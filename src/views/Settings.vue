@@ -7,28 +7,29 @@
     </ion-header>
     
     <ion-content :fullscreen="true">
-      <!-- Profile of user logged in -->
-      <ion-item>
-        <ion-icon :icon="personCircleOutline" slot="start" />
-        <ion-label>{{ userProfile !== null ? userProfile.partyName : '' }}</ion-label>
-        <ion-button slot="end" fill="outline" color="dark" @click="logout()">{{ $t("Logout") }}</ion-button>
-      </ion-item>
+      <ion-list>
+        <!-- Select store -->
+        <ion-item>
+          <ion-icon :icon="storefrontOutline" slot="start" />
+          <ion-label>{{$t("store")}}</ion-label>
+          <ion-select interface="popover" :placeholder="$t('store name')" :selected-text="currentFacility.facilityId" @ionChange="setFacility($event)">
+            <ion-select-option v-for="facility in userProfile.facilities" :key="facility.facilityId" :value="facility.facilityId" >{{ facility.facilityId }}</ion-select-option>
+          </ion-select>
+        </ion-item>
 
-      <!-- Select store -->
-       <ion-item>
-        <ion-icon :icon="storefrontOutline" slot="start" />
-        <ion-label>{{ currentFacility.facilityId ? currentFacility.facilityId : '' }}</ion-label>
-      <ion-select interface="popover" :placeholder="$t('store name')" :selected-text="currentFacility.facilityId" @ionChange="setFacility($event)">
-        <ion-select-option v-for="facility in userProfile.facilities" :key="facility.facilityId" :value="facility.facilityId" >{{ facility.facilityId }}</ion-select-option>
-      </ion-select>
-      </ion-item>
-
+        <!-- Profile of user logged in -->
+        <ion-item>
+          <ion-icon :icon="personCircleOutline" slot="start" />
+          <ion-label>{{ userProfile !== null ? userProfile.partyName : '' }}</ion-label>
+         <ion-button slot="end" fill="outline" color="dark" @click="logout()">{{ $t("Logout") }}</ion-button>
+        </ion-item>
+      </ion-list>
     </ion-content>
   </ion-page>
 </template>
 
 <script lang="ts">
-import { alertController, IonButton, IonContent, IonHeader,IonIcon, IonItem, IonLabel, IonPage, IonSelect, IonSelectOption, IonTitle, IonToolbar, popoverController } from '@ionic/vue';
+import { alertController, IonButton, IonContent, IonHeader,IonIcon, IonItem, IonLabel, IonList, IonPage, IonSelect, IonSelectOption, IonTitle, IonToolbar, popoverController } from '@ionic/vue';
 import { defineComponent } from 'vue';
 import { ellipsisVertical, personCircleOutline, storefrontOutline} from 'ionicons/icons'
 import { mapGetters, useStore } from 'vuex';
@@ -43,6 +44,7 @@ export default defineComponent({
     IonIcon,
     IonItem, 
     IonLabel, 
+    IonList,
     IonPage, 
     IonSelect, 
     IonSelectOption,
@@ -60,7 +62,6 @@ export default defineComponent({
       this.userProfile.facilities.map((fac: any) => {
         if (fac.facilityId == facility['detail'].value) {
           this.store.dispatch('user/setFacility', {'facility': fac});
-          console.log(fac);
         }
       })
     },
