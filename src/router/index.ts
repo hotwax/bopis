@@ -1,8 +1,8 @@
 import { createRouter, createWebHistory } from '@ionic/vue-router';
 import { RouteRecordRaw } from 'vue-router';
-import Home from '@/views/Home.vue'
 import Login from '@/views/Login.vue'
 import store from '@/store'
+import Tabs from '../views/Tabs.vue'
 
 const authGuard = (to: any, from: any, next: any) => {
   if (store.getters['user/isAuthenticated']) {
@@ -23,13 +23,30 @@ const loginGuard = (to: any, from: any, next: any) => {
 const routes: Array<RouteRecordRaw> = [
   {
     path: '/',
-    redirect: '/home'
+    redirect: '/tabs/Catalog'
   },
   {
-    path: '/home',
-    name: 'Home',
-    component: Home,
-    beforeEnter: authGuard
+    path: '/tabs',
+    component: Tabs,
+    children: [
+      {
+        path: '',
+        redirect: '/Catalog'
+      },
+      {
+        path: 'Catalog',
+        component: () => import('@/views/Catalog.vue')
+      },
+      
+      {
+        path: 'Orders',
+        component: () => import('../views/Orders.vue')
+      },
+       {
+        path: 'More',
+        component: () => import('../views/More.vue')
+      },
+    ]
   },
   {
     path: '/login',
