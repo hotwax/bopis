@@ -65,25 +65,6 @@ export default defineComponent({
         }
       })
     },
-    async presentAlert () {
-      const alert = await alertController.create({
-        header: this.$t('Logout'),
-        message: this.$t('The products in the upload list will be removed.'),
-        buttons: [{
-          text: this.$t('Cancel')
-        },
-        {
-          text: this.$t('Ok'),
-          handler: () => {
-            this.store.dispatch('product/clearUploadProducts');
-            this.store.dispatch('user/logout').then(() => {
-            this.router.push('/login');
-            })
-          }
-        }]
-      });
-      await alert.present();
-    },
     logout () {
       this.store.dispatch('user/logout').then(() => {
         this.router.push('/login');
