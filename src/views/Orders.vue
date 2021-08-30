@@ -15,10 +15,10 @@
       <ion-toolbar>
         <ion-segment @ionChange="segmentChanged($event)" v-model="segment">
           <ion-segment-button value="open">
-            <ion-label>OPEN</ion-label>
+            <ion-label>{{ $t("OPEN") }}</ion-label>
           </ion-segment-button>
           <ion-segment-button value="packedorders">
-            <ion-label>PACKED</ion-label>
+            <ion-label>{{ $t("PACKED") }}</ion-label>
           </ion-segment-button>
         </ion-segment>
       </ion-toolbar>
@@ -58,7 +58,7 @@
               <ion-button fill="outline" color="medium">COPY</ion-button>
             </ion-item>
           </ion-list>
-          <ion-button fill="clear" >READY FOR PICKUP</ion-button>
+          <ion-button fill="clear">{{ $t("READY FOR PICKUP") }}</ion-button>
         </ion-card>
       </div>
     </ion-content>
