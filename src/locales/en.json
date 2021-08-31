@@ -1,6 +1,9 @@
 {
   "Blank": "Blank",
+  "Catalog":"Catalog",
   "Click the backdrop to dismiss.": "Click the backdrop to dismiss.",
+  "Orders":"Orders",
+  "More":"More",
   "Ready to create an app?": "Ready to create an app?",
   "Start with Ionic": "Start with Ionic",
   "UI Components": "UI Components"
