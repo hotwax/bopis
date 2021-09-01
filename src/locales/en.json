@@ -2,12 +2,17 @@
   "Blank": "Blank",
   "Catalog":"Catalog",
   "Click the backdrop to dismiss.": "Click the backdrop to dismiss.",
+  "Color":"Color",
+  "COPY":"COPY",
+  "in stock":"in stock",
   "Orders":"Orders",
   "More":"More",
   "OPEN":"OPEN",
+  "order time delta":"order time delta",
   "PACKED":"PACKED",
   "READY FOR PICKUP":"READY FOR PICKUP",
   "Ready to create an app?": "Ready to create an app?",
+  "Size":"Size",
   "Start with Ionic": "Start with Ionic",
   "UI Components": "UI Components"
 }

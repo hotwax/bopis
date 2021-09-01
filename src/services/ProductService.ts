@@ -1,0 +1,16 @@
+import api from '@/api';
+
+const fetchOrders = async (query: any): Promise <any>  => {
+  console.log(query)
+  return api({
+   // TODO: We can replace this with any API
+    url: "wms-orders", 
+    method: "post",
+    data: query,
+    cache: true
+  });
+}
+
+export const ProductService = {
+  fetchOrders
+}

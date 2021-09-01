@@ -25,84 +25,70 @@
     </ion-header>
     
     <ion-content :fullscreen="true">
-      <div v-if="segment == 'open'">
-        <ion-card>
-          <ion-item lines="none" >
-            <ion-label>
-              <h1>Customer name</h1>
-              <p>Order ID</p>
-            </ion-label>
-            <ion-note slot="end">order time delta</ion-note>
-          </ion-item>
-          <ion-item lines="full">
-            <ion-thumbnail slot="start">
-              <img class="thumbnail-image" src="https://images-na.ssl-images-amazon.com/images/I/61cyHHh-l7L._UL1100_.jpg"/>
-            </ion-thumbnail>
-            <ion-label>
-              <h2>BRAND</h2>
-              <h1>Virtual name</h1>
-              <p>Color: color</p>
-              <p>Size: size</p>
-            </ion-label>
-            <ion-note color="success" slot="end">15 in stock</ion-note>
-          </ion-item>
-          <ion-list>
-            <ion-item >
-              <ion-icon slot="start" :icon="callOutline" />
-              <ion-label>phone number</ion-label>
-              <ion-button fill="outline" color="medium">COPY</ion-button>
-            </ion-item>
-            <ion-item lines="full">
-              <ion-icon slot="start" :icon="mailOutline" />
-              <ion-label>email</ion-label>
-              <ion-button fill="outline" color="medium">COPY</ion-button>
-            </ion-item>
-          </ion-list>
-          <ion-button fill="clear">{{ $t("READY FOR PICKUP") }}</ion-button>
-        </ion-card>
-      </div>
+      <product-list-item v-for="product in products" :key="product.productId" :product="product"/>
     </ion-content>
   </ion-page>
 </template>
 
 <script lang="ts">
-import { callOutline, mailOutline, swapVerticalOutline } from 'ionicons/icons'
-import { IonButton, IonButtons, IonCard, IonContent, IonHeader, IonIcon, IonItem, IonLabel, IonList, IonNote, IonPage, IonSearchbar, IonSegment, IonSegmentButton, IonThumbnail, IonTitle, IonToolbar } from '@ionic/vue';
+import { IonButton, IonButtons, IonContent, IonHeader, IonIcon, IonLabel, IonPage, IonSearchbar, IonSegment, IonSegmentButton,  IonTitle, IonToolbar } from '@ionic/vue';
 import { defineComponent, ref } from 'vue';
+import { useRouter } from 'vue-router'
+import { useStore } from 'vuex';
+import { mapGetters } from 'vuex';
+import ProductListItem from "@/components/ProductListItem.vue";
+
 
 export default defineComponent({
   name: 'Orders',
   components: {
     IonButton,
     IonButtons, 
-    IonCard,
     IonContent,
     IonHeader,
     IonIcon, 
-    IonItem,
     IonLabel,
-    IonList, 
-    IonNote,
     IonPage,
     IonSearchbar,
     IonSegment,
     IonSegmentButton,
-    IonThumbnail,
     IonTitle,
-    IonToolbar
+    IonToolbar,
+    ProductListItem
   },
   methods: {
+    async getOrderdetails (vSize: any, vIndex: any){
+      const viewSize = vSize ? vSize : process.env.VUE_APP_VIEW_SIZE;
+      const viewIndex = vIndex ? vIndex : 0;
+      const payload = {
+      sortBy: 'orderDate',
+      sortOrder: 'Desc',
+      viewSize: viewSize,
+      viewIndex: viewIndex,
+      facilityId: 'STORE_8'
+    };
+      await this.store.dispatch('product/getOrderdetails',  payload);
+    },
     segmentChanged(ev: CustomEvent) {
       this.segment = ev.detail.value;
     },
   },
+  computed: {
+    ...mapGetters({
+      products: "product/getOrderdetails"
+    })
+  },
+   mounted() {
+    this.getOrderdetails(10,0)
+  },
   setup() {
-    const segment = ref("orders");
+    const router = useRouter();
+    const store = useStore();
+    const segment = ref("open");
     return {
-      callOutline,
-      mailOutline,
       segment,
-      swapVerticalOutline
+      router,
+      store
     };
   }
 });
