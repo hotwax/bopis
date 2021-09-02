@@ -25,13 +25,16 @@
     </ion-header>
     
     <ion-content :fullscreen="true">
-      <product-list-item v-for="product in products" :key="product.productId" :product="product"/>
+      <div v-if="segment == 'open'">
+        <product-list-item v-for="product in products" :key="product.productId" :product="product"/>
+      </div>
     </ion-content>
   </ion-page>
 </template>
 
 <script lang="ts">
 import { IonButton, IonButtons, IonContent, IonHeader, IonIcon, IonLabel, IonPage, IonSearchbar, IonSegment, IonSegmentButton,  IonTitle, IonToolbar } from '@ionic/vue';
+import { swapVerticalOutline } from 'ionicons/icons'
 import { defineComponent, ref } from 'vue';
 import { useRouter } from 'vue-router'
 import { useStore } from 'vuex';
@@ -88,7 +91,8 @@ export default defineComponent({
     return {
       segment,
       router,
-      store
+      store,
+      swapVerticalOutline
     };
   }
 });

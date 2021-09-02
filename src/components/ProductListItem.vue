@@ -7,7 +7,7 @@
       </ion-label>
       <ion-note slot="end">{{ product.orderDate }}</ion-note>
     </ion-item>
-    <ion-item lines="full">
+    <ion-item lines="full" >
       <ion-thumbnail slot="start">
         <img :src="product.items[0].images.main.thumbnail"/>
       </ion-thumbnail>
@@ -19,47 +19,26 @@
       </ion-label>
       <ion-note color="success" slot="end">{{ product.items[0].inventory[0].quantity }} {{ $t("in stock") }}</ion-note>
     </ion-item>
-    <ion-list>
-      <ion-item >
-        <ion-icon slot="start" :icon="callOutline" />
-        <ion-label>phone number</ion-label>
-        <ion-button fill="outline" color="medium">{{ $t("COPY") }}</ion-button>
-      </ion-item>
-      <ion-item lines="full">
-        <ion-icon slot="start" :icon="mailOutline" />
-        <ion-label>email</ion-label>
-        <ion-button fill="outline" color="medium">{{ $t("COPY") }}</ion-button>
-      </ion-item>
-    </ion-list>
+    <!-- TODO: We can add the Contact details of the Customer -->
     <ion-button fill="clear">{{ $t("READY FOR PICKUP") }}</ion-button>
   </ion-card>
 </template>
 
 
 <script lang="ts">
-import { IonButton, IonCard, IonIcon, IonItem, IonLabel, IonList, IonNote, IonThumbnail } from '@ionic/vue';
+import { IonButton, IonCard, IonItem, IonLabel, IonNote, IonThumbnail } from '@ionic/vue';
 import { defineComponent } from 'vue';
-import { callOutline, mailOutline, swapVerticalOutline } from 'ionicons/icons'
 
 export default defineComponent({
   name: 'ProductListItem',
   components: {
     IonButton,
     IonCard,
-    IonIcon, 
     IonItem,
-    IonLabel,
-    IonList, 
+    IonLabel, 
     IonNote,
     IonThumbnail,
   },
-  props:['product'],
-  setup() {
-    return {
-      callOutline,
-      mailOutline,
-      swapVerticalOutline,
-    };
-  }
+  props:['product']
 });
 </script>
