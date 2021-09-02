@@ -46,7 +46,6 @@ const actions: ActionTree<UserState, RootState> = {
   async logout ({ commit }) {
     // TODO add any other tasks if need
     commit(types.USER_END_SESSION)
-    
   },
 
   /**
@@ -64,16 +63,23 @@ const actions: ActionTree<UserState, RootState> = {
   },
 
   /**
+   * update current facility information
+   */
+  async setFacility ({ commit }, payload) {
+    commit(types.USER_CURRENT_FACILITY_UPDATED, payload.facility);
+  },
+  
+  /**
    * Update user timeZone
    */
-     async setUserTimeZone ( { state, commit }, payload) {
-      const resp = await UserService.setUserTimeZone(payload)
-      if (resp.status === 200 && !hasError(resp)) {
-        const current: any = state.current;
-        current.userTimeZone = payload.tzId;
-        commit(types.USER_INFO_UPDATED, current);
-        showToast(translate("Time zone updated successfully"));
-      }
+  async setUserTimeZone ( { state, commit }, payload) {
+    const resp = await UserService.setUserTimeZone(payload)
+    if (resp.status === 200 && !hasError(resp)) {
+      const current: any = state.current;
+      current.userTimeZone = payload.tzId;
+      commit(types.USER_INFO_UPDATED, current);
+      showToast(translate("Time zone updated successfully"));
     }
+  }
 }
 export default actions;

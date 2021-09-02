@@ -9,14 +9,14 @@ const userModule: Module<UserState, RootState> = {
     namespaced: true,
     state: {
       token: '',
-      current: null
+      current: null,
+      currentFacility: {}
     },
     getters,
     actions,
     mutations,
 }
 
-export default userModule;
-
 // TODO
 // store.registerModule('user', userModule);
+export default userModule;

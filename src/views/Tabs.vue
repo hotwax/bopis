@@ -4,17 +4,17 @@
       <ion-tab-bar slot="bottom">
         <ion-tab-button tab="catalog" href="/tabs/Catalog">
           <ion-icon :icon="shirtOutline" />
-          <ion-label>Catalog</ion-label>
+          <ion-label>{{ $t("Catalog") }}</ion-label>
         </ion-tab-button>
 
         <ion-tab-button tab="orders" href="/tabs/Orders">
           <ion-icon :icon="infiniteOutline" />
-          <ion-label>Orders</ion-label>
+          <ion-label>{{ $t("Orders") }}</ion-label>
         </ion-tab-button>
 
         <ion-tab-button tab="more" href="/tabs/More">
           <ion-icon :icon="menuOutline" />
-          <ion-label>More</ion-label>
+          <ion-label>{{ $t("More") }}</ion-label>
         </ion-tab-button>
       </ion-tab-bar>
     </ion-tabs>

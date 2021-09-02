@@ -14,6 +14,9 @@ const getters: GetterTree <UserState, RootState> = {
     },
     getUserProfile (state) {
         return state.current
+    },
+    getCurrentFacility (state){
+        return state.currentFacility
     }
 
 }
