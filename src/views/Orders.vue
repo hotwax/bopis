@@ -10,7 +10,7 @@
         </ion-buttons>
       </ion-toolbar>
       <ion-toolbar>
-        <ion-searchbar placeholder="Search orders"></ion-searchbar>
+        <ion-searchbar @ionFocus="selectSearchBarText($event)" v-model="queryString" :placeholder="$t('Search')" v-on:keyup.enter="getOrderdetails()"></ion-searchbar>
       </ion-toolbar>
       <ion-toolbar>
         <ion-segment @ionChange="segmentChanged($event)" v-model="segment">
@@ -27,20 +27,24 @@
     <ion-content :fullscreen="true">
       <div v-if="segment == 'open'">
         <product-list-item v-for="product in products" :key="product.productId" :product="product"/>
+         <ion-infinite-scroll @ionInfinite="loadMoreOrders($event)" threshold="100px" :disabled="!isScrollable">
+          <ion-infinite-scroll-content loading-spinner="crescent" :loading-text="$t('Loading')"></ion-infinite-scroll-content>
+        </ion-infinite-scroll>
       </div>
     </ion-content>
   </ion-page>
 </template>
 
 <script lang="ts">
-import { IonButton, IonButtons, IonContent, IonHeader, IonIcon, IonLabel, IonPage, IonSearchbar, IonSegment, IonSegmentButton,  IonTitle, IonToolbar } from '@ionic/vue';
+import { IonButton, IonButtons, IonContent, IonHeader, IonIcon, IonInfiniteScroll, IonInfiniteScrollContent, IonLabel, IonPage, IonSearchbar, IonSegment, IonSegmentButton,  IonTitle, IonToolbar } from '@ionic/vue';
 import { swapVerticalOutline } from 'ionicons/icons'
 import { defineComponent, ref } from 'vue';
 import { useRouter } from 'vue-router'
 import { useStore } from 'vuex';
 import { mapGetters } from 'vuex';
 import ProductListItem from "@/components/ProductListItem.vue";
-
+import { translate } from '@/i18n'
+import { showToast } from '@/utils'
 
 export default defineComponent({
   name: 'Orders',
@@ -50,6 +54,8 @@ export default defineComponent({
     IonContent,
     IonHeader,
     IonIcon, 
+    IonInfiniteScroll,
+    IonInfiniteScrollContent,
     IonLabel,
     IonPage,
     IonSearchbar,
@@ -58,6 +64,11 @@ export default defineComponent({
     IonTitle,
     IonToolbar,
     ProductListItem
+  },
+  data (){
+    return {
+      queryString: ''
+    }
   },
   methods: {
     async getOrderdetails (vSize: any, vIndex: any){
@@ -72,17 +83,32 @@ export default defineComponent({
     };
       await this.store.dispatch('product/getOrderdetails',  payload);
     },
+    async loadMoreOrders (event: any) {
+      this.getOrderdetails(
+        undefined,
+        Math.ceil(this.products.length / process.env.VUE_APP_VIEW_SIZE).toString()
+      ).then(() => {
+        event.target.complete();
+      })
+    },
     segmentChanged(ev: CustomEvent) {
       this.segment = ev.detail.value;
     },
+    selectSearchBarText(event: any) {
+      event.target.getInputElement().then((element: any) => {
+        element.select();
+      })
+    },
+    
   },
   computed: {
     ...mapGetters({
-      products: "product/getOrderdetails"
+      products: "product/getOrderdetails",
+      isScrollable: "product/isScrollable"
     })
   },
    mounted() {
-    this.getOrderdetails(10,0)
+    this.getOrderdetails(null, null)
   },
   setup() {
     const router = useRouter();

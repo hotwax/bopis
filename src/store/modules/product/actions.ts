@@ -12,7 +12,6 @@ const actions: ActionTree<ProductState, RootState> = {
 
   // Fetch Product
   async getOrderdetails ({ commit, state }, payload) {
-
     // Show loader only when new query and not the infinite scroll
     if (payload.viewIndex === 0) emitter.emit("presentLoader");
 
@@ -30,9 +29,9 @@ const actions: ActionTree<ProductState, RootState> = {
       // resp.data.response.numFound tells the number of items in the response
       if (resp.status === 200 && resp.data.count > 0 && !hasError(resp)) {
         let products = resp.data.docs;
-        const totalProductsCount = resp.data.count;
+        const total = resp.data.count;
         if (payload.viewIndex && payload.viewIndex > 0) products = state.products.details.concat(products)
-        commit(types.PRODUCTS_DETAILS, { products: products, totalProductsCount: totalProductsCount })
+        commit(types.PRODUCTS_DETAILS, { products: products, total: total })
       } else {
         //showing error whenever getting no products in the response or having any other error
         showToast(translate("Product not found"));

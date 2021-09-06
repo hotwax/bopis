@@ -9,7 +9,8 @@ const productModule: Module<ProductState, RootState> = {
     namespaced: true,
     state: {
       products: {
-        details: {}
+        details: {},
+        total: 0
       }
     },
     getters,
