@@ -20,7 +20,7 @@
       <ion-note color="success" slot="end">{{ item.inventory[0].quantity }} {{ $t("in stock") }}</ion-note>
     </ion-item>
     <!-- TODO: We can add the Contact details of the Customer -->
-    <ion-button fill="clear">{{ $t("READY FOR PICKUP") }} </ion-button>
+    <ion-button fill="clear" @click="quickShipEntireShipGroup(order, shipGroup)" >{{ $t("Ready for pickup") }}</ion-button>
   </ion-card>
 </template>
 
@@ -28,6 +28,8 @@
 <script lang="ts">
 import { IonButton, IonCard, IonItem, IonLabel, IonNote, IonThumbnail } from '@ionic/vue';
 import { defineComponent } from 'vue';
+import { useStore } from 'vuex';
+import { useRouter } from 'vue-router'
 
 export default defineComponent({
   name: 'ProductListItem',
@@ -39,6 +41,31 @@ export default defineComponent({
     IonNote,
     IonThumbnail,
   },
-  props:['product']
+  methods:{
+    async quickShipEntireShipGroup (vSize: any, vIndex: any){
+      const viewSize = vSize ? vSize : process.env.VUE_APP_VIEW_SIZE;
+      const viewIndex = vIndex ? vIndex : 0;
+      const payload = {
+      orderId: "NN11843",
+      setPackedOnly: 'Y',
+      dimensionUomId: 'WT_kg',
+      shipmentBoxTypeId: 'YOURPACKNG',
+      weight: '1',
+      weightUomId: 'WT_kg',
+      facilityId: "STORE_8",
+      shipGroupSeqId: "00001"
+    };
+      await this.store.dispatch('product/quickShipEntireShipGroup',  payload);
+    },
+  },
+  props:['product'],
+  setup() {
+    const router = useRouter();
+    const store = useStore();
+    return {
+      router,
+      store
+    }; 
+  }
 });
 </script>

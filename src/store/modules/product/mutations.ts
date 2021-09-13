@@ -7,6 +7,14 @@ const mutations: MutationTree <ProductState> = {
     state.products.details = payload.products;
     state.products.total = payload.total;
   },
+  [types.PACKEDORDERS_DETAILS] (state, payload) {
+    state.products.details = payload.products;
+    state.products.total = payload.total;
+  },
+  [types.ENTIRESHIPGROUP_DETAILS] (state, payload) {
+    state.products.details = payload.products;
+    state.products.total = payload.total;
+  },
   [types.ORDER_SEARCH_UPDATED] (state, payload) {
     state.products.details = payload.products;
     state.products.total = payload.totalProductsCount;

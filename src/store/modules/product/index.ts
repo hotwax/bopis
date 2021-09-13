@@ -11,6 +11,14 @@ const productModule: Module<ProductState, RootState> = {
       products: {
         details: {},
         total: 0
+      },
+      PackedOrders: {
+        details: {},
+        total: 0
+      },
+      EntireShipGroup:{
+        details: {},
+        total: 0
       }
     },
     getters,

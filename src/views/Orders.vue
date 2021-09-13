@@ -83,6 +83,33 @@ export default defineComponent({
     };
       await this.store.dispatch('product/getOrderdetails',  payload);
     },
+    async getPackedOrders (vSize: any, vIndex: any){
+      const viewSize = vSize ? vSize : process.env.VUE_APP_VIEW_SIZE;
+      const viewIndex = vIndex ? vIndex : 0;
+      const payload = {
+      sortBy: 'createdDate',
+      sortOrder: 'Desc',
+      viewSize: viewSize,
+      viewIndex: viewIndex,
+      facilityId: 'STORE_8'
+    };
+      await this.store.dispatch('product/getPackedOrders',  payload);
+    },
+    async quickShipEntireShipGroup (vSize: any, vIndex: any){
+      const viewSize = vSize ? vSize : process.env.VUE_APP_VIEW_SIZE;
+      const viewIndex = vIndex ? vIndex : 0;
+      const payload = {
+      orderId: "NN11843",
+      setPackedOnly: 'Y',
+      dimensionUomId: 'WT_kg',
+      shipmentBoxTypeId: 'YOURPACKNG',
+      weight: '1',
+      weightUomId: 'WT_kg',
+      facilityId: "STORE_8",
+      shipGroupSeqId: "00001"
+    };
+      await this.store.dispatch('product/quickShipEntireShipGroup',  payload);
+    },
     async loadMoreOrders (event: any) {
       this.getOrderdetails(
         undefined,
@@ -104,11 +131,15 @@ export default defineComponent({
   computed: {
     ...mapGetters({
       products: "product/getOrderdetails",
+      packedOrders: "product/getPackedOrders",
+      EntireShipGroup:"product/quickShipEntireShipGroup",
       isScrollable: "product/isScrollable"
     })
   },
    mounted() {
-    this.getOrderdetails(null, null)
+    this.getOrderdetails(null, null);
+    this.getPackedOrders(null, null);
+    this.quickShipEntireShipGroup(null, null);
   },
   setup() {
     const router = useRouter();
