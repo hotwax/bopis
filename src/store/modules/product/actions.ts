@@ -99,14 +99,13 @@ const actions: ActionTree<ProductState, RootState> = {
         "shipGroupSeqId": payload.shipGroupSeqId
       })
       if(resp.data._EVENT_MESSAGE_) {
-        console.log("163")
         showToast(translate('Order packed and ready for delivery'));
       } 
       dispatch('getOrderdetails',{
         sortBy: 'orderDate',
         sortOrder: 'Desc',
-        viewSize: 0,
-        viewIndex: 10,
+        viewSize: 10,
+        viewIndex: 0,
         facilityId: 'STORE_8'
       });
       

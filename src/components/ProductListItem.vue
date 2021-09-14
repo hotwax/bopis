@@ -17,13 +17,12 @@
         <p>{{ $t("Color") }}: {{ item.standardFeatures.COLOR.description }}</p>
         <p>{{ $t("Size") }}: {{ item.standardFeatures.SIZE.description }}</p>
       </ion-label>
-      <ion-note color="success" slot="end">{{ item.inventory[0].quantity }} {{ $t("in stock") }}</ion-note>
+      <!-- TODO: We can add here the number of product available in stock -->
     </ion-item>
     <!-- TODO: We can add the Contact details of the Customer -->
-    <ion-button fill="clear" @click="quickShipEntireShipGroup(order, shipGroup)" >{{ $t("Ready for pickup") }}</ion-button>
+    <ion-button fill="clear" @click="quickShipEntireShipGroup(product, product.items[0].shipGroupSeqId)" >{{ $t("READY FOR PICKUP") }}</ion-button>
   </ion-card>
 </template>
-
 
 <script lang="ts">
 import { IonButton, IonCard, IonItem, IonLabel, IonNote, IonThumbnail } from '@ionic/vue';
@@ -42,18 +41,16 @@ export default defineComponent({
     IonThumbnail,
   },
   methods:{
-    async quickShipEntireShipGroup (vSize: any, vIndex: any){
-      const viewSize = vSize ? vSize : process.env.VUE_APP_VIEW_SIZE;
-      const viewIndex = vIndex ? vIndex : 0;
+    async quickShipEntireShipGroup (order: any , shipGroupSeqId: any){
       const payload = {
-      orderId: "NN11843",
+      orderId: order.orderId,
       setPackedOnly: 'Y',
       dimensionUomId: 'WT_kg',
       shipmentBoxTypeId: 'YOURPACKNG',
       weight: '1',
       weightUomId: 'WT_kg',
       facilityId: "STORE_8",
-      shipGroupSeqId: "00001"
+      shipGroupSeqId: shipGroupSeqId
     };
       await this.store.dispatch('product/quickShipEntireShipGroup',  payload);
     },

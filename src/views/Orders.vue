@@ -26,8 +26,10 @@
     
     <ion-content :fullscreen="true">
       <div v-if="segment == 'open'">
-        <product-list-item v-for="product in products" :key="product.productId" :product="product"/>
-         <ion-infinite-scroll @ionInfinite="loadMoreOrders($event)" threshold="100px" :disabled="!isScrollable">
+        <ion-list v-if="products.length > 0">
+          <product-list-item v-for="product in products" :key="product.productId" :product="product"/>
+        </ion-list>
+        <ion-infinite-scroll @ionInfinite="loadMoreOrders($event)" threshold="100px" >
           <ion-infinite-scroll-content loading-spinner="crescent" :loading-text="$t('Loading')"></ion-infinite-scroll-content>
         </ion-infinite-scroll>
       </div>
@@ -36,7 +38,7 @@
 </template>
 
 <script lang="ts">
-import { IonButton, IonButtons, IonContent, IonHeader, IonIcon, IonInfiniteScroll, IonInfiniteScrollContent, IonLabel, IonPage, IonSearchbar, IonSegment, IonSegmentButton,  IonTitle, IonToolbar } from '@ionic/vue';
+import { IonButton, IonButtons, IonContent, IonHeader, IonIcon, IonInfiniteScroll, IonInfiniteScrollContent, IonLabel, IonList, IonPage, IonSearchbar, IonSegment, IonSegmentButton,  IonTitle, IonToolbar } from '@ionic/vue';
 import { swapVerticalOutline } from 'ionicons/icons'
 import { defineComponent, ref } from 'vue';
 import { useRouter } from 'vue-router'
@@ -57,6 +59,7 @@ export default defineComponent({
     IonInfiniteScroll,
     IonInfiniteScrollContent,
     IonLabel,
+    IonList,
     IonPage,
     IonSearchbar,
     IonSegment,
