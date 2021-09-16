@@ -1,4 +1,4 @@
-import { orderService } from "@/services/orderService";
+import { OrderService } from "@/services/OrderService";
 import { ActionTree } from 'vuex'
 import RootState from '@/store/RootState'
 import orderState from './OrderState'
@@ -17,7 +17,7 @@ const actions: ActionTree<orderState, RootState> = {
     let resp;
 
     try {
-      resp = await orderService.fetchOrders(payload)
+      resp = await OrderService.fetchOrders(payload)
       // resp.data.docs the number of items in the response
       if (resp.status === 200 && resp.data.count > 0 && !hasError(resp)) {
         let orders = resp.data.docs;
@@ -42,7 +42,7 @@ const actions: ActionTree<orderState, RootState> = {
     let resp;
 
     try {
-      resp = await orderService.fetchEntireShipGroup(payload)
+      resp = await OrderService.fetchEntireShipGroup(payload)
       if(resp.data._EVENT_MESSAGE_) {
         showToast(translate('Order packed and ready for delivery'));
       } 

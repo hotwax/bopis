@@ -7,9 +7,9 @@
       </ion-label>
       <ion-note slot="end">{{ order.orderDate }}</ion-note>
     </ion-item>
-    <ion-item lines="full" v-for="item in order.items" :key="item.orderId" :item="item" >
+    <ion-item lines="full" v-for="(item, index) in order.items" :key="index" :item="item" >
       <ion-thumbnail slot="start">
-        <img :src="item.images.main.thumbnail"/>
+        <Image :src="item.images.main.thumbnail"></Image>
       </ion-thumbnail>
       <ion-label>
         <h2>{{ item.brandName }}</h2>
@@ -30,16 +30,18 @@ import { defineComponent } from 'vue';
 import { useStore } from 'vuex';
 import { useRouter } from 'vue-router'
 import { mapGetters } from 'vuex';
+import Image from "@/components/Image.vue";
 
 export default defineComponent({
-  name: 'OrderList',
+  name: 'Order',
   components: {
     IonButton,
     IonCard,
     IonItem,
-    IonLabel, 
+    IonLabel,
     IonNote,
     IonThumbnail,
+    Image
   },
   methods:{
     async quickShipEntireShipGroup (order: any , shipGroupSeqId: any){

@@ -11,10 +11,6 @@ const orderModule: Module<OrderState, RootState> = {
       orders: {
         details: {},
         total: 0
-      },
-      EntireShipGroup:{
-        details: {},
-        total: 0
       }
     },
     getters,

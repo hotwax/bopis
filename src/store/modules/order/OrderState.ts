@@ -3,8 +3,4 @@ export default interface OrderState{
     details: any;
     total: number;
   }
-  EntireShipGroup:{
-    details: any;
-    total: number;
-  }
 }

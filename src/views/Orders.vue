@@ -27,7 +27,7 @@
     <ion-content :fullscreen="true">
       <div v-if="segment == 'open'">
         <ion-list v-if="orders.length > 0">
-          <order-details v-for="order in orders" :key="order.orderId" :order="order"/>
+          <order v-for="order in orders" :key="order.orderId" :order="order"/>
         </ion-list>
         <ion-infinite-scroll @ionInfinite="loadMoreOrders($event)" threshold="100px" >
           <ion-infinite-scroll-content loading-spinner="crescent" :loading-text="$t('Loading')"></ion-infinite-scroll-content>
@@ -44,7 +44,7 @@ import { defineComponent, ref } from 'vue';
 import { useRouter } from 'vue-router'
 import { useStore } from 'vuex';
 import { mapGetters } from 'vuex';
-import OrderDetails from "@/components/OrderDetails.vue";
+import Order from "@/components/Order.vue";
 
 export default defineComponent({
   name: 'Orders',
@@ -64,7 +64,7 @@ export default defineComponent({
     IonSegmentButton,
     IonTitle,
     IonToolbar,
-    OrderDetails
+    Order
   },
   data (){
     return {
