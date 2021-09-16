@@ -2,12 +2,12 @@
   <ion-card>
     <ion-item lines="none" >
       <ion-label>
-        <h1>{{product.customerName}}</h1>
-        <p>{{product.orderId}}</p>
+        <h1>{{order.customerName}}</h1>
+        <p>{{order.orderId}}</p>
       </ion-label>
-      <ion-note slot="end">{{ product.orderDate }}</ion-note>
+      <ion-note slot="end">{{ order.orderDate }}</ion-note>
     </ion-item>
-    <ion-item lines="full" v-for="item in product.items" :key="item.productId" :item="item" >
+    <ion-item lines="full" v-for="item in order.items" :key="item.orderId" :item="item" >
       <ion-thumbnail slot="start">
         <img :src="item.images.main.thumbnail"/>
       </ion-thumbnail>
@@ -17,10 +17,10 @@
         <p>{{ $t("Color") }}: {{ item.standardFeatures.COLOR.description }}</p>
         <p>{{ $t("Size") }}: {{ item.standardFeatures.SIZE.description }}</p>
       </ion-label>
-      <!-- TODO: We can add here the number of product available in stock -->
+      <!-- TODO: We can add here the number of order available in stock -->
     </ion-item>
     <!-- TODO: We can add the Contact details of the Customer -->
-    <ion-button fill="clear" @click="quickShipEntireShipGroup(product, product.items[0].shipGroupSeqId)" >{{ $t("READY FOR PICKUP") }}</ion-button>
+    <ion-button fill="clear" @click="quickShipEntireShipGroup(order, order.items[0].shipGroupSeqId)" >{{ $t("READY FOR PICKUP") }}</ion-button>
   </ion-card>
 </template>
 
@@ -29,9 +29,10 @@ import { IonButton, IonCard, IonItem, IonLabel, IonNote, IonThumbnail } from '@i
 import { defineComponent } from 'vue';
 import { useStore } from 'vuex';
 import { useRouter } from 'vue-router'
+import { mapGetters } from 'vuex';
 
 export default defineComponent({
-  name: 'ProductListItem',
+  name: 'OrderList',
   components: {
     IonButton,
     IonCard,
@@ -49,13 +50,18 @@ export default defineComponent({
       shipmentBoxTypeId: 'YOURPACKNG',
       weight: '1',
       weightUomId: 'WT_kg',
-      facilityId: "STORE_8",
+      facilityId: this.currentFacility.facilityId,
       shipGroupSeqId: shipGroupSeqId
     };
-      await this.store.dispatch('product/quickShipEntireShipGroup',  payload);
+      await this.store.dispatch('order/quickShipEntireShipGroup',  payload);
     },
   },
-  props:['product'],
+  computed: {
+    ...mapGetters({
+      currentFacility: 'user/getCurrentFacility'
+    })
+  },
+  props:['order'],
   setup() {
     const router = useRouter();
     const store = useStore();

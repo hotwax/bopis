@@ -26,8 +26,8 @@
     
     <ion-content :fullscreen="true">
       <div v-if="segment == 'open'">
-        <ion-list v-if="products.length > 0">
-          <product-list-item v-for="product in products" :key="product.productId" :product="product"/>
+        <ion-list v-if="orders.length > 0">
+          <order-details v-for="order in orders" :key="order.orderId" :order="order"/>
         </ion-list>
         <ion-infinite-scroll @ionInfinite="loadMoreOrders($event)" threshold="100px" >
           <ion-infinite-scroll-content loading-spinner="crescent" :loading-text="$t('Loading')"></ion-infinite-scroll-content>
@@ -44,9 +44,7 @@ import { defineComponent, ref } from 'vue';
 import { useRouter } from 'vue-router'
 import { useStore } from 'vuex';
 import { mapGetters } from 'vuex';
-import ProductListItem from "@/components/ProductListItem.vue";
-import { translate } from '@/i18n'
-import { showToast } from '@/utils'
+import OrderDetails from "@/components/OrderDetails.vue";
 
 export default defineComponent({
   name: 'Orders',
@@ -66,7 +64,7 @@ export default defineComponent({
     IonSegmentButton,
     IonTitle,
     IonToolbar,
-    ProductListItem
+    OrderDetails
   },
   data (){
     return {
@@ -74,7 +72,7 @@ export default defineComponent({
     }
   },
   methods: {
-    async getOrderdetails (vSize: any, vIndex: any){
+    async getOrderdetails (vSize?: any, vIndex?: any){
       const viewSize = vSize ? vSize : process.env.VUE_APP_VIEW_SIZE;
       const viewIndex = vIndex ? vIndex : 0;
       const payload = {
@@ -82,41 +80,14 @@ export default defineComponent({
       sortOrder: 'Desc',
       viewSize: viewSize,
       viewIndex: viewIndex,
-      facilityId: 'STORE_8'
+      facilityId: this.currentFacility.facilityId
     };
-      await this.store.dispatch('product/getOrderdetails',  payload);
-    },
-    async getPackedOrders (vSize: any, vIndex: any){
-      const viewSize = vSize ? vSize : process.env.VUE_APP_VIEW_SIZE;
-      const viewIndex = vIndex ? vIndex : 0;
-      const payload = {
-      sortBy: 'createdDate',
-      sortOrder: 'Desc',
-      viewSize: viewSize,
-      viewIndex: viewIndex,
-      facilityId: 'STORE_8'
-    };
-      await this.store.dispatch('product/getPackedOrders',  payload);
-    },
-    async quickShipEntireShipGroup (vSize: any, vIndex: any){
-      const viewSize = vSize ? vSize : process.env.VUE_APP_VIEW_SIZE;
-      const viewIndex = vIndex ? vIndex : 0;
-      const payload = {
-      orderId: "NN11843",
-      setPackedOnly: 'Y',
-      dimensionUomId: 'WT_kg',
-      shipmentBoxTypeId: 'YOURPACKNG',
-      weight: '1',
-      weightUomId: 'WT_kg',
-      facilityId: "STORE_8",
-      shipGroupSeqId: "00001"
-    };
-      await this.store.dispatch('product/quickShipEntireShipGroup',  payload);
+      await this.store.dispatch('order/getOrderdetails',  payload);
     },
     async loadMoreOrders (event: any) {
       this.getOrderdetails(
         undefined,
-        Math.ceil(this.products.length / process.env.VUE_APP_VIEW_SIZE).toString()
+        Math.ceil(this.orders.length / process.env.VUE_APP_VIEW_SIZE).toString()
       ).then(() => {
         event.target.complete();
       })
@@ -129,20 +100,15 @@ export default defineComponent({
         element.select();
       })
     },
-    
   },
   computed: {
     ...mapGetters({
-      products: "product/getOrderdetails",
-      packedOrders: "product/getPackedOrders",
-      EntireShipGroup:"product/quickShipEntireShipGroup",
-      isScrollable: "product/isScrollable"
+      orders: "order/getOrderdetails",
+      currentFacility: 'user/getCurrentFacility'
     })
   },
    mounted() {
-    this.getOrderdetails(null, null);
-    this.getPackedOrders(null, null);
-    this.quickShipEntireShipGroup(null, null);
+    this.getOrderdetails();
   },
   setup() {
     const router = useRouter();
