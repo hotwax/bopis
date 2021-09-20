@@ -11,13 +11,13 @@ import emitter from '@/event-bus'
 const actions: ActionTree<orderState, RootState> = {
 
   // Fetch order details
-  async getOrderdetails ({ commit, state }, payload) {
+  async getOrdersList ({ commit, state }, payload) {
     if (payload.viewIndex === 0) emitter.emit("presentLoader");
 
     let resp;
 
     try {
-      resp = await OrderService.fetchOrders(payload)
+      resp = await OrderService.fetchOrdersList(payload)
       // resp.data.docs the number of items in the response
       if (resp.status === 200 && resp.data.count > 0 && !hasError(resp)) {
         let orders = resp.data.docs;
@@ -46,7 +46,7 @@ const actions: ActionTree<orderState, RootState> = {
       if(resp.data._EVENT_MESSAGE_) {
         showToast(translate('Order packed and ready for delivery'));
       } 
-      dispatch('getOrderdetails',{
+      dispatch('getOrdersList',{
         sortBy: 'orderDate',
         sortOrder: 'Desc',
         viewSize: 10,

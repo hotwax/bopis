@@ -10,7 +10,7 @@
         </ion-buttons>
       </ion-toolbar>
       <ion-toolbar>
-        <ion-searchbar @ionFocus="selectSearchBarText($event)" v-model="queryString" :placeholder="$t('Search')" v-on:keyup.enter="getOrderdetails()"></ion-searchbar>
+        <ion-searchbar @ionFocus="selectSearchBarText($event)" v-model="queryString" :placeholder="$t('Search')" v-on:keyup.enter="getOrdersList()"></ion-searchbar>
       </ion-toolbar>
       <ion-toolbar>
         <ion-segment @ionChange="segmentChanged($event)" v-model="segment">
@@ -72,7 +72,7 @@ export default defineComponent({
     }
   },
   methods: {
-    async getOrderdetails (vSize?: any, vIndex?: any){
+    async getOrdersList (vSize?: any, vIndex?: any){
       const viewSize = vSize ? vSize : process.env.VUE_APP_VIEW_SIZE;
       const viewIndex = vIndex ? vIndex : 0;
       const payload = {
@@ -82,10 +82,10 @@ export default defineComponent({
       viewIndex: viewIndex,
       facilityId: this.currentFacility.facilityId
     };
-      await this.store.dispatch('order/getOrderdetails',  payload);
+      await this.store.dispatch('order/getOrdersList',  payload);
     },
     async loadMoreOrders (event: any) {
-      this.getOrderdetails(
+      this.getOrdersList(
         undefined,
         Math.ceil(this.orders.length / process.env.VUE_APP_VIEW_SIZE).toString()
       ).then(() => {
@@ -103,12 +103,12 @@ export default defineComponent({
   },
   computed: {
     ...mapGetters({
-      orders: "order/getOrderdetails",
+      orders: "order/getOrdersList",
       currentFacility: 'user/getCurrentFacility'
     })
   },
    mounted() {
-    this.getOrderdetails();
+    this.getOrdersList();
   },
   setup() {
     const router = useRouter();

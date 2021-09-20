@@ -5,7 +5,7 @@
         <h1>{{order.customerName}}</h1>
         <p>{{order.orderId}}</p>
       </ion-label>
-      <ion-note slot="end">{{ order.orderDate }}</ion-note>
+      <ion-note slot="end">{{ order.orderDate ? $filters.formatDate(order.orderDate, undefined, "DD-MM-YYYY") : '-' }}</ion-note>
     </ion-item>
     <ion-item lines="full" v-for="(item, index) in order.items" :key="index" :item="item" >
       <ion-thumbnail slot="start">

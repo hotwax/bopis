@@ -1,6 +1,6 @@
 import api from '@/api';
 
-const fetchOrders = async (query: any): Promise <any>  => {
+const fetchOrdersList = async (query: any): Promise <any>  => {
   return api({
     url: "wms-orders", 
     method: "post",
@@ -19,6 +19,6 @@ const fetchEntireShipGroup = async (query: any): Promise <any>  => {
 }
 
 export const OrderService = {
-  fetchOrders,
+  fetchOrdersList,
   fetchEntireShipGroup
 }
