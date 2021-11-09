@@ -21,10 +21,10 @@
       <!-- Segment part where we can switch between open and packed orders -->
       <ion-segment @ionChange="segmentChanged($event)" v-model="segmentName">
         <ion-segment-button value="open">
-          <ion-label>OPEN</ion-label>
+          <ion-label>{{ $t("OPEN") }}</ion-label>
         </ion-segment-button>
         <ion-segment-button value="packed">
-          <ion-label>PACKED</ion-label>
+          <ion-label>{{ $t("PACKED") }}</ion-label>
         </ion-segment-button>
       </ion-segment>
     </ion-header>
@@ -58,10 +58,10 @@
                 <ion-label>
                   <h5>BRAND</h5>
                   <h2>Virtual Name</h2>
-                  <p>Color : color</p>
-                  <p>Size : size</p>
+                  <p>{{ $t("Color") }} : color</p>
+                  <p>{{ $t("Size") }} : size</p>
                 </ion-label>
-                <ion-not color="medium">15 in stocks</ion-not>
+                <ion-not color="medium">15 {{ $t("In Stock") }}</ion-not>
               </ion-item>
               <ion-item lines="none">
                 <ion-thumbnail slot="start">
@@ -73,10 +73,10 @@
                 <ion-label>
                   <h5>BRAND</h5>
                   <h2>Virtual Name</h2>
-                  <p>Color : color</p>
-                  <p>Size : size</p>
+                  <p>{{ $t("Color") }} : color</p>
+                  <p>{{ $t("Size") }} : size</p>
                 </ion-label>
-                <ion-not color="medium">15 in stocks</ion-not>
+                <ion-not color="medium">15 {{ $t("In Stock") }}</ion-not>
               </ion-item>
             </ion-list>
           </ion-card-content>
@@ -84,24 +84,24 @@
           <!-- The Phone Number SLot -->
           <ion-item>
             <ion-icon :icon="callOutline" slot="start"></ion-icon>
-            <ion-label>Phone Number</ion-label>
-            <ion-button fill="outline" slot="end" color="medium">COPY</ion-button>
+            <ion-label>{{ $t("Phone Number") }}</ion-label>
+            <ion-button fill="outline" slot="end" color="medium">{{ $t("Copy") }}</ion-button>
           </ion-item>
 
           <!-- The Email Slot -->
           <ion-item lines="none">
             <ion-icon :icon="mailOutline" slot="start"></ion-icon>
-            <ion-label>Email</ion-label>
-            <ion-button fill="outline" slot="end" color="medium">COPY</ion-button>
+            <ion-label>{{ $t("Email") }}</ion-label>
+            <ion-button fill="outline" slot="end" color="medium">{{ $t("Copy") }}</ion-button>
           </ion-item>
 
           <!-- The Footer Slot -->
           <div class="border-top">
             <ion-button fill="clear" size="default" slot="start">
-              READY FOR PICKUP
+              {{ $t("Ready For Pickup") }}
             </ion-button>
           </div>
-          
+
         </ion-card>
       </div>
 
@@ -129,6 +129,12 @@ import {
   IonSegmentButton,
   IonSearchbar,
   IonItem,
+  IonIcon,
+  IonButtons,
+  IonCardHeader,
+  IonThumbnail,
+  IonList
+
 } from "@ionic/vue";
 import { defineComponent, ref } from "vue";
 import { swapVerticalOutline, callOutline, mailOutline } from "ionicons/icons";
@@ -150,6 +156,11 @@ export default defineComponent({
     IonButton,
     IonCardContent,
     IonNote,
+    IonIcon,
+    IonButtons,
+    IonCardHeader,
+    IonThumbnail,
+    IonList
   },
   methods: {
     segmentChanged(ev: CustomEvent) {
@@ -198,6 +209,6 @@ ion-card-subtitle {
 }
 
 ion-note {
-  padding-top: 22px;
+  padding-top: 20px;
 }
 </style>
