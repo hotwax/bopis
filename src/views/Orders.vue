@@ -34,18 +34,18 @@
       <!-- if employer is on the open segment -->
       <div v-if="segmentName == 'open'">
         <ion-card>
-          <!-- This the the header of the card -->
+          <!-- This the the header of the card for the open section-->
           <ion-card-header>
             <ion-item lines="none">
               <ion-label>
                 <h2>Customer Name</h2>
                 <p>Customer Id</p>
               </ion-label>
-              <ion-note slot="end">Vico Turmeric</ion-note>
+              <ion-note slot="end">order time delta</ion-note>
             </ion-item>
           </ion-card-header>
 
-          <!-- The content of the card -->
+          <!-- The content of the card for open section-->
           <ion-card-content class="border-bottom">
             <ion-list>
               <ion-item lines="none">
@@ -81,33 +81,96 @@
             </ion-list>
           </ion-card-content>
 
-          <!-- The Phone Number SLot -->
+          <!-- The Phone Number Slot for the open section-->
           <ion-item>
             <ion-icon :icon="callOutline" slot="start"></ion-icon>
             <ion-label>{{ $t("Phone Number") }}</ion-label>
-            <ion-button fill="outline" slot="end" color="medium">{{ $t("Copy") }}</ion-button>
+            <ion-button fill="outline" slot="end" color="medium">{{
+              $t("Copy")
+            }}</ion-button>
           </ion-item>
 
-          <!-- The Email Slot -->
+          <!-- The Email Slot for the open section-->
           <ion-item lines="none">
             <ion-icon :icon="mailOutline" slot="start"></ion-icon>
             <ion-label>{{ $t("Email") }}</ion-label>
-            <ion-button fill="outline" slot="end" color="medium">{{ $t("Copy") }}</ion-button>
+            <ion-button fill="outline" slot="end" color="medium">{{
+              $t("Copy")
+            }}</ion-button>
           </ion-item>
 
-          <!-- The Footer Slot -->
+          <!-- The Footer Slot for the open section-->
           <div class="border-top">
             <ion-button fill="clear" size="default" slot="start">
               {{ $t("Ready For Pickup") }}
             </ion-button>
           </div>
-
         </ion-card>
       </div>
 
       <!-- if employer is on the packed segment -->
       <div v-if="segmentName == 'packed'">
-        In this the packed segments will be shown
+        <ion-card>
+          <!-- This the the header of the card for the packed section-->
+          <ion-card-header>
+            <ion-item lines="none">
+              <ion-label>
+                <h2>Customer Name</h2>
+                <p>Customer Id</p>
+              </ion-label>
+              <ion-note slot="end" class="caption">
+                <p class="ion-text-right">order time delta</p>
+                <p class="ion-text-right">packed time delta</p>
+              </ion-note>
+            </ion-item>
+          </ion-card-header>
+
+          <!-- The content of the card of the packed section-->
+          <ion-card-content class="border-bottom">
+            <ion-list>
+              <ion-item lines="none">
+                <ion-thumbnail slot="start">
+                  <img
+                    src="https://images.all-free-download.com/images/graphicthumb/fashion_model_portrait_205201.jpg"
+                    alt=""
+                  />
+                </ion-thumbnail>
+                <ion-label>
+                  <h5>BRAND</h5>
+                  <h2>Virtual Name</h2>
+                  <p>{{ $t("Color") }} : color</p>
+                  <p>{{ $t("Size") }} : size</p>
+                </ion-label>
+                <ion-not color="medium">15 {{ $t("In Stock") }}</ion-not>
+              </ion-item>
+            </ion-list>
+          </ion-card-content>
+
+          <!-- The Phone Number Slot of the packed section-->
+          <ion-item>
+            <ion-icon :icon="callOutline" slot="start"></ion-icon>
+            <ion-label>{{ $t("Phone Number") }}</ion-label>
+            <ion-button fill="outline" slot="end" color="medium">{{
+              $t("Copy")
+            }}</ion-button>
+          </ion-item>
+
+          <!-- The Email Slot of the packed section -->
+          <ion-item lines="none">
+            <ion-icon :icon="mailOutline" slot="start"></ion-icon>
+            <ion-label>{{ $t("Email") }}</ion-label>
+            <ion-button fill="outline" slot="end" color="medium">{{
+              $t("Copy")
+            }}</ion-button>
+          </ion-item>
+
+          <!-- The Footer Slot of the packed section-->
+          <div class="border-top">
+            <ion-button fill="clear" size="default" slot="start">
+              {{ $t("Handover") }}
+            </ion-button>
+          </div>
+        </ion-card>
       </div>
     </ion-content>
   </ion-page>
@@ -133,8 +196,7 @@ import {
   IonButtons,
   IonCardHeader,
   IonThumbnail,
-  IonList
-
+  IonList,
 } from "@ionic/vue";
 import { defineComponent, ref } from "vue";
 import { swapVerticalOutline, callOutline, mailOutline } from "ionicons/icons";
@@ -160,7 +222,7 @@ export default defineComponent({
     IonButtons,
     IonCardHeader,
     IonThumbnail,
-    IonList
+    IonList,
   },
   methods: {
     segmentChanged(ev: CustomEvent) {
