@@ -1,7 +1,6 @@
 <template>
   <ion-page>
-    <!-- Designing the Header -->
-
+    
     <ion-header :translucent="true">
       <ion-toolbar>
         <ion-title>{{ $t("Orders") }}</ion-title>
@@ -17,7 +16,6 @@
         <ion-searchbar :placeholder="$t('Search Orders')"></ion-searchbar>
       </ion-toolbar>
 
-      <!-- Segment part where we can switch between open and packed orders -->
       <ion-toolbar>
         <ion-segment @ionChange="segmentChanged($event)" v-model="segmentName" >
           <ion-segment-button value="open">
@@ -31,11 +29,7 @@
     </ion-header>
 
 
-
-    <!-- Content of the app -->
     <ion-content>
-
-      <!-- if employer is on the open segment -->
       <div v-if="segmentName == 'open'">
         <ion-card>
          <ion-card-header>
@@ -165,7 +159,7 @@
         </ion-card>
       </div>
 
-      <!-- if employer is on the packed segment -->
+      
       <div v-if="segmentName == 'packed'">
         <ion-card>
           
@@ -293,9 +287,6 @@ export default defineComponent({
 
 <style scoped>
 
-   /* ion-segment {
-  --background:white;
-}    */
 
 
 </style>
