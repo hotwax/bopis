@@ -1,8 +1,8 @@
 {
   "Catalog":"Catalog",
   "Orders":"Orders",
-  "OPEN":"OPEN",
-  "PACKED":"PACKED",
+  "Open":"Open",
+  "Packed":"Packed",
   "Color":"Color",
   "Size":"Size",
   "In Stock":"In Stock",

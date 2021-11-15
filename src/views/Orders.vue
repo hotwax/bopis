@@ -1,6 +1,5 @@
 <template>
   <ion-page>
-    
     <ion-header :translucent="true">
       <ion-toolbar>
         <ion-title>{{ $t("Orders") }}</ion-title>
@@ -10,24 +9,20 @@
           </ion-button>
         </ion-buttons>
       </ion-toolbar>
-
-     
       <ion-toolbar>
         <ion-searchbar :placeholder="$t('Search Orders')"></ion-searchbar>
       </ion-toolbar>
-
       <ion-toolbar>
-        <ion-segment @ionChange="segmentChanged($event)" v-model="segmentName" >
+        <ion-segment v-model="segmentName" >
           <ion-segment-button value="open">
-            <ion-label>{{ $t("OPEN") }}</ion-label>
+            <ion-label>{{ $t("Open") }}</ion-label>
           </ion-segment-button>
           <ion-segment-button value="packed">
-            <ion-label>{{ $t("PACKED") }}</ion-label>
+            <ion-label>{{ $t("Packed") }}</ion-label>
           </ion-segment-button>
         </ion-segment>
       </ion-toolbar>
     </ion-header>
-
 
     <ion-content>
       <div v-if="segmentName == 'open'">
@@ -41,7 +36,6 @@
               <ion-note slot="end">order time delta</ion-note>
             </ion-item>
           </ion-card-header>
-
           <ion-card-content>
              <ion-list>
               <ion-item lines="none">
@@ -54,7 +48,7 @@
                   <p>{{ $t("Color") }} : color</p>
                   <p>{{ $t("Size") }} : size</p>
                 </ion-label>
-                <ion-note color="secondary">15 {{ $t("In Stock") }}</ion-note>
+                <ion-note color="success">15 {{ $t("In Stock") }}</ion-note>
               </ion-item>
               <ion-item lines="full">
                 <ion-thumbnail slot="start">
@@ -66,11 +60,10 @@
                   <p>{{ $t("Color") }} : color</p>
                   <p>{{ $t("Size") }} : size</p>
                 </ion-label>
-                <ion-note color="secondary">15 {{ $t("In Stock") }}</ion-note>
+                <ion-note color="success">15 {{ $t("In Stock") }}</ion-note>
               </ion-item>
             </ion-list>
           </ion-card-content>
-
           <ion-item>
             <ion-icon :icon="callOutline" slot="start" />
             <ion-label>{{ $t("Phone Number") }}</ion-label>
@@ -78,7 +71,6 @@
               {{ $t("Copy") }}
             </ion-button>
           </ion-item>
-
           <ion-item lines="full">
             <ion-icon :icon="mailOutline" slot="start" />
             <ion-label>{{ $t("Email") }}</ion-label>
@@ -86,15 +78,12 @@
               {{ $t("Copy") }}
             </ion-button>
           </ion-item>
-
           <div>
-            <ion-button fill="clear" slot="start">
+            <ion-button fill="clear">
               {{ $t("Ready For Pickup") }}
             </ion-button>
           </div>
         </ion-card>
-
-
         <ion-card>
          <ion-card-header>
             <ion-item lines="none">
@@ -105,7 +94,6 @@
               <ion-note slot="end">order time delta</ion-note>
             </ion-item>
           </ion-card-header>
-
           <ion-card-content>
              <ion-list>
               <ion-item lines="none">
@@ -118,7 +106,7 @@
                   <p>{{ $t("Color") }} : color</p>
                   <p>{{ $t("Size") }} : size</p>
                 </ion-label>
-                <ion-note color="secondary">15 {{ $t("In Stock") }}</ion-note>
+                <ion-note color="success">15 {{ $t("In Stock") }}</ion-note>
               </ion-item>
               <ion-item lines="full">
                 <ion-thumbnail slot="start">
@@ -130,11 +118,10 @@
                   <p>{{ $t("Color") }} : color</p>
                   <p>{{ $t("Size") }} : size</p>
                 </ion-label>
-                <ion-note color="secondary">15 {{ $t("In Stock") }}</ion-note>
+                <ion-note color="success">15 {{ $t("In Stock") }}</ion-note>
               </ion-item>
             </ion-list>
           </ion-card-content>
-
           <ion-item>
             <ion-icon :icon="callOutline" slot="start" />
             <ion-label>{{ $t("Phone Number") }}</ion-label>
@@ -142,7 +129,6 @@
               {{ $t("Copy") }}
             </ion-button>
           </ion-item>
-
           <ion-item lines="full">
             <ion-icon :icon="mailOutline" slot="start" />
             <ion-label>{{ $t("Email") }}</ion-label>
@@ -150,19 +136,15 @@
               {{ $t("Copy") }}
             </ion-button>
           </ion-item>
-
           <div>
-            <ion-button fill="clear" slot="start">
+            <ion-button fill="clear">
               {{ $t("Ready For Pickup") }}
             </ion-button>
           </div>
         </ion-card>
-      </div>
-
-      
+      </div>      
       <div v-if="segmentName == 'packed'">
         <ion-card>
-          
           <ion-card-header>
             <ion-item lines="none">
               <ion-label>
@@ -175,7 +157,6 @@
               </ion-note>
             </ion-item>
           </ion-card-header>
-
           <ion-card-content>
             <ion-list>
               <ion-item lines="full">
@@ -188,11 +169,10 @@
                   <p>{{ $t("Color") }} : color</p>
                   <p>{{ $t("Size") }} : size</p>
                 </ion-label>
-                <ion-note color="secondary">15 {{ $t("In Stock") }}</ion-note>
+                <ion-note color="success">15 {{ $t("In Stock") }}</ion-note>
               </ion-item>
             </ion-list>
           </ion-card-content>
-
           <ion-item>
             <ion-icon :icon="callOutline" slot="start" />
             <ion-label>{{ $t("Phone Number") }}</ion-label>
@@ -200,7 +180,6 @@
               {{ $t("Copy") }}
             </ion-button>
           </ion-item>
-
           <ion-item lines="full">
             <ion-icon :icon="mailOutline" slot="start" />
             <ion-label>{{ $t("Email") }}</ion-label>
@@ -208,9 +187,8 @@
               {{ $t("Copy") }}
             </ion-button>
           </ion-item>
-
           <div>
-            <ion-button fill="clear" slot="start">
+            <ion-button fill="clear">
               {{ $t("Handover") }}
             </ion-button>
           </div>
@@ -267,11 +245,6 @@ export default defineComponent({
     IonCardHeader,
     IonThumbnail,
     IonList,
-  },
-  methods: {
-    segmentChanged(ev: CustomEvent) {
-      console.log("Segment changed", ev);
-    },
   },
   setup() {
     const segmentName = ref("open");
