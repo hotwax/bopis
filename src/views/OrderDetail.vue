@@ -4,19 +4,19 @@
       <ion-buttons slot="start">
         <ion-back-button default-href="home"></ion-back-button>
       </ion-buttons>
-      <ion-title>Order details</ion-title>
+      <ion-title>{{$t("Order details")}}</ion-title>
     </ion-toolbar>
   </ion-header>
   <ion-content>
     <ion-list>
       <ion-item>
         <ion-label>
-          <h2>Customer name</h2>
+          <h2>{{$t("Customer name")}}</h2>
 
           <!-- <p slot="end"> order time delta</p> -->
           <p>Order ID</p>
         </ion-label>
-        <ion-note slot="end">order time delta</ion-note>
+        <ion-note slot="end">{{$t("order time delta")}}</ion-note>
       </ion-item>
     </ion-list>
     <!-- The Phone Number SLot -->
@@ -69,15 +69,19 @@
                </ion-card-content>
           </ion-card>
          
-            <p>This order cannot be split. If you cannot fulfill any item, customer name will be sent an email with alternate fulfillment options and this order will be removed from your dashboard.</p>
-         
+            <!-- <p>This order cannot be split. If you cannot fulfill any item, customer name will be sent an email with alternate fulfillment options and this order will be removed from your dashboard.</p> -->
+            <ion-text>
+         <p>{{$t("This order cannot be split. If you cannot fulfill any item, <customer name> will be sent an email with alternate fulfillment options and this order will be removed from your dashboard.")}}</p>
+
+            </ion-text>
             <ion-button expand="block" color="danger" fill="outline" >{{$t("REJECT ORDER")}}</ion-button>
-               <ion-item>
+               <ion-badge>
+                 
                <ion-icon :icon="informationCircleOutline" slot="start"></ion-icon>
               <ion-label>
-                Learn more about unfillable items
+               {{$t(" Learn more about unfillable items")}}
               </ion-label>
-            </ion-item>
+            </ion-badge>
         
 
 
@@ -95,15 +99,34 @@ import {
   IonLabel,
   IonBackButton,
   IonButtons,
-  IonTitle,IonSelect,IonCheckbox,IonButton,IonCardContent,IonThumbnail,IonSelectOption,IonIcon,
+  IonTitle,
+  IonSelect,
+  IonCheckbox,
+  IonButton,
+  IonCardContent,
+  IonThumbnail,
+  IonSelectOption,
+  IonIcon,IonText,IonCard,
 } from "@ionic/vue";
 import { defineComponent } from "vue";
-import { swapVerticalOutline, callOutline, mailOutline ,informationCircleOutline} from "ionicons/icons";
+import {
+  swapVerticalOutline,
+  callOutline,
+  mailOutline,
+  informationCircleOutline,
+} from "ionicons/icons";
 
 export default defineComponent({
   name: "OrderDetail",
   components: {
-    IonHeader,IonSelect,IonCheckbox,IonButton,IonCardContent,IonThumbnail,IonSelectOption,IonIcon,
+    IonHeader,IonText,IonCard,
+    IonSelect,
+    IonCheckbox,
+    IonButton,
+    IonCardContent,
+    IonThumbnail,
+    IonSelectOption,
+    IonIcon,
     IonToolbar,
     IonList,
     IonItem,
@@ -113,18 +136,25 @@ export default defineComponent({
     IonBackButton,
     IonButtons,
     IonTitle,
-  },setup(){
-    return{
-      swapVerticalOutline, callOutline, mailOutline ,informationCircleOutline
-    }
-  }
+  },
+  setup() {
+    return {
+      swapVerticalOutline,
+      callOutline,
+      mailOutline,
+      informationCircleOutline,
+    };
+  },
 });
 </script>
 <style scoped>
-ion-thumbnail >img{
+ion-thumbnail > img {
   object-fit: contain;
 }
-ion-select{
+ion-select {
   max-width: 100%;
 }
+/* ion-text{
+width: 50%;
+} */
 </style>
