@@ -27,115 +27,112 @@
     <ion-content>
       <div v-if="segmentName == 'open'">
         <ion-card>
-         <ion-card-header>
+          <ion-list>
             <ion-item lines="none">
               <ion-label>
-                <h2>Customer Name</h2>
+                <h1>Customer Name</h1>
                 <p>Customer Id</p>
               </ion-label>
-              <ion-note slot="end">order time delta</ion-note>
+              <ion-note>
+                <p>order time delta</p>
+              </ion-note>
             </ion-item>
-          </ion-card-header>
-          <ion-card-content>
-             <ion-list>
-              <ion-item lines="none">
-                <ion-thumbnail slot="start">
-                  <img src="https://images.all-free-download.com/images/graphicthumb/fashion_model_portrait_205201.jpg"/>
-                </ion-thumbnail>
-                <ion-label>
-                  <h5>BRAND</h5>
-                  <h2>Virtual Name</h2>
-                  <p>{{ $t("Color") }} : color</p>
-                  <p>{{ $t("Size") }} : size</p>
-                </ion-label>
-                <ion-note color="success">15 {{ $t("In Stock") }}</ion-note>
-              </ion-item>
-              <ion-item lines="full">
-                <ion-thumbnail slot="start">
-                  <img src="https://images.all-free-download.com/images/graphicthumb/fashion_model_portrait_205201.jpg" />
-                </ion-thumbnail>
-                <ion-label>
-                  <h5>BRAND</h5>
-                  <h2>Virtual Name</h2>
-                  <p>{{ $t("Color") }} : color</p>
-                  <p>{{ $t("Size") }} : size</p>
-                </ion-label>
-                <ion-note color="success">15 {{ $t("In Stock") }}</ion-note>
-              </ion-item>
-            </ion-list>
-          </ion-card-content>
-          <ion-item>
-            <ion-icon :icon="callOutline" slot="start" />
-            <ion-label>{{ $t("Phone Number") }}</ion-label>
-            <ion-button fill="outline" slot="end" color="medium">
+            <ion-item lines="none">
+              <ion-thumbnail slot="start">
+                <img src="https://images.all-free-download.com/images/graphicthumb/fashion_model_portrait_205201.jpg"/>
+              </ion-thumbnail>
+              <ion-label>
+                <h5>BRAND</h5>
+                <h2>Virtual Name</h2>
+                <p>{{ $t("Color") }} : color</p>
+                <p>{{ $t("Size") }} : size</p>
+              </ion-label>
+              <ion-note color="success">15 {{ $t("In Stock") }}</ion-note>
+            </ion-item>
+            <ion-item lines="full">
+              <ion-thumbnail slot="start">
+                <img src="https://images.all-free-download.com/images/graphicthumb/fashion_model_portrait_205201.jpg"/>
+              </ion-thumbnail>
+              <ion-label>
+                <h5>BRAND</h5>
+                <h2>Virtual Name</h2>
+                <p>{{ $t("Color") }} : color</p>
+                <p>{{ $t("Size") }} : size</p>
+              </ion-label>
+              <ion-note color="success">15 {{ $t("In Stock") }}</ion-note>
+            </ion-item>
+            <ion-item>
+              <ion-icon :icon="callOutline" slot="start" />
+              <ion-label>phone number</ion-label>
+              <ion-button fill="outline" slot="end" color="medium">
               {{ $t("Copy") }}
-            </ion-button>
-          </ion-item>
-          <ion-item lines="full">
-            <ion-icon :icon="mailOutline" slot="start" />
-            <ion-label>{{ $t("Email") }}</ion-label>
-            <ion-button fill="outline" slot="end" color="medium">
-              {{ $t("Copy") }}
-            </ion-button>
-          </ion-item>
+              </ion-button>
+            </ion-item>
+            <ion-item lines="full">
+              <ion-icon :icon="mailOutline" slot="start" />
+              <ion-label>email</ion-label>
+              <ion-button fill="outline" slot="end" color="medium">
+                {{ $t("Copy") }}
+              </ion-button>
+            </ion-item>
+          </ion-list>
           <div>
             <ion-button fill="clear">
               {{ $t("Ready For Pickup") }}
             </ion-button>
           </div>
         </ion-card>
+
         <ion-card>
-         <ion-card-header>
+          <ion-list>
             <ion-item lines="none">
               <ion-label>
-                <h2>Customer Name</h2>
+                <h1>Customer Name</h1>
                 <p>Customer Id</p>
               </ion-label>
-              <ion-note slot="end">order time delta</ion-note>
+              <ion-note>
+                <p>order time delta</p>
+              </ion-note>
+            </ion-item>  
+            <ion-item lines="none">
+              <ion-thumbnail slot="start">
+                <img src="https://images.all-free-download.com/images/graphicthumb/fashion_model_portrait_205201.jpg"/>
+              </ion-thumbnail>
+              <ion-label>
+                <h5>BRAND</h5>
+                <h2>Virtual Name</h2>
+                <p>{{ $t("Color") }} : color</p>
+                <p>{{ $t("Size") }} : size</p>
+              </ion-label>
+              <ion-note color="success">15 {{ $t("In Stock") }}</ion-note>
             </ion-item>
-          </ion-card-header>
-          <ion-card-content>
-             <ion-list>
-              <ion-item lines="none">
-                <ion-thumbnail slot="start">
-                  <img src="https://images.all-free-download.com/images/graphicthumb/fashion_model_portrait_205201.jpg"/>
-                </ion-thumbnail>
-                <ion-label>
-                  <h5>BRAND</h5>
-                  <h2>Virtual Name</h2>
-                  <p>{{ $t("Color") }} : color</p>
-                  <p>{{ $t("Size") }} : size</p>
-                </ion-label>
-                <ion-note color="success">15 {{ $t("In Stock") }}</ion-note>
-              </ion-item>
-              <ion-item lines="full">
-                <ion-thumbnail slot="start">
-                  <img src="https://images.all-free-download.com/images/graphicthumb/fashion_model_portrait_205201.jpg" />
-                </ion-thumbnail>
-                <ion-label>
-                  <h5>BRAND</h5>
-                  <h2>Virtual Name</h2>
-                  <p>{{ $t("Color") }} : color</p>
-                  <p>{{ $t("Size") }} : size</p>
-                </ion-label>
-                <ion-note color="success">15 {{ $t("In Stock") }}</ion-note>
-              </ion-item>
-            </ion-list>
-          </ion-card-content>
-          <ion-item>
-            <ion-icon :icon="callOutline" slot="start" />
-            <ion-label>{{ $t("Phone Number") }}</ion-label>
-            <ion-button fill="outline" slot="end" color="medium">
-              {{ $t("Copy") }}
-            </ion-button>
-          </ion-item>
-          <ion-item lines="full">
-            <ion-icon :icon="mailOutline" slot="start" />
-            <ion-label>{{ $t("Email") }}</ion-label>
-            <ion-button fill="outline" slot="end" color="medium">
-              {{ $t("Copy") }}
-            </ion-button>
-          </ion-item>
+            <ion-item lines="full">
+              <ion-thumbnail slot="start">
+                <img src="https://images.all-free-download.com/images/graphicthumb/fashion_model_portrait_205201.jpg"/>
+              </ion-thumbnail>
+              <ion-label>
+                <h5>BRAND</h5>
+                <h2>Virtual Name</h2>
+                <p>{{ $t("Color") }} : color</p>
+                <p>{{ $t("Size") }} : size</p>
+              </ion-label>
+              <ion-note color="success">15 {{ $t("In Stock") }}</ion-note>
+            </ion-item>
+            <ion-item>
+              <ion-icon :icon="callOutline" slot="start" />
+              <ion-label>phone number</ion-label>
+              <ion-button fill="outline" slot="end" color="medium">
+                {{ $t("Copy") }}
+              </ion-button>
+            </ion-item>
+            <ion-item lines="full">
+              <ion-icon :icon="mailOutline" slot="start" />
+              <ion-label>email</ion-label>
+              <ion-button fill="outline" slot="end" color="medium">
+                {{ $t("Copy") }}
+              </ion-button>
+            </ion-item>
+          </ion-list>
           <div>
             <ion-button fill="clear">
               {{ $t("Ready For Pickup") }}
@@ -145,51 +142,58 @@
       </div>      
       <div v-if="segmentName == 'packed'">
         <ion-card>
-          <ion-card-header>
+          <ion-list>
             <ion-item lines="none">
               <ion-label>
-                <h2>Customer Name</h2>
+                <h1>Customer Name</h1>
                 <p>Customer Id</p>
               </ion-label>
-              <ion-note slot="end">
+              <ion-note>
                 <p>order time delta</p>
-                <p>packed time delta</p>
               </ion-note>
+            </ion-item>  
+            <ion-item lines="none">
+              <ion-thumbnail slot="start">
+                <img src="https://images.all-free-download.com/images/graphicthumb/fashion_model_portrait_205201.jpg"/>
+              </ion-thumbnail>
+              <ion-label>
+                <h5>BRAND</h5>
+                <h2>Virtual Name</h2>
+                <p>{{ $t("Color") }} : color</p>
+                <p>{{ $t("Size") }} : size</p>
+              </ion-label>
+              <ion-note color="success">15 {{ $t("In Stock") }}</ion-note>
             </ion-item>
-          </ion-card-header>
-          <ion-card-content>
-            <ion-list>
-              <ion-item lines="full">
-                <ion-thumbnail slot="start">
-                  <img src="https://images.all-free-download.com/images/graphicthumb/fashion_model_portrait_205201.jpg"/>
-                </ion-thumbnail>
-                <ion-label>
-                  <h5>BRAND</h5>
-                  <h2>Virtual Name</h2>
-                  <p>{{ $t("Color") }} : color</p>
-                  <p>{{ $t("Size") }} : size</p>
-                </ion-label>
-                <ion-note color="success">15 {{ $t("In Stock") }}</ion-note>
-              </ion-item>
-            </ion-list>
-          </ion-card-content>
-          <ion-item>
-            <ion-icon :icon="callOutline" slot="start" />
-            <ion-label>{{ $t("Phone Number") }}</ion-label>
-            <ion-button fill="outline" slot="end" color="medium">
-              {{ $t("Copy") }}
-            </ion-button>
-          </ion-item>
-          <ion-item lines="full">
-            <ion-icon :icon="mailOutline" slot="start" />
-            <ion-label>{{ $t("Email") }}</ion-label>
-            <ion-button fill="outline" slot="end" color="medium">
-              {{ $t("Copy") }}
-            </ion-button>
-          </ion-item>
+            <ion-item lines="full">
+              <ion-thumbnail slot="start">
+                <img src="https://images.all-free-download.com/images/graphicthumb/fashion_model_portrait_205201.jpg"/>
+              </ion-thumbnail>
+              <ion-label>
+                <h5>BRAND</h5>
+                <h2>Virtual Name</h2>
+                <p>{{ $t("Color") }} : color</p>
+                <p>{{ $t("Size") }} : size</p>
+              </ion-label>
+              <ion-note color="success">15 {{ $t("In Stock") }}</ion-note>
+            </ion-item>
+            <ion-item>
+              <ion-icon :icon="callOutline" slot="start" />
+              <ion-label>phone number</ion-label>
+              <ion-button fill="outline" slot="end" color="medium">
+                {{ $t("Copy") }}
+              </ion-button>
+            </ion-item>
+            <ion-item lines="full">
+              <ion-icon :icon="mailOutline" slot="start" />
+              <ion-label>email</ion-label>
+              <ion-button fill="outline" slot="end" color="medium">
+                {{ $t("Copy") }}
+              </ion-button>
+            </ion-item>
+          </ion-list>
           <div>
             <ion-button fill="clear">
-              {{ $t("Handover") }}
+              {{ $t("Ready For Pickup") }}
             </ion-button>
           </div>
         </ion-card>
@@ -205,7 +209,6 @@ import {
   IonPage,
   IonCard,
   IonNote,
-  IonCardContent,
   IonLabel,
   IonButton,
   IonTitle,
@@ -216,7 +219,6 @@ import {
   IonItem,
   IonIcon,
   IonButtons,
-  IonCardHeader,
   IonThumbnail,
   IonList,
 } from "@ionic/vue";
@@ -238,11 +240,9 @@ export default defineComponent({
     IonItem,
     IonLabel,
     IonButton,
-    IonCardContent,
     IonNote,
     IonIcon,
     IonButtons,
-    IonCardHeader,
     IonThumbnail,
     IonList,
   },
@@ -260,6 +260,8 @@ export default defineComponent({
 
 <style scoped>
 
-
+.margin-bottom{
+  margin-bottom: 1px solid black;
+}
 
 </style>
