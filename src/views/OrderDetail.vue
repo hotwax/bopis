@@ -46,6 +46,8 @@
                     src="../assets/images/image1.jpeg"
                     alt=""
                   />
+                  <!-- <ion-img src="../assets/images/image1.jpeg"></ion-img> -->
+                  
                 </ion-thumbnail>
                 <ion-label>
                   <h5>BRAND</h5>
@@ -75,13 +77,23 @@
 
             </ion-text>
             <ion-button expand="block" color="danger" fill="outline" >{{$t("REJECT ORDER")}}</ion-button>
-               <ion-badge>
+               <ion-card>
+                 <ion-card-header>
+                   <ion-card-subtitle>
                  
-               <ion-icon :icon="informationCircleOutline" slot="start"></ion-icon>
-              <ion-label>
-               {{$t(" Learn more about unfillable items")}}
-              </ion-label>
-            </ion-badge>
+                     
+
+                  <ion-item>
+      <ion-icon :icon="informationCircleOutline"  slot="start"></ion-icon>
+      <ion-label>{{$t(" Learn more about unfillable items")}}</ion-label>
+    </ion-item>
+             
+               
+                   </ion-card-subtitle>
+               
+             
+              </ion-card-header>
+            </ion-card>
         
 
 
