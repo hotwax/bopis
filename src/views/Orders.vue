@@ -39,7 +39,7 @@
             </ion-item>
             <ion-item lines="none">
               <ion-thumbnail slot="start">
-                <img src="https://images.all-free-download.com/images/graphicthumb/fashion_model_portrait_205201.jpg"/>
+                <Image :src="'https://images.all-free-download.com/images/graphicthumb/fashion_model_portrait_205201.jpg'" />
               </ion-thumbnail>
               <ion-label>
                 <h5>BRAND</h5>
@@ -51,7 +51,7 @@
             </ion-item>
             <ion-item lines="full">
               <ion-thumbnail slot="start">
-                <img src="https://images.all-free-download.com/images/graphicthumb/fashion_model_portrait_205201.jpg"/>
+                <Image :src="'https://images.all-free-download.com/images/graphicthumb/fashion_model_portrait_205201.jpg'" />
               </ion-thumbnail>
               <ion-label>
                 <h5>BRAND</h5>
@@ -94,7 +94,7 @@
             </ion-item>  
             <ion-item lines="none">
               <ion-thumbnail slot="start">
-                <img src="https://images.all-free-download.com/images/graphicthumb/fashion_model_portrait_205201.jpg"/>
+                <Image :src="'https://images.all-free-download.com/images/graphicthumb/fashion_model_portrait_205201.jpg'" />
               </ion-thumbnail>
               <ion-label>
                 <h5>BRAND</h5>
@@ -106,7 +106,7 @@
             </ion-item>
             <ion-item lines="full">
               <ion-thumbnail slot="start">
-                <img src="https://images.all-free-download.com/images/graphicthumb/fashion_model_portrait_205201.jpg"/>
+                <Image :src="'https://images.all-free-download.com/images/graphicthumb/fashion_model_portrait_205201.jpg'" />
               </ion-thumbnail>
               <ion-label>
                 <h5>BRAND</h5>
@@ -151,7 +151,7 @@
             </ion-item>  
             <ion-item lines="none">
               <ion-thumbnail slot="start">
-                <img src="https://images.all-free-download.com/images/graphicthumb/fashion_model_portrait_205201.jpg"/>
+                <Image :src="'https://images.all-free-download.com/images/graphicthumb/fashion_model_portrait_205201.jpg'" />
               </ion-thumbnail>
               <ion-label>
                 <h5>BRAND</h5>
@@ -163,7 +163,7 @@
             </ion-item>
             <ion-item lines="full">
               <ion-thumbnail slot="start">
-                <img src="https://images.all-free-download.com/images/graphicthumb/fashion_model_portrait_205201.jpg"/>
+                <Image :src="'https://images.all-free-download.com/images/graphicthumb/fashion_model_portrait_205201.jpg'" />
               </ion-thumbnail>
               <ion-label>
                 <h5>BRAND</h5>
@@ -218,6 +218,7 @@ import {
   IonToolbar,
 } from "@ionic/vue";
 import { defineComponent, ref } from "vue";
+import Image from './../components/Image.vue'
 import { swapVerticalOutline, callOutline, mailOutline } from "ionicons/icons";
 
 export default defineComponent({
@@ -240,6 +241,7 @@ export default defineComponent({
     IonThumbnail,
     IonTitle,
     IonToolbar,
+    Image
   },
   setup() {
     const segmentName = ref("open");

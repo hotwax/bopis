@@ -7,7 +7,7 @@
     </ion-header>
     
     <ion-content :fullscreen="true">
-   
+      
     </ion-content>
   </ion-page>
 </template>
