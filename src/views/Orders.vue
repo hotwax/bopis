@@ -146,6 +146,7 @@
               </ion-label>
               <ion-note>
                 <p>order time delta</p>
+                <p>packed time delta</p>
               </ion-note>
             </ion-item>  
             <ion-item lines="none">
