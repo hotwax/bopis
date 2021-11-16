@@ -65,7 +65,7 @@
               <ion-icon :icon="callOutline" slot="start" />
               <ion-label>phone number</ion-label>
               <ion-button fill="outline" slot="end" color="medium">
-              {{ $t("Copy") }}
+                {{ $t("Copy") }}
               </ion-button>
             </ion-item>
             <ion-item lines="full">
@@ -76,11 +76,9 @@
               </ion-button>
             </ion-item>
           </ion-list>
-          <div>
-            <ion-button fill="clear">
-              {{ $t("Ready For Pickup") }}
-            </ion-button>
-          </div>
+          <ion-button fill="clear">
+            {{ $t("Ready For Pickup") }}
+          </ion-button>
         </ion-card>
 
         <ion-card>
@@ -133,11 +131,9 @@
               </ion-button>
             </ion-item>
           </ion-list>
-          <div>
-            <ion-button fill="clear">
-              {{ $t("Ready For Pickup") }}
-            </ion-button>
-          </div>
+          <ion-button fill="clear">
+            {{ $t("Ready For Pickup") }}
+          </ion-button>
         </ion-card>
       </div>      
       <div v-if="segmentName == 'packed'">
@@ -191,11 +187,9 @@
               </ion-button>
             </ion-item>
           </ion-list>
-          <div>
-            <ion-button fill="clear">
-              {{ $t("Ready For Pickup") }}
-            </ion-button>
-          </div>
+          <ion-button fill="clear">
+            {{ $t("Handover") }}
+          </ion-button>
         </ion-card>
       </div>
     </ion-content>
@@ -204,23 +198,23 @@
 
 <script lang="ts">
 import {
+  IonButton,
+  IonButtons,
+  IonCard,
   IonContent,
   IonHeader,
-  IonPage,
-  IonCard,
-  IonNote,
+  IonIcon,
+  IonItem,
   IonLabel,
-  IonButton,
-  IonTitle,
-  IonToolbar,
+  IonList,
+  IonNote,
+  IonPage,
+  IonSearchbar,
   IonSegment,
   IonSegmentButton,
-  IonSearchbar,
-  IonItem,
-  IonIcon,
-  IonButtons,
   IonThumbnail,
-  IonList,
+  IonTitle,
+  IonToolbar,
 } from "@ionic/vue";
 import { defineComponent, ref } from "vue";
 import { swapVerticalOutline, callOutline, mailOutline } from "ionicons/icons";
@@ -228,40 +222,32 @@ import { swapVerticalOutline, callOutline, mailOutline } from "ionicons/icons";
 export default defineComponent({
   name: 'Orders',
   components: {
+    IonButton,
+    IonButtons,
+    IonCard,
     IonContent,
     IonHeader,
-    IonPage,
-    IonTitle,
-    IonToolbar,
-    IonSegmentButton,
-    IonSegment,
-    IonSearchbar,
-    IonCard,
+    IonIcon,
     IonItem,
     IonLabel,
-    IonButton,
-    IonNote,
-    IonIcon,
-    IonButtons,
-    IonThumbnail,
     IonList,
+    IonNote,
+    IonPage,
+    IonSearchbar,
+    IonSegment,
+    IonSegmentButton,
+    IonThumbnail,
+    IonTitle,
+    IonToolbar,
   },
   setup() {
     const segmentName = ref("open");
     return {
-      swapVerticalOutline,
-      segmentName,
       callOutline,
       mailOutline,
+      segmentName,
+      swapVerticalOutline,
     };
   },
 });
 </script>
-
-<style scoped>
-
-.margin-bottom{
-  margin-bottom: 1px solid black;
-}
-
-</style>
