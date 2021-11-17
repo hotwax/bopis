@@ -4,6 +4,8 @@ import Login from '@/views/Login.vue'
 import Settings from "@/views/Settings.vue"
 import store from '@/store'
 import Tabs from '@/views/Tabs.vue'
+import OrderDetail from '@/views/OrderDetail.vue'
+
 
 const authGuard = (to: any, from: any, next: any) => {
   if (store.getters['user/isAuthenticated']) {
@@ -60,6 +62,11 @@ const routes: Array<RouteRecordRaw> = [
     name: "Settings",
     component: Settings,
     beforeEnter: authGuard
+  },{
+    path: "/orderdetail",
+    name: "orderdetail",
+    component: OrderDetail,
+    
   }
 ]
 
