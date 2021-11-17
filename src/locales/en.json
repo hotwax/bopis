@@ -27,7 +27,7 @@
   "Color":"Color",
   "In Stock":"In Stock",
   "UnFillable":"UnFillable",
-  "This order cannot be split. If you cannot fulfill any item, <customer name> will be sent an email with alternate fulfillment options and this order will be removed from your dashboard.":"This order cannot be split. If you cannot fulfill any item, <customer name> will be sent an email with alternate fulfillment options and this order will be removed from your dashboard.",
+  "This order cannot be split. If you cannot fulfill any item, customer name will be sent an email with alternate fulfillment options and this order will be removed from your dashboard.":"This order cannot be split. If you cannot fulfill any item, customer name will be sent an email with alternate fulfillment options and this order will be removed from your dashboard.",
   "REJECT ORDER":"REJECT ORDER",
   " Learn more about unfillable items":" Learn more about unfillable items"
 
