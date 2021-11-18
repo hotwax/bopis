@@ -5,7 +5,7 @@
         <ion-title>{{ $t("Catalog") }}</ion-title>
       </ion-toolbar>
     </ion-header>
-    
+   
     <ion-content :fullscreen="true">
     
     </ion-content>
