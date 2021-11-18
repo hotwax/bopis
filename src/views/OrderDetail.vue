@@ -72,25 +72,24 @@
 
 <script>
 import {
-  IonButton,
   IonBackButton,
+  IonButton, 
   IonButtons,
   IonCard,
   IonContent,
-  IonCheckbox,
   IonCardContent,
+  IonCheckbox, 
   IonHeader,
-  IonItem,
   IonIcon,
-  IonList,
+  IonItem, 
   IonLabel,
+  IonList,
   IonNote,
-  IonSelectOption,
   IonSelect,
-  IonThumbnail,
-  IonToolbar,
+  IonSelectOption,
   IonTitle,
- 
+  IonThumbnail,
+  IonToolbar
 } from "@ionic/vue";
 import { defineComponent } from "vue";
 import {
@@ -104,26 +103,25 @@ import Image from "@/components/Image.vue";
 export default defineComponent({
   name: "OrderDetail",
   components: {
-   IonButton,
-   IonBackButton,
-   IonButtons,
-   IonCard,
-   Image, 
-   IonContent,
-   IonCheckbox,
-   IonCardContent,
-   IonHeader,
-   IonItem,
-   IonIcon,
-   IonList,
-   IonLabel,
-   IonNote,
-   IonSelectOption,
-   IonSelect,
-   IonThumbnail,
-   IonToolbar,
-   IonTitle,
-
+    Image,
+    IonBackButton,
+    IonButton, 
+    IonButtons,
+    IonCard,
+    IonContent,
+    IonCardContent,
+    IonCheckbox, 
+    IonHeader,
+    IonIcon,
+    IonItem, 
+    IonLabel,
+    IonList,
+    IonNote,
+    IonSelect,
+    IonSelectOption,
+    IonTitle,
+    IonThumbnail,
+    IonToolbar
   },
   setup() {
     return {
