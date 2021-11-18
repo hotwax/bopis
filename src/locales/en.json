@@ -1,10 +1,14 @@
 {
-  "Blank": "Blank",
   "Catalog":"Catalog",
-  "Click the backdrop to dismiss.": "Click the backdrop to dismiss.",
   "Orders":"Orders",
-  "More":"More",
-  "Ready to create an app?": "Ready to create an app?",
-  "Start with Ionic": "Start with Ionic",
-  "UI Components": "UI Components"
+  "Open":"Open",
+  "Packed":"Packed",
+  "Color":"Color",
+  "Size":"Size",
+  "In Stock":"In Stock",
+  "Copy":"Copy",
+  "Search Orders":"Search Orders",
+  "Handover":"Handover",
+  "Ready For Pickup":"Ready For Pickup",
+  "More":"More"
 }
