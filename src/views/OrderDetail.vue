@@ -21,17 +21,17 @@
       <ion-icon :icon="callOutline" slot="start"></ion-icon>
       <ion-label>Phone Number</ion-label>
       <ion-button fill="outline" slot="end" color="medium">
-        {{$t ("Copy") }}
-        </ion-button>
+        {{ $t("Copy") }}
+      </ion-button>
     </ion-item>
     <ion-item lines="none">
       <ion-icon :icon="mailOutline" slot="start"></ion-icon>
       <ion-label>Email</ion-label>
       <ion-button fill="outline" slot="end" color="medium">
         {{ $t( "Copy") }}
-        </ion-button>
+      </ion-button>
     </ion-item>
-    <!-- Card -->
+  
     <ion-card>
       <ion-card-content class="border-bottom">
         <ion-item lines="full">
@@ -61,12 +61,12 @@
       </p>
     </ion-text>
     <ion-button expand="block" color="danger" fill="outline">
-      {{ $t("REJECT ORDER") }}
-      </ion-button>
+      {{ $t("Reject Order") }}
+    </ion-button>
     <ion-card>
       <ion-item lines="none">
         <ion-icon :icon="informationCircleOutline" slot="start"></ion-icon>
-        <ion-label>{{ $t(" Learn more about unfillable items") }}</ion-label>
+        <ion-label>{{ $t("Learn more about unfillable items") }}</ion-label>
       </ion-item>
     </ion-card>
   </ion-content>
