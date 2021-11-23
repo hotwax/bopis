@@ -220,6 +220,7 @@ import {
 import { defineComponent, ref } from "vue";
 import Image from './../components/Image.vue'
 import { swapVerticalOutline, callOutline, mailOutline } from "ionicons/icons";
+import { mapGetters, useStore } from 'vuex'
 
 export default defineComponent({
   name: 'Orders',
@@ -243,13 +244,33 @@ export default defineComponent({
     IonToolbar,
     Image
   },
+  methods: {
+    async getOrders(vSize: any, vIndex: any){
+      const viewSize = vSize ? vSize : process.env.VUE_APP_VIEW_SIZE;
+      const viewIndex = vIndex ? vIndex : 0;
+      const payload = {
+        sortBy: 'orderDate',
+        sortOrder: 'Desc',
+        viewSize: vSize,
+        viewIndex: vIndex,
+        // facilityId: this.currentStoreData.externalFacilityId
+      }
+
+      await this.store.dispatch("orders/getOrder", payload);
+
+
+    }
+  },
   setup() {
     const segmentName = ref("open");
+    const store = useStore(); 
+
     return {
       callOutline,
       mailOutline,
       segmentName,
       swapVerticalOutline,
+      store
     };
   },
 });
