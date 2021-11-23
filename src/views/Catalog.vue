@@ -9,28 +9,27 @@
       <ion-searchbar></ion-searchbar>
       <ion-row>
         <ion-col>
-          <ion-card>
-            
-              <ion-card-header>
-                <img src="https://images.unsplash.com/photo-1523275335684-37898b6baf30?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxzZWFyY2h8Mnx8cHJvZHVjdHxlbnwwfHwwfHw%3D&w=1000&q=80" />
-                <ion-label>
-                  <h2 class="black-text" style="color: black;">Brand</h2>
-                  <h2 class="black-text" style="color: black;">Parent Name</h2>
-                  <p>$Sale price</p>
-                </ion-label>
-              </ion-card-header>             
+          <ion-card>            
+            <ion-card-header>
+              <img src="https://images.unsplash.com/photo-1523275335684-37898b6baf30?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxzZWFyY2h8Mnx8cHJvZHVjdHxlbnwwfHwwfHw%3D&w=1000&q=80" />
+              <ion-label>
+                <h2 class="black-text" style="color: black;">Brand</h2>
+                <h2 class="black-text" style="color: black;">Parent Name</h2>
+                <p>$Sale price</p>
+              </ion-label>
+            </ion-card-header>             
           </ion-card>  
         </ion-col>
         <ion-col> 
           <ion-card>
-              <ion-card-header>
-                <img src="https://images.unsplash.com/photo-1523275335684-37898b6baf30?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxzZWFyY2h8Mnx8cHJvZHVjdHxlbnwwfHwwfHw%3D&w=1000&q=80" />
-                <ion-label>
-                  <h2 class="black-text" style="color: black;">Brand</h2>
-                  <h2 class="black-text" style="color: black;">Parent Name</h2>
-                  <p>$Sale price</p>
-                </ion-label>
-              </ion-card-header>            
+            <ion-card-header>
+              <img src="https://images.unsplash.com/photo-1523275335684-37898b6baf30?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxzZWFyY2h8Mnx8cHJvZHVjdHxlbnwwfHwwfHw%3D&w=1000&q=80" />
+              <ion-label>
+                <h2 class="black-text" style="color: black;">Brand</h2>
+                <h2 class="black-text" style="color: black;">Parent Name</h2>
+                <p>$Sale price</p>
+              </ion-label>
+            </ion-card-header>            
           </ion-card>  
         </ion-col>    
       </ion-row>      
