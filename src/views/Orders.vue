@@ -26,7 +26,11 @@
 
     <ion-content>
       <div v-if="segmentName == 'open'">
-        <ion-card>
+        <OrderItemCard />
+        <OrderItemCard />
+        <OrderItemCard />
+        <OrderItemCard v-for="order in orders" :key="order.orderId" :order="order" />
+        <!-- <ion-card>
           <ion-list>
             <ion-item lines="none">
               <ion-label>
@@ -134,7 +138,7 @@
           <ion-button fill="clear">
             {{ $t("Ready For Pickup") }}
           </ion-button>
-        </ion-card>
+        </ion-card> -->
       </div>      
       <div v-if="segmentName == 'packed'">
         <ion-card>
@@ -219,6 +223,7 @@ import {
 } from "@ionic/vue";
 import { defineComponent, ref } from "vue";
 import Image from './../components/Image.vue'
+import OrderItemCard from './../components/OrderItemCard.vue'
 import { swapVerticalOutline, callOutline, mailOutline } from "ionicons/icons";
 import { mapGetters, useStore } from 'vuex'
 
@@ -242,10 +247,18 @@ export default defineComponent({
     IonThumbnail,
     IonTitle,
     IonToolbar,
-    Image
+    Image,
+    OrderItemCard
+  },
+  computed: {
+    ...mapGetters({
+      orders: 'orders/getOrders',
+      currentFacilityId: 'user/getCurrentFacility'
+    })
   },
   methods: {
     async getOrders(vSize: any, vIndex: any){
+      console.log('Get Order Started')
       const viewSize = vSize ? vSize : process.env.VUE_APP_VIEW_SIZE;
       const viewIndex = vIndex ? vIndex : 0;
       const payload = {
@@ -253,13 +266,19 @@ export default defineComponent({
         sortOrder: 'Desc',
         viewSize: vSize,
         viewIndex: vIndex,
-        // facilityId: this.currentStoreData.externalFacilityId
+        facilityId: this.currentFacilityId.facilityId
       }
 
       await this.store.dispatch("orders/getOrder", payload);
 
-
+      console.log('get Order ended')
+      console.log(this.orders, 'My name is athony gonsalves')
     }
+  },
+  mounted(){
+      console.log('Mounted is being called');
+      this.getOrders(process.env.VUE_APP_VIEW_SIZE,0);
+      console.log('Mounted Ended')
   },
   setup() {
     const segmentName = ref("open");
