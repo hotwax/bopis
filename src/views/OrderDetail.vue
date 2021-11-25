@@ -63,7 +63,7 @@
     </ion-button>
     <ion-card>
       <ion-item lines="none">
-        <ion-icon :icon="informationCircleOutline" slot="start"></ion-icon>
+        <ion-icon :icon="informationCircleOutline" slot="start"/>
         <ion-label>{{ $t("Learn more about unfillable items") }}</ion-label>
       </ion-item>
     </ion-card>
