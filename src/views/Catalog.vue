@@ -12,7 +12,7 @@
           <ion-card>           
           <ion-card-header>
             <Image :src="'https://images.unsplash.com/photo-1523275335684-37898b6baf30?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxzZWFyY2h8Mnx8cHJvZHVjdHxlbnwwfHwwfHw%3D&w=1000&q=80'" />
-              <ion-label color="dark">
+              <ion-label>
                 <h2>Brand</h2>
                 <h2>Parent Name</h2>
                 <p>{{ $t("$")}} Sale price</p>
@@ -22,7 +22,7 @@
           <ion-card>
           <ion-card-header>
             <Image :src="'https://images.unsplash.com/photo-1523275335684-37898b6baf30?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxzZWFyY2h8Mnx8cHJvZHVjdHxlbnwwfHwwfHw%3D&w=1000&q=80'" />
-              <ion-label color="dark">
+              <ion-label>
                 <h2>Brand</h2>
                 <h2>Parent Name</h2>
                 <p>{{ $t("$") }} Sale price</p>
