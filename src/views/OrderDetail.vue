@@ -2,7 +2,7 @@
   <ion-header>
     <ion-toolbar>
       <ion-buttons slot="start">
-        <ion-back-button default-href="home"></ion-back-button>
+        <ion-back-button default-href="home"/>
       </ion-buttons>
       <ion-title>{{ $t("Order details") }}</ion-title>
     </ion-toolbar>
