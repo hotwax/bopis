@@ -44,7 +44,7 @@
             <p>{{ $t("Color") }} : color</p>
             <p>{{ $t("Size") }} : size</p>
           </ion-label>
-          <ion-note slot="end" color="warning">15 {{ $t("In Stock") }}</ion-note>
+          <ion-note slot="end" color="warning">{{ $t('In Stock', {count: 15}) }}</ion-note>
         </ion-item>
         <ion-item lines="none">
           <ion-checkbox slot="start" color="primary"/>
@@ -55,9 +55,11 @@
         </ion-item>
       </ion-card-content>
     </ion-card>
-    <p>
-      {{ $t("This order cannot be split. If you cannot fulfill any item, customer name will be sent an email with alternate fulfillment options and this order will be removed from your dashboard.") }}
-    </p>
+    <ion-item lines="none">
+      <ion-note>
+        {{ $t("This order cannot be split. If you cannot fulfill any item, customer name will be sent an email with alternate fulfillment options and this order will be removed from your dashboard.") }}
+      </ion-note>
+    </ion-item>
     <ion-button expand="block" color="danger" fill="outline">
       {{ $t("Reject Order") }}
     </ion-button>
