@@ -46,11 +46,9 @@ export default defineComponent({
     IonPage, 
     IonSearchbar, 
     IonTitle, 
-    IonToolbar
-    
+    IonToolbar    
   }
-}
-);
+});
 </script>
 <style scoped>
  .product-item {

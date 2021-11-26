@@ -19,22 +19,6 @@ function loadLocaleMessages(): LocaleMessages<VueMessageType> {
   return messages
 }
 
-
-// const numberFormats = {
-//   'en-US': {
-//     currency: {
-//       style: "currency",
-//       currency: "USD",
-//     },
-//   },
-//   ru: {
-//     currency: {
-//       style: "currency",
-//       currency: "RUB",
-      
-//     },
-//   },
-// };
 const numberFormats = {
   'en': {
     currency: {
@@ -112,6 +96,5 @@ const translate = (key: string) => {
   return i18n.global.t(key);
 };
 
-export { i18n as default, translate,numberFormats
- }
+export { i18n as default, translate, numberFormats }
  
