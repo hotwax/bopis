@@ -19,10 +19,88 @@ function loadLocaleMessages(): LocaleMessages<VueMessageType> {
   return messages
 }
 
+
+// const numberFormats = {
+//   'en-US': {
+//     currency: {
+//       style: "currency",
+//       currency: "USD",
+//     },
+//   },
+//   ru: {
+//     currency: {
+//       style: "currency",
+//       currency: "RUB",
+      
+//     },
+//   },
+// };
+const numberFormats = {
+  'en': {
+    currency: {
+      style: 'currency',
+      currency: 'USD',
+      currencyDisplay: 'symbol'
+    }
+  },
+  'jp': {
+    currency: {
+      style: 'currency',
+      currency: 'JPY',
+      currencyDisplay: 'symbol'
+    }
+  },
+  'fr': { 
+    currency: {
+      style: 'currency', 
+      currency: 'EUR',
+      currencyDisplay: 'symbol'
+    }
+  },
+  'in': { 
+    currency: {
+      style: 'currency', 
+      currency: 'INR',
+      currencyDisplay: 'symbol'
+    }
+  },
+  'za': { 
+    currency: {
+      style: 'currency', 
+      currency: 'ZAR',
+      currencyDisplay: 'symbol'
+    }
+  },
+  'kr': { 
+    currency: {
+      style: 'currency', 
+      currency: 'KRW',
+      currencyDisplay: 'symbol'
+    }
+  },
+  'il': { 
+    currency: {
+      style: 'currency', 
+      currency: 'ILS',
+      currencyDisplay: 'symbol'
+    }
+  },
+  'ch': { 
+    currency: {
+      style: 'currency', 
+      currency: 'CNY',
+      currencyDisplay: 'symbol'
+    }
+  },
+    
+   
+
+}
 const i18n = createI18n({
   locale: process.env.VUE_APP_I18N_LOCALE || 'en',
   fallbackLocale: process.env.VUE_APP_I18N_FALLBACK_LOCALE || 'en',
-  messages: loadLocaleMessages()
+  messages: loadLocaleMessages(),
+  numberFormats
 })
 
 // TODO Check if this is needed in updated versions
@@ -34,4 +112,6 @@ const translate = (key: string) => {
   return i18n.global.t(key);
 };
 
-export { i18n as default, translate }
+export { i18n as default, translate,numberFormats
+ }
+ 
