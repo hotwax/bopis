@@ -48,6 +48,10 @@ const actions: ActionTree<OrdersState , RootState> ={
 
         console.log('actions is ended')
         return resp;
+    },
+    updateCurrentOrder ({ commit },payload){
+    commit(types.PRODUCT_CURRENT_UPDATED, { product: payload.product })
+
     }
 }
 
