@@ -3,68 +3,51 @@
           <ion-list>
             <ion-item lines="none">
               <ion-label>
-                <h1>Customer Name</h1>
-                <p>Customer Id</p>
+                <h1>{{ order.customerName }}</h1>
+                <p>{{ order.customerId }}</p>
               </ion-label>
               <ion-note>
-                <p>order time delta</p>
+                <p>{{ order.orderDate }}</p>
               </ion-note>
             </ion-item>
-            <ion-item lines="none">
-              <ion-thumbnail slot="start">
-                <Image :src="'https://images.all-free-download.com/images/graphicthumb/fashion_model_portrait_205201.jpg'" />
-              </ion-thumbnail>
-              <ion-label>
-                <h5>BRAND</h5>
-                <h2>Virtual Name</h2>
-                <p>{{ $t("Color") }} : color</p>
-                <p>{{ $t("Size") }} : size</p>
-              </ion-label>
-              <ion-note color="success">15 {{ $t("In Stock") }}</ion-note>
-            </ion-item>
-            <ProductListItem />
-            <ProductListItem />
-            <ProductListItem />
-            <ion-item lines="full">
-              <ion-thumbnail slot="start">
-                <Image :src="'https://images.all-free-download.com/images/graphicthumb/fashion_model_portrait_205201.jpg'" />
-              </ion-thumbnail>
-              <ion-label>
-                <h5>BRAND</h5>
-                <h2>Virtual Name</h2>
-                <p>{{ $t("Color") }} : color</p>
-                <p>{{ $t("Size") }} : size</p>
-              </ion-label>
-              <ion-note color="success">15 {{ $t("In Stock") }}</ion-note>
-            </ion-item>
-            <ion-item>
+            
+            <ProductListItem v-for="item in order.items" :key="item.itemId" :item="item" />
+
+            <ion-item >
               <ion-icon :icon="callOutline" slot="start" />
               <ion-label>phone number</ion-label>
-              <ion-button fill="outline" slot="end" color="medium">
+              <ion-button fill="outline" slot="end" color="medium" @click="copyToClipboard('Phone Number Copied')">
                 {{ $t("Copy") }}
               </ion-button>
             </ion-item>
-            <ion-item lines="full">
+            <ion-item lines="full" v-if="order.email">
               <ion-icon :icon="mailOutline" slot="start" />
               <ion-label>email</ion-label>
-              <ion-button fill="outline" slot="end" color="medium">
+              <ion-button fill="outline" slot="end" color="medium" @click="copyToClipboard(order.email)">
                 {{ $t("Copy") }}
               </ion-button>
             </ion-item>
           </ion-list>
-          <ion-button fill="clear">
+          <div class="border-top">
+            <ion-button fill="clear" @click="readyForPickup">
             {{ $t("Ready For Pickup") }}
-          </ion-button>
+            </ion-button>
+          </div>
+          
         </ion-card>
 </template>
 
 
 <script lang="ts">
-import { IonCard , IonList , IonItem , IonLabel , IonNote , IonThumbnail , IonButton , IonIcon } from "@ionic/vue";
+import { IonCard , IonList , IonItem , IonLabel , IonNote , IonThumbnail , IonButton , IonIcon , alertController} from "@ionic/vue";
 import Image from './Image.vue'
 import ProductListItem from './ProductListItem.vue'
 import { callOutline, mailOutline } from "ionicons/icons";
 import { onMounted } from "vue"
+import { Plugins } from '@capacitor/core';
+import { showToast } from '@/utils'
+
+const { Clipboard } = Plugins;
 
 export default {
     name: 'OrderItemCard',
@@ -74,13 +57,46 @@ export default {
         IonItem,
         IonLabel,
         IonNote,
-        IonThumbnail,
         IonButton,
         IonIcon,
-        Image,
         ProductListItem
     },
     props: ["order"],
+    methods: {
+      async copyToClipboard(text: string) {
+      await Clipboard.write({
+        string: text
+      }).then(() => {
+        // showToast(this.$t('Copied', { text }));
+        showToast('Copied')
+      })
+    },
+    async readyForPickup() {
+      const alert = await alertController
+        .create({
+          cssClass: 'my-custom-class',
+          header: 'Ready For Pickup',
+          message: 'An email notification will be sent to <customer name> that their order is ready for pickup.<br/> <br/> This order will also be moved to the packed orders tab.',
+          buttons: [
+            {
+              text: 'Cancel',
+              role: 'cancel',
+              cssClass: 'secondary',
+              handler: blah => {
+                console.log('Confirm Cancel:', blah)
+              },
+            },
+            {
+              text: 'Ready For Pickup',
+              handler: () => {
+                console.log('Confirm Okay')
+              },
+            },
+          ],
+        });
+      return alert.present();
+    }
+    },
     setup() {
         return {
             callOutline,
@@ -89,3 +105,9 @@ export default {
     },
 }
 </script>
+
+<style>
+.border-top{
+  border-top: 1px solid rgba(0, 0, 0, 0.12);
+}
+</style>

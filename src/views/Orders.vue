@@ -26,9 +26,7 @@
 
     <ion-content>
       <div v-if="segmentName == 'open'">
-        <OrderItemCard />
-        <OrderItemCard />
-        <OrderItemCard />
+        
         <OrderItemCard v-for="order in orders" :key="order.orderId" :order="order" />
         <!-- <ion-card>
           <ion-list>

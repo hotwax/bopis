@@ -1,13 +1,13 @@
 <template>
-    <ion-item lines="full">
+    <ion-item lines="none">
         <ion-thumbnail slot="start">
-            <Image :src="'https://images.all-free-download.com/images/graphicthumb/fashion_model_portrait_205201.jpg'" />
+            <Image :src="item.images.main.thumbnail" />
         </ion-thumbnail>
         <ion-label>
-            <h5>BRAND</h5>
-            <h2>Virtual Name</h2>
-            <p>{{ $t("Color") }} : color</p>
-            <p>{{ $t("Size") }} : size</p>
+            <h5>{{  item.itemId }}</h5>
+            <h2>{{ item.itemName }}</h2>
+            <p>{{ $t("Color") }} : {{ item.standardFeatures.COLOR.description }}</p>
+            <p>{{ $t("Size") }} : {{ item.standardFeatures.SIZE.description }}</p>
         </ion-label>
       <ion-note color="success">15 {{ $t("In Stock") }}</ion-note>
     </ion-item>
@@ -25,8 +25,16 @@ export default {
         IonThumbnail,
         Image
     },
-    // setup() {
-        
+    props: ["item"],
+    // setup(props) {
+    //     console.log(props.item)
+    //     return { props }
     // },
 }
 </script>
+
+<style>
+ion-thumbnail > img {
+    object-fit: contain;
+}
+</style>
