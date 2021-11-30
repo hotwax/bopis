@@ -103,7 +103,7 @@ export default defineComponent({
       await this.store.dispatch('orders/updateCurrentOrder', {product: this.order});
         
         this.router.push({ path: `/orderdetail/${this.order.orderId}` })
-        // console.log("order",this.order)
+        console.log("order",this.order)
       }
     },
     setup() {
