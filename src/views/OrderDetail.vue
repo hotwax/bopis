@@ -2,7 +2,7 @@
   <ion-header>
     <ion-toolbar>
       <ion-buttons slot="start">
-        <ion-back-button default-href="home"/>
+        <ion-back-button default-href="/tabs/Orders"/>
       </ion-buttons>
       <ion-title>{{ $t("Order details") }}</ion-title>
     </ion-toolbar>
@@ -11,43 +11,59 @@
     <ion-list>
       <ion-item>
         <ion-label>
-          <h2>{{orders.customerName}}</h2>
-          <p>{{orders.orderId}}</p>
+          <h2>{{ orders.customerName }}</h2>
+          <p>{{ orders.orderId }}</p>
         </ion-label>
-        <ion-note slot="end">order time delta</ion-note>
+        <ion-note slot="end">{{ $filters.formatDate(orders.orderDate) }}</ion-note>
       </ion-item>
     </ion-list>
     <ion-item>
-      <ion-icon :icon="callOutline" slot="start"/>
+      <ion-icon :icon="callOutline" slot="start" />
       <ion-label>Phone Number</ion-label>
-      <ion-button fill="outline" slot="end" color="medium">
+      <ion-button
+        fill="outline"
+        slot="end"
+        color="medium"
+        @click="copyToClipboard('copied')"
+      >
         {{ $t("Copy") }}
       </ion-button>
     </ion-item>
     <ion-item lines="none">
-      <ion-icon :icon="mailOutline" slot="start"/>
+      <ion-icon :icon="mailOutline" slot="start" />
       <ion-label>Email</ion-label>
-      <ion-button fill="outline" slot="end" color="medium">
-        {{ $t( "Copy") }}
+      <ion-button
+        fill="outline"
+        slot="end"
+        color="medium"
+        @click="copyToClipboard('copied')"
+      >
+        {{ $t("Copy") }}
       </ion-button>
     </ion-item>
-  
+
     <ion-card>
       <ion-card-content>
         <ion-item lines="full">
           <ion-thumbnail slot="start">
-            <Image :src="orders.items[0].images.main.thumbnail"/>
+            <Image :src="orders.items[0].images.main.thumbnail" />
           </ion-thumbnail>
           <ion-label>
             <h5>BRAND</h5>
-            <h2>{{orders.items[0].itemName}}</h2>
-            <p>{{ $t("Color") }} : {{orders.items[0].standardFeatures.COLOR.description }}</p>
-            <p>{{ $t("Size") }} : {{orders.items[0].standardFeatures.SIZE.description }}</p>
+            <h2>{{ orders.items[0].itemName }}</h2>
+            <p>
+              {{ $t("Color") }} : {{ orders.items[0].standardFeatures.COLOR.description }}
+            </p>
+            <p>
+              {{ $t("Size") }} :{{ orders.items[0].standardFeatures.SIZE.description }}
+            </p>
           </ion-label>
-          <ion-note slot="end" color="warning">{{ $t('In Stock', {count: 15}) }}</ion-note>
+          <ion-note slot="end" color="warning">
+            {{ $t("In Stock", { count: orders.items[0].inventory[0].quantity }) }}
+          </ion-note>
         </ion-item>
         <ion-item lines="none">
-          <ion-checkbox slot="start" color="primary"/>
+          <ion-checkbox slot="start" color="primary" />
           <ion-label>{{ $t("UnFillable") }} </ion-label>
           <ion-select value="Not in stock">
             <ion-select-option>{{ $t("Not in stock") }}</ion-select-option>
@@ -65,7 +81,7 @@
     </ion-button>
     <ion-card>
       <ion-item lines="none">
-        <ion-icon :icon="informationCircleOutline" slot="start"/>
+        <ion-icon :icon="informationCircleOutline" slot="start" />
         <ion-label>{{ $t("Learn more about unfillable items") }}</ion-label>
       </ion-item>
     </ion-card>
@@ -75,15 +91,15 @@
 <script>
 import {
   IonBackButton,
-  IonButton, 
+  IonButton,
   IonButtons,
   IonCard,
   IonContent,
   IonCardContent,
-  IonCheckbox, 
+  IonCheckbox,
   IonHeader,
   IonIcon,
-  IonItem, 
+  IonItem,
   IonLabel,
   IonList,
   IonNote,
@@ -91,9 +107,10 @@ import {
   IonSelectOption,
   IonTitle,
   IonThumbnail,
-  IonToolbar
+  IonToolbar,
 } from "@ionic/vue";
 import { defineComponent } from "vue";
+import { Plugins } from "@capacitor/core";
 import { mapGetters } from "vuex";
 import {
   swapVerticalOutline,
@@ -102,21 +119,24 @@ import {
   informationCircleOutline,
 } from "ionicons/icons";
 import Image from "@/components/Image.vue";
+import { showToast } from "@/utils";
+
+const { Clipboard } = Plugins;
 
 export default defineComponent({
   name: "OrderDetail",
   components: {
     Image,
     IonBackButton,
-    IonButton, 
+    IonButton,
     IonButtons,
     IonCard,
     IonContent,
     IonCardContent,
-    IonCheckbox, 
+    IonCheckbox,
     IonHeader,
     IonIcon,
-    IonItem, 
+    IonItem,
     IonLabel,
     IonList,
     IonNote,
@@ -124,16 +144,23 @@ export default defineComponent({
     IonSelectOption,
     IonTitle,
     IonThumbnail,
-    IonToolbar
+    IonToolbar,
   },
-computed: {
-      ...mapGetters({
-        orders: "orders/getCurrent"
-      })
-      
-    },mounted(){
-      console.log("orders",this.orders);
+  computed: {
+    ...mapGetters({
+      orders: "orders/getCurrent",
+    }),
+  },
+  methods: {
+    async copyToClipboard(text) {
+      await Clipboard.write({
+        string: text,
+      }).then(() => {
+        showToast("Copied");
+        console.log("text", text);
+      });
     },
+  },
   setup() {
     return {
       swapVerticalOutline,
