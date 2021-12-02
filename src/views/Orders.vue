@@ -148,7 +148,6 @@ export default defineComponent({
   },
   methods: {
     async getOrders(vSize: any, vIndex: any){
-      console.log('Get Order Started')
       const viewSize = vSize ? vSize : process.env.VUE_APP_VIEW_SIZE;
       const viewIndex = vIndex ? vIndex : 0;
       const payload = {

@@ -9,7 +9,6 @@ import emitter from '@/event-bus'
 
 const actions: ActionTree<OrdersState , RootState> ={
     async getOrder({ commit , state}, payload){
-        console.log('action is started')
         // Show loader only when new query and not the infinite scroll
         if (payload.viewIndex === 0) emitter.emit("presentLoader");
         let resp;
@@ -23,7 +22,6 @@ const actions: ActionTree<OrdersState , RootState> ={
 
         try{
             resp = await OrderService.getOrders(obj)
-            console.log(resp)
             if(resp.status === 200 && resp.data.count > 0 && !hasError(resp)){
                 let orders = resp.data.docs ;
                 const ordersCount = resp.data.count ;
