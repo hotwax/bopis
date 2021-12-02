@@ -13,7 +13,6 @@
     </ion-item>
 </template>
 
-
 <script lang="ts">
 import { IonItem , IonThumbnail , IonLabel , IonNote } from "@ionic/vue";
 import Image from './Image.vue'
@@ -25,11 +24,7 @@ export default {
         IonThumbnail,
         Image
     },
-    props: ["item"],
-    // setup(props) {
-    //     console.log(props.item)
-    //     return { props }
-    // },
+    props: ["item"]
 }
 </script>
 

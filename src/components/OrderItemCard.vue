@@ -13,7 +13,7 @@
             
             <ProductListItem v-for="item in order.items" :key="item.itemId" :item="item" />
 
-            <ion-item >
+            <ion-item v-if="order.phoneNumber">
               <ion-icon :icon="callOutline" slot="start" />
               <ion-label>phone number</ion-label>
               <ion-button fill="outline" slot="end" color="medium" @click="copyToClipboard('Phone Number Copied')">
@@ -40,10 +40,8 @@
 
 <script lang="ts">
 import { IonCard , IonList , IonItem , IonLabel , IonNote , IonThumbnail , IonButton , IonIcon , alertController} from "@ionic/vue";
-import Image from './Image.vue'
 import ProductListItem from './ProductListItem.vue'
 import { callOutline, mailOutline } from "ionicons/icons";
-import { onMounted } from "vue"
 import { Plugins } from '@capacitor/core';
 import { showToast } from '@/utils'
 
@@ -67,7 +65,6 @@ export default {
       await Clipboard.write({
         string: text
       }).then(() => {
-        // showToast(this.$t('Copied', { text }));
         showToast('Copied')
       })
     },
@@ -96,13 +93,13 @@ export default {
         });
       return alert.present();
     }
-    },
-    setup() {
-        return {
-            callOutline,
-            mailOutline,
-        }
-    },
+  },
+  setup() {
+    return {
+      callOutline,
+      mailOutline,
+    }
+  },
 }
 </script>
 

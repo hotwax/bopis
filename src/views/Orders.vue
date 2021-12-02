@@ -28,115 +28,7 @@
       <div v-if="segmentName == 'open'">
         
         <OrderItemCard v-for="order in orders" :key="order.orderId" :order="order" />
-        <!-- <ion-card>
-          <ion-list>
-            <ion-item lines="none">
-              <ion-label>
-                <h1>Customer Name</h1>
-                <p>Customer Id</p>
-              </ion-label>
-              <ion-note>
-                <p>order time delta</p>
-              </ion-note>
-            </ion-item>
-            <ion-item lines="none">
-              <ion-thumbnail slot="start">
-                <Image :src="'https://images.all-free-download.com/images/graphicthumb/fashion_model_portrait_205201.jpg'" />
-              </ion-thumbnail>
-              <ion-label>
-                <h5>BRAND</h5>
-                <h2>Virtual Name</h2>
-                <p>{{ $t("Color") }} : color</p>
-                <p>{{ $t("Size") }} : size</p>
-              </ion-label>
-              <ion-note color="success">15 {{ $t("In Stock") }}</ion-note>
-            </ion-item>
-            <ion-item lines="full">
-              <ion-thumbnail slot="start">
-                <Image :src="'https://images.all-free-download.com/images/graphicthumb/fashion_model_portrait_205201.jpg'" />
-              </ion-thumbnail>
-              <ion-label>
-                <h5>BRAND</h5>
-                <h2>Virtual Name</h2>
-                <p>{{ $t("Color") }} : color</p>
-                <p>{{ $t("Size") }} : size</p>
-              </ion-label>
-              <ion-note color="success">15 {{ $t("In Stock") }}</ion-note>
-            </ion-item>
-            <ion-item>
-              <ion-icon :icon="callOutline" slot="start" />
-              <ion-label>phone number</ion-label>
-              <ion-button fill="outline" slot="end" color="medium">
-                {{ $t("Copy") }}
-              </ion-button>
-            </ion-item>
-            <ion-item lines="full">
-              <ion-icon :icon="mailOutline" slot="start" />
-              <ion-label>email</ion-label>
-              <ion-button fill="outline" slot="end" color="medium">
-                {{ $t("Copy") }}
-              </ion-button>
-            </ion-item>
-          </ion-list>
-          <ion-button fill="clear">
-            {{ $t("Ready For Pickup") }}
-          </ion-button>
-        </ion-card>
-
-        <ion-card>
-          <ion-list>
-            <ion-item lines="none">
-              <ion-label>
-                <h1>Customer Name</h1>
-                <p>Customer Id</p>
-              </ion-label>
-              <ion-note>
-                <p>order time delta</p>
-              </ion-note>
-            </ion-item>  
-            <ion-item lines="none">
-              <ion-thumbnail slot="start">
-                <Image :src="'https://images.all-free-download.com/images/graphicthumb/fashion_model_portrait_205201.jpg'" />
-              </ion-thumbnail>
-              <ion-label>
-                <h5>BRAND</h5>
-                <h2>Virtual Name</h2>
-                <p>{{ $t("Color") }} : color</p>
-                <p>{{ $t("Size") }} : size</p>
-              </ion-label>
-              <ion-note color="success">15 {{ $t("In Stock") }}</ion-note>
-            </ion-item>
-            <ion-item lines="full">
-              <ion-thumbnail slot="start">
-                <Image :src="'https://images.all-free-download.com/images/graphicthumb/fashion_model_portrait_205201.jpg'" />
-              </ion-thumbnail>
-              <ion-label>
-                <h5>BRAND</h5>
-                <h2>Virtual Name</h2>
-                <p>{{ $t("Color") }} : color</p>
-                <p>{{ $t("Size") }} : size</p>
-              </ion-label>
-              <ion-note color="success">15 {{ $t("In Stock") }}</ion-note>
-            </ion-item>
-            <ion-item>
-              <ion-icon :icon="callOutline" slot="start" />
-              <ion-label>phone number</ion-label>
-              <ion-button fill="outline" slot="end" color="medium">
-                {{ $t("Copy") }}
-              </ion-button>
-            </ion-item>
-            <ion-item lines="full">
-              <ion-icon :icon="mailOutline" slot="start" />
-              <ion-label>email</ion-label>
-              <ion-button fill="outline" slot="end" color="medium">
-                {{ $t("Copy") }}
-              </ion-button>
-            </ion-item>
-          </ion-list>
-          <ion-button fill="clear">
-            {{ $t("Ready For Pickup") }}
-          </ion-button>
-        </ion-card> -->
+             
       </div>      
       <div v-if="segmentName == 'packed'">
         <ion-card>
@@ -266,17 +158,11 @@ export default defineComponent({
         viewIndex: vIndex,
         facilityId: this.currentFacilityId.facilityId
       }
-
       await this.store.dispatch("orders/getOrder", payload);
-
-      console.log('get Order ended')
-      console.log(this.orders, 'My name is athony gonsalves')
     }
   },
   mounted(){
-      console.log('Mounted is being called');
       this.getOrders(process.env.VUE_APP_VIEW_SIZE,0);
-      console.log('Mounted Ended')
   },
   setup() {
     const segmentName = ref("open");

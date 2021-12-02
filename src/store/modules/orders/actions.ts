@@ -12,9 +12,7 @@ const actions: ActionTree<OrdersState , RootState> ={
         console.log('action is started')
         // Show loader only when new query and not the infinite scroll
         if (payload.viewIndex === 0) emitter.emit("presentLoader");
-
         let resp;
-
         const obj = {
             "sortBy": payload.sortBy,
             "sortOrder": payload.sortOrder,
@@ -29,11 +27,8 @@ const actions: ActionTree<OrdersState , RootState> ={
             if(resp.status === 200 && resp.data.count > 0 && !hasError(resp)){
                 let orders = resp.data.docs ;
                 const ordersCount = resp.data.count ;
-                console.log(orders)
                 if(payload.viewIndex && payload.viewIndex > 0) orders = state.orders.concat(orders)
                 commit(types.OPEN_ORDERS_INITIAL, {orders: orders , ordersCount: ordersCount})
-
-
             }
             else{
                 showToast(translate("Orders Not Found"))
@@ -45,11 +40,8 @@ const actions: ActionTree<OrdersState , RootState> ={
             console.log(error)
             showToast(translate("Something went wrong"))
         }
-
-        console.log('actions is ended')
         return resp;
     }
 }
-
 
 export default actions;
