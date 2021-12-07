@@ -26,7 +26,7 @@ const loginGuard = (to: any, from: any, next: any) => {
 const routes: Array<RouteRecordRaw> = [
   {
     path: '/',
-    redirect: '/tabs/Catalog'
+    redirect: '/tabs/orders'
   },
   {
     path: '/tabs',
@@ -34,19 +34,14 @@ const routes: Array<RouteRecordRaw> = [
     children: [
       {
         path: '',
-        redirect: '/Catalog'
+        redirect: '/orders'
       },
       {
-        path: 'Catalog',
-        component: () => import('@/views/Catalog.vue')
-      },
-      
-      {
-        path: 'Orders',
+        path: 'orders',
         component: () => import('@/views/Orders.vue')
       },
        {
-        path: 'More',
+        path: 'more',
         component: () => import('@/views/More.vue')
       },
     ]
