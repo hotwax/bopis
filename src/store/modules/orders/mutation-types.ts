@@ -1,2 +1,3 @@
 export const SN_ORDERS = 'orders'
+export const PRODUCT_CURRENT_UPDATED = SN_ORDERS + '/CURRENT_UPDATED'
 export const OPEN_ORDERS_INITIAL = SN_ORDERS + '/ORDERS_INITIAL'

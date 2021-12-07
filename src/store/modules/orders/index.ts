@@ -9,6 +9,7 @@ import RootState from '../../RootState'
 const ordersModule: Module<OrdersState, RootState> = {
     namespaced: true,
     state: {
+        current: {},
         orders: {
             list: {},
             totalCount: 0

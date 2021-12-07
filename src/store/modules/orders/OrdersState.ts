@@ -1,3 +1,4 @@
 export default interface OrdersState {
-  orders: any;
-}
+    orders: any;
+    current: any;
+  }

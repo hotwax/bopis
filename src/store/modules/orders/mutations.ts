@@ -7,6 +7,13 @@ const mutations: MutationTree <ProductState> = {
         state.orders.list = payload.orders
         state.orders.totalCount = payload.ordersCount
     }
+    ,
+    [types.PRODUCT_CURRENT_UPDATED] (state, payload) {
+        
+        state.current = payload.product
+        console.log("payload",payload.product)
+      }
+
 }
 
 export default mutations;

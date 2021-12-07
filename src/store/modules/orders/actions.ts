@@ -34,8 +34,13 @@ const actions: ActionTree<OrdersState , RootState> ={
         console.log(err)
         showToast(translate("Something went wrong"))
     }
-    return resp;
+        console.log('actions is ended')
+        return resp;
+    },
+    updateCurrentOrder ({ commit },payload){
+    commit(types.PRODUCT_CURRENT_UPDATED, { product: payload.product })
+
+    }
   }
-}
 
 export default actions;
