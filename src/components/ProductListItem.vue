@@ -4,12 +4,12 @@
       <Image :src="item.images.main.thumbnail" />
     </ion-thumbnail>
     <ion-label>
-      <h5>{{  item.itemId }}</h5>
+      <h5>{{ item.itemId }}</h5>
       <h2>{{ item.itemName }}</h2>
       <p>{{ $t("Color") }} : {{ item.standardFeatures.COLOR.description }}</p>
       <p>{{ $t("Size") }} : {{ item.standardFeatures.SIZE.description }}</p>
     </ion-label>
-    <ion-note color="success">15 {{ $t("In Stock") }}</ion-note>
+    <ion-note color="success">{{ item.inventory[0].quantity }} {{ $t("In Stock") }}</ion-note>
   </ion-item>
 </template>
 

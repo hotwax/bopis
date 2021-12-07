@@ -1,9 +1,7 @@
 <template>
   <ion-header>
     <ion-toolbar>
-      <ion-buttons slot="start">
-        <ion-back-button default-href="/tabs/Orders"/>
-      </ion-buttons>
+      <ion-back-button default-href="/" slot="start" />
       <ion-title>{{ $t("Order details") }}</ion-title>
     </ion-toolbar>
   </ion-header>
@@ -92,7 +90,6 @@
 import {
   IonBackButton,
   IonButton,
-  IonButtons,
   IonCard,
   IonContent,
   IonCardContent,
@@ -129,7 +126,6 @@ export default defineComponent({
     Image,
     IonBackButton,
     IonButton,
-    IonButtons,
     IonCard,
     IonContent,
     IonCardContent,

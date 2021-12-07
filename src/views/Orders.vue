@@ -17,12 +17,10 @@
     </ion-header>
 
     <ion-content>
-      <div v-if="segmentName == 'open'">
-        
-        <OrderItemCard v-for="order in orders" :key="order.orderId" :order="order" />
-             
+      <div v-if="segmentName === 'open'">
+        <OrderItemCard v-for="order in orders" :key="order.orderId" :order="order"/>     
       </div>      
-      <div v-if="segmentName == 'packed'">
+      <div v-if="segmentName === 'packed'">
         <ion-card>
           <ion-list>
             <ion-item lines="none">
@@ -141,15 +139,15 @@ export default defineComponent({
       const payload = {
         sortBy: 'orderDate',
         sortOrder: 'Desc',
-        viewSize: vSize,
-        viewIndex: vIndex,
+        viewSize,
+        viewIndex,
         facilityId: this.currentFacilityId.facilityId
       }
       await this.store.dispatch("orders/getOrder", payload);
     }
   },
-  mounted(){
-      this.getOrders(process.env.VUE_APP_VIEW_SIZE,0);
+  mounted() {
+    this.getOrders(process.env.VUE_APP_VIEW_SIZE, 0);
   },
   setup() {
     const segmentName = ref("open");
