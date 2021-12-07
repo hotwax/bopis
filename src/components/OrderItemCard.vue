@@ -8,6 +8,9 @@
         </ion-label>
         <ion-note>
           <p>{{ order.orderDate && $filters.formatDate(order.orderDate) }}</p>
+          <slot name="packedTime">
+            <p>{{ order.orderDate && $filters.formatDate(order.orderDate) }}</p>
+          </slot>
         </ion-note>
       </ion-item>
             
@@ -29,15 +32,13 @@
       </ion-item>
     </ion-list>
     <div class="border-top">
-      <ion-button fill="clear" @click="readyForPickup(order)">
-        {{ $t("Ready For Pickup") }}
-      </ion-button>
+      <slot name="cardBottomLabel" />
     </div>       
   </ion-card>
 </template>
 
 <script lang="ts">
-import { IonCard, IonList, IonItem, IonLabel, IonNote, IonButton, IonIcon, alertController } from "@ionic/vue";
+import { IonCard, IonList, IonItem, IonLabel, IonNote, IonButton, IonIcon } from "@ionic/vue";
 import ProductListItem from './ProductListItem.vue'
 import { callOutline, mailOutline } from "ionicons/icons";
 import { onMounted, defineComponent } from "vue"
@@ -69,30 +70,6 @@ export default defineComponent({
         // showToast(this.$t('Copied', { text }));
         showToast('Copied')
       })
-    },
-    async readyForPickup(order: any) {
-      const alert = await alertController
-        .create({
-          header: 'Ready For Pickup',
-          message: `An email notification will be sent to ${order.customerName} that their order is ready for pickup.<br/> <br/> This order will also be moved to the packed orders tab.`,
-          buttons: [
-            {
-              text: 'Cancel',
-              role: 'cancel',
-              cssClass: 'secondary',
-              handler: blah => {
-                console.log('Confirm Cancel:', blah)
-              },
-            },
-            {
-              text: 'Ready For Pickup',
-              handler: (order) => {
-                console.log('Confirm Okay')
-              },
-            },
-          ],
-        });
-      return alert.present();
     },
     async viewProduct () {
       await this.store.dispatch('orders/updateCurrentOrder', { product: this.order }).then(() => {

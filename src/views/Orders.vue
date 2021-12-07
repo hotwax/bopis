@@ -18,10 +18,26 @@
 
     <ion-content>
       <div v-if="segmentName === 'open'">
-        <OrderItemCard v-for="order in orders" :key="order.orderId" :order="order"/>     
+        <OrderItemCard v-for="order in orders" :key="order.orderId" :order="order">
+          <template #packedTime>
+            <p></p>
+          </template>
+          <template #cardBottomLabel>
+            <ion-button fill="clear" @click="readyForPickup(order)">
+              {{ $t("Ready For Pickup") }}
+            </ion-button>
+          </template>
+        </OrderItemCard>     
       </div>      
       <div v-if="segmentName === 'packed'">
-        <ion-card>
+        <OrderItemCard v-for="order in orders" :key="order.orderId" :order="order">
+          <template #cardBottomLabel>
+            <ion-button fill="clear" @click="handover(order)">
+              {{ $t("Handover") }}
+            </ion-button>
+          </template>
+        </OrderItemCard>
+        <!-- <ion-card>
           <ion-list>
             <ion-item lines="none">
               <ion-label>
@@ -75,7 +91,7 @@
           <ion-button fill="clear">
             {{ $t("Handover") }}
           </ion-button>
-        </ion-card>
+        </ion-card> -->
       </div>
     </ion-content>
   </ion-page>
@@ -83,24 +99,18 @@
 
 <script lang="ts">
 import {
+  alertController,
   IonButton,
-  IonCard,
   IonContent,
   IonHeader,
-  IonIcon,
-  IonItem,
   IonLabel,
-  IonList,
-  IonNote,
   IonPage,
   IonSegment,
   IonSegmentButton,
-  IonThumbnail,
   IonTitle,
   IonToolbar,
 } from "@ionic/vue";
 import { defineComponent, ref } from "vue";
-import Image from './../components/Image.vue'
 import OrderItemCard from './../components/OrderItemCard.vue'
 import { swapVerticalOutline, callOutline, mailOutline } from "ionicons/icons";
 import { mapGetters, useStore } from 'vuex'
@@ -109,21 +119,14 @@ export default defineComponent({
   name: 'Orders',
   components: {
     IonButton,
-    IonCard,
     IonContent,
     IonHeader,
-    IonIcon,
-    IonItem,
     IonLabel,
-    IonList,
-    IonNote,
     IonPage,
     IonSegment,
     IonSegmentButton,
-    IonThumbnail,
     IonTitle,
     IonToolbar,
-    Image,
     OrderItemCard
   },
   computed: {
@@ -144,6 +147,54 @@ export default defineComponent({
         facilityId: this.currentFacilityId.facilityId
       }
       await this.store.dispatch("orders/getOrder", payload);
+    },
+    async readyForPickup(order: any) {
+      const alert = await alertController
+        .create({
+          header: 'Ready For Pickup',
+          message: `An email notification will be sent to ${order.customerName} that their order is ready for pickup.<br/> <br/> This order will also be moved to the packed orders tab.`,
+          buttons: [
+            {
+              text: 'Cancel',
+              role: 'cancel',
+              cssClass: 'secondary',
+              handler: blah => {
+                console.log('Confirm Cancel:', blah)
+              },
+            },
+            {
+              text: 'Ready For Pickup',
+              handler: (order) => {
+                console.log('Confirm Okay')
+              },
+            },
+          ],
+        });
+      return alert.present();
+    },
+    async handover(order: any) {
+      const alert = await alertController
+        .create({
+          header: 'Ready For Pickup',
+          message: `An email notification will be sent to ${order.customerName} that their order is ready for pickup.<br/> <br/> This order will also be moved to the packed orders tab.`,
+          buttons: [
+            {
+              text: 'Cancel',
+              role: 'cancel',
+              cssClass: 'secondary',
+              handler: blah => {
+                console.log('Confirm Cancel:', blah)
+              },
+            },
+            {
+              text: 'Ready For Pickup',
+              handler: (order) => {
+                console.log('Confirm Okay')
+              },
+            },
+          ],
+        });
+      return alert.present();
     }
   },
   mounted() {
