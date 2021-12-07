@@ -1,7 +1,7 @@
 <template>
   <ion-card>
     <ion-list>
-      <ion-item @click="viewProduct()" detail="true" lines="none">
+      <ion-item @click="viewProduct()" lines="none">
         <ion-label>
           <h1>{{ order.customerName }}</h1>
           <p>{{ order.customerId }}</p>
