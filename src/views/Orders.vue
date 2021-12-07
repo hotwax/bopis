@@ -10,9 +10,6 @@
         </ion-buttons>
       </ion-toolbar>
       <ion-toolbar>
-        <ion-searchbar :placeholder="$t('Search Orders')"></ion-searchbar>
-      </ion-toolbar>
-      <ion-toolbar>
         <ion-segment v-model="segmentName" >
           <ion-segment-button value="open">
             <ion-label>{{ $t("Open") }}</ion-label>
@@ -104,7 +101,6 @@ import {
   IonList,
   IonNote,
   IonPage,
-  IonSearchbar,
   IonSegment,
   IonSegmentButton,
   IonThumbnail,
@@ -131,7 +127,6 @@ export default defineComponent({
     IonList,
     IonNote,
     IonPage,
-    IonSearchbar,
     IonSegment,
     IonSegmentButton,
     IonThumbnail,
