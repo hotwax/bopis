@@ -3,11 +3,6 @@
     <ion-header :translucent="true">
       <ion-toolbar>
         <ion-title>{{ $t("Orders") }}</ion-title>
-        <ion-buttons slot="end">
-          <ion-button>
-            <ion-icon :icon="swapVerticalOutline" />
-          </ion-button>
-        </ion-buttons>
       </ion-toolbar>
       <ion-toolbar>
         <ion-segment v-model="segmentName" >
@@ -91,7 +86,6 @@
 <script lang="ts">
 import {
   IonButton,
-  IonButtons,
   IonCard,
   IonContent,
   IonHeader,
@@ -117,7 +111,6 @@ export default defineComponent({
   name: 'Orders',
   components: {
     IonButton,
-    IonButtons,
     IonCard,
     IonContent,
     IonHeader,
