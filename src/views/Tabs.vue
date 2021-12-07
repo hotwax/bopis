@@ -7,9 +7,9 @@
           <ion-label>{{ $t("Orders") }}</ion-label>
         </ion-tab-button>
 
-        <ion-tab-button tab="more" href="/tabs/more">
-          <ion-icon :icon="menuOutline" />
-          <ion-label>{{ $t("More") }}</ion-label>
+        <ion-tab-button tab="more" href="/tabs/settings">
+          <ion-icon :icon="settings" />
+          <ion-label>{{ $t("Settings") }}</ion-label>
         </ion-tab-button>
       </ion-tab-bar>
     </ion-tabs>
@@ -21,7 +21,7 @@ import { useRoute } from "vue-router";
 import { IonLabel, IonTabBar, IonTabButton, IonTabs, IonIcon, IonPage } from "@ionic/vue";
 import {
  infiniteOutline,
- menuOutline
+ settings
 } from "ionicons/icons";
 export default {
   name: "Tabs",
@@ -30,7 +30,7 @@ export default {
     const route = useRoute();
     return {
       infiniteOutline,
-      menuOutline
+      settings
     };
   },
 };
