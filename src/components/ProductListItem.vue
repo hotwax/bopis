@@ -9,7 +9,7 @@
       <p>{{ $t("Color") }} : {{ item.standardFeatures.COLOR.description }}</p>
       <p>{{ $t("Size") }} : {{ item.standardFeatures.SIZE.description }}</p>
     </ion-label>
-    <ion-note color="success">{{ item.inventory[0].quantity }} {{ $t("In Stock") }}</ion-note>
+    <ion-note color="success">{{ item.quantity ? item.quantity : item.inventory[0].quantity }} {{ $t("In Stock") }}</ion-note>
   </ion-item>
 </template>
 

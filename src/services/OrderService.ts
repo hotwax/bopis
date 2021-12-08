@@ -8,6 +8,15 @@ const getOrders = async (payload: any): Promise <any> => {
   });
 }
 
+const getPackedOrders = async (payload: any): Promise <any> => {
+  return api({
+    url: "readytoshiporders",
+    method: "post",
+    data: payload
+  });
+}
+
 export const OrderService = {
-  getOrders
+  getOrders,
+  getPackedOrders
 }

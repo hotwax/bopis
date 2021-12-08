@@ -13,7 +13,8 @@ const ordersModule: Module<OrdersState, RootState> = {
         orders: {
             list: {},
             totalCount: 0
-        }
+        },
+        packedOrders: {}
     },
     getters,
     actions,

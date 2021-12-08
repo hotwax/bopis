@@ -12,7 +12,10 @@ const mutations: MutationTree <ProductState> = {
         
         state.current = payload.product
         console.log("payload",payload.product)
-      }
+    },
+    [types.ORDERS_PACKED_INITIAL] (state, payload) {
+      state.packedOrders = payload.packedOrders
+    }
 
 }
 

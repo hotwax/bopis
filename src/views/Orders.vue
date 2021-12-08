@@ -30,7 +30,7 @@
         </OrderItemCard>     
       </div>      
       <div v-if="segmentSelected === 'packed'">
-        <OrderItemCard v-for="order in orders" :key="order.orderId" :order="order">
+        <OrderItemCard v-for="order in packedOrders" :key="order.orderId" :order="order">
           <template #cardBottomButton>
             <ion-button fill="clear" @click="handover(order)">
               {{ $t("Handover") }}
@@ -110,7 +110,7 @@ import {
   IonTitle,
   IonToolbar,
 } from "@ionic/vue";
-import { defineComponent, onMounted, ref } from "vue";
+import { defineComponent, ref } from "vue";
 import OrderItemCard from './../components/OrderItemCard.vue'
 import { swapVerticalOutline, callOutline, mailOutline } from "ionicons/icons";
 import { mapGetters, useStore } from 'vuex'
@@ -132,11 +132,12 @@ export default defineComponent({
   computed: {
     ...mapGetters({
       orders: 'orders/getOrders',
+      packedOrders: 'orders/getPackedOrders',
       currentFacilityId: 'user/getCurrentFacility'
     })
   },
   methods: {
-    async getPickupOrders(vSize: any, vIndex: any){
+    async getPickupOrders(vSize?: any, vIndex?: any){
       const viewSize = vSize ? vSize : process.env.VUE_APP_VIEW_SIZE;
       const viewIndex = vIndex ? vIndex : 0;
       const payload = {
@@ -148,8 +149,17 @@ export default defineComponent({
       }
       await this.store.dispatch("orders/getOrder", payload);
     },
-    async getPackedOrders() {
-      console.log('packed orders action')
+    async getPackedOrders(vSize?: any, vIndex?: any) {
+      const viewSize = vSize ? vSize : process.env.VUE_APP_VIEW_SIZE;
+      const viewIndex = vIndex ? vIndex : 0;
+      const payload = {
+        sortBy: 'createdDate',
+        sortOrder: 'Desc',
+        viewSize,
+        viewIndex,
+        facilityId: this.currentFacilityId.facilityId
+      };
+      await this.store.dispatch("orders/getPackedOrders", payload);
     },
     async readyForPickup(order: any) {
       const alert = await alertController
@@ -200,11 +210,11 @@ export default defineComponent({
     },
     segmentChanged (e: CustomEvent) {
       this.segmentSelected = e.detail.value
-      this.segmentSelected === 'open' ? this.getPickupOrders(process.env.VUE_APP_VIEW_SIZE, 0) : this.getPackedOrders;
+      this.segmentSelected === 'open' ? this.getPickupOrders() : this.getPackedOrders();
     }
   },
   ionViewWillEnter () {
-    this.segmentSelected === 'open' ? this.getPickupOrders(process.env.VUE_APP_VIEW_SIZE, 0) : this.getPackedOrders;
+    this.segmentSelected === 'open' ? this.getPickupOrders() : this.getPackedOrders();
   },
   setup() {
     const store = useStore();
