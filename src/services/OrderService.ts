@@ -24,8 +24,17 @@ const updateShipment = async (payload: any): Promise <any> => {
   });
 }
 
+const quickShipEntireShipGroup = async (payload: any): Promise <any> => {
+  return api({
+    url: "quickShipEntireShipGroup",
+    method: "post",
+    data: payload
+  });
+}
+
 export const OrderService = {
   getOrders,
   getPackedOrders,
+  quickShipEntireShipGroup,
   updateShipment
 }
