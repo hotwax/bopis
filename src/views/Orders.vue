@@ -5,7 +5,7 @@
         <ion-title>{{ $t("Orders") }}</ion-title>
       </ion-toolbar>
       <ion-toolbar>
-        <ion-segment v-model="segmentName" >
+        <ion-segment v-model="segmentSelected" @ionChange="segmentChanged">
           <ion-segment-button value="open">
             <ion-label>{{ $t("Open") }}</ion-label>
           </ion-segment-button>
@@ -17,21 +17,21 @@
     </ion-header>
 
     <ion-content>
-      <div v-if="segmentName === 'open'">
+      <div v-if="segmentSelected === 'open'">
         <OrderItemCard v-for="order in orders" :key="order.orderId" :order="order">
           <template #packedTime>
             <p></p>
           </template>
-          <template #cardBottomLabel>
+          <template #cardBottomButton>
             <ion-button fill="clear" @click="readyForPickup(order)">
               {{ $t("Ready For Pickup") }}
             </ion-button>
           </template>
         </OrderItemCard>     
       </div>      
-      <div v-if="segmentName === 'packed'">
+      <div v-if="segmentSelected === 'packed'">
         <OrderItemCard v-for="order in orders" :key="order.orderId" :order="order">
-          <template #cardBottomLabel>
+          <template #cardBottomButton>
             <ion-button fill="clear" @click="handover(order)">
               {{ $t("Handover") }}
             </ion-button>
@@ -110,7 +110,7 @@ import {
   IonTitle,
   IonToolbar,
 } from "@ionic/vue";
-import { defineComponent, ref } from "vue";
+import { defineComponent, onMounted, ref } from "vue";
 import OrderItemCard from './../components/OrderItemCard.vue'
 import { swapVerticalOutline, callOutline, mailOutline } from "ionicons/icons";
 import { mapGetters, useStore } from 'vuex'
@@ -136,7 +136,7 @@ export default defineComponent({
     })
   },
   methods: {
-    async getOrders(vSize: any, vIndex: any){
+    async getPickupOrders(vSize: any, vIndex: any){
       const viewSize = vSize ? vSize : process.env.VUE_APP_VIEW_SIZE;
       const viewIndex = vIndex ? vIndex : 0;
       const payload = {
@@ -147,6 +147,9 @@ export default defineComponent({
         facilityId: this.currentFacilityId.facilityId
       }
       await this.store.dispatch("orders/getOrder", payload);
+    },
+    async getPackedOrders() {
+      console.log('packed orders action')
     },
     async readyForPickup(order: any) {
       const alert = await alertController
@@ -175,8 +178,7 @@ export default defineComponent({
     async handover(order: any) {
       const alert = await alertController
         .create({
-          header: 'Ready For Pickup',
-          message: `An email notification will be sent to ${order.customerName} that their order is ready for pickup.<br/> <br/> This order will also be moved to the packed orders tab.`,
+          header: 'Handover',
           buttons: [
             {
               text: 'Cancel',
@@ -187,7 +189,7 @@ export default defineComponent({
               },
             },
             {
-              text: 'Ready For Pickup',
+              text: 'Handover',
               handler: (order) => {
                 console.log('Confirm Okay')
               },
@@ -195,19 +197,23 @@ export default defineComponent({
           ],
         });
       return alert.present();
+    },
+    segmentChanged (e: CustomEvent) {
+      this.segmentSelected = e.detail.value
+      this.segmentSelected === 'open' ? this.getPickupOrders(process.env.VUE_APP_VIEW_SIZE, 0) : this.getPackedOrders;
     }
   },
-  mounted() {
-    this.getOrders(process.env.VUE_APP_VIEW_SIZE, 0);
+  ionViewWillEnter () {
+    this.segmentSelected === 'open' ? this.getPickupOrders(process.env.VUE_APP_VIEW_SIZE, 0) : this.getPackedOrders;
   },
   setup() {
-    const segmentName = ref("open");
-    const store = useStore(); 
+    const store = useStore();
+    const segmentSelected = ref('open');
 
     return {
       callOutline,
       mailOutline,
-      segmentName,
+      segmentSelected,
       swapVerticalOutline,
       store
     };

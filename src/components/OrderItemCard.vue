@@ -32,7 +32,7 @@
       </ion-item>
     </ion-list>
     <div class="border-top">
-      <slot name="cardBottomLabel" />
+      <slot name="cardBottomButton" />
     </div>       
   </ion-card>
 </template>
