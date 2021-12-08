@@ -32,7 +32,7 @@
       <div v-if="segmentSelected === 'packed'">
         <OrderItemCard v-for="order in packedOrders" :key="order.orderId" :order="order">
           <template #cardActionButton>
-            <ion-button fill="clear" @click="handover(order)">
+            <ion-button fill="clear" @click="deliverShipment(order)">
               {{ $t("Handover") }}
             </ion-button>
           </template>
@@ -185,28 +185,12 @@ export default defineComponent({
         });
       return alert.present();
     },
-    async handover(order: any) {
-      const alert = await alertController
-        .create({
-          header: 'Handover',
-          buttons: [
-            {
-              text: 'Cancel',
-              role: 'cancel',
-              cssClass: 'secondary',
-              handler: blah => {
-                console.log('Confirm Cancel:', blah)
-              },
-            },
-            {
-              text: 'Handover',
-              handler: (order) => {
-                console.log('Confirm Okay')
-              },
-            },
-          ],
-        });
-      return alert.present();
+    async deliverShipment(order: any) {
+      await this.store.dispatch('orders/deliverShipment', order).then((resp) => {
+        if (resp._EVENT_MESSAGE_) {
+          this.getPackedOrders();
+        }
+      });
     },
     segmentChanged (e: CustomEvent) {
       this.segmentSelected = e.detail.value

@@ -60,6 +60,35 @@ const actions: ActionTree<OrdersState , RootState> ={
   	return resp;
 	},
 
+	async deliverShipment ({ dispatch }, order: any) {
+		console.log(order);
+		const params = {
+      shipmentId: order.shipmentId,
+      statusId: 'SHIPMENT_SHIPPED'
+    }
+
+		let resp;
+
+		try {
+			resp = await OrderService.updateShipment(params)
+			if (resp.status === 200 && !hasError(resp)) {
+				console.log('shippend')
+				// let packedOrders = resp.data.docs;
+				// const ordersCount = resp.data.count;
+				// if(payload.viewIndex && payload.viewIndex > 0) packedOrders = state.packedOrders.concat(packedOrders)
+				// commit(types.ORDERS_PACKED_INITIAL, { packedOrders })
+			} else {
+				showToast(translate("Orders Not Found"))
+			}
+			// if (payload.viewIndex === 0) emitter.emit("dismissLoader");
+    } catch(err) {
+			console.log(err)
+			showToast(translate("Something went wrong"))
+    }
+
+  	return resp;
+	},
+
 	quickShipEntireShipGroup ({ commit }) {
 		console.log('ship group action')
 	}
