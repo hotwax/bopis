@@ -1,5 +1,5 @@
 <template>
-  <ion-card v-for="(shipGroup, index) in getShipGroups(order.items)" :key="index">
+  <ion-card>
     <ion-list>
       <ion-item @click="viewProduct()" lines="none">
         <ion-label>
@@ -61,7 +61,7 @@ export default defineComponent({
     IonNote,
     ProductListItem
   },
-  props: ["order"],
+  props: ["order", "shipGroup"],
   methods: {
     async copyToClipboard(text: string) {
       await Clipboard.write({
@@ -75,10 +75,6 @@ export default defineComponent({
       await this.store.dispatch('orders/updateCurrentOrder', { product: this.order }).then(() => {
         this.router.push({ path: `/orderdetail/${this.order.orderId}` })
       })
-    },
-    getShipGroups(items: any) {
-      // To get unique shipGroup, further it will use on ion-card iteration
-      return Array.from(new Set(items.map((ele: any) => ele.shipGroupSeqId)))
     },
     getShipGroupItems(shipGroupSeqId: any, items: any) {
       // To get all the items of same shipGroup, further it will use on pickup-order-card component to display line items

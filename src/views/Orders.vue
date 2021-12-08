@@ -18,80 +18,29 @@
 
     <ion-content>
       <div v-if="segmentSelected === 'open'">
-        <OrderItemCard v-for="order in orders" :key="order.orderId" :order="order">
-          <template #packedTime>
-            <p></p>
-          </template>
-          <template #cardActionButton>
-            <ion-button fill="clear" @click="readyForPickup(order)">
-              {{ $t("Ready For Pickup") }}
-            </ion-button>
-          </template>
-        </OrderItemCard>     
+        <div v-for="order in orders" :key="order.orderId">
+          <OrderItemCard v-for="(shipGroup, index) in getShipGroups(order.items)" :key="index" :order="order" :shipGroup="shipGroup">
+            <template #packedTime>
+              <p></p>
+            </template>
+            <template #cardActionButton>
+              <ion-button fill="clear" @click="readyForPickup(order, shipGroup)">
+                {{ getShipmentMethod(shipGroup, order.items) == 'STOREPICKUP' ? $t("Ready for pickup") : $t("Ready to ship") }}
+              </ion-button>
+            </template>
+          </OrderItemCard>
+        </div>
       </div>      
       <div v-if="segmentSelected === 'packed'">
-        <OrderItemCard v-for="order in packedOrders" :key="order.orderId" :order="order">
-          <template #cardActionButton>
-            <ion-button fill="clear" @click="deliverShipment(order)">
-              {{ $t("Handover") }}
-            </ion-button>
-          </template>
-        </OrderItemCard>
-        <!-- <ion-card>
-          <ion-list>
-            <ion-item lines="none">
-              <ion-label>
-                <h1>Customer Name</h1>
-                <p>Customer Id</p>
-              </ion-label>
-              <ion-note>
-                <p>order time delta</p>
-                <p>packed time delta</p>
-              </ion-note>
-            </ion-item>  
-            <ion-item lines="none">
-              <ion-thumbnail slot="start">
-                <Image :src="'https://images.all-free-download.com/images/graphicthumb/fashion_model_portrait_205201.jpg'" />
-              </ion-thumbnail>
-              <ion-label>
-                <h5>BRAND</h5>
-                <h2>Virtual Name</h2>
-                <p>{{ $t("Color") }} : color</p>
-                <p>{{ $t("Size") }} : size</p>
-              </ion-label>
-              <ion-note color="success">15 {{ $t("In Stock") }}</ion-note>
-            </ion-item>
-            <ion-item lines="full">
-              <ion-thumbnail slot="start">
-                <Image :src="'https://images.all-free-download.com/images/graphicthumb/fashion_model_portrait_205201.jpg'" />
-              </ion-thumbnail>
-              <ion-label>
-                <h5>BRAND</h5>
-                <h2>Virtual Name</h2>
-                <p>{{ $t("Color") }} : color</p>
-                <p>{{ $t("Size") }} : size</p>
-              </ion-label>
-              <ion-note color="success">15 {{ $t("In Stock") }}</ion-note>
-            </ion-item>
-            <ion-item>
-              <ion-icon :icon="callOutline" slot="start" />
-              <ion-label>phone number</ion-label>
-              <ion-button fill="outline" slot="end" color="medium">
-                {{ $t("Copy") }}
+        <div v-for="order in packedOrders" :key="order.orderId">
+          <OrderItemCard v-for="(shipGroup, index) in getShipGroups(order.items)" :key="index" :order="order" :shipGroup="shipGroup">
+            <template #cardActionButton>
+              <ion-button fill="clear" @click="deliverShipment(order)">
+                {{ order.shipmentMethodTypeId === 'STOREPICKUP' ? $t("Handover") : $t("Ship") }}
               </ion-button>
-            </ion-item>
-            <ion-item lines="full">
-              <ion-icon :icon="mailOutline" slot="start" />
-              <ion-label>email</ion-label>
-              <ion-button fill="outline" slot="end" color="medium">
-                {{ $t("Copy") }}
-              </ion-button>
-            </ion-item>
-          </ion-list>
-          <ion-button fill="clear">
-            {{ $t("Handover") }}
-          </ion-button>
-        </ion-card> -->
+            </template>
+          </OrderItemCard>
+        </div>
       </div>
     </ion-content>
   </ion-page>
@@ -147,6 +96,7 @@ export default defineComponent({
         viewIndex,
         facilityId: this.currentFacilityId.facilityId
       }
+      console.log('get pickup orders')
       await this.store.dispatch("orders/getOrder", payload);
     },
     async getPackedOrders(vSize?: any, vIndex?: any) {
@@ -161,7 +111,7 @@ export default defineComponent({
       };
       await this.store.dispatch("orders/getPackedOrders", payload);
     },
-    async readyForPickup(order: any) {
+    async readyForPickup(order: any, shipGroup: any) {
       const alert = await alertController
         .create({
           header: 'Ready For Pickup',
@@ -177,8 +127,11 @@ export default defineComponent({
             },
             {
               text: 'Ready For Pickup',
-              handler: (order) => {
-                console.log('Confirm Okay')
+              handler: () => {
+                this.store.dispatch('orders/quickShipEntireShipGroup', {order, shipGroup, facilityId: this.currentFacilityId.facilityId}).then((resp) => {
+                  console.log(resp);
+                  if (resp) this.getPickupOrders;
+                })
               },
             },
           ],
@@ -187,7 +140,7 @@ export default defineComponent({
     },
     async deliverShipment(order: any) {
       await this.store.dispatch('orders/deliverShipment', order).then((resp) => {
-        if (resp._EVENT_MESSAGE_) {
+        if (resp.data._EVENT_MESSAGE_) {
           this.getPackedOrders();
         }
       });
@@ -195,6 +148,17 @@ export default defineComponent({
     segmentChanged (e: CustomEvent) {
       this.segmentSelected = e.detail.value
       this.segmentSelected === 'open' ? this.getPickupOrders() : this.getPackedOrders();
+    },
+    getShipGroups(items: any) {
+      // To get unique shipGroup, further it will use on ion-card iteration
+      return Array.from(new Set(items.map((ele: any) => ele.shipGroupSeqId)))
+    },
+    getShipmentMethod(shipGroupSeqId: any, items: any) {
+    /* To display the button label as per the shipmentMethodTypeId, this will only used on orders segment.
+        Because we get the shipmentMethodTypeId on items level in wms-orders API.
+        As we already get shipmentMethodTypeId on order level in readytoshiporders API hence we will not use this method on packed orders segment.
+    */
+      return items.find((ele: any) => ele.shipGroupSeqId == shipGroupSeqId).shipmentMethodTypeId
     }
   },
   ionViewWillEnter () {
