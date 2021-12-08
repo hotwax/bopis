@@ -22,7 +22,7 @@
           <template #packedTime>
             <p></p>
           </template>
-          <template #cardBottomButton>
+          <template #cardActionButton>
             <ion-button fill="clear" @click="readyForPickup(order)">
               {{ $t("Ready For Pickup") }}
             </ion-button>
@@ -31,7 +31,7 @@
       </div>      
       <div v-if="segmentSelected === 'packed'">
         <OrderItemCard v-for="order in packedOrders" :key="order.orderId" :order="order">
-          <template #cardBottomButton>
+          <template #cardActionButton>
             <ion-button fill="clear" @click="handover(order)">
               {{ $t("Handover") }}
             </ion-button>

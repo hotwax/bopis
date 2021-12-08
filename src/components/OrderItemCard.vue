@@ -1,5 +1,5 @@
 <template>
-  <ion-card>
+  <ion-card v-for="(shipGroup, index) in getShipGroups(order.items)" :key="index">
     <ion-list>
       <ion-item @click="viewProduct()" lines="none">
         <ion-label>
@@ -13,8 +13,8 @@
           </slot>
         </ion-note>
       </ion-item>
-            
-      <ProductListItem v-for="item in order.items" :key="item.itemId" :item="item" />
+
+      <ProductListItem v-for="item in getShipGroupItems(shipGroup, order.items)" :key="item.itemId" :item="item" />
 
       <ion-item v-if="order.phoneNumber">
         <ion-icon :icon="callOutline" slot="start" />
@@ -32,7 +32,7 @@
       </ion-item>
     </ion-list>
     <div class="border-top">
-      <slot name="cardBottomButton" />
+      <slot name="cardActionButton" />
     </div>       
   </ion-card>
 </template>
@@ -41,7 +41,7 @@
 import { IonCard, IonList, IonItem, IonLabel, IonNote, IonButton, IonIcon } from "@ionic/vue";
 import ProductListItem from './ProductListItem.vue'
 import { callOutline, mailOutline } from "ionicons/icons";
-import { onMounted, defineComponent } from "vue"
+import { defineComponent } from "vue"
 import { Plugins } from '@capacitor/core';
 import { showToast } from '@/utils'
 import {useRouter} from 'vue-router'
@@ -75,7 +75,15 @@ export default defineComponent({
       await this.store.dispatch('orders/updateCurrentOrder', { product: this.order }).then(() => {
         this.router.push({ path: `/orderdetail/${this.order.orderId}` })
       })
-    }
+    },
+    getShipGroups(items: any) {
+      // To get unique shipGroup, further it will use on ion-card iteration
+      return Array.from(new Set(items.map((ele: any) => ele.shipGroupSeqId)))
+    },
+    getShipGroupItems(shipGroupSeqId: any, items: any) {
+      // To get all the items of same shipGroup, further it will use on pickup-order-card component to display line items
+      return items.filter((item: any) => item.shipGroupSeqId == shipGroupSeqId)
+    },
   },
   setup() {
     const router = useRouter();
