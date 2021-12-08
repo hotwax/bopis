@@ -12,8 +12,8 @@
         <ion-item>
           <ion-icon :icon="storefrontOutline" slot="start" />
           <ion-label>{{$t("store")}}</ion-label>
-          <ion-select interface="popover" :placeholder="$t('store name')" :selected-text="currentFacility.facilityId" @ionChange="setFacility($event)">
-            <ion-select-option v-for="facility in userProfile.facilities" :key="facility.facilityId" :value="facility.facilityId" >{{ facility.facilityId }}</ion-select-option>
+          <ion-select interface="popover" :placeholder="$t('store name')" :value="currentFacility.facilityId" @ionChange="setFacility($event)">
+            <ion-select-option v-for="facility in (userProfile ? userProfile.facilities : [])" :key="facility.facilityId" :value="facility.facilityId" >{{ facility.name }}</ion-select-option>
           </ion-select>
         </ion-item>
 
@@ -21,7 +21,7 @@
         <ion-item>
           <ion-icon :icon="personCircleOutline" slot="start" />
           <ion-label>{{ userProfile !== null ? userProfile.partyName : '' }}</ion-label>
-         <ion-button slot="end" fill="outline" color="dark" @click="logout()">{{ $t("Logout") }}</ion-button>
+          <ion-button slot="end" fill="outline" color="dark" @click="logout()">{{ $t("Logout") }}</ion-button>
         </ion-item>
       </ion-list>
     </ion-content>
