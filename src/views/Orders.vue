@@ -119,10 +119,14 @@ export default defineComponent({
       await this.store.dispatch("orders/getPackedOrders", payload);
     },
     async readyForPickup(order: any, shipGroup: any) {
+      const pickup = this.getShipmentMethod(shipGroup, order.items) === 'STOREPICKUP';
+      const header = pickup ? 'Ready For Pickup' : 'Ready to Ship';
+      const message = pickup ? `An email notification will be sent to ${order.customerName} that their order is ready for pickup.<br/> <br/> This order will also be moved to the packed orders tab.` : '';
+
       const alert = await alertController
         .create({
-          header: 'Ready For Pickup',
-          message: `An email notification will be sent to ${order.customerName} that their order is ready for pickup.<br/> <br/> This order will also be moved to the packed orders tab.`,
+          header: header,
+          message: message,
           buttons: [
             {
               text: 'Cancel',
@@ -133,7 +137,7 @@ export default defineComponent({
               },
             },
             {
-              text: 'Ready For Pickup',
+              text: header,
               handler: () => {
                 this.store.dispatch('orders/quickShipEntireShipGroup', {order, shipGroup, facilityId: this.currentFacilityId.facilityId}).then((resp) => {
                   if (resp.data._EVENT_MESSAGE_) this.getPickupOrders();

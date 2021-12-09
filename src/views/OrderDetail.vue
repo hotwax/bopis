@@ -67,12 +67,12 @@
         {{ $t("This order cannot be split. If you cannot fulfill any item, customer name will be sent an email with alternate fulfillment options and this order will be removed from your dashboard.") }}
       </ion-note>
     </ion-item>
-    <ion-button expand="block" color="danger" fill="outline" @click="rejectOrder(orders)">
+    <ion-button expand="block" color="danger" fill="outline" @click="updateOrder(orders)">
       {{ $t("Reject Order") }}
     </ion-button>
     <ion-card>
       <ion-item lines="none">
-        <ion-icon :icon="informationCircleOutline" slot="start" />
+        <ion-icon :icon="informationCircleOutline" slot="start" @click="learnMore"/>
         <ion-label>{{ $t("Learn more about unfillable items") }}</ion-label>
       </ion-item>
     </ion-card>
@@ -81,6 +81,7 @@
 
 <script>
 import {
+  alertController,
   IonBackButton,
   IonButton,
   IonCard,
@@ -143,9 +144,43 @@ export default defineComponent({
         console.log("text", text);
       });
     },
-    async rejectOrder (order) {
-      this.store.dispatch('orders/unfillableOrderOrItem', order);
-    }
+    async updateOrder (order) {
+      const alert = await alertController
+        .create({
+          header: this.$t('Update Order'),
+          message: `${order.customerName} will be sent an email with alternate fulfillment options for their BOPIS order and this order will be removed from your dashboard.<br/><br/>This action cannot be undone.`,
+          buttons: [
+            {
+              text: 'Cancel',
+              role: 'cancel',
+              handler: blah => {
+                console.log('Confirm Cancel:', blah)
+              },
+            },
+            {
+              text: this.$t('Reject Order'),
+              handler: () => {
+                this.store.dispatch('orders/unfillableOrderOrItem', order);
+              },
+            },
+          ],
+        });
+      return alert.present();
+    },
+    async learnMore () {
+      const alert = await alertController
+        .create({
+          header: this.$t('Unfillable items'),
+          message: this.$t('Depending on the reason you select for not fulfulling an item, an inventory variance will be recorded and all sales channels will be updated with new inventory levels.<br/><br/>For example, by selecting “Not in stock” HotWax Commerce will stop routing orders for it to your store and customers will not be able to place BOPIS orders for it at your store on Shopify.'),
+          buttons: [
+            {
+              text: 'Dismiss',
+              role: 'cancel'
+            }
+          ],
+        });
+      return alert.present();
+    },
   },
   setup() {
     const store = useStore();
