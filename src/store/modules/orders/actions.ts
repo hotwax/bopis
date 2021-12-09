@@ -34,8 +34,8 @@ const actions: ActionTree<OrdersState , RootState> ={
   	return resp;
   },
 
-  updateCurrentOrder ({ commit }, payload){
-    commit(types.PRODUCT_CURRENT_UPDATED, { product: payload.product })
+  updateCurrentOrder ({ commit }, payload) {
+    commit(types.ORDERS_CURRENT_UPDATED, { order: payload.order })
   },
 
 	async getPackedOrders ({ commit, state }, payload) {
@@ -50,6 +50,7 @@ const actions: ActionTree<OrdersState , RootState> ={
 				const total = resp.data.count;
 				if(payload.viewIndex && payload.viewIndex > 0) packedOrders = state.packedOrders.list.concat(packedOrders)
 				commit(types.ORDERS_PACKED_INITIAL, { packedOrders, total })
+				if (payload.viewIndex === 0) emitter.emit("dismissLoader");
 			} else {
 				showToast(translate("Orders Not Found"))
 			}

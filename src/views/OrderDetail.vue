@@ -95,6 +95,7 @@ const { Clipboard } = Plugins;
 
 export default defineComponent({
   name: "OrderDetail",
+  props: ['orderId'],
   components: {
     IonBackButton,
     IonButton,
@@ -121,8 +122,7 @@ export default defineComponent({
       await Clipboard.write({
         string: text,
       }).then(() => {
-        showToast("Copied");
-        console.log("text", text);
+        showToast(this.translate("Copied"));
       });
     },
     async updateOrder (order) {

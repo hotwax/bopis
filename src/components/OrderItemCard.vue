@@ -1,7 +1,7 @@
 <template>
   <ion-card>
     <ion-list>
-      <ion-item @click="viewProduct()" lines="none">
+      <ion-item @click="viewProduct(order)" lines="none">
         <ion-label>
           <h1>{{ order.customerName }}</h1>
           <p>{{ order.customerId }}</p>
@@ -72,9 +72,9 @@ export default defineComponent({
         showToast('Copied')
       })
     },
-    async viewProduct () {
-      await this.store.dispatch('orders/updateCurrentOrder', { product: this.order }).then(() => {
-        this.router.push({ path: `/orderdetail/${this.order.orderId}` })
+    async viewProduct (order: any) {
+      await this.store.dispatch('orders/updateCurrentOrder', { order }).then(() => {
+        this.router.push({ path: `/orderdetail/${order.orderId}` })
       })
     },
     getShipGroupItems(shipGroupSeqId: any, items: any) {

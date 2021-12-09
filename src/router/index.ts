@@ -43,7 +43,8 @@ const routes: Array<RouteRecordRaw> = [
         path: 'settings',
         component: () => import('@/views/Settings.vue')
       },
-    ]
+    ],
+    beforeEnter: authGuard
   },
   {
     path: '/login',
@@ -52,12 +53,11 @@ const routes: Array<RouteRecordRaw> = [
     beforeEnter: loginGuard
   },
   {
-    path: "/orderdetail/:sku",
-    name: "orderdetail",
+    path: "/orderdetail/:orderId",
+    name: "OrderDetail",
     component: OrderDetail,
     beforeEnter: authGuard,
-    props:true
-    
+    props: true
   }
 ]
 
