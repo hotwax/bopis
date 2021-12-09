@@ -14,15 +14,14 @@ const actions: ActionTree<OrdersState , RootState> ={
     if (payload.viewIndex === 0) emitter.emit("presentLoader");
     let resp;
 
-		console.log('getOrders')
-
     try {
 			resp = await OrderService.getOrders(payload)
 			if (resp.status === 200 && resp.data.count > 0 && !hasError(resp)) {
 				let orders = resp.data.docs;
 				const ordersCount = resp.data.count;
-				if(payload.viewIndex && payload.viewIndex > 0) orders = state.orders.concat(orders)
+				if(payload.viewIndex && payload.viewIndex > 0) orders = state.orders.list.concat(orders)
 				commit(types.OPEN_ORDERS_INITIAL, {orders: orders , ordersCount: ordersCount})
+				if (payload.viewIndex === 0) emitter.emit("dismissLoader");
 			} else {
 				showToast(translate("Orders Not Found"))
 			}
@@ -48,9 +47,9 @@ const actions: ActionTree<OrdersState , RootState> ={
 			resp = await OrderService.getPackedOrders(payload)
 			if (resp.status === 200 && resp.data.count > 0 && !hasError(resp)) {
 				let packedOrders = resp.data.docs;
-				// const ordersCount = resp.data.count;
-				if(payload.viewIndex && payload.viewIndex > 0) packedOrders = state.packedOrders.concat(packedOrders)
-				commit(types.ORDERS_PACKED_INITIAL, { packedOrders })
+				const total = resp.data.count;
+				if(payload.viewIndex && payload.viewIndex > 0) packedOrders = state.packedOrders.list.concat(packedOrders)
+				commit(types.ORDERS_PACKED_INITIAL, { packedOrders, total })
 			} else {
 				showToast(translate("Orders Not Found"))
 			}

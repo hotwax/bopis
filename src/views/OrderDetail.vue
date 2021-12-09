@@ -47,7 +47,7 @@
     </ion-card>
     <ion-item lines="none">
       <ion-note>
-        {{ $t("This order cannot be split. If you cannot fulfill any item, customer name will be sent an email with alternate fulfillment options and this order will be removed from your dashboard.") }}
+        {{ $t(`This order cannot be split. If you cannot fulfill any item, ${orders.customerName} will be sent an email with alternate fulfillment options and this order will be removed from your dashboard.`) }}
       </ion-note>
     </ion-item>
     <ion-button expand="block" color="danger" fill="outline" @click="updateOrder(orders)">

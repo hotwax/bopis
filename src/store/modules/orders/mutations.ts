@@ -5,16 +5,16 @@ import * as types from './mutation-types'
 const mutations: MutationTree <ProductState> = {
     [types.OPEN_ORDERS_INITIAL] ( state , payload ) {
         state.orders.list = payload.orders
-        state.orders.totalCount = payload.ordersCount
+        state.orders.total = payload.ordersCount
     }
     ,
     [types.PRODUCT_CURRENT_UPDATED] (state, payload) {
         
         state.current = payload.product
-        console.log("payload",payload.product)
     },
     [types.ORDERS_PACKED_INITIAL] (state, payload) {
-      state.packedOrders = payload.packedOrders
+      state.packedOrders.list = payload.packedOrders
+      state.packedOrders.total = payload.total
     }
 
 }

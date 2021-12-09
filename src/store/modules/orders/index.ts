@@ -12,9 +12,12 @@ const ordersModule: Module<OrdersState, RootState> = {
         current: {},
         orders: {
             list: {},
-            totalCount: 0
+            total: 0
         },
-        packedOrders: {}
+        packedOrders: {
+            list: {},
+            total: 0
+        }
     },
     getters,
     actions,

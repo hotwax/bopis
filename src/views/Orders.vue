@@ -42,6 +42,9 @@
           </OrderItemCard>
         </div>
       </div>
+      <ion-infinite-scroll @ionInfinite="loadMoreProducts($event)" threshold="100px" :disabled="!isScrollable">
+        <ion-infinite-scroll-content loading-spinner="crescent" :loading-text="$t('Loading')" />
+      </ion-infinite-scroll>
     </ion-content>
   </ion-page>
 </template>
@@ -52,6 +55,8 @@ import {
   IonButton,
   IonContent,
   IonHeader,
+  IonInfiniteScroll,
+  IonInfiniteScrollContent,
   IonLabel,
   IonPage,
   IonSegment,
@@ -71,6 +76,8 @@ export default defineComponent({
     IonButton,
     IonContent,
     IonHeader,
+    IonInfiniteScroll,
+    IonInfiniteScrollContent,
     IonLabel,
     IonPage,
     IonSegment,
@@ -89,11 +96,12 @@ export default defineComponent({
     ...mapGetters({
       orders: 'orders/getOrders',
       packedOrders: 'orders/getPackedOrders',
-      currentFacilityId: 'user/getCurrentFacility'
+      currentFacilityId: 'user/getCurrentFacility',
+      isScrollable: 'orders/isScrollable'
     })
   },
   methods: {
-    async getPickupOrders(vSize?: any, vIndex?: any){
+    async getPickupOrders (vSize?: any, vIndex?: any) {
       const viewSize = vSize ? vSize : process.env.VUE_APP_VIEW_SIZE;
       const viewIndex = vIndex ? vIndex : 0;
       const payload = {
@@ -103,10 +111,9 @@ export default defineComponent({
         viewIndex,
         facilityId: this.currentFacilityId.facilityId
       }
-      console.log('get pickup orders')
       await this.store.dispatch("orders/getOrder", payload);
     },
-    async getPackedOrders(vSize?: any, vIndex?: any) {
+    async getPackedOrders (vSize?: any, vIndex?: any) {
       const viewSize = vSize ? vSize : process.env.VUE_APP_VIEW_SIZE;
       const viewIndex = vIndex ? vIndex : 0;
       const payload = {
@@ -117,6 +124,23 @@ export default defineComponent({
         facilityId: this.currentFacilityId.facilityId
       };
       await this.store.dispatch("orders/getPackedOrders", payload);
+    },
+    async loadMoreProducts (event: any) {
+      if (this.segmentSelected === 'open') {
+        this.getPickupOrders(
+          undefined,
+          Math.ceil(this.orders.length / process.env.VUE_APP_VIEW_SIZE).toString()
+        ).then(() => {
+          event.target.complete();
+        })
+      } else {
+        this.getPackedOrders(
+          undefined,
+          Math.ceil(this.packedOrders.length / process.env.VUE_APP_VIEW_SIZE).toString()
+        ).then(() => {
+          event.target.complete();
+        })
+      }
     },
     async readyForPickup(order: any, shipGroup: any) {
       const pickup = this.getShipmentMethod(shipGroup, order.items) === 'STOREPICKUP';
