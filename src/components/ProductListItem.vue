@@ -4,7 +4,7 @@
       <Image :src="item.images.main.thumbnail" />
     </ion-thumbnail>
     <ion-label>
-      <h5>{{ item.itemId }}</h5>
+      <h5>{{ item?.brandName }}</h5>
       <h2>{{ item.itemName }}</h2>
       <p>{{ $t("Color") }} : {{ item.standardFeatures.COLOR.description }}</p>
       <p>{{ $t("Size") }} : {{ item.standardFeatures.SIZE.description }}</p>
