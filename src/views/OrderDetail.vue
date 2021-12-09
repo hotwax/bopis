@@ -133,14 +133,11 @@ export default defineComponent({
       const alert = await alertController
         .create({
           header: this.$t('Update Order'),
-          message: `${order.customerName} will be sent an email with alternate fulfillment options for their BOPIS order and this order will be removed from your dashboard.<br/><br/>This action cannot be undone.`,
+          message: this.$t(`will be sent an email with alternate fulfillment options for their BOPIS order and this order will be removed from your dashboard. This action cannot be undone.`, { customerName: order.customerName, space: '<br /><br />' }),
           buttons: [
             {
-              text: 'Cancel',
-              role: 'cancel',
-              handler: blah => {
-                console.log('Confirm Cancel:', blah)
-              },
+              text: this.$t('Cancel'),
+              role: 'cancel'
             },
             {
               text: this.$t('Reject Order'),
@@ -155,11 +152,11 @@ export default defineComponent({
     async learnMore () {
       const alert = await alertController
         .create({
-          header: this.$t('Unfillable items'),
-          message: this.$t('Depending on the reason you select for not fulfulling an item, an inventory variance will be recorded and all sales channels will be updated with new inventory levels.<br/><br/>For example, by selecting “Not in stock” HotWax Commerce will stop routing orders for it to your store and customers will not be able to place BOPIS orders for it at your store on Shopify.'),
+          header: this.$t('Unfillable Items'),
+          message: this.$t('Depending on the reason you select for not fulfulling an item, an inventory variance will be recorded and all sales channels will be updated with new inventory levels. For example, by selecting “Not in stock” HotWax Commerce will stop routing orders for it to your store and customers will not be able to place BOPIS orders for it at your store on Shopify.', { space: '<br/><br/>'}),
           buttons: [
             {
-              text: 'Dismiss',
+              text: this.$t('Dismiss'),
               role: 'cancel'
             }
           ],

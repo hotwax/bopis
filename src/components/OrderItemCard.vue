@@ -10,7 +10,7 @@
           <p>{{ order.orderDate && $filters.formatDate(order.orderDate) }}</p>
           <slot name="packedTime">
             <!-- TODO: Display the packed date of the orders, currently not getting the packed date from API-->
-            <p>{{ order.orderDate && $filters.formatDate(order.orderDate) }}</p>
+            <p></p>
           </slot>
         </ion-note>
       </ion-item>
@@ -68,8 +68,7 @@ export default defineComponent({
       await Clipboard.write({
         string: text
       }).then(() => {
-        // showToast(this.$t('Copied', { text }));
-        showToast('Copied')
+        showToast(this.$t('Copied'))
       })
     },
     async viewProduct (order: any) {

@@ -25,7 +25,7 @@
             </template>
             <template #cardActionButton>
               <ion-button fill="clear" @click="readyForPickup(order, shipGroup)">
-                {{ getShipmentMethod(shipGroup, order.items) == 'STOREPICKUP' ? $t("Ready for pickup") : $t("Ready to ship") }}
+                {{ getShipmentMethod(shipGroup, order.items) === 'STOREPICKUP' ? $t("Ready for pickup") : $t("Ready to Ship") }}
               </ion-button>
             </template>
           </OrderItemCard>
@@ -144,8 +144,8 @@ export default defineComponent({
     },
     async readyForPickup(order: any, shipGroup: any) {
       const pickup = this.getShipmentMethod(shipGroup, order.items) === 'STOREPICKUP';
-      const header = pickup ? 'Ready For Pickup' : 'Ready to Ship';
-      const message = pickup ? `An email notification will be sent to ${order.customerName} that their order is ready for pickup.<br/> <br/> This order will also be moved to the packed orders tab.` : '';
+      const header = pickup ? this.$t('Ready For Pickup') : this.$t('Ready to Ship');
+      const message = pickup ? this.$t('An email notification will be sent to that their order is ready for pickup. This order will also be moved to the packed orders tab.', { customerName: order.customerName, space: '<br/><br/>'}) : '';
 
       const alert = await alertController
         .create({
@@ -153,12 +153,8 @@ export default defineComponent({
           message: message,
           buttons: [
             {
-              text: 'Cancel',
-              role: 'cancel',
-              cssClass: 'secondary',
-              handler: blah => {
-                console.log('Confirm Cancel:', blah)
-              },
+              text: this.$t('Cancel'),
+              role: 'cancel'
             },
             {
               text: header,
