@@ -42,24 +42,7 @@
 
     <ion-card v-for="(item, index) in orders?.items" :key="index">
       <ion-card-content>
-        <ion-item lines="none">
-          <ion-thumbnail slot="start">
-            <Image :src="item.images.main.thumbnail" />
-          </ion-thumbnail>
-          <ion-label>
-            <h5>BRAND</h5>
-            <h2>{{ item.itemName }}</h2>
-            <p>
-              {{ $t("Color") }}: {{ item.standardFeatures.COLOR.description }}
-            </p>
-            <p>
-              {{ $t("Size") }}: {{ item.standardFeatures.SIZE.description }}
-            </p>
-          </ion-label>
-          <ion-note slot="end" color="warning">
-            {{ $t("In Stock", { count: item.inventory[0].quantity }) }}
-          </ion-note>
-        </ion-item>
+        <ProductListItem :item="item" />
       </ion-card-content>
     </ion-card>
     <ion-item lines="none">
@@ -94,7 +77,6 @@ import {
   IonList,
   IonNote,
   IonTitle,
-  IonThumbnail,
   IonToolbar,
 } from "@ionic/vue";
 import { defineComponent } from "vue";
@@ -106,15 +88,14 @@ import {
   mailOutline,
   informationCircleOutline,
 } from "ionicons/icons";
-import Image from "@/components/Image.vue";
 import { showToast } from "@/utils";
+import ProductListItem from '@/components/ProductListItem.vue'
 
 const { Clipboard } = Plugins;
 
 export default defineComponent({
   name: "OrderDetail",
   components: {
-    Image,
     IonBackButton,
     IonButton,
     IonCard,
@@ -127,8 +108,8 @@ export default defineComponent({
     IonList,
     IonNote,
     IonTitle,
-    IonThumbnail,
     IonToolbar,
+    ProductListItem
   },
   computed: {
     ...mapGetters({
