@@ -32,9 +32,18 @@ const quickShipEntireShipGroup = async (payload: any): Promise <any> => {
   });
 }
 
+const rejectOrderItem = async (payload: any): Promise <any> => {
+  return api({
+    url: "rejectOrderItem",
+    method: "post",
+    data: payload
+  });
+}
+
 export const OrderService = {
   getOrders,
   getPackedOrders,
   quickShipEntireShipGroup,
+  rejectOrderItem,
   updateShipment
 }

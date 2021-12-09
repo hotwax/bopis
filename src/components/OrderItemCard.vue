@@ -9,6 +9,7 @@
         <ion-note>
           <p>{{ order.orderDate && $filters.formatDate(order.orderDate) }}</p>
           <slot name="packedTime">
+            <!-- TODO: Display the packed date of the orders, currently not getting the packed date from API-->
             <p>{{ order.orderDate && $filters.formatDate(order.orderDate) }}</p>
           </slot>
         </ion-note>

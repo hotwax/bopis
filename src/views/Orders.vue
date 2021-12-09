@@ -63,6 +63,7 @@ import { defineComponent, ref } from "vue";
 import OrderItemCard from './../components/OrderItemCard.vue'
 import { swapVerticalOutline, callOutline, mailOutline } from "ionicons/icons";
 import { mapGetters, useStore } from 'vuex'
+import emitter from "@/event-bus"
 
 export default defineComponent({
   name: 'Orders',
@@ -77,6 +78,12 @@ export default defineComponent({
     IonTitle,
     IonToolbar,
     OrderItemCard
+  },
+  created () {
+    emitter.on("refreshPickupOrders", this.getPickupOrders);
+  },
+  unmounted () {
+    emitter.off("refreshPickupOrders", this.getPickupOrders);
   },
   computed: {
     ...mapGetters({
@@ -129,8 +136,7 @@ export default defineComponent({
               text: 'Ready For Pickup',
               handler: () => {
                 this.store.dispatch('orders/quickShipEntireShipGroup', {order, shipGroup, facilityId: this.currentFacilityId.facilityId}).then((resp) => {
-                  console.log(resp);
-                  if (resp) this.getPickupOrders;
+                  if (resp.data._EVENT_MESSAGE_) this.getPickupOrders();
                 })
               },
             },
