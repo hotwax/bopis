@@ -15,26 +15,26 @@
         <ion-note slot="end">{{ $filters.formatDate(orders.orderDate) }}</ion-note>
       </ion-item>
     </ion-list>
-    <ion-item>
+    <ion-item v-if="orders.phoneNumber">
       <ion-icon :icon="callOutline" slot="start" />
-      <ion-label>Phone Number</ion-label>
+      <ion-label>{{ orders.phoneNumber }}</ion-label>
       <ion-button
         fill="outline"
         slot="end"
         color="medium"
-        @click="copyToClipboard('copied')"
+        @click="copyToClipboard(orders.phoneNumber)"
       >
         {{ $t("Copy") }}
       </ion-button>
     </ion-item>
-    <ion-item lines="none">
+    <ion-item v-if="orders.email" lines="none">
       <ion-icon :icon="mailOutline" slot="start" />
-      <ion-label>Email</ion-label>
+      <ion-label>{{ orders.email }}</ion-label>
       <ion-button
         fill="outline"
         slot="end"
         color="medium"
-        @click="copyToClipboard('copied')"
+        @click="copyToClipboard(orders.email)"
       >
         {{ $t("Copy") }}
       </ion-button>
@@ -59,13 +59,6 @@
           <ion-note slot="end" color="warning">
             {{ $t("In Stock", { count: orders.items[0].inventory[0].quantity }) }}
           </ion-note>
-        </ion-item>
-        <ion-item lines="none">
-          <ion-checkbox slot="start" color="primary" />
-          <ion-label>{{ $t("UnFillable") }} </ion-label>
-          <ion-select value="Not in stock">
-            <ion-select-option>{{ $t("Not in stock") }}</ion-select-option>
-          </ion-select>
         </ion-item>
       </ion-card-content>
     </ion-card>
@@ -93,15 +86,12 @@ import {
   IonCard,
   IonContent,
   IonCardContent,
-  IonCheckbox,
   IonHeader,
   IonIcon,
   IonItem,
   IonLabel,
   IonList,
   IonNote,
-  IonSelect,
-  IonSelectOption,
   IonTitle,
   IonThumbnail,
   IonToolbar,
@@ -129,15 +119,12 @@ export default defineComponent({
     IonCard,
     IonContent,
     IonCardContent,
-    IonCheckbox,
     IonHeader,
     IonIcon,
     IonItem,
     IonLabel,
     IonList,
     IonNote,
-    IonSelect,
-    IonSelectOption,
     IonTitle,
     IonThumbnail,
     IonToolbar,
