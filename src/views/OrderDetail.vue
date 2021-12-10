@@ -100,7 +100,6 @@ export default defineComponent({
   name: "OrderDetail",
   props: ['orderId'],
   components: {
-    alertController,
     IonBackButton,
     IonButton,
     IonCard,
