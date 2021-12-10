@@ -7,21 +7,21 @@ import RootState from '../../RootState'
 
 
 const ordersModule: Module<OrdersState, RootState> = {
-	namespaced: true,
-	state: {
-		current: {},
-		orders: {
-			list: {},
-			total: 0
-		},
-		packedOrders: {
-			list: {},
-			total: 0
-		}
-	},
-	getters,
-	actions,
-	mutations,
+  namespaced: true,
+  state: {
+    current: {},
+    orders: {
+      list: {},
+      total: 0
+    },
+    packedOrders: {
+      list: {},
+      total: 0
+    }
+  },
+  getters,
+  actions,
+  mutations,
 }
 
 export default ordersModule;
