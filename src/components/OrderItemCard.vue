@@ -47,6 +47,7 @@ import { Plugins } from '@capacitor/core';
 import { showToast } from '@/utils'
 import {useRouter} from 'vue-router'
 import { useStore } from "vuex";
+import emitter from "@/event-bus";
 
 const { Clipboard } = Plugins;
 
@@ -72,9 +73,7 @@ export default defineComponent({
       })
     },
     async viewProduct (order: any) {
-      await this.store.dispatch('orders/updateCurrentOrder', { order }).then(() => {
-        this.router.push({ path: `/orderdetail/${order.orderId}` })
-      })
+      emitter.emit("setCurrent", order);
     },
     getShipGroupItems(shipGroupSeqId: any, items: any) {
       // To get all the items of same shipGroup, further it will use on pickup-order-card component to display line items

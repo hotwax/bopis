@@ -88,9 +88,11 @@ export default defineComponent({
   },
   created () {
     emitter.on("refreshPickupOrders", this.getPickupOrders);
+    emitter.on("setCurrent", this.setCurrent);
   },
   unmounted () {
     emitter.off("refreshPickupOrders", this.getPickupOrders);
+    emitter.off("setCurrent", this.setCurrent);
   },
   computed: {
     ...mapGetters({
@@ -101,6 +103,14 @@ export default defineComponent({
     })
   },
   methods: {
+    async setCurrent (order: any) {
+      // TODO: find a better approach to handle the case that when in open segment we can click on
+      // order card to route on the order details page but not in the packed segment
+      if (this.segmentSelected === 'open')
+        await this.store.dispatch('orders/updateCurrentOrder', { order }).then(() => {
+          this.$router.push({ path: `/orderdetail/${order.orderId}` })
+        })
+    },
     async getPickupOrders (vSize?: any, vIndex?: any) {
       const viewSize = vSize ? vSize : process.env.VUE_APP_VIEW_SIZE;
       const viewIndex = vIndex ? vIndex : 0;
