@@ -39,13 +39,13 @@
 </template>
 
 <script lang="ts">
-import { IonCard, IonList, IonItem, IonLabel, IonNote, IonButton, IonIcon } from "@ionic/vue";
+import { IonButton, IonCard, IonIcon, IonItem, IonList, IonLabel, IonNote } from "@ionic/vue";
 import ProductListItem from './ProductListItem.vue'
 import { callOutline, mailOutline } from "ionicons/icons";
 import { defineComponent } from "vue"
 import { Plugins } from '@capacitor/core';
 import { showToast } from '@/utils'
-import {useRouter} from 'vue-router'
+import { useRouter } from 'vue-router'
 import { useStore } from "vuex";
 import emitter from "@/event-bus";
 
@@ -65,7 +65,7 @@ export default defineComponent({
   },
   props: ["order", "shipGroup"],
   methods: {
-    async copyToClipboard(text: string) {
+    async copyToClipboard (text: string) {
       await Clipboard.write({
         string: text
       }).then(() => {
@@ -75,12 +75,12 @@ export default defineComponent({
     async viewProduct (order: any) {
       emitter.emit("setCurrent", order);
     },
-    getShipGroupItems(shipGroupSeqId: any, items: any) {
+    getShipGroupItems (shipGroupSeqId: any, items: any) {
       // To get all the items of same shipGroup, further it will use on pickup-order-card component to display line items
       return items.filter((item: any) => item.shipGroupSeqId == shipGroupSeqId)
-    },
+    }
   },
-  setup() {
+  setup () {
     const router = useRouter();
     const store = useStore();
     return {
@@ -94,7 +94,7 @@ export default defineComponent({
 </script>
 
 <style>
-.border-top{
+.border-top {
   border-top: 1px solid rgba(0, 0, 0, 0.12);
 }
 </style>

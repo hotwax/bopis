@@ -29,7 +29,7 @@
 </template>
 
 <script lang="ts">
-import { IonButton, IonContent, IonHeader,IonIcon, IonItem, IonLabel, IonList, IonPage, IonSelect, IonSelectOption, IonTitle, IonToolbar } from '@ionic/vue';
+import { IonButton, IonContent, IonHeader, IonIcon, IonItem, IonLabel, IonList, IonPage, IonSelect, IonSelectOption, IonTitle, IonToolbar } from '@ionic/vue';
 import { defineComponent } from 'vue';
 import { ellipsisVertical, personCircleOutline, storefrontOutline} from 'ionicons/icons'
 import { mapGetters, useStore } from 'vuex';
@@ -60,11 +60,11 @@ export default defineComponent({
   methods: {
     setFacility (facility: any) {
       if (this.userProfile)
-      this.userProfile.facilities.map((fac: any) => {
-        if (fac.facilityId == facility['detail'].value) {
-          this.store.dispatch('user/setFacility', {'facility': fac});
-        }
-      })
+        this.userProfile.facilities.map((fac: any) => {
+          if (fac.facilityId == facility['detail'].value) {
+            this.store.dispatch('user/setFacility', {'facility': fac});
+          }
+        })
       // clearing the orders state whenever changing the facility
       this.store.dispatch("orders/clearOrders")
     },
@@ -74,16 +74,16 @@ export default defineComponent({
       })
     }
   },
-  setup(){
+  setup () {
     const store = useStore();
     const router = useRouter();
 
     return {
       ellipsisVertical,
       personCircleOutline,
-      storefrontOutline,
+      router,
       store,
-      router
+      storefrontOutline,
     }
   }
 });

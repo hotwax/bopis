@@ -18,20 +18,21 @@
 
 <script lang="ts">
 import { useRoute } from "vue-router";
-import { IonLabel, IonTabBar, IonTabButton, IonTabs, IonIcon, IonPage } from "@ionic/vue";
+import { IonIcon, IonLabel, IonPage, IonTabBar, IonTabButton, IonTabs } from "@ionic/vue";
 import {
- infiniteOutline,
- settings
+  infiniteOutline,
+  settings
 } from "ionicons/icons";
+
 export default {
   name: "Tabs",
-  components: { IonLabel, IonTabs, IonTabBar, IonTabButton, IonIcon, IonPage },
-  setup() {
+  components: { IonIcon, IonLabel, IonPage, IonTabBar, IonTabButton, IonTabs },
+  setup () {
     const route = useRoute();
     return {
       infiniteOutline,
       settings
     };
-  },
+  }
 };
 </script>

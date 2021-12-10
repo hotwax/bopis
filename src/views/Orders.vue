@@ -152,7 +152,7 @@ export default defineComponent({
         })
       }
     },
-    async readyForPickup(order: any, shipGroup: any) {
+    async readyForPickup (order: any, shipGroup: any) {
       const pickup = this.getShipmentMethod(shipGroup, order.items) === 'STOREPICKUP';
       const header = pickup ? this.$t('Ready For Pickup') : this.$t('Ready to Ship');
       const message = pickup ? this.$t('An email notification will be sent to that their order is ready for pickup. This order will also be moved to the packed orders tab.', { customerName: order.customerName, space: '<br/><br/>'}) : '';
@@ -161,50 +161,45 @@ export default defineComponent({
         .create({
           header: header,
           message: message,
-          buttons: [
-            {
-              text: this.$t('Cancel'),
-              role: 'cancel'
-            },
-            {
-              text: header,
-              handler: () => {
-                this.store.dispatch('orders/quickShipEntireShipGroup', {order, shipGroup, facilityId: this.currentFacilityId.facilityId}).then((resp) => {
-                  if (resp.data._EVENT_MESSAGE_) this.getPickupOrders();
-                })
-              },
-            },
-          ],
+          buttons: [{
+            text: this.$t('Cancel'),
+            role: 'cancel'
+          },{
+            text: header,
+            handler: () => {
+              this.store.dispatch('orders/quickShipEntireShipGroup', {order, shipGroup, facilityId: this.currentFacilityId.facilityId}).then((resp) => {
+                if (resp.data._EVENT_MESSAGE_) this.getPickupOrders();
+              })
+            }
+          }]
         });
       return alert.present();
     },
-    async deliverShipment(order: any) {
+    async deliverShipment (order: any) {
       await this.store.dispatch('orders/deliverShipment', order).then((resp) => {
-        if (resp.data._EVENT_MESSAGE_) {
-          this.getPackedOrders();
-        }
+        if (resp.data._EVENT_MESSAGE_) this.getPackedOrders();
       });
     },
     segmentChanged (e: CustomEvent) {
       this.segmentSelected = e.detail.value
       this.segmentSelected === 'open' ? this.getPickupOrders() : this.getPackedOrders();
     },
-    getShipGroups(items: any) {
+    getShipGroups (items: any) {
       // To get unique shipGroup, further it will use on ion-card iteration
       return Array.from(new Set(items.map((ele: any) => ele.shipGroupSeqId)))
     },
-    getShipmentMethod(shipGroupSeqId: any, items: any) {
-    /* To display the button label as per the shipmentMethodTypeId, this will only used on orders segment.
+    getShipmentMethod (shipGroupSeqId: any, items: any) {
+      /* To display the button label as per the shipmentMethodTypeId, this will only used on orders segment.
         Because we get the shipmentMethodTypeId on items level in wms-orders API.
         As we already get shipmentMethodTypeId on order level in readytoshiporders API hence we will not use this method on packed orders segment.
-    */
+      */
       return items.find((ele: any) => ele.shipGroupSeqId == shipGroupSeqId).shipmentMethodTypeId
     }
   },
   ionViewWillEnter () {
     this.segmentSelected === 'open' ? this.getPickupOrders() : this.getPackedOrders();
   },
-  setup() {
+  setup () {
     const store = useStore();
     const segmentSelected = ref('open');
 

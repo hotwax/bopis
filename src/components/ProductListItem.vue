@@ -14,15 +14,15 @@
 </template>
 
 <script lang="ts">
-import { IonItem , IonThumbnail , IonLabel , IonNote } from "@ionic/vue";
+import { IonItem, IonLabel, IonNote, IonThumbnail } from "@ionic/vue";
 import Image from './Image.vue'
 export default {
   components: {
+    Image,
     IonItem,
     IonLabel,
     IonNote,
-    IonThumbnail,
-    Image
+    IonThumbnail
   },
   props: ["item"]
 }

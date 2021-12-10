@@ -75,10 +75,10 @@ import {
   IonHeader,
   IonIcon,
   IonItem,
-  IonPage,
   IonLabel,
   IonList,
   IonNote,
+  IonPage,
   IonTitle,
   IonToolbar,
 } from "@ionic/vue";
@@ -100,6 +100,7 @@ export default defineComponent({
   name: "OrderDetail",
   props: ['orderId'],
   components: {
+    alertController,
     IonBackButton,
     IonButton,
     IonCard,
@@ -108,10 +109,10 @@ export default defineComponent({
     IonHeader,
     IonIcon,
     IonItem,
-    IonPage,
     IonLabel,
     IonList,
     IonNote,
+    IonPage,
     IonTitle,
     IonToolbar,
     ProductListItem
@@ -122,7 +123,7 @@ export default defineComponent({
     }),
   },
   methods: {
-    async copyToClipboard(text) {
+    async copyToClipboard (text) {
       await Clipboard.write({
         string: text,
       }).then(() => {
@@ -134,18 +135,15 @@ export default defineComponent({
         .create({
           header: this.$t('Update Order'),
           message: this.$t(`will be sent an email with alternate fulfillment options for their BOPIS order and this order will be removed from your dashboard. This action cannot be undone.`, { customerName: order.customerName, space: '<br /><br />' }),
-          buttons: [
-            {
-              text: this.$t('Cancel'),
-              role: 'cancel'
+          buttons: [{
+            text: this.$t('Cancel'),
+            role: 'cancel'
+          },{
+            text: this.$t('Reject Order'),
+            handler: () => {
+              this.store.dispatch('orders/unfillableOrderOrItem', order);
             },
-            {
-              text: this.$t('Reject Order'),
-              handler: () => {
-                this.store.dispatch('orders/unfillableOrderOrItem', order);
-              },
-            },
-          ],
+          }]
         });
       return alert.present();
     },
@@ -154,29 +152,28 @@ export default defineComponent({
         .create({
           header: this.$t('Unfillable Items'),
           message: this.$t('Depending on the reason you select for not fulfulling an item, an inventory variance will be recorded and all sales channels will be updated with new inventory levels. For example, by selecting “Not in stock” HotWax Commerce will stop routing orders for it to your store and customers will not be able to place BOPIS orders for it at your store on Shopify.', { space: '<br/><br/>'}),
-          buttons: [
-            {
-              text: this.$t('Dismiss'),
-              role: 'cancel'
-            }
-          ],
+          buttons: [{
+            text: this.$t('Dismiss'),
+            role: 'cancel'
+          }]
         });
       return alert.present();
-    },
+    }
   },
-  setup() {
+  setup () {
     const store = useStore();
 
     return {
-      store,
-      swapVerticalOutline,
       callOutline,
-      mailOutline,
       informationCircleOutline,
+      mailOutline,
+      store,
+      swapVerticalOutline
     };
-  },
+  }
 });
 </script>
+
 <style scoped>
 ion-thumbnail > img {
   object-fit: contain;
