@@ -65,6 +65,8 @@ export default defineComponent({
           this.store.dispatch('user/setFacility', {'facility': fac});
         }
       })
+      // clearing the orders state whenever changing the facility
+      this.store.dispatch("orders/clearOrders")
     },
     logout () {
       this.store.dispatch('user/logout').then(() => {

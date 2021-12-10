@@ -125,21 +125,17 @@ const actions: ActionTree<OrdersState , RootState> ={
 
 		try {
 			resp = await OrderService.quickShipEntireShipGroup(params)
-			console.log(resp)
 			if (resp.status === 200 && !hasError(resp) && resp.data._EVENT_MESSAGE_) {
 				const shipmentMethod = await dispatch('getShipmentMethod', {shipGroupSeqId: payload.shipGroup, items: payload.order.items})
-				console.log(shipmentMethod);
 				if (shipmentMethod !== 'STOREPICKUP') {
 					const shipmentId = resp.data._EVENT_MESSAGE_.match(/\d+/g)[0]
-					dispatch('packDeliveryItems', shipmentId).then((data) => {
-						console.log(data)
+					await dispatch('packDeliveryItems', shipmentId).then((data) => {
 						if (!hasError(data) && !data.data._EVENT_MESSAGE_) showToast(translate("Something went wrong"))
 					})
 				}
 				emitter.emit("dismissLoader");
 				showToast(translate("Order packed and ready for delivery"))
 			} else {
-				console.log('else')
 				emitter.emit("dismissLoader");
 				showToast(translate("Something went wrong"))
 			}
@@ -185,6 +181,11 @@ const actions: ActionTree<OrdersState , RootState> ={
 				throw err;
 			})
 		}))
+	},
+
+	// clearning the orders state when logout, or user store is changed
+	clearOrders ({ commit }) {
+		commit(types.ORDERS_CLEARED);
 	}
 }
 
