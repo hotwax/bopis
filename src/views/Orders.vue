@@ -96,10 +96,10 @@ export default defineComponent({
   },
   computed: {
     ...mapGetters({
-      orders: 'orders/getOrders',
-      packedOrders: 'orders/getPackedOrders',
+      orders: 'order/getOrders',
+      packedOrders: 'order/getPackedOrders',
       currentFacilityId: 'user/getCurrentFacility',
-      isScrollable: 'orders/isScrollable'
+      isScrollable: 'order/isScrollable'
     })
   },
   methods: {
@@ -107,7 +107,7 @@ export default defineComponent({
       // TODO: find a better approach to handle the case that when in open segment we can click on
       // order card to route on the order details page but not in the packed segment
       if (this.segmentSelected === 'open')
-        await this.store.dispatch('orders/updateCurrentOrder', { order }).then(() => {
+        await this.store.dispatch('order/updateCurrentOrder', { order }).then(() => {
           this.$router.push({ path: `/orderdetail/${order.orderId}` })
         })
     },
@@ -121,7 +121,7 @@ export default defineComponent({
         viewIndex,
         facilityId: this.currentFacilityId.facilityId
       }
-      await this.store.dispatch("orders/getOrder", payload);
+      await this.store.dispatch("order/getOrder", payload);
     },
     async getPackedOrders (vSize?: any, vIndex?: any) {
       const viewSize = vSize ? vSize : process.env.VUE_APP_VIEW_SIZE;
@@ -133,7 +133,7 @@ export default defineComponent({
         viewIndex,
         facilityId: this.currentFacilityId.facilityId
       };
-      await this.store.dispatch("orders/getPackedOrders", payload);
+      await this.store.dispatch("order/getPackedOrders", payload);
     },
     async loadMoreProducts (event: any) {
       if (this.segmentSelected === 'open') {
@@ -167,7 +167,7 @@ export default defineComponent({
           },{
             text: header,
             handler: () => {
-              this.store.dispatch('orders/quickShipEntireShipGroup', {order, shipGroup, facilityId: this.currentFacilityId.facilityId}).then((resp) => {
+              this.store.dispatch('order/quickShipEntireShipGroup', {order, shipGroup, facilityId: this.currentFacilityId.facilityId}).then((resp) => {
                 if (resp.data._EVENT_MESSAGE_) this.getPickupOrders();
               })
             }
@@ -176,7 +176,7 @@ export default defineComponent({
       return alert.present();
     },
     async deliverShipment (order: any) {
-      await this.store.dispatch('orders/deliverShipment', order).then((resp) => {
+      await this.store.dispatch('order/deliverShipment', order).then((resp) => {
         if (resp.data._EVENT_MESSAGE_) this.getPackedOrders();
       });
     },

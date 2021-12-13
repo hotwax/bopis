@@ -10,38 +10,38 @@
       <ion-list>
         <ion-item lines="none">
           <ion-label>
-            <h2>{{ orders.customerName }}</h2>
-            <p>{{ orders.orderId }}</p>
+            <h2>{{ order.customerName }}</h2>
+            <p>{{ order.orderId }}</p>
           </ion-label>
-          <ion-note slot="end">{{ $filters.formatDate(orders.orderDate) }}</ion-note>
+          <ion-note slot="end">{{ $filters.formatDate(order.orderDate) }}</ion-note>
         </ion-item>
       </ion-list>
-      <ion-item v-if="orders.phoneNumber">
+      <ion-item v-if="order.phoneNumber">
         <ion-icon :icon="callOutline" slot="start" />
-        <ion-label>{{ orders.phoneNumber }}</ion-label>
+        <ion-label>{{ order.phoneNumber }}</ion-label>
         <ion-button
           fill="outline"
           slot="end"
           color="medium"
-          @click="copyToClipboard(orders.phoneNumber)"
+          @click="copyToClipboard(order.phoneNumber)"
         >
           {{ $t("Copy") }}
         </ion-button>
       </ion-item>
-      <ion-item v-if="orders.email" lines="none">
+      <ion-item v-if="order.email" lines="none">
         <ion-icon :icon="mailOutline" slot="start" />
-        <ion-label>{{ orders.email }}</ion-label>
+        <ion-label>{{ order.email }}</ion-label>
         <ion-button
           fill="outline"
           slot="end"
           color="medium"
-          @click="copyToClipboard(orders.email)"
+          @click="copyToClipboard(order.email)"
         >
           {{ $t("Copy") }}
         </ion-button>
       </ion-item>
 
-      <ion-card v-for="(item, index) in orders?.items" :key="index">
+      <ion-card v-for="(item, index) in order?.items" :key="index">
         <ion-card-content>
           <ProductListItem :item="item" />
         </ion-card-content>
@@ -51,7 +51,7 @@
           {{ $t("This order cannot be split. If you cannot fulfill any item, will be sent an email with alternate fulfillment options and this order will be removed from your dashboard.", { customerName: orders.customerName }) }}
         </ion-note>
       </ion-item>
-      <ion-button expand="block" color="danger" fill="outline" @click="updateOrder(orders)">
+      <ion-button expand="block" color="danger" fill="outline" @click="updateOrder(order)">
         {{ $t("Reject Order") }}
       </ion-button>
       <ion-card>
@@ -118,7 +118,7 @@ export default defineComponent({
   },
   computed: {
     ...mapGetters({
-      orders: "orders/getCurrent",
+      order: "order/getCurrent",
     }),
   },
   methods: {
