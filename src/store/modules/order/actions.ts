@@ -1,14 +1,14 @@
 import { OrderService } from "@/services/OrderService";
 import { ActionTree } from 'vuex'
 import RootState from '@/store/RootState'
-import OrdersState from './OrdersState'
+import OrderState from './OrderState'
 import * as types from './mutation-types'
 import { hasError , showToast } from "@/utils";
 import { translate } from "@/i18n";
 import emitter from '@/event-bus'
 import router from "@/router";
 
-const actions: ActionTree<OrdersState , RootState> ={
+const actions: ActionTree<OrderState , RootState> ={
   async getOrder ({ commit, state }, payload) {
     // Show loader only when new query and not the infinite scroll
     if (payload.viewIndex === 0) emitter.emit("presentLoader");
@@ -148,7 +148,7 @@ const actions: ActionTree<OrdersState , RootState> ={
     return resp;
   },
 
-  async unfillableOrderOrItem ({ dispatch }, order) {
+  async setUnfillableOrderOrItem ({ dispatch }, order) {
     emitter.emit("presentLoader");
     await dispatch("rejectOrderItems", order).then((resp) => {
       let unfillableItems = 0;

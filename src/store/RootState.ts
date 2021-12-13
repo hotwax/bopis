@@ -1,4 +1,4 @@
 export default interface RootState {
     user: any;
-    orders: any;
+    order: any;
 }
