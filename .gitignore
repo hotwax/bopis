@@ -16,6 +16,8 @@ $RECYCLE.BIN/
 *.log
 log.txt
 npm-debug.log*
+.env
+.env.*
 
 /.idea
 /.ionic
@@ -29,3 +31,6 @@ npm-debug.log*
 /platforms
 /plugins
 /www
+
+# Excluding the .env.example file from .gitignore
+!.env.example
