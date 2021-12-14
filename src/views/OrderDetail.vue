@@ -48,7 +48,7 @@
       </ion-card>
       <ion-item lines="none">
         <ion-note>
-          {{ $t("This order cannot be split. If you cannot fulfill any item, will be sent an email with alternate fulfillment options and this order will be removed from your dashboard.", { customerName: orders.customerName }) }}
+          {{ $t("This order cannot be split. If you cannot fulfill any item, will be sent an email with alternate fulfillment options and this order will be removed from your dashboard.", { customerName: order.customerName }) }}
         </ion-note>
       </ion-item>
       <ion-button expand="block" color="danger" fill="outline" @click="updateOrder(order)">
@@ -83,7 +83,6 @@ import {
   IonToolbar,
 } from "@ionic/vue";
 import { defineComponent } from "vue";
-import { Plugins } from "@capacitor/core";
 import { mapGetters, useStore } from "vuex";
 import {
   swapVerticalOutline,
@@ -91,10 +90,8 @@ import {
   mailOutline,
   informationCircleOutline,
 } from "ionicons/icons";
-import { showToast } from "@/utils";
 import ProductListItem from '@/components/ProductListItem.vue'
-
-const { Clipboard } = Plugins;
+import { copyToClipboard } from '@/utils'
 
 export default defineComponent({
   name: "OrderDetail",
@@ -122,13 +119,6 @@ export default defineComponent({
     }),
   },
   methods: {
-    async copyToClipboard (text) {
-      await Clipboard.write({
-        string: text,
-      }).then(() => {
-        showToast(this.translate("Copied"));
-      });
-    },
     async updateOrder (order) {
       const alert = await alertController
         .create({
@@ -164,6 +154,7 @@ export default defineComponent({
 
     return {
       callOutline,
+      copyToClipboard,
       informationCircleOutline,
       mailOutline,
       store,

@@ -91,14 +91,6 @@ const actions: ActionTree<OrderState , RootState> ={
     return resp;
   },
 
-  getShipmentMethod({ commit }, payload) {
-    /* To display the button label as per the shipmentMethodTypeId, this will only used on orders segment.
-        Because we get the shipmentMethodTypeId on items level in wms-orders API.
-        As we already get shipmentMethodTypeId on order level in readytoshiporders API hence we will not use this method on packed orders segment.
-    */
-    return payload.items.find((ele: any) => ele.shipGroupSeqId == payload.shipGroupSeqId).shipmentMethodTypeId
-  },
-
   async packDeliveryItems ({ commit }, shipmentId) {
     const params = {
       shipmentId: shipmentId,
@@ -126,7 +118,11 @@ const actions: ActionTree<OrderState , RootState> ={
     try {
       resp = await OrderService.quickShipEntireShipGroup(params)
       if (resp.status === 200 && !hasError(resp) && resp.data._EVENT_MESSAGE_) {
-        const shipmentMethod = await dispatch('getShipmentMethod', {shipGroupSeqId: payload.shipGroup, items: payload.order.items})
+        /* To display the button label as per the shipmentMethodTypeId, this will only used on orders segment.
+          Because we get the shipmentMethodTypeId on items level in wms-orders API.
+          As we already get shipmentMethodTypeId on order level in readytoshiporders API hence we will not use this method on packed orders segment.
+        */
+        const shipmentMethod = payload.order.items.find((ele: any) => ele.shipGroupSeqId == payload.shipGroup).shipmentMethodTypeId
         if (shipmentMethod !== 'STOREPICKUP') {
           const shipmentId = resp.data._EVENT_MESSAGE_.match(/\d+/g)[0]
           await dispatch('packDeliveryItems', shipmentId).then((data) => {
