@@ -1,4 +1,5 @@
 {
+  "All items were canceled from the order": "All items were canceled from the order",
   "An email notification will be sent to that their order is ready for pickup. This order will also be moved to the packed orders tab.": "An email notification will be sent to { customerName } that their order is ready for pickup.{ space } This order will also be moved to the packed orders tab.",
   "Catalog": "Catalog",
   "Cancel": "Cancel",
@@ -10,8 +11,6 @@
   "Depending on the reason you select for not fulfulling an item, an inventory variance will be recorded and all sales channels will be updated with new inventory levels. For example, by selecting “Not in stock” HotWax Commerce will stop routing orders for it to your store and customers will not be able to place BOPIS orders for it at your store on Shopify.": "Depending on the reason you select for not fulfulling an item, an inventory variance will be recorded and all sales channels will be updated with new inventory levels.{ space } For example, by selecting “Not in stock” HotWax Commerce will stop routing orders for it to your store and customers will not be able to place BOPIS orders for it at your store on Shopify.",
   "Dismiss": "Dismiss",
   "Handover": "Handover",
-  "item was": "item was",
-  "items were": "items were",
   "In Stock": "In Stock",
   "Learn more about unfillable items": "Learn more about unfillable items",
   "Loading": "Loading",
