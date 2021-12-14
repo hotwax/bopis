@@ -12,14 +12,11 @@ const getters: GetterTree<OrderState , RootState> = {
   getPackedOrders: (state) => {
     return state.packedOrders.list;
   },
-  isScrollable: (state) => (segmentSelected: string) => {
-    return segmentSelected === 'open' ? (
-      state.orders.list.length > 0 &&
-      state.orders.list.length < state.orders.total
-    ) : (
-      state.packedOrders.list.length > 0 &&
-      state.packedOrders.list.length < state.packedOrders.total
-    );
+  isPackedOrdersScrollable: (state) => {
+    return state.packedOrders.list.length > 0 && state.packedOrders.list.length < state.packedOrders.total
+  },
+  isOpenOrdersScrollable: (state) => {
+    return state.orders.list.length > 0 && state.orders.list.length < state.orders.total
   }
 }
 

@@ -42,7 +42,7 @@
           </OrderItemCard>
         </div>
       </div>
-      <ion-infinite-scroll @ionInfinite="loadMoreProducts($event)" threshold="100px" :disabled="!isScrollable">
+      <ion-infinite-scroll @ionInfinite="loadMoreProducts($event)" threshold="100px" :disabled="segmentSelected === 'open' ? !isOpenOrdersScrollable : !isPackedOrdersScrollable">
         <ion-infinite-scroll-content loading-spinner="crescent" :loading-text="$t('Loading')" />
       </ion-infinite-scroll>
     </ion-content>
@@ -99,7 +99,8 @@ export default defineComponent({
       orders: 'order/getOrders',
       packedOrders: 'order/getPackedOrders',
       currentFacilityId: 'user/getCurrentFacility',
-      isScrollable: 'order/isScrollable'
+      isPackedOrdersScrollable: 'order/isPackedOrdersScrollable',
+      isOpenOrdersScrollable: 'order/isOpenOrdersScrollable'
     })
   },
   methods: {
