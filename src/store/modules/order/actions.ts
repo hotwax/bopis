@@ -140,19 +140,18 @@ const actions: ActionTree<OrderState , RootState> ={
     return resp;
   },
 
+  // TODO: handle the unfillable items count
   async setUnfillableOrderOrItem ({ dispatch }, order) {
     emitter.emit("presentLoader");
-    await dispatch("rejectOrderItems", order).then((resp) => {
-      let unfillableItems = 0;
+    return await dispatch("rejectOrderItems", order).then((resp) => {
       const refreshPickupOrders = resp.find((response: any) => !(response.data._ERROR_MESSAGE_ || response.data._ERROR_MESSAGE_LIST_))
       if (refreshPickupOrders) {
-        unfillableItems++;
-        showToast(`${unfillableItems} ${unfillableItems == 1 ? translate('item was') : translate('items were')}` + ' ' + translate('canceled from the order') + ' ' + order.orderId);
-        router.push('/tabs/orders')
+        showToast(translate('All items were canceled from the order') + ' ' + order.orderId);
       } else {
         showToast(translate('Something went wrong'));
       }
       emitter.emit("dismissLoader");
+      return resp;
     })
   },
 
