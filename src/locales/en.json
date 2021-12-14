@@ -37,7 +37,6 @@
   "Size": "Size",
   "Something went wrong": "Something went wrong",
   "store": "store",
-  "store name": "store name",
   "This order cannot be split. If you cannot fulfill any item, will be sent an email with alternate fulfillment options and this order will be removed from your dashboard.": "This order cannot be split. If you cannot fulfill any item, { customerName} will be sent an email with alternate fulfillment options and this order will be removed from your dashboard.",
   "Unfillable Items": "Unfillable Items",
   "Update Order": "Update Order",

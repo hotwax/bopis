@@ -12,7 +12,7 @@
         <ion-item>
           <ion-icon :icon="storefrontOutline" slot="start" />
           <ion-label>{{$t("store")}}</ion-label>
-          <ion-select interface="popover" :placeholder="$t('store name')" :value="currentFacility.facilityId" @ionChange="setFacility($event)">
+          <ion-select interface="popover" :value="currentFacility.facilityId" @ionChange="setFacility($event)">
             <ion-select-option v-for="facility in (userProfile ? userProfile.facilities : [])" :key="facility.facilityId" :value="facility.facilityId" >{{ facility.name }}</ion-select-option>
           </ion-select>
         </ion-item>
@@ -65,8 +65,6 @@ export default defineComponent({
             this.store.dispatch('user/setFacility', {'facility': fac});
           }
         })
-      // clearing the orders state whenever changing the facility
-      this.store.dispatch("orders/clearOrders")
     },
     logout () {
       this.store.dispatch('user/logout').then(() => {

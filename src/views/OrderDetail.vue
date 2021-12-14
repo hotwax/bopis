@@ -140,7 +140,7 @@ export default defineComponent({
           },{
             text: this.$t('Reject Order'),
             handler: () => {
-              this.store.dispatch('orders/setUnfillableOrderOrItem', order);
+              this.store.dispatch('order/setUnfillableOrderOrItem', order);
             },
           }]
         });
