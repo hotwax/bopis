@@ -20,7 +20,7 @@
   "More": "More",
   "Not in stock": "Not in stock",
   "Open": "Open",
-  "Order delivered to *": "Order delivered to *",
+  "Order delivered to": "Order delivered to { customerName }",
   "Order details": "Order details",
   "Order packed and ready for delivery": "Order packed and ready for delivery",
   "Orders": "Orders",

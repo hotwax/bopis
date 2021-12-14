@@ -76,7 +76,7 @@ const actions: ActionTree<OrderState , RootState> ={
     try {
       resp = await OrderService.updateShipment(params)
       if (resp.status === 200 && !hasError(resp)) {
-        showToast(translate(`Order delivered to ${order.customerName}`))
+        showToast(translate('Order delivered to', {customerName: order.customerName}))
         emitter.emit("dismissLoader");
       } else {
         emitter.emit("dismissLoader");
