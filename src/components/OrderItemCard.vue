@@ -1,7 +1,7 @@
 <template>
   <ion-card>
     <ion-list>
-      <ion-item @click="viewProduct(order)" lines="none">
+      <ion-item lines="none">
         <ion-label>
           <h1>{{ order.customerName }}</h1>
           <p>{{ order.customerId }}</p>
@@ -62,9 +62,6 @@ export default defineComponent({
   },
   props: ["order", "shipGroup"],
   methods: {
-    async viewProduct (order: any) {
-      emitter.emit("setCurrent", order);
-    },
     getShipGroupItems(shipGroupSeqId: any, items: any) {
       // To get all the items of same shipGroup, further it will use on pickup-order-card component to display line items
       return items.filter((item: any) => item.shipGroupSeqId == shipGroupSeqId)

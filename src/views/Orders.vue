@@ -19,12 +19,12 @@
     <ion-content>
       <div v-if="segmentSelected === 'open'">
         <div v-for="order in orders" :key="order.orderId">
-          <OrderItemCard v-for="(shipGroup, index) in getShipGroups(order.items)" :key="index" :order="order" :shipGroup="shipGroup">
+          <OrderItemCard v-for="(shipGroup, index) in getShipGroups(order.items)" :key="index" :order="order" :shipGroup="shipGroup" @click.prevent="viewOrder(order)">
             <template #packedTime>
               <p></p>
             </template>
             <template #cardActionButton>
-              <ion-button fill="clear" @click="readyForPickup(order, shipGroup)">
+              <ion-button fill="clear" @click.stop="readyForPickup(order, shipGroup)">
                 {{ getShipmentMethod(shipGroup, order.items) === 'STOREPICKUP' ? $t("Ready for pickup") : $t("Ready to Ship") }}
               </ion-button>
             </template>
@@ -35,7 +35,7 @@
         <div v-for="order in packedOrders" :key="order.orderId">
           <OrderItemCard v-for="(shipGroup, index) in getShipGroups(order.items)" :key="index" :order="order" :shipGroup="shipGroup">
             <template #cardActionButton>
-              <ion-button fill="clear" @click="deliverShipment(order)">
+              <ion-button fill="clear" @click.stop="deliverShipment(order)">
                 {{ order.shipmentMethodTypeId === 'STOREPICKUP' ? $t("Handover") : $t("Ship") }}
               </ion-button>
             </template>
@@ -88,11 +88,9 @@ export default defineComponent({
   },
   created () {
     emitter.on("refreshPickupOrders", this.getPickupOrders);
-    emitter.on("setCurrent", this.setCurrent);
   },
   unmounted () {
     emitter.off("refreshPickupOrders", this.getPickupOrders);
-    emitter.off("setCurrent", this.setCurrent);
   },
   computed: {
     ...mapGetters({
@@ -104,13 +102,12 @@ export default defineComponent({
     })
   },
   methods: {
-    async setCurrent (order: any) {
+    async viewOrder (order: any) {
       // TODO: find a better approach to handle the case that when in open segment we can click on
       // order card to route on the order details page but not in the packed segment
-      if (this.segmentSelected === 'open')
-        await this.store.dispatch('order/updateCurrent', { order }).then(() => {
-          this.$router.push({ path: `/orderdetail/${order.orderId}` })
-        })
+      await this.store.dispatch('order/updateCurrent', { order }).then(() => {
+        this.$router.push({ path: `/orderdetail/${order.orderId}` })
+      })
     },
     async getPickupOrders (vSize?: any, vIndex?: any) {
       const viewSize = vSize ? vSize : process.env.VUE_APP_VIEW_SIZE;
