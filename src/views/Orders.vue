@@ -121,7 +121,7 @@ export default defineComponent({
         viewIndex,
         facilityId: this.currentFacilityId.facilityId
       }
-      await this.store.dispatch("order/getOrder", payload);
+      await this.store.dispatch("order/getOpenOrders", payload);
     },
     async getPackedOrders (vSize?: any, vIndex?: any) {
       const viewSize = vSize ? vSize : process.env.VUE_APP_VIEW_SIZE;

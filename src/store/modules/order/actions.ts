@@ -9,7 +9,7 @@ import emitter from '@/event-bus'
 import router from "@/router";
 
 const actions: ActionTree<OrderState , RootState> ={
-  async getOrder ({ commit, state }, payload) {
+  async getOpenOrders ({ commit, state }, payload) {
     // Show loader only when new query and not the infinite scroll
     if (payload.viewIndex === 0) emitter.emit("presentLoader");
     let resp;
