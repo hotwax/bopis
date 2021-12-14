@@ -77,17 +77,15 @@ const actions: ActionTree<OrderState , RootState> ={
       resp = await OrderService.updateShipment(params)
       if (resp.status === 200 && !hasError(resp)) {
         showToast(translate('Order delivered to', {customerName: order.customerName}))
-        emitter.emit("dismissLoader");
       } else {
-        emitter.emit("dismissLoader");
         showToast(translate("Something went wrong"))
       }
     } catch(err) {
       console.log(err)
-      emitter.emit("dismissLoader");
       showToast(translate("Something went wrong"))
     }
 
+    emitter.emit("dismissLoader")
     return resp;
   },
 
@@ -129,18 +127,16 @@ const actions: ActionTree<OrderState , RootState> ={
             if (!hasError(data) && !data.data._EVENT_MESSAGE_) showToast(translate("Something went wrong"))
           })
         }
-        emitter.emit("dismissLoader");
         showToast(translate("Order packed and ready for delivery"))
       } else {
-        emitter.emit("dismissLoader");
         showToast(translate("Something went wrong"))
       }
     } catch(err) {
       console.log(err)
-      emitter.emit("dismissLoader");
       showToast(translate("Something went wrong"))
     }
 
+    emitter.emit("dismissLoader")
     return resp;
   },
 
