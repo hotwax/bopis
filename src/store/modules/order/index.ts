@@ -10,11 +10,11 @@ const orderModule: Module<OrderState, RootState> = {
   namespaced: true,
   state: {
     current: {},
-    orders: {
+    open: {
       list: {},
       total: 0
     },
-    packedOrders: {
+    packed: {
       list: {},
       total: 0
     }

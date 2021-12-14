@@ -19,7 +19,7 @@ const actions: ActionTree<OrderState , RootState> ={
       if (resp.status === 200 && resp.data.count > 0 && !hasError(resp)) {
         let orders = resp.data.docs;
         const total = resp.data.count;
-        if(payload.viewIndex && payload.viewIndex > 0) orders = state.orders.list.concat(orders)
+        if(payload.viewIndex && payload.viewIndex > 0) orders = state.open.list.concat(orders)
         commit(types.ORDER_OPEN_UPDATED, { orders, total })
         if (payload.viewIndex === 0) emitter.emit("dismissLoader");
       } else {
@@ -48,7 +48,7 @@ const actions: ActionTree<OrderState , RootState> ={
       if (resp.status === 200 && resp.data.count > 0 && !hasError(resp)) {
         let packedOrders = resp.data.docs;
         const total = resp.data.count;
-        if(payload.viewIndex && payload.viewIndex > 0) packedOrders = state.packedOrders.list.concat(packedOrders)
+        if(payload.viewIndex && payload.viewIndex > 0) packedOrders = state.packed.list.concat(packedOrders)
         commit(types.ORDER_PACKED_UPDATED, { packedOrders, total })
         if (payload.viewIndex === 0) emitter.emit("dismissLoader");
       } else {

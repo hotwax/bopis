@@ -4,19 +4,19 @@ import RootState from "../../RootState";
 
 const getters: GetterTree<OrderState , RootState> = {
   getOrders: (state) => {
-    return state.orders.list;
+    return state.open.list;
   },
   getCurrent: (state) => {
     return JSON.parse(JSON.stringify(state.current));
   },
   getPackedOrders: (state) => {
-    return state.packedOrders.list;
+    return state.packed.list;
   },
   isPackedOrdersScrollable: (state) => {
-    return state.packedOrders.list.length > 0 && state.packedOrders.list.length < state.packedOrders.total
+    return state.packed.list.length > 0 && state.packed.list.length < state.packed.total
   },
   isOpenOrdersScrollable: (state) => {
-    return state.orders.list.length > 0 && state.orders.list.length < state.orders.total
+    return state.open.list.length > 0 && state.open.list.length < state.open.total
   }
 }
 

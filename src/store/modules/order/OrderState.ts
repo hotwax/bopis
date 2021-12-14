@@ -1,5 +1,5 @@
 export default interface OrderState {
-  orders: any;
+  open: any;
   current: any;
-  packedOrders: any;
+  packed: any;
 }
