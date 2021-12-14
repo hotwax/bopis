@@ -18,9 +18,9 @@ const actions: ActionTree<OrderState , RootState> ={
       resp = await OrderService.getOrders(payload)
       if (resp.status === 200 && resp.data.count > 0 && !hasError(resp)) {
         let orders = resp.data.docs;
-        const ordersCount = resp.data.count;
+        const total = resp.data.count;
         if(payload.viewIndex && payload.viewIndex > 0) orders = state.orders.list.concat(orders)
-        commit(types.OPEN_ORDERS_INITIAL, {orders: orders , ordersCount: ordersCount})
+        commit(types.ORDER_OPEN_UPDATED, { orders, total })
         if (payload.viewIndex === 0) emitter.emit("dismissLoader");
       } else {
         showToast(translate("Orders Not Found"))
@@ -34,8 +34,8 @@ const actions: ActionTree<OrderState , RootState> ={
     return resp;
   },
 
-  updateCurrentOrder ({ commit }, payload) {
-    commit(types.ORDERS_CURRENT_UPDATED, { order: payload.order })
+  updateCurrent ({ commit }, payload) {
+    commit(types.ORDER_CURRENT_UPDATED, { order: payload.order })
   },
 
   async getPackedOrders ({ commit, state }, payload) {
@@ -49,7 +49,7 @@ const actions: ActionTree<OrderState , RootState> ={
         let packedOrders = resp.data.docs;
         const total = resp.data.count;
         if(payload.viewIndex && payload.viewIndex > 0) packedOrders = state.packedOrders.list.concat(packedOrders)
-        commit(types.ORDERS_PACKED_INITIAL, { packedOrders, total })
+        commit(types.ORDER_PACKED_UPDATED, { packedOrders, total })
         if (payload.viewIndex === 0) emitter.emit("dismissLoader");
       } else {
         showToast(translate("Orders Not Found"))
@@ -185,7 +185,8 @@ const actions: ActionTree<OrderState , RootState> ={
 
   // clearning the orders state when logout, or user store is changed
   clearOrders ({ commit }) {
-    commit(types.ORDERS_CLEARED);
+    commit(types.ORDER_OPEN_UPDATED, {orders: {} , total: 0})
+    commit(types.ORDER_PACKED_UPDATED, {packedOrders: {} , total: 0})
   }
 }
 

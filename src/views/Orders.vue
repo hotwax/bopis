@@ -107,7 +107,7 @@ export default defineComponent({
       // TODO: find a better approach to handle the case that when in open segment we can click on
       // order card to route on the order details page but not in the packed segment
       if (this.segmentSelected === 'open')
-        await this.store.dispatch('order/updateCurrentOrder', { order }).then(() => {
+        await this.store.dispatch('order/updateCurrent', { order }).then(() => {
           this.$router.push({ path: `/orderdetail/${order.orderId}` })
         })
     },
