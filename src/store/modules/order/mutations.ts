@@ -11,7 +11,7 @@ const mutations: MutationTree <ProductState> = {
     state.current = payload.order
   },
   [types.ORDER_PACKED_UPDATED] (state, payload) {
-    state.packed.list = payload.packedOrders
+    state.packed.list = payload.orders
     state.packed.total = payload.total
   }
 }

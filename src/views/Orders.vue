@@ -94,7 +94,7 @@ export default defineComponent({
   },
   computed: {
     ...mapGetters({
-      orders: 'order/getOrders',
+      orders: 'order/getOpenOrders',
       packedOrders: 'order/getPackedOrders',
       currentFacilityId: 'user/getCurrentFacility',
       isPackedOrdersScrollable: 'order/isPackedOrdersScrollable',
@@ -165,7 +165,7 @@ export default defineComponent({
           },{
             text: header,
             handler: () => {
-              this.store.dispatch('order/quickShipEntireShipGroup', {order, shipGroup, facilityId: this.currentFacilityId.facilityId}).then((resp) => {
+              this.store.dispatch('order/quickShipEntireShipGroup', {order, shipGroupSeqId: shipGroup, facilityId: this.currentFacilityId.facilityId}).then((resp) => {
                 if (resp.data._EVENT_MESSAGE_) this.getPickupOrders();
               })
             }

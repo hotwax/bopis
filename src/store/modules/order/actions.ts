@@ -15,7 +15,7 @@ const actions: ActionTree<OrderState , RootState> ={
     let resp;
 
     try {
-      resp = await OrderService.getOrders(payload)
+      resp = await OrderService.getOpenOrders(payload)
       if (resp.status === 200 && resp.data.count > 0 && !hasError(resp)) {
         let orders = resp.data.docs;
         const total = resp.data.count;
@@ -46,10 +46,10 @@ const actions: ActionTree<OrderState , RootState> ={
     try {
       resp = await OrderService.getPackedOrders(payload)
       if (resp.status === 200 && resp.data.count > 0 && !hasError(resp)) {
-        let packedOrders = resp.data.docs;
+        let orders = resp.data.docs;
         const total = resp.data.count;
-        if(payload.viewIndex && payload.viewIndex > 0) packedOrders = state.packed.list.concat(packedOrders)
-        commit(types.ORDER_PACKED_UPDATED, { packedOrders, total })
+        if(payload.viewIndex && payload.viewIndex > 0) orders = state.packed.list.concat(orders)
+        commit(types.ORDER_PACKED_UPDATED, { orders, total })
         if (payload.viewIndex === 0) emitter.emit("dismissLoader");
       } else {
         showToast(translate("Orders Not Found"))
@@ -108,7 +108,7 @@ const actions: ActionTree<OrderState , RootState> ={
       weight: '1',
       weightUomId: 'WT_kg',
       facilityId: payload.facilityId,
-      shipGroupSeqId: payload.shipGroup
+      shipGroupSeqId: payload.shipGroupSeqId
     }
     
     let resp;
@@ -120,8 +120,8 @@ const actions: ActionTree<OrderState , RootState> ={
           Because we get the shipmentMethodTypeId on items level in wms-orders API.
           As we already get shipmentMethodTypeId on order level in readytoshiporders API hence we will not use this method on packed orders segment.
         */
-        const shipmentMethod = payload.order.items.find((ele: any) => ele.shipGroupSeqId == payload.shipGroup).shipmentMethodTypeId
-        if (shipmentMethod !== 'STOREPICKUP') {
+        const shipmentMethodTypeId = payload.order.items.find((ele: any) => ele.shipGroupSeqId == payload.shipGroup).shipmentMethodTypeId
+        if (shipmentMethodTypeId !== 'STOREPICKUP') {
           const shipmentId = resp.data._EVENT_MESSAGE_.match(/\d+/g)[0]
           await dispatch('packDeliveryItems', shipmentId).then((data) => {
             if (!hasError(data) && !data.data._EVENT_MESSAGE_) showToast(translate("Something went wrong"))
@@ -178,7 +178,7 @@ const actions: ActionTree<OrderState , RootState> ={
   // clearning the orders state when logout, or user store is changed
   clearOrders ({ commit }) {
     commit(types.ORDER_OPEN_UPDATED, {orders: {} , total: 0})
-    commit(types.ORDER_PACKED_UPDATED, {packedOrders: {} , total: 0})
+    commit(types.ORDER_PACKED_UPDATED, {orders: {} , total: 0})
   }
 }
 

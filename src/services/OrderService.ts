@@ -1,6 +1,6 @@
 import api from '@/api'
 
-const getOrders = async (payload: any): Promise <any> => {
+const getOpenOrders = async (payload: any): Promise <any> => {
   return api({
     url: "wms-orders",
     method: "post",
@@ -41,7 +41,7 @@ const rejectOrderItem = async (payload: any): Promise <any> => {
 }
 
 export const OrderService = {
-  getOrders,
+  getOpenOrders,
   getPackedOrders,
   quickShipEntireShipGroup,
   rejectOrderItem,
