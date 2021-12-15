@@ -156,19 +156,20 @@ const actions: ActionTree<OrderState , RootState> ={
   },
 
   rejectOrderItems ({ commit }, order) {
-    const params: any = {
-      "payload": {
-        "orderId": order.orderId,
-        "rejectReason": ''
-      }
+    const payload = {
+      "orderId": order.orderId,
+      "rejectReason": ''
     }
 
     return Promise.all(order.items.map((item: any) => {
-      params['payload']['facilityId'] = item.facilityId
-      params['payload']['orderItemSeqId'] = item.orderItemSeqId
-      params['payload']['shipmentMethodTypeId'] = item.shipmentMethodTypeId
-      params['payload']['quantity'] = parseInt(item.inventory[0].quantity)
-      return OrderService.rejectOrderItem(params).catch((err) => { 
+      const params = {
+        ...payload,
+        'facilityId': item.facilityId,
+        'orderItemSeqId': item.orderItemSeqId,
+        'shipmentMethodTypeId': item.shipmentMethodTypeId,
+        'quantity': parseInt(item.inventory[0].quantity)
+      }
+      return OrderService.rejectOrderItem({'payload': params}).catch((err) => { 
         throw err;
       })
     }))

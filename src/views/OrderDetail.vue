@@ -92,6 +92,7 @@ import {
 } from "ionicons/icons";
 import ProductListItem from '@/components/ProductListItem.vue'
 import { copyToClipboard } from '@/utils'
+import { useRouter } from 'vue-router'
 
 export default defineComponent({
   name: "OrderDetail",
@@ -153,12 +154,14 @@ export default defineComponent({
   },
   setup () {
     const store = useStore();
+    const router = useRouter();
 
     return {
       callOutline,
       copyToClipboard,
       informationCircleOutline,
       mailOutline,
+      router,
       store,
       swapVerticalOutline
     };
