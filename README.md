@@ -38,8 +38,8 @@ Ionic CLI - If you don't have the ionic CLI installed refer [official documentat
 If you can't handle some parts of the issue then please ask for help in the comment. If you have any problems during the implementation of some complex issue, feel free to implement just a part of it.
 
 # UI / UX Resources
-Below you may find some useful resources for improving the UI / UX of the app.
-    - https://www.figma.com/community/file/885791511781717756
+You may find some useful resources for improving the UI / UX of the app <a href="https://www.figma.com/community/file/885791511781717756" target="_blank">here</a>.
+
 
 ## Report a bug or request a feature
 
