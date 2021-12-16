@@ -44,13 +44,13 @@
       <ion-card v-for="(item, index) in order?.items" :key="index">
         <ion-card-content>
           <ProductListItem :item="item" />
-          <ion-item lines="none">
-            <ion-label>{{ $t("Reason") }}</ion-label>
-            <ion-select multiple="false" v-model="item.reason">
-              <ion-select-option v-for="reason in unfillableReason" :value="reason.id" :key="reason.id">{{ $t(reason.label) }}</ion-select-option>
-            </ion-select>
-          </ion-item>
         </ion-card-content>
+        <ion-item lines="none" class="border-top">
+          <ion-label>{{ $t("Reason") }}</ion-label>
+          <ion-select multiple="false" v-model="item.reason">
+            <ion-select-option v-for="reason in unfillableReason" :value="reason.id" :key="reason.id">{{ $t(reason.label) }}</ion-select-option>
+          </ion-select>
+        </ion-item>
       </ion-card>
       <ion-item lines="none">
         <ion-note>
@@ -199,5 +199,9 @@ ion-thumbnail > img {
 }
 ion-select {
   max-width: 100%;
+}
+
+.border-top {
+  border-top: 1px solid #ccc;
 }
 </style>
