@@ -122,6 +122,7 @@ const actions: ActionTree<OrderState , RootState> ={
         */
         const shipmentMethodTypeId = payload.order.items.find((ele: any) => ele.shipGroupSeqId == payload.shipGroupSeqId).shipmentMethodTypeId
         if (shipmentMethodTypeId !== 'STOREPICKUP') {
+          // TODO: find a better way to get the shipmentId
           const shipmentId = resp.data._EVENT_MESSAGE_.match(/\d+/g)[0]
           await dispatch('packDeliveryItems', shipmentId).then((data) => {
             if (!hasError(data) && !data.data._EVENT_MESSAGE_) showToast(translate("Something went wrong"))
@@ -141,27 +142,27 @@ const actions: ActionTree<OrderState , RootState> ={
   },
 
   // TODO: handle the unfillable items count
-  async setUnfillableOrderOrItem ({ dispatch }, order) {
+  async setUnfillableOrderOrItem ({ dispatch }, payload) {
     emitter.emit("presentLoader");
-    return await dispatch("rejectOrderItems", order).then((resp) => {
+    return await dispatch("rejectOrderItems", payload).then((resp) => {
       const refreshPickupOrders = resp.find((response: any) => !(response.data._ERROR_MESSAGE_ || response.data._ERROR_MESSAGE_LIST_))
       if (refreshPickupOrders) {
-        showToast(translate('All items were canceled from the order') + ' ' + order.orderId);
+        showToast(translate('All items were canceled from the order') + ' ' + payload.order.orderId);
       } else {
         showToast(translate('Something went wrong'));
       }
       emitter.emit("dismissLoader");
       return resp;
-    })
+    }).catch(err => err);
   },
 
-  rejectOrderItems ({ commit }, order) {
+  rejectOrderItems ({ commit }, data) {
     const payload = {
-      "orderId": order.orderId,
-      "rejectReason": ''
+      "orderId": data.order.orderId,
+      "rejectReason": data.reason
     }
 
-    return Promise.all(order.items.map((item: any) => {
+    return Promise.all(data.order.items.map((item: any) => {
       const params = {
         ...payload,
         'facilityId': item.facilityId,
@@ -170,7 +171,7 @@ const actions: ActionTree<OrderState , RootState> ={
         'quantity': parseInt(item.inventory[0].quantity)
       }
       return OrderService.rejectOrderItem({'payload': params}).catch((err) => { 
-        throw err;
+        return err;
       })
     }))
   },

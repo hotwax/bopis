@@ -44,6 +44,12 @@
       <ion-card v-for="(item, index) in order?.items" :key="index">
         <ion-card-content>
           <ProductListItem :item="item" />
+          <ion-item lines="none">
+            <ion-label>{{ $t("Reason") }}</ion-label>
+            <ion-select multiple="false" v-model="item.reason">
+              <ion-select-option v-for="reason in unfillableReason" :value="reason.id" :key="reason.id">{{ $t(reason.label) }}</ion-select-option>
+            </ion-select>
+          </ion-item>
         </ion-card-content>
       </ion-card>
       <ion-item lines="none">
@@ -79,6 +85,8 @@ import {
   IonList,
   IonNote,
   IonPage,
+  IonSelect,
+  IonSelectOption,
   IonTitle,
   IonToolbar,
 } from "@ionic/vue";
@@ -110,14 +118,30 @@ export default defineComponent({
     IonList,
     IonNote,
     IonPage,
+    IonSelect,
+    IonSelectOption,
     IonTitle,
     IonToolbar,
     ProductListItem
   },
+  data () {
+    return {
+      unfillableReason: [
+        {id: "", label: "No Variance"},
+        {id: "NOT_IN_STOCK", label: "Not in Stock"},
+        {id: "INACTIVE_STORE", label: "Inactive store"},
+        {id: "MISMATCH", label: "Mismatch"},
+        {id: "WORN_DISPLAY", label: "Worn Display"}
+      ]
+    }
+  },
   computed: {
     ...mapGetters({
       order: "order/getCurrent",
-    }),
+    })
+  },
+  mounted () {
+    this.order.items.map((item) => item['reason'] = this.unfillableReason[0].id);
   },
   methods: {
     async updateOrder (order) {
