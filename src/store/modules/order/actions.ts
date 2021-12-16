@@ -147,7 +147,7 @@ const actions: ActionTree<OrderState , RootState> ={
     return await dispatch("rejectOrderItems", payload).then((resp) => {
       const refreshPickupOrders = resp.find((response: any) => !(response.data._ERROR_MESSAGE_ || response.data._ERROR_MESSAGE_LIST_))
       if (refreshPickupOrders) {
-        showToast(translate('All items were canceled from the order') + ' ' + payload.order.orderId);
+        showToast(translate('All items were canceled from the order') + ' ' + payload.orderId);
       } else {
         showToast(translate('Something went wrong'));
       }
@@ -158,13 +158,13 @@ const actions: ActionTree<OrderState , RootState> ={
 
   rejectOrderItems ({ commit }, data) {
     const payload = {
-      "orderId": data.order.orderId,
-      "rejectReason": data.reason
+      'orderId': data.orderId
     }
 
-    return Promise.all(data.order.items.map((item: any) => {
+    return Promise.all(data.items.map((item: any) => {
       const params = {
         ...payload,
+        'rejectReason': item.reason,
         'facilityId': item.facilityId,
         'orderItemSeqId': item.orderItemSeqId,
         'shipmentMethodTypeId': item.shipmentMethodTypeId,
