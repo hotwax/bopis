@@ -126,13 +126,7 @@ export default defineComponent({
   },
   data () {
     return {
-      unfillableReason: [
-        {id: "", label: "No Variance"},
-        {id: "NOT_IN_STOCK", label: "Not in Stock"},
-        {id: "INACTIVE_STORE", label: "Inactive store"},
-        {id: "MISMATCH", label: "Mismatch"},
-        {id: "WORN_DISPLAY", label: "Worn Display"}
-      ]
+      unfillableReason: JSON.parse(process.env.VUE_APP_UNFILLABLE_REASONS)
     }
   },
   computed: {
