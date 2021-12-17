@@ -20,7 +20,7 @@ const actions: ActionTree<UserState, RootState> = {
       if (resp.status === 200 && resp.data) {
         if (resp.data.token) {
             commit(types.USER_TOKEN_CHANGED, { newToken: resp.data.token })
-            dispatch('getProfile')
+            await dispatch('getProfile')
             return resp.data;
         } else if (hasError(resp)) {
           showToast(translate('Sorry, your username or password is incorrect. Please try again.'));
@@ -59,13 +59,17 @@ const actions: ActionTree<UserState, RootState> = {
         emitter.emit('timeZoneDifferent', { profileTimeZone: resp.data.userTimeZone, localTimeZone});
       }
       commit(types.USER_INFO_UPDATED, resp.data);
+      commit(types.USER_CURRENT_FACILITY_UPDATED, resp.data.facilities.length > 0 ? resp.data.facilities[0] : {});
     }
+    return resp;
   },
 
   /**
    * update current facility information
    */
-  async setFacility ({ commit }, payload) {
+  async setFacility ({ commit, dispatch }, payload) {
+    // clearing the orders state whenever changing the facility
+    dispatch("order/clearOrders", null, {root: true})
     commit(types.USER_CURRENT_FACILITY_UPDATED, payload.facility);
   },
   

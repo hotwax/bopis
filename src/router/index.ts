@@ -1,7 +1,6 @@
 import { createRouter, createWebHistory } from '@ionic/vue-router';
 import { RouteRecordRaw } from 'vue-router';
 import Login from '@/views/Login.vue'
-import Settings from "@/views/Settings.vue"
 import store from '@/store'
 import Tabs from '@/views/Tabs.vue'
 import OrderDetail from '@/views/OrderDetail.vue'
@@ -26,7 +25,7 @@ const loginGuard = (to: any, from: any, next: any) => {
 const routes: Array<RouteRecordRaw> = [
   {
     path: '/',
-    redirect: '/tabs/Catalog'
+    redirect: '/tabs/orders'
   },
   {
     path: '/tabs',
@@ -34,22 +33,18 @@ const routes: Array<RouteRecordRaw> = [
     children: [
       {
         path: '',
-        redirect: '/Catalog'
+        redirect: '/orders'
       },
       {
-        path: 'Catalog',
-        component: () => import('@/views/Catalog.vue')
-      },
-      
-      {
-        path: 'Orders',
+        path: 'orders',
         component: () => import('@/views/Orders.vue')
       },
        {
-        path: 'More',
-        component: () => import('@/views/More.vue')
+        path: 'settings',
+        component: () => import('@/views/Settings.vue')
       },
-    ]
+    ],
+    beforeEnter: authGuard
   },
   {
     path: '/login',
@@ -58,15 +53,11 @@ const routes: Array<RouteRecordRaw> = [
     beforeEnter: loginGuard
   },
   {
-    path: "/settings",
-    name: "Settings",
-    component: Settings,
-    beforeEnter: authGuard
-  },{
-    path: "/orderdetail",
-    name: "orderdetail",
+    path: "/orderdetail/:orderId",
+    name: "OrderDetail",
     component: OrderDetail,
-    
+    beforeEnter: authGuard,
+    props: true
   }
 ]
 

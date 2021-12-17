@@ -30,7 +30,8 @@ import {
   IonInput,
   IonItem,
   IonLabel,
-  IonPage } from "@ionic/vue";
+  IonPage
+} from "@ionic/vue";
 import { defineComponent } from "vue";
 import { useRouter } from "vue-router";
 import { useStore } from "@/store";
@@ -45,7 +46,7 @@ export default defineComponent({
     IonLabel,
     IonPage
   },
-  data() {
+  data () {
     return {
       username: "",
       password: ""
@@ -63,15 +64,15 @@ export default defineComponent({
       })
     }
   },
-  setup() {
+  setup () {
     const router = useRouter();
     const store = useStore();
     return { router, store };
   }
 });
 </script>
-<style scoped>
 
+<style scoped>
 .login-container {
   width: 375px;
 }
@@ -87,5 +88,4 @@ img {
   align-items: center;
   height: 100%;
 }
-
 </style>
