@@ -72,6 +72,12 @@ const actions: ActionTree<UserState, RootState> = {
     dispatch("order/clearOrders", null, {root: true})
     commit(types.USER_CURRENT_FACILITY_UPDATED, payload.facility);
   },
+  /**
+   * Set User Instance Url
+   */
+   setUserInstanceUrl ({ state, commit }, payload){
+    commit(types.USER_INSTANCE_URL_UPDATED, payload)
+   },
   
   /**
    * Update user timeZone
