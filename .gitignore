@@ -18,6 +18,7 @@ log.txt
 npm-debug.log*
 .env
 .env.*
+.history
 
 /.idea
 /.ionic
