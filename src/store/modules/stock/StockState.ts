@@ -1,3 +1,3 @@
 export default interface StockState {
-	products: any;
+  products: any;
 }
