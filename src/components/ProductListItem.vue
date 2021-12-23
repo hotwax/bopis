@@ -4,8 +4,11 @@
       <Image :src="item.images.main.thumbnail" />
     </ion-thumbnail>
     <ion-label>
-      <h5>{{ item?.brandName }}</h5>
+      <h5>{{ item.brandName }}</h5>
       <h2>{{ item.itemName }}</h2>
+      <p class="overline">{{ $filters.getIdentificationId(getProduct(item.itemId).goodIdentifications, goodIdentificationTypeId) }}</p>
+      <p>{{ $t("Color") }} : {{ item.standardFeatures.COLOR.description }}</p>
+      <p>{{ $t("Size") }} : {{ item.standardFeatures.SIZE.description }}</p>
       <p>{{ $t("Color") }}: {{ item.standardFeatures.COLOR.description }}</p>
       <p>{{ $t("Size") }}: {{ item.standardFeatures.SIZE.description }}</p>
     </ion-label>
@@ -26,9 +29,15 @@ export default {
     IonNote,
     IonThumbnail
   },
+  data () {
+    return {
+      goodIdentificationTypeId: process.env.VUE_APP_PRDT_IDENT_TYPE_ID
+    }
+  },
   props: ["item"],
   computed: {
     ...mapGetters({
+      getProduct: 'product/getProduct',
       getProductStock: 'stock/getProductStock'
     })
   }

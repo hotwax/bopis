@@ -6,7 +6,6 @@ import * as types from './mutation-types'
 import { hasError , showToast } from "@/utils";
 import { translate } from "@/i18n";
 import emitter from '@/event-bus'
-import router from "@/router";
 
 const actions: ActionTree<OrderState , RootState> ={
   async getOpenOrders ({ commit, state }, payload) {
@@ -20,24 +19,15 @@ const actions: ActionTree<OrderState , RootState> ={
         let orders = resp.data.docs;
         const total = resp.data.count;
 
-        // storing the productIds in a set and then calling the checkInventory API
-        let productIds: any = new Set();
-        orders.forEach((order: any) => {
-          order.items.forEach((item: any) => {
-            if (item.itemId) productIds.add(item.itemId);
-          });
-        });
-        productIds = [...productIds]
-
-        if (productIds.length) this.dispatch('stock/addProducts', { productIds })
+        this.dispatch('product/getProductInformation', { orders })
 
         if(payload.viewIndex && payload.viewIndex > 0) orders = state.open.list.concat(orders)
         commit(types.ORDER_OPEN_UPDATED, { orders, total })
-        if (payload.viewIndex === 0) emitter.emit("dismissLoader");
+        emitter.emit("dismissLoader");
       } else {
         showToast(translate("Orders Not Found"))
       }
-      if (payload.viewIndex === 0) emitter.emit("dismissLoader");
+      emitter.emit("dismissLoader");
     } catch(err) {
       console.log(err)
       showToast(translate("Something went wrong"))
@@ -60,16 +50,7 @@ const actions: ActionTree<OrderState , RootState> ={
       if (resp.status === 200 && resp.data.count > 0 && !hasError(resp)) {
         let orders = resp.data.docs;
 
-        // storing the productIds in a set and then calling the checkInventory API
-        let productIds: any = new Set();
-        orders.forEach((order: any) => {
-          order.items.forEach((item: any) => {
-            if (item.itemId) productIds.add(item.itemId);
-          });
-        });
-        productIds = [...productIds]
-
-        if (productIds.length) this.dispatch('stock/addProducts', { productIds })
+        this.dispatch('product/getProductInformation', { orders })
 
         const total = resp.data.count;
         if(payload.viewIndex && payload.viewIndex > 0) orders = state.packed.list.concat(orders)
@@ -78,7 +59,7 @@ const actions: ActionTree<OrderState , RootState> ={
       } else {
         showToast(translate("Orders Not Found"))
       }
-      if (payload.viewIndex === 0) emitter.emit("dismissLoader");
+      emitter.emit("dismissLoader");
     } catch(err) {
       console.log(err)
       showToast(translate("Something went wrong"))

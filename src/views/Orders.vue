@@ -25,7 +25,7 @@
             </template>
             <template #cardActionButton>
               <ion-button fill="clear" @click.stop="readyForPickup(order, shipGroup)">
-                {{ getShipmentMethod(shipGroup, order.items) === 'STOREPICKUP' ? $t("Ready for pickup") : $t("Ready to Ship") }}
+                {{ getShipmentMethod(shipGroup, order.items) === 'STOREPICKUP' ? $t("Ready for pickup") : $t("Ready to ship") }}
               </ion-button>
             </template>
           </OrderItemCard>
@@ -152,7 +152,7 @@ export default defineComponent({
     },
     async readyForPickup (order: any, shipGroup: any) {
       const pickup = this.getShipmentMethod(shipGroup, order.items) === 'STOREPICKUP';
-      const header = pickup ? this.$t('Ready For Pickup') : this.$t('Ready to Ship');
+      const header = pickup ? this.$t('Ready for pickup') : this.$t('Ready to ship');
       const message = pickup ? this.$t('An email notification will be sent to that their order is ready for pickup. This order will also be moved to the packed orders tab.', { customerName: order.customerName, space: '<br/><br/>'}) : '';
 
       const alert = await alertController

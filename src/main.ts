@@ -48,6 +48,24 @@ app.config.globalProperties.$filters = {
     const userProfile = store.getters['user/getUserProfile'];
     // TODO Fix this setDefault should set the default timezone instead of getting it everytiem and setting the tz
     return moment.utc(value, inFormat).tz(userProfile.userTimeZone).format(outFormat ? outFormat : 'MM-DD-YYYY');
+  },
+  getIdentificationId(identifications: any, id: string) {
+    let  externalId = ''
+    if (identifications) {
+      const externalIdentification = identifications.find((identification: any) => identification.startsWith(id))
+      const externalIdentificationSplit = externalIdentification ? externalIdentification.split('/') : [];
+      externalId = externalIdentificationSplit[1] ? externalIdentificationSplit[1] : '';
+    }
+    return externalId;
+  },
+  getOrderIdentificationId(identifications: any, id: string) {
+    let  externalId = ''
+    if (identifications) {
+      const externalIdentification = identifications.find((identification: any) => identification.startsWith(id))
+      const externalIdentificationSplit = externalIdentification ? externalIdentification.split('/') : [];
+      externalId = externalIdentificationSplit[1] ? externalIdentificationSplit[1] : '';
+    }
+    return externalId;
   }
 }
 

@@ -3,7 +3,7 @@
       <ion-item lines="none">
         <ion-label>
           <h1>{{ order.customerName }}</h1>
-          <p>{{ order.customerId }}</p>
+          <p>{{ $filters.getOrderIdentificationId(order.orderIdentifications, orderIdentificationTypeId) }}</p>
         </ion-label>
         <ion-note>
           <p>{{ order.orderDate && $filters.formatDate(order.orderDate) }}</p>
@@ -63,6 +63,11 @@ export default defineComponent({
     getShipGroupItems(shipGroupSeqId: any, items: any) {
       // To get all the items of same shipGroup, further it will use on pickup-order-card component to display line items
       return items.filter((item: any) => item.shipGroupSeqId == shipGroupSeqId)
+    }
+  },
+  data () {
+    return {
+      orderIdentificationTypeId: process.env.VUE_APP_ORD_IDENT_TYPE_ID
     }
   },
   setup () {
