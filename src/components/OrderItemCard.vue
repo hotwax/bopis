@@ -1,6 +1,5 @@
 <template>
   <ion-card>
-    <ion-list>
       <ion-item lines="none">
         <ion-label>
           <h1>{{ order.customerName }}</h1>
@@ -31,7 +30,6 @@
           {{ $t("Copy") }}
         </ion-button>
       </ion-item>
-    </ion-list>
     <div class="border-top">
       <slot name="cardActionButton" />
     </div>       
