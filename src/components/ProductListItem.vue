@@ -6,8 +6,8 @@
     <ion-label>
       <h5>{{ item?.brandName }}</h5>
       <h2>{{ item.itemName }}</h2>
-      <p>{{ $t("Color") }} : {{ item.standardFeatures.COLOR.description }}</p>
-      <p>{{ $t("Size") }} : {{ item.standardFeatures.SIZE.description }}</p>
+      <p>{{ $t("Color") }}: {{ item.standardFeatures.COLOR.description }}</p>
+      <p>{{ $t("Size") }}: {{ item.standardFeatures.SIZE.description }}</p>
     </ion-label>
     <ion-note slot = "end">{{ getProductStock(item.itemId) }} {{ $t("in stock") }}</ion-note>
   </ion-item>
