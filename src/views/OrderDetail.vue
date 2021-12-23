@@ -60,9 +60,9 @@
       <ion-button expand="block" color="danger" fill="outline" @click="updateOrder(order)">
         {{ $t("Reject Order") }}
       </ion-button>
-      <ion-card>
+      <ion-card @click="learnMore">
         <ion-item lines="none">
-          <ion-icon :icon="informationCircleOutline" slot="start" @click="learnMore"/>
+          <ion-icon :icon="informationCircleOutline" slot="start"/>
           <ion-label text-wrap>{{ $t("Learn more about unfillable items") }}</ion-label>
         </ion-item>
       </ion-card>

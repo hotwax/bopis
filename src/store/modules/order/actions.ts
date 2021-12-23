@@ -19,6 +19,18 @@ const actions: ActionTree<OrderState , RootState> ={
       if (resp.status === 200 && resp.data.count > 0 && !hasError(resp)) {
         let orders = resp.data.docs;
         const total = resp.data.count;
+
+        // storing the productIds in a set and then calling the checkInventory API
+        let productIds: any = new Set();
+        orders.forEach((order: any) => {
+          order.items.forEach((item: any) => {
+            if (item.itemId) productIds.add(item.itemId);
+          });
+        });
+        productIds = [...productIds]
+
+        if (productIds.length) this.dispatch('stock/addProducts', { productIds })
+
         if(payload.viewIndex && payload.viewIndex > 0) orders = state.open.list.concat(orders)
         commit(types.ORDER_OPEN_UPDATED, { orders, total })
         if (payload.viewIndex === 0) emitter.emit("dismissLoader");
@@ -47,6 +59,18 @@ const actions: ActionTree<OrderState , RootState> ={
       resp = await OrderService.getPackedOrders(payload)
       if (resp.status === 200 && resp.data.count > 0 && !hasError(resp)) {
         let orders = resp.data.docs;
+
+        // storing the productIds in a set and then calling the checkInventory API
+        let productIds: any = new Set();
+        orders.forEach((order: any) => {
+          order.items.forEach((item: any) => {
+            if (item.itemId) productIds.add(item.itemId);
+          });
+        });
+        productIds = [...productIds]
+
+        if (productIds.length) this.dispatch('stock/addProducts', { productIds })
+
         const total = resp.data.count;
         if(payload.viewIndex && payload.viewIndex > 0) orders = state.packed.list.concat(orders)
         commit(types.ORDER_PACKED_UPDATED, { orders, total })

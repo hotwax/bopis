@@ -9,13 +9,15 @@
       <p>{{ $t("Color") }} : {{ item.standardFeatures.COLOR.description }}</p>
       <p>{{ $t("Size") }} : {{ item.standardFeatures.SIZE.description }}</p>
     </ion-label>
-    <ion-note color="success">{{ item.quantity ? item.quantity : item.inventory[0].quantity }} {{ $t("In Stock") }}</ion-note>
+    <ion-note>{{ getProductStock(item.itemId) }} {{ $t("in stock") }}</ion-note>
   </ion-item>
 </template>
 
 <script lang="ts">
 import { IonItem, IonLabel, IonNote, IonThumbnail } from "@ionic/vue";
 import Image from './Image.vue'
+import { mapGetters } from 'vuex';
+
 export default {
   components: {
     Image,
@@ -24,7 +26,12 @@ export default {
     IonNote,
     IonThumbnail
   },
-  props: ["item"]
+  props: ["item"],
+  computed: {
+    ...mapGetters({
+      getProductStock: 'stock/getProductStock'
+    })
+  }
 }
 </script>
 
