@@ -37,7 +37,7 @@
 </template>
 
 <script lang="ts">
-import { IonButton, IonCard, IonIcon, IonItem, IonList, IonLabel, IonNote } from "@ionic/vue";
+import { IonButton, IonCard, IonIcon, IonItem, IonLabel, IonNote } from "@ionic/vue";
 import ProductListItem from './ProductListItem.vue'
 import { callOutline, mailOutline } from "ionicons/icons";
 import { defineComponent } from "vue"
@@ -54,7 +54,6 @@ export default defineComponent({
     IonIcon,
     IonItem,
     IonLabel,
-    IonList,
     IonNote,
     ProductListItem
   },

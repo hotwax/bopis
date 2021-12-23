@@ -13,6 +13,7 @@
                 v-model="shopOrigin"
                 name="shopOrigin"
                 type="text"
+                placeholder="shop1.myshopify.com"
                 required
               ></ion-input>
             </ion-item>
@@ -116,6 +117,8 @@ export default defineComponent({
     authorise(shop, host, apiKey) {
       const scopes = process.env.VUE_APP_SHOPIFY_SCOPES
       emitter.emit("presentLoader");
+      const shopConfig = this.shopConfigs[shop];
+      if (!apiKey) apiKey = shopConfig ? shopConfig.apiKey : '';
       const redirectUri = process.env.VUE_APP_SHOPIFY_REDIRECT_URI;
       const permissionUrl = `https://${shop}/admin/oauth/authorize?client_id=${apiKey}&scope=${scopes}&redirect_uri=${redirectUri}`;
 
