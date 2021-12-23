@@ -34,14 +34,13 @@ const actions: ActionTree<ProductState, RootState> = {
       // Handled empty response in case of failed query
       if (resp.data) commit(types.PRODUCT_ADD_TO_CACHED_MULTIPLE, { products });
     } else {
-      showToast(translate('Something went wrong'))
+      console.error('Something went wrong')
     }
     // TODO Handle specific error
     return resp;
   },
 
   async getProductInformation ({ dispatch }, { orders }) {
-
     let productIds: any = new Set();
     orders.forEach((order: any) => {
       order.items.forEach((item: any) => {
