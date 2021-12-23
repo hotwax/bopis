@@ -1,27 +1,29 @@
 <template>
   <ion-page>
     <ion-content>
-      <!-- Commented form tag as when using it the install page reloads again and
-      then redirect to shopify -->
-      <form @keyup.enter="install(shopOrigin)" @submit.prevent="install(shopOrigin)">
-        <ion-list>
-          <img src="../assets/images/hc.png" />
-          <ion-item>
-            <ion-label position="floating"> {{ $t("Shop") }}</ion-label>
-            <ion-input
-              v-model="shopOrigin"
-              name="shopOrigin"
-              type="text"
-              required
-            ></ion-input>
-          </ion-item>
-        </ion-list>
-        <div class="ion-padding">
-          <ion-button type="submit" expand="block">
-            {{ $t("Install")  }}
-          </ion-button>
-        </div>
-      </form>
+      <div class="install">
+        <!-- Commented form tag as when using it the install page reloads again and
+        then redirect to shopify -->
+        <form @keyup.enter="install(shopOrigin)" @submit.prevent="install(shopOrigin)">
+          <ion-list>
+            <img src="../assets/images/hc.png" />
+            <ion-item>
+              <ion-label position="floating"> {{ $t("Shop") }}</ion-label>
+              <ion-input
+                v-model="shopOrigin"
+                name="shopOrigin"
+                type="text"
+                required
+              ></ion-input>
+            </ion-item>
+          </ion-list>
+          <div class="ion-padding">
+            <ion-button type="submit" expand="block">
+              {{ $t("Install")  }}
+            </ion-button>
+          </div>
+        </form>
+      </div>
     </ion-content>
   </ion-page>
 </template>
@@ -134,4 +136,20 @@ export default defineComponent({
 });
 </script>
 
-<style scoped></style>
+<style scoped>
+.install {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
+}
+
+form {
+  max-width: 375px;
+}
+
+img {
+  margin-bottom: 25px;
+  padding: 16px;
+}
+</style>
