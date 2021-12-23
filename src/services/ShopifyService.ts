@@ -1,11 +1,10 @@
-import api from '@/api';
+import { client } from '@/api';
 
-const generateAccessToken = async (query: any): Promise <any>  => {
-  return api({
+const generateAccessToken = async (config: any): Promise <any>  => {
+  return client({
     url: "/generateShopifyAccessToken",
     method: "post",
-    data: query,
-    cache: true
+    ...config
   });
 }
 

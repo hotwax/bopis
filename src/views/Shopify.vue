@@ -44,6 +44,7 @@ import { useRouter } from "vue-router";
 import emitter from "@/event-bus"
 import { ShopifyService } from "@/services/ShopifyService"
 import { getSessionToken } from "@shopify/app-bridge-utils";
+import { useStore } from 'vuex'
 
 export default defineComponent({
   name: "Shopify",
@@ -59,6 +60,7 @@ export default defineComponent({
   data() {
     return {
       apiKey: process.env.VUE_APP_SHOPIFY_API_KEY,
+      shopConfigs: JSON.parse(process.env.VUE_APP_SHOPIFY_SHOP_CONFIG),
       shopOrigin: '',
       session: this.$route.query['session'],
       hmac: this.$route.query['hmac'],
@@ -71,32 +73,38 @@ export default defineComponent({
   },
   async mounted () {
     const shop = this.shop || this.shopOrigin
+    const shopConfig = this.shopConfigs[shop];
+    const apiKey = shopConfig ? shopConfig.apiKey : '';
+    const oms = shopConfig ? shopConfig.oms : '';
+    this.store.dispatch("user/setUserInstanceUrl", oms)
     if (this.session) {
       const app = createApp({
-        apiKey: this.apiKey,
+        apiKey: apiKey,
         host: this.host
       });
       const sessionToken = await getSessionToken(app);
-
       if (sessionToken) {
+        // TODO Verify from server
         this.$router.push("/");
       }
-
     } else if (this.code) {
       // TODO store returned status and perform operation based upon it
       await ShopifyService.generateAccessToken({
+        data: {
         "code": this.code,
         "shop": shop,
-        "clientId": this.apiKey,
+        "clientId": apiKey,
         "host": this.host,
         "hmac": this.hmac,
         "timestamp": this.timestamp
+        },
+        baseUrl: `https://${oms}.hotwax.io/api/`
       }).then(resp => resp.json()).then(data => data.status).catch(err => console.warn(err));
       // TODO Navigate user based upon the status
-      const appURL = `https://${this.shop}/admin/apps/${this.apiKey}`;
+      const appURL = `https://${shop}/admin/apps/${apiKey}`;
       window.location.assign(appURL);
     } else if (this.shop || this.host) {
-      this.authorise(this.shop, this.host, this.apiKey);
+      this.authorise(shop, this.host, apiKey);
     }
   },
   methods: {
@@ -126,8 +134,10 @@ export default defineComponent({
   },
   setup() {
     const router = useRouter();
+    const store = useStore();
     return {
       router,
+      store,
       showToast,
     };
   },
