@@ -42,9 +42,7 @@
       </ion-item>
 
       <ion-card v-for="(item, index) in order?.items" :key="index">
-        <ion-card-content>
-          <ProductListItem :item="item" />
-        </ion-card-content>
+        <ProductListItem :item="item" />
         <ion-item lines="none" class="border-top">
           <ion-label>{{ $t("Reason") }}</ion-label>
           <ion-select multiple="false" v-model="item.reason">

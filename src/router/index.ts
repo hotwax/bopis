@@ -4,6 +4,7 @@ import Login from '@/views/Login.vue'
 import store from '@/store'
 import Tabs from '@/views/Tabs.vue'
 import OrderDetail from '@/views/OrderDetail.vue'
+import Shopify from '@/views/Shopify.vue'
 
 
 const authGuard = (to: any, from: any, next: any) => {
@@ -58,7 +59,12 @@ const routes: Array<RouteRecordRaw> = [
     component: OrderDetail,
     beforeEnter: authGuard,
     props: true
-  }
+  },
+  {
+    path: '/shopify',
+    name: 'Shopify',
+    component: Shopify
+  },
 ]
 
 const router = createRouter({

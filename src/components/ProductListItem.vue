@@ -9,8 +9,10 @@
       <p class="overline">{{ $filters.getIdentificationId(getProduct(item.itemId).goodIdentifications, goodIdentificationTypeId) }}</p>
       <p>{{ $t("Color") }} : {{ item.standardFeatures.COLOR.description }}</p>
       <p>{{ $t("Size") }} : {{ item.standardFeatures.SIZE.description }}</p>
+      <p>{{ $t("Color") }}: {{ item.standardFeatures.COLOR.description }}</p>
+      <p>{{ $t("Size") }}: {{ item.standardFeatures.SIZE.description }}</p>
     </ion-label>
-    <ion-note>{{ getProductStock(item.itemId) }} {{ $t("in stock") }}</ion-note>
+    <ion-note slot = "end">{{ getProductStock(item.itemId) }} {{ $t("in stock") }}</ion-note>
   </ion-item>
 </template>
 
