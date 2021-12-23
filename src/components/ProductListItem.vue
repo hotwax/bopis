@@ -6,7 +6,7 @@
     <ion-label>
       <h5>{{ item.brandName }}</h5>
       <h2>{{ item.itemName }}</h2>
-      <p class="overline">{{ $filters.getIdentificationId(getProduct(item.productId).goodIdentifications, goodIdentificationTypeId) }}</p>
+      <p class="overline">{{ $filters.getIdentificationId(getProduct(item.itemId).goodIdentifications, goodIdentificationTypeId) }}</p>
       <p>{{ $t("Color") }} : {{ item.standardFeatures.COLOR.description }}</p>
       <p>{{ $t("Size") }} : {{ item.standardFeatures.SIZE.description }}</p>
     </ion-label>

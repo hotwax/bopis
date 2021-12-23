@@ -11,7 +11,7 @@
         <ion-item lines="none">
           <ion-label>
             <h2>{{ order.customerName }}</h2>
-            <p>{{ order.orderId }}</p>
+            <p>{{ $filters.getOrderIdentificationId(order.orderIdentifications, orderIdentificationTypeId) }}</p>
           </ion-label>
           <ion-note slot="end">{{ $filters.formatDate(order.orderDate) }}</ion-note>
         </ion-item>
@@ -126,7 +126,8 @@ export default defineComponent({
   },
   data () {
     return {
-      unfillableReason: JSON.parse(process.env.VUE_APP_UNFILLABLE_REASONS)
+      unfillableReason: JSON.parse(process.env.VUE_APP_UNFILLABLE_REASONS),
+      orderIdentificationTypeId: process.env.VUE_APP_ORD_IDENT_TYPE_ID
     }
   },
   computed: {
