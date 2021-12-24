@@ -24,6 +24,7 @@ export default defineComponent({
   },
   methods: {
     async presentLoader() {
+      // if currently loader is not present then creating a new loader
       if (!this.loader) {
         this.loader = await loadingController
           .create({
@@ -37,11 +38,13 @@ export default defineComponent({
     dismissLoader() {
       if (this.loader) {
         this.loader.dismiss();
+        // on dismiss initializing the loader as null, so it can again be created
         this.loader = null as any;
       }
     }
   },
   async mounted() {
+    // creating the loader on mounted as loadingController is taking too much time to create initially
     this.loader = await loadingController
       .create({
         message: this.$t("Click the backdrop to dismiss."),
