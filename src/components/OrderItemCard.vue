@@ -5,7 +5,7 @@
           <h1>{{ order.customerName }}</h1>
           <p>{{ $filters.getOrderIdentificationId(order.orderIdentifications, orderIdentificationTypeId) }}</p>
         </ion-label>
-        <ion-badge v-if="order.orderDate" slot="end">{{ moment.utc(order.orderDate).fromNow() }}</ion-badge>
+        <ion-badge v-if="order.orderDate" color="dark" slot="end">{{ moment.utc(order.orderDate).fromNow() }}</ion-badge>
         <slot name="packedTime">
           <!-- TODO: Display the packed date of the orders, currently not getting the packed date from API-->
           <p></p>

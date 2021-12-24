@@ -13,7 +13,7 @@
             <h2>{{ order.customerName }}</h2>
             <p>{{ $filters.getOrderIdentificationId(order.orderIdentifications, orderIdentificationTypeId) }}</p>
           </ion-label>
-          <ion-badge v-if="order.orderDate" slot="end">{{ moment.utc(order.orderDate).fromNow() }}</ion-badge>
+          <ion-badge v-if="order.orderDate" color="dark" slot="end">{{ moment.utc(order.orderDate).fromNow() }}</ion-badge>
         </ion-item>
       </ion-list>
       <ion-item v-if="order.phoneNumber">
