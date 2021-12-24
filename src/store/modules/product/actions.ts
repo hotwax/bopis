@@ -13,13 +13,12 @@ const actions: ActionTree<ProductState, RootState> = {
   async fetchProducts ( { commit, state }, { productIds }) {
     const cachedProductIds = Object.keys(state.cached);
     const productIdFilter= productIds.reduce((filter: string, productId: any) => {
-      // checking consition that if the filter is not empty and the cached does not include
-      // the productId then add ' OR ' to the filter
-      if (filter !== '' && !cachedProductIds.includes(productId)) filter += ' OR '
       // If product already exist in cached products skip
       if (cachedProductIds.includes(productId)) {
         return filter;
       } else {
+        // checking condition that if the filter is not empty then adding 'OR' to the filter
+        if (filter !== '') filter += ' OR '
         return filter += productId;
       }
     }, '');
