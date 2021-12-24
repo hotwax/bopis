@@ -5,13 +5,11 @@
           <h1>{{ order.customerName }}</h1>
           <p>{{ $filters.getOrderIdentificationId(order.orderIdentifications, orderIdentificationTypeId) }}</p>
         </ion-label>
-        <ion-note>
-          <p>{{ order.orderDate && $filters.formatDate(order.orderDate) }}</p>
-          <slot name="packedTime">
-            <!-- TODO: Display the packed date of the orders, currently not getting the packed date from API-->
-            <p></p>
-          </slot>
-        </ion-note>
+        <ion-badge v-if="order.orderDate" slot="end">{{ moment.utc(order.orderDate).fromNow() }}</ion-badge>
+        <slot name="packedTime">
+          <!-- TODO: Display the packed date of the orders, currently not getting the packed date from API-->
+          <p></p>
+        </slot>
       </ion-item>
 
       <ProductListItem v-for="item in getShipGroupItems(shipGroup, order.items)" :key="item.itemId" :item="item" />
@@ -37,24 +35,24 @@
 </template>
 
 <script lang="ts">
-import { IonButton, IonCard, IonIcon, IonItem, IonLabel, IonNote } from "@ionic/vue";
+import { IonBadge, IonButton, IonCard, IonIcon, IonItem, IonLabel } from "@ionic/vue";
 import ProductListItem from './ProductListItem.vue'
 import { callOutline, mailOutline } from "ionicons/icons";
 import { defineComponent } from "vue"
 import { copyToClipboard } from '@/utils'
 import { useRouter } from 'vue-router'
 import { useStore } from "vuex";
-import emitter from "@/event-bus";
+import * as moment from "moment-timezone";
 
 export default defineComponent({
   name: 'OrderItemCard',
   components: {
+    IonBadge,
     IonButton,
     IonCard,
     IonIcon,
     IonItem,
     IonLabel,
-    IonNote,
     ProductListItem
   },
   props: ["order", "shipGroup"],
@@ -77,6 +75,7 @@ export default defineComponent({
       callOutline,
       copyToClipboard,
       mailOutline,
+      moment,
       router,
       store,
     }

@@ -13,7 +13,7 @@
             <h2>{{ order.customerName }}</h2>
             <p>{{ $filters.getOrderIdentificationId(order.orderIdentifications, orderIdentificationTypeId) }}</p>
           </ion-label>
-          <ion-note slot="end">{{ $filters.formatDate(order.orderDate) }}</ion-note>
+          <ion-badge v-if="order.orderDate" slot="end">{{ moment.utc(order.orderDate).fromNow() }}</ion-badge>
         </ion-item>
       </ion-list>
       <ion-item v-if="order.phoneNumber">
@@ -72,6 +72,7 @@
 import {
   alertController,
   IonBackButton,
+  IonBadge,
   IonButton,
   IonCard,
   IonContent,
@@ -98,12 +99,14 @@ import {
 import ProductListItem from '@/components/ProductListItem.vue'
 import { copyToClipboard } from '@/utils'
 import { useRouter } from 'vue-router'
+import * as moment from "moment-timezone";
 
 export default defineComponent({
   name: "OrderDetail",
   props: ['orderId'],
   components: {
     IonBackButton,
+    IonBadge,
     IonButton,
     IonCard,
     IonContent,
@@ -176,6 +179,7 @@ export default defineComponent({
       copyToClipboard,
       informationCircleOutline,
       mailOutline,
+      moment,
       router,
       store,
       swapVerticalOutline
