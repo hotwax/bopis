@@ -40,6 +40,10 @@ const routes: Array<RouteRecordRaw> = [
         path: 'orders',
         component: () => import('@/views/Orders.vue')
       },
+      {
+        path: 'catalog',
+        component: () => import('@/views/Catalog.vue')
+      },
        {
         path: 'settings',
         component: () => import('@/views/Settings.vue')

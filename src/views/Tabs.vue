@@ -2,6 +2,10 @@
   <ion-page>
     <ion-tabs>
       <ion-tab-bar slot="bottom">
+        <ion-tab-button tab="catalog" href="/tabs/catalog">
+          <ion-icon :icon="shirtOutline" />
+          <ion-label>{{ $t("Catalog") }}</ion-label>
+        </ion-tab-button>
         <ion-tab-button tab="orders" href="/tabs/orders">
           <ion-icon :icon="infiniteOutline" />
           <ion-label>{{ $t("Orders") }}</ion-label>
@@ -21,7 +25,8 @@ import { useRoute } from "vue-router";
 import { IonIcon, IonLabel, IonPage, IonTabBar, IonTabButton, IonTabs } from "@ionic/vue";
 import {
   infiniteOutline,
-  settings
+  settings,
+  shirtOutline,
 } from "ionicons/icons";
 
 export default {
@@ -31,7 +36,8 @@ export default {
     const route = useRoute();
     return {
       infiniteOutline,
-      settings
+      settings,
+      shirtOutline
     };
   }
 };
