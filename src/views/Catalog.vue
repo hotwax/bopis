@@ -8,13 +8,14 @@
     <ion-content :fullscreen="true">
       <ion-searchbar/>
       <main>        
-        <ion-card v-for="items in 10" :key="items">
-          <Image/>
+        <ion-card v-for="items in products" :key="items">
+          <Image :src="items.mainImageUrl"/>
             <ion-item lines="none">
+              {{items.p}}
               <ion-label>
-                <p>Brand</p>
-                  Parent name
-                <p>$Sale price</p>
+                <p>{{items.productId}}</p>
+                 {{items.productName}}
+                <p>${{items.groupPrice}}</p>
               </ion-label>
             </ion-item>          
         </ion-card>
@@ -36,6 +37,7 @@ import {
   IonToolbar,
 } from '@ionic/vue';
 import { defineComponent } from 'vue';
+import { mapGetters,useStore } from 'vuex';
 import Image from "../components/Image.vue"
 
 export default defineComponent({
@@ -51,7 +53,26 @@ export default defineComponent({
     IonSearchbar,
     IonTitle,
     IonToolbar,
-  }
+  },
+  computed : {
+    ...mapGetters({
+      products:'product/findProducts'
+    })
+
+  },
+ 
+  async mounted () {
+    // this.getOrders(process.env.VUE_APP_VIEW_SIZE,0);
+    console.log('products',this.products)
+    await this.store.dispatch("product/findProducts");
+    
+  }, setup(){
+      const store = useStore();
+
+    return{
+      store
+    }
+  },
 });
 </script>
 <style scoped>
