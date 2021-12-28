@@ -7,8 +7,15 @@ const getters: GetterTree<ProductState, RootState> = {
     // Returning empty object so that it doesn't breaks the UI
     return state.cached[productId] ? state.cached[productId] : {};
   },
-  findProducts: (state) => {
+  findProduct: (state) => {
     return state.cached ? state.cached : {};
+  },
+  isScrollable(state) {
+    return (
+      state.cached.length > 0 
+      // state.cached.length < state.cached.total
+     
+    );
   },
   
 
