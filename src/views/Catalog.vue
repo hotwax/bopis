@@ -28,7 +28,7 @@
         <ion-infinite-scroll-content
           loading-spinner="crescent"
           :loading-text="$t('Loading')"
-        ></ion-infinite-scroll-content>
+        />
       </ion-infinite-scroll>
     </ion-content>
   </ion-page>
