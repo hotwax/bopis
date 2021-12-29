@@ -8,14 +8,14 @@
     <ion-content :fullscreen="true">
      <ion-searchbar @ionFocus="selectSearchBarText($event)" v-model="queryString" :placeholder="$t('Search')" v-on:keyup.enter="getProducts()"/>
       <main>
-        <ion-card v-for="items in products" :key="items">
-          <Image :src="items.mainImageUrl" />
+        <ion-card v-for="product in products" :key="product">
+          <Image :src="product.mainImageUrl" />
           <ion-item lines="none">
-            {{ items.p }}
+            {{ product.p }}
             <ion-label>
-              <p>{{ items.productId }}</p>
-              {{ items.productName }}
-              <p>${{ items.groupPrice }}</p>
+              <p>{{ product.productId }}</p>
+              {{ product.productName }}
+              <p>${{ product.groupPrice }}</p>
             </ion-label>
           </ion-item>
         </ion-card>
@@ -109,7 +109,7 @@ export default defineComponent({
                 "defType" : "edismax"
             },
            "query": `(*${this.queryString}*) OR "${this.queryString}"^100`,
-            "filter": "docType:PRODUCT"
+           "filter": "docType:PRODUCT"
           }
         }  
        if (this.queryString) {
@@ -138,6 +138,6 @@ export default defineComponent({
 main {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
-  align-items: start;
+  align-product: start;
 }
 </style>
