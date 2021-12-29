@@ -31,7 +31,6 @@ const actions: ActionTree<ProductState, RootState> = {
     const resp = await ProductService.fetchProducts({
       "filters": ['productId: (' + productIdFilter + ')']
     })
-    console.log("resppp",resp);
     
     if (resp.status === 200 && resp.data.response && !hasError(resp)) {
       const products = resp.data.response.docs;
