@@ -20,14 +20,15 @@
           </ion-item>
         </ion-card>
       </main>
-      {{ isScrollable }}
       <ion-infinite-scroll
         @ionInfinite="loadMoreProducts($event)"
         threshold="100px"
-        :disabled="false">
+        :disabled="false"
+      >
         <ion-infinite-scroll-content
           loading-spinner="crescent"
-          :loading-text="$t('Loading')"></ion-infinite-scroll-content>
+          :loading-text="$t('Loading')"
+        ></ion-infinite-scroll-content>
       </ion-infinite-scroll>
     </ion-content>
   </ion-page>
@@ -80,7 +81,6 @@ export default defineComponent({
   },
   methods: {
     async loadMoreProducts(event: any) {
-
       this.getProducts(
         undefined,
         Math.ceil(
@@ -98,11 +98,8 @@ export default defineComponent({
         viewIndex,
         queryString: "*" + this.queryString + "*",
       };
-      // if (this.queryString) {
       await this.store.dispatch("product/findProduct", payload);
-      // } else {
-      // showToast(translate("Enter product sku to search"))
-      // }
+     
     },
   },
 
