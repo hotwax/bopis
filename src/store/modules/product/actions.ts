@@ -50,12 +50,7 @@ const actions: ActionTree<ProductState, RootState> = {
     let resp;
 
     try {
-      resp = await ProductService.fetchProducts({
-        // used sku as we are currently only using sku to search for the product
-        "filters": ['sku: ' + payload.queryString],
-        "viewSize": payload.viewSize,
-        "viewIndex": payload.viewIndex
-      })
+      resp = await ProductService.fetchProducts(payload)
 
       // resp.data.response.numFound tells the number of items in the response
       if (resp.status === 200 && resp.data.response.numFound > 0 && !hasError(resp)) {
@@ -74,7 +69,6 @@ const actions: ActionTree<ProductState, RootState> = {
       console.log(error)
       showToast(translate("Something went wrong"));
     }
-
     // TODO Handle specific error
     return resp;
     

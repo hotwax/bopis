@@ -6,7 +6,7 @@
       </ion-toolbar>
     </ion-header>
     <ion-content :fullscreen="true">
-      <ion-searchbar v-model="queryString" />
+     <ion-searchbar @ionFocus="selectSearchBarText($event)" v-model="queryString" :placeholder="$t('Search')" v-on:keyup.enter="getProducts()"/>
       <main>
         <ion-card v-for="items in products" :key="items">
           <Image :src="items.mainImageUrl" />
@@ -50,6 +50,8 @@ import {
 } from "@ionic/vue";
 import { defineComponent } from "vue";
 import { mapGetters, useStore } from "vuex";
+import { showToast } from '@/utils'
+import { translate } from '@/i18n'
 import Image from "../components/Image.vue";
 
 export default defineComponent({
@@ -80,6 +82,11 @@ export default defineComponent({
     }),
   },
   methods: {
+        selectSearchBarText(event: any) {
+      event.target.getInputElement().then((element: any) => {
+        element.select();
+      })
+    },
     async loadMoreProducts(event: any) {
       this.getProducts(
         undefined,
@@ -91,20 +98,32 @@ export default defineComponent({
       });
     },
     async getProducts(vSize: any, vIndex: any) {
+    
       const viewSize = vSize ? vSize : process.env.VUE_APP_VIEW_SIZE;
       const viewIndex = vIndex ? vIndex : 0;
       const payload = {
-        viewSize,
-        viewIndex,
-        queryString: "*" + this.queryString + "*",
-      };
-      await this.store.dispatch("product/findProduct", payload);
-     
+        "json": {
+            "params": {
+                "q.op": "AND",
+                "qf": "sku productId productName",
+                "defType" : "edismax"
+            },
+           "query": `(*${this.queryString}*) OR "${this.queryString}"^100`,
+            "filter": "docType:PRODUCT"
+          }
+        }  
+       if (this.queryString) {
+        await this.store.dispatch("product/findProduct", payload);
+      } else {
+        showToast(translate("Enter product sku to search"))
+      }
     },
   },
 
   async mounted() {
     this.getProducts(process.env.VUE_APP_VIEW_SIZE, 0);
+        // await this.store.dispatch("product/findProduct", payload);
+
   },
   setup() {
     const store = useStore();
