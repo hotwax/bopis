@@ -128,7 +128,7 @@ export default defineComponent({
       const alert = await alertController
         .create({
           header: this.$t('Update Order'),
-          message: this.$t(`will be sent an email with alternate fulfillment options for their BOPIS order and this order will be removed from your dashboard. This action cannot be undone.`, { customerName: order.customerName, space: '<br /><br />' }),
+          message: this.$t(`This order will be removed from your dashboard. This action cannot be undone.`, { space: '<br /><br />' }),
           buttons: [{
             text: this.$t('Cancel'),
             role: 'cancel'
