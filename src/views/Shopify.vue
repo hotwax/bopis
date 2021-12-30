@@ -125,6 +125,7 @@ export default defineComponent({
       if (window.top == window.self) {
         window.location.assign(permissionUrl);
       } else {
+        // TODO Handle for host
         const app = createApp({
           apiKey,
           host,
