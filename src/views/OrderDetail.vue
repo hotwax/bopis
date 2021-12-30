@@ -58,12 +58,6 @@
       <ion-button expand="block" color="danger" fill="outline" @click="updateOrder(order)">
         {{ $t("Reject Order") }}
       </ion-button>
-      <ion-card @click="learnMore">
-        <ion-item lines="none">
-          <ion-icon :icon="informationCircleOutline" slot="start"/>
-          <ion-label text-wrap>{{ $t("Learn more about unfillable items") }}</ion-label>
-        </ion-item>
-      </ion-card>
     </ion-content>
   </ion-page>
 </template>
@@ -94,7 +88,6 @@ import {
   swapVerticalOutline,
   callOutline,
   mailOutline,
-  informationCircleOutline,
 } from "ionicons/icons";
 import ProductListItem from '@/components/ProductListItem.vue'
 import { copyToClipboard } from '@/utils'
@@ -156,18 +149,6 @@ export default defineComponent({
           }]
         });
       return alert.present();
-    },
-    async learnMore () {
-      const alert = await alertController
-        .create({
-          header: this.$t('Unfillable Items'),
-          message: this.$t('Depending on the reason you select for not fulfulling an item, an inventory variance will be recorded and all sales channels will be updated with new inventory levels. For example, by selecting “Not in stock” HotWax Commerce will stop routing orders for it to your store and customers will not be able to place BOPIS orders for it at your store on Shopify.', { space: '<br/><br/>'}),
-          buttons: [{
-            text: this.$t('Dismiss'),
-            role: 'cancel'
-          }]
-        });
-      return alert.present();
     }
   },
   setup () {
@@ -177,7 +158,6 @@ export default defineComponent({
     return {
       callOutline,
       copyToClipboard,
-      informationCircleOutline,
       mailOutline,
       moment,
       router,
