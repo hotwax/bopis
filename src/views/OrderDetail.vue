@@ -50,11 +50,6 @@
           </ion-select>
         </ion-item>
       </ion-card>
-      <ion-item lines="none">
-        <ion-note>
-          {{ $t("This order cannot be split. If you cannot fulfill any item, will be sent an email with alternate fulfillment options and this order will be removed from your dashboard.", { customerName: order.customerName }) }}
-        </ion-note>
-      </ion-item>
       <ion-button expand="block" color="danger" fill="outline" @click="updateOrder(order)">
         {{ $t("Reject Order") }}
       </ion-button>
@@ -75,7 +70,6 @@ import {
   IonItem,
   IonLabel,
   IonList,
-  IonNote,
   IonPage,
   IonSelect,
   IonSelectOption,
@@ -108,7 +102,6 @@ export default defineComponent({
     IonItem,
     IonLabel,
     IonList,
-    IonNote,
     IonPage,
     IonSelect,
     IonSelectOption,
