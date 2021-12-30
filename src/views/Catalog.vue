@@ -8,14 +8,13 @@
     <ion-content :fullscreen="true">
       <ion-searchbar v-model="queryString" />
       <main>
-        <ion-card v-for="items in products" :key="items">
-          <Image :src="items.mainImageUrl" />
+        <ion-card v-for="product in products" :key="product">
+          <Image :src="product.mainImageUrl" />
           <ion-item lines="none">
-            {{ items.p }}
             <ion-label>
-              <p>{{ items.productId }}</p>
-              {{ items.productName }}
-              <p>${{ items.groupPrice }}</p>
+              <p>{{ product.productId }}</p>
+              {{ product.productName }}
+              <p>${{ product.groupPrice }}</p>
             </ion-label>
           </ion-item>
         </ion-card>
@@ -28,7 +27,7 @@
         <ion-infinite-scroll-content
           loading-spinner="crescent"
           :loading-text="$t('Loading')"
-        ></ion-infinite-scroll-content>
+        />
       </ion-infinite-scroll>
     </ion-content>
   </ion-page>
