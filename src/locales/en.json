@@ -35,7 +35,7 @@
   "Ready for pickup": "Ready for pickup",
   "Ready to create an app?": "Ready to create an app?",
   "Ready to ship": "Ready to ship",
-  "Reject Order": "Reject",
+  "Reject Order": "Reject Order",
   "Reason": "Reason",
   "Search": "Search",
   "Settings": "Settings",
@@ -48,5 +48,5 @@
   "Update Order": "Update Order",
   "Username": "Username",
   "Worn Display": "Worn Display",
-  "will be sent an email with alternate fulfillment options for their BOPIS order and this order will be removed from your dashboard. This action cannot be undone.": "{ customerName } will be sent an email with alternate fulfillment options for their BOPIS order and this order will be removed from your dashboard.{ space } This action cannot be undone."
+  "This order will be removed from your dashboard. This action cannot be undone.": "This order will be removed from your dashboard.{ space } This action cannot be undone."
 }

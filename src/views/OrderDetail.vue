@@ -50,20 +50,9 @@
           </ion-select>
         </ion-item>
       </ion-card>
-      <ion-item lines="none">
-        <ion-note>
-          {{ $t("This order cannot be split. If you cannot fulfill any item, will be sent an email with alternate fulfillment options and this order will be removed from your dashboard.", { customerName: order.customerName }) }}
-        </ion-note>
-      </ion-item>
       <ion-button expand="block" color="danger" fill="outline" @click="updateOrder(order)">
         {{ $t("Reject Order") }}
       </ion-button>
-      <ion-card @click="learnMore">
-        <ion-item lines="none">
-          <ion-icon :icon="informationCircleOutline" slot="start"/>
-          <ion-label text-wrap>{{ $t("Learn more about unfillable items") }}</ion-label>
-        </ion-item>
-      </ion-card>
     </ion-content>
   </ion-page>
 </template>
@@ -81,7 +70,6 @@ import {
   IonItem,
   IonLabel,
   IonList,
-  IonNote,
   IonPage,
   IonSelect,
   IonSelectOption,
@@ -94,7 +82,6 @@ import {
   swapVerticalOutline,
   callOutline,
   mailOutline,
-  informationCircleOutline,
 } from "ionicons/icons";
 import ProductListItem from '@/components/ProductListItem.vue'
 import { copyToClipboard } from '@/utils'
@@ -115,7 +102,6 @@ export default defineComponent({
     IonItem,
     IonLabel,
     IonList,
-    IonNote,
     IonPage,
     IonSelect,
     IonSelectOption,
@@ -142,7 +128,7 @@ export default defineComponent({
       const alert = await alertController
         .create({
           header: this.$t('Update Order'),
-          message: this.$t(`will be sent an email with alternate fulfillment options for their BOPIS order and this order will be removed from your dashboard. This action cannot be undone.`, { customerName: order.customerName, space: '<br /><br />' }),
+          message: this.$t(`This order will be removed from your dashboard. This action cannot be undone.`, { space: '<br /><br />' }),
           buttons: [{
             text: this.$t('Cancel'),
             role: 'cancel'
@@ -156,18 +142,6 @@ export default defineComponent({
           }]
         });
       return alert.present();
-    },
-    async learnMore () {
-      const alert = await alertController
-        .create({
-          header: this.$t('Unfillable Items'),
-          message: this.$t('Depending on the reason you select for not fulfulling an item, an inventory variance will be recorded and all sales channels will be updated with new inventory levels. For example, by selecting “Not in stock” HotWax Commerce will stop routing orders for it to your store and customers will not be able to place BOPIS orders for it at your store on Shopify.', { space: '<br/><br/>'}),
-          buttons: [{
-            text: this.$t('Dismiss'),
-            role: 'cancel'
-          }]
-        });
-      return alert.present();
     }
   },
   setup () {
@@ -177,7 +151,6 @@ export default defineComponent({
     return {
       callOutline,
       copyToClipboard,
-      informationCircleOutline,
       mailOutline,
       moment,
       router,
