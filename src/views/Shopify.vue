@@ -101,7 +101,7 @@ export default defineComponent({
         "hmac": this.hmac,
         "timestamp": this.timestamp
         },
-        baseUrl: `https://${oms}.hotwax.io/api/`
+        baseURL: `https://${oms}.hotwax.io/api/`
       }).then(resp => resp.json()).then(data => data.status).catch(err => console.warn(err));
       // TODO Navigate user based upon the status
       const appURL = `https://${shop}/admin/apps/${apiKey}`;
