@@ -25,6 +25,7 @@ const actions: ActionTree<OrderState , RootState> ={
         commit(types.ORDER_OPEN_UPDATED, { orders, total })
         emitter.emit("dismissLoader");
       } else {
+        commit(types.ORDER_OPEN_UPDATED, { orders: {}, total: 0 })
         showToast(translate("Orders Not Found"))
       }
       emitter.emit("dismissLoader");
@@ -57,6 +58,7 @@ const actions: ActionTree<OrderState , RootState> ={
         commit(types.ORDER_PACKED_UPDATED, { orders, total })
         if (payload.viewIndex === 0) emitter.emit("dismissLoader");
       } else {
+        commit(types.ORDER_PACKED_UPDATED, { orders: {}, total: 0 })
         showToast(translate("Orders Not Found"))
       }
       emitter.emit("dismissLoader");
@@ -85,6 +87,7 @@ const actions: ActionTree<OrderState , RootState> ={
       } else {
         showToast(translate("Something went wrong"))
       }
+      emitter.emit("dismissLoader")
     } catch(err) {
       console.log(err)
       showToast(translate("Something went wrong"))
@@ -137,6 +140,7 @@ const actions: ActionTree<OrderState , RootState> ={
       } else {
         showToast(translate("Something went wrong"))
       }
+      emitter.emit("dismissLoader")
     } catch(err) {
       console.log(err)
       showToast(translate("Something went wrong"))
