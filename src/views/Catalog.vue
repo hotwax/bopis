@@ -11,7 +11,6 @@
         <ion-card v-for="product in products" :key="product">
           <Image :src="product.mainImageUrl" />
           <ion-item lines="none">
-            {{ product.p }}
             <ion-label>
               <p>{{ product.productId }}</p>
               {{ product.productName }}
@@ -73,6 +72,7 @@ export default defineComponent({
   data() {
     return {
       queryString: "",
+      count:0
     };
   },
   computed: {
@@ -88,6 +88,9 @@ export default defineComponent({
       })
     },
     async loadMoreProducts(event: any) {
+      console.log(this.count);
+      this.count+=10;
+      
       this.getProducts(
         undefined,
         Math.ceil(
@@ -97,7 +100,7 @@ export default defineComponent({
         event.target.complete();
       });
     },
-    async getProducts(vSize: any, vIndex: any) {
+    async getProducts(vSize?: any, vIndex?: any) {
     
       const viewSize = vSize ? vSize : process.env.VUE_APP_VIEW_SIZE;
       const viewIndex = vIndex ? vIndex : 0;
@@ -106,23 +109,22 @@ export default defineComponent({
             "params": {
                 "q.op": "AND",
                 "qf": "sku productId productName",
-                "defType" : "edismax"
+                "defType" : "edismax",
+                "rows":10,
+                "start":viewIndex*10,
             },
            "query": `(*${this.queryString}*) OR "${this.queryString}"^100`,
-           "filter": "docType:PRODUCT"
-          }
+           "filter": "docType:PRODUCT",
+          },
+        
         }  
-       if (this.queryString) {
+   
         await this.store.dispatch("product/findProduct", payload);
-      } else {
-        showToast(translate("Enter product sku to search"))
-      }
     },
   },
 
   async mounted() {
     this.getProducts(process.env.VUE_APP_VIEW_SIZE, 0);
-        // await this.store.dispatch("product/findProduct", payload);
 
   },
   setup() {
@@ -138,6 +140,6 @@ export default defineComponent({
 main {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
-  align-product: start;
+  align-items: start;
 }
 </style>
