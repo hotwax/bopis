@@ -88,9 +88,7 @@ export default defineComponent({
       })
     },
     async loadMoreProducts(event: any) {
-      console.log(this.count);
       this.count+=10;
-      
       this.getProducts(
         undefined,
         Math.ceil(
