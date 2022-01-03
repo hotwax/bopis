@@ -114,9 +114,7 @@ export default defineComponent({
            "query": `(*${this.queryString}*) OR "${this.queryString}"^100`,
            "filter": "docType:PRODUCT",
           },
-        
         }  
-   
         await this.store.dispatch("product/findProduct", payload);
     },
   },
