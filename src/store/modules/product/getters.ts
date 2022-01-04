@@ -16,8 +16,5 @@ const getters: GetterTree<ProductState, RootState> = {
       state.cached.length < state.cached.total
     );
   },
-  
-
-  
 };
 export default getters;

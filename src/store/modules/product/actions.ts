@@ -9,7 +9,6 @@ import emitter from '@/event-bus'
 
 
 const actions: ActionTree<ProductState, RootState> = {
-
   async fetchProducts ( { commit, state }, { productIds }) {
     const cachedProductIds = Object.keys(state.cached);
     const productIdFilter= productIds.reduce((filter: string, productId: any) => {
@@ -45,12 +44,9 @@ const actions: ActionTree<ProductState, RootState> = {
 
     // Show loader only when new query and not the infinite scroll
     if (payload.viewIndex === 0) emitter.emit("presentLoader");
-
     let resp;
-
     try {
       resp = await ProductService.fetchProducts(payload)
-
       // resp.data.response.numFound tells the number of items in the response
       if (resp.status === 200 && resp.data.response.numFound > 0 && !hasError(resp)) {
         let products = resp.data.response.docs;
@@ -70,7 +66,6 @@ const actions: ActionTree<ProductState, RootState> = {
     }
     // TODO Handle specific error
     return resp;
-    
   },
 
   async getProductInformation ({ dispatch }, { orders }) {
