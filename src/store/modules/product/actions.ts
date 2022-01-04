@@ -9,7 +9,6 @@ import emitter from '@/event-bus'
 
 
 const actions: ActionTree<ProductState, RootState> = {
-
   async fetchProducts ( { commit, state }, { productIds }) {
     const cachedProductIds = Object.keys(state.cached);
     const productIdFilter= productIds.reduce((filter: string, productId: any) => {
@@ -22,10 +21,8 @@ const actions: ActionTree<ProductState, RootState> = {
         return filter += productId;
       }
     }, '');
-
     // If there are no products skip the API call
     if (productIdFilter === '') return;
-
     // adding viewSize as by default we are having the viewSize of 10
     const resp = await ProductService.fetchProducts({
       "filters": ['productId: (' + productIdFilter + ')']
@@ -42,12 +39,9 @@ const actions: ActionTree<ProductState, RootState> = {
     return resp;
   },
   async findProduct ({ commit, state }, payload) {
-
     // Show loader only when new query and not the infinite scroll
     if (payload.viewIndex === 0) emitter.emit("presentLoader");
-
     let resp;
-
     try {
       resp = await ProductService.fetchProducts({
         // used sku as we are currently only using sku to search for the product
@@ -55,7 +49,6 @@ const actions: ActionTree<ProductState, RootState> = {
         "viewSize": payload.viewSize,
         "viewIndex": payload.viewIndex
       })
-
       // resp.data.response.numFound tells the number of items in the response
       if (resp.status === 200 && resp.data.response.numFound > 0 && !hasError(resp)) {
         let products = resp.data.response.docs;
@@ -73,10 +66,8 @@ const actions: ActionTree<ProductState, RootState> = {
       console.log(error)
       showToast(translate("Something went wrong"));
     }
-
     // TODO Handle specific error
     return resp;
-    
   },
 
   async getProductInformation ({ dispatch }, { orders }) {
