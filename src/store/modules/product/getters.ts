@@ -12,9 +12,8 @@ const getters: GetterTree<ProductState, RootState> = {
   },
   isScrollable(state) {
     return (
-      state.cached.length > 0 
-      // state.cached.length < state.cached.total
-     
+      state.cached.length > 0 &&
+      state.cached.length < state.cached.total
     );
   },
   

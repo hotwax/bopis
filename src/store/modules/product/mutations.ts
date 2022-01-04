@@ -13,7 +13,7 @@ const mutations: MutationTree <ProductState> = {
   },
   [types.PRODUCT_SEARCH_UPDATED] (state, payload) {
     state.cached = payload.products;
-    // state.products.total = payload.totalProductsCount;
+    state.cached.total = payload.totalProductsCount;
   }
 }
 export default mutations;

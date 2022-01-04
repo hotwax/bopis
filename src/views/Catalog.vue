@@ -47,9 +47,9 @@ import {
   IonTitle,
   IonToolbar,
 } from "@ionic/vue";
-import { defineComponent } from "vue";
-import { mapGetters, useStore } from "vuex";
-import Image from "../components/Image.vue";
+import { defineComponent } from 'vue';
+import { mapGetters, useStore } from 'vuex';
+import Image from '../components/Image.vue';
 
 export default defineComponent({
   name: "Catalog",
@@ -89,7 +89,7 @@ export default defineComponent({
         event.target.complete();
       });
     },
-    async getProducts(vSize: any, vIndex: any) {
+    async getProducts(vSize?: any, vIndex?: any) {
       const viewSize = vSize ? vSize : process.env.VUE_APP_VIEW_SIZE;
       const viewIndex = vIndex ? vIndex : 0;
       const payload = {
@@ -103,7 +103,7 @@ export default defineComponent({
   },
 
   async mounted() {
-    this.getProducts(process.env.VUE_APP_VIEW_SIZE, 0);
+    this.getProducts();
   },
   setup() {
     const store = useStore();
