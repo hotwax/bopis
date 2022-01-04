@@ -47,11 +47,11 @@ import {
   IonTitle,
   IonToolbar,
 } from "@ionic/vue";
-import { defineComponent } from "vue";
-import { mapGetters, useStore } from "vuex";
+import { defineComponent } from 'vue';
+import { mapGetters, useStore } from 'vuex';
 import { showToast } from '@/utils'
 import { translate } from '@/i18n'
-import Image from "../components/Image.vue";
+import Image from '../components/Image.vue';
 
 export default defineComponent({
   name: "Catalog",
@@ -82,7 +82,7 @@ export default defineComponent({
     }),
   },
   methods: {
-        selectSearchBarText(event: any) {
+    selectSearchBarText(event: any) {
       event.target.getInputElement().then((element: any) => {
         element.select();
       })
@@ -99,18 +99,17 @@ export default defineComponent({
       });
     },
     async getProducts(vSize?: any, vIndex?: any) {
-    
       const viewSize = vSize ? vSize : process.env.VUE_APP_VIEW_SIZE;
       const viewIndex = vIndex ? vIndex : 0;
       const payload = {
         "json": {
-            "params": {
-                "q.op": "AND",
-                "qf": "sku productId productName",
-                "defType" : "edismax",
-                "rows":10,
-                "start":viewIndex*10,
-            },
+           "params": {
+              "qf": "sku productId productName",
+              "defType" : "edismax",
+              "rows":10,
+              "start":viewIndex*10,
+              "q.op": "AND",
+           },
            "query": `(*${this.queryString}*) OR "${this.queryString}"^100`,
            "filter": "docType:PRODUCT",
           },
@@ -120,12 +119,10 @@ export default defineComponent({
   },
 
   async mounted() {
-    this.getProducts(process.env.VUE_APP_VIEW_SIZE, 0);
-
+    this.getProducts();
   },
   setup() {
     const store = useStore();
-
     return {
       store,
     };
