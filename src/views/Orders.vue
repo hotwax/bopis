@@ -214,7 +214,7 @@ export default defineComponent({
 
 <style scoped>
 
-@media (min-width: 991px) {
+@media (min-width: 343px) {
   ion-content > div {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(343px, 1fr));
