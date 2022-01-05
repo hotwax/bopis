@@ -17,7 +17,7 @@
     </ion-header>
 
     <ion-content>
-      <div class="order-card" v-if="segmentSelected === 'open'">
+      <div class="orders" v-if="segmentSelected === 'open'">
         <div v-for="order in orders" :key="order.orderId">
           <OrderItemCard v-for="(shipGroup, index) in getShipGroups(order.items)" :key="index" :order="order" :shipGroup="shipGroup" @click.prevent="viewOrder(order)">
             <template #packedTime>
@@ -31,7 +31,7 @@
           </OrderItemCard>
         </div>
       </div>      
-      <div class="order-card" v-if="segmentSelected === 'packed'">
+      <div class="orders" v-if="segmentSelected === 'packed'">
         <div v-for="order in packedOrders" :key="order.orderId">
           <OrderItemCard v-for="(shipGroup, index) in getShipGroups(order.items)" :key="index" :order="order" :shipGroup="shipGroup">
             <template #cardActionButton>
@@ -213,8 +213,16 @@ export default defineComponent({
 </script>
 
 <style scoped>
-.order-card{ 
+.orders{ 
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(343px, 1fr));
+  gap: 10px;
+  align-items: start;
+}
+
+@media (max-width: 343px) {
+  .orders {
+    grid-template-columns: auto
+  }
 }
 </style>
