@@ -11,7 +11,7 @@
         <ion-item lines="none">
           <ion-label>
             <h2>{{ order.customerName }}</h2>
-            <p>{{ $t('Order') }}: {{ $filters.getOrderIdentificationId(order.orderIdentifications, orderIdentificationTypeId) }}</p>
+            <p v-if="$filters.getOrderIdentificationId(order.orderIdentifications, orderIdentificationTypeId)">{{ $t('Order') }}: {{ $filters.getOrderIdentificationId(order.orderIdentifications, orderIdentificationTypeId) }}</p>
           </ion-label>
           <ion-badge v-if="order.orderDate" color="dark" slot="end">{{ moment.utc(order.orderDate).fromNow() }}</ion-badge>
         </ion-item>
