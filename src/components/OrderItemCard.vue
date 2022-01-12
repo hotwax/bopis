@@ -3,7 +3,7 @@
       <ion-item lines="none">
         <ion-label>
           <h1>{{ order.customerName }}</h1>
-          <p>{{ $t('Shopify order') }}: {{ $filters.getOrderIdentificationId(order.orderIdentifications, orderIdentificationTypeId) }}</p>
+          <p>{{ $t('Order') }}: {{ $filters.getOrderIdentificationId(order.orderIdentifications, orderIdentificationTypeId) }}</p>
         </ion-label>
         <ion-badge v-if="order.orderDate" color="dark" slot="end">{{ moment.utc(order.orderDate).fromNow() }}</ion-badge>
         <slot name="packedTime">
