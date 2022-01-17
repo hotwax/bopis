@@ -8,6 +8,13 @@ const getOpenOrders = async (payload: any): Promise <any> => {
   });
 }
 
+const findOrderDetails = async (payload: any): Promise<any> => {
+  return api({
+    url:`orders/${payload}`,
+    method: "get",
+  })
+}
+
 const getPackedOrders = async (payload: any): Promise <any> => {
   return api({
     url: "readytoshiporders",
@@ -43,6 +50,7 @@ const rejectOrderItem = async (payload: any): Promise <any> => {
 export const OrderService = {
   getOpenOrders,
   getPackedOrders,
+  findOrderDetails,
   quickShipEntireShipGroup,
   rejectOrderItem,
   updateShipment
