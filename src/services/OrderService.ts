@@ -7,14 +7,12 @@ const getOpenOrders = async (payload: any): Promise <any> => {
     data: payload
   });
 }
-
 const findOrderDetails = async (payload: any): Promise<any> => {
   return api({
     url:`orders/${payload}`,
     method: "get",
   })
 }
-
 const getPackedOrders = async (payload: any): Promise <any> => {
   return api({
     url: "readytoshiporders",

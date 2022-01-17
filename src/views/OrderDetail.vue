@@ -118,7 +118,6 @@ export default defineComponent({
   computed: {
     ...mapGetters({
       order: "order/getCurrent",
-      orderDetail: "order/getOrderDetails"
     })
   },
   mounted () {

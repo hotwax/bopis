@@ -13,7 +13,6 @@
       </ion-item>
 
       <ProductListItem v-for="item in getShipGroupItems(shipGroup, order.items)" :key="item.itemId" :item="item" />
-
       <ion-item v-if="order.phoneNumber">
         <ion-icon :icon="callOutline" slot="start" />
         <ion-label>{{ order.phoneNumber }}</ion-label>

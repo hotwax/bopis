@@ -18,7 +18,10 @@ const actions: ActionTree<OrderState , RootState> ={
       if (resp.status === 200 && resp.data.count > 0 && !hasError(resp)) {
         let orders = resp.data.docs;
         const total = resp.data.count;
-
+        const details = orders.forEach((order: any) =>{
+           this.dispatch("order/getOrderDetails", order.orderId);
+        })
+        console.log(details);
         this.dispatch('product/getProductInformation', { orders })
 
         if(payload.viewIndex && payload.viewIndex > 0) orders = state.open.list.concat(orders)
@@ -40,7 +43,17 @@ const actions: ActionTree<OrderState , RootState> ={
   updateCurrent ({ commit }, payload) {
     commit(types.ORDER_CURRENT_UPDATED, { order: payload.order })
   },
-
+  async getOrderDetails({commit}, payload){
+    let resp;
+    try{
+      resp = await OrderService.findOrderDetails(payload);
+      commit(types.ORDER_DETAILS_UPDATED, {
+        orderDetails: resp.data
+      })
+    } catch(error) {
+      showToast(translate("Something went wrong"));
+    }
+  },
   async getPackedOrders ({ commit, state }, payload) {
     // Show loader only when new query and not the infinite scroll
     if (payload.viewIndex === 0) emitter.emit("presentLoader");
