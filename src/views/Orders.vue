@@ -115,7 +115,7 @@ import {
   IonToolbar,
 } from "@ionic/vue";
 import { defineComponent, ref } from "vue";
-import ProductListItem from './../components/ProductListItem.vue'
+import ProductListItem from '@/components/ProductListItem.vue'
 import { swapVerticalOutline, callOutline, mailOutline } from "ionicons/icons";
 import { mapGetters, useStore } from 'vuex'
 import { useRouter } from 'vue-router'
