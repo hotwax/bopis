@@ -50,6 +50,7 @@ const actions: ActionTree<OrderState , RootState> ={
       commit(types.ORDER_DETAILS_UPDATED, {
         orderDetails: resp.data
       })
+      console.log(resp);
     } catch(error) {
       showToast(translate("Something went wrong"));
     }

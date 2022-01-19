@@ -14,7 +14,7 @@ const orderModule: Module<OrderState, RootState> = {
       list: {},
       total: 0
     },
-    order: {},
+    order: [],
     packed: {
       list: {},
       total: 0
