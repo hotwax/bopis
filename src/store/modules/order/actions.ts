@@ -177,7 +177,7 @@ const actions: ActionTree<OrderState , RootState> ={
         'facilityId': item.facilityId,
         'orderItemSeqId': item.orderItemSeqId,
         'shipmentMethodTypeId': item.shipmentMethodTypeId,
-        'quantity': parseInt(item.inventory[0].quantity)
+        'quantity': parseInt(item.quantity)
       }
       return OrderService.rejectOrderItem({'payload': params}).catch((err) => { 
         return err;
