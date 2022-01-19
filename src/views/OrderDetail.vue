@@ -120,8 +120,8 @@ export default defineComponent({
       order: "order/getCurrent",
     })
   },
-  mounted () {
-    this.order.items.map((item) => item['reason'] = this.unfillableReason[0].id);
+  ionViewDidEnter() {
+    if(this.order.items) this.order.items.map((item) => item['reason'] = this.unfillableReason[0].id);
   },
   methods: {
     async updateOrder (order) {
