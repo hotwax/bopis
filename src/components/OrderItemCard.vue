@@ -67,9 +67,6 @@ export default defineComponent({
       orderIdentificationTypeId: process.env.VUE_APP_ORD_IDENT_TYPE_ID
     }
   },
-  mounted(){
-    console.log(this.order)
-  },
   setup () {
     const router = useRouter();
     const store = useStore();
