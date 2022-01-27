@@ -11,7 +11,7 @@
         <ion-item lines="none">
           <ion-label>
             <h2>{{ order.customerName }}</h2>
-            <p>{{ $filters.getOrderIdentificationId(order.orderIdentifications, orderIdentificationTypeId) }}</p>
+            <p v-if="$filters.getOrderIdentificationId(order.orderIdentifications, orderIdentificationTypeId)">{{ $t('Order') }}: {{ $filters.getOrderIdentificationId(order.orderIdentifications, orderIdentificationTypeId) }}</p>
           </ion-label>
           <ion-badge v-if="order.orderDate" color="dark" slot="end">{{ moment.utc(order.orderDate).fromNow() }}</ion-badge>
         </ion-item>
@@ -121,8 +121,10 @@ export default defineComponent({
     })
   },
   mounted () {
-    this.order.items.map((item) => item['reason'] = this.unfillableReason[0].id);
     this.getOrderDetails();
+  },  
+  ionViewDidEnter() {
+    if(this.order.items) this.order.items.map((item) => item['reason'] = this.unfillableReason[0].id);
   },
   methods: {
     async getOrderDetails(){
