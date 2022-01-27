@@ -9,8 +9,9 @@ const getOpenOrders = async (payload: any): Promise <any> => {
 }
 const findOrderDetails = async (payload: any): Promise<any> => {
   return api({
-    url:`orders/${payload}`,
-    method: "get",
+    url:"/solr-query",
+    method: "post",
+    data: payload
   })
 }
 const getPackedOrders = async (payload: any): Promise <any> => {

@@ -6,6 +6,9 @@ const getters: GetterTree<OrderState , RootState> = {
   getOpenOrders: (state) => {
     return state.open.list;
   },
+  getOrderDetails (state) {
+    return state.order;
+  },
   getCurrent: (state) => {
     return JSON.parse(JSON.stringify(state.current));
   },

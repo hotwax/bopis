@@ -40,7 +40,6 @@
           {{ $t("Copy") }}
         </ion-button>
       </ion-item>
-
       <ion-card v-for="(item, index) in order?.items" :key="index">
         <ProductListItem :item="item" />
         <ion-item lines="none" class="border-top">
@@ -118,12 +117,37 @@ export default defineComponent({
   computed: {
     ...mapGetters({
       order: "order/getCurrent",
+      orderDetail: "order/getOrderDetails"
     })
   },
   mounted () {
     this.order.items.map((item) => item['reason'] = this.unfillableReason[0].id);
+    this.getOrderDetails();
   },
   methods: {
+    async getOrderDetails(){
+      const payload = {
+              "json": {
+                "params": {
+                  "rows": "10",
+                  "sort": "orderDate desc",
+                  "group": true,
+                  "group.field": "orderId",
+                  "group.limit": 1000,
+                  "group.ngroups": true,
+                  "defType": "edismax",
+                  "q.op": "AND",
+                  "qf": "orderId",
+                  "start": 0
+                },
+                "query": `*${this.order.orderId}*`,
+                "filter": ["docType:ORDER","orderTypeId: SALES_ORDER"]
+              }
+            }
+            await this.store.dispatch("order/getOrderDetails",payload );
+            this.order.email = this.orderDetail.customerEmailId;
+            this.order.phoneNumber = this.orderDetail.contactPhoneNumbers;
+    },
     async updateOrder (order) {
       const alert = await alertController
         .create({
