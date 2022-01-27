@@ -1,0 +1,6 @@
+---
+title: Implemented the code to fetch missing information using solr query API
+ticket_id: "#1ytqbz6"
+merge_request: 44
+author: Disha
+type: fixed
