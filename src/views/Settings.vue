@@ -20,7 +20,7 @@
         <ion-item>
           <ion-icon :icon="sendOutline" slot="start" />
           <ion-label>{{$t("Shipping orders")}}</ion-label>
-          <ion-toggle :checked="shippingOrders" @ionChange="showShippingOrders($event)" />
+          <ion-toggle :checked="shippingOrders" @ionChange="showShippingOrders($event)" slot="end" />
         </ion-item>
         <!-- OMS information -->
         <ion-item>
