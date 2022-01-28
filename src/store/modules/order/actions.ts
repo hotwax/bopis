@@ -16,7 +16,7 @@ const actions: ActionTree<OrderState , RootState> ={
 
     try {
       const shippingOrdersStatus = store.state.user.shippingOrders;
-      if(shippingOrdersStatus){
+      if(!shippingOrdersStatus){
         payload.shipmentMethodTypeId= "STOREPICKUP"
       }
       resp = await OrderService.getOpenOrders(payload)
