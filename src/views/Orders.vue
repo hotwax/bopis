@@ -117,7 +117,7 @@ export default defineComponent({
         sortOrder: 'Desc',
         viewSize,
         viewIndex,
-        facilityId: this.currentFacilityId.facilityId,
+        facilityId: this.currentFacilityId.facilityId
       }
       await this.store.dispatch("order/getOpenOrders", payload);
     },
