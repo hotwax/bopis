@@ -16,6 +16,15 @@
             <ion-select-option v-for="facility in (userProfile ? userProfile.facilities : [])" :key="facility.facilityId" :value="facility.facilityId" >{{ facility.name }}</ion-select-option>
           </ion-select>
         </ion-item>
+        <!-- Select store -->
+        <ion-item>
+          <ion-icon :icon="sendOutline" slot="start" />
+          <ion-label>{{$t("Shipping orders")}}</ion-label>
+          <!-- <ion-select interface="popover" :value="currentFacility.facilityId" @ionChange="setFacility($event)">
+            <ion-select-option v-for="facility in (userProfile ? userProfile.facilities : [])" :key="facility.facilityId" :value="facility.facilityId" >{{ facility.name }}</ion-select-option>
+          </ion-select> -->
+           <ion-toggle :checked="shippingOrders" @ionChange="showShippingOrders($event)" />
+        </ion-item>
         <!-- OMS information -->
         <ion-item>
           <ion-icon :icon="codeWorkingOutline" slot="start"/>
@@ -34,9 +43,9 @@
 </template>
 
 <script lang="ts">
-import { IonButton, IonContent, IonHeader, IonIcon, IonItem, IonLabel, IonList, IonNote, IonPage, IonSelect, IonSelectOption, IonTitle, IonToolbar } from '@ionic/vue';
+import { IonButton, IonContent, IonHeader, IonIcon, IonItem, IonLabel, IonList, IonNote, IonPage, IonSelect, IonSelectOption, IonTitle, IonToggle , IonToolbar } from '@ionic/vue';
 import { defineComponent } from 'vue';
-import { ellipsisVertical, personCircleOutline, storefrontOutline, codeWorkingOutline } from 'ionicons/icons'
+import { ellipsisVertical, personCircleOutline, sendOutline , storefrontOutline, codeWorkingOutline } from 'ionicons/icons'
 import { mapGetters, useStore } from 'vuex';
 import { useRouter } from 'vue-router';
 
@@ -54,14 +63,16 @@ export default defineComponent({
     IonPage, 
     IonSelect, 
     IonSelectOption,
-    IonTitle, 
+    IonTitle,
+    IonToggle, 
     IonToolbar
   },
   computed: {
     ...mapGetters({
       userProfile: 'user/getUserProfile',
       currentFacility: 'user/getCurrentFacility',
-      instanceUrl: 'user/getInstanceUrl'
+      instanceUrl: 'user/getInstanceUrl',
+      shippingOrders: 'user/getShippingOrders'
     })
   },
   methods: {
@@ -75,6 +86,9 @@ export default defineComponent({
       this.store.dispatch('user/logout').then(() => {
         this.router.push('/login');
       })
+    },
+    showShippingOrders (ev: any){
+      this.store.dispatch('user/setShippingOrdersStatus', ev.detail.checked)
     }
   },
   setup () {
@@ -85,6 +99,7 @@ export default defineComponent({
       ellipsisVertical,
       personCircleOutline,
       router,
+      sendOutline,
       store,
       storefrontOutline,
       codeWorkingOutline

@@ -90,6 +90,10 @@ const actions: ActionTree<UserState, RootState> = {
       commit(types.USER_INFO_UPDATED, current);
       showToast(translate("Time zone updated successfully"));
     }
+  },
+
+  setShippingOrdersStatus( {state, commit }, payload){
+    commit(types.USER_SHIPPING_ORDERS_STATUS_UPDATED, payload)
   }
 }
 export default actions;
