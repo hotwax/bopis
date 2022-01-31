@@ -14,15 +14,6 @@ export default defineComponent({
 </script>
 
 <style scoped>
-
-figure {
-  text-align: center;
-}
-
-figure > img {
-  width: 375px;
-}
-
 .dark {
   display: none;
 }
