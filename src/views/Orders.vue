@@ -42,6 +42,9 @@
           </OrderItemCard>
         </div>
       </div>
+      <ion-refresher slot="fixed" @ionRefresh="refreshOrders($event)">
+        <ion-refresher-content pullingIcon="crescent" refreshingSpinner="crescent" />
+      </ion-refresher>
       <ion-infinite-scroll @ionInfinite="loadMoreProducts($event)" threshold="100px" :disabled="segmentSelected === 'open' ? !isOpenOrdersScrollable : !isPackedOrdersScrollable">
         <ion-infinite-scroll-content loading-spinner="crescent" :loading-text="$t('Loading')" />
       </ion-infinite-scroll>
@@ -59,6 +62,8 @@ import {
   IonInfiniteScrollContent,
   IonLabel,
   IonPage,
+  IonRefresher,
+  IonRefresherContent,
   IonSegment,
   IonSegmentButton,
   IonTitle,
@@ -80,6 +85,8 @@ export default defineComponent({
     IonInfiniteScrollContent,
     IonLabel,
     IonPage,
+    IonRefresher,
+    IonRefresherContent,
     IonSegment,
     IonSegmentButton,
     IonTitle,
@@ -102,6 +109,13 @@ export default defineComponent({
     })
   },
   methods: {
+    async refreshOrders(event: any) {
+      if(this.segmentSelected === 'open') {
+        this.getPickupOrders().then(() => { event.target.complete() });
+      } else {
+        this.getPackedOrders().then(() => { event.target.complete() });
+      }
+    },
     async viewOrder (order: any) {
       // TODO: find a better approach to handle the case that when in open segment we can click on
       // order card to route on the order details page but not in the packed segment
