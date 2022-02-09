@@ -34,7 +34,7 @@
 </template>
 
 <script lang="ts">
-import { IonButton, IonContent, IonHeader, IonIcon, IonItem, IonLabel, IonList, IonNote, IonPage, IonSelect, IonSelectOption, IonTitle, IonToolbar } from '@ionic/vue';
+import { IonButton, IonContent, IonHeader, IonIcon, IonItem, IonLabel, IonList, IonPage, IonSelect, IonSelectOption, IonTitle, IonToolbar } from '@ionic/vue';
 import { defineComponent } from 'vue';
 import { ellipsisVertical, personCircleOutline, storefrontOutline, codeWorkingOutline } from 'ionicons/icons'
 import { mapGetters, useStore } from 'vuex';
@@ -50,7 +50,6 @@ export default defineComponent({
     IonItem, 
     IonLabel, 
     IonList,
-    IonNote,
     IonPage, 
     IonSelect, 
     IonSelectOption,

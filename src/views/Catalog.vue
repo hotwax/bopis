@@ -8,7 +8,7 @@
     <ion-content :fullscreen="true">
       <ion-searchbar/>
       <main>        
-        <ion-card v-for="items in 10" :key="items">
+        <ion-card v-for="items in 10" :key="items" @click.prevent="() => router.push('/productdetail/12102')">
           <Image/>
             <ion-item lines="none">
               <ion-label>
@@ -37,6 +37,9 @@ import {
 } from '@ionic/vue';
 import { defineComponent } from 'vue';
 import Image from "../components/Image.vue"
+import { useStore } from "vuex"
+import { useRouter } from "vue-router";
+import { setup } from 'axios-cache-adapter';
 
 export default defineComponent({
   name: 'Catalog',
@@ -51,8 +54,17 @@ export default defineComponent({
     IonSearchbar,
     IonTitle,
     IonToolbar,
+  },
+  setup() {
+    const router = useRouter();
+    const store = useStore();
+
+    return {
+      router,
+      store
+    }
   }
-});
+})
 </script>
 <style scoped>
 main{
