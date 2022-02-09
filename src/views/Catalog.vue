@@ -64,7 +64,7 @@ export default defineComponent({
       store
     }
   }
-})
+});
 </script>
 <style scoped>
 main{
