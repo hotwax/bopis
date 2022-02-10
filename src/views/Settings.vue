@@ -50,7 +50,6 @@ export default defineComponent({
     IonItem, 
     IonLabel, 
     IonList,
-    IonNote,
     IonPage, 
     IonSelect, 
     IonSelectOption,
