@@ -25,7 +25,10 @@
                 <h1>{{ order.customerName }}</h1>
                 <p v-if="$filters.getOrderIdentificationId(order.orderIdentifications, orderIdentificationTypeId)">{{ $t('Order') }}: {{ $filters.getOrderIdentificationId(order.orderIdentifications, orderIdentificationTypeId) }}</p>
               </ion-label>
-              <ion-badge v-if="order.orderDate" color="dark" slot="end">{{ moment.utc(order.orderDate).fromNow() }}</ion-badge>
+              <div class="metadata">
+                <ion-badge v-if="order.orderDate" color="dark">{{ moment.utc(order.orderDate).fromNow() }}</ion-badge>
+                <ion-badge v-if="order.statusId == 'ORDER_APPROVED'" color="danger">{{ $t('pending approval') }}</ion-badge>
+              </div>
               <!-- TODO: Display the packed date of the orders, currently not getting the packed date from API-->
             </ion-item>
 
@@ -293,5 +296,12 @@ export default defineComponent({
 
 .border-top {
   border-top: 1px solid rgba(0, 0, 0, 0.12);
+}
+
+.metadata {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  row-gap: 4px;
 }
 </style>
