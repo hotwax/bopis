@@ -5,15 +5,15 @@ import RootState from "../../RootState";
 const getters: GetterTree<ProductState, RootState> = {
   getProduct: (state) => (productId: string) => {
     // Returning empty object so that it doesn't breaks the UI
-    return state.cached[productId] ? state.cached[productId] : {};
+    return state.products[productId] ? state.products[productId] : {};
   },
   findProduct: (state) => {
-    return state.cached ? state.cached : {};
+    return state.products ? state.products : {};
   },
   isScrollable(state) {
     return (
-      state.cached.length > 0 &&
-      state.cached.length < state.total
+      state.products.length > 0 &&
+      state.products.length < state.total
     );
   },
 };
