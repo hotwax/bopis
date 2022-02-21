@@ -18,28 +18,74 @@
 
     <ion-content>
       <div v-if="segmentSelected === 'open'">
-        <div v-for="order in orders" :key="order.orderId">
-          <OrderItemCard v-for="(shipGroup, index) in getShipGroups(order.items)" :key="index" :order="order" :shipGroup="shipGroup" @click.prevent="viewOrder(order)">
-            <template #packedTime>
-              <p></p>
-            </template>
-            <template #cardActionButton>
+        <div v-for="order in orders" :key="order.orderId" v-show="getShipGroups(order.items).length > 0">
+          <ion-card v-for="(shipGroup, index) in getShipGroups(order.items)" :key="index" @click.prevent="viewOrder(order)">
+            <ion-item lines="none">
+              <ion-label>
+                <h1>{{ order.customerName }}</h1>
+                <p v-if="$filters.getOrderIdentificationId(order.orderIdentifications, orderIdentificationTypeId)">{{ $t('Order') }}: {{ $filters.getOrderIdentificationId(order.orderIdentifications, orderIdentificationTypeId) }}</p>
+              </ion-label>
+              <ion-badge v-if="order.orderDate" color="dark" slot="end">{{ moment.utc(order.orderDate).fromNow() }}</ion-badge>
+              <!-- TODO: Display the packed date of the orders, currently not getting the packed date from API-->
+            </ion-item>
+
+            <ProductListItem v-for="item in getShipGroupItems(shipGroup, order.items)" :key="item.itemId" :item="item" />
+
+            <ion-item v-if="order.phoneNumber">
+              <ion-icon :icon="callOutline" slot="start" />
+              <ion-label>{{ order.phoneNumber }}</ion-label>
+              <ion-button fill="outline" slot="end" color="medium" @click="copyToClipboard(order.phoneNumber)">
+                {{ $t("Copy") }}
+              </ion-button>
+            </ion-item>
+            <ion-item lines="full" v-if="order.email">
+              <ion-icon :icon="mailOutline" slot="start" />
+              <ion-label>{{ order.email }}</ion-label>
+              <ion-button fill="outline" slot="end" color="medium" @click="copyToClipboard(order.email)">
+                {{ $t("Copy") }}
+              </ion-button>
+            </ion-item>
+            <div class="border-top">
               <ion-button fill="clear" @click.stop="readyForPickup(order, shipGroup)">
                 {{ getShipmentMethod(shipGroup, order.items) === 'STOREPICKUP' ? $t("Ready for pickup") : $t("Ready to ship") }}
               </ion-button>
-            </template>
-          </OrderItemCard>
+            </div>
+          </ion-card>
         </div>
       </div>      
       <div v-if="segmentSelected === 'packed'">
-        <div v-for="order in packedOrders" :key="order.orderId">
-          <OrderItemCard v-for="(shipGroup, index) in getShipGroups(order.items)" :key="index" :order="order" :shipGroup="shipGroup">
-            <template #cardActionButton>
+        <div v-for="order in packedOrders" :key="order.orderId" v-show="getShipGroups(order.items).length > 0">
+          <ion-card v-for="(shipGroup, index) in getShipGroups(order.items)" :key="index">
+            <ion-item lines="none">
+              <ion-label>
+                <h1>{{ order.customerName }}</h1>
+                <p v-if="$filters.getOrderIdentificationId(order.orderIdentifications, orderIdentificationTypeId)">{{ $t('Order') }}: {{ $filters.getOrderIdentificationId(order.orderIdentifications, orderIdentificationTypeId) }}</p>
+              </ion-label>
+              <ion-badge v-if="order.orderDate" color="dark" slot="end">{{ moment.utc(order.orderDate).fromNow() }}</ion-badge>
+            </ion-item>
+
+            <ProductListItem v-for="item in getShipGroupItems(shipGroup, order.items)" :key="item.itemId" :item="item" />
+
+            <ion-item v-if="order.phoneNumber">
+              <ion-icon :icon="callOutline" slot="start" />
+              <ion-label>{{ order.phoneNumber }}</ion-label>
+              <ion-button fill="outline" slot="end" color="medium" @click="copyToClipboard(order.phoneNumber)">
+                {{ $t("Copy") }}
+              </ion-button>
+            </ion-item>
+            <ion-item lines="full" v-if="order.email">
+              <ion-icon :icon="mailOutline" slot="start" />
+              <ion-label>{{ order.email }}</ion-label>
+              <ion-button fill="outline" slot="end" color="medium" @click="copyToClipboard(order.email)">
+                {{ $t("Copy") }}
+              </ion-button>
+            </ion-item>
+            <div class="border-top">
               <ion-button fill="clear" @click.stop="deliverShipment(order)">
                 {{ order.shipmentMethodTypeId === 'STOREPICKUP' ? $t("Handover") : $t("Ship") }}
               </ion-button>
-            </template>
-          </OrderItemCard>
+            </div>
+          </ion-card>
         </div>
       </div>
       <ion-infinite-scroll @ionInfinite="loadMoreProducts($event)" threshold="100px" :disabled="segmentSelected === 'open' ? !isOpenOrdersScrollable : !isPackedOrdersScrollable">
@@ -52,11 +98,15 @@
 <script lang="ts">
 import {
   alertController,
+  IonBadge,
   IonButton,
+  IonCard,
   IonContent,
   IonHeader,
+  IonIcon,
   IonInfiniteScroll,
   IonInfiniteScrollContent,
+  IonItem,
   IonLabel,
   IonPage,
   IonSegment,
@@ -65,26 +115,33 @@ import {
   IonToolbar,
 } from "@ionic/vue";
 import { defineComponent, ref } from "vue";
-import OrderItemCard from './../components/OrderItemCard.vue'
+import ProductListItem from '@/components/ProductListItem.vue'
 import { swapVerticalOutline, callOutline, mailOutline } from "ionicons/icons";
 import { mapGetters, useStore } from 'vuex'
+import { useRouter } from 'vue-router'
+import { copyToClipboard } from '@/utils'
+import * as moment from "moment-timezone";
 import emitter from "@/event-bus"
 
 export default defineComponent({
   name: 'Orders',
   components: {
+    IonBadge,
     IonButton,
+    IonCard,
     IonContent,
     IonHeader,
+    IonIcon,
     IonInfiniteScroll,
     IonInfiniteScrollContent,
+    IonItem,
     IonLabel,
     IonPage,
     IonSegment,
     IonSegmentButton,
     IonTitle,
     IonToolbar,
-    OrderItemCard
+    ProductListItem
   },
   created () {
     emitter.on("refreshPickupOrders", this.getPickupOrders);
@@ -100,6 +157,11 @@ export default defineComponent({
       isPackedOrdersScrollable: 'order/isPackedOrdersScrollable',
       isOpenOrdersScrollable: 'order/isOpenOrdersScrollable'
     })
+  },
+  data () {
+    return {
+      orderIdentificationTypeId: process.env.VUE_APP_ORD_IDENT_TYPE_ID
+    }
   },
   methods: {
     async viewOrder (order: any) {
@@ -192,18 +254,26 @@ export default defineComponent({
         As we already get shipmentMethodTypeId on order level in readytoshiporders API hence we will not use this method on packed orders segment.
       */
       return items.find((ele: any) => ele.shipGroupSeqId == shipGroupSeqId).shipmentMethodTypeId
+    },
+    getShipGroupItems(shipGroupSeqId: any, items: any) {
+      // To get all the items of same shipGroup, further it will use on pickup-order-card component to display line items
+      return items.filter((item: any) => item.shipGroupSeqId == shipGroupSeqId)
     }
   },
   ionViewWillEnter () {
     this.segmentSelected === 'open' ? this.getPickupOrders() : this.getPackedOrders();
   },
   setup () {
+    const router = useRouter();
     const store = useStore();
     const segmentSelected = ref('open');
 
     return {
       callOutline,
+      copyToClipboard,
       mailOutline,
+      moment,
+      router,
       segmentSelected,
       swapVerticalOutline,
       store
@@ -219,5 +289,9 @@ export default defineComponent({
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(343px, 1fr));
   }
+}
+
+.border-top {
+  border-top: 1px solid rgba(0, 0, 0, 0.12);
 }
 </style>
