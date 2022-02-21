@@ -144,6 +144,9 @@ export default defineComponent({
       return alert.present();
     }
   },
+  mounted() {
+    await this.store.dispatch('order/updateCurrent', { orderId: this.$route.params })
+  },
   setup () {
     const store = useStore();
     const router = useRouter();
