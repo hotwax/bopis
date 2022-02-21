@@ -5,6 +5,7 @@
     </ion-thumbnail>
     <ion-label>
       <h5>{{ item.brandName }}</h5>
+      <h2>{{ item.itemName }}</h2>
       <h2>{{ getProduct(item.itemId).internalName }}</h2>
       <p class="overline">{{ $filters.getIdentificationId(getProduct(item.itemId).goodIdentifications, goodIdentificationTypeId) }}</p>
       <p v-if="item.standardFeatures.COLOR">{{ $t("Color") }}: {{ item.standardFeatures.COLOR.description }}</p>
