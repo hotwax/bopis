@@ -145,7 +145,7 @@ export default defineComponent({
     }
   },
   mounted() {
-    await this.store.dispatch('order/updateCurrent', { orderId: this.$route.params })
+    this.store.dispatch('order/updateCurrent', { orderId: this.$route.params })
   },
   setup () {
     const store = useStore();

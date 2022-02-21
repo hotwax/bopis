@@ -38,7 +38,11 @@ const actions: ActionTree<OrderState , RootState> ={
   },
 
   updateCurrent ({ commit }, payload) {
-    commit(types.ORDER_CURRENT_UPDATED, { order: payload.order })
+    if (payload.orderId) {
+
+    } else {
+      commit(types.ORDER_CURRENT_UPDATED, { order: payload.order });
+    }
   },
 
   async getPackedOrders ({ commit, state }, payload) {
