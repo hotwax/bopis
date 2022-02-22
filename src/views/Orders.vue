@@ -23,7 +23,7 @@
             <ion-item lines="none">
               <ion-label>
                 <h1>{{ order.customerName }}</h1>
-                <p v-if="$filters.getOrderIdentificationId(order.orderIdentifications, orderIdentificationTypeId)">{{ $t('Order') }}: {{ $filters.getOrderIdentificationId(order.orderIdentifications, orderIdentificationTypeId) }}</p>
+                <p>{{ order.orderName ? order.orderName : order.orderId }}</p>
               </ion-label>
               <div class="metadata">
                 <ion-badge v-if="order.orderDate" color="dark">{{ moment.utc(order.orderDate).fromNow() }}</ion-badge>
@@ -62,7 +62,7 @@
             <ion-item lines="none">
               <ion-label>
                 <h1>{{ order.customerName }}</h1>
-                <p v-if="$filters.getOrderIdentificationId(order.orderIdentifications, orderIdentificationTypeId)">{{ $t('Order') }}: {{ $filters.getOrderIdentificationId(order.orderIdentifications, orderIdentificationTypeId) }}</p>
+                <p>{{ order.orderName ? order.orderName : order.orderId }}</p>
               </ion-label>
               <ion-badge v-if="order.orderDate" color="dark" slot="end">{{ moment.utc(order.orderDate).fromNow() }}</ion-badge>
             </ion-item>
@@ -167,11 +167,6 @@ export default defineComponent({
       isPackedOrdersScrollable: 'order/isPackedOrdersScrollable',
       isOpenOrdersScrollable: 'order/isOpenOrdersScrollable'
     })
-  },
-  data () {
-    return {
-      orderIdentificationTypeId: process.env.VUE_APP_ORD_IDENT_TYPE_ID
-    }
   },
   methods: {
     async refreshOrders(event: any) {
