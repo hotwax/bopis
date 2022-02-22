@@ -6,6 +6,7 @@ import * as types from './mutation-types'
 import { hasError , showToast } from "@/utils";
 import { translate } from "@/i18n";
 import emitter from '@/event-bus'
+import store from "@/store";
 
 const actions: ActionTree<OrderState , RootState> ={
   async getOpenOrders ({ commit, state }, payload) {
@@ -14,6 +15,10 @@ const actions: ActionTree<OrderState , RootState> ={
     let resp;
 
     try {
+      const shippingOrdersStatus = store.state.user.shippingOrders;
+      if(!shippingOrdersStatus){
+        payload.shipmentMethodTypeId= "STOREPICKUP"
+      }
       resp = await OrderService.getOpenOrders(payload)
       if (resp.status === 200 && resp.data.count > 0 && !hasError(resp)) {
         let orders = resp.data.docs;
