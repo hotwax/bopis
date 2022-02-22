@@ -9,40 +9,51 @@ import emitter from '@/event-bus'
 
 const actions: ActionTree<OrderState , RootState> ={
   async getOpenOrders ({ commit, state }, payload) {
-    // Show loader only when new query and not the infinite scroll
-    if (payload.viewIndex === 0) emitter.emit("presentLoader");
     let resp;
 
-    try {
-      resp = await OrderService.getOpenOrders(payload)
-      if (resp.status === 200 && resp.data.count > 0 && !hasError(resp)) {
-        let orders = resp.data.docs;
-        const total = resp.data.count;
-
-        this.dispatch('product/getProductInformation', { orders })
-
-        if(payload.viewIndex && payload.viewIndex > 0) orders = state.open.list.concat(orders)
-        commit(types.ORDER_OPEN_UPDATED, { orders, total })
-        emitter.emit("dismissLoader");
-      } else {
-        commit(types.ORDER_OPEN_UPDATED, { orders: {}, total: 0 })
-        showToast(translate("Orders Not Found"))
+    if(payload.orderId) {
+      try {
+        resp = await OrderService.getOpenOrders(payload)
+        if (resp.status === 200 && resp.data.count > 0 && !hasError(resp)) {
+          const order = resp.data.docs[0]
+          this.dispatch('order/updateCurrent', { order })
+        } else {
+          showToast(translate("Order not found"))
+        }
+      } catch(err) {
+        console.error(err)
+        showToast(translate("Something went wrong"))
       }
-      emitter.emit("dismissLoader");
-    } catch(err) {
-      console.log(err)
-      showToast(translate("Something went wrong"))
-    }
+    } else {
+      if (payload.viewIndex === 0) emitter.emit("presentLoader");
 
-    return resp;
+      try {
+        resp = await OrderService.getOpenOrders(payload)
+        if (resp.status === 200 && resp.data.count > 0 && !hasError(resp)) {
+          let orders = resp.data.docs;
+          const total = resp.data.count;
+
+          this.dispatch('product/getProductInformation', { orders })
+
+          if (payload.viewIndex && payload.viewIndex > 0) orders = state.open.list.concat(orders)
+          commit(types.ORDER_OPEN_UPDATED, { orders, total })
+          emitter.emit("dismissLoader");
+        } else {
+          commit(types.ORDER_OPEN_UPDATED, { orders: {}, total: 0 })
+          showToast(translate("Orders Not Found"))
+        }
+        emitter.emit("dismissLoader");
+      } catch (err) {
+        console.log(err)
+        showToast(translate("Something went wrong"))
+      }
+
+      return resp;
+    }
   },
 
   updateCurrent ({ commit }, payload) {
-    if (payload.orderId) {
-
-    } else {
-      commit(types.ORDER_CURRENT_UPDATED, { order: payload.order });
-    }
+    commit(types.ORDER_CURRENT_UPDATED, { order: payload.order })
   },
 
   async getPackedOrders ({ commit, state }, payload) {
