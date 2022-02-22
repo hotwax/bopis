@@ -18,39 +18,39 @@
 
     <ion-content>
       <div v-if="segmentSelected === 'open'">
-        <div v-for="order in orders" :key="order.orderId" v-show="getShipGroups(order.items).length > 0">
-          <ion-card v-for="(shipGroup, index) in getShipGroups(order.items)" :key="index" @click.prevent="viewOrder(order)">
+        <div v-for="order in orders" :key="order.groupValue" v-show="getShipGroups(order.doclist?.docs).length > 0">
+          <ion-card v-for="(shipGroup, index) in getShipGroups(order.doclist?.docs)" :key="index" @click.prevent="viewOrder(order)">
             <ion-item lines="none">
               <ion-label>
-                <h1>{{ order.customerName }}</h1>
-                <p>{{ order.orderName ? order.orderName : order.orderId }}</p>
+                <h1>{{ order.doclist?.docs[0].customerPartyName }}</h1>
+                <p>{{ order.doclist?.docs[0].orderName ? order.doclist?.docs[0].orderName : order.doclist?.docs[0].orderId }}</p>
               </ion-label>
               <div class="metadata">
-                <ion-badge v-if="order.orderDate" color="dark">{{ moment.utc(order.orderDate).fromNow() }}</ion-badge>
-                <ion-badge v-if="order.statusId !== 'ORDER_APPROVED'" color="danger">{{ $t('pending approval') }}</ion-badge>
+                <ion-badge v-if="order.doclist?.docs[0].orderDate" color="dark">{{ moment.utc(order.doclist?.docs[0].orderDate).fromNow() }}</ion-badge>
+                <ion-badge v-if="order.doclist?.docs[0].statusId !== 'ORDER_APPROVED'" color="danger">{{ $t('pending approval') }}</ion-badge>
               </div>
               <!-- TODO: Display the packed date of the orders, currently not getting the packed date from API-->
             </ion-item>
 
-            <ProductListItem v-for="item in getShipGroupItems(shipGroup, order.items)" :key="item.itemId" :item="item" />
+            <ProductListItem v-for="item in getShipGroupItems(shipGroup, order.doclist?.docs)" :key="item.itemId" :item="item" />
 
-            <ion-item v-if="order.phoneNumber">
+            <ion-item v-if="order.doclist?.docs[0].phoneNumber">
               <ion-icon :icon="callOutline" slot="start" />
-              <ion-label>{{ order.phoneNumber }}</ion-label>
-              <ion-button fill="outline" slot="end" color="medium" @click="copyToClipboard(order.phoneNumber)">
+              <ion-label>{{ order.doclist?.docs[0].phoneNumber }}</ion-label>
+              <ion-button fill="outline" slot="end" color="medium" @click="copyToClipboard(order.doclist?.docs[0].phoneNumber)">
                 {{ $t("Copy") }}
               </ion-button>
             </ion-item>
-            <ion-item lines="full" v-if="order.email">
+            <ion-item lines="full" v-if="order.doclist?.docs[0].email">
               <ion-icon :icon="mailOutline" slot="start" />
-              <ion-label>{{ order.email }}</ion-label>
-              <ion-button fill="outline" slot="end" color="medium" @click="copyToClipboard(order.email)">
+              <ion-label>{{ order.doclist?.docs[0].email }}</ion-label>
+              <ion-button fill="outline" slot="end" color="medium" @click="copyToClipboard(order.doclist?.docs[0].email)">
                 {{ $t("Copy") }}
               </ion-button>
             </ion-item>
             <div class="border-top">
               <ion-button fill="clear" @click.stop="readyForPickup(order, shipGroup)">
-                {{ getShipmentMethod(shipGroup, order.items) === 'STOREPICKUP' ? $t("Ready for pickup") : $t("Ready to ship") }}
+                {{ getShipmentMethod(shipGroup, order.doclist?.docs.items) === 'STOREPICKUP' ? $t("Ready for pickup") : $t("Ready to ship") }}
               </ion-button>
             </div>
           </ion-card>
@@ -186,12 +186,26 @@ export default defineComponent({
     async getPickupOrders (vSize?: any, vIndex?: any) {
       const viewSize = vSize ? vSize : process.env.VUE_APP_VIEW_SIZE;
       const viewIndex = vIndex ? vIndex : 0;
+      
       const payload = {
-        sortBy: 'orderDate',
-        sortOrder: 'Desc',
+        "inputFields":{
+          "orderTypeId": "SALES_ORDER",
+          // TODO:
+          // "statusId": "ITEM_APPROVED",
+          // TODO:
+          // "orderStatusId": "ORDER_APPROVED", 
+          "picklistId_fld0_op": "empty",
+          "shipmentId_fld0_op": "empty",
+          "facilityId": "STORE_3",
+          "shipFromFacilityId": "STORE_3",
+        },
         viewSize,
         viewIndex,
-        facilityId: this.currentFacilityId.facilityId
+        "fieldList": [ "orderId" ],
+        // TODO:
+        "entityName": "ReadyOrderItems",
+        "distinct": "Y",
+        "noConditionFind": "Y",        
       }
       await this.store.dispatch("order/getOpenOrders", payload);
     },

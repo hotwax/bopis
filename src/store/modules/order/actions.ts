@@ -17,17 +17,57 @@ const actions: ActionTree<OrderState , RootState> ={
     try {
       const shippingOrdersStatus = store.state.user.shippingOrders;
       if(!shippingOrdersStatus){
-        payload.shipmentMethodTypeId= "STOREPICKUP"
+        payload.inputFields.shipmentMethodTypeId= "STOREPICKUP"
       }
       resp = await OrderService.getOpenOrders(payload)
       if (resp.status === 200 && resp.data.count > 0 && !hasError(resp)) {
-        let orders = resp.data.docs;
-        const total = resp.data.count;
+        const orders = resp.data.docs
 
-        this.dispatch('product/getProductInformation', { orders })
+        const orderIds = orders.reduce((orderIds: any, order: any) => {
+          if(orderIds){
+            orderIds += ' OR '
+          }
+          orderIds += ("orderId: *" + order.orderId + "*")
+          return orderIds 
+        } , '')
 
-        if(payload.viewIndex && payload.viewIndex > 0) orders = state.open.list.concat(orders)
-        commit(types.ORDER_OPEN_UPDATED, { orders, total })
+        const payload = {
+          "json": {
+            "params": {
+              "rows": orders.length,
+              "group": true,
+              "group.field": "orderId",
+              "group.ngroups": true,
+              "group.limit": 1000,
+            },
+            "query": "*:*",
+            "filter": [orderIds, "docType: ORDER"],
+          }
+        }
+        if (!shippingOrdersStatus) {
+          payload.json.filter.push("shipmentMethodTypeId: STOREPICKUP")
+        }
+
+        let orderDetails;
+
+        try {
+          orderDetails = await OrderService.getOpenOrderDetails(payload);
+
+          if(orderDetails.status == 200 && orderDetails.data.grouped.orderId.groups?.length > 0 && !hasError(orderDetails)) {
+            let orders = orderDetails.data.grouped.orderId.groups
+            const total = orderDetails.data.grouped.orderId.groups.length
+            console.log(orders)
+            // this.dispatch('product/getProductInformation', { orders })
+            commit(types.ORDER_OPEN_UPDATED, { orders, total })
+          }
+        } catch(err) {
+          console.log(err);
+          showToast(translate("Something went wrong"))
+        }
+        // this.dispatch('product/getProductInformation', { orders })
+
+        // if(payload.viewIndex && payload.viewIndex > 0) orders = state.open.list.concat(orders)
+        // commit(types.ORDER_OPEN_UPDATED, { orders, total })
         emitter.emit("dismissLoader");
       } else {
         commit(types.ORDER_OPEN_UPDATED, { orders: {}, total: 0 })
