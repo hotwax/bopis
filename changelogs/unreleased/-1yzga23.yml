@@ -1,0 +1,6 @@
+---
+title: 'Added: a condition to fetch a single order when we refresh 'orderDetails' page.'
+ticket_id: "#1yzga23"
+merge_request: 60
+author: meet-aniket
+type: changed
