@@ -9,7 +9,7 @@ import emitter from '@/event-bus'
 import store from "@/store";
 
 const actions: ActionTree<OrderState , RootState> ={
-  async getOpenOrders ({ dispatch }, payload) {
+  async getOpenOrders({ dispatch }, payload) {
     // Show loader only when new query and not the infinite scroll
     if (payload.viewIndex === 0) emitter.emit("presentLoader");
     let resp;
@@ -53,7 +53,7 @@ const actions: ActionTree<OrderState , RootState> ={
     return resp;
   },
 
-  async getOpenOrderDetails({ commit, state }, { query, viewIndex}) {
+  async getOpenOrderDetails({ commit, state }, { query, viewIndex }) {
     const shippingOrdersStatus = store.state.user.shippingOrders;
     if (!shippingOrdersStatus) {
       query.json.filter.push("shipmentMethodTypeId: STOREPICKUP")

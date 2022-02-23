@@ -191,8 +191,7 @@ export default defineComponent({
       const payload = {
         "inputFields":{
           "orderTypeId": "SALES_ORDER",
-          // TODO:
-          // "statusId": "ITEM_APPROVED",
+          "orderItemStatusId": "ITEM_APPROVED",
           // TODO:
           // "orderStatusId": "ORDER_APPROVED", 
           "picklistId_fld0_op": "empty",
