@@ -32,7 +32,7 @@
               <!-- TODO: Display the packed date of the orders, currently not getting the packed date from API-->
             </ion-item>
 
-            <ProductListItem v-for="item in getShipGroupItems(shipGroup, order.doclist?.docs)" :key="item.itemId" :item="item" />
+            <ProductListItem v-for="item in getShipGroupItems(shipGroup, order.doclist?.docs)" :key="item.productId" :item="item" />
 
             <!-- TODO: handle for phone number -->
             <ion-item v-if="order.doclist?.docs[0].phoneNumber">
@@ -271,18 +271,18 @@ export default defineComponent({
     },
     getShipGroups (items: any) {
       // To get unique shipGroup, further it will use on ion-card iteration
-      return Array.from(new Set(items.map((ele: any) => ele.shipGroupSeqId)))
+      return Array.from(new Set(items.map((ele: any) => ele.shipmentMethodTypeId)))
     },
-    getShipmentMethod (shipGroupSeqId: any, items: any) {
+    getShipmentMethod (shipGroup: any, items: any) {
       /* To display the button label as per the shipmentMethodTypeId, this will only used on orders segment.
         Because we get the shipmentMethodTypeId on items level in wms-orders API.
         As we already get shipmentMethodTypeId on order level in readytoshiporders API hence we will not use this method on packed orders segment.
       */
-      return items.find((ele: any) => ele.shipGroupSeqId == shipGroupSeqId).shipmentMethodTypeId
+      return items.find((ele: any) => ele.shipmentMethodTypeId == shipGroup).shipmentMethodTypeId
     },
-    getShipGroupItems(shipGroupSeqId: any, items: any) {
+    getShipGroupItems(shipGroup: any, items: any) {
       // To get all the items of same shipGroup, further it will use on pickup-order-card component to display line items
-      return items.filter((item: any) => item.shipGroupSeqId == shipGroupSeqId)
+      return items.filter((item: any) => item.shipmentMethodTypeId == shipGroup)
     }
   },
   ionViewWillEnter () {
