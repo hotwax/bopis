@@ -203,7 +203,6 @@ export default defineComponent({
         viewSize,
         viewIndex,
         "fieldList": [ "orderId" ],
-        // TODO:
         "entityName": "OrderHeaderItemAndShipment",
         "distinct": "Y",
         "noConditionFind": "Y",        
