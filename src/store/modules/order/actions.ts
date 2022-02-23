@@ -9,7 +9,7 @@ import emitter from '@/event-bus'
 import store from "@/store";
 
 const actions: ActionTree<OrderState , RootState> ={
-  async getOpenOrders ({ commit, state }, payload) {
+  async getOpenOrders ({ dispatch }, payload) {
     // Show loader only when new query and not the infinite scroll
     if (payload.viewIndex === 0) emitter.emit("presentLoader");
     let resp;
@@ -22,7 +22,6 @@ const actions: ActionTree<OrderState , RootState> ={
       resp = await OrderService.getOpenOrders(payload)
       if (resp.status === 200 && resp.data.count > 0 && !hasError(resp)) {
         const orders = resp.data.docs
-
         const orderIds = orders.reduce((orderIds: any, order: any) => {
           if(orderIds){
             orderIds += ' OR '
@@ -31,7 +30,7 @@ const actions: ActionTree<OrderState , RootState> ={
           return orderIds 
         } , '')
 
-        const payload = {
+        const query = {
           "json": {
             "params": {
               "rows": orders.length,
@@ -44,42 +43,38 @@ const actions: ActionTree<OrderState , RootState> ={
             "filter": [orderIds, "docType: ORDER"],
           }
         }
-        if (!shippingOrdersStatus) {
-          payload.json.filter.push("shipmentMethodTypeId: STOREPICKUP")
-        }
-
-        let orderDetails;
-
-        try {
-          orderDetails = await OrderService.getOpenOrderDetails(payload);
-
-          if(orderDetails.status == 200 && orderDetails.data.grouped.orderId.groups?.length > 0 && !hasError(orderDetails)) {
-            let orders = orderDetails.data.grouped.orderId.groups
-            const total = orderDetails.data.grouped.orderId.groups.length
-            console.log(orders)
-            // this.dispatch('product/getProductInformation', { orders })
-            commit(types.ORDER_OPEN_UPDATED, { orders, total })
-          }
-        } catch(err) {
-          console.log(err);
-          showToast(translate("Something went wrong"))
-        }
-        // this.dispatch('product/getProductInformation', { orders })
-
-        // if(payload.viewIndex && payload.viewIndex > 0) orders = state.open.list.concat(orders)
-        // commit(types.ORDER_OPEN_UPDATED, { orders, total })
+        this.dispatch('order/getOpenOrderDetails', { query, viewIndex: payload.viewIndex });
         emitter.emit("dismissLoader");
-      } else {
-        commit(types.ORDER_OPEN_UPDATED, { orders: {}, total: 0 })
-        showToast(translate("Orders Not Found"))
       }
-      emitter.emit("dismissLoader");
     } catch(err) {
       console.log(err)
       showToast(translate("Something went wrong"))
     }
-
     return resp;
+  },
+
+  async getOpenOrderDetails({ commit, state }, { query, viewIndex}) {
+    const shippingOrdersStatus = store.state.user.shippingOrders;
+    if (!shippingOrdersStatus) {
+      query.json.filter.push("shipmentMethodTypeId: STOREPICKUP")
+    }
+
+    let resp;
+    try {
+      resp = await OrderService.getOpenOrderDetails(query);
+      if(resp.status == 200 && resp.data.grouped.orderId.groups?.length > 0 && !hasError(resp)) {
+        let orders = resp.data.grouped.orderId.groups
+        const total = resp.data.grouped.orderId.groups.length
+
+        this.dispatch('product/getProductInformation', { orders })
+
+        if(viewIndex && viewIndex > 0) orders = state.open.list.concat(orders)
+        commit(types.ORDER_OPEN_UPDATED, { orders, total })
+      }
+    } catch(err) {
+      console.log(err);
+      showToast(translate("Something went wrong"))
+    }
   },
 
   updateCurrent ({ commit }, payload) {

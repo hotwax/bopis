@@ -1,17 +1,18 @@
 <template>
   <ion-item lines="none">
     <ion-thumbnail slot="start">
-      <Image :src="item.images.main.thumbnail" />
+      <Image :src="item.images?.main.thumbnail ? item.images?.main.thumbnail : getProduct(item.productId).mainImageUrl" />
     </ion-thumbnail>
     <ion-label>
       <h5>{{ item.brandName }}</h5>
-      <h2>{{ item.itemName }}</h2>
-      <p class="ion-text-wrap">{{ getProduct(item.itemId).internalName }}</p>
-      <p class="overline">{{ $filters.getIdentificationId(getProduct(item.itemId).goodIdentifications, goodIdentificationTypeId) }}</p>
-      <p v-if="item.standardFeatures.COLOR">{{ $t("Color") }}: {{ item.standardFeatures.COLOR.description }}</p>
-      <p v-if="item.standardFeatures.SIZE">{{ $t("Size") }}: {{ item.standardFeatures.SIZE.description }}</p>
+      <h2>{{ item.itemName ? item.itemName : item.parentProductName }}</h2>
+      <p class="ion-text-wrap">{{ item.itemId ? getProduct(item.itemId).internalName : item.internalName }}</p>
+      <p class="overline">{{ $filters.getIdentificationId(getProduct(item.itemId ? item.itemId : item.productId).goodIdentifications, goodIdentificationTypeId) }}</p>
+
+      <p v-if="item.standardFeatures?.COLOR || item.productId">{{ $t("Color") }}: {{ item.standardFeatures?.COLOR.description || $filters.getFeature(getProduct(item.productId).featureHierarchy, '1/COLOR/') }}</p>
+      <p v-if="item.standardFeatures?.COLOR || item.productId">{{ $t("Size") }}: {{ item.standardFeatures?.SIZE.description || $filters.getFeature(getProduct(item.productId).featureHierarchy, '1/SIZE/') }}</p>
     </ion-label>
-    <ion-note slot = "end">{{ getProductStock(item.itemId) }} {{ $t("in stock") }}</ion-note>
+    <ion-note slot = "end">{{ getProductStock(item.itemId ? item.itemId : item.productId) }} {{ $t("in stock") }}</ion-note>
   </ion-item>
 </template>
 

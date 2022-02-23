@@ -27,30 +27,31 @@
               </ion-label>
               <div class="metadata">
                 <ion-badge v-if="order.doclist?.docs[0].orderDate" color="dark">{{ moment.utc(order.doclist?.docs[0].orderDate).fromNow() }}</ion-badge>
-                <ion-badge v-if="order.doclist?.docs[0].statusId !== 'ORDER_APPROVED'" color="danger">{{ $t('pending approval') }}</ion-badge>
+                <ion-badge v-if="order.doclist?.docs[0].orderStatusId !== 'ORDER_APPROVED'" color="danger">{{ $t('pending approval') }}</ion-badge>
               </div>
               <!-- TODO: Display the packed date of the orders, currently not getting the packed date from API-->
             </ion-item>
 
             <ProductListItem v-for="item in getShipGroupItems(shipGroup, order.doclist?.docs)" :key="item.itemId" :item="item" />
 
+            <!-- TODO: handle for phone number -->
             <ion-item v-if="order.doclist?.docs[0].phoneNumber">
               <ion-icon :icon="callOutline" slot="start" />
               <ion-label>{{ order.doclist?.docs[0].phoneNumber }}</ion-label>
-              <ion-button fill="outline" slot="end" color="medium" @click="copyToClipboard(order.doclist?.docs[0].phoneNumber)">
+              <ion-button fill="outline" slot="end" color="medium" @click.stop="copyToClipboard(order.doclist?.docs[0].phoneNumber)">
                 {{ $t("Copy") }}
               </ion-button>
             </ion-item>
-            <ion-item lines="full" v-if="order.doclist?.docs[0].email">
+            <ion-item lines="full" v-if="order.doclist?.docs[0].customerEmailId">
               <ion-icon :icon="mailOutline" slot="start" />
-              <ion-label>{{ order.doclist?.docs[0].email }}</ion-label>
-              <ion-button fill="outline" slot="end" color="medium" @click="copyToClipboard(order.doclist?.docs[0].email)">
+              <ion-label>{{ order.doclist?.docs[0].customerEmailId }}</ion-label>
+              <ion-button fill="outline" slot="end" color="medium" @click.stop="copyToClipboard(order.doclist?.docs[0].customerEmailId)">
                 {{ $t("Copy") }}
               </ion-button>
             </ion-item>
             <div class="border-top">
               <ion-button fill="clear" @click.stop="readyForPickup(order, shipGroup)">
-                {{ getShipmentMethod(shipGroup, order.doclist?.docs.items) === 'STOREPICKUP' ? $t("Ready for pickup") : $t("Ready to ship") }}
+                {{ getShipmentMethod(shipGroup, order.doclist?.docs) === 'STOREPICKUP' ? $t("Ready for pickup") : $t("Ready to ship") }}
               </ion-button>
             </div>
           </ion-card>
@@ -180,7 +181,7 @@ export default defineComponent({
       // TODO: find a better approach to handle the case that when in open segment we can click on
       // order card to route on the order details page but not in the packed segment
       await this.store.dispatch('order/updateCurrent', { order }).then(() => {
-        this.$router.push({ path: `/orderdetail/${order.orderId}` })
+        this.$router.push({ path: `/orderdetail/${order.doclist?.docs[0].orderId}` })
       })
     },
     async getPickupOrders (vSize?: any, vIndex?: any) {
@@ -196,14 +197,14 @@ export default defineComponent({
           // "orderStatusId": "ORDER_APPROVED", 
           "picklistId_fld0_op": "empty",
           "shipmentId_fld0_op": "empty",
-          "facilityId": "STORE_3",
-          "shipFromFacilityId": "STORE_3",
+          "facilityId": this.currentFacilityId.facilityId,
+          "shipFromFacilityId": this.currentFacilityId.facilityId,
         },
         viewSize,
         viewIndex,
         "fieldList": [ "orderId" ],
         // TODO:
-        "entityName": "ReadyOrderItems",
+        "entityName": "OrderHeaderItemAndShipment",
         "distinct": "Y",
         "noConditionFind": "Y",        
       }
@@ -239,7 +240,7 @@ export default defineComponent({
       }
     },
     async readyForPickup (order: any, shipGroup: any) {
-      const pickup = this.getShipmentMethod(shipGroup, order.items) === 'STOREPICKUP';
+      const pickup = this.getShipmentMethod(shipGroup, order.doclist?.docs) === 'STOREPICKUP';
       const header = pickup ? this.$t('Ready for pickup') : this.$t('Ready to ship');
       const message = pickup ? this.$t('An email notification will be sent to that their order is ready for pickup. This order will also be moved to the packed orders tab.', { customerName: order.customerName, space: '<br/><br/>'}) : '';
 

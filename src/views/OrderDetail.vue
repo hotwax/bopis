@@ -10,38 +10,38 @@
       <ion-list>
         <ion-item lines="none">
           <ion-label>
-            <h2>{{ order.customerName }}</h2>
-            <p>{{ order.orderName ? order.orderName : order.orderId }}</p>
+            <h2>{{ order.doclist?.docs[0].customerPartyName }}</h2>
+            <p>{{ order.doclist?.docs[0].orderName ? order.doclist?.docs[0].orderName : order.doclist?.docs[0].orderId }}</p>
           </ion-label>
-          <ion-badge v-if="order.orderDate" color="dark" slot="end">{{ moment.utc(order.orderDate).fromNow() }}</ion-badge>
+          <ion-badge v-if="order.doclist?.docs[0].orderDate" color="dark" slot="end">{{ moment.utc(order.doclist?.docs[0].orderDate).fromNow() }}</ion-badge>
         </ion-item>
       </ion-list>
-      <ion-item v-if="order.phoneNumber">
+      <ion-item v-if="order.doclist?.docs[0].phoneNumber">
         <ion-icon :icon="callOutline" slot="start" />
-        <ion-label>{{ order.phoneNumber }}</ion-label>
+        <ion-label>{{ order.doclist?.docs[0].phoneNumber }}</ion-label>
         <ion-button
           fill="outline"
           slot="end"
           color="medium"
-          @click="copyToClipboard(order.phoneNumber)"
+          @click="copyToClipboard(order.doclist?.docs[0].phoneNumber)"
         >
           {{ $t("Copy") }}
         </ion-button>
       </ion-item>
-      <ion-item v-if="order.email" lines="none">
+      <ion-item v-if="order.doclist?.docs[0].customerEmailId" lines="none">
         <ion-icon :icon="mailOutline" slot="start" />
-        <ion-label>{{ order.email }}</ion-label>
+        <ion-label>{{ order.doclist?.docs[0].customerEmailId }}</ion-label>
         <ion-button
           fill="outline"
           slot="end"
           color="medium"
-          @click="copyToClipboard(order.email)"
+          @click="copyToClipboard(order.doclist?.docs[0].customerEmailId)"
         >
           {{ $t("Copy") }}
         </ion-button>
       </ion-item>
 
-      <ion-card v-for="(item, index) in order?.items" :key="index">
+      <ion-card v-for="(item, index) in order.doclist?.docs" :key="index">
         <ProductListItem :item="item" />
         <ion-item lines="none" class="border-top">
           <ion-label>{{ $t("Reason") }}</ion-label>
@@ -120,7 +120,7 @@ export default defineComponent({
     })
   },
   ionViewDidEnter() {
-    if(this.order.items) this.order.items.map((item) => item['reason'] = this.unfillableReason[0].id);
+    if(this.order.doclist?.docs) this.order.doclist?.docs.map((item) => item['reason'] = this.unfillableReason[0].id);
   },
   methods: {
     async updateOrder (order) {
