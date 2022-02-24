@@ -115,6 +115,11 @@ const actions: ActionTree<UserState, RootState> = {
    setUserInstanceUrl ({ state, commit }, payload){
     commit(types.USER_INSTANCE_URL_UPDATED, payload)
    },
+
+  async setStore({ commit, dispatch }, payload) {
+    dispatch("order/clearOrders", null, { root: true })
+    commit(types.USER_CURRENT_STORE_UPDATED, payload.store);
+  },
   
   /**
    * Update user timeZone

@@ -8,12 +8,20 @@
     
     <ion-content>
       <ion-list>
+        <!-- Select facility -->
+        <ion-item>
+          <ion-icon :icon="storefrontOutline" slot="start" />
+          <ion-label>{{$t("Facility")}}</ion-label>
+          <ion-select interface="popover" :value="currentFacility.facilityId" @ionChange="setFacility($event)">
+            <ion-select-option v-for="facility in (userProfile ? userProfile.facilities : [])" :key="facility.facilityId" :value="facility.facilityId" >{{ facility.name }}</ion-select-option>
+          </ion-select>
+        </ion-item>
         <!-- Select store -->
         <ion-item>
           <ion-icon :icon="storefrontOutline" slot="start" />
           <ion-label>{{$t("Store")}}</ion-label>
-          <ion-select interface="popover" :value="currentFacility.facilityId" @ionChange="setFacility($event)">
-            <ion-select-option v-for="facility in (userProfile ? userProfile.facilities : [])" :key="facility.facilityId" :value="facility.facilityId" >{{ facility.name }}</ion-select-option>
+          <ion-select interface="popover" :value="currentStore.productStoreId" @ionChange="setStore($event)">
+            <ion-select-option v-for="store in (userProfile ? userProfile.stores : [])" :key="store.productStoreId" :value="store.productStoreId" >{{ store.storeName }}</ion-select-option>
           </ion-select>
         </ion-item>
         <!-- Select store -->
@@ -67,6 +75,7 @@ export default defineComponent({
     ...mapGetters({
       userProfile: 'user/getUserProfile',
       currentFacility: 'user/getCurrentFacility',
+      currentStore: 'user/getCurrentStore',
       instanceUrl: 'user/getInstanceUrl',
       shippingOrders: 'user/getShippingOrders'
     })
@@ -77,6 +86,13 @@ export default defineComponent({
         this.store.dispatch('user/setFacility', {
           'facility': this.userProfile.facilities.find((fac: any) => fac.facilityId == facility['detail'].value)
         });
+    },
+    setStore(store: any) {
+      if(this.userProfile){
+        this.store.dispatch('user/setStore', {
+          'store': this.userProfile.stores.find((store: any) => store.productStoreId == store['detail'].value)
+        });
+      }
     },
     logout () {
       this.store.dispatch('user/logout').then(() => {
