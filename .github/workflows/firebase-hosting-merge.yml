@@ -24,6 +24,6 @@ jobs:
         env:
           HOTWAX_PUBLIC_SECRET: ${{ secrets.HOTWAX_PUBLIC_SECRET }}
       - name: Deploy
-        run: firebase deploy --token "$HOTWAX_PUBLIC_SECRET"  --only hosting:bopis-dev
+        run: firebase deploy --token "$HOTWAX_PUBLIC_SECRET" -m "Deploying via GitHub actions"  --only hosting:bopis-dev
         env:
           HOTWAX_PUBLIC_SECRET: ${{ secrets.HOTWAX_PUBLIC_SECRET }}
