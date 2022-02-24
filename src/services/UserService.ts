@@ -17,6 +17,15 @@ const getProfile = async (): Promise <any>  => {
       method: "get",
     });
 }
+
+const getStores = async (payload: any): Promise<any> => {
+  return api({
+    url: "performFind",
+    method: "post",
+    data: payload
+  });
+}
+
 const getAvailableTimeZones = async (): Promise <any>  => {
   return api({
     url: "getAvailableTimeZones",
@@ -36,5 +45,6 @@ export const UserService = {
     login,
     getAvailableTimeZones,
     getProfile,
+    getStores,
     setUserTimeZone,
 }

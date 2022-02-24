@@ -51,17 +51,54 @@ const actions: ActionTree<UserState, RootState> = {
   /**
    * Get User profile
    */
-  async getProfile ( { commit }) {
+  async getProfile({ commit, dispatch }) {
     const resp = await UserService.getProfile()
-    if (resp.status === 200) {
+    if (resp.status === 200 && resp.data.facilities?.length && resp.data.facilities?.length > 0) {
       const localTimeZone = moment.tz.guess();
       if (resp.data.userTimeZone !== localTimeZone) {
         emitter.emit('timeZoneDifferent', { profileTimeZone: resp.data.userTimeZone, localTimeZone});
       }
+
+      const payload = {
+        "inputFields": {
+          "facilityId": resp.data.facilities[0].facilityId
+        },
+        "fieldList": [ "reserveInventory", "productStoreId", "storeName" ],
+        "entityName": "ProductStoreAndFacility",
+        "distinct": "Y",
+        "noConditionFind": "Y"
+      }
+
+      await dispatch('getStores', payload).then((payload: any) => {
+        resp.data.stores = payload.stores
+      })
+
       commit(types.USER_INFO_UPDATED, resp.data);
+      commit(types.USER_CURRENT_STORE_UPDATED, resp.data.stores.length > 0 ? resp.data.stores[0] : {});
       commit(types.USER_CURRENT_FACILITY_UPDATED, resp.data.facilities.length > 0 ? resp.data.facilities[0] : {});
+    } else {
+      commit(types.USER_TOKEN_CHANGED, { newToken: "" })
+      showToast(translate("Something went wrong"));
     }
     return resp;
+  },
+
+  async getStores({ commit }, payload) {
+    let resp;
+
+    try{
+      resp = await UserService.getStores(payload);
+      if (resp.status === 200 && resp.data.docs?.length > 0 && !hasError(resp)) {
+        const stores: any = []
+        resp.data.docs.forEach((store: any) => {
+          store.reserveInventory == "Y" ? store.reserveInventory = true : store.reserveInventory = false
+          stores.push(store)
+        })
+        return { stores }
+      }
+    } catch(err) {
+      console.error(err)
+    }
   },
 
   /**
