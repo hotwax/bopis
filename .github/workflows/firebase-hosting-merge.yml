@@ -17,7 +17,9 @@ jobs:
         run: cp .env.example .env
       - name: Build
         run: npm run build
+      - name: Install Firebase
+        run: npm install -g firebase-tools
       - name: Deploy
-        run: npx firebase deploy --token "$HOTWAX_PUBLIC_SECRET"  --only hosting:bopis-dev
+        run: firebase deploy --token "$HOTWAX_PUBLIC_SECRET"  --only hosting:bopis-dev
         env:
           HOTWAX_PUBLIC_SECRET: ${{ secrets.HOTWAX_PUBLIC_SECRET }}
