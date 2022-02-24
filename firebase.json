@@ -1,17 +1,32 @@
 {
-    "hosting": {
-      "target": "commerce-hub-dev",
-      "public": "dist",
-      "ignore": [
-        "firebase.json",
-        "**/.*",
-        "**/node_modules/**"
-      ],
-      "rewrites": [
-        {
+    "hosting": [
+      {
+        "target": "hotwax-bopis",
+        "public": "dist",
+        "ignore": [
+          "firebase.json",
+          "**/.*",
+          "**/node_modules/**"
+        ],
+        "rewrites": [ {
           "source": "**",
           "destination": "/index.html"
-        }
-      ]
-    }
+        } ]
+  
+      },
+      {
+        "target": "bopis-dev",
+        "public": "dist",
+        "ignore": [
+          "firebase.json",
+          "**/.*",
+          "**/node_modules/**"
+        ],
+        "rewrites": [ {
+          "source": "**",
+          "destination": "/index.html"
+        } ]
+  
+      }
+    ]
   }
