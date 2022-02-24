@@ -17,10 +17,7 @@ jobs:
         run: cp .env.example .env
       - name: Build
         run: npm run build
-      - uses: FirebaseExtended/action-hosting-deploy@v0
-        with:
-          repoToken: '${{ secrets.GITHUB_TOKEN }}'
-          firebaseServiceAccount: '${{ secrets.FIREBASE_SERVICE_ACCOUNT_HOTWAX_DIGITAL_COMMERCE }}'
-          channelId: live
-          projectId: hotwax-digital-commerce
-          target: commerce-hub-dev
+      - name: Deploy
+        run: npx firebase deploy --token "$HOTWAX_PUBLIC_SECRET"  --only hosting:bopis-dev
+        env:
+          HOTWAX_PUBLIC_SECRET: ${{ secrets.HOTWAX_PUBLIC_SECRET }}
