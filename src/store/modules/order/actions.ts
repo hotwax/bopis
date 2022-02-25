@@ -43,8 +43,6 @@ const actions: ActionTree<OrderState , RootState> ={
   },
 
   async getOrderDetail( { dispatch, state }, payload ) {
-    let resp;
-
     const current = state.current as any
     const orders = state.open.list as any
 
@@ -57,7 +55,8 @@ const actions: ActionTree<OrderState , RootState> ={
         }
       })
     }
-
+    
+    let resp;
     try {
       resp = await OrderService.getOpenOrder(payload)
       if (resp.status === 200 && resp.data.count > 0 && !hasError(resp)) {
