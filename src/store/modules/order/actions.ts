@@ -26,7 +26,7 @@ const actions: ActionTree<OrderState , RootState> ={
 
         this.dispatch('product/getProductInformation', { orders })
 
-        if (payload.viewIndex && payload.viewIndex > 0) orders = state.open.list.concat(orders)
+        if(payload.viewIndex && payload.viewIndex > 0) orders = state.open.list.concat(orders)
         commit(types.ORDER_OPEN_UPDATED, { orders, total })
         emitter.emit("dismissLoader");
       } else {
@@ -34,7 +34,7 @@ const actions: ActionTree<OrderState , RootState> ={
         showToast(translate("Orders Not Found"))
       }
       emitter.emit("dismissLoader");
-    } catch (err) {
+    } catch(err) {
       console.log(err)
       showToast(translate("Something went wrong"))
     }
