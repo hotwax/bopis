@@ -47,7 +47,7 @@ const actions: ActionTree<OrderState , RootState> ={
     const orders = state.open.list as any
 
     if(current.orderId === payload.orderId) { return current }
-    else if(orders.length) {
+    if(orders.length) {
       return orders.some((order: any) => {
         if(order.orderId === payload.orderId) {
           dispatch('updateCurrent', { order })
