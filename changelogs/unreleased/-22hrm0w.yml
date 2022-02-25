@@ -1,5 +1,5 @@
 ---
-title: 'Implemented: code to fetch ordrIds from "performFond" end-point and then search order-details from "solr-query".'
+title: 'Implemented: code to fetch orderIds from "performFind" end-point and then search order-details from "solr-query".'
 ticket_id: "#22hrm0w"
 merge_request: 64
 author: aniket
