@@ -98,7 +98,7 @@ const actions: ActionTree<UserState, RootState> = {
           }
           stores.push(store)
         })
-        return { stores }
+        return stores
       }
     } catch(err) {
       console.error(err)
