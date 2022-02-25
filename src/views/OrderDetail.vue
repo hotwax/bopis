@@ -149,7 +149,7 @@ export default defineComponent({
         facilityId: this.currentFacilityId.facilityId,
         orderId: orderId
       }
-      await this.store.dispatch("order/getOpenOrders", payload)
+      await this.store.dispatch("order/getOrderDetail", payload)
     }
   },
   mounted() {
