@@ -47,6 +47,7 @@ const actions: ActionTree<OrderState , RootState> ={
         emitter.emit("dismissLoader");
       } else {
         commit(types.ORDER_OPEN_UPDATED, { orders: {}, total: 0 })
+        emitter.emit("dismissLoader");
         showToast(translate("Orders Not Found"))
       }
     } catch(err) {
