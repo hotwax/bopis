@@ -42,11 +42,24 @@ const actions: ActionTree<OrderState , RootState> ={
     return resp;
   },
 
-  async getOrderDetail( { dispatch }, payload ) {
+  async getOrderDetail( { dispatch, state }, payload ) {
     let resp;
 
+    const current = state.current as any
+    const orders = state.open.list as any
+
+    if(current.orderId === payload.orderId) { return current }
+    else if(orders.length) {
+      return orders.some((order: any) => {
+        if(order.orderId === payload.orderId) {
+          dispatch('updateCurrent', { order })
+          return current;
+        }
+      })
+    }
+
     try {
-      resp = await OrderService.getOpenOrders(payload)
+      resp = await OrderService.getOpenOrder(payload)
       if (resp.status === 200 && resp.data.count > 0 && !hasError(resp)) {
         const order = resp.data.docs
 
