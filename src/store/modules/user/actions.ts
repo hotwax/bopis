@@ -91,7 +91,11 @@ const actions: ActionTree<UserState, RootState> = {
       if (resp.status === 200 && resp.data.docs?.length > 0 && !hasError(resp)) {
         const stores: any = []
         resp.data.docs.forEach((store: any) => {
-          store.reserveInventory == "Y" ? store.reserveInventory = true : store.reserveInventory = false
+          if(store.reserveInventory) {
+            store.reserveInventory == "Y" ? store.reserveInventory = true : store.reserveInventory = false
+          } else {
+            store.reserveInventory = true
+          }
           stores.push(store)
         })
         return { stores }

@@ -165,6 +165,7 @@ export default defineComponent({
       orders: 'order/getOpenOrders',
       packedOrders: 'order/getPackedOrders',
       currentFacilityId: 'user/getCurrentFacility',
+      currentStore: 'user/getCurrentStore',
       isPackedOrdersScrollable: 'order/isPackedOrdersScrollable',
       isOpenOrdersScrollable: 'order/isOpenOrdersScrollable'
     })
@@ -187,7 +188,7 @@ export default defineComponent({
     async getPickupOrders (vSize?: any, vIndex?: any) {
       const viewSize = vSize ? vSize : process.env.VUE_APP_VIEW_SIZE;
       const viewIndex = vIndex ? vIndex : 0;
-      
+
       const payload = {
         "inputFields":{
           "orderTypeId": "SALES_ORDER",
@@ -202,7 +203,7 @@ export default defineComponent({
         viewSize,
         viewIndex,
         "fieldList": [ "orderId" ],
-        "entityName": "OrderHeaderItemAndShipment",
+        "entityName": this.currentStore.reserveInventory ? "ReadyOrderItems" : "OrderHeaderItemAndShipment",
         "distinct": "Y",
         "noConditionFind": "Y",        
       }

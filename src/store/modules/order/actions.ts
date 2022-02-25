@@ -9,7 +9,7 @@ import emitter from '@/event-bus'
 import store from "@/store";
 
 const actions: ActionTree<OrderState , RootState> ={
-  async getOpenOrders({ dispatch }, payload) {
+  async getOpenOrders({ dispatch, commit }, payload) {
     // Show loader only when new query and not the infinite scroll
     if (payload.viewIndex === 0) emitter.emit("presentLoader");
     let resp;
@@ -45,6 +45,9 @@ const actions: ActionTree<OrderState , RootState> ={
         }
         this.dispatch('order/getOpenOrderDetails', { query, viewIndex: payload.viewIndex });
         emitter.emit("dismissLoader");
+      } else {
+        commit(types.ORDER_OPEN_UPDATED, { orders: {}, total: 0 })
+        showToast(translate("Orders Not Found"))
       }
     } catch(err) {
       console.log(err)
@@ -70,6 +73,9 @@ const actions: ActionTree<OrderState , RootState> ={
 
         if(viewIndex && viewIndex > 0) orders = state.open.list.concat(orders)
         commit(types.ORDER_OPEN_UPDATED, { orders, total })
+      } else {
+        commit(types.ORDER_OPEN_UPDATED, { orders: {}, total: 0 })
+        showToast(translate("Orders Not Found"))
       }
     } catch(err) {
       console.log(err);
