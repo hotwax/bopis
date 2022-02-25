@@ -71,6 +71,17 @@ const actions: ActionTree<OrderState , RootState> ={
 
         this.dispatch('product/getProductInformation', { orders })
 
+        orders.map((order: any) => {
+          order.customerName = order.doclist?.docs[0].customerPartyName,
+          order.orderId = order.doclist?.docs[0].orderId,
+          order.orderName = order.doclist?.docs[0].orderName,
+          order.orderDate = order.doclist?.docs[0].orderDate,
+          order.orderStatusId = order.doclist?.docs[0].orderStatusId,
+          order.phoneNumber = order.doclist?.docs[0].phoneNumber,
+          order.email = order.doclist?.docs[0].customerEmailId,
+          order.items = order.doclist?.docs
+        })
+
         if(viewIndex && viewIndex > 0) orders = state.open.list.concat(orders)
         commit(types.ORDER_OPEN_UPDATED, { orders, total })
       } else {
