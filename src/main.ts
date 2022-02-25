@@ -59,15 +59,6 @@ app.config.globalProperties.$filters = {
       externalId = externalIdentificationSplit[1] ? externalIdentificationSplit[1] : '';
     }
     return externalId;
-  },
-  getOrderIdentificationId(identifications: any, id: string) {
-    let  externalId = ''
-    if (identifications) {
-      const externalIdentification = identifications.find((identification: any) => identification.startsWith(id))
-      const externalIdentificationSplit = externalIdentification ? externalIdentification.split('/') : [];
-      externalId = externalIdentificationSplit[1] ? externalIdentificationSplit[1] : '';
-    }
-    return externalId;
   }
 }
 

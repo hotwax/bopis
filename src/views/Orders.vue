@@ -23,9 +23,12 @@
             <ion-item lines="none">
               <ion-label>
                 <h1>{{ order.customerName }}</h1>
-                <p v-if="$filters.getOrderIdentificationId(order.orderIdentifications, orderIdentificationTypeId)">{{ $t('Order') }}: {{ $filters.getOrderIdentificationId(order.orderIdentifications, orderIdentificationTypeId) }}</p>
+                <p>{{ order.orderName ? order.orderName : order.orderId }}</p>
               </ion-label>
-              <ion-badge v-if="order.orderDate" color="dark" slot="end">{{ moment.utc(order.orderDate).fromNow() }}</ion-badge>
+              <div class="metadata">
+                <ion-badge v-if="order.orderDate" color="dark">{{ moment.utc(order.orderDate).fromNow() }}</ion-badge>
+                <ion-badge v-if="order.statusId !== 'ORDER_APPROVED'" color="danger">{{ $t('pending approval') }}</ion-badge>
+              </div>
               <!-- TODO: Display the packed date of the orders, currently not getting the packed date from API-->
             </ion-item>
 
@@ -59,7 +62,7 @@
             <ion-item lines="none">
               <ion-label>
                 <h1>{{ order.customerName }}</h1>
-                <p v-if="$filters.getOrderIdentificationId(order.orderIdentifications, orderIdentificationTypeId)">{{ $t('Order') }}: {{ $filters.getOrderIdentificationId(order.orderIdentifications, orderIdentificationTypeId) }}</p>
+                <p>{{ order.orderName ? order.orderName : order.orderId }}</p>
               </ion-label>
               <ion-badge v-if="order.orderDate" color="dark" slot="end">{{ moment.utc(order.orderDate).fromNow() }}</ion-badge>
             </ion-item>
@@ -88,6 +91,9 @@
           </ion-card>
         </div>
       </div>
+      <ion-refresher slot="fixed" @ionRefresh="refreshOrders($event)">
+        <ion-refresher-content pullingIcon="crescent" refreshingSpinner="crescent" />
+      </ion-refresher>
       <ion-infinite-scroll @ionInfinite="loadMoreProducts($event)" threshold="100px" :disabled="segmentSelected === 'open' ? !isOpenOrdersScrollable : !isPackedOrdersScrollable">
         <ion-infinite-scroll-content loading-spinner="crescent" :loading-text="$t('Loading')" />
       </ion-infinite-scroll>
@@ -109,6 +115,8 @@ import {
   IonItem,
   IonLabel,
   IonPage,
+  IonRefresher,
+  IonRefresherContent,
   IonSegment,
   IonSegmentButton,
   IonTitle,
@@ -137,6 +145,8 @@ export default defineComponent({
     IonItem,
     IonLabel,
     IonPage,
+    IonRefresher,
+    IonRefresherContent,
     IonSegment,
     IonSegmentButton,
     IonTitle,
@@ -158,12 +168,14 @@ export default defineComponent({
       isOpenOrdersScrollable: 'order/isOpenOrdersScrollable'
     })
   },
-  data () {
-    return {
-      orderIdentificationTypeId: process.env.VUE_APP_ORD_IDENT_TYPE_ID
-    }
-  },
   methods: {
+    async refreshOrders(event: any) {
+      if(this.segmentSelected === 'open') {
+        this.getPickupOrders().then(() => { event.target.complete() });
+      } else {
+        this.getPackedOrders().then(() => { event.target.complete() });
+      }
+    },
     async viewOrder (order: any) {
       // TODO: find a better approach to handle the case that when in open segment we can click on
       // order card to route on the order details page but not in the packed segment
@@ -293,5 +305,12 @@ export default defineComponent({
 
 .border-top {
   border-top: 1px solid rgba(0, 0, 0, 0.12);
+}
+
+.metadata {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  row-gap: 4px;
 }
 </style>
