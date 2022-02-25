@@ -1,8 +1,8 @@
 {
-  "name": "ionic-sdk",
-  "version": "0.0.1",
+  "name": "bopis",
+  "version": "1.0.2",
   "private": true,
-  "description": "An Ionic project",
+  "description": "HotWax Bopis app",
   "scripts": {
     "serve": "vue-cli-service serve",
     "build": "vue-cli-service build",
