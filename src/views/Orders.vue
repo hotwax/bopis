@@ -2,7 +2,7 @@
   <ion-page>
     <ion-header :translucent="true">
       <ion-toolbar>
-        <ion-title>{{ $t("Orders") }}</ion-title>
+        <ion-title>{{ currentFacilityId.name }}</ion-title>
       </ion-toolbar>
       <ion-toolbar>
         <ion-segment v-model="segmentSelected" @ionChange="segmentChanged">
