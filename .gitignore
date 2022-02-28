@@ -32,6 +32,8 @@ npm-debug.log*
 /platforms
 /plugins
 /www
+.gradle
 
 # Excluding the .env.example file from .gitignore
 !.env.example
+.firebase

@@ -1,4 +1,4 @@
-package co.hotwax.ionic.sdk;
+package co.hotwax.bopis;
 
 import android.os.Bundle;
 

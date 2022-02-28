@@ -1,6 +1,6 @@
 {
-  "appId": "co.hotwax.ionic.sdk",
-  "appName": "ionic-sdk",
+  "appId": "co.hotwax.bopis",
+  "appName": "bopis",
   "bundledWebRuntime": false,
   "npmClient": "npm",
   "webDir": "dist",
