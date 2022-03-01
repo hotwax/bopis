@@ -22,12 +22,12 @@
           <ion-card v-for="(shipGroup, index) in getShipGroups(order.items)" :key="index" @click.prevent="viewOrder(order)">
             <ion-item lines="none">
               <ion-label>
-                <h1>{{ order.customerName }}</h1>
+                <h1>{{ order.customer.name }}</h1>
                 <p>{{ order.orderName ? order.orderName : order.orderId }}</p>
               </ion-label>
               <div class="metadata">
-                <ion-badge v-if="order.orderDate" color="dark">{{ moment.utc(order.orderDate).fromNow() }}</ion-badge>
-                <ion-badge v-if="order.orderStatusId !== 'ORDER_APPROVED'" color="danger">{{ $t('pending approval') }}</ion-badge>
+                <ion-badge v-if="order.date" color="dark">{{ moment.utc(order.date).fromNow() }}</ion-badge>
+                <ion-badge v-if="order.statusId !== 'ORDER_APPROVED'" color="danger">{{ $t('pending approval') }}</ion-badge>
               </div>
               <!-- TODO: Display the packed date of the orders, currently not getting the packed date from API-->
             </ion-item>
