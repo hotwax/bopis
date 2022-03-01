@@ -47,23 +47,25 @@ const actions: ActionTree<OrderState , RootState> ={
     const orders = state.open.list as any
 
     if(current.orderId === payload.orderId) { return current }
+
     if(orders.length) {
-      return orders.some((order: any) => {
-        if(order.orderId === payload.orderId) {
-          dispatch('updateCurrent', { order })
-          return current;
-        }
+      const order = orders.find((order: any) => {
+        return order.orderId === payload.orderId;
       })
+      if(order) {
+        dispatch('updateCurrent', { order })
+        return order;
+      }
     }
     
     let resp;
     try {
       resp = await OrderService.getOpenOrder(payload)
       if (resp.status === 200 && resp.data.count > 0 && !hasError(resp)) {
-        const order = resp.data.docs
+        const orders = resp.data.docs
 
-        this.dispatch('product/getProductInformation', { orders: order })
-        dispatch('updateCurrent', { order: resp.data.docs[0] })
+        this.dispatch('product/getProductInformation', { orders })
+        dispatch('updateCurrent', { order: orders[0] })
       } else {
         showToast(translate("Order not found"))
       }

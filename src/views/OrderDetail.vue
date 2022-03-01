@@ -117,7 +117,7 @@ export default defineComponent({
   computed: {
     ...mapGetters({
       order: "order/getCurrent",
-      currentFacilityId: 'user/getCurrentFacility',
+      currentFacility: 'user/getCurrentFacility',
     })
   },
   ionViewDidEnter() {
@@ -145,8 +145,8 @@ export default defineComponent({
     },
     async getOrderDetail(orderId) {
       const payload = {
-        facilityId: this.currentFacilityId.facilityId,
-        orderId: orderId
+        facilityId: this.currentFacility.facilityId,
+        orderId
       }
       await this.store.dispatch("order/getOrderDetail", payload)
     }
