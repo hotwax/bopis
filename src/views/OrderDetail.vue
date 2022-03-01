@@ -10,10 +10,10 @@
       <ion-list>
         <ion-item lines="none">
           <ion-label>
-            <h2>{{ order.customerName }}</h2>
+            <h2>{{ order.customer?.name }}</h2>
             <p>{{ order.orderName ? order.orderName : order.orderId }}</p>
           </ion-label>
-          <ion-badge v-if="order.orderDate" color="dark" slot="end">{{ moment.utc(order.orderDate).fromNow() }}</ion-badge>
+          <ion-badge v-if="order.date" color="dark" slot="end">{{ moment.utc(order.date).fromNow() }}</ion-badge>
         </ion-item>
       </ion-list>
       <ion-item v-if="order.phoneNumber">
@@ -117,6 +117,7 @@ export default defineComponent({
   computed: {
     ...mapGetters({
       order: "order/getCurrent",
+      currentFacility: 'user/getCurrentFacility',
     })
   },
   ionViewDidEnter() {
@@ -141,7 +142,27 @@ export default defineComponent({
           }]
         });
       return alert.present();
+    },
+    async getOrderDetail(orderId) {
+      const payload = {
+          "json": {
+            "params": {
+              "group": true,
+              "group.field": "orderId",
+              "group.ngroups": true,
+              "group.limit": 1000,
+            },
+            "query": "*:*",
+            // TODO: add facilityId to filter out products which needs to be order.
+            "filter": [`orderId: *${orderId}*`, `facilityId: ${this.currentFacility.facilityId}`, "docType: ORDER"],
+          }
+      }
+
+      await this.store.dispatch("order/getOrderDetail", { payload, orderId })
     }
+  },
+  mounted() {
+    this.getOrderDetail(this.$route.params.orderId);
   },
   setup () {
     const store = useStore();

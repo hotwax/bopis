@@ -65,7 +65,7 @@ const actions: ActionTree<OrderState , RootState> ={
 
     let resp;
     try {
-      resp = await OrderService.getOpenOrderDetails(query);
+      resp = await OrderService.getOrderDetails(query);
       if(resp.status == 200 && resp.data.grouped.orderId.groups?.length > 0 && !hasError(resp)) {
         let orders = resp.data.grouped.orderId.groups
         const total = resp.data.grouped.orderId.groups.length
@@ -103,6 +103,61 @@ const actions: ActionTree<OrderState , RootState> ={
       console.error(err)
       showToast(translate("Something went wrong"))
     }
+  },
+
+  async getOrderDetail( { dispatch, state }, { payload, orderId} ) {
+    const current = state.current as any
+    const orders = state.open.list as any
+    if(current.orderId === orderId) { return current }
+
+    if(orders.length) {
+      const order = orders.find((order: any) => {
+        return order.orderId === orderId;
+      })
+      if(order) {
+        dispatch('updateCurrent', { order })
+        return order;
+      }
+    }
+    
+    let resp;
+    try {
+      resp = await OrderService.getOrderDetails(payload)
+      if (resp.status == 200 && resp.data.grouped.orderId.groups?.length > 0 && !hasError(resp)) {
+        const orders = resp.data.grouped.orderId.groups
+
+        let productIds: any = new Set();
+        orders.forEach((order: any) => {
+          order.doclist.docs.forEach((item: any) => {
+            if(item.productId) productIds.add(item.productId);
+          })
+        })
+        productIds = [...productIds]
+        if (productIds.length) {
+          this.dispatch('product/fetchProducts', { productIds })
+          this.dispatch('stock/addProducts', { productIds })
+        }
+
+        const order = {
+          orderId : orders[0].doclist?.docs[0].orderId,
+          orderName : orders[0].doclist?.docs[0].orderName,
+          customer : { name: orders[0].doclist?.docs[0].customerPartyName },
+          items : orders[0].doclist?.docs,
+          statusId : orders[0].doclist?.docs[0].orderStatusId,
+          date : orders[0].doclist?.docs[0].orderDate,
+          email : orders[0].doclist?.docs[0].customerEmailId,
+          phoneNumber : orders[0].doclist?.docs[0].phoneNumber
+        }
+
+        dispatch('updateCurrent', { order })
+      } else {
+        showToast(translate("Order not found"))
+      }
+    } catch (err) {
+      console.error(err)
+      showToast(translate("Something went wrong"))
+    }
+    return resp
   },
 
   updateCurrent ({ commit }, payload) {

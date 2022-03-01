@@ -8,12 +8,12 @@ const getOpenOrders = async (payload: any): Promise <any> => {
   });
 }
 
-const getOpenOrderDetails = async (payload: any): Promise <any> => {
+const getOrderDetails = async (payload: any): Promise <any> => {
   return api({
     url: "solr-query",
     method: "post",
     data: payload
-  })
+  });
 }
 
 const getPackedOrders = async (payload: any): Promise <any> => {
@@ -50,7 +50,7 @@ const rejectOrderItem = async (payload: any): Promise <any> => {
 
 export const OrderService = {
   getOpenOrders,
-  getOpenOrderDetails,
+  getOrderDetails,
   getPackedOrders,
   quickShipEntireShipGroup,
   rejectOrderItem,
