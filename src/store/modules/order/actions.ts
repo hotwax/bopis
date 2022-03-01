@@ -60,7 +60,7 @@ const actions: ActionTree<OrderState , RootState> ={
     
     let resp;
     try {
-      resp = await OrderService.getOpenOrder(payload)
+      resp = await OrderService.getOrderDetails(payload)
       if (resp.status === 200 && resp.data.count > 0 && !hasError(resp)) {
         const orders = resp.data.docs
 
