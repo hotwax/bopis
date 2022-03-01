@@ -43,7 +43,7 @@ const actions: ActionTree<OrderState , RootState> ={
             "filter": [orderIds, "docType: ORDER"],
           }
         }
-        this.dispatch('order/getOpenOrderDetails', { query, viewIndex: payload.viewIndex });
+        await dispatch('getOpenOrderDetails', { query, viewIndex: payload.viewIndex });
         emitter.emit("dismissLoader");
       } else {
         commit(types.ORDER_OPEN_UPDATED, { orders: {}, total: 0 })
@@ -70,7 +70,17 @@ const actions: ActionTree<OrderState , RootState> ={
         let orders = resp.data.grouped.orderId.groups
         const total = resp.data.grouped.orderId.groups.length
 
-        this.dispatch('product/getProductInformation', { orders })
+        let productIds: any = new Set();
+        orders.forEach((order: any) => {
+          order.doclist.docs.forEach((item: any) => {
+            if(item.productId) productIds.add(item.productId);
+          })
+        })
+        productIds = [...productIds]
+        if (productIds.length) {
+          this.dispatch('product/fetchProducts', { productIds })
+          this.dispatch('stock/addProducts', { productIds })
+        }
 
         orders.map((order: any) => {
           order.customerName = order.doclist?.docs[0].customerPartyName,

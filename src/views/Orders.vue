@@ -18,7 +18,7 @@
 
     <ion-content>
       <div v-if="segmentSelected === 'open'">
-        <div v-for="order in orders" :key="order.groupValue" v-show="getShipGroups(order.items).length > 0">
+        <div v-for="order in orders" :key="order.orderId" v-show="getShipGroups(order.items).length > 0">
           <ion-card v-for="(shipGroup, index) in getShipGroups(order.items)" :key="index" @click.prevent="viewOrder(order)">
             <ion-item lines="none">
               <ion-label>

@@ -19,7 +19,7 @@ const getters: GetterTree <UserState, RootState> = {
         return state.currentFacility
     },
     getCurrentStore(state) {
-        return state.currentStore
+        return state.currentEComStore
     },
     getInstanceUrl (state) {
         return state.instanceUrl;

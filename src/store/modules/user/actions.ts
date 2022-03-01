@@ -70,11 +70,11 @@ const actions: ActionTree<UserState, RootState> = {
       }
 
       await dispatch('getStores', payload).then((payload: any) => {
-        resp.data.stores = payload.stores
+        resp.data.stores = payload
       })
 
       commit(types.USER_INFO_UPDATED, resp.data);
-      commit(types.USER_CURRENT_STORE_UPDATED, resp.data.stores.length > 0 ? resp.data.stores[0] : {});
+      commit(types.USER_CURRENT_STORE_UPDATED, resp.data.stores?.length > 0 ? resp.data.stores[0] : {});
       commit(types.USER_CURRENT_FACILITY_UPDATED, resp.data.facilities.length > 0 ? resp.data.facilities[0] : {});
     } else {
       commit(types.USER_TOKEN_CHANGED, { newToken: "" })

@@ -41,7 +41,7 @@
         </ion-button>
       </ion-item>
 
-      <ion-card v-for="(item, index) in order.items" :key="index">
+      <ion-card v-for="(item, index) in order?.items" :key="index">
         <ProductListItem :item="item" />
         <ion-item lines="none" class="border-top">
           <ion-label>{{ $t("Reason") }}</ion-label>
@@ -120,7 +120,7 @@ export default defineComponent({
     })
   },
   ionViewDidEnter() {
-    if(this.orderitems) this.order.items.map((item) => item['reason'] = this.unfillableReason[0].id);
+    if(this.order.items) this.order.items.map((item) => item['reason'] = this.unfillableReason[0].id);
   },
   methods: {
     async updateOrder (order) {
