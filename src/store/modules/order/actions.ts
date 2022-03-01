@@ -9,7 +9,7 @@ import emitter from '@/event-bus'
 import store from "@/store";
 
 const actions: ActionTree<OrderState , RootState> ={
-  async getOpenOrders ({ commit, state }, payload) {
+  async getOpenOrders({ commit, state }, payload) {
     // Show loader only when new query and not the infinite scroll
     if (payload.viewIndex === 0) emitter.emit("presentLoader");
     let resp;
@@ -35,11 +35,44 @@ const actions: ActionTree<OrderState , RootState> ={
       }
       emitter.emit("dismissLoader");
     } catch(err) {
-      console.log(err)
+      console.error(err)
       showToast(translate("Something went wrong"))
     }
 
     return resp;
+  },
+
+  async getOrderDetail( { dispatch, state }, payload ) {
+    const current = state.current as any
+    const orders = state.open.list as any
+
+    if(current.orderId === payload.orderId) { return current }
+
+    if(orders.length) {
+      const order = orders.find((order: any) => {
+        return order.orderId === payload.orderId;
+      })
+      if(order) {
+        dispatch('updateCurrent', { order })
+        return order;
+      }
+    }
+    
+    let resp;
+    try {
+      resp = await OrderService.getOrderDetails(payload)
+      if (resp.status === 200 && resp.data.count > 0 && !hasError(resp)) {
+        const orders = resp.data.docs
+
+        this.dispatch('product/getProductInformation', { orders })
+        dispatch('updateCurrent', { order: orders[0] })
+      } else {
+        showToast(translate("Order not found"))
+      }
+    } catch (err) {
+      console.error(err)
+      showToast(translate("Something went wrong"))
+    }
   },
 
   updateCurrent ({ commit }, payload) {
@@ -68,7 +101,7 @@ const actions: ActionTree<OrderState , RootState> ={
       }
       emitter.emit("dismissLoader");
     } catch(err) {
-      console.log(err)
+      console.error(err)
       showToast(translate("Something went wrong"))
     }
 
@@ -94,7 +127,7 @@ const actions: ActionTree<OrderState , RootState> ={
       }
       emitter.emit("dismissLoader")
     } catch(err) {
-      console.log(err)
+      console.error(err)
       showToast(translate("Something went wrong"))
     }
 
@@ -147,7 +180,7 @@ const actions: ActionTree<OrderState , RootState> ={
       }
       emitter.emit("dismissLoader")
     } catch(err) {
-      console.log(err)
+      console.error(err)
       showToast(translate("Something went wrong"))
     }
 

@@ -29,6 +29,7 @@
   "Order": "Order",
   "Order delivered to": "Order delivered to { customerName }",
   "Order details": "Order details",
+  "Order not found": "Order not found",
   "Order packed and ready for delivery": "Order packed and ready for delivery",
   "Orders": "Orders",
   "Orders Not Found": "Orders Not Found",

@@ -117,6 +117,7 @@ export default defineComponent({
   computed: {
     ...mapGetters({
       order: "order/getCurrent",
+      currentFacility: 'user/getCurrentFacility',
     })
   },
   ionViewDidEnter() {
@@ -141,7 +142,17 @@ export default defineComponent({
           }]
         });
       return alert.present();
+    },
+    async getOrderDetail(orderId) {
+      const payload = {
+        facilityId: this.currentFacility.facilityId,
+        orderId
+      }
+      await this.store.dispatch("order/getOrderDetail", payload)
     }
+  },
+  mounted() {
+    this.getOrderDetail(this.$route.params.orderId);
   },
   setup () {
     const store = useStore();

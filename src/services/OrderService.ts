@@ -8,6 +8,14 @@ const getOpenOrders = async (payload: any): Promise <any> => {
   });
 }
 
+const getOrderDetails = async (payload: any): Promise <any> => {
+  return api({
+    url: "wms-orders",
+    method: "post",
+    data: payload
+  });
+}
+
 const getPackedOrders = async (payload: any): Promise <any> => {
   return api({
     url: "readytoshiporders",
@@ -42,6 +50,7 @@ const rejectOrderItem = async (payload: any): Promise <any> => {
 
 export const OrderService = {
   getOpenOrders,
+  getOrderDetails,
   getPackedOrders,
   quickShipEntireShipGroup,
   rejectOrderItem,
