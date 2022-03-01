@@ -92,8 +92,8 @@ const actions: ActionTree<OrderState , RootState> ={
           order.email = order.doclist?.docs[0].customerEmailId,
           order.phoneNumber = order.doclist?.docs[0].phoneNumber
         })
+
         if(viewIndex && viewIndex > 0) orders = state.open.list.concat(orders)
-        console.log(orders)
         commit(types.ORDER_OPEN_UPDATED, { orders, total })
       } else {
         commit(types.ORDER_OPEN_UPDATED, { orders: {}, total: 0 })
