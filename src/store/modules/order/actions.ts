@@ -35,7 +35,7 @@ const actions: ActionTree<OrderState , RootState> ={
       }
       emitter.emit("dismissLoader");
     } catch(err) {
-      console.log(err)
+      console.error(err)
       showToast(translate("Something went wrong"))
     }
 
@@ -99,7 +99,7 @@ const actions: ActionTree<OrderState , RootState> ={
       }
       emitter.emit("dismissLoader");
     } catch(err) {
-      console.log(err)
+      console.error(err)
       showToast(translate("Something went wrong"))
     }
 
@@ -125,7 +125,7 @@ const actions: ActionTree<OrderState , RootState> ={
       }
       emitter.emit("dismissLoader")
     } catch(err) {
-      console.log(err)
+      console.error(err)
       showToast(translate("Something went wrong"))
     }
 
@@ -178,7 +178,7 @@ const actions: ActionTree<OrderState , RootState> ={
       }
       emitter.emit("dismissLoader")
     } catch(err) {
-      console.log(err)
+      console.error(err)
       showToast(translate("Something went wrong"))
     }
 
