@@ -12,7 +12,7 @@
         <ion-item>
           <ion-icon :icon="globeOutline" slot="start" />
           <ion-label>{{$t("eCom Store")}}</ion-label>
-          <ion-select interface="popover" :value="currentStore.productStoreId" @ionChange="setEComStore($event)">
+          <ion-select interface="popover" :value="currentEComStore.productStoreId" @ionChange="setEComStore($event)">
             <ion-select-option v-for="store in (userProfile ? userProfile.stores : [])" :key="store.productStoreId" :value="store.productStoreId" >{{ store.storeName }}</ion-select-option>
           </ion-select>
         </ion-item>
@@ -75,7 +75,7 @@ export default defineComponent({
     ...mapGetters({
       userProfile: 'user/getUserProfile',
       currentFacility: 'user/getCurrentFacility',
-      currentStore: 'user/getCurrentStore',
+      currentEComStore: 'user/getCurrentEComStore',
       instanceUrl: 'user/getInstanceUrl',
       shippingOrders: 'user/getShippingOrders'
     })

@@ -165,7 +165,7 @@ export default defineComponent({
       orders: 'order/getOpenOrders',
       packedOrders: 'order/getPackedOrders',
       currentFacilityId: 'user/getCurrentFacility',
-      currentStore: 'user/getCurrentStore',
+      currentEComStore: 'user/getCurrentEComStore',
       isPackedOrdersScrollable: 'order/isPackedOrdersScrollable',
       isOpenOrdersScrollable: 'order/isOpenOrdersScrollable'
     })
@@ -203,7 +203,7 @@ export default defineComponent({
         viewSize,
         viewIndex,
         "fieldList": [ "orderId" ],
-        "entityName": this.currentStore.reserveInventory ? "ReadyOrderItems" : "OrderHeaderItemAndShipment",
+        "entityName": this.currentEComStore.reserveInventory ? "ReadyOrderItems" : "OrderHeaderItemAndShipment",
         "distinct": "Y",
         "noConditionFind": "Y",        
       }
