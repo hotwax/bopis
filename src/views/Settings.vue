@@ -12,7 +12,7 @@
         <ion-item>
           <ion-icon :icon="globeOutline" slot="start" />
           <ion-label>{{$t("eCom Store")}}</ion-label>
-          <ion-select interface="popover" :value="currentStore.productStoreId" @ionChange="setStore($event)">
+          <ion-select interface="popover" :value="currentStore.productStoreId" @ionChange="setEComStore($event)">
             <ion-select-option v-for="store in (userProfile ? userProfile.stores : [])" :key="store.productStoreId" :value="store.productStoreId" >{{ store.storeName }}</ion-select-option>
           </ion-select>
         </ion-item>
@@ -87,9 +87,9 @@ export default defineComponent({
           'facility': this.userProfile.facilities.find((fac: any) => fac.facilityId == facility['detail'].value)
         });
     },
-    setStore(store: any) {
+    setEComStore(store: any) {
       if(this.userProfile){
-        this.store.dispatch('user/setStore', {
+        this.store.dispatch('user/setEComStore', {
           'store': this.userProfile.stores.find((str: any) => str.productStoreId == store['detail'].value)
         });
       }

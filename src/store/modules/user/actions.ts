@@ -69,12 +69,12 @@ const actions: ActionTree<UserState, RootState> = {
         "noConditionFind": "Y"
       }
 
-      await dispatch('getStores', payload).then((payload: any) => {
-        resp.data.stores = payload
+      await dispatch('getEComStores', payload).then((stores: any) => {
+        resp.data.stores = stores
       })
 
       commit(types.USER_INFO_UPDATED, resp.data);
-      commit(types.USER_CURRENT_STORE_UPDATED, resp.data.stores?.length > 0 ? resp.data.stores[0] : {});
+      commit(types.USER_CURRENT_ECOM_STORE_UPDATED, resp.data.stores?.length > 0 ? resp.data.stores[0] : {});
       commit(types.USER_CURRENT_FACILITY_UPDATED, resp.data.facilities.length > 0 ? resp.data.facilities[0] : {});
     } else {
       commit(types.USER_TOKEN_CHANGED, { newToken: "" })
@@ -83,21 +83,17 @@ const actions: ActionTree<UserState, RootState> = {
     return resp;
   },
 
-  async getStores({ commit }, payload) {
+  async getEComStores({ commit }, payload) {
     let resp;
 
     try{
-      resp = await UserService.getStores(payload);
+      resp = await UserService.getEComStores(payload);
       if (resp.status === 200 && resp.data.docs?.length > 0 && !hasError(resp)) {
-        const stores: any = []
-        resp.data.docs.forEach((store: any) => {
-          if(store.reserveInventory) {
-            store.reserveInventory == "Y" ? store.reserveInventory = true : store.reserveInventory = false
-          } else {
-            store.reserveInventory = true
-          }
-          stores.push(store)
+        const stores = resp.data.docs
+        stores.map((store: any) => {
+          store.reserveInventory = store.reserveInventory !== "N";
         })
+
         return stores
       }
     } catch(err) {
@@ -120,9 +116,9 @@ const actions: ActionTree<UserState, RootState> = {
     commit(types.USER_INSTANCE_URL_UPDATED, payload)
    },
 
-  async setStore({ commit, dispatch }, payload) {
+  async setEComStore({ commit, dispatch }, payload) {
     dispatch("order/clearOrders", null, { root: true })
-    commit(types.USER_CURRENT_STORE_UPDATED, payload.store);
+    commit(types.USER_CURRENT_ECOM_STORE_UPDATED, payload.store);
   },
   
   /**
