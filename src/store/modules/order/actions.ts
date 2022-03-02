@@ -40,7 +40,7 @@ const actions: ActionTree<OrderState , RootState> ={
               "group.limit": 1000,
             },
             "query": "*:*",
-            "filter": [orderIds, "docType: ORDER"],
+            "filter": [orderIds, `orderItemStatusId: ${payload.inputFields.orderItemStatusId}`, "docType: ORDER"],
           }
         }
         await dispatch('getOpenOrderDetails', { query, viewIndex: payload.viewIndex });
@@ -82,15 +82,17 @@ const actions: ActionTree<OrderState , RootState> ={
           this.dispatch('stock/addProducts', { productIds })
         }
 
-        orders.map((order: any) => {
-          order.orderId = order.doclist?.docs[0].orderId,
-          order.orderName = order.doclist?.docs[0].orderName,
-          order.customer = { name : order.doclist?.docs[0].customerPartyName },
-          order.items = order.doclist?.docs,
-          order.statusId = order.doclist?.docs[0].orderStatusId,
-          order.date = order.doclist?.docs[0].orderDate,
-          order.email = order.doclist?.docs[0].customerEmailId,
-          order.phoneNumber = order.doclist?.docs[0].phoneNumber
+        orders = orders.map((order: any) => {
+          return {
+            orderId: order.doclist?.docs[0].orderId,
+            orderName: order.doclist?.docs[0].orderName,
+            customer: { name: order.doclist?.docs[0].customerPartyName },
+            items: order.doclist?.docs,
+            statusId: order.doclist?.docs[0].orderStatusId,
+            date: order.doclist?.docs[0].orderDate,
+            email: order.doclist?.docs[0].customerEmailId,
+            phoneNumber: order.doclist?.docs[0].phoneNumber
+          }
         })
 
         if(viewIndex && viewIndex > 0) orders = state.open.list.concat(orders)
