@@ -50,6 +50,7 @@
               </ion-button>
             </ion-item>
             <div class="border-top">
+              <!-- TODO: Will handle this condition later -->
               <ion-button fill="clear" @click.stop="readyForPickup(order, shipGroup)">
                 {{ getShipmentMethod(shipGroup, order.items) === 'STOREPICKUP' ? $t("Ready for pickup") : $t("Ready to ship") }}
               </ion-button>
