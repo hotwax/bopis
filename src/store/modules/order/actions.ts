@@ -40,7 +40,7 @@ const actions: ActionTree<OrderState , RootState> ={
               "group.limit": 1000,
             },
             "query": "*:*",
-            "filter": [orderIds, `orderItemStatusId: ${payload.inputFields.orderItemStatusId}`, "docType: ORDER"],
+            "filter": [orderIds, `orderItemStatusId: ${payload.inputFields.orderItemStatusId}`, `facilityId: ${payload.inputFields.facilityId_fld0_value}`, "docType: ORDER"],
           }
         }
         await dispatch('getOpenOrderDetails', { query, viewIndex: payload.viewIndex });
