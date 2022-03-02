@@ -2,7 +2,7 @@
   <ion-page>
     <ion-header :translucent="true">
       <ion-toolbar>
-        <ion-title>{{ currentFacilityId.name }}</ion-title>
+        <ion-title>{{ currentFacility.name }}</ion-title>
       </ion-toolbar>
       <ion-toolbar>
         <ion-segment v-model="segmentSelected" @ionChange="segmentChanged">
@@ -163,7 +163,7 @@ export default defineComponent({
     ...mapGetters({
       orders: 'order/getOpenOrders',
       packedOrders: 'order/getPackedOrders',
-      currentFacilityId: 'user/getCurrentFacility',
+      currentFacility: 'user/getCurrentFacility',
       isPackedOrdersScrollable: 'order/isPackedOrdersScrollable',
       isOpenOrdersScrollable: 'order/isOpenOrdersScrollable'
     })
@@ -191,7 +191,7 @@ export default defineComponent({
         sortOrder: 'Desc',
         viewSize,
         viewIndex,
-        facilityId: this.currentFacilityId.facilityId
+        facilityId: this.currentFacility.facilityId
       }
       await this.store.dispatch("order/getOpenOrders", payload);
     },
@@ -203,7 +203,7 @@ export default defineComponent({
         sortOrder: 'Desc',
         viewSize,
         viewIndex,
-        facilityId: this.currentFacilityId.facilityId
+        facilityId: this.currentFacility.facilityId
       };
       await this.store.dispatch("order/getPackedOrders", payload);
     },
@@ -239,7 +239,7 @@ export default defineComponent({
           },{
             text: header,
             handler: () => {
-              this.store.dispatch('order/quickShipEntireShipGroup', {order, shipGroupSeqId: shipGroup, facilityId: this.currentFacilityId.facilityId}).then((resp) => {
+              this.store.dispatch('order/quickShipEntireShipGroup', {order, shipGroupSeqId: shipGroup, facilityId: this.currentFacility.facilityId}).then((resp) => {
                 if (resp.data._EVENT_MESSAGE_) this.getPickupOrders();
               })
             }
