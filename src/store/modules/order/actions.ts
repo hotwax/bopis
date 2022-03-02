@@ -105,7 +105,7 @@ const actions: ActionTree<OrderState , RootState> ={
     }
   },
 
-  async getOrderDetail( { dispatch, state }, { payload, orderId} ) {
+  async getOrderDetail( { dispatch, state }, { payload, orderId, shipmentMethod } ) {
     const current = state.current as any
     const orders = state.open.list as any
     if(current.orderId === orderId) { return current }
@@ -115,7 +115,7 @@ const actions: ActionTree<OrderState , RootState> ={
         return order.orderId === orderId;
       })
       if(order) {
-        dispatch('updateCurrent', { order })
+        dispatch('updateCurrent', { order, shipmentMethod })
         return order;
       }
     }
@@ -149,7 +149,7 @@ const actions: ActionTree<OrderState , RootState> ={
           phoneNumber : orders[0].doclist?.docs[0].phoneNumber
         }
 
-        dispatch('updateCurrent', { order })
+        dispatch('updateCurrent', { order, shipmentMethod })
       } else {
         showToast(translate("Order not found"))
       }
@@ -161,7 +161,13 @@ const actions: ActionTree<OrderState , RootState> ={
   },
 
   updateCurrent ({ commit }, payload) {
-    commit(types.ORDER_CURRENT_UPDATED, { order: payload.order })
+    const order = payload.order
+    const items = order.items.filter((item: any) => {
+      return item.shipmentMethodTypeId === payload.shipmentMethod
+    })
+    order.items = items
+
+    commit(types.ORDER_CURRENT_UPDATED, { order })
   },
 
   async getPackedOrders ({ commit, state }, payload) {

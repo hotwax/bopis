@@ -143,7 +143,7 @@ export default defineComponent({
         });
       return alert.present();
     },
-    async getOrderDetail(orderId) {
+    async getOrderDetail(orderId, shipmentMethod) {
       const payload = {
           "json": {
             "params": {
@@ -153,16 +153,15 @@ export default defineComponent({
               "group.limit": 1000,
             },
             "query": "*:*",
-            // TODO: add facilityId to filter out products which needs to be order.
-            "filter": [`orderId: *${orderId}*`, `facilityId: ${this.currentFacility.facilityId}`, "docType: ORDER"],
+            "filter": [`orderId: *${orderId}*`, `shipmentMethodTypeId: ${shipmentMethod}`, "docType: ORDER"],
           }
       }
 
-      await this.store.dispatch("order/getOrderDetail", { payload, orderId })
+      await this.store.dispatch("order/getOrderDetail", { payload, orderId, shipmentMethod })
     }
   },
   mounted() {
-    this.getOrderDetail(this.$route.params.orderId);
+    this.getOrderDetail(this.$route.params.orderId, this.$route.params.shipmentMethod);
   },
   setup () {
     const store = useStore();
