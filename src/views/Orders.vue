@@ -4,18 +4,21 @@
       <ion-toolbar>
         <ion-title>{{ currentFacility.name }}</ion-title>
       </ion-toolbar>
+
       <ion-toolbar>
+      <div class="header">
+        <ion-searchbar :placeholder= "$t('Search Orders')"></ion-searchbar>
         <ion-segment v-model="segmentSelected" @ionChange="segmentChanged">
           <ion-segment-button value="open">
             <ion-label>{{ $t("Open") }}</ion-label>
-          </ion-segment-button>
+        </ion-segment-button>
           <ion-segment-button value="packed">
             <ion-label>{{ $t("Packed") }}</ion-label>
           </ion-segment-button>
-        </ion-segment>
+          </ion-segment>
+      </div>
       </ion-toolbar>
     </ion-header>
-
     <ion-content>
       <div v-if="segmentSelected === 'open'">
         <div v-for="order in orders" :key="order.orderId" v-show="getShipGroups(order.items).length > 0">
@@ -117,6 +120,7 @@ import {
   IonPage,
   IonRefresher,
   IonRefresherContent,
+  IonSearchbar,
   IonSegment,
   IonSegmentButton,
   IonTitle,
@@ -147,6 +151,7 @@ export default defineComponent({
     IonPage,
     IonRefresher,
     IonRefresherContent,
+    IonSearchbar,
     IonSegment,
     IonSegmentButton,
     IonTitle,
@@ -300,6 +305,12 @@ export default defineComponent({
   ion-content > div {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(343px, 1fr));
+  }
+}
+
+@media (min-width: 991px){
+ .header{
+   display: flex;
   }
 }
 
