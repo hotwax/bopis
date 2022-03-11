@@ -6,7 +6,7 @@
       </ion-toolbar>
 
       <ion-toolbar>
-        <div class="find">
+        <div>
           <ion-searchbar :placeholder= "$t('Search Orders')" />
           <ion-segment v-model="segmentSelected" @ionChange="segmentChanged">
             <ion-segment-button value="open">
@@ -320,7 +320,7 @@ export default defineComponent({
 }
 
 @media (min-width: 991px){
-  .find{
+  ion-toolbar > div {
     display: flex;
   }
 }
