@@ -40,7 +40,8 @@
           {{ $t("Copy") }}
         </ion-button>
       </ion-item>
-
+  
+    <main>
       <ion-card v-for="(item, index) in order?.items" :key="index">
         <ProductListItem :item="item" />
         <ion-item lines="none" class="border-top">
@@ -59,6 +60,7 @@
       <ion-button expand="block" color="danger" fill="outline" @click="updateOrder(order)">
         {{ $t("Reject Order") }}
       </ion-button>
+    </main>  
     </ion-content>
   </ion-page>
 </template>
@@ -188,11 +190,9 @@ export default defineComponent({
 </script>
 
 <style scoped>
-ion-thumbnail > img {
-  object-fit: contain;
-}
-ion-select {
-  max-width: 100%;
+main {
+  max-width: 445px;
+  margin: var(--spacer-base) auto 0; 
 }
 
 .border-top {
