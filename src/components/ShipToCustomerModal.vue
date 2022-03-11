@@ -14,34 +14,32 @@
     <main>  
       <ion-item>
         <ion-label position="fixed">{{ $t("First name") }}</ion-label>
-        <ion-input v-model="firstName" />
+        <ion-input :value="firstName" v-model="firstName" />
       </ion-item>
       <ion-item>
         <ion-label position="fixed">{{ $t("Last name") }}</ion-label>
-        <ion-input v-model="lastName" />
+        <ion-input :value="lastName" v-model="lastName" />
       </ion-item>
       <ion-item>
         <ion-label position="fixed">{{ $t("Street") }}</ion-label>
-        <ion-input v-model="street" />
+        <ion-input :value="street" v-model="street" />
       </ion-item>
       <ion-item>
         <ion-label position="fixed">{{ $t("City") }}</ion-label>
-        <ion-input v-model="city" />
+        <ion-input :value="city" v-model="city" />
       </ion-item>
       <ion-item>
         <ion-label position="fixed">{{ $t("State") }}</ion-label>
-        <ion-input v-model="state" />
+        <ion-input :value="state" v-model="state" />
       </ion-item>
       <ion-item>
         <ion-label position="fixed">{{ $t("Zipcode") }}</ion-label>
-        <ion-input />
+        <ion-input :value="zipcode" v-model="zipcode" />
       </ion-item>
       <ion-item>
         <ion-label>{{ $t("Shipping method") }}</ion-label>
-        <ion-select value="next-day">
-          <ion-select-option value="same-day">Same day</ion-select-option>
-          <ion-select-option value="next-day">Next day</ion-select-option>
-          <ion-select-option value="second-day">After 2 days</ion-select-option>
+        <ion-select :value="shipmentMethod" @ionChange="changeShipment($event)">
+          <ion-select-option v-for="shipMethod in shipmentMethods" :key="shipMethod" :value="shipMethod.shipmentMethodTypeId">{{ shipMethod.description }}</ion-select-option>
         </ion-select>
       </ion-item>
 
@@ -52,7 +50,7 @@
   </ion-content> 
 </template>
 
-<script>
+<script lang="ts">
 import {
   IonButton,
   IonButtons,
@@ -75,6 +73,8 @@ import {
   closeOutline,
   storefrontOutline,
 } from 'ionicons/icons';
+import { mapGetters, useStore } from "vuex"
+
 
 export default defineComponent({
   name: 'ShipToCustomerModal',
@@ -94,13 +94,20 @@ export default defineComponent({
   },
   data() {
     return{
-      firstName: "",
-      lastName: "",
-      street: "",
-      city: "",
-      state: "",
-      zipcode: ""
+      firstName: this.order.firstName,
+      lastName: this.order.lastName,
+      street: this.order.address1,
+      city: this.order.city,
+      state: this.order.stateProvinceGeoId,
+      zipcode: this.order.postalCode,
+      shipmentMethod: this.order.shipmentMethod
     }
+  },
+  props: ['order'],
+  computed: {
+    ...mapGetters({
+      shipmentMethods: "util/getShipmentMethods",
+    })
   },
   methods: {
     closeModal() {
@@ -115,17 +122,52 @@ export default defineComponent({
             {
               text: this.$t('Cancel')
             },
-            { text: this.$t('Ship') }
+            {
+              text: this.$t('Ship'),
+              handler: () => {
+                const payload = {
+                  "partyId": this.order.customerId,
+                  "orderId": this.order.orderId,
+                  "shipGroupSeqId": this.order.shipGroupSeqId,
+                  "isEdited": "Y",
+                  "contactMechId": this.order.contactMechId,
+                  "contactMechPurposeTypeId": "SHIPPING_LOCATION",
+                  "shipmentMethod": this.shipmentMethod,
+                  "toName": this.firstName,
+                  "attnName": this.lastName,
+                  "address1": this.street,
+                  "address2": "",
+                  "countryGeoId": "USA",
+                  "stateProvinceGeoId": this.state,
+                  "city": this.city,
+                  "postalCode": this.zipcode,
+                  "latitude": "",
+                  "longitude": ""
+                }
+
+                this.store.dispatch('order/UpdateOrderAddress', payload)
+                  .then(() => modalController.dismiss({ dismissed: true }));
+              }
+            }
           ],
         });
       return alert.present();
     },
+    changeShipment(event: CustomEvent) {
+      this.shipmentMethod = event['detail'].value;
+    }
+  },
+  beforeCreate() {
+    this.store.dispatch("util/fetchShipmentMethods");
   },
   setup() {
+    const store = useStore();
+
     return {
       businessOutline,
       closeOutline,
-      storefrontOutline,
+      store,
+      storefrontOutline
     };
   },
 });
@@ -133,7 +175,7 @@ export default defineComponent({
 
 <style scoped>
 main {
- max-width: 75%;
- margin: auto;
+  max-width: 75%;
+  margin: auto;
 }
 </style>

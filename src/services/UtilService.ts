@@ -2,7 +2,7 @@ import api from "../api";
 
 const getShipmentMethods = async (payload: any): Promise<any> => {
   return api({
-    url: "",
+    url: "/performFind",
     method: "post",
     data: payload
   });

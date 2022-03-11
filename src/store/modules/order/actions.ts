@@ -76,7 +76,16 @@ const actions: ActionTree<OrderState , RootState> ={
   },
 
   updateCurrent ({ commit }, payload) {
-    commit(types.ORDER_CURRENT_UPDATED, { order: payload.order })
+    const order = {
+      ...payload.order,
+      firstName: payload.order.customerName?.split(' ').slice(0, -1).join(" "),
+      lastName: payload.order.customerName?.split(' ').slice(-1).join(' '),
+      shipmentMethod: payload.order.items[0]?.shipmentMethodTypeId,
+      shipGroupSeqId: payload.order?.items[0]?.shipGroupSeqId,
+      contactMechId: payload.order?.items[0]?.contactMechId
+    }
+
+    commit(types.ORDER_CURRENT_UPDATED, { order })
   },
 
   async getPackedOrders ({ commit, state }, payload) {
@@ -229,19 +238,19 @@ const actions: ActionTree<OrderState , RootState> ={
     commit(types.ORDER_PACKED_UPDATED, {orders: {} , total: 0})
   },
 
-  async UpdateOrderAddress( payload ) {
+  async UpdateOrderAddress( { commit }, payload ) {
     let resp;
 
     try{
       resp = await OrderService.updateShippingInformation(payload);
       if(resp.status === 200 && !hasError(resp)) {
-        const customer = resp;
-
-        console.log(customer);
+        showToast(translate("Shipping address updated successfully."));
       }
     } catch(err) {
+      showToast(translate("Something went wrong"));
       console.error(err);
     }
+    return resp;
   }
 }
 
