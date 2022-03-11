@@ -70,7 +70,7 @@ const api = async (customConfig: any) => {
         params: customConfig.params
     }
     const baseURL = store.getters['user/getInstanceUrl'];
-    if (baseURL) config.baseURL = `https://172.20.20.52:8443/api/`;
+    if (baseURL) config.baseURL = `https://${baseURL}.hotwax.io/api/`;
 
     if(customConfig.cache) config.adapter = axiosCache.adapter;
 
