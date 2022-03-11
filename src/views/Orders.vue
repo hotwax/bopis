@@ -6,17 +6,17 @@
       </ion-toolbar>
 
       <ion-toolbar>
-      <div class="header">
-        <ion-searchbar :placeholder= "$t('Search Orders')"></ion-searchbar>
-        <ion-segment v-model="segmentSelected" @ionChange="segmentChanged">
-          <ion-segment-button value="open">
-            <ion-label>{{ $t("Open") }}</ion-label>
-        </ion-segment-button>
-          <ion-segment-button value="packed">
-            <ion-label>{{ $t("Packed") }}</ion-label>
-          </ion-segment-button>
+        <div class="header">
+          <ion-searchbar :placeholder= "$t('Search Orders')"></ion-searchbar>
+          <ion-segment v-model="segmentSelected" @ionChange="segmentChanged">
+            <ion-segment-button value="open">
+              <ion-label>{{ $t("Open") }}</ion-label>
+            </ion-segment-button>
+            <ion-segment-button value="packed">
+              <ion-label>{{ $t("Packed") }}</ion-label>
+            </ion-segment-button>
           </ion-segment>
-      </div>
+        </div>
       </ion-toolbar>
     </ion-header>
     <ion-content>
@@ -308,12 +308,6 @@ export default defineComponent({
   }
 }
 
-@media (min-width: 991px){
- .header{
-   display: flex;
-  }
-}
-
 .border-top {
   border-top: 1px solid rgba(0, 0, 0, 0.12);
 }
@@ -323,5 +317,11 @@ export default defineComponent({
   flex-direction: column;
   align-items: flex-end;
   row-gap: 4px;
+}
+
+@media (min-width: 991px){
+ .header{
+   display: flex;
+  }
 }
 </style>
