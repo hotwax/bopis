@@ -13,27 +13,27 @@
   <ion-content>
     <main>  
       <ion-item>
-        <ion-label position="floating">{{ $t("First name") }}</ion-label>
+        <ion-label position="fixed">{{ $t("First name") }}</ion-label>
         <ion-input />
       </ion-item>
       <ion-item>
-        <ion-label position="floating">{{ $t("Last name") }}</ion-label>
+        <ion-label position="fixed">{{ $t("Last name") }}</ion-label>
         <ion-input />
       </ion-item>
       <ion-item>
-        <ion-label position="floating">{{ $t("Street") }}</ion-label>
+        <ion-label position="fixed">{{ $t("Street") }}</ion-label>
         <ion-input />
       </ion-item>
       <ion-item>
-        <ion-label position="floating">{{ $t("City") }}</ion-label>
+        <ion-label position="fixed">{{ $t("City") }}</ion-label>
         <ion-input />
       </ion-item>
       <ion-item>
-        <ion-label position="floating">{{ $t("State") }}</ion-label>
+        <ion-label position="fixed">{{ $t("State") }}</ion-label>
         <ion-input />
       </ion-item>
       <ion-item>
-        <ion-label position="floating">{{ $t("Zipcode") }}</ion-label>
+        <ion-label position="fixed">{{ $t("Zipcode") }}</ion-label>
         <ion-input />
       </ion-item>
       <ion-item>
@@ -44,7 +44,7 @@
           <ion-select-option value="second-day">After 2 days</ion-select-option>
         </ion-select>
       </ion-item>
-      
+
       <div class="ion-padding ion-text-center">
         <ion-button @click="shipToCustomer" size="small">{{ $t("Ship to this address") }}</ion-button>
       </div>
@@ -118,7 +118,7 @@ export default defineComponent({
 
 <style scoped>
 main {
- max-width: 375px;
+ max-width: 75%;
  margin: auto;
 }
 </style>
