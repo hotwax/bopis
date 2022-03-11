@@ -320,8 +320,8 @@ export default defineComponent({
 }
 
 @media (min-width: 991px){
- .header{
-   display: flex;
+  .header{
+    display: flex;
   }
 }
 </style>
