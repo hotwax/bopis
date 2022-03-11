@@ -229,7 +229,7 @@ const actions: ActionTree<OrderState , RootState> ={
     commit(types.ORDER_PACKED_UPDATED, {orders: {} , total: 0})
   },
 
-  async UpdateOrderAddress({ dispatch }, payload) {
+  async UpdateOrderAddress( payload ) {
     let resp;
 
     try{
