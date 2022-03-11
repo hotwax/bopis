@@ -136,6 +136,9 @@ export default defineComponent({
     async shipToCustomer() {
       const shipmodal = await modalController.create({
         component: ShipToCustomerModal,
+        componentProps: {
+          order: this.order
+        }
       });
       return shipmodal.present();
     },
