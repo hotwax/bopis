@@ -7,7 +7,7 @@
 
       <ion-toolbar>
         <div class="header">
-          <ion-searchbar :placeholder= "$t('Search Orders')"></ion-searchbar>
+          <ion-searchbar :placeholder= "$t('Search Orders')" />
           <ion-segment v-model="segmentSelected" @ionChange="segmentChanged">
             <ion-segment-button value="open">
               <ion-label>{{ $t("Open") }}</ion-label>
