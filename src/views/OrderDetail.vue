@@ -50,6 +50,9 @@
           </ion-select>
         </ion-item>
       </ion-card>
+      <ion-button expand="block" fill="outline" @click="UpdateOrderAddress()">
+        {{ $t("Ship To Customer") }}
+      </ion-button>
       <ion-button expand="block" color="danger" fill="outline" @click="updateOrder(order)">
         {{ $t("Reject Order") }}
       </ion-button>
@@ -75,6 +78,7 @@ import {
   IonSelectOption,
   IonTitle,
   IonToolbar,
+  modalController,
 } from "@ionic/vue";
 import { defineComponent } from "vue";
 import { mapGetters, useStore } from "vuex";
@@ -87,6 +91,7 @@ import ProductListItem from '@/components/ProductListItem.vue'
 import { copyToClipboard } from '@/utils'
 import { useRouter } from 'vue-router'
 import * as moment from "moment-timezone";
+import UpdateOrderAddressModal from "@/components/UpdateOrderAddressModal.vue";
 
 export default defineComponent({
   name: "OrderDetail",
@@ -149,6 +154,13 @@ export default defineComponent({
         orderId
       }
       await this.store.dispatch("order/getOrderDetail", payload)
+    },
+    async UpdateOrderAddress() {
+      const modal = await modalController
+        .create({
+          component: UpdateOrderAddressModal
+        })
+      return modal.present();
     }
   },
   mounted() {

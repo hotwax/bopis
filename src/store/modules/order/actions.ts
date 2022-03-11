@@ -227,6 +227,21 @@ const actions: ActionTree<OrderState , RootState> ={
   clearOrders ({ commit }) {
     commit(types.ORDER_OPEN_UPDATED, {orders: {} , total: 0})
     commit(types.ORDER_PACKED_UPDATED, {orders: {} , total: 0})
+  },
+
+  async UpdateOrderAddress({ dispatch }, payload) {
+    let resp;
+
+    try{
+      resp = await OrderService.updateShippingInformation(payload);
+      if(resp.status === 200 && !hasError(resp)) {
+        const customer = resp;
+
+        console.log(customer);
+      }
+    } catch(err) {
+      console.error(err);
+    }
   }
 }
 

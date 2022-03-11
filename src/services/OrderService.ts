@@ -48,11 +48,20 @@ const rejectOrderItem = async (payload: any): Promise <any> => {
   });
 }
 
+const updateShippingInformation = async (payload: any): Promise <any> => {
+  return api({
+    url: "service/updateShippingInformationOfShipGroup",
+    method: "post",
+    data: payload
+  })
+}
+
 export const OrderService = {
   getOpenOrders,
   getOrderDetails,
   getPackedOrders,
   quickShipEntireShipGroup,
   rejectOrderItem,
-  updateShipment
+  updateShipment,
+  updateShippingInformation
 }
