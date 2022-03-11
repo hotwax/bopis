@@ -50,9 +50,12 @@
           </ion-select>
         </ion-item>
       </ion-card>
-      <ion-button expand="block" fill="outline" @click="UpdateOrderAddress()">
-        {{ $t("Ship To Customer") }}
+
+      <ion-button expand="block" fill="outline" @click="shipToCustomer()">
+        {{ $t("Ship to customer") }}
+        <ion-icon :icon="sendOutline" slot="end" />
       </ion-button>
+
       <ion-button expand="block" color="danger" fill="outline" @click="updateOrder(order)">
         {{ $t("Reject Order") }}
       </ion-button>
@@ -78,11 +81,12 @@ import {
   IonSelectOption,
   IonTitle,
   IonToolbar,
-  modalController,
+  modalController
 } from "@ionic/vue";
 import { defineComponent } from "vue";
 import { mapGetters, useStore } from "vuex";
 import {
+  sendOutline,
   swapVerticalOutline,
   callOutline,
   mailOutline,
@@ -91,7 +95,7 @@ import ProductListItem from '@/components/ProductListItem.vue'
 import { copyToClipboard } from '@/utils'
 import { useRouter } from 'vue-router'
 import * as moment from "moment-timezone";
-import UpdateOrderAddressModal from "@/components/UpdateOrderAddressModal.vue";
+import ShipToCustomerModal from "@/components/ShipToCustomerModal.vue";
 
 export default defineComponent({
   name: "OrderDetail",
@@ -129,6 +133,12 @@ export default defineComponent({
     if(this.order.items) this.order.items.map((item) => item['reason'] = this.unfillableReason[0].id);
   },
   methods: {
+    async shipToCustomer() {
+      const shipmodal = await modalController.create({
+        component: ShipToCustomerModal,
+      });
+      return shipmodal.present();
+    },
     async updateOrder (order) {
       const alert = await alertController
         .create({
@@ -154,13 +164,6 @@ export default defineComponent({
         orderId
       }
       await this.store.dispatch("order/getOrderDetail", payload)
-    },
-    async UpdateOrderAddress() {
-      const modal = await modalController
-        .create({
-          component: UpdateOrderAddressModal
-        })
-      return modal.present();
     }
   },
   mounted() {
@@ -177,7 +180,8 @@ export default defineComponent({
       moment,
       router,
       store,
-      swapVerticalOutline
+      swapVerticalOutline,
+      sendOutline
     };
   }
 });
