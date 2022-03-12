@@ -14,27 +14,27 @@
     <main>  
       <ion-item>
         <ion-label position="fixed">{{ $t("First name") }}</ion-label>
-        <ion-input :value="firstName" v-model="firstName" />
+        <ion-input v-model="firstName" />
       </ion-item>
       <ion-item>
         <ion-label position="fixed">{{ $t("Last name") }}</ion-label>
-        <ion-input :value="lastName" v-model="lastName" />
+        <ion-input v-model="lastName" />
       </ion-item>
       <ion-item>
         <ion-label position="fixed">{{ $t("Street") }}</ion-label>
-        <ion-input :value="street" v-model="street" />
+        <ion-input v-model="street" />
       </ion-item>
       <ion-item>
         <ion-label position="fixed">{{ $t("City") }}</ion-label>
-        <ion-input :value="city" v-model="city" />
+        <ion-input v-model="city" />
       </ion-item>
       <ion-item>
         <ion-label position="fixed">{{ $t("State") }}</ion-label>
-        <ion-input :value="state" v-model="state" />
+        <ion-input v-model="state" />
       </ion-item>
       <ion-item>
         <ion-label position="fixed">{{ $t("Zipcode") }}</ion-label>
-        <ion-input :value="zipcode" v-model="zipcode" />
+        <ion-input v-model="zipcode" />
       </ion-item>
       <ion-item>
         <ion-label>{{ $t("Shipping method") }}</ion-label>
@@ -130,19 +130,12 @@ export default defineComponent({
                   "orderId": this.order.orderId,
                   "shipGroupSeqId": this.order.shipGroupSeqId,
                   "isEdited": "Y",
-                  "contactMechId": this.order.contactMechId,
-                  "contactMechPurposeTypeId": "SHIPPING_LOCATION",
                   "shipmentMethod": this.shipmentMethod,
-                  "toName": this.firstName,
-                  "attnName": this.lastName,
+                  "toName": this.firstName + " " + this.lastName,
                   "address1": this.street,
-                  "address2": "",
-                  "countryGeoId": "USA",
                   "stateProvinceGeoId": this.state,
                   "city": this.city,
-                  "postalCode": this.zipcode,
-                  "latitude": "",
-                  "longitude": ""
+                  "postalCode": this.zipcode
                 }
 
                 this.store.dispatch('order/UpdateOrderAddress', payload)

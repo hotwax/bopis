@@ -82,7 +82,6 @@ const actions: ActionTree<OrderState , RootState> ={
       lastName: payload.order.customerName?.split(' ').slice(-1).join(' '),
       shipmentMethod: payload.order.items[0]?.shipmentMethodTypeId,
       shipGroupSeqId: payload.order?.items[0]?.shipGroupSeqId,
-      contactMechId: payload.order?.items[0]?.contactMechId
     }
 
     commit(types.ORDER_CURRENT_UPDATED, { order })
