@@ -1,3 +1,3 @@
 export default interface UtilState {
-  shipmentMethods: Object | any
+  shipmentMethods: any
 }

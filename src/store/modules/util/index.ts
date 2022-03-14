@@ -8,7 +8,7 @@ import UtilState from './UtilState';
 const utilModule: Module<UtilState, RootState> = {
   namespaced: true,
   state: {
-    shipmentMethods: {}
+    shipmentMethods: []
   },
   getters,
   actions,
