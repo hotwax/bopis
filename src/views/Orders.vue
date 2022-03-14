@@ -103,7 +103,6 @@
 
 <script lang="ts">
 import {
-  alertController,
   IonBadge,
   IonButton,
   IonCard,
@@ -121,6 +120,7 @@ import {
   IonSegmentButton,
   IonTitle,
   IonToolbar,
+  modalController,
 } from "@ionic/vue";
 import { defineComponent, ref } from "vue";
 import ProductListItem from '@/components/ProductListItem.vue'
@@ -130,6 +130,7 @@ import { useRouter } from 'vue-router'
 import { copyToClipboard } from '@/utils'
 import * as moment from "moment-timezone";
 import emitter from "@/event-bus"
+import AssignPickerModal from "@/components/AssignPickerModal.vue"
 
 export default defineComponent({
   name: 'Orders',
@@ -226,26 +227,22 @@ export default defineComponent({
     },
     async readyForPickup (order: any, shipGroup: any) {
       const pickup = this.getShipmentMethod(shipGroup, order.items) === 'STOREPICKUP';
-      const header = pickup ? this.$t('Ready for pickup') : this.$t('Ready to ship');
-      const message = pickup ? this.$t('An email notification will be sent to that their order is ready for pickup. This order will also be moved to the packed orders tab.', { customerName: order.customerName, space: '<br/><br/>'}) : '';
 
-      const alert = await alertController
-        .create({
-          header: header,
-          message: message,
-          buttons: [{
-            text: this.$t('Cancel'),
-            role: 'cancel'
-          },{
-            text: header,
-            handler: () => {
-              this.store.dispatch('order/quickShipEntireShipGroup', {order, shipGroupSeqId: shipGroup, facilityId: this.currentFacility.facilityId}).then((resp) => {
-                if (resp.data._EVENT_MESSAGE_) this.getPickupOrders();
-              })
-            }
-          }]
+      if(pickup) {
+        const bgJobModal = await  modalController.create({
+          component: AssignPickerModal,
+          componentProps: { order, shipGroup }
         });
-      return alert.present();
+
+        bgJobModal.onDidDismiss().then((data) => {
+          if(data['data']?.dismissed) {
+            this.store.dispatch('order/quickShipEntireShipGroup', { order, shipGroupSeqId: shipGroup, facilityId: this.currentFacility.facilityId }).then((resp) => {
+              if (resp.data._EVENT_MESSAGE_) this.getPickupOrders();
+            })
+          }
+        })
+        return bgJobModal.present();
+      }
     },
     async deliverShipment (order: any) {
       await this.store.dispatch('order/deliverShipment', order).then((resp) => {
