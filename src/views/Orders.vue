@@ -7,7 +7,7 @@
 
       <ion-toolbar>
         <div>
-          <ion-searchbar :placeholder= "$t('Search Orders')" />
+          <ion-searchbar @ionFocus="selectSearchBarText($event)" v-model="queryString" v-on:keyup.enter="searchOrders()" :placeholder= "$t('Search Orders')" />
           <ion-segment v-model="segmentSelected" @ionChange="segmentChanged">
             <ion-segment-button value="open">
               <ion-label>{{ $t("Open") }}</ion-label>
@@ -164,6 +164,11 @@ export default defineComponent({
   unmounted () {
     emitter.off("refreshPickupOrders", this.getPickupOrders);
   },
+  data() {
+    return {
+      queryString: ''
+    }
+  },
   computed: {
     ...mapGetters({
       orders: 'order/getOpenOrders',
@@ -179,6 +184,13 @@ export default defineComponent({
         this.getPickupOrders().then(() => { event.target.complete() });
       } else {
         this.getPackedOrders().then(() => { event.target.complete() });
+      }
+    },
+    async searchOrders() {
+      if(this.segmentSelected === 'open') {
+        this.getPickupOrders()
+      } else {
+        this.getPackedOrders()
       }
     },
     async viewOrder (order: any) {
@@ -197,6 +209,9 @@ export default defineComponent({
         viewSize,
         viewIndex,
         facilityId: this.currentFacility.facilityId
+      } as any
+      if (this.queryString) {
+        payload['orderId'] = this.queryString
       }
       await this.store.dispatch("order/getOpenOrders", payload);
     },
@@ -209,7 +224,10 @@ export default defineComponent({
         viewSize,
         viewIndex,
         facilityId: this.currentFacility.facilityId
-      };
+      } as any;
+      if (this.queryString) {
+        payload['orderId'] = this.queryString
+      }
       await this.store.dispatch("order/getPackedOrders", payload);
     },
     async loadMoreProducts (event: any) {
@@ -259,6 +277,7 @@ export default defineComponent({
     },
     segmentChanged (e: CustomEvent) {
       this.segmentSelected = e.detail.value
+      this.queryString = ''
       this.segmentSelected === 'open' ? this.getPickupOrders() : this.getPackedOrders();
     },
     getShipGroups (items: any) {
@@ -275,7 +294,12 @@ export default defineComponent({
     getShipGroupItems(shipGroupSeqId: any, items: any) {
       // To get all the items of same shipGroup, further it will use on pickup-order-card component to display line items
       return items.filter((item: any) => item.shipGroupSeqId == shipGroupSeqId)
-    }
+    },
+    selectSearchBarText(event: any) {
+      event.target.getInputElement().then((element: any) => {
+        element.select();
+      })
+    },
   },
   ionViewWillEnter () {
     this.segmentSelected === 'open' ? this.getPickupOrders() : this.getPackedOrders();
