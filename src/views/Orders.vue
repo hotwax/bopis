@@ -7,7 +7,7 @@
 
       <ion-toolbar>
         <div>
-          <ion-searchbar @ionFocus="selectSearchBarText($event)" v-model="queryString" v-on:keyup.enter="searchOrders()" :placeholder= "$t('Search Orders')" />
+          <ion-searchbar @ionFocus="selectSearchBarText($event)" v-model="queryString" @keyup.enter="searchOrders()" :placeholder= "$t('Search Orders')" />
           <ion-segment v-model="segmentSelected" @ionChange="segmentChanged">
             <ion-segment-button value="open">
               <ion-label>{{ $t("Open") }}</ion-label>
