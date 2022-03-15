@@ -29,8 +29,16 @@
         <ion-input v-model="city" />
       </ion-item>
       <ion-item>
+        <ion-label position="fixed">{{ $t("Country") }}</ion-label>
+        <ion-select slot="end" interface="popover" :value="country" @ionChange="changeCountry($event)">
+          <ion-select-option v-for="country in countryOptions" :key="country" :value="country.geoId">{{ country.geoName }}</ion-select-option>
+        </ion-select>
+      </ion-item>
+      <ion-item>
         <ion-label position="fixed">{{ $t("State") }}</ion-label>
-        <ion-input v-model="state" />
+        <ion-select slot="end" interface="popover" :value="state" @ionChange="changeState($event)">
+          <ion-select-option v-for="state in stateOptions" :key="state" :value="state.geoId">{{ state.geoName }}</ion-select-option>
+        </ion-select>
       </ion-item>
       <ion-item>
         <ion-label position="fixed">{{ $t("Zipcode") }}</ion-label>
@@ -38,7 +46,7 @@
       </ion-item>
       <ion-item>
         <ion-label>{{ $t("Shipping method") }}</ion-label>
-        <ion-select :value="shipmentMethod" :selected-text="getShipmentDescription(shipmentMethod)" @ionChange="changeShipment($event)">
+        <ion-select slot="end" :value="shipmentMethod" :selected-text="getShipmentDescription(shipmentMethod)" @ionChange="changeShipment($event)">
           <ion-select-option v-for="shipMethod in shipmentMethods" :key="shipMethod" :value="shipMethod.shipmentMethodTypeId">{{ shipMethod.description }}</ion-select-option>
         </ion-select>
       </ion-item>
@@ -100,14 +108,17 @@ export default defineComponent({
       city: this.order.city,
       state: this.order.stateProvinceGeoId,
       zipcode: this.order.postalCode,
-      shipmentMethod: this.order.shipmentMethod
+      shipmentMethod: this.order.shipmentMethod,
+      country: "USA"
     }
   },
   props: ['order'],
   computed: {
     ...mapGetters({
       shipmentMethods: "util/getShipmentMethods",
-      getShipmentDescription: "util/getShipmentDescription"
+      getShipmentDescription: "util/getShipmentDescription",
+      countryOptions: 'util/getCountry',
+      stateOptions: 'util/getState'
     })
   },
   methods: {
@@ -126,20 +137,21 @@ export default defineComponent({
             {
               text: this.$t('Ship'),
               handler: () => {
-                const payload = {
-                  "partyId": this.order.customerId,
-                  "orderId": this.order.orderId,
-                  "shipGroupSeqId": this.order.shipGroupSeqId,
-                  "isEdited": "Y",
-                  "shipmentMethod": this.shipmentMethod,
-                  "toName": this.firstName + " " + this.lastName,
-                  "address1": this.street,
-                  "stateProvinceGeoId": this.state,
-                  "city": this.city,
-                  "postalCode": this.zipcode
+                const params = {
+                  "shipmentMethodTypeId": this.shipmentMethod,
+                  "shippingAddress" :{
+                    "address1": this.street,
+                    "phone": "",
+                    "city": this.city,
+                    "zip": this.zipcode,
+                    "address2": "",
+                    "name": this.firstName + " " + this.lastName,
+                    "countryCode": this.country,
+                    "provinceCode": this.state
+                  }
                 }
 
-                this.store.dispatch('order/updateShippingInformation', payload)
+                this.store.dispatch('order/updateShippingInformation', { params, order: this.order })
                   .then(() => modalController.dismiss({ dismissed: true }));
               }
             }
@@ -149,10 +161,18 @@ export default defineComponent({
     },
     changeShipment(event: CustomEvent) {
       this.shipmentMethod = event['detail'].value;
+    },
+    changeCountry(event: CustomEvent) {
+      this.country = event['detail'].value
+      this.store.dispatch('util/fetchStateOptions', { countryId: this.country })
+    },
+    changeState(event: CustomEvent) {
+      this.state = event['detail'].value
     }
   },
   beforeCreate() {
     this.store.dispatch("util/fetchShipmentMethods");
+    this.store.dispatch('util/fetchStateOptions', { countryId: 'USA' })
   },
   setup() {
     const store = useStore();
