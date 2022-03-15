@@ -23,7 +23,9 @@ const getters: GetterTree <UserState, RootState> = {
     },
     getShippingOrders (state) {
         return state.shippingOrders
+    },
+    getCurrentEComStore(state) {
+        return state.currentEComStore
     }
-
 }
 export default getters;

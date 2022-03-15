@@ -51,13 +51,16 @@ const actions: ActionTree<UserState, RootState> = {
   /**
    * Get User profile
    */
-  async getProfile ( { commit }) {
+  async getProfile ({ dispatch, commit }) {
     const resp = await UserService.getProfile()
     if (resp.status === 200) {
       const localTimeZone = moment.tz.guess();
       if (resp.data.userTimeZone !== localTimeZone) {
         emitter.emit('timeZoneDifferent', { profileTimeZone: resp.data.userTimeZone, localTimeZone});
       }
+
+      dispatch('getEComStores', { facilityId: resp.data.facilities[0].facilityId })
+
       commit(types.USER_INFO_UPDATED, resp.data);
       commit(types.USER_CURRENT_FACILITY_UPDATED, resp.data.facilities.length > 0 ? resp.data.facilities[0] : {});
     }
@@ -70,6 +73,7 @@ const actions: ActionTree<UserState, RootState> = {
   async setFacility ({ commit, dispatch }, payload) {
     // clearing the orders state whenever changing the facility
     dispatch("order/clearOrders", null, {root: true})
+    dispatch("getEComStores", { facilityId: payload.facility })
     commit(types.USER_CURRENT_FACILITY_UPDATED, payload.facility);
   },
   /**
@@ -94,6 +98,42 @@ const actions: ActionTree<UserState, RootState> = {
 
   setShippingOrdersStatus( {state, commit }, payload){
     commit(types.USER_SHIPPING_ORDERS_STATUS_UPDATED, payload)
+  },
+
+  async getEComStores({ commit }, payload) {
+    let resp;
+
+    const params = {
+      "inputFields": {
+        "facilityId": payload.facilityId
+      },
+      "fieldList": [ "reserveInventory", "productStoreId", "storeName" ],
+      "entityName": "ProductStoreAndFacility",
+      "distinct": "Y",
+      "noConditionFind": "Y"
+    }
+
+    try{
+      resp = await UserService.getEComStores(params);
+      if (resp.status === 200 && resp.data.docs?.length > 0 && !hasError(resp)) {
+        const stores = resp.data.docs
+        stores.map((store: any) => {
+          store.reserveInventory = store.reserveInventory !== "N";
+        })
+
+        commit(types.USER_ECOM_STORE_UPDATED, stores?.length > 0 ?  stores : {});
+        commit(types.USER_CURRENT_ECOM_STORE_UPDATED, stores?.length > 0 ? stores[0] : {});
+
+        return stores
+      }
+    } catch(err) {
+      console.error(err)
+    }
+  },
+
+  async setEComStore({ commit, dispatch }, payload) {
+    dispatch("order/clearOrders", null, { root: true })
+    commit(types.USER_CURRENT_ECOM_STORE_UPDATED, payload.store);
   }
 }
 export default actions;
