@@ -11,13 +11,18 @@ const actions: ActionTree<UtilState, RootState> = {
     try {
       if (Object.keys(state.shipmentMethods).length === 0) {
         const resp = await UtilService.getShipmentMethods({
-          "entityName": "ShipmentMethodType",
-          "noConditionFind": "Y",
+          "inputFields":{
+            "partyId": "_NA_",
+            "roleTypeId": "CARRIER",
+            "productStoreId": this.state.user.currentEComStore.productStoreId
+          },
+          "entityName": "ProductStoreShipmentMethView",
           "fieldList": ["shipmentMethodTypeId", "description"],
+          "noConditionFind": "Y",
           "viewSize": 100
         });
 
-        if(resp.status === 200 && resp.data.docs.length > 0 && !hasError(resp)) {
+        if(resp.status === 200 && !hasError(resp) && !(typeof resp.data === 'string' && resp.data.includes('error')) && resp.data?.docs?.length > 0) {
           commit(types.UTIL_SHIPMENT_METHODS_UPDATED, resp.data.docs);
         }
       }

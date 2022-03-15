@@ -73,7 +73,7 @@ const actions: ActionTree<UserState, RootState> = {
   async setFacility ({ commit, dispatch }, payload) {
     // clearing the orders state whenever changing the facility
     dispatch("order/clearOrders", null, {root: true})
-    dispatch("getEComStores", { facilityId: payload.facility })
+    dispatch("getEComStores", { facilityId: payload.facility.facilityId })
     commit(types.USER_CURRENT_FACILITY_UPDATED, payload.facility);
   },
   /**

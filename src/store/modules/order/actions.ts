@@ -223,7 +223,7 @@ const actions: ActionTree<OrderState , RootState> ={
         'facilityId': item.facilityId,
         'orderItemSeqId': item.orderItemSeqId,
         'shipmentMethodTypeId': item.shipmentMethodTypeId,
-        'quantity': parseInt(item.quantity)
+        'quantity': parseInt(item.inventory[0].quantity)
       }
       return OrderService.rejectOrderItem({'payload': params}).catch((err) => { 
         return err;
@@ -243,7 +243,7 @@ const actions: ActionTree<OrderState , RootState> ={
         orderId: data.order.orderId,
         facilityId: '_NA_',
         shipmentMethodTypeId: data.params.shipmentMethodTypeId,
-        quantity: item.inventory[0].quantity,
+        quantity: parseInt(item.inventory[0].quantity),
         itemSeqId: item.orderItemSeqId,
         shippingAddress: data.params.shippingAddress
       }
