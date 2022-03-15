@@ -237,19 +237,32 @@ const actions: ActionTree<OrderState , RootState> ={
     commit(types.ORDER_PACKED_UPDATED, {orders: {} , total: 0})
   },
 
-  async updateShippingInformation( { commit }, payload ) {
+  updateShippingInformationItems ({ commit }, data) {
+    return Promise.all(data.order.items.map((item: any) => {
+      const params = {
+        orderId: data.order.orderId,
+        facilityId: '_NA_',
+        shipmentMethodTypeId: data.params.shipmentMethodTypeId,
+        quantity: item.inventory[0].quantity,
+        itemSeqId: item.orderItemSeqId,
+        shippingAddress: data.params.shippingAddress
+      }
+      return OrderService.updateShippingInformation({'payload': params}).catch((err) => {
+        return err;
+      })
+    }))
+  },
+
+  async updateShippingInformation({ dispatch }, payload ) {
     let resp;
 
-    try{
-      resp = await OrderService.updateShippingInformation(payload);
-      if(resp.status === 200 && !hasError(resp)) {
-        showToast(translate("Shipping address updated successfully."));
-      }
-    } catch(err) {
-      showToast(translate("Something went wrong"));
-      console.error(err);
-    }
-    return resp;
+    return await dispatch("rejectOrderItems", payload.order).then(async() => {
+      await dispatch("updateShippingInformationItems", payload).then((resp) => {
+        if (resp.status == 200 && !hasError(resp)) {
+          showToast(translate("Shipping information updated for order") + ' ' + payload.order.orderId)
+        }
+      })
+    })
   }
 }
 
