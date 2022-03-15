@@ -7,7 +7,7 @@
         </ion-button>
       </ion-buttons>
       <ion-title>{{ $t("Assign Pickers") }}</ion-title>
-      <ion-button fill="clear" slot="end" @click="readyForPickup()">{{ $t("pack") }}</ion-button>
+      <ion-button fill="clear" slot="end" @click="packOrder()">{{ $t("pack") }}</ion-button>
     </ion-toolbar>
   </ion-header>
 
@@ -47,6 +47,8 @@ import {
 import { defineComponent } from "vue";
 import { closeCircle, closeOutline } from "ionicons/icons";
 import { mapGetters, useStore } from "vuex";
+import { PicklistService } from '@/services/PicklistService'
+import { hasError, showToast } from '@/utils'
 
 export default defineComponent({
   name: "AssignPickerModal",
@@ -68,7 +70,6 @@ export default defineComponent({
   },
   computed: {
     ...mapGetters({
-      pickers: 'picklist/getPickers',
       currentFacility: 'user/getCurrentFacility'
     })
   },
@@ -87,17 +88,17 @@ export default defineComponent({
     pickerChanged (selectedPickerId: string) {
       this.selectedPickerId = selectedPickerId
     },
-    searchPicker () {
-      this.pickerList = []
+    searchPicker (pickers: any) {
+      // this.pickerList = []
       if (this.queryString.length > 0) {
-        this.pickerList = this.pickers.filter((picker: any) => {
+        this.pickerList = pickers.filter((picker: any) => {
           return picker.name.toLowerCase().includes(this.queryString.toLowerCase())
         })
       } else {
-        this.pickerList = this.pickers
+        this.pickerList = pickers;
       }
     },
-    async readyForPickup () {
+    async packOrder() {
       const alert = await alertController
         .create({
           header: this.$t('Ready for pickup'),
@@ -108,25 +109,82 @@ export default defineComponent({
           },{
             text: this.$t('Ready for pickup'),
             handler: () => {
-              this.store.dispatch('picklist/createOrderItemPicklist', { facilityId: this.currentFacility.facilityId, order: this.order, pickerId: this.selectedPickerId }).then((resp) => {
+              this.createOrderItemPicklist({ facilityId: this.currentFacility.facilityId, order: this.order, pickerId: this.selectedPickerId })
+              .then((resp: any) => {
                 if (resp) modalController.dismiss({ dismissed: true });
               })
             }
           }]
         });
       return alert.present();
+    },
+    async fetchPickers() {
+      const payload = {
+        vSize: 50,
+        vIndex: 0,
+        facilityId: this.currentFacility.facilityId,
+        roleTypeId: 'WAREHOUSE_PICKE'
+      }
+
+      let resp;
+      try {
+        resp = await PicklistService.getPickers(payload);
+        if(resp.status === 200 && resp.data.count > 0 && !hasError(resp)) {
+          this.searchPicker({ pickers: resp.data.docs });
+        } else {
+          showToast(this.$t('Pickers not found'))
+        }
+      } catch (err) {
+        console.error(this.$t('Something went wrong'))
+      }
+      return resp;
+    },
+    async createOrderItemPicklist(payload: any) {
+      try {
+
+        const params = {
+          "payload": {
+            "facilityId": payload.facilityId,
+            "orderId": payload.order?.orderId,
+            "shipmentMethodTypeId": "",
+            "item": {
+              "orderItemSeqId": "",
+              "pickerId": "",
+              "quantity": ""
+            }
+          } as any
+        }
+
+        const response = payload.order?.items.map((item: any) => {
+          params.payload.shipmentMethodTypeId = item.shipmentMethodTypeId;
+          params.payload.item.orderItemSeqId = item.orderItemSeqId;
+          params.payload.item.pickerId = payload.pickerId;
+          // TODO: Add dynamic quantity for quantity property
+          params.payload.item.quantity = 1
+
+          return PicklistService.createOrderItemPicklist(params)
+        })
+
+        return Promise.all(response).then((resp) => {
+          if(resp.length === payload.order?.items.length) {
+
+            const isPicklistCreated = resp.some((res: any) => (res.status === 200 && res.data?._EVENT_MESSAGE_));
+
+            if(!isPicklistCreated) showToast(this.$t("Can not create picklist"));
+
+            // return isPicklistCreated;
+          } else {
+            showToast(this.$t("Can not create picklist for each item"));
+          }
+        })
+      } catch(err) {
+        showToast(this.$t("Something went wrong"));
+        console.error(err);
+      }
     }
   },
   mounted() {
-    this.store.dispatch('picklist/getPickers', {
-      vSize: 50,
-      vIndex: 0,
-      facilityId: this.currentFacility.facilityId,
-      roleTypeId: 'WAREHOUSE_PICKER'
-    })  
-    .then(() => {
-      this.searchPicker()
-    })
+    this.fetchPickers();
   },
   setup() {
     const store = useStore();

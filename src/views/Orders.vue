@@ -234,19 +234,19 @@ export default defineComponent({
       const pickup = this.getShipmentMethod(shipGroup, order.items) === 'STOREPICKUP';
 
       if(pickup) {
-        const bgJobModal = await  modalController.create({
+        const pickerModal = await  modalController.create({
           component: AssignPickerModal,
           componentProps: { order }
         });
 
-        bgJobModal.onDidDismiss().then((data) => {
+        pickerModal.onDidDismiss().then((data) => {
           if(data['data']?.dismissed) {
             this.store.dispatch('order/quickShipEntireShipGroup', { order, shipGroupSeqId: shipGroup, facilityId: this.currentFacility.facilityId }).then((resp) => {
               if (resp.data._EVENT_MESSAGE_) this.getPickupOrders();
             })
           }
         })
-        return bgJobModal.present();
+        return pickerModal.present();
       }
     },
     async deliverShipment (order: any) {
