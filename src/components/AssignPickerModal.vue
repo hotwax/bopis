@@ -16,17 +16,17 @@
 
     <ion-list>
       <ion-list-header>{{ $t("Staff") }}</ion-list-header>
-      <ion-radio-group allow-empty-selection="true">
-        <ion-item v-for="(picker, index) in currentPickers" :key="index" @click="pickerChanged(picker)">
+      <ion-radio-group allow-empty-selection="true" :value="selectedPickerId" @ionChange="pickerChanged($event.detail.value)">
+        <ion-item v-for="(picker, index) in pickerList" :key="index" >
           <ion-label>{{ picker.name }}</ion-label>
-          <ion-radio :value="picker" :checked="pickerSelected ? true : false" />
+          <ion-radio :value="picker.partyId" />
         </ion-item>
       </ion-radio-group>
     </ion-list>
   </ion-content>
 </template>
 
-<script>
+<script lang="ts">
 import { 
   alertController,
   IonButtons,
@@ -75,26 +75,26 @@ export default defineComponent({
   props: ['order'],
   data () {
     return {
-      pickerSelected: {},
+      selectedPickerId: "",
       queryString: '',
-      currentPickers: []
+      pickerList: []
     }
   },
   methods: {
     closeModal() {
       modalController.dismiss({ dismissed: false });
     },
-    pickerChanged (picker) {
-      this.pickerSelected.partyId != picker.partyId ? this.pickerSelected = picker : this.pickerSelected = {};
+    pickerChanged (selectedPickerId: string) {
+      this.selectedPickerId = selectedPickerId
     },
     searchPicker () {
-      this.currentPickers = []
+      this.pickerList = []
       if (this.queryString.length > 0) {
-        this.pickers.map((picker) => {
-          if (picker.name.toLowerCase().includes(this.queryString.toLowerCase())) this.currentPickers.push(picker)
+        this.pickerList = this.pickers.filter((picker: any) => {          
+          return picker.name.toLowerCase().includes(this.queryString.toLowerCase())
         })
       } else {
-        this.currentPickers = this.pickers.map((picker) => picker)
+        this.pickerList = this.pickers.map((picker: any) => picker)
       }
     },
     async readyForPickup () {
@@ -108,7 +108,7 @@ export default defineComponent({
           },{
             text: this.$t('Ready for pickup'),
             handler: () => {
-              this.store.dispatch('picklist/createOrderItemPicklist', { facilityId: this.currentFacility.facilityId, order: this.order, pickerId: this.pickerSelected.partyId }).then((resp) => {
+              this.store.dispatch('picklist/createOrderItemPicklist', { facilityId: this.currentFacility.facilityId, order: this.order, pickerId: this.selectedPickerId }).then((resp) => {
                 if (resp) modalController.dismiss({ dismissed: true });
               })
             }
@@ -121,7 +121,7 @@ export default defineComponent({
     this.store.dispatch('picklist/getPickers', {
       vSize: 50,
       vIndex: 0,
-      facilityId: "STORE_9",
+      facilityId: this.currentFacility.facilityId,
       roleTypeId: 'WAREHOUSE_PICKER'
     })  
     .then(() => {
