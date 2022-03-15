@@ -239,8 +239,8 @@ export default defineComponent({
           componentProps: { order }
         });
 
-        pickerModal.onDidDismiss().then((data) => {
-          if(data['data']?.dismissed) {
+        pickerModal.onDidDismiss().then((resp) => {
+          if(resp.data?.isPickerSelected) {
             this.store.dispatch('order/quickShipEntireShipGroup', { order, shipGroupSeqId: shipGroup, facilityId: this.currentFacility.facilityId }).then((resp) => {
               if (resp.data._EVENT_MESSAGE_) this.getPickupOrders();
             })

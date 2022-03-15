@@ -77,8 +77,9 @@ export default defineComponent({
   data () {
     return {
       selectedPickerId: "",
-      queryString: '',
-      pickerList: []
+      pickers: [],
+      pickerList: [],
+      queryString: ''
     }
   },
   methods: {
@@ -88,14 +89,14 @@ export default defineComponent({
     pickerChanged (selectedPickerId: string) {
       this.selectedPickerId = selectedPickerId
     },
-    searchPicker (pickers: any) {
-      // this.pickerList = []
+    searchPicker() {
+      this.pickerList = []
       if (this.queryString.length > 0) {
-        this.pickerList = pickers.filter((picker: any) => {
+        this.pickerList = this.pickers.filter((picker: any) => {
           return picker.name.toLowerCase().includes(this.queryString.toLowerCase())
         })
       } else {
-        this.pickerList = pickers;
+        this.pickerList = this.pickers;
       }
     },
     async packOrder() {
@@ -111,7 +112,7 @@ export default defineComponent({
             handler: () => {
               this.createOrderItemPicklist({ facilityId: this.currentFacility.facilityId, order: this.order, pickerId: this.selectedPickerId })
               .then((resp: any) => {
-                if (resp) modalController.dismiss({ dismissed: true });
+                if(resp) modalController.dismiss({ isPickerSelected: true });
               })
             }
           }]
@@ -123,14 +124,14 @@ export default defineComponent({
         vSize: 50,
         vIndex: 0,
         facilityId: this.currentFacility.facilityId,
-        roleTypeId: 'WAREHOUSE_PICKE'
+        roleTypeId: 'WAREHOUSE_PICKER'
       }
 
       let resp;
       try {
         resp = await PicklistService.getPickers(payload);
         if(resp.status === 200 && resp.data.count > 0 && !hasError(resp)) {
-          this.searchPicker({ pickers: resp.data.docs });
+          this.pickers = resp.data.docs;
         } else {
           showToast(this.$t('Pickers not found'))
         }
@@ -159,7 +160,7 @@ export default defineComponent({
           params.payload.shipmentMethodTypeId = item.shipmentMethodTypeId;
           params.payload.item.orderItemSeqId = item.orderItemSeqId;
           params.payload.item.pickerId = payload.pickerId;
-          // TODO: Add dynamic quantity for quantity property
+          // TODO: Add dynamic quantity for item property
           params.payload.item.quantity = 1
 
           return PicklistService.createOrderItemPicklist(params)
@@ -172,7 +173,7 @@ export default defineComponent({
 
             if(!isPicklistCreated) showToast(this.$t("Can not create picklist"));
 
-            // return isPicklistCreated;
+            return isPicklistCreated;
           } else {
             showToast(this.$t("Can not create picklist for each item"));
           }
@@ -184,7 +185,9 @@ export default defineComponent({
     }
   },
   mounted() {
-    this.fetchPickers();
+    this.fetchPickers().then(() => {
+      this.searchPicker();
+    })
   },
   setup() {
     const store = useStore();
