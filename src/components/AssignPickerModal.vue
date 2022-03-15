@@ -90,11 +90,11 @@ export default defineComponent({
     searchPicker () {
       this.pickerList = []
       if (this.queryString.length > 0) {
-        this.pickerList = this.pickers.filter((picker: any) => {          
+        this.pickerList = this.pickers.filter((picker: any) => {
           return picker.name.toLowerCase().includes(this.queryString.toLowerCase())
         })
       } else {
-        this.pickerList = this.pickers.map((picker: any) => picker)
+        this.pickerList = this.pickers
       }
     },
     async readyForPickup () {
