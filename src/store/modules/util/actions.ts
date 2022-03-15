@@ -24,6 +24,51 @@ const actions: ActionTree<UtilState, RootState> = {
     } catch(err) {
       console.error(err);
     }
+  },
+  async fetchCountryOptions({ state, commit }) {
+    try {
+      const resp = await UtilService.getCountryOptions({
+        "inputFields":{
+          "geoTypeId": ['COUNTRY'],
+          "geoTypeId_op": "in"
+        },
+        "fieldList": [ "geoId", "geoName" ],
+        "entityName": "Geo",
+        "noConditionFind": "Y",
+        "viewSize": "250"
+      });
+
+      if(resp.status === 200 && resp.data.docs.length > 0 && !hasError(resp)) {
+        commit(types.UTIL_COUNTRY_OPTIONS_UPDATED, resp.data.docs);
+      } else {
+        commit(types.UTIL_COUNTRY_OPTIONS_UPDATED, {});
+      }
+    } catch(err) {
+      console.error(err);
+    }
+  },
+  async fetchStateOptions({ state, commit }, payload) {
+    try {
+      const resp = await UtilService.getStateOptions({
+        "inputFields":{
+          "geoTypeId": ['STATE', 'PROVINCE'],
+          "geoTypeId_op": "in",
+          "geoIdFrom": payload.countryId,
+        },
+        "fieldList": [ "geoId", "geoName" ],
+        "entityName": "GeoAssocAndGeoToWithState",
+        "noConditionFind": "Y",
+        "viewSize": "250"
+      });
+
+      if(resp.status === 200 && resp.data?.docs?.length > 0 && !hasError(resp)) {
+        commit(types.UTIL_STATE_OPTIONS_UPDATED, resp.data.docs);
+      } else {
+        commit(types.UTIL_STATE_OPTIONS_UPDATED, {});
+      }
+    } catch(err) {
+      console.error(err);
+    }
   }
 }
 

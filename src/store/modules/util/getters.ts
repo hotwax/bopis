@@ -8,7 +8,13 @@ const getters: GetterTree<UtilState, RootState> = {
   },
   getShipmentDescription: (state) => (shipmentMethodTypeId: string) => {
     return state.shipmentMethods.find((data: any) => data.shipmentMethodTypeId === shipmentMethodTypeId)?.description;
-  }
+  },
+  getCountry: (state) => {
+    return state.country;
+  },
+  getState: (state) => {
+    return state.state;
+  },
 }
 
 export default getters;

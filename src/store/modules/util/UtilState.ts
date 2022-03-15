@@ -1,3 +1,5 @@
 export default interface UtilState {
-  shipmentMethods: any
+  shipmentMethods: any,
+  country: any,
+  state: any
 }
