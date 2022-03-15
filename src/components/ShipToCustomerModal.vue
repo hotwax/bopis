@@ -38,7 +38,7 @@
       </ion-item>
       <ion-item>
         <ion-label>{{ $t("Shipping method") }}</ion-label>
-        <ion-select :value="shipmentMethod" :selected-text="getShipmentMethod(shipmentMethod)" @ionChange="changeShipment($event)">
+        <ion-select :value="shipmentMethod" :selected-text="getShipmentDescription(shipmentMethod)" @ionChange="changeShipment($event)">
           <ion-select-option v-for="shipMethod in shipmentMethods" :key="shipMethod" :value="shipMethod.shipmentMethodTypeId">{{ shipMethod.description }}</ion-select-option>
         </ion-select>
       </ion-item>
@@ -107,7 +107,7 @@ export default defineComponent({
   computed: {
     ...mapGetters({
       shipmentMethods: "util/getShipmentMethods",
-      getShipmentMethod: "util/getShipmentMethod"
+      getShipmentDescription: "util/getShipmentDescription"
     })
   },
   methods: {
@@ -139,7 +139,7 @@ export default defineComponent({
                   "postalCode": this.zipcode
                 }
 
-                this.store.dispatch('order/UpdateOrderAddress', payload)
+                this.store.dispatch('order/updateShippingInformation', payload)
                   .then(() => modalController.dismiss({ dismissed: true }));
               }
             }

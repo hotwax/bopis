@@ -6,7 +6,7 @@ const getters: GetterTree<UtilState, RootState> = {
   getShipmentMethods: (state) => {
     return state.shipmentMethods;
   },
-  getShipmentMethod: (state) => (shipmentMethodTypeId: string) => {
+  getShipmentDescription: (state) => (shipmentMethodTypeId: string) => {
     return state.shipmentMethods.find((data: any) => data.shipmentMethodTypeId === shipmentMethodTypeId)?.description;
   }
 }
