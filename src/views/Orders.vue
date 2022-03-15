@@ -211,7 +211,10 @@ export default defineComponent({
         facilityId: this.currentFacility.facilityId
       } as any
       if (this.queryString) {
-        payload['orderName'] = this.queryString
+        payload['inputFields'] = {
+          'orderName': this.queryString,
+          'orderName_op': 'contains'
+        }
       }
       await this.store.dispatch("order/getOpenOrders", payload);
     },
@@ -226,7 +229,10 @@ export default defineComponent({
         facilityId: this.currentFacility.facilityId
       } as any;
       if (this.queryString) {
-        payload['orderName'] = this.queryString
+        payload['inputFields'] = {
+          'orderName': this.queryString,
+          'orderName_op': 'contains'
+        }
       }
       await this.store.dispatch("order/getPackedOrders", payload);
     },
