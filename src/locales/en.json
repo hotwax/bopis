@@ -1,6 +1,7 @@
 {
   "All items were canceled from the order": "All items were canceled from the order",
   "An email notification will be sent to that their order is ready for pickup. This order will also be moved to the packed orders tab.": "An email notification will be sent to { customerName } that their order is ready for pickup.{ space } This order will also be moved to the packed orders tab.",
+  "Assign Pickers": "Assign Pickers",
   "Catalog": "Catalog",
   "Cancel": "Cancel",
   "canceled from the order": "canceled from the order",
@@ -33,6 +34,7 @@
   "Order packed and ready for delivery": "Order packed and ready for delivery",
   "Orders": "Orders",
   "Orders Not Found": "Orders Not Found",
+  "pack": "PACK",
   "Packed": "Packed",
   "Password": "Password",
   "pending approval": "pending approval",
@@ -48,6 +50,7 @@
   "Shop": "Shop",
   "Size": "Size",
   "Something went wrong": "Something went wrong",
+  "Staff": "Staff",
   "Store": "Store",
   "This order cannot be split. If you cannot fulfill any item, will be sent an email with alternate fulfillment options and this order will be removed from your dashboard.": "This order cannot be split. If you cannot fulfill any item, { customerName } will be sent an email with alternate fulfillment options and this order will be removed from your dashboard.",
   "Unfillable Items": "Unfillable Items",

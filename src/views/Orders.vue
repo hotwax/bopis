@@ -231,7 +231,7 @@ export default defineComponent({
       if(pickup) {
         const bgJobModal = await  modalController.create({
           component: AssignPickerModal,
-          componentProps: { order, shipGroup }
+          componentProps: { order }
         });
 
         bgJobModal.onDidDismiss().then((data) => {

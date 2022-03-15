@@ -7,28 +7,21 @@
         </ion-button>
       </ion-buttons>
       <ion-title>{{ $t("Assign Pickers") }}</ion-title>
-      <ion-button fill="clear" slot="end" @click="readyForPickup()">{{ $t("PACK") }}</ion-button>
+      <ion-button fill="clear" slot="end" @click="readyForPickup()">{{ $t("pack") }}</ion-button>
     </ion-toolbar>
   </ion-header>
 
   <ion-content>
     <ion-searchbar v-model="queryString" @keyup.enter="searchPicker()"/>
-    <ion-row>
-      <ion-chip v-for="picker in pickerSelected" :key="picker">
-        <ion-label v-if="picker">{{ picker.name }}</ion-label>
-        <ion-icon :icon="closeCircle" @click="pickerChanged(picker)" />
-      </ion-chip>
-    </ion-row>
 
     <ion-list>
       <ion-list-header>{{ $t("Staff") }}</ion-list-header>
-      <!-- TODO: added click event on the item as when using the ionChange event then it's getting
-      called every time the v-for loop runs and then removes or adds the currently rendered picker
-      -->
-      <ion-item v-for="(picker, index) in currentPickers" :key="index" @click="pickerChanged(picker)">
-        <ion-label>{{ picker.name }}</ion-label>
-        <ion-checkbox :checked="pickerSelected.includes(picker)"/>
-      </ion-item>
+      <ion-radio-group allow-empty-selection="true">
+        <ion-item v-for="(picker, index) in currentPickers" :key="index" @click="pickerChanged(picker)">
+          <ion-label>{{ picker.name }}</ion-label>
+          <ion-radio :value="picker" :checked="pickerSelected ? true : false" />
+        </ion-item>
+      </ion-radio-group>
     </ion-list>
   </ion-content>
 </template>
@@ -38,8 +31,6 @@ import {
   alertController,
   IonButtons,
   IonButton,
-  IonCheckbox,
-  IonChip,
   IonContent,
   IonHeader,
   IonIcon,
@@ -47,7 +38,8 @@ import {
   IonLabel,
   IonList,
   IonListHeader,
-  IonRow,
+  IonRadio,
+  IonRadioGroup,
   IonSearchbar,
   IonTitle,
   IonToolbar,
@@ -61,8 +53,6 @@ export default defineComponent({
   components: { 
     IonButtons,
     IonButton,
-    IonCheckbox,
-    IonChip,
     IonContent,
     IonHeader,
     IonIcon,
@@ -70,7 +60,8 @@ export default defineComponent({
     IonLabel,
     IonList,
     IonListHeader,
-    IonRow,
+    IonRadio,
+    IonRadioGroup,
     IonSearchbar,
     IonTitle,
     IonToolbar,
@@ -81,10 +72,10 @@ export default defineComponent({
       currentFacility: 'user/getCurrentFacility'
     })
   },
-  props: ['order', 'shipGroup'],
+  props: ['order'],
   data () {
     return {
-      pickerSelected: [],
+      pickerSelected: {},
       queryString: '',
       currentPickers: []
     }
@@ -94,11 +85,7 @@ export default defineComponent({
       modalController.dismiss({ dismissed: false });
     },
     pickerChanged (picker) {
-      if (!this.pickerSelected.includes(picker)) {
-        this.pickerSelected.push(picker)
-      } else {
-        this.pickerSelected.splice(this.pickerSelected.indexOf(picker), 1);
-      }
+      this.pickerSelected.partyId != picker.partyId ? this.pickerSelected = picker : this.pickerSelected = {};
     },
     searchPicker () {
       this.currentPickers = []
@@ -121,22 +108,8 @@ export default defineComponent({
           },{
             text: this.$t('Ready for pickup'),
             handler: () => {
-              const pickerIds = this.pickerSelected.map((picker) => picker.partyId)
-              const payload = {
-                "facilityId": "STORE_11",
-                "shipmentMethodTypeId": "STANDARD",
-                "quantity": "1",
-                "orderItemSeqId": "00001",
-                "orderId": "NN13311",
-                "picked": 1,
-                "shipGroupSeqId": "00002",
-                "inventoryItemId": "39846",
-                "itemStatusId": "PICKITEM_PENDING",
-                "pickerIds": ["11331", "11330"]
-              }
-              this.store.dispatch('picklist/createOrderItemPicklist', { payload }).then((resp) => {
-                // if (resp.data._EVENT_MESSAGE_) modalController.dismiss({ dismissed: true });
-                console.log("first")
+              this.store.dispatch('picklist/createOrderItemPicklist', { facilityId: this.currentFacility.facilityId, order: this.order, pickerId: this.pickerSelected.partyId }).then((resp) => {
+                if (resp) modalController.dismiss({ dismissed: true });
               })
             }
           }]
@@ -166,14 +139,3 @@ export default defineComponent({
   },
 });
 </script>
-
-<style scoped>
-ion-row {
-  flex-wrap: nowrap;
-  overflow: scroll;
-}
-
-ion-chip {
-  flex-shrink: 0;
-}
-</style>

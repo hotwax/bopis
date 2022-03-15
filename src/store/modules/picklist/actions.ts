@@ -25,32 +25,52 @@ const actions: ActionTree<PicklistState, RootState> = {
   },
 
   async createOrderItemPicklist({ commit }, payload ) {
-    console.log(payload)
-    let resp;
 
     try {
 
-      // const query = {
-      //   "payload": {
-      //     "facilityId": payload.facilityId,
-      //     "orderId": payload.order?.orderId,
-      //     "shipmentMethodTypeId": payload.order?.items[0]?.shipmentMethodTypeId,
-      //     "item": {
-      //       "pickerId": ""
-      //     }
-      //   }
-      // }
-
-      resp = await PicklistService.createOrderItemPicklist(payload);
-      if(resp.status === 200 && !hasError(resp)) {
-        console.log(resp);
-
-
-
-      } else {
-        console.log("Error may happen")
+      let params = {
+        "payload": {
+          "facilityId": payload.facilityId,
+          "orderId": payload.order?.orderId,
+          "shipmentMethodTypeId": "",
+          "item": {
+            "orderItemSeqId": "",
+            "pickerId": "",
+            "quantity": ""
+          }
+        } as any
       }
+
+      return Promise.all(
+        params = payload.order?.items.map((item: any) => {
+          params.payload.shipmentMethodTypeId = item.shipmentMethodTypeId;
+          params.payload.item.orderItemSeqId = item.orderItemSeqId;
+          params.payload.item.pickerId = payload.pickerId;
+          // TODO: Add dynamic quantity for quantity property
+          params.payload.item.quantity = 1
+
+          return PicklistService.createOrderItemPicklist(params)
+      })).then((resp) => {
+        if(resp.length === payload.order?.items.length) {
+          let isPicklistCreated = false;
+          
+          resp.forEach((response: any) => {
+            if (response.status === 200 && response.data?._EVENT_MESSAGE_) {
+              isPicklistCreated = true;
+            } else {
+              isPicklistCreated = false;
+            }
+          })
+
+          if(!isPicklistCreated) showToast(translate("Can not create picklist"));
+
+          return isPicklistCreated;
+        } else {
+          showToast(translate("Can not create picklist for each item"));
+        }
+      })
     } catch(err) {
+      showToast(translate("Something went wrong"));
       console.error(err);
     }
   }
