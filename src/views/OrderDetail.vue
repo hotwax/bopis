@@ -126,7 +126,7 @@ export default defineComponent({
   computed: {
     ...mapGetters({
       order: "order/getCurrent",
-      currentFacility: 'user/getCurrentFacility',
+      currentFacility: 'user/getCurrentFacility'
     })
   },
   ionViewDidEnter() {
@@ -171,6 +171,7 @@ export default defineComponent({
   },
   mounted() {
     this.getOrderDetail(this.$route.params.orderId);
+    this.store.dispatch('util/fetchCountryOptions')
   },
   setup () {
     const store = useStore();
