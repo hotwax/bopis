@@ -11,49 +11,60 @@
   </ion-header>
 
   <ion-content>
-    <main>  
-      <ion-item>
-        <ion-label position="fixed">{{ $t("First name") }}</ion-label>
-        <ion-input v-model="firstName" />
-      </ion-item>
-      <ion-item>
-        <ion-label position="fixed">{{ $t("Last name") }}</ion-label>
-        <ion-input v-model="lastName" />
-      </ion-item>
-      <ion-item>
-        <ion-label position="fixed">{{ $t("Street") }}</ion-label>
-        <ion-input v-model="street" />
-      </ion-item>
-      <ion-item>
-        <ion-label position="fixed">{{ $t("City") }}</ion-label>
-        <ion-input v-model="city" />
-      </ion-item>
-      <ion-item>
-        <ion-label position="fixed">{{ $t("Country") }}</ion-label>
-        <ion-select slot="end" interface="popover" :value="country" @ionChange="changeCountry($event)">
-          <ion-select-option v-for="country in countryOptions" :key="country" :value="country.geoId">{{ country.geoName }}</ion-select-option>
-        </ion-select>
-      </ion-item>
-      <ion-item>
-        <ion-label position="fixed">{{ $t("State") }}</ion-label>
-        <ion-select slot="end" interface="popover" :value="state" @ionChange="changeState($event)">
-          <ion-select-option v-for="state in stateOptions" :key="state" :value="state.geoId">{{ state.geoName }}</ion-select-option>
-        </ion-select>
-      </ion-item>
-      <ion-item>
-        <ion-label position="fixed">{{ $t("Zipcode") }}</ion-label>
-        <ion-input v-model="zipcode" />
-      </ion-item>
-      <ion-item>
-        <ion-label>{{ $t("Shipping method") }}</ion-label>
-        <ion-select slot="end" :value="shipmentMethod" :selected-text="getShipmentDescription(shipmentMethod)" @ionChange="changeShipment($event)">
-          <ion-select-option v-for="shipMethod in shipmentMethods" :key="shipMethod" :value="shipMethod.shipmentMethodTypeId">{{ shipMethod.description }}</ion-select-option>
-        </ion-select>
-      </ion-item>
+    <main>
+      <form @keyup.enter="shipToCustomer" @submit.prevent="shipToCustomer">
+        <ion-item>
+          <ion-label position="fixed">{{ $t("First name") }}</ion-label>
+          <ion-input v-model="firstName" required/>
+        </ion-item>
+        <ion-item>
+          <ion-label position="fixed">{{ $t("Last name") }}</ion-label>
+          <ion-input v-model="lastName" required/>
+        </ion-item>
+        <ion-item>
+          <ion-label position="fixed">{{ $t("Phone") }}</ion-label>
+          <ion-input v-model="phone"/>
+        </ion-item>
+        <ion-item>
+          <ion-label position="fixed">{{ $t("Street") }}</ion-label>
+          <ion-input v-model="street" required/>
+        </ion-item>
+        <ion-item>
+          <ion-label position="fixed">{{ $t("Address 2") }}</ion-label>
+          <ion-input v-model="address2"/>
+        </ion-item>
+        <ion-item>
+          <ion-label position="fixed">{{ $t("City") }}</ion-label>
+          <ion-input v-model="city" required/>
+        </ion-item>
+        <ion-item>
+          <ion-label position="fixed">{{ $t("Country") }}</ion-label>
+          <ion-select slot="end" interface="popover" :value="country" @ionChange="changeCountry($event)">
+            <ion-select-option v-for="country in countryOptions" :key="country" :value="country.geoId">{{ country.geoName }}</ion-select-option>
+          </ion-select>
+        </ion-item>
+        <ion-item>
+          <ion-label position="fixed">{{ $t("State") }}</ion-label>
+          <ion-select slot="end" interface="popover" :value="state" @ionChange="changeState($event)">
+            <ion-select-option v-for="state in stateOptions" :key="state" :value="state.geoId">{{ state.geoName }}</ion-select-option>
+          </ion-select>
+        </ion-item>
+        <ion-item>
+          <ion-label position="fixed">{{ $t("Zipcode") }}</ion-label>
+          <ion-input v-model="zipcode" required/>
+        </ion-item>
 
-      <div class="ion-padding ion-text-center">
-        <ion-button @click="shipToCustomer" size="small">{{ $t("Ship to this address") }}</ion-button>
-      </div>
+        <ion-item>
+          <ion-label>{{ $t("Shipping method") }}</ion-label>
+          <ion-select slot="end" :value="shipmentMethod" :selected-text="getShipmentDescription(shipmentMethod)" @ionChange="changeShipment($event)" required>
+            <ion-select-option v-for="shipMethod in shipmentMethods" :key="shipMethod" :value="shipMethod.shipmentMethodTypeId">{{ shipMethod.description }}</ion-select-option>
+          </ion-select>
+        </ion-item>
+
+        <div class="ion-padding ion-text-center">
+          <ion-button type="submit" size="small">{{ $t("Ship to this address") }}</ion-button>
+        </div>
+      </form>
     </main>
   </ion-content> 
 </template>
@@ -82,6 +93,8 @@ import {
   storefrontOutline,
 } from 'ionicons/icons';
 import { mapGetters, useStore } from "vuex"
+import { showToast } from '@/utils';
+import { translate } from '@/i18n';
 
 
 export default defineComponent({
@@ -104,7 +117,9 @@ export default defineComponent({
     return{
       firstName: this.order.firstName,
       lastName: this.order.lastName,
+      phone: this.phone,
       street: this.order.address1,
+      address2: this.order.address2,
       city: this.order.city,
       state: this.order.stateProvinceGeoId,
       zipcode: this.order.postalCode,
@@ -112,7 +127,7 @@ export default defineComponent({
       country: "USA"
     }
   },
-  props: ['order'],
+  props: ['order', 'items'],
   computed: {
     ...mapGetters({
       shipmentMethods: "util/getShipmentMethods",
@@ -141,17 +156,22 @@ export default defineComponent({
                   "shipmentMethodTypeId": this.shipmentMethod,
                   "shippingAddress" :{
                     "address1": this.street,
-                    "phone": "",
+                    "phone": this.phone,
                     "city": this.city,
                     "zip": this.zipcode,
-                    "address2": "",
+                    "address2": this.address2,
                     "name": this.firstName + " " + this.lastName,
                     "countryCode": this.country,
                     "provinceCode": this.state
                   }
                 }
 
-                this.store.dispatch('order/updateShippingInformation', { params, order: this.order })
+                if (!params.shippingAddress.countryCode || !params.shippingAddress.provinceCode || !params.shipmentMethodTypeId) {
+                  showToast(translate("Please select country, state and shipping method"))
+                  return;
+                }
+
+                this.store.dispatch('order/updateShippingInformation', { params, order: this.order, items: this.items })
                   .then(() => modalController.dismiss({ dismissed: true }));
               }
             }
