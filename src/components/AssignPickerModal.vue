@@ -156,7 +156,7 @@ export default defineComponent({
           } as any
         }
 
-        const response = payload.order?.items.map((item: any) => {
+        const responseList = payload.order?.items.map((item: any) => {
           if(item.shipmentMethodTypeId === "STOREPICKUP") {
             params.payload.shipmentMethodTypeId = item.shipmentMethodTypeId;
             params.payload.item.orderItemSeqId = item.orderItemSeqId;
@@ -168,7 +168,7 @@ export default defineComponent({
           }
         })
 
-        return Promise.all(response).then((resp) => {
+        return Promise.all(responseList).then((resp) => {
           if(resp.length === payload.order?.items.length) {
 
             const isPicklistCreated = resp.some((res: any) => (res?.status === 200 && res.data?._EVENT_MESSAGE_));
