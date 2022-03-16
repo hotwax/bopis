@@ -9,8 +9,8 @@ const utilModule: Module<UtilState, RootState> = {
   namespaced: true,
   state: {
     shipmentMethods: [],
-    country: {},
-    state: {}
+    countries: {},
+    states: {}
   },
   getters,
   actions,

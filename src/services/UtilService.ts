@@ -8,7 +8,7 @@ const getShipmentMethods = async (payload: any): Promise<any> => {
   });
 }
 
-const getCountryOptions = async (payload: any): Promise<any> => {
+const getCountries = async (payload: any): Promise<any> => {
   return api({
     url: "/performFind",
     method: "post",
@@ -17,7 +17,7 @@ const getCountryOptions = async (payload: any): Promise<any> => {
   });
 }
 
-const getStateOptions = async (payload: any): Promise<any> => {
+const getStates = async (payload: any): Promise<any> => {
   return api({
     url: "/performFind",
     method: "post",
@@ -27,7 +27,7 @@ const getStateOptions = async (payload: any): Promise<any> => {
 }
 
 export const UtilService = {
-  getCountryOptions,
-  getStateOptions,
+  getCountries,
+  getStates,
   getShipmentMethods
 }

@@ -30,12 +30,12 @@ const actions: ActionTree<UtilState, RootState> = {
       console.error(err);
     }
   },
-  async fetchCountryOptions({ state, commit }) {
+  async fetchCountries({ commit }) {
     try {
-      const resp = await UtilService.getCountryOptions({
+      const resp = await UtilService.getCountries({
         "inputFields":{
-          "geoTypeId": ['COUNTRY'],
-          "geoTypeId_op": "in"
+          "geoTypeId": 'COUNTRY',
+          "geoTypeId_op": "equals"
         },
         "fieldList": [ "geoId", "geoName" ],
         "entityName": "Geo",
@@ -44,17 +44,17 @@ const actions: ActionTree<UtilState, RootState> = {
       });
 
       if(resp.status === 200 && resp.data.docs.length > 0 && !hasError(resp)) {
-        commit(types.UTIL_COUNTRY_OPTIONS_UPDATED, resp.data.docs);
+        commit(types.UTIL_COUNTRIES_UPDATED, resp.data.docs);
       } else {
-        commit(types.UTIL_COUNTRY_OPTIONS_UPDATED, {});
+        commit(types.UTIL_COUNTRIES_UPDATED, {});
       }
     } catch(err) {
       console.error(err);
     }
   },
-  async fetchStateOptions({ state, commit }, payload) {
+  async fetchStates({ commit }, payload) {
     try {
-      const resp = await UtilService.getStateOptions({
+      const resp = await UtilService.getStates({
         "inputFields":{
           "geoTypeId": ['STATE', 'PROVINCE'],
           "geoTypeId_op": "in",
@@ -67,9 +67,9 @@ const actions: ActionTree<UtilState, RootState> = {
       });
 
       if(resp.status === 200 && resp.data?.docs?.length > 0 && !hasError(resp)) {
-        commit(types.UTIL_STATE_OPTIONS_UPDATED, resp.data.docs);
+        commit(types.UTIL_STATES_UPDATED, resp.data.docs);
       } else {
-        commit(types.UTIL_STATE_OPTIONS_UPDATED, {});
+        commit(types.UTIL_STATES_UPDATED, {});
       }
     } catch(err) {
       console.error(err);

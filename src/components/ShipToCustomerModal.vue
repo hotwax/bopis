@@ -39,14 +39,14 @@
         </ion-item>
         <ion-item>
           <ion-label position="fixed">{{ $t("Country") }}</ion-label>
-          <ion-select slot="end" interface="popover" :value="country" @ionChange="changeCountry($event)">
-            <ion-select-option v-for="country in countryOptions" :key="country" :value="country.geoId">{{ country.geoName }}</ion-select-option>
+          <ion-select slot="end" interface="popover" :value="country" @ionChange="updateCountry($event)">
+            <ion-select-option v-for="country in countries" :key="country" :value="country.geoId">{{ country.geoName }}</ion-select-option>
           </ion-select>
         </ion-item>
         <ion-item>
           <ion-label position="fixed">{{ $t("State") }}</ion-label>
-          <ion-select slot="end" interface="popover" :value="state" @ionChange="changeState($event)">
-            <ion-select-option v-for="state in stateOptions" :key="state" :value="state.geoId">{{ state.geoName }}</ion-select-option>
+          <ion-select slot="end" interface="popover" :value="state" @ionChange="updateState($event)">
+            <ion-select-option v-for="state in states" :key="state" :value="state.geoId">{{ state.geoName }}</ion-select-option>
           </ion-select>
         </ion-item>
         <ion-item>
@@ -132,8 +132,8 @@ export default defineComponent({
     ...mapGetters({
       shipmentMethods: "util/getShipmentMethods",
       getShipmentDescription: "util/getShipmentDescription",
-      countryOptions: 'util/getCountry',
-      stateOptions: 'util/getState'
+      countries: 'util/getCountries',
+      states: 'util/getStates'
     })
   },
   methods: {
@@ -182,17 +182,18 @@ export default defineComponent({
     changeShipment(event: CustomEvent) {
       this.shipmentMethod = event['detail'].value;
     },
-    changeCountry(event: CustomEvent) {
+    updateCountry(event: CustomEvent) {
       this.country = event['detail'].value
-      this.store.dispatch('util/fetchStateOptions', { countryId: this.country })
+      this.state = ''
+      this.store.dispatch('util/fetchStates', { countryId: this.country })
     },
-    changeState(event: CustomEvent) {
+    updateState(event: CustomEvent) {
       this.state = event['detail'].value
     }
   },
   beforeCreate() {
     this.store.dispatch("util/fetchShipmentMethods");
-    this.store.dispatch('util/fetchStateOptions', { countryId: 'USA' })
+    this.store.dispatch('util/fetchStates', { countryId: 'USA' })
   },
   setup() {
     const store = useStore();
