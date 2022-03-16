@@ -103,12 +103,13 @@ const actions: ActionTree<UserState, RootState> = {
   async getEComStores({ commit }, payload) {
     let resp;
 
+    // TODO: add support to only get distinct information, currently returning duplicate stores
     const params = {
       "inputFields": {
         "facilityId": payload.facilityId
       },
       "fieldList": [ "reserveInventory", "productStoreId", "storeName" ],
-      "entityName": "ProductStoreAndFacility",
+      "entityName": "ProductStoreFacilityDetail",
       "distinct": "Y",
       "noConditionFind": "Y"
     }
