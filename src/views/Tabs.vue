@@ -48,7 +48,7 @@ ion-tab-bar {
   left: 50%;
   transform: translate(-50%, -50%);
   bottom: 24px;
-  box-shadow: rgb(0 0 0 / 20%) 0px 3px 1px -2px, rgb(0 0 0 / 14%) 0px 2px 2px 0px, rgb(0 0 0 / 12%) 0px 1px 5px 0px;
+  filter: drop-shadow(0px 6px 10px rgba(0, 0, 0, 0.14)) drop-shadow(0px 1px 18px rgba(0, 0, 0, 0.12)) drop-shadow(0px 3px 5px rgba(0, 0, 0, 0.2));
   width: 375px;
   border-radius: 15px;
 }
