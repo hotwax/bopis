@@ -4,4 +4,5 @@ export default interface UserState {
     currentFacility: object;
     instanceUrl: string;
     shippingOrders: boolean;
+    currentEComStore: object;
 }

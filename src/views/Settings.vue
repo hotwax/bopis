@@ -8,6 +8,13 @@
     
     <ion-content>
       <ion-list>
+        <ion-item>
+          <ion-icon :icon="globeOutline" slot="start" />
+          <ion-label>{{$t("eCom Store")}}</ion-label>
+          <ion-select interface="popover" :value="currentEComStore.productStoreId" @ionChange="setEComStore($event)">
+            <ion-select-option v-for="store in (userProfile ? userProfile.stores : [])" :key="store.productStoreId" :value="store.productStoreId" >{{ store.storeName }}</ion-select-option>
+          </ion-select>
+        </ion-item>
         <!-- Select store -->
         <ion-item>
           <ion-icon :icon="storefrontOutline" slot="start" />
@@ -42,7 +49,7 @@
 <script lang="ts">
 import { IonButton, IonContent, IonHeader, IonIcon, IonItem, IonLabel, IonList, IonPage, IonSelect, IonSelectOption, IonTitle, IonToggle , IonToolbar } from '@ionic/vue';
 import { defineComponent } from 'vue';
-import { ellipsisVertical, personCircleOutline, sendOutline , storefrontOutline, codeWorkingOutline } from 'ionicons/icons'
+import { ellipsisVertical, personCircleOutline, sendOutline , storefrontOutline, codeWorkingOutline, globeOutline } from 'ionicons/icons'
 import { mapGetters, useStore } from 'vuex';
 import { useRouter } from 'vue-router';
 
@@ -68,7 +75,8 @@ export default defineComponent({
       userProfile: 'user/getUserProfile',
       currentFacility: 'user/getCurrentFacility',
       instanceUrl: 'user/getInstanceUrl',
-      shippingOrders: 'user/getShippingOrders'
+      shippingOrders: 'user/getShippingOrders',
+      currentEComStore: 'user/getCurrentEComStore'
     })
   },
   methods: {
@@ -77,6 +85,13 @@ export default defineComponent({
         this.store.dispatch('user/setFacility', {
           'facility': this.userProfile.facilities.find((fac: any) => fac.facilityId == facility['detail'].value)
         });
+    },
+    setEComStore(store: any) {
+      if(this.userProfile){
+        this.store.dispatch('user/setEComStore', {
+          'store': this.userProfile.stores.find((str: any) => str.productStoreId == store['detail'].value)
+        });
+      }
     },
     logout () {
       this.store.dispatch('user/logout').then(() => {
@@ -93,6 +108,7 @@ export default defineComponent({
 
     return {
       ellipsisVertical,
+      globeOutline,
       personCircleOutline,
       router,
       sendOutline,

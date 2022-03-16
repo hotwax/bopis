@@ -76,7 +76,15 @@ const actions: ActionTree<OrderState , RootState> ={
   },
 
   updateCurrent ({ commit }, payload) {
-    commit(types.ORDER_CURRENT_UPDATED, { order: payload.order })
+    const order = {
+      ...payload.order,
+      firstName: payload.order.customerName?.split(' ').slice(0, -1).join(" "),
+      lastName: payload.order.customerName?.split(' ').slice(-1).join(' '),
+      shipmentMethod: payload.order.items[0]?.shipmentMethodTypeId,
+      shipGroupSeqId: payload.order?.items[0]?.shipGroupSeqId,
+    }
+
+    commit(types.ORDER_CURRENT_UPDATED, { order })
   },
 
   async getPackedOrders ({ commit, state }, payload) {
@@ -205,17 +213,17 @@ const actions: ActionTree<OrderState , RootState> ={
 
   rejectOrderItems ({ commit }, data) {
     const payload = {
-      'orderId': data.orderId
+      'orderId': data.order.orderId
     }
 
-    return Promise.all(data.items.map((item: any) => {
+    return Promise.all(data.items?.map((item: any) => {
       const params = {
         ...payload,
         'rejectReason': item.reason,
         'facilityId': item.facilityId,
         'orderItemSeqId': item.orderItemSeqId,
         'shipmentMethodTypeId': item.shipmentMethodTypeId,
-        'quantity': parseInt(item.quantity)
+        'quantity': parseInt(item.inventory[0].quantity)
       }
       return OrderService.rejectOrderItem({'payload': params}).catch((err) => { 
         return err;
@@ -227,6 +235,36 @@ const actions: ActionTree<OrderState , RootState> ={
   clearOrders ({ commit }) {
     commit(types.ORDER_OPEN_UPDATED, {orders: {} , total: 0})
     commit(types.ORDER_PACKED_UPDATED, {orders: {} , total: 0})
+  },
+
+  updateShippingInformationItems ({ commit }, data) {
+    return Promise.all(data.items.map((item: any) => {
+      const params = {
+        orderId: data.order.orderId,
+        facilityId: '_NA_',
+        shipmentMethodTypeId: data.params.shipmentMethodTypeId,
+        quantity: parseInt(item.inventory[0].quantity),
+        itemSeqId: item.orderItemSeqId,
+        shippingAddress: data.params.shippingAddress
+      }
+      return OrderService.updateShippingInformation({'payload': params}).catch((err) => {
+        return err;
+      })
+    }))
+  },
+
+  async updateShippingInformation({ dispatch }, payload ) {
+    return await dispatch("rejectOrderItems", payload).then(async(response) => {
+      response.find((response: any) => !(response.data._ERROR_MESSAGE_ || response.data._ERROR_MESSAGE_LIST_))
+      await dispatch("updateShippingInformationItems", payload).then((resp) => {
+        const shippingInformationUpdated = resp.find((response: any) => !(response.data._ERROR_MESSAGE_ || response.data._ERROR_MESSAGE_LIST_))
+        if (resp.status == 200 && !hasError(resp) && shippingInformationUpdated) {
+          showToast(translate("Shipping information updated for order") + ' ' + payload.order.orderId)
+        } else {
+          showToast(translate("Something went wrong"))
+        }
+      })
+    })
   }
 }
 

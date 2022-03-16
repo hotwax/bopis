@@ -45,6 +45,7 @@
       <ion-card v-for="(item, index) in order?.items" :key="index">
         <ProductListItem :item="item" />
         <ion-item lines="none" class="border-top">
+          <ion-checkbox slot="start" @ionChange="itemAdded(item)"/>
           <ion-label>{{ $t("Reason") }}</ion-label>
           <ion-select multiple="false" v-model="item.reason">
             <ion-select-option v-for="reason in unfillableReason" :value="reason.id" :key="reason.id">{{ $t(reason.label) }}</ion-select-option>
@@ -72,6 +73,7 @@ import {
   IonBadge,
   IonButton,
   IonCard,
+  IonCheckbox,
   IonContent,
   IonHeader,
   IonIcon,
@@ -107,6 +109,7 @@ export default defineComponent({
     IonBadge,
     IonButton,
     IonCard,
+    IonCheckbox,
     IonContent,
     IonHeader,
     IonIcon,
@@ -123,12 +126,13 @@ export default defineComponent({
   data () {
     return {
       unfillableReason: JSON.parse(process.env.VUE_APP_UNFILLABLE_REASONS),
+      itemsSelected: {}
     }
   },
   computed: {
     ...mapGetters({
       order: "order/getCurrent",
-      currentFacility: 'user/getCurrentFacility',
+      currentFacility: 'user/getCurrentFacility'
     })
   },
   ionViewDidEnter() {
@@ -138,6 +142,10 @@ export default defineComponent({
     async shipToCustomer() {
       const shipmodal = await modalController.create({
         component: ShipToCustomerModal,
+        componentProps: {
+          order: this.order,
+          items: this.itemsSelected
+        }
       });
       return shipmodal.present();
     },
@@ -166,10 +174,18 @@ export default defineComponent({
         orderId
       }
       await this.store.dispatch("order/getOrderDetail", payload)
+    },
+    itemAdded(item) {
+      if (!this.itemsSelected[item.orderItemSeqId]) {
+        this.itemsSelected[item.orderItemSeqId] = item
+      } else {
+        delete this.itemsSelected[item.orderItemSeqId]
+      }
     }
   },
   mounted() {
     this.getOrderDetail(this.$route.params.orderId);
+    this.store.dispatch('util/fetchCountryOptions')
   },
   setup () {
     const store = useStore();
