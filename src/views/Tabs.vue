@@ -42,3 +42,14 @@ export default {
   }
 };
 </script>
+<style scoped>
+ion-tab-bar {
+  position: absolute;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  bottom: 24px;
+  filter: drop-shadow(0px 6px 10px rgba(0, 0, 0, 0.14)) drop-shadow(0px 1px 18px rgba(0, 0, 0, 0.12)) drop-shadow(0px 3px 5px rgba(0, 0, 0, 0.2));
+  width: 375px;
+  border-radius: 16px;
+}
+</style>
