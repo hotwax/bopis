@@ -12,7 +12,7 @@
   </ion-header>
 
   <ion-content>
-    <ion-searchbar v-model="queryString" @keyup.enter="searchPicker()"/>
+    <ion-searchbar @ionFocus="selectSearchBarText($event)" v-model="queryString" @keyup.enter="searchPicker()"/>
 
     <ion-list>
       <ion-list-header>{{ $t("Staff") }}</ion-list-header>
@@ -83,8 +83,13 @@ export default defineComponent({
     }
   },
   methods: {
+    selectSearchBarText(event: any) {
+      event.target.getInputElement().then((element: any) => {
+        element.select();
+      })
+    },
     closeModal() {
-      modalController.dismiss({ dismissed: false });
+      modalController.dismiss({ isPickerSelected: false });
     },
     pickerChanged (selectedPickerId: string) {
       this.selectedPickerId = selectedPickerId
