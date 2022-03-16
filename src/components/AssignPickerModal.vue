@@ -157,15 +157,13 @@ export default defineComponent({
         }
 
         const responseList = payload.order?.items.map((item: any) => {
-          if(item.shipmentMethodTypeId === "STOREPICKUP") {
-            params.payload.shipmentMethodTypeId = item.shipmentMethodTypeId;
-            params.payload.item.orderItemSeqId = item.orderItemSeqId;
-            params.payload.item.pickerId = payload.pickerId;
-            // TODO: Add dynamic quantity for item property
-            params.payload.item.quantity = 1
+          params.payload.shipmentMethodTypeId = item.shipmentMethodTypeId;
+          params.payload.item.orderItemSeqId = item.orderItemSeqId;
+          params.payload.item.pickerId = payload.pickerId;
+          // TODO: Add dynamic quantity for item property
+          params.payload.item.quantity = 1
 
-            return PicklistService.createOrderItemPicklist({ ...params })
-          }
+          return PicklistService.createOrderItemPicklist({ ...params })
         })
 
         return Promise.all(responseList).then((resp) => {
