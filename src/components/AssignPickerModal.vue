@@ -168,7 +168,7 @@ export default defineComponent({
           // TODO: Add dynamic quantity for item property
           params.payload.item.quantity = 1
 
-          return PicklistService.createOrderItemPicklist({ ...params })
+          return PicklistService.createOrderItemPicklist(JSON.parse(JSON.stringify(params)))
         })
 
         return Promise.all(responseList).then((resp) => {
