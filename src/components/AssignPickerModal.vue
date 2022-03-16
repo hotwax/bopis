@@ -157,19 +157,21 @@ export default defineComponent({
         }
 
         const response = payload.order?.items.map((item: any) => {
-          params.payload.shipmentMethodTypeId = item.shipmentMethodTypeId;
-          params.payload.item.orderItemSeqId = item.orderItemSeqId;
-          params.payload.item.pickerId = payload.pickerId;
-          // TODO: Add dynamic quantity for item property
-          params.payload.item.quantity = 1
+          if(item.shipmentMethodTypeId === "STOREPICKUP") {
+            params.payload.shipmentMethodTypeId = item.shipmentMethodTypeId;
+            params.payload.item.orderItemSeqId = item.orderItemSeqId;
+            params.payload.item.pickerId = payload.pickerId;
+            // TODO: Add dynamic quantity for item property
+            params.payload.item.quantity = 1
 
-          return PicklistService.createOrderItemPicklist(params)
+            return PicklistService.createOrderItemPicklist({ ...params })
+          }
         })
 
         return Promise.all(response).then((resp) => {
           if(resp.length === payload.order?.items.length) {
 
-            const isPicklistCreated = resp.some((res: any) => (res.status === 200 && res.data?._EVENT_MESSAGE_));
+            const isPicklistCreated = resp.some((res: any) => (res?.status === 200 && res.data?._EVENT_MESSAGE_));
 
             if(!isPicklistCreated) showToast(this.$t("Can not create picklist"));
 
