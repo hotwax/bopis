@@ -171,7 +171,7 @@ export default defineComponent({
         return Promise.all(responseList).then((resp) => {
           if(resp.length === payload.order?.items.length) {
 
-            const isPicklistCreated = resp.some((res: any) => (res?.status === 200 && res.data?._EVENT_MESSAGE_));
+            const isPicklistCreated = resp.every((res: any) => (res?.status === 200 && res.data?._EVENT_MESSAGE_));
 
             if(!isPicklistCreated) showToast(this.$t("Can not create picklist"));
 
