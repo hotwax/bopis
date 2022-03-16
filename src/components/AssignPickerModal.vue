@@ -7,7 +7,7 @@
         </ion-button>
       </ion-buttons>
       <ion-title>{{ $t("Assign Pickers") }}</ion-title>
-      <ion-button fill="clear" slot="end" @click="packOrder()">{{ $t("pack") }}</ion-button>
+      <ion-button fill="clear" slot="end" @click="packOrder()">{{ $t("PACK") }}</ion-button>
     </ion-toolbar>
   </ion-header>
 
@@ -173,11 +173,11 @@ export default defineComponent({
 
             const isPicklistCreated = resp.every((res: any) => (res?.status === 200 && res.data?._EVENT_MESSAGE_));
 
-            if(!isPicklistCreated) showToast(this.$t("Can not create picklist"));
+            if(!isPicklistCreated) showToast(this.$t("Cannot create picklist"));
 
             return isPicklistCreated;
           } else {
-            showToast(this.$t("Can not create picklist for each item"));
+            showToast(this.$t("Cannot create picklist for each item"));
           }
         })
       } catch(err) {
