@@ -213,10 +213,10 @@ const actions: ActionTree<OrderState , RootState> ={
 
   rejectOrderItems ({ commit }, data) {
     const payload = {
-      'orderId': data.orderId
+      'orderId': data.order.orderId
     }
 
-    return Promise.all(data.items.map((item: any) => {
+    return Promise.all(data.items?.map((item: any) => {
       const params = {
         ...payload,
         'rejectReason': item.reason,
@@ -238,7 +238,7 @@ const actions: ActionTree<OrderState , RootState> ={
   },
 
   updateShippingInformationItems ({ commit }, data) {
-    return Promise.all(data.order.items.map((item: any) => {
+    return Promise.all(data.items.map((item: any) => {
       const params = {
         orderId: data.order.orderId,
         facilityId: '_NA_',
@@ -254,12 +254,14 @@ const actions: ActionTree<OrderState , RootState> ={
   },
 
   async updateShippingInformation({ dispatch }, payload ) {
-    let resp;
-
-    return await dispatch("rejectOrderItems", payload.order).then(async() => {
+    return await dispatch("rejectOrderItems", payload).then(async(response) => {
+      response.find((response: any) => !(response.data._ERROR_MESSAGE_ || response.data._ERROR_MESSAGE_LIST_))
       await dispatch("updateShippingInformationItems", payload).then((resp) => {
-        if (resp.status == 200 && !hasError(resp)) {
+        const shippingInformationUpdated = resp.find((response: any) => !(response.data._ERROR_MESSAGE_ || response.data._ERROR_MESSAGE_LIST_))
+        if (resp.status == 200 && !hasError(resp) && shippingInformationUpdated) {
           showToast(translate("Shipping information updated for order") + ' ' + payload.order.orderId)
+        } else {
+          showToast(translate("Something went wrong"))
         }
       })
     })
