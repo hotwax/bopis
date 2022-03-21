@@ -4,18 +4,21 @@
       <ion-toolbar>
         <ion-title>{{ currentFacility.name }}</ion-title>
       </ion-toolbar>
+
       <ion-toolbar>
-        <ion-segment v-model="segmentSelected" @ionChange="segmentChanged">
-          <ion-segment-button value="open">
-            <ion-label>{{ $t("Open") }}</ion-label>
-          </ion-segment-button>
-          <ion-segment-button value="packed">
-            <ion-label>{{ $t("Packed") }}</ion-label>
-          </ion-segment-button>
-        </ion-segment>
+        <div>
+          <ion-searchbar :placeholder= "$t('Search Orders')" />
+          <ion-segment v-model="segmentSelected" @ionChange="segmentChanged">
+            <ion-segment-button value="open">
+              <ion-label>{{ $t("Open") }}</ion-label>
+            </ion-segment-button>
+            <ion-segment-button value="packed">
+              <ion-label>{{ $t("Packed") }}</ion-label>
+            </ion-segment-button>
+          </ion-segment>
+        </div>
       </ion-toolbar>
     </ion-header>
-
     <ion-content>
       <div v-if="segmentSelected === 'open'">
         <div v-for="order in orders" :key="order.orderId" v-show="getShipGroups(order.items).length > 0">
@@ -117,6 +120,7 @@ import {
   IonPage,
   IonRefresher,
   IonRefresherContent,
+  IonSearchbar,
   IonSegment,
   IonSegmentButton,
   IonTitle,
@@ -147,6 +151,7 @@ export default defineComponent({
     IonPage,
     IonRefresher,
     IonRefresherContent,
+    IonSearchbar,
     IonSegment,
     IonSegmentButton,
     IonTitle,
@@ -312,5 +317,11 @@ export default defineComponent({
   flex-direction: column;
   align-items: flex-end;
   row-gap: 4px;
+}
+
+@media (min-width: 991px){
+  ion-toolbar > div {
+    display: flex;
+  }
 }
 </style>
