@@ -233,13 +233,47 @@ http://ionicframework.com/docs/theming/ */
 
     --ion-card-background: #1e1e1e;
   }
+}
 
-  .overline {
-    font-weight: 500 !important;
-    font-size: 10px !important;
-    line-height: 16px !important;
-    letter-spacing: 1.5px;
-    color: #666;
-    text-transform: uppercase !important;
+/** Spacer variables **/
+body {
+  --spacer-2xs: 0.25rem; /* 4px */
+  --spacer-xs: 0.5rem;   /* 8px */
+  --spacer-sm: 1rem;     /* 16px */
+  --spacer-base: 1.5rem; /* 24px */
+  --spacer-lg: 2rem;     /* 32px */
+  --spacer-xl: 2.5rem;   /* 40px */
+  --spacer-2xl: 5rem;    /* 80px */
+  --spacer-3xl: 10rem;   /* 160px */
+}
+
+.overline {
+  font-weight: 500 !important;
+  font-size: 10px !important;
+  line-height: 16px !important;
+  letter-spacing: 1.5px;
+  color: #666;
+  text-transform: uppercase !important;
+}
+
+ion-thumbnail > img {
+  object-fit: contain;
+}
+
+ion-select {
+  max-width: 100%;
+}
+
+@media (prefers-color-scheme: dark) {
+  ion-chip > ion-icon {
+    color: var(--ion-color-dark);
+  }
+
+  .chip-outline {
+    border-color: var(--ion-color-dark);
+  }
+
+  ion-item {
+    --border-color: var(--ion-color-medium)
   }
 }
