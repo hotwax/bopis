@@ -28,7 +28,8 @@ const actions: ActionTree<ProductState, RootState> = {
 
     // adding viewSize as by default we are having the viewSize of 10
     const resp = await ProductService.fetchProducts({
-      "filters": ['productId: (' + productIdFilter + ')']
+      "filters": ['productId: (' + productIdFilter + ')'],
+      "viewSize": productIds.length
     })
     if (resp.status === 200 && resp.data.response && !hasError(resp)) {
       const products = resp.data.response.docs;
