@@ -19,9 +19,17 @@ const actions: ActionTree<UserState, RootState> = {
       const resp = await UserService.login(username, password)
       if (resp.status === 200 && resp.data) {
         if (resp.data.token) {
-            commit(types.USER_TOKEN_CHANGED, { newToken: resp.data.token })
-            await dispatch('getProfile')
+          const user = await dispatch('getProfile', { token: resp.data.token });
+
+          // If the user is not associated with any facility we will consider that the user does not have permission to access this app.
+          if (user.data.facilities?.length > 0) {
+            commit(types.USER_TOKEN_CHANGED, { newToken: resp.data.token });
+            await dispatch('getEComStores', { facilityId: user.data.facilities[0]?.facilityId })
             return resp.data;
+          } else {
+            showToast(translate('You do not have permission to login into this app.'));
+            return Promise.reject(new Error(resp.data._ERROR_MESSAGE_));
+          }
         } else if (hasError(resp)) {
           showToast(translate('Sorry, your username or password is incorrect. Please try again.'));
           console.error("error", resp.data._ERROR_MESSAGE_);
@@ -51,16 +59,15 @@ const actions: ActionTree<UserState, RootState> = {
   /**
    * Get User profile
    */
-  async getProfile ( { commit, dispatch }) {
-    const resp = await UserService.getProfile()
-    if (resp.status === 200) {
+  async getProfile({ commit }, payload) {
+    const resp = await UserService.getProfile(payload)
+    if (resp.status === 200 && resp.data.facilities?.length > 0) {
       const localTimeZone = moment.tz.guess();
       if (resp.data.userTimeZone !== localTimeZone) {
         emitter.emit('timeZoneDifferent', { profileTimeZone: resp.data.userTimeZone, localTimeZone});
       }
 
       commit(types.USER_INFO_UPDATED, resp.data);
-      await dispatch('getEComStores', { facilityId: resp.data.facilities[0] })
       commit(types.USER_CURRENT_FACILITY_UPDATED, resp.data.facilities.length > 0 ? resp.data.facilities[0] : {});
     }
     return resp;
@@ -70,6 +77,7 @@ const actions: ActionTree<UserState, RootState> = {
    *  update current eComStore information
   */ 
   async setEComStore({ commit, dispatch }, payload) {
+    // clearing the orders state whenever changing the eComStore/Shop
     dispatch('order/clearOrders', null, {root: true});
     commit(types.USER_CURRENT_ECOM_STORE_UPDATED, payload.eComStore);
   },

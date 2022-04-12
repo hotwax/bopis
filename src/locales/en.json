@@ -55,6 +55,7 @@
   "Shop": "Shop",
   "Size": "Size",
   "Something went wrong": "Something went wrong",
+  "Sorry, your username or password is incorrect. Please try again.": "Sorry, your username or password is incorrect. Please try again.",
   "State": "State",
   "Street": "Street",
   "Store": "Store",
@@ -65,5 +66,6 @@
   "Username": "Username",
   "Worn Display": "Worn Display",
   "This order will be removed from your dashboard. This action cannot be undone.": "This order will be removed from your dashboard.{ space } This action cannot be undone.",
+  "You do not have permission to login into this app.": "You do not have permission to login into this app.",
   "Zipcode": "Zipcode"
 }
