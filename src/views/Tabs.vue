@@ -21,7 +21,6 @@
 </template>
 
 <script lang="ts">
-import { useRoute } from "vue-router";
 import { IonIcon, IonLabel, IonPage, IonTabBar, IonTabButton, IonTabs } from "@ionic/vue";
 import {
   infiniteOutline,
@@ -33,7 +32,6 @@ export default {
   name: "Tabs",
   components: { IonIcon, IonLabel, IonPage, IonTabBar, IonTabButton, IonTabs },
   setup () {
-    const route = useRoute();
     return {
       infiniteOutline,
       settings,

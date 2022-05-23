@@ -134,6 +134,9 @@ import { useRouter } from 'vue-router'
 import { copyToClipboard } from '@/utils'
 import * as moment from "moment-timezone";
 import emitter from "@/event-bus"
+import { translate } from "@/i18n";
+import { hasError , showToast } from "@/utils";
+import { OrderService } from "@/services/OrderService";
 
 export default defineComponent({
   name: 'Orders',
@@ -243,19 +246,82 @@ export default defineComponent({
             role: 'cancel'
           },{
             text: header,
-            handler: () => {
-              this.store.dispatch('order/quickShipEntireShipGroup', {order, shipGroupSeqId: shipGroup, facilityId: this.currentFacility.facilityId}).then((resp) => {
-                if (resp.data._EVENT_MESSAGE_) this.getPickupOrders();
-              })
+            handler: async () => {
+              emitter.emit("presentLoader")
+
+              const params = {
+                orderId: order.orderId,
+                setPackedOnly: 'Y',
+                dimensionUomId: 'WT_kg',
+                shipmentBoxTypeId: 'YOURPACKNG',
+                weight: '1',
+                weightUomId: 'WT_kg',
+                facilityId: this.currentFacility.facilityId,
+                shipGroupSeqId: shipGroup
+              }
+              
+              let resp;
+
+              try {
+                resp = await OrderService.quickShipEntireShipGroup(params)
+                if (resp.status === 200 && !hasError(resp) && resp.data._EVENT_MESSAGE_) {
+                  /* To display the button label as per the shipmentMethodTypeId, this will only used on orders segment.
+                    Because we get the shipmentMethodTypeId on items level in wms-orders API.
+                    As we already get shipmentMethodTypeId on order level in readytoshiporders API hence we will not use this method on packed orders segment.
+                  */
+                  const shipmentMethodTypeId = order.items.find((ele: any) => ele.shipGroupSeqId == shipGroup).shipmentMethodTypeId
+                  if (shipmentMethodTypeId !== 'STOREPICKUP') {
+                    // TODO: find a better way to get the shipmentId
+                    const shipmentId = resp.data._EVENT_MESSAGE_.match(/\d+/g)[0]
+                    const params = {
+                      shipmentId: shipmentId,
+                      statusId: 'SHIPMENT_PACKED'
+                    }
+                    const data = await OrderService.updateShipment(params)
+                      if (!hasError(data) && !data.data._EVENT_MESSAGE_) showToast(translate("Something went wrong"))
+                  }
+                  showToast(translate("Order packed and ready for delivery"))
+                } else {
+                  showToast(translate("Something went wrong"))
+                }
+                emitter.emit("dismissLoader")
+              } catch(err) {
+                console.error(err)
+                showToast(translate("Something went wrong"))
+              }
+
+              emitter.emit("dismissLoader")
+              if (resp.data._EVENT_MESSAGE_) this.getPickupOrders();
             }
           }]
         });
       return alert.present();
     },
     async deliverShipment (order: any) {
-      await this.store.dispatch('order/deliverShipment', order).then((resp) => {
-        if (resp.data._EVENT_MESSAGE_) this.getPackedOrders();
-      });
+      emitter.emit("presentLoader");
+
+    const params = {
+      shipmentId: order.shipmentId,
+      statusId: 'SHIPMENT_SHIPPED'
+    }
+
+    let resp;
+
+    try {
+      resp = await OrderService.updateShipment(params)
+      if (resp.status === 200 && !hasError(resp)) {
+        showToast(translate('Order delivered to', {customerName: order.customerName}))
+      } else {
+        showToast(translate("Something went wrong"))
+      }
+      emitter.emit("dismissLoader")
+    } catch(err) {
+      console.error(err)
+      showToast(translate("Something went wrong"))
+    }
+
+      emitter.emit("dismissLoader")
+      if (resp.data._EVENT_MESSAGE_) this.getPackedOrders();
     },
     segmentChanged (e: CustomEvent) {
       this.segmentSelected = e.detail.value

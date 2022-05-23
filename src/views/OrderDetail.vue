@@ -98,6 +98,10 @@ import { copyToClipboard } from '@/utils'
 import { useRouter } from 'vue-router'
 import * as moment from "moment-timezone";
 import ShipToCustomerModal from "@/components/ShipToCustomerModal.vue";
+import { translate } from "@/i18n";
+import { showToast } from "@/utils";
+import { OrderService } from "@/services/OrderService";
+import emitter from "@/event-bus"
 
 export default defineComponent({
   name: "OrderDetail",
@@ -141,7 +145,7 @@ export default defineComponent({
       });
       return shipmodal.present();
     },
-    async updateOrder (order) {
+    async updateOrder (data) {
       const alert = await alertController
         .create({
           header: this.$t('Update Order'),
@@ -151,10 +155,38 @@ export default defineComponent({
             role: 'cancel'
           },{
             text: this.$t('Reject Order'),
-            handler: () => {
-              this.store.dispatch('order/setUnfillableOrderOrItem', order).then((resp) => {
-                if (resp) this.router.push('/tabs/orders')
-              })
+            handler: async () => {
+              
+              emitter.emit("presentLoader");
+              
+              const payload = {
+                'orderId': data.orderId
+              }
+
+              await Promise.all(data.items.map((item) => {
+                const params = {
+                  ...payload,
+                  'rejectReason': item.reason,
+                  'facilityId': item.facilityId,
+                  'orderItemSeqId': item.orderItemSeqId,
+                  'shipmentMethodTypeId': item.shipmentMethodTypeId,
+                  'quantity': parseInt(item.quantity)
+                }
+                OrderService.rejectOrderItem({'payload': params}).catch((err) => { 
+                  return err;
+                })
+              })).then((resp) => {
+                const refreshPickupOrders = resp.find((response) => !(response.data._ERROR_MESSAGE_ || response.data._ERROR_MESSAGE_LIST_))
+                if (refreshPickupOrders) {
+                  showToast(translate('All items were canceled from the order') + ' ' + payload.orderId);
+                } else {
+                  showToast(translate('Something went wrong'));
+                }
+                emitter.emit("dismissLoader");
+                return resp;
+              }).catch(err => err).then((resp)=>{
+              if (resp) this.router.push('/tabs/orders')
+            });
             },
           }]
         });
