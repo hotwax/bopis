@@ -1,5 +1,6 @@
 export default interface ProductState {
-  cached: any,
-  products: any,
-  total: number
+  products: {
+    cached: any,
+    total: number
+  } 
 }
