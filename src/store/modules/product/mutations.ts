@@ -8,12 +8,12 @@ const mutations: MutationTree <ProductState> = {
       payload.products.forEach((product: any) => {
         state.cached[product.productId] = product
       });
-      state.total = payload.totalProductsCount
+      state.products.total = payload.totalProductsCount
     }
   },
   [types.PRODUCT_SEARCH_UPDATED] (state, payload) {
-    state.products = payload.products;
-    state.total = payload.totalProductsCount;
+    state.products.list = payload.products;
+    state.products.total = payload.totalProductsCount;
   }
 }
 export default mutations;

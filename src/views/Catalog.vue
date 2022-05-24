@@ -8,7 +8,7 @@
     <ion-content :fullscreen="true">
       <ion-searchbar v-model="queryString" />
       <main>
-        <ion-card v-for="product in products" :key="product">
+        <ion-card v-for="product in products.list" :key="product">
           <Image :src="product.mainImageUrl" />
           <ion-item lines="none">
             <ion-label>
