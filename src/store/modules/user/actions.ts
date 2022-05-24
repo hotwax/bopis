@@ -75,7 +75,7 @@ const actions: ActionTree<UserState, RootState> = {
   /**
    * Set User Instance Url
    */
-   setUserInstanceUrl ({ state, commit }, payload){
+   setUserInstanceUrl ({ commit }, payload){
     commit(types.USER_INSTANCE_URL_UPDATED, payload)
    },
   
@@ -92,7 +92,7 @@ const actions: ActionTree<UserState, RootState> = {
     }
   },
 
-  setShippingOrdersStatus( {state, commit }, payload){
+  setShippingOrdersStatus( { commit }, payload){
     commit(types.USER_SHIPPING_ORDERS_STATUS_UPDATED, payload)
   }
 }
