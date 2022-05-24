@@ -131,11 +131,10 @@ import ProductListItem from '@/components/ProductListItem.vue'
 import { swapVerticalOutline, callOutline, mailOutline } from "ionicons/icons";
 import { mapGetters, useStore } from 'vuex'
 import { useRouter } from 'vue-router'
-import { copyToClipboard } from '@/utils'
+import { copyToClipboard, hasError, showToast } from '@/utils'
 import * as moment from "moment-timezone";
 import emitter from "@/event-bus"
 import { translate } from "@/i18n";
-import { hasError , showToast } from "@/utils";
 import { OrderService } from "@/services/OrderService";
 
 export default defineComponent({

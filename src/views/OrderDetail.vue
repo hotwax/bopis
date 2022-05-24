@@ -94,12 +94,11 @@ import {
   mailOutline,
 } from "ionicons/icons";
 import ProductListItem from '@/components/ProductListItem.vue'
-import { copyToClipboard } from '@/utils'
+import { copyToClipboard, showToast } from '@/utils'
 import { useRouter } from 'vue-router'
 import * as moment from "moment-timezone";
 import ShipToCustomerModal from "@/components/ShipToCustomerModal.vue";
 import { translate } from "@/i18n";
-import { showToast } from "@/utils";
 import { OrderService } from "@/services/OrderService";
 import emitter from "@/event-bus"
 
