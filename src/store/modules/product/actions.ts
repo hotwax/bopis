@@ -9,6 +9,7 @@ import emitter from '@/event-bus'
 
 
 const actions: ActionTree<ProductState, RootState> = {
+  
   async fetchProducts ( { commit, state }, { productIds }) {
     const cachedProductIds = Object.keys(state.cached);
     const productIdFilter= productIds.reduce((filter: string, productId: any) => {
@@ -21,8 +22,10 @@ const actions: ActionTree<ProductState, RootState> = {
         return filter += productId;
       }
     }, '');
+    
     // If there are no products skip the API call
     if (productIdFilter === '') return;
+    
     // adding viewSize as by default we are having the viewSize of 10
     const resp = await ProductService.fetchProducts({
       "filters": ['productId: (' + productIdFilter + ')'],
@@ -39,6 +42,7 @@ const actions: ActionTree<ProductState, RootState> = {
     // TODO Handle specific error
     return resp;
   },
+  
   async findProduct ({ commit, state }, payload) {
     // Show loader only when new query and not the infinite scroll
     if (payload.viewIndex === 0) emitter.emit("presentLoader");
