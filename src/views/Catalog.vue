@@ -8,7 +8,7 @@
     <ion-content :fullscreen="true">
       <ion-searchbar v-model="queryString" @keypress.enter="getProducts()" />
       <main>
-        <ion-card v-for="product in products.list" :key="product">
+        <ion-card v-for="product in products.list" :key="product.productId">
           <Image :src="product.mainImageUrl" />
           <ion-item lines="none">
             <ion-label>
@@ -46,13 +46,13 @@ import {
   IonSearchbar,
   IonTitle,
   IonToolbar,
-} from "@ionic/vue";
+} from '@ionic/vue';
 import { defineComponent } from 'vue';
 import { mapGetters, useStore } from 'vuex';
 import Image from '../components/Image.vue';
 
 export default defineComponent({
-  name: "Catalog",
+  name: 'Catalog',
   components: {
     Image,
     IonCard,
@@ -116,8 +116,9 @@ export default defineComponent({
 </script>
 <style scoped>
 main {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
-  align-items: start;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+    align-items: start;
 }
+
 </style>
