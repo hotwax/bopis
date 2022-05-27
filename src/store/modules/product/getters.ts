@@ -5,9 +5,9 @@ import RootState from "../../RootState";
 const getters: GetterTree<ProductState, RootState> = {
   getProduct: (state) => (productId: string) => {
     // Returning empty object so that it doesn't breaks the UI
-    return state.products.list[productId] ? state.products.list[productId] : {};
+    return state.cached[productId] ? state.cached[productId] : {};
   },
-  findProduct: (state) => {
+  getSearchProducts: (state) => {
     return state.products ? state.products : {};
   },
   isScrollable(state) {

@@ -6,7 +6,7 @@
       </ion-toolbar>
     </ion-header>
     <ion-content :fullscreen="true">
-      <ion-searchbar v-model="queryString" />
+      <ion-searchbar v-model="queryString" @keypress.enter="getProducts()" />
       <main>
         <ion-card v-for="product in products.list" :key="product">
           <Image :src="product.mainImageUrl" />
@@ -74,7 +74,7 @@ export default defineComponent({
   },
   computed: {
     ...mapGetters({
-      products: "product/findProduct",
+      products: "product/getSearchProducts",
       isScrollable: "product/isScrollable",
     }),
   },
