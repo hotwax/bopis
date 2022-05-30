@@ -8,7 +8,6 @@ const mutations: MutationTree <ProductState> = {
       payload.products.forEach((product: any) => {
         state.cached[product.productId] = product
       });
-      state.products.total = payload.totalProductsCount
     }
   },
   [types.PRODUCT_SEARCH_UPDATED] (state, payload) {

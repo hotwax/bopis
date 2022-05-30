@@ -22,7 +22,7 @@
       <ion-infinite-scroll
         @ionInfinite="loadMoreProducts($event)"
         threshold="100px"
-        :disabled="false"
+        :disabled="!isScrollable"
       >
         <ion-infinite-scroll-content
           loading-spinner="crescent"
