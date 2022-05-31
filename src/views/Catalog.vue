@@ -6,7 +6,7 @@
       </ion-toolbar>
     </ion-header>
     <ion-content :fullscreen="true">
-      <ion-searchbar v-model="queryString" @keypress.enter="getProducts()" />
+      <ion-searchbar v-model="queryString" @keypress.enter="queryString = $event.target.value; getProducts()" />
       <main>
         <ion-card v-for="product in products.list" :key="product.productId">
           <Image :src="product.mainImageUrl" />
@@ -83,7 +83,7 @@ export default defineComponent({
       this.getProducts(
         undefined,
         Math.ceil(
-          this.products.length / process.env.VUE_APP_VIEW_SIZE
+          this.products.list?.length / (process.env.VUE_APP_VIEW_SIZE as any)
         ).toString()
       ).then(() => {
         event.target.complete();
@@ -115,7 +115,7 @@ export default defineComponent({
 });
 </script>
 <style scoped>
-main {
+main{
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
     align-items: start;
