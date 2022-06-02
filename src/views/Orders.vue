@@ -21,12 +21,12 @@
     </ion-header>
     <ion-content>
       <div v-if="segmentSelected === 'open'">
-        <div v-for="order in orders" :key="order.orderId" v-show="getShipGroups(order.items).length > 0">
-          <ion-card v-for="(shipGroup, index) in getShipGroups(order.items)" :key="index" @click.prevent="viewOrder(order)">
+        <div v-for="order in orders" :key="order.id" v-show="order.itemGroup.length > 0">
+          <ion-card v-for="(shipGroup, index) in order.itemGroup" :key="index" @click.prevent="viewOrder(order)">
             <ion-item lines="none">
               <ion-label>
-                <h1>{{ order.customerName }}</h1>
-                <p>{{ order.orderName ? order.orderName : order.orderId }}</p>
+                <h1>{{ order.customer.name }}</h1>
+                <p>{{ order.name ? order.name : order.id }}</p>
               </ion-label>
               <div class="metadata">
                 <ion-badge v-if="order.orderDate" color="dark">{{ moment.utc(order.orderDate).fromNow() }}</ion-badge>
@@ -35,7 +35,7 @@
               <!-- TODO: Display the packed date of the orders, currently not getting the packed date from API-->
             </ion-item>
 
-            <ProductListItem v-for="item in getShipGroupItems(shipGroup, order.items)" :key="item.itemId" :item="item" />
+            <ProductListItem v-for="item in findShipGroupItems(shipGroup.id, order.items)" :key="item.id" :item="item" />
 
             <ion-item v-if="order.phoneNumber">
               <ion-icon :icon="callOutline" slot="start" />
@@ -53,7 +53,7 @@
             </ion-item>
             <div class="border-top">
               <ion-button fill="clear" @click.stop="readyForPickup(order, shipGroup)">
-                {{ getShipmentMethod(shipGroup, order.items) === 'STOREPICKUP' ? $t("Ready for pickup") : $t("Ready to ship") }}
+                {{ shipGroup.shippingMethod.id === 'STOREPICKUP' ? $t("Ready for pickup") : $t("Ready to ship") }}
               </ion-button>
             </div>
           </ion-card>
@@ -185,7 +185,7 @@ export default defineComponent({
       // TODO: find a better approach to handle the case that when in open segment we can click on
       // order card to route on the order details page but not in the packed segment
       await this.store.dispatch('order/updateCurrent', { order }).then(() => {
-        this.$router.push({ path: `/orderdetail/${order.orderId}` })
+        this.$router.push({ path: `/orderdetail/${order.id}` })
       })
     },
     async getPickupOrders (vSize?: any, vIndex?: any) {
@@ -275,6 +275,10 @@ export default defineComponent({
     getShipGroupItems(shipGroupSeqId: any, items: any) {
       // To get all the items of same shipGroup, further it will use on pickup-order-card component to display line items
       return items.filter((item: any) => item.shipGroupSeqId == shipGroupSeqId)
+    },
+    findShipGroupItems(shipGroupSeqId: any, items: any) {
+      // To get all the items of same shipGroup, further it will use on pickup-order-card component to display line items
+      return items.filter((item: any) => item.orderItemGroupId == shipGroupSeqId)
     }
   },
   ionViewWillEnter () {
