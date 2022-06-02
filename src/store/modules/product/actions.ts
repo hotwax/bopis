@@ -47,7 +47,7 @@ const actions: ActionTree<ProductState, RootState> = {
     orders.forEach((order: any) => {
       order.items.forEach((item: any) => {
         // Revert this condition once complete order has type support
-        if (item.productId || item.itemId) productIds.add(item.itemId ? item.itemId : item.productId);
+        if (item.product.id || item.itemId) productIds.add(item.itemId ? item.itemId : item.product.id);
       });
     });
     productIds = [...productIds]

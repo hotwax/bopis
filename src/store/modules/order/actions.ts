@@ -37,7 +37,8 @@ const actions: ActionTree<OrderState , RootState> ={
               name: item.itemName,
               brand: item.brandName,
               mainImage: item.images.main.thumbnail,
-              assets: Object.values(item.images.main)
+              assets: Object.values(item.images.main),
+              feature: item.standardFeatures
             } as Product,
             statusId: item.statusId
           })) as OrderItem[],
