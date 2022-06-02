@@ -1,15 +1,15 @@
 <template>
   <ion-item lines="none">
     <ion-thumbnail slot="start">
-      <Image :src="item.images.main.thumbnail" />
+      <Image :src="item.product.mainImage" />
     </ion-thumbnail>
     <ion-label>
-      <h5>{{ item.brandName }}</h5>
-      <h2>{{ item.itemName }}</h2>
+      <h5>{{ item.product.brand }}</h5>
+      <h2>{{ item.product.name }}</h2>
       <p class="ion-text-wrap">{{ getProduct(item.itemId).internalName }}</p>
       <p class="overline">{{ $filters.getIdentificationId(getProduct(item.itemId).goodIdentifications, goodIdentificationTypeId) }}</p>
-      <p v-if="item.standardFeatures.COLOR">{{ $t("Color") }}: {{ item.standardFeatures.COLOR.description }}</p>
-      <p v-if="item.standardFeatures.SIZE">{{ $t("Size") }}: {{ item.standardFeatures.SIZE.description }}</p>
+      <!-- <p v-if="item.standardFeatures.COLOR">{{ $t("Color") }}: {{ item.standardFeatures.COLOR.description }}</p>
+      <p v-if="item.standardFeatures.SIZE">{{ $t("Size") }}: {{ item.standardFeatures.SIZE.description }}</p> -->
     </ion-label>
     <ion-note slot = "end">{{ getProductStock(item.itemId) }} {{ $t("in stock") }}</ion-note>
   </ion-item>
