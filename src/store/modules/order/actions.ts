@@ -7,6 +7,7 @@ import { hasError , showToast } from "@/utils";
 import { translate } from "@/i18n";
 import emitter from '@/event-bus'
 import store from "@/store";
+import { Order, OrderItem, OrderItemGroup, Product } from "@/types";
 
 const actions: ActionTree<OrderState , RootState> ={
   async getOpenOrders({ commit, state }, payload) {
@@ -21,7 +22,41 @@ const actions: ActionTree<OrderState , RootState> ={
       }
       resp = await OrderService.getOpenOrders(payload)
       if (resp.status === 200 && resp.data.count > 0 && !hasError(resp)) {
-        let orders = resp.data.docs;
+        let orders: Order = resp.data.docs.map((order: any) => ({
+          id: order.orderId,
+          name: order.orderName,
+          customer: {
+            id: order.customerId,
+            name: order.customerName
+          },
+          items: order.items.map((item: any) => ({
+            orderItemGroupId: item.shipGroupSeqId,
+            id: item.orderItemSeqId,
+            product: {
+              id: item.itemId,
+              name: item.itemName,
+              brand: item.brandName,
+              mainImage: item.images.main.thumbnail,
+              assets: Object.values(item.images.main)
+            } as Product,
+            statusId: item.statusId
+          })) as OrderItem[],
+          itemGroup: order.items.reduce((arr: OrderItemGroup[], item: any) => {
+            if (!arr.includes(item.shipGroupSeqId)) {
+              arr.push({
+                id: item.shipGroupSeqId,
+                shippingMethod: {
+                  id: item.shipmentMethodTypeId
+                }
+              })
+            }
+
+            return arr
+          }, []) as OrderItemGroup,
+          statusId: order.statusId,
+          identifications: order.orderIdentifications
+        }));
+
         const total = resp.data.count;
 
         this.dispatch('product/getProductInformation', { orders })

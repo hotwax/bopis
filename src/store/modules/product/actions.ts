@@ -46,7 +46,8 @@ const actions: ActionTree<ProductState, RootState> = {
     let productIds: any = new Set();
     orders.forEach((order: any) => {
       order.items.forEach((item: any) => {
-        if (item.itemId) productIds.add(item.itemId);
+        // Revert this condition once complete order has type support
+        if (item.productId || item.itemId) productIds.add(item.itemId ? item.itemId : item.productId);
       });
     });
     productIds = [...productIds]
