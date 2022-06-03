@@ -183,14 +183,14 @@ const actions: ActionTree<OrderState , RootState> ={
     emitter.emit("presentLoader")
 
     const params = {
-      orderId: payload.order.orderId,
+      orderId: payload.order.id,
       setPackedOnly: 'Y',
       dimensionUomId: 'WT_kg',
       shipmentBoxTypeId: 'YOURPACKNG',
       weight: '1',
       weightUomId: 'WT_kg',
       facilityId: payload.facilityId,
-      shipGroupSeqId: payload.shipGroupSeqId
+      shipGroupSeqId: payload.shipGroup.id
     }
     
     let resp;
@@ -202,8 +202,7 @@ const actions: ActionTree<OrderState , RootState> ={
           Because we get the shipmentMethodTypeId on items level in wms-orders API.
           As we already get shipmentMethodTypeId on order level in readytoshiporders API hence we will not use this method on packed orders segment.
         */
-        const shipmentMethodTypeId = payload.order.items.find((ele: any) => ele.shipGroupSeqId == payload.shipGroupSeqId).shipmentMethodTypeId
-        if (shipmentMethodTypeId !== 'STOREPICKUP') {
+        if (payload.shipGroup.shippingMethod.id !== 'STOREPICKUP') {
           // TODO: find a better way to get the shipmentId
           const shipmentId = resp.data._EVENT_MESSAGE_.match(/\d+/g)[0]
           await dispatch('packDeliveryItems', shipmentId).then((data) => {
