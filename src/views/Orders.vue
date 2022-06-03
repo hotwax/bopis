@@ -37,17 +37,17 @@
 
             <ProductListItem v-for="item in findShipGroupItems(shipGroup.id, order.items)" :key="item.id" :item="item" />
 
-            <ion-item v-if="order.phoneNumber">
+            <ion-item v-if="order.customer.phone">
               <ion-icon :icon="callOutline" slot="start" />
-              <ion-label>{{ order.phoneNumber }}</ion-label>
-              <ion-button fill="outline" slot="end" color="medium" @click="copyToClipboard(order.phoneNumber)">
+              <ion-label>{{ order.customer.phone }}</ion-label>
+              <ion-button fill="outline" slot="end" color="medium" @click="copyToClipboard(order.customer.phone)">
                 {{ $t("Copy") }}
               </ion-button>
             </ion-item>
-            <ion-item lines="full" v-if="order.email">
+            <ion-item lines="full" v-if="order.customer.email">
               <ion-icon :icon="mailOutline" slot="start" />
-              <ion-label>{{ order.email }}</ion-label>
-              <ion-button fill="outline" slot="end" color="medium" @click="copyToClipboard(order.email)">
+              <ion-label>{{ order.customer.email }}</ion-label>
+              <ion-button fill="outline" slot="end" color="medium" @click="copyToClipboard(order.customer.email)">
                 {{ $t("Copy") }}
               </ion-button>
             </ion-item>
@@ -134,6 +134,7 @@ import { useRouter } from 'vue-router'
 import { copyToClipboard } from '@/utils'
 import * as moment from "moment-timezone";
 import emitter from "@/event-bus"
+import { Order, OrderItemGroup } from "@/types";
 
 export default defineComponent({
   name: 'Orders',
@@ -229,10 +230,10 @@ export default defineComponent({
         })
       }
     },
-    async readyForPickup (order: any, shipGroup: any) {
-      const pickup = this.getShipmentMethod(shipGroup, order.items) === 'STOREPICKUP';
+    async readyForPickup (order: Order, shipGroup: OrderItemGroup) {
+      const pickup = shipGroup.shippingMethod.id === 'STOREPICKUP';
       const header = pickup ? this.$t('Ready for pickup') : this.$t('Ready to ship');
-      const message = pickup ? this.$t('An email notification will be sent to that their order is ready for pickup. This order will also be moved to the packed orders tab.', { customerName: order.customerName, space: '<br/><br/>'}) : '';
+      const message = pickup ? this.$t('An email notification will be sent to that their order is ready for pickup. This order will also be moved to the packed orders tab.', { customerName: order.customer.name, space: '<br/><br/>'}) : '';
 
       const alert = await alertController
         .create({
@@ -244,7 +245,7 @@ export default defineComponent({
           },{
             text: header,
             handler: () => {
-              this.store.dispatch('order/quickShipEntireShipGroup', {order, shipGroupSeqId: shipGroup, facilityId: this.currentFacility.facilityId}).then((resp) => {
+              this.store.dispatch('order/quickShipEntireShipGroup', {order, shipGroup, facilityId: this.currentFacility.facilityId}).then((resp) => {
                 if (resp.data._EVENT_MESSAGE_) this.getPickupOrders();
               })
             }
