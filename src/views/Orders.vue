@@ -60,35 +60,35 @@
         </div>
       </div>      
       <div v-if="segmentSelected === 'packed'">
-        <div v-for="order in packedOrders" :key="order.orderId" v-show="getShipGroups(order.items).length > 0">
-          <ion-card v-for="(shipGroup, index) in getShipGroups(order.items)" :key="index">
+        <div v-for="order in packedOrders" :key="order.id" v-show="order.itemGroup.length > 0">
+          <ion-card v-for="(shipGroup, index) in order.itemGroup" :key="index">
             <ion-item lines="none">
               <ion-label>
-                <h1>{{ order.customerName }}</h1>
-                <p>{{ order.orderName ? order.orderName : order.orderId }}</p>
+                <h1>{{ order.customer.name }}</h1>
+                <p>{{ order.name ? order.name : order.id }}</p>
               </ion-label>
               <ion-badge v-if="order.orderDate" color="dark" slot="end">{{ moment.utc(order.orderDate).fromNow() }}</ion-badge>
             </ion-item>
 
-            <ProductListItem v-for="item in getShipGroupItems(shipGroup, order.items)" :key="item.itemId" :item="item" />
+            <ProductListItem v-for="item in findShipGroupItems(shipGroup.id, order.items)" :key="item.id" :item="item" />
 
-            <ion-item v-if="order.phoneNumber">
+            <ion-item v-if="order.customer.phone">
               <ion-icon :icon="callOutline" slot="start" />
-              <ion-label>{{ order.phoneNumber }}</ion-label>
-              <ion-button fill="outline" slot="end" color="medium" @click="copyToClipboard(order.phoneNumber)">
+              <ion-label>{{ order.customer.phone }}</ion-label>
+              <ion-button fill="outline" slot="end" color="medium" @click="copyToClipboard(order.customer.phone)">
                 {{ $t("Copy") }}
               </ion-button>
             </ion-item>
-            <ion-item lines="full" v-if="order.email">
+            <ion-item lines="full" v-if="order.customer.email">
               <ion-icon :icon="mailOutline" slot="start" />
-              <ion-label>{{ order.email }}</ion-label>
-              <ion-button fill="outline" slot="end" color="medium" @click="copyToClipboard(order.email)">
+              <ion-label>{{ order.customer.email }}</ion-label>
+              <ion-button fill="outline" slot="end" color="medium" @click="copyToClipboard(order.customer.email)">
                 {{ $t("Copy") }}
               </ion-button>
             </ion-item>
             <div class="border-top">
               <ion-button fill="clear" @click.stop="deliverShipment(order)">
-                {{ order.shipmentMethodTypeId === 'STOREPICKUP' ? $t("Handover") : $t("Ship") }}
+                {{ shipGroup.shippingMethod.id === 'STOREPICKUP' ? $t("Handover") : $t("Ship") }}
               </ion-button>
             </div>
           </ion-card>
