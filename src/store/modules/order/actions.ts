@@ -55,7 +55,8 @@ const actions: ActionTree<OrderState , RootState> ={
             return arr
           }, []) as OrderItemGroup,
           statusId: order.statusId,
-          identifications: order.orderIdentifications
+          identifications: order.orderIdentifications,
+          orderDate: order.orderDate
         }));
 
         const total = resp.data.count;

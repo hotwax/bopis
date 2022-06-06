@@ -3,7 +3,7 @@ import { Product } from "./Product";
 export interface Order {
     id: string;
     name: string;
-    customer: any;
+    customer: Customer;
     /** An array containing the items purchased in this order */
     items?: Array<OrderItem>;
     /** An array containing the groups of items purchased in this order */
@@ -11,6 +11,7 @@ export interface Order {
     total?: number;
     statusId?: string;
     identifications?: Array<any>;
+    orderDate?: string
 }
 export interface OrderItem {
     orderItemGroupId?: string;
@@ -28,4 +29,12 @@ export interface OrderItemGroup {
     shippingMethod?: any;
     carrier?: any;
     identifications?: Array<any>;
+}
+
+export interface Customer {
+    id?: string;
+    name?: string;
+    email?: string;
+    phone?: number;
+    address?: string
 }
