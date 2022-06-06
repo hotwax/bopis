@@ -10,32 +10,32 @@
       <ion-list>
         <ion-item lines="none">
           <ion-label>
-            <h2>{{ order.customerName }}</h2>
-            <p>{{ order.orderName ? order.orderName : order.orderId }}</p>
+            <h2>{{ order.customer?.name }}</h2>
+            <p>{{ order.name ? order.name : order.id }}</p>
           </ion-label>
           <ion-badge v-if="order.orderDate" color="dark" slot="end">{{ moment.utc(order.orderDate).fromNow() }}</ion-badge>
         </ion-item>
       </ion-list>
-      <ion-item v-if="order.phoneNumber">
+      <ion-item v-if="order.customer?.phone">
         <ion-icon :icon="callOutline" slot="start" />
-        <ion-label>{{ order.phoneNumber }}</ion-label>
+        <ion-label>{{ order.customer?.phone }}</ion-label>
         <ion-button
           fill="outline"
           slot="end"
           color="medium"
-          @click="copyToClipboard(order.phoneNumber)"
+          @click="copyToClipboard(order.customer?.phone)"
         >
           {{ $t("Copy") }}
         </ion-button>
       </ion-item>
-      <ion-item v-if="order.email" lines="none">
+      <ion-item v-if="order.customer?.email" lines="none">
         <ion-icon :icon="mailOutline" slot="start" />
-        <ion-label>{{ order.email }}</ion-label>
+        <ion-label>{{ order.customer?.email }}</ion-label>
         <ion-button
           fill="outline"
           slot="end"
           color="medium"
-          @click="copyToClipboard(order.email)"
+          @click="copyToClipboard(order.customer?.email)"
         >
           {{ $t("Copy") }}
         </ion-button>
