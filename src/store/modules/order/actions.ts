@@ -83,11 +83,11 @@ const actions: ActionTree<OrderState , RootState> ={
     const current = state.current as any
     const orders = state.open.list as any
 
-    if(current.orderId === payload.orderId) { return current }
+    if(current.id === payload.orderId) { return current }
 
     if(orders.length) {
       const order = orders.find((order: any) => {
-        return order.orderId === payload.orderId;
+        return order.id === payload.orderId;
       })
       if(order) {
         dispatch('updateCurrent', { order })
@@ -99,7 +99,43 @@ const actions: ActionTree<OrderState , RootState> ={
     try {
       resp = await OrderService.getOrderDetails(payload)
       if (resp.status === 200 && resp.data.count > 0 && !hasError(resp)) {
-        const orders = resp.data.docs
+
+        const orders: Order[] = resp.data.docs.map((order: any) => ({
+          id: order.orderId,
+          name: order.orderName,
+          customer: {
+            id: order.customerId,
+            name: order.customerName
+          },
+          items: order.items.map((item: any) => ({
+            orderItemGroupId: item.shipGroupSeqId,
+            id: item.orderItemSeqId,
+            product: {
+              id: item.itemId,
+              name: item.itemName,
+              brand: item.brandName,
+              mainImage: item.images.main.thumbnail,
+              assets: Object.values(item.images.main),
+              feature: item.standardFeatures
+            } as Product,
+            statusId: item.statusId
+          })) as OrderItem[],
+          itemGroup: order.items.reduce((arr: OrderItemGroup[], item: any) => {
+            if (!arr.includes(item.shipGroupSeqId)) {
+              arr.push({
+                id: item.shipGroupSeqId,
+                shippingMethod: {
+                  id: item.shipmentMethodTypeId
+                }
+              })
+            }
+
+            return arr
+          }, []) as OrderItemGroup,
+          statusId: order.statusId,
+          identifications: order.orderIdentifications,
+          orderDate: order.orderDate
+        }));
 
         this.dispatch('product/getProductInformation', { orders })
         dispatch('updateCurrent', { order: orders[0] })
