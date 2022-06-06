@@ -301,7 +301,7 @@ const actions: ActionTree<OrderState , RootState> ={
     return await dispatch("rejectOrderItems", payload).then((resp) => {
       const refreshPickupOrders = resp.find((response: any) => !(response.data._ERROR_MESSAGE_ || response.data._ERROR_MESSAGE_LIST_))
       if (refreshPickupOrders) {
-        showToast(translate('All items were canceled from the order') + ' ' + payload.orderId);
+        showToast(translate('All items were canceled from the order') + ' ' + payload.id);
       } else {
         showToast(translate('Something went wrong'));
       }
@@ -312,17 +312,17 @@ const actions: ActionTree<OrderState , RootState> ={
 
   rejectOrderItems ({ commit }, data) {
     const payload = {
-      'orderId': data.orderId
+      'orderId': data.id
     }
 
     return Promise.all(data.items.map((item: any) => {
       const params = {
         ...payload,
         'rejectReason': item.reason,
-        'facilityId': item.facilityId,
+        'facilityId': item.facilityId, // missing in updated type format
         'orderItemSeqId': item.orderItemSeqId,
-        'shipmentMethodTypeId': item.shipmentMethodTypeId,
-        'quantity': parseInt(item.quantity)
+        'shipmentMethodTypeId': data.itemGroup.find((group: OrderItemGroup) => group.id === item.orderItemGroupId).shippingMethod.id,
+        'quantity': parseInt(item.quantity) // missing in updated type format
       }
       return OrderService.rejectOrderItem({'payload': params}).catch((err) => { 
         return err;
