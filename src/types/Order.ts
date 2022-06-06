@@ -11,7 +11,8 @@ export interface Order {
     total?: number;
     statusId?: string;
     identifications?: Array<any>;
-    orderDate?: string
+    orderDate?: string,
+    shipmentId?: string
 }
 export interface OrderItem {
     orderItemGroupId?: string;

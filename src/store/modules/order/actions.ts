@@ -157,7 +157,8 @@ const actions: ActionTree<OrderState , RootState> ={
             return arr
           }, []) as OrderItemGroup,
           statusId: order.statusId,
-          identifications: order.orderIdentifications
+          identifications: order.orderIdentifications,
+          shipmentId: order.shipmentId
         }));
 
         this.dispatch('product/getProductInformation', { orders })

@@ -35,7 +35,7 @@
               <!-- TODO: Display the packed date of the orders, currently not getting the packed date from API-->
             </ion-item>
 
-            <ProductListItem v-for="item in findShipGroupItems(shipGroup.id, order.items)" :key="item.id" :item="item" />
+            <ProductListItem v-for="item in getShipGroupItems(shipGroup.id, order.items)" :key="item.id" :item="item" />
 
             <ion-item v-if="order.customer.phone">
               <ion-icon :icon="callOutline" slot="start" />
@@ -70,7 +70,7 @@
               <ion-badge v-if="order.orderDate" color="dark" slot="end">{{ moment.utc(order.orderDate).fromNow() }}</ion-badge>
             </ion-item>
 
-            <ProductListItem v-for="item in findShipGroupItems(shipGroup.id, order.items)" :key="item.id" :item="item" />
+            <ProductListItem v-for="item in getShipGroupItems(shipGroup.id, order.items)" :key="item.id" :item="item" />
 
             <ion-item v-if="order.customer.phone">
               <ion-icon :icon="callOutline" slot="start" />
@@ -274,10 +274,6 @@ export default defineComponent({
       return items.find((ele: any) => ele.shipGroupSeqId == shipGroupSeqId).shipmentMethodTypeId
     },
     getShipGroupItems(shipGroupSeqId: any, items: any) {
-      // To get all the items of same shipGroup, further it will use on pickup-order-card component to display line items
-      return items.filter((item: any) => item.shipGroupSeqId == shipGroupSeqId)
-    },
-    findShipGroupItems(shipGroupSeqId: any, items: any) {
       // To get all the items of same shipGroup, further it will use on pickup-order-card component to display line items
       return items.filter((item: any) => item.orderItemGroupId == shipGroupSeqId)
     }
