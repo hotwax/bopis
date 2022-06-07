@@ -127,15 +127,15 @@ const actions: ActionTree<OrderState , RootState> ={
       resp = await OrderService.getPackedOrders(payload)
       if (resp.status === 200 && resp.data.count > 0 && !hasError(resp)) {
         let orders: Order = resp.data.docs.map((order: any) => ({
-          id: order.orderId,
-          name: order.orderName,
+          orderId: order.orderId,
+          orderName: order.orderName,
           customer: {
-            id: order.customerId,
+            partyId: order.customerId,
             name: order.customerName
           },
           items: order.items.map((item: any) => ({
-            orderItemGroupId: item.shipGroupSeqId,
-            id: item.orderItemSeqId,
+            orderPartSeqId: item.shipGroupSeqId,
+            orderItemSeqId: item.orderItemSeqId,
             product: {
               id: item.itemId,
               name: item.itemName,
@@ -146,21 +146,23 @@ const actions: ActionTree<OrderState , RootState> ={
             } as Product,
             statusId: item.statusId
           })) as OrderItem[],
-          itemGroup: order.items.reduce((arr: OrderItemGroup[], item: any) => {
-            if (!arr.includes(item.shipGroupSeqId)) {
+          parts: order.items.reduce((arr: OrderPart[], item: any) => {
+            if (!arr.some((orderPart: any) => orderPart.orderPartSeqId === item.shipGroupSeqId)) {
               arr.push({
-                id: item.shipGroupSeqId,
-                shippingMethod: {
-                  id: item.shipmentMethodTypeId
+                orderPartSeqId: item.shipGroupSeqId,
+                shipmentMethodEnum: {
+                  shipmentMethodEnumId: item.shipmentMethodTypeId
                 }
               })
             }
 
             return arr
-          }, []) as OrderItemGroup,
-          statusId: order.statusId,
+          }, []) as OrderPart,
+          status: {
+            statusId: order.statusId
+          } as Status,
           identifications: order.orderIdentifications,
-          shipmentId: order.shipmentId
+          placedDate: order.orderDate
         }));
 
         this.dispatch('product/getProductInformation', { orders })
@@ -195,7 +197,7 @@ const actions: ActionTree<OrderState , RootState> ={
     try {
       resp = await OrderService.updateShipment(params)
       if (resp.status === 200 && !hasError(resp)) {
-        showToast(translate('Order delivered to', {customerName: order.customerName}))
+        showToast(translate('Order delivered to', {customerName: order.customer.name}))
       } else {
         showToast(translate("Something went wrong"))
       }

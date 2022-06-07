@@ -60,17 +60,17 @@
         </div>
       </div>      
       <div v-if="segmentSelected === 'packed'">
-        <div v-for="order in packedOrders" :key="order.id" v-show="order.itemGroup.length > 0">
-          <ion-card v-for="(shipGroup, index) in order.itemGroup" :key="index">
+        <div v-for="order in packedOrders" :key="order.orderId" v-show="order.parts.length > 0">
+          <ion-card v-for="(orderPart, index) in order.parts" :key="index">
             <ion-item lines="none">
               <ion-label>
                 <h1>{{ order.customer.name }}</h1>
-                <p>{{ order.name ? order.name : order.id }}</p>
+                <p>{{ order.orderName ? order.orderName : order.orderId }}</p>
               </ion-label>
-              <ion-badge v-if="order.orderDate" color="dark" slot="end">{{ moment.utc(order.orderDate).fromNow() }}</ion-badge>
+              <ion-badge v-if="order.placedDate" color="dark" slot="end">{{ moment.utc(order.placedDate).fromNow() }}</ion-badge>
             </ion-item>
 
-            <ProductListItem v-for="item in getShipGroupItems(shipGroup.id, order.items)" :key="item.id" :item="item" />
+            <ProductListItem v-for="item in getShipGroupItems(orderPart.orderPartSeqId, order.items)" :key="item.orderItemSeqId" :item="item" />
 
             <ion-item v-if="order.customer.phone">
               <ion-icon :icon="callOutline" slot="start" />
@@ -88,7 +88,7 @@
             </ion-item>
             <div class="border-top">
               <ion-button fill="clear" @click.stop="deliverShipment(order)">
-                {{ shipGroup.shippingMethod.id === 'STOREPICKUP' ? $t("Handover") : $t("Ship") }}
+                {{ orderPart.shipmentMethodEnum.shipmentMethodEnumId === 'STOREPICKUP' ? $t("Handover") : $t("Ship") }}
               </ion-button>
             </div>
           </ion-card>
