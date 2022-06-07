@@ -21,22 +21,21 @@
     </ion-header>
     <ion-content>
       <div v-if="segmentSelected === 'open'">
-        <div v-for="order in orders" :key="order.id" v-show="order.itemGroup.length > 0">
-          {{ order.itemGroup }}
-          <ion-card v-for="(shipGroup, index) in order.itemGroup" :key="index" @click.prevent="viewOrder(order)">
+        <div v-for="order in orders" :key="order.orderId" v-show="order.parts.length > 0">
+          <ion-card v-for="(orderPart, index) in order.parts" :key="index" @click.prevent="viewOrder(order)">
             <ion-item lines="none">
               <ion-label>
                 <h1>{{ order.customer?.name }}</h1>
-                <p>{{ order.name ? order.name : order.id }}</p>
+                <p>{{ order.orderName ? order.orderName : order.orderId }}</p>
               </ion-label>
               <div class="metadata">
-                <ion-badge v-if="order.orderDate" color="dark">{{ moment.utc(order.orderDate).fromNow() }}</ion-badge>
-                <ion-badge v-if="order.statusId !== 'ORDER_APPROVED'" color="danger">{{ $t('pending approval') }}</ion-badge>
+                <ion-badge v-if="order.placedDate" color="dark">{{ moment.utc(order.placedDate).fromNow() }}</ion-badge>
+                <ion-badge v-if="order.status.statusId !== 'ORDER_APPROVED'" color="danger">{{ $t('pending approval') }}</ion-badge>
               </div>
               <!-- TODO: Display the packed date of the orders, currently not getting the packed date from API-->
             </ion-item>
 
-            <ProductListItem v-for="item in findShipGroupItems(shipGroup.id, order.items)" :key="item.id" :item="item" />
+            <ProductListItem v-for="item in findShipGroupItems(orderPart.orderPartSeqId, order.items)" :key="item.orderItemSeqId" :item="item" />
 
             <ion-item v-if="order.customer?.phone">
               <ion-icon :icon="callOutline" slot="start" />
@@ -53,8 +52,8 @@
               </ion-button>
             </ion-item>
             <div class="border-top">
-              <ion-button fill="clear" @click.stop="readyForPickup(order, shipGroup)">
-                {{ shipGroup.shippingMethod.id === 'STOREPICKUP' ? $t("Ready for pickup") : $t("Ready to ship") }}
+              <ion-button fill="clear" @click.stop="readyForPickup(order, orderPart)">
+                {{ orderPart.shipmentMethodEnum.shipmentMethodEnumId === 'STOREPICKUP' ? $t("Ready for pickup") : $t("Ready to ship") }}
               </ion-button>
             </div>
           </ion-card>
@@ -135,7 +134,7 @@ import { useRouter } from 'vue-router'
 import { copyToClipboard } from '@/utils'
 import * as moment from "moment-timezone";
 import emitter from "@/event-bus"
-import { Order, OrderItemGroup } from "@/types";
+import { Order, OrderPart } from "@/types";
 
 export default defineComponent({
   name: 'Orders',
@@ -187,7 +186,7 @@ export default defineComponent({
       // TODO: find a better approach to handle the case that when in open segment we can click on
       // order card to route on the order details page but not in the packed segment
       await this.store.dispatch('order/updateCurrent', { order }).then(() => {
-        this.$router.push({ path: `/orderdetail/${order.id}` })
+        this.$router.push({ path: `/orderdetail/${order.orderId}` })
       })
     },
     async getPickupOrders (vSize?: any, vIndex?: any) {
@@ -231,8 +230,8 @@ export default defineComponent({
         })
       }
     },
-    async readyForPickup (order: Order, shipGroup: OrderItemGroup) {
-      const pickup = shipGroup.shippingMethod.id === 'STOREPICKUP';
+    async readyForPickup (order: Order, orderPart: OrderPart) {
+      const pickup = orderPart.shipmentMethodEnum.shipmentMethodEnumId === 'STOREPICKUP';
       const header = pickup ? this.$t('Ready for pickup') : this.$t('Ready to ship');
       const message = pickup ? this.$t('An email notification will be sent to that their order is ready for pickup. This order will also be moved to the packed orders tab.', { customerName: order.customer.name, space: '<br/><br/>'}) : '';
 
@@ -246,7 +245,7 @@ export default defineComponent({
           },{
             text: header,
             handler: () => {
-              this.store.dispatch('order/quickShipEntireShipGroup', {order, shipGroup, facilityId: this.currentFacility.facilityId}).then((resp) => {
+              this.store.dispatch('order/quickShipEntireShipGroup', {order, orderPart, facilityId: this.currentFacility.facilityId}).then((resp) => {
                 if (resp.data._EVENT_MESSAGE_) this.getPickupOrders();
               })
             }
@@ -280,7 +279,7 @@ export default defineComponent({
     },
     findShipGroupItems(shipGroupSeqId: any, items: any) {
       // To get all the items of same shipGroup, further it will use on pickup-order-card component to display line items
-      return items.filter((item: any) => item.orderItemGroupId == shipGroupSeqId)
+      return items.filter((item: any) => item.orderPartSeqId == shipGroupSeqId)
     }
   },
   ionViewWillEnter () {
