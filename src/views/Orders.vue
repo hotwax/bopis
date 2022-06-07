@@ -22,10 +22,11 @@
     <ion-content>
       <div v-if="segmentSelected === 'open'">
         <div v-for="order in orders" :key="order.id" v-show="order.itemGroup.length > 0">
+          {{ order.itemGroup }}
           <ion-card v-for="(shipGroup, index) in order.itemGroup" :key="index" @click.prevent="viewOrder(order)">
             <ion-item lines="none">
               <ion-label>
-                <h1>{{ order.customer.name }}</h1>
+                <h1>{{ order.customer?.name }}</h1>
                 <p>{{ order.name ? order.name : order.id }}</p>
               </ion-label>
               <div class="metadata">
@@ -37,14 +38,14 @@
 
             <ProductListItem v-for="item in findShipGroupItems(shipGroup.id, order.items)" :key="item.id" :item="item" />
 
-            <ion-item v-if="order.customer.phone">
+            <ion-item v-if="order.customer?.phone">
               <ion-icon :icon="callOutline" slot="start" />
               <ion-label>{{ order.customer.phone }}</ion-label>
               <ion-button fill="outline" slot="end" color="medium" @click="copyToClipboard(order.customer.phone)">
                 {{ $t("Copy") }}
               </ion-button>
             </ion-item>
-            <ion-item lines="full" v-if="order.customer.email">
+            <ion-item lines="full" v-if="order.customer?.email">
               <ion-icon :icon="mailOutline" slot="start" />
               <ion-label>{{ order.customer.email }}</ion-label>
               <ion-button fill="outline" slot="end" color="medium" @click="copyToClipboard(order.customer.email)">
