@@ -319,10 +319,10 @@ const actions: ActionTree<OrderState , RootState> ={
       const params = {
         ...payload,
         'rejectReason': item.reason,
-        'facilityId': item.facilityId, // missing in updated type format
-        'orderItemSeqId': item.orderItemSeqId,
+        'facilityId': this.state.user.currentFacility.facilityId,
+        'orderItemSeqId': item.id,
         'shipmentMethodTypeId': data.itemGroup.find((group: OrderItemGroup) => group.id === item.orderItemGroupId).shippingMethod.id,
-        'quantity': parseInt(item.quantity) // missing in updated type format
+        'quantity': parseInt(item.quantity)
       }
       return OrderService.rejectOrderItem({'payload': params}).catch((err) => { 
         return err;
