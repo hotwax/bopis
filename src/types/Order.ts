@@ -1,40 +1,41 @@
 import { Product } from "./Product";
+import { Status } from "./Status";
 
 export interface Order {
-    id: string;
-    name: string;
+    orderId: string;
+    orderName: string;
     customer: Customer;
     /** An array containing the items purchased in this order */
     items?: Array<OrderItem>;
     /** An array containing the groups of items purchased in this order */
-    itemGroup?: Array<OrderItemGroup>;
-    total?: number;
-    statusId?: string;
-    identifications?: Array<any>;
-    orderDate?: string
+    parts?: Array<OrderPart>;
+    grandTotal?: number;
+    status?: Status;
+    identifications?: Array<string>;
+    placedDate?: string
 }
 export interface OrderItem {
-    orderItemGroupId?: string;
-    id?: string;
+    orderPartSeqId?: string;
+    orderItemSeqId?: string;
     product?: Product;
     quantity?: number;
-    price?: number;
-    amount?: number;
+    unitListPrice?: number;
+    unitAmount?: number;
     statusId?: string;
 }
-export interface OrderItemGroup {
-    id?: string;
+export interface OrderPart {
+    orderPartSeqId?: string;
     shippingAddress?: any;
     billingAddress?: any;
-    shippingMethod?: any;
-    carrier?: any;
+    shipmentMethodEnum?: any;
+    carrierPartyId?: any;
     identifications?: Array<any>;
 }
 
 export interface Customer {
-    id?: string;
+    partyId?: string;
     name?: string;
-    email?: string;
+    contactMech?: string;
     phone?: number;
-    address?: string
+    postalAddress?: string
 }
