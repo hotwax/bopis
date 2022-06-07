@@ -43,7 +43,7 @@ const actions: ActionTree<OrderState , RootState> ={
             statusId: item.statusId
           })) as OrderItem[],
           itemGroup: order.items.reduce((arr: OrderItemGroup[], item: any) => {
-            if (!arr.includes(item.shipGroupSeqId)) {
+            if (!arr.some((shipGroup) => shipGroup.id === item.shipGroupSeqId)) {
               arr.push({
                 id: item.shipGroupSeqId,
                 shippingMethod: {
