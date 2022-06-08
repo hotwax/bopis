@@ -11,9 +11,9 @@
         <ion-item lines="none">
           <ion-label>
             <h2>{{ order.customer?.name }}</h2>
-            <p>{{ order.name ? order.name : order.id }}</p>
+            <p>{{ order.orderName ? order.orderName : order.orderId }}</p>
           </ion-label>
-          <ion-badge v-if="order.orderDate" color="dark" slot="end">{{ moment.utc(order.orderDate).fromNow() }}</ion-badge>
+          <ion-badge v-if="order.placedDate" color="dark" slot="end">{{ moment.utc(order.placedDate).fromNow() }}</ion-badge>
         </ion-item>
       </ion-list>
       <ion-item v-if="order.customer?.phone">
@@ -65,7 +65,7 @@
   </ion-page>
 </template>
 
-<script>
+<script lang="ts">
 import {
   alertController,
   IonBackButton,
@@ -98,6 +98,7 @@ import { copyToClipboard } from '@/utils'
 import { useRouter } from 'vue-router'
 import * as moment from "moment-timezone";
 import ShipToCustomerModal from "@/components/ShipToCustomerModal.vue";
+import { Order, OrderItem } from "@/types";
 
 export default defineComponent({
   name: "OrderDetail",
@@ -132,7 +133,7 @@ export default defineComponent({
     })
   },
   ionViewDidEnter() {
-    if(this.order.items) this.order.items.map((item) => item['reason'] = this.unfillableReason[0].id);
+    if(this.order.items) this.order.items.map((item: OrderItem | any) => item['reason'] = this.unfillableReason[0].id);
   },
   methods: {
     async shipToCustomer() {
@@ -141,7 +142,7 @@ export default defineComponent({
       });
       return shipmodal.present();
     },
-    async updateOrder (order) {
+    async updateOrder (order: Order) {
       const alert = await alertController
         .create({
           header: this.$t('Update Order'),
@@ -160,7 +161,7 @@ export default defineComponent({
         });
       return alert.present();
     },
-    async getOrderDetail(orderId) {
+    async getOrderDetail(orderId: string) {
       const payload = {
         facilityId: this.currentFacility.facilityId,
         orderId
@@ -169,7 +170,7 @@ export default defineComponent({
     }
   },
   mounted() {
-    this.getOrderDetail(this.$route.params.orderId);
+    this.getOrderDetail(this.$route.params.orderId as string);
   },
   setup () {
     const store = useStore();
