@@ -90,7 +90,7 @@
               <ion-button fill="clear" @click.stop="deliverShipment(order)">
                 {{ order.shipmentMethodTypeId === 'STOREPICKUP' ? $t("Handover") : $t("Ship") }}
               </ion-button>
-              <ion-button fill="clear" slot="end" @click="printPackingSlip(order)">
+              <ion-button v-if="isPackingSlipEnabled" fill="clear" slot="end" @click="printPackingSlip(order)">
                 <ion-icon slot="icon-only" :icon="print" />
               </ion-button>
             </div>
@@ -137,7 +137,7 @@ import { useRouter } from 'vue-router'
 import { copyToClipboard, hasError, showToast } from '@/utils'
 import * as moment from "moment-timezone";
 import emitter from "@/event-bus"
-import api, { client } from "@/api"
+import api from "@/api"
 import { translate } from "@/i18n";
 
 export default defineComponent({
@@ -175,7 +175,8 @@ export default defineComponent({
       packedOrders: 'order/getPackedOrders',
       currentFacility: 'user/getCurrentFacility',
       isPackedOrdersScrollable: 'order/isPackedOrdersScrollable',
-      isOpenOrdersScrollable: 'order/isOpenOrdersScrollable'
+      isOpenOrdersScrollable: 'order/isOpenOrdersScrollable',
+      isPackingSlipEnabled: 'user/getPackingSlipEnabled'
     })
   },
   methods: {
