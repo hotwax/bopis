@@ -67,7 +67,8 @@ const api = async (customConfig: any) => {
         url: customConfig.url,
         method: customConfig.method,
         data: customConfig.data,
-        params: customConfig.params
+        params: customConfig.params,
+        responseType: customConfig.responseType
     }
     const baseURL = store.getters['user/getInstanceUrl'];
     if (baseURL) config.baseURL = `https://${baseURL}.hotwax.io/api/`;
