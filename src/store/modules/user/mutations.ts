@@ -20,6 +20,9 @@ const mutations: MutationTree <UserState> = {
     [types.USER_INSTANCE_URL_UPDATED] (state, payload) {
         state.instanceUrl = payload;
     },
+    [types.USER_PACKING_SLIP_ENABLED_UPDATED] (state, payload) {
+        state.packingSlipEnabled = payload;
+    },
     [types.USER_SHIPPING_ORDERS_STATUS_UPDATED] (state, payload) {
         state.shippingOrders = payload
     }

@@ -12,7 +12,8 @@ const userModule: Module<UserState, RootState> = {
       current: null,
       currentFacility: {},
       instanceUrl: '',
-      shippingOrders: true
+      shippingOrders: true,
+      packingSlipEnabled: false
     },
     getters,
     actions,
