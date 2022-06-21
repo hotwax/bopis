@@ -11,18 +11,19 @@ import store from "@/store";
 const actions: ActionTree<OrderState , RootState> ={
   async getOpenOrders({ commit, state }, payload) {
     // Show loader only when new query and not the infinite scroll
-    if (payload.viewIndex === 0) emitter.emit("presentLoader");
+    if (payload.json.params.start === 0) emitter.emit("presentLoader");
     let resp;
 
     try {
       const shippingOrdersStatus = store.state.user.shippingOrders;
       if(!shippingOrdersStatus){
-        payload.shipmentMethodTypeId= "STOREPICKUP"
+        payload.json.filter.push("shipmentMethodTypeId: STOREPICKUP")
       }
       resp = await OrderService.getOpenOrders(payload)
-      if (resp.status === 200 && resp.data.count > 0 && !hasError(resp)) {
-        let orders = resp.data.docs;
-        const total = resp.data.count;
+      if (resp.status === 200 && resp.data.grouped?.orderId?.ngroups > 0 && !hasError(resp)) {
+
+        let orders = resp.data.grouped?.orderId?.groups;
+        const total = resp.data.grouped?.orderId?.ngroups;
 
         this.dispatch('product/getProductInformation', { orders })
 

@@ -228,11 +228,22 @@ export default defineComponent({
       const viewSize = vSize ? vSize : process.env.VUE_APP_VIEW_SIZE;
       const viewIndex = vIndex ? vIndex : 0;
       const payload = {
-        sortBy: 'orderDate',
-        sortOrder: 'Desc',
-        viewSize,
-        viewIndex,
-        facilityId: this.currentFacility.facilityId
+        "json": {
+          "params": {
+            "rows": viewSize,
+            "sort": "orderDate desc",
+            "group": true,
+            "group.field": "orderId",
+            "group.limit": 1000,
+            "group.ngroups": true,
+            "defType": "edismax",
+            "q.op": "AND",
+            "qf": "orderId orderName",
+            "start": viewIndex * viewSize
+          },
+          "query":"(**)",
+          "filter": ["docType: OISGIR","orderTypeId: SALES_ORDER","orderStatusId:ORDER_APPROVED","isPicked:N","-fulfillmentStatus: Cancelled",`facilityId: ${this.currentFacility.facilityId}`]
+        }
       }
       await this.store.dispatch("order/getOpenOrders", payload);
     },
