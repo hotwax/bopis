@@ -23,11 +23,22 @@ const actions: ActionTree<OrderState , RootState> ={
       if (resp.status === 200 && resp.data.grouped?.orderId?.ngroups > 0 && !hasError(resp)) {
 
         let orders = resp.data.grouped?.orderId?.groups;
+
+        orders.map((order: any) => {
+          order.doclist.docs.map((item: any) => {
+            if (order.items) {
+              order.items.push(item)
+            } else {
+              order.items = [item]
+            }
+          })
+        })
+
         const total = resp.data.grouped?.orderId?.ngroups;
 
         this.dispatch('product/getProductInformation', { orders })
 
-        if(payload.viewIndex && payload.viewIndex > 0) orders = state.open.list.concat(orders)
+        if(payload.json.params.start && payload.json.params.start > 0) orders = state.open.list.concat(orders)
         commit(types.ORDER_OPEN_UPDATED, { orders, total })
         emitter.emit("dismissLoader");
       } else {
@@ -148,7 +159,7 @@ const actions: ActionTree<OrderState , RootState> ={
     emitter.emit("presentLoader")
 
     const params = {
-      orderId: payload.order.orderId,
+      orderId: payload.order.groupValue,
       setPackedOnly: 'Y',
       dimensionUomId: 'WT_kg',
       shipmentBoxTypeId: 'YOURPACKNG',
