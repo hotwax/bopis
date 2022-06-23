@@ -81,7 +81,7 @@ const actions: ActionTree<OrderState , RootState> ={
 
   async getPackedOrders ({ commit, state }, payload) {
     // Show loader only when new query and not the infinite scroll
-    if (payload.viewIndex === 0) emitter.emit("presentLoader");
+    if (payload.json.params.start === 0) emitter.emit("presentLoader");
     let resp;
 
     try {
@@ -134,7 +134,7 @@ const actions: ActionTree<OrderState , RootState> ={
 
         if(payload.json.params.start && payload.json.params.start > 0) orders = state.packed.list.concat(orders)
         commit(types.ORDER_PACKED_UPDATED, { orders, total })
-        if (payload.viewIndex === 0) emitter.emit("dismissLoader");
+        if (payload.json.params.start === 0) emitter.emit("dismissLoader");
       } else {
         commit(types.ORDER_PACKED_UPDATED, { orders: {}, total: 0 })
         showToast(translate("Orders Not Found"))
