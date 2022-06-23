@@ -94,12 +94,69 @@ const actions: ActionTree<OrderState , RootState> ={
         return order;
       }
     }
+
+    const params = {
+      "json": {
+        "params": {
+          "rows": 10,
+          "sort": "orderDate desc",
+          "group": true,
+          "group.field": "orderId",
+          "group.limit": 1000,
+          "group.ngroups": true,
+          "defType": "edismax",
+          "q.op": "AND",
+          "qf": "orderId orderName"
+        },
+        "query":"(**)",
+        "filter": ["docType: OISGIR",`orderId: ${payload.orderId}`,"orderTypeId: SALES_ORDER","orderStatusId: ORDER_APPROVED",`facilityId: ${payload.facilityId}`]
+      }
+    }
+
+    if (payload.orderPartSeqId) {
+      params.json.filter.push(`shipGroupSeqId: ${payload.orderPartSeqId}`)
+    }
     
     let resp;
     try {
-      resp = await OrderService.getOrderDetails(payload)
-      if (resp.status === 200 && resp.data.count > 0 && !hasError(resp)) {
-        const orders = resp.data.docs
+      resp = await OrderService.getOrderDetails(params)
+      if (resp.status === 200 && resp.data.grouped?.orderId?.ngroups > 0 && !hasError(resp)) {
+        const orders = resp.data.grouped?.orderId?.groups.map((order: any) => {
+          const orderItem = order.doclist.docs[0]
+          return {
+            orderId: orderItem.orderId,
+            orderName: orderItem.orderName,
+            customer: {
+              partyId: orderItem.customerId,
+              name: orderItem.customerName
+            },
+            statusId: orderItem.orderStatusId,
+            parts: order.doclist.docs.reduce((arr: Array<any>, item: any) => {
+              if (!arr.some((orderPart: any) => orderPart.orderPartSeqId === item.shipGroupSeqId)) {
+                arr.push({
+                  orderPartSeqId: item.shipGroupSeqId,
+                  shipmentMethodEnum: {
+                    shipmentMethodEnumId: item.shipmentMethodTypeId,
+                    shipmentMethodEnumDesc: item.shipmentMethodTypeDesc
+                  },
+                  items: [{
+                    orderItemSeqId: item.orderItemSeqId,
+                    productId: item.productId
+                  }]
+                })
+              } else {
+                const currentOrderPart = arr.find((orderPart: any) => orderPart.orderPartSeqId === item.shipGroupSeqId)
+                currentOrderPart.items.push({
+                  orderItemSeqId: item.orderItemSeqId,
+                  productId: item.productId
+                })
+              }
+
+              return arr
+            }, []),
+            placedDate: orderItem.orderDate
+          }
+        })
 
         this.dispatch('product/getProductInformation', { orders })
         dispatch('updateCurrent', { order: orders[0] })
@@ -245,13 +302,13 @@ const actions: ActionTree<OrderState , RootState> ={
       'orderId': data.orderId
     }
 
-    return Promise.all(data.items.map((item: any) => {
+    return Promise.all(data.parts[0]?.items.map((item: any) => {
       const params = {
         ...payload,
         'rejectReason': item.reason,
-        'facilityId': item.facilityId,
+        'facilityId': this.state.user.currentFacility.facilityId,
         'orderItemSeqId': item.orderItemSeqId,
-        'shipmentMethodTypeId': item.shipmentMethodTypeId,
+        'shipmentMethodTypeId': data.parts[0].shipmentMethodEnum.shipmentMethodEnumId,
         'quantity': parseInt(item.quantity)
       }
       return OrderService.rejectOrderItem({'payload': params}).catch((err) => { 
