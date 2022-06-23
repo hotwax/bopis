@@ -10,39 +10,39 @@
       <ion-list>
         <ion-item lines="none">
           <ion-label>
-            <h2>{{ order.customerName }}</h2>
+            <h2>{{ order.customer?.name }}</h2>
             <p>{{ order.orderName ? order.orderName : order.orderId }}</p>
           </ion-label>
-          <ion-badge v-if="order.orderDate" color="dark" slot="end">{{ moment.utc(order.orderDate).fromNow() }}</ion-badge>
+          <ion-badge v-if="order.placedDate" color="dark" slot="end">{{ moment.utc(order.placedDate).fromNow() }}</ion-badge>
         </ion-item>
       </ion-list>
-      <ion-item v-if="order.phoneNumber">
+      <ion-item v-if="order.customer?.phoneNumber">
         <ion-icon :icon="callOutline" slot="start" />
-        <ion-label>{{ order.phoneNumber }}</ion-label>
+        <ion-label>{{ order.customer?.phoneNumber }}</ion-label>
         <ion-button
           fill="outline"
           slot="end"
           color="medium"
-          @click="copyToClipboard(order.phoneNumber)"
+          @click="copyToClipboard(order.customer?.phoneNumber)"
         >
           {{ $t("Copy") }}
         </ion-button>
       </ion-item>
-      <ion-item v-if="order.email" lines="none">
+      <ion-item v-if="order.customer?.email" lines="none">
         <ion-icon :icon="mailOutline" slot="start" />
-        <ion-label>{{ order.email }}</ion-label>
+        <ion-label>{{ order.customer?.email }}</ion-label>
         <ion-button
           fill="outline"
           slot="end"
           color="medium"
-          @click="copyToClipboard(order.email)"
+          @click="copyToClipboard(order.customer?.email)"
         >
           {{ $t("Copy") }}
         </ion-button>
       </ion-item>
   
     <main>
-      <ion-card v-for="(item, index) in order?.items" :key="index">
+      <ion-card v-for="(item, index) in order?.parts && order?.parts[0]?.items" :key="index">
         <ProductListItem :item="item" />
         <ion-item lines="none" class="border-top">
           <ion-label>{{ $t("Reason") }}</ion-label>
@@ -132,7 +132,9 @@ export default defineComponent({
     })
   },
   ionViewDidEnter() {
-    if(this.order.items) this.order.items.map((item) => item['reason'] = this.unfillableReason[0].id);
+    if (this.order.parts && this.order.parts[0]) {
+      this.order.parts[0].items.map((item) => item['reason'] = this.unfillableReason[0].id);
+    }
   },
   methods: {
     async shipToCustomer() {
@@ -160,16 +162,17 @@ export default defineComponent({
         });
       return alert.present();
     },
-    async getOrderDetail(orderId) {
+    async getOrderDetail(orderId, orderPartSeqId) {
       const payload = {
         facilityId: this.currentFacility.facilityId,
-        orderId
+        orderId,
+        orderPartSeqId
       }
       await this.store.dispatch("order/getOrderDetail", payload)
     }
   },
   mounted() {
-    this.getOrderDetail(this.$route.params.orderId);
+    this.getOrderDetail(this.$route.params.orderId, this.$route.params.orderPartSeqId);
   },
   setup () {
     const store = useStore();
