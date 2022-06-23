@@ -22,7 +22,7 @@
     <ion-content>
       <div v-if="segmentSelected === 'open'">
         <div v-for="order in orders" :key="order.orderId" v-show="order.parts.length > 0">
-          <ion-card v-for="(part, index) in order.parts" :key="index" @click.prevent="viewOrder(order)">
+          <ion-card v-for="(part, index) in order.parts" :key="index" @click.prevent="viewOrder(order, part)">
             <ion-item lines="none">
               <ion-label>
                 <h1>{{ order.customer.name }}</h1>
@@ -40,14 +40,14 @@
             <ion-item v-if="order.customer.phoneNumber">
               <ion-icon :icon="callOutline" slot="start" />
               <ion-label>{{ order.customer.phoneNumber }}</ion-label>
-              <ion-button fill="outline" slot="end" color="medium" @click="copyToClipboard(order.customer.phoneNumber)">
+              <ion-button fill="outline" slot="end" color="medium" @click.stop="copyToClipboard(order.customer.phoneNumber)">
                 {{ $t("Copy") }}
               </ion-button>
             </ion-item>
             <ion-item lines="full" v-if="order.customer.email">
               <ion-icon :icon="mailOutline" slot="start" />
               <ion-label>{{ order.customer.email }}</ion-label>
-              <ion-button fill="outline" slot="end" color="medium" @click="copyToClipboard(order.customer.email)">
+              <ion-button fill="outline" slot="end" color="medium" @click.stop="copyToClipboard(order.customer.email)">
                 {{ $t("Copy") }}
               </ion-button>
             </ion-item>
@@ -222,11 +222,11 @@ export default defineComponent({
         this.getPackedOrders().then(() => { event.target.complete() });
       }
     },
-    async viewOrder (order: any) {
+    async viewOrder (order: any, part: any) {
       // TODO: find a better approach to handle the case that when in open segment we can click on
       // order card to route on the order details page but not in the packed segment
       await this.store.dispatch('order/updateCurrent', { order }).then(() => {
-        this.$router.push({ path: `/orderdetail/${order.orderId}` })
+        this.$router.push({ path: `/orderdetail/${order.orderId}/${part.orderPartSeqId}` })
       })
     },
     async getPickupOrders (vSize?: any, vIndex?: any) {

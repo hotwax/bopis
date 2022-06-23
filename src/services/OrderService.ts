@@ -10,7 +10,15 @@ const getOpenOrders = async (payload: any): Promise <any> => {
 
 const getOrderDetails = async (payload: any): Promise <any> => {
   return api({
-    url: "wms-orders",
+    url: "solr-query",
+    method: "post",
+    data: payload
+  });
+}
+
+const fetchOrderDetails = async (payload: any): Promise <any> => {
+  return api({
+    url: "solr-query",
     method: "post",
     data: payload
   });
@@ -49,6 +57,7 @@ const rejectOrderItem = async (payload: any): Promise <any> => {
 }
 
 export const OrderService = {
+  fetchOrderDetails,
   getOpenOrders,
   getOrderDetails,
   getPackedOrders,
