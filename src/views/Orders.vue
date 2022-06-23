@@ -243,7 +243,7 @@ export default defineComponent({
             "group.ngroups": true,
             "defType": "edismax",
             "q.op": "AND",
-            "qf": "orderId orderName",
+            "qf": "productId productName virtualProductName orderId productSku customerId customerName search_orderIdentifications goodIdentifications",
             "start": viewIndex * viewSize
           },
           "query":"(**)",
