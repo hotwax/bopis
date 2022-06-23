@@ -91,8 +91,7 @@ const actions: ActionTree<OrderState , RootState> ={
       }
       resp = await OrderService.getPackedOrders(payload)
       if (resp.status === 200 && resp.data.grouped?.orderId?.ngroups > 0 && !hasError(resp)) {
-        let orders = [];
-        orders = resp?.data?.grouped?.orderId?.groups.map((order: any) => {
+        let orders = resp?.data?.grouped?.orderId?.groups.map((order: any) => {
           const orderItem = order.doclist.docs[0]
           return {
             orderId: orderItem.orderId,
@@ -102,8 +101,6 @@ const actions: ActionTree<OrderState , RootState> ={
             customer: {
               partyId: orderItem.customerId,
               name: orderItem.customerName,
-              email: orderItem.customerEmailId,
-              phoneNumber: orderItem.contactPhoneNumbers ? orderItem.contactPhoneNumbers[0] : ''
             },
             statusId: orderItem.orderStatusId,
             parts: order.doclist.docs.reduce((arr: Array<any>, item: any) => {
@@ -131,7 +128,6 @@ const actions: ActionTree<OrderState , RootState> ={
             placedDate: orderItem.orderDate
           }
         })
-        console.log(orders);
         this.dispatch('product/getProductInformation', { orders });
 
         const total = resp.data.grouped?.orderId?.ngroups;
