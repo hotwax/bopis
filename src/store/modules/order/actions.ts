@@ -22,16 +22,41 @@ const actions: ActionTree<OrderState , RootState> ={
       resp = await OrderService.getOpenOrders(payload)
       if (resp.status === 200 && resp.data.grouped?.orderId?.ngroups > 0 && !hasError(resp)) {
 
-        let orders = resp.data.grouped?.orderId?.groups;
+        let orders = resp.data.grouped?.orderId?.groups.map((order: any) => {
+          const orderItem = order.doclist.docs[0]
+          return {
+            orderId: orderItem.orderId,
+            orderName: orderItem.orderName,
+            customer: {
+              partyId: orderItem.customerId,
+              name: orderItem.customerName
+            },
+            statusId: orderItem.orderStatusId,
+            parts: order.doclist.docs.reduce((arr: Array<any>, item: any) => {
+              if (!arr.some((orderPart: any) => orderPart.orderPartSeqId === item.shipGroupSeqId)) {
+                arr.push({
+                  orderPartSeqId: item.shipGroupSeqId,
+                  shipmentMethodEnum: {
+                    shipmentMethodEnumId: item.shipmentMethodTypeId,
+                    shipmentMethodEnumDesc: item.shipmentMethodTypeDesc
+                  },
+                  items: [{
+                    orderItemSeqId: item.orderItemSeqId,
+                    productId: item.productId
+                  }]
+                })
+              } else {
+                const currentOrderPart = arr.find((orderPart: any) => orderPart.orderPartSeqId === item.shipGroupSeqId)
+                currentOrderPart.items.push({
+                  orderItemSeqId: item.orderItemSeqId,
+                  productId: item.productId
+                })
+              }
 
-        orders.map((order: any) => {
-          order.doclist.docs.map((item: any) => {
-            if (order.items) {
-              order.items.push(item)
-            } else {
-              order.items = [item]
-            }
-          })
+              return arr
+            }, []),
+            placedDate: orderItem.orderDate
+          }
         })
 
         const total = resp.data.grouped?.orderId?.ngroups;
@@ -159,14 +184,14 @@ const actions: ActionTree<OrderState , RootState> ={
     emitter.emit("presentLoader")
 
     const params = {
-      orderId: payload.order.groupValue,
+      orderId: payload.order?.orderId,
       setPackedOnly: 'Y',
       dimensionUomId: 'WT_kg',
       shipmentBoxTypeId: 'YOURPACKNG',
       weight: '1',
       weightUomId: 'WT_kg',
       facilityId: payload.facilityId,
-      shipGroupSeqId: payload.shipGroupSeqId
+      shipGroupSeqId: payload.part?.orderPartSeqId
     }
     
     let resp;
@@ -178,7 +203,7 @@ const actions: ActionTree<OrderState , RootState> ={
           Because we get the shipmentMethodTypeId on items level in wms-orders API.
           As we already get shipmentMethodTypeId on order level in readytoshiporders API hence we will not use this method on packed orders segment.
         */
-        const shipmentMethodTypeId = payload.order.items.find((ele: any) => ele.shipGroupSeqId == payload.shipGroupSeqId).shipmentMethodTypeId
+        const shipmentMethodTypeId = payload.part?.shipmentMethodEnum?.shipmentMethodEnumId
         if (shipmentMethodTypeId !== 'STOREPICKUP') {
           // TODO: find a better way to get the shipmentId
           const shipmentId = resp.data._EVENT_MESSAGE_.match(/\d+/g)[0]

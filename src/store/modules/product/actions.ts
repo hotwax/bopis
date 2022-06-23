@@ -47,9 +47,11 @@ const actions: ActionTree<ProductState, RootState> = {
     orders.forEach((order: any) => {
       // TODO: remove this check and only use the doclist pattern when using solr-query
       // For now, added the if-else to have backward compatibility
-      if (order?.doclist?.docs) {
-        order.doclist.docs.forEach((item: any) => {
-          if (item.productId) productIds.add(item.productId);
+      if (order?.parts) {
+        order.parts.forEach((part: any) => {
+          part.items.map((item: any) => {
+            if (item.productId) productIds.add(item.productId);
+          })
         });
       } else {
         order.items.forEach((item: any) => {
