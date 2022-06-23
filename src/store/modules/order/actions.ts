@@ -86,13 +86,53 @@ const actions: ActionTree<OrderState , RootState> ={
 
     try {
       resp = await OrderService.getPackedOrders(payload)
-      if (resp.status === 200 && resp.data.count > 0 && !hasError(resp)) {
-        let orders = resp.data.docs;
+      if (resp.status === 200 && resp.data.grouped?.orderId?.ngroups > 0 && !hasError(resp)) {
+        let orders = [];
+        orders = resp?.data?.grouped?.orderId?.groups.map((order: any) => {
+          const orderItem = order.doclist.docs[0]
+          return {
+            orderId: orderItem.orderId,
+            orderName: orderItem.orderName,
+            shipmentId: orderItem.shipmentId,
 
-        this.dispatch('product/getProductInformation', { orders })
+            customer: {
+              partyId: orderItem.customerId,
+              name: orderItem.customerName,
+              email: orderItem.customerEmailId,
+              phoneNumber: orderItem.contactPhoneNumbers ? orderItem.contactPhoneNumbers[0] : ''
+            },
+            statusId: orderItem.orderStatusId,
+            parts: order.doclist.docs.reduce((arr: Array<any>, item: any) => {
+              if (!arr.some((orderPart: any) => orderPart.orderPartSeqId === item.shipGroupSeqId)) {
+                arr.push({
+                  orderPartSeqId: item.shipGroupSeqId,
+                  shipmentMethodEnum: {
+                    shipmentMethodEnumId: item.shipmentMethodTypeId
+                  },
+                  items: [{
+                    orderItemSeqId: item.orderItemSeqId,
+                    productId: item.productId
+                  }]
+                })
+              } else {
+                const currentOrderPart = arr.find((orderPart: any) => orderPart.orderPartSeqId === item.shipGroupSeqId)
+                currentOrderPart.items.push({
+                  orderItemSeqId: item.orderItemSeqId,
+                  productId: item.productId
+                })
+              }
 
-        const total = resp.data.count;
-        if(payload.viewIndex && payload.viewIndex > 0) orders = state.packed.list.concat(orders)
+              return arr
+            }, []),
+            placedDate: orderItem.orderDate
+          }
+        })
+        console.log(orders);
+        this.dispatch('product/getProductInformation', { orders });
+
+        const total = resp.data.grouped?.orderId?.ngroups;
+
+        if(payload.json.params.start && payload.json.params.start > 0) orders = state.packed.list.concat(orders)
         commit(types.ORDER_PACKED_UPDATED, { orders, total })
         if (payload.viewIndex === 0) emitter.emit("dismissLoader");
       } else {
@@ -110,7 +150,6 @@ const actions: ActionTree<OrderState , RootState> ={
 
   async deliverShipment ({ dispatch }, order) {
     emitter.emit("presentLoader");
-
     const params = {
       shipmentId: order.shipmentId,
       statusId: 'SHIPMENT_SHIPPED'

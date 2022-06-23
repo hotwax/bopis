@@ -7,7 +7,7 @@
 
       <ion-toolbar>
         <div>
-          <ion-searchbar :placeholder= "$t('Search Orders')" />
+          <ion-searchbar @ionFocus="selectSearchBarText($event)" v-model="queryString" @keyup.enter="queryString = $event.target.value; searchOrders()"  />
           <ion-segment v-model="segmentSelected" @ionChange="segmentChanged">
             <ion-segment-button value="open">
               <ion-label>{{ $t("Open") }}</ion-label>
@@ -60,35 +60,35 @@
         </div>
       </div>      
       <div v-if="segmentSelected === 'packed'">
-        <div v-for="order in packedOrders" :key="order.orderId" v-show="getShipGroups(order.items).length > 0">
-          <ion-card v-for="(shipGroup, index) in getShipGroups(order.items)" :key="index">
+        <div v-for="order in packedOrders" :key="order.orderId" v-show="order.parts.length > 0">
+          <ion-card v-for="(part, index) in order.parts" :key="index">
             <ion-item lines="none">
               <ion-label>
-                <h1>{{ order.customerName }}</h1>
+                <h1>{{ order.customer.name }}</h1>
                 <p>{{ order.orderName ? order.orderName : order.orderId }}</p>
               </ion-label>
-              <ion-badge v-if="order.orderDate" color="dark" slot="end">{{ moment.utc(order.orderDate).fromNow() }}</ion-badge>
+              <ion-badge v-if="order.placedDate" color="dark" slot="end">{{ moment.utc(order.placedDate).fromNow() }}</ion-badge>
             </ion-item>
 
-            <ProductListItem v-for="item in getShipGroupItems(shipGroup, order.items)" :key="item.itemId" :item="item" />
+            <ProductListItem v-for="item in part.items" :key="item.productId" :item="item" />
 
-            <ion-item v-if="order.phoneNumber">
+            <ion-item v-if="order.customer.phoneNumber">
               <ion-icon :icon="callOutline" slot="start" />
-              <ion-label>{{ order.phoneNumber }}</ion-label>
-              <ion-button fill="outline" slot="end" color="medium" @click="copyToClipboard(order.phoneNumber)">
+              <ion-label>{{ order.customer.phoneNumber }}</ion-label>
+              <ion-button fill="outline" slot="end" color="medium" @click.stop="copyToClipboard(order.customer.phoneNumber)">
                 {{ $t("Copy") }}
               </ion-button>
             </ion-item>
-            <ion-item lines="full" v-if="order.email">
+            <ion-item lines="full" v-if="order.customer.email">
               <ion-icon :icon="mailOutline" slot="start" />
-              <ion-label>{{ order.email }}</ion-label>
-              <ion-button fill="outline" slot="end" color="medium" @click="copyToClipboard(order.email)">
+              <ion-label>{{ order.customer.email }}</ion-label>
+              <ion-button fill="outline" slot="end" color="medium" @click.stop="copyToClipboard(order.customer.email)">
                 {{ $t("Copy") }}
               </ion-button>
             </ion-item>
             <div class="border-top">
               <ion-button fill="clear" @click.stop="deliverShipment(order)">
-                {{ order.shipmentMethodTypeId === 'STOREPICKUP' ? $t("Handover") : $t("Ship") }}
+                {{ part.shipmentMethodEnum.shipmentMethodEnumId === 'STOREPICKUP' ? $t("Handover") : $t("Ship") }}
               </ion-button>
               <ion-button v-if="isPackingSlipEnabled" fill="clear" slot="end" @click="printPackingSlip(order)">
                 <ion-icon slot="icon-only" :icon="print" />
@@ -179,6 +179,11 @@ export default defineComponent({
       isPackingSlipEnabled: 'user/getPackingSlipEnabled'
     })
   },
+  data() {
+    return {
+      queryString: ''
+    }
+  },
   methods: {
     async printPackingSlip(order: any) {
 
@@ -240,12 +245,26 @@ export default defineComponent({
       const viewSize = vSize ? vSize : process.env.VUE_APP_VIEW_SIZE;
       const viewIndex = vIndex ? vIndex : 0;
       const payload = {
-        sortBy: 'createdDate',
-        sortOrder: 'Desc',
-        viewSize,
-        viewIndex,
-        facilityId: this.currentFacility.facilityId
+        "json": {
+          "params": {
+            "rows": "10",
+            "sort": "orderDate desc",
+            "group": true,
+            "group.field": "orderId",
+            "group.limit": 1000,
+            "group.ngroups": true,
+            "defType": "edismax",
+            "q.op": "AND",
+            "qf": "productId productName virtualProductName orderId search_orderIdentifications productSku customerId customerName goodIdentifications",
+            "start": 0
+          },
+          "query":"(**)",
+          "filter": ["docType:OISGIR", `facilityId: ${this.currentFacility.facilityId}`,"shipmentStatusId: SHIPMENT_PACKED"]
+        }
       };
+      if (this.queryString) {
+        payload.json.query = `(*${this.queryString}*)`
+      }
       await this.store.dispatch("order/getPackedOrders", payload);
     },
     async loadMoreProducts (event: any) {
@@ -311,6 +330,18 @@ export default defineComponent({
     getShipGroupItems(shipGroupSeqId: any, items: any) {
       // To get all the items of same shipGroup, further it will use on pickup-order-card component to display line items
       return items.filter((item: any) => item.shipGroupSeqId == shipGroupSeqId)
+    },
+    async searchOrders(ev: CustomEvent) {
+      if(this.segmentSelected === 'open') {
+        this.getPickupOrders()
+      } else {
+        this.getPackedOrders()
+      }
+    },
+    selectSearchBarText(event: any) {
+      event.target.getInputElement().then((element: any) => {
+        element.select();
+      })
     }
   },
   ionViewWillEnter () {
