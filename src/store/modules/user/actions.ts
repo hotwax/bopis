@@ -58,6 +58,9 @@ const actions: ActionTree<UserState, RootState> = {
       if (resp.data.userTimeZone !== localTimeZone) {
         emitter.emit('timeZoneDifferent', { profileTimeZone: resp.data.userTimeZone, localTimeZone});
       }
+      JSON.stringify(await UserService.getShippingOrderPreference({
+        'userPrefTypeId': 'BOPIS_SETTINGS'
+      }));
       commit(types.USER_INFO_UPDATED, resp.data);
       commit(types.USER_CURRENT_FACILITY_UPDATED, resp.data.facilities.length > 0 ? resp.data.facilities[0] : {});
     }
@@ -97,6 +100,10 @@ const actions: ActionTree<UserState, RootState> = {
 
   setShippingOrdersStatus( {state, commit }, payload){
     commit(types.USER_SHIPPING_ORDERS_STATUS_UPDATED, payload)
+    JSON.stringify(UserService.setShippingOrderPreference({
+      'userPrefTypeId': 'BOPIS_SETTINGS',
+      'userPrefValue': payload
+    }));
   }
 }
 export default actions;

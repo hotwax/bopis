@@ -31,10 +31,25 @@ const setUserTimeZone = async (payload: any): Promise <any>  => {
     data: payload
   });
 }
-
+const getShippingOrderPreference = async (payload: any): Promise<any> => {
+  return api({
+    url: "service/getUserPreference",
+    method: "post",
+    data: payload
+  });
+}
+const setShippingOrderPreference = async (payload: any): Promise<any> => {
+  return api({
+    url: "service/setUserPreference",
+    method: "post",
+    data: payload
+  });
+}
 export const UserService = {
     login,
     getAvailableTimeZones,
     getProfile,
     setUserTimeZone,
+    getShippingOrderPreference,
+    setShippingOrderPreference
 }
