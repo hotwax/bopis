@@ -85,6 +85,10 @@ const actions: ActionTree<OrderState , RootState> ={
     let resp;
 
     try {
+      const shippingOrdersStatus = store.state.user.shippingOrders;
+      if(!shippingOrdersStatus){
+        payload.json.filter.push("shipmentMethodTypeId: STOREPICKUP")
+      }
       resp = await OrderService.getPackedOrders(payload)
       if (resp.status === 200 && resp.data.grouped?.orderId?.ngroups > 0 && !hasError(resp)) {
         let orders = [];
