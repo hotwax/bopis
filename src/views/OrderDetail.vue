@@ -52,10 +52,11 @@
         </ion-item>
       </ion-card>
 
-      <ion-button expand="block" fill="outline" @click="shipToCustomer()">
+      <!-- TODO: implement functionality to change shipping address -->
+      <!-- <ion-button expand="block" fill="outline" @click="shipToCustomer()">
         {{ $t("Ship to customer") }}
         <ion-icon :icon="sendOutline" slot="end" />
-      </ion-button>
+      </ion-button> -->
 
       <ion-button expand="block" color="danger" fill="outline" @click="updateOrder(order)">
         {{ $t("Reject Order") }}
