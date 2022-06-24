@@ -15,7 +15,7 @@ const actions: ActionTree<OrderState , RootState> ={
     let resp;
 
     try {
-      const shippingOrdersStatus = store.state.user.preference.shippingOrders;
+      const shippingOrdersStatus = store.state.user.preference.showShippingOrders;
       if(!shippingOrdersStatus){
         payload.shipmentMethodTypeId= "STOREPICKUP"
       }
