@@ -2,7 +2,7 @@ import api from '@/api'
 
 const getOpenOrders = async (payload: any): Promise <any> => {
   return api({
-    url: "solr-query",
+    url: "wms-orders",
     method: "post",
     data: payload
   });
@@ -10,7 +10,7 @@ const getOpenOrders = async (payload: any): Promise <any> => {
 
 const getOrderDetails = async (payload: any): Promise <any> => {
   return api({
-    url: "solr-query",
+    url: "wms-orders",
     method: "post",
     data: payload
   });

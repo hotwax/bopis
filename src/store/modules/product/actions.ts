@@ -45,19 +45,9 @@ const actions: ActionTree<ProductState, RootState> = {
   async getProductInformation ({ dispatch }, { orders }) {
     let productIds: any = new Set();
     orders.forEach((order: any) => {
-      // TODO: remove this check and only use the doclist pattern when using solr-query
-      // For now, added the if-else to have backward compatibility
-      if (order?.parts) {
-        order.parts.forEach((part: any) => {
-          part.items.map((item: any) => {
-            if (item.productId) productIds.add(item.productId);
-          })
-        });
-      } else {
-        order.items.forEach((item: any) => {
-          if (item.itemId) productIds.add(item.itemId);
-        });
-      }
+      order.items.forEach((item: any) => {
+        if (item.itemId) productIds.add(item.itemId);
+      });
     });
     productIds = [...productIds]
     if (productIds.length) {
