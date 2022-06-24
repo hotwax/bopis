@@ -232,30 +232,8 @@ export default defineComponent({
     async getPickupOrders (vSize?: any, vIndex?: any) {
       const viewSize = vSize ? vSize : process.env.VUE_APP_VIEW_SIZE;
       const viewIndex = vIndex ? vIndex : 0;
-      const payload = {
-        "json": {
-          "params": {
-            "rows": viewSize,
-            "sort": "orderDate desc",
-            "group": true,
-            "group.field": "orderId",
-            "group.limit": 1000,
-            "group.ngroups": true,
-            "defType": "edismax",
-            "q.op": "AND",
-            "qf": "productId productName virtualProductName orderId productSku customerId customerName search_orderIdentifications goodIdentifications",
-            "start": viewIndex * viewSize
-          },
-          "query":"(**)",
-          "filter": ["docType: OISGIR","orderTypeId: SALES_ORDER","orderStatusId: ORDER_APPROVED", `facilityId: ${this.currentFacility.facilityId}`,"-shipmentStatusId: *","-fulfillmentStatus : Cancelled"]
-        }
-      }
 
-      if (this.queryString) {
-        payload.json.query = `(*${this.queryString}*)`
-      }
-
-      await this.store.dispatch("order/getOpenOrders", payload);
+      await this.store.dispatch("order/getOpenOrders", { viewSize, viewIndex, queryString: this.queryString, facilityId: this.currentFacility.facilityId });
     },
     async getPackedOrders (vSize?: any, vIndex?: any) {
       const viewSize = vSize ? vSize : process.env.VUE_APP_VIEW_SIZE;

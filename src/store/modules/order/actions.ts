@@ -7,19 +7,25 @@ import { hasError , showToast } from "@/utils";
 import { translate } from "@/i18n";
 import emitter from '@/event-bus'
 import store from "@/store";
+import { prepareOISGIRQuery } from "@/utils/solrHelper";
 
 const actions: ActionTree<OrderState , RootState> ={
   async getOpenOrders({ commit, state }, payload) {
     // Show loader only when new query and not the infinite scroll
-    if (payload.json.params.start === 0) emitter.emit("presentLoader");
+    if (payload.viewIndex === 0) emitter.emit("presentLoader");
     let resp;
 
+    const solrQueryPayload = prepareOISGIRQuery({
+      ...payload,
+      shippingOrdersStatus: store.state.user.shippingOrders,
+      _shipmentStatusId: '*',
+      _fulfillmentStatus: 'Cancelled',
+      orderStatusId: 'ORDER_APPROVED',
+      orderTypeId: 'SALES_ORDER'
+    })
+
     try {
-      const shippingOrdersStatus = store.state.user.shippingOrders;
-      if(!shippingOrdersStatus){
-        payload.json.filter.push("shipmentMethodTypeId: STOREPICKUP")
-      }
-      resp = await OrderService.getOpenOrders(payload)
+      resp = await OrderService.getOpenOrders(solrQueryPayload)
       if (resp.status === 200 && resp.data.grouped?.orderId?.ngroups > 0 && !hasError(resp)) {
 
         let orders = resp.data.grouped?.orderId?.groups.map((order: any) => {
@@ -63,7 +69,7 @@ const actions: ActionTree<OrderState , RootState> ={
 
         this.dispatch('product/getProductInformation', { orders })
 
-        if(payload.json.params.start && payload.json.params.start > 0) orders = state.open.list.concat(orders)
+        if(payload.viewIndex && payload.viewIndex > 0) orders = state.open.list.concat(orders)
         commit(types.ORDER_OPEN_UPDATED, { orders, total })
         emitter.emit("dismissLoader");
       } else {
@@ -95,31 +101,15 @@ const actions: ActionTree<OrderState , RootState> ={
       }
     }
 
-    const params = {
-      "json": {
-        "params": {
-          "rows": 10,
-          "sort": "orderDate desc",
-          "group": true,
-          "group.field": "orderId",
-          "group.limit": 1000,
-          "group.ngroups": true,
-          "defType": "edismax",
-          "q.op": "AND",
-          "qf": "orderId orderName"
-        },
-        "query":"(**)",
-        "filter": ["docType: OISGIR",`orderId: ${payload.orderId}`,"orderTypeId: SALES_ORDER","orderStatusId: ORDER_APPROVED",`facilityId: ${payload.facilityId}`]
-      }
-    }
-
-    if (payload.orderPartSeqId) {
-      params.json.filter.push(`shipGroupSeqId: ${payload.orderPartSeqId}`)
-    }
+    const solrQueryPayload = prepareOISGIRQuery({
+      ...payload,
+      orderStatusId: 'ORDER_APPROVED',
+      orderTypeId: 'SALES_ORDER'
+    })
     
     let resp;
     try {
-      resp = await OrderService.getOrderDetails(params)
+      resp = await OrderService.getOrderDetails(solrQueryPayload)
       if (resp.status === 200 && resp.data.grouped?.orderId?.ngroups > 0 && !hasError(resp)) {
         const orders = resp.data.grouped?.orderId?.groups.map((order: any) => {
           const orderItem = order.doclist.docs[0]
