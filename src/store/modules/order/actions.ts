@@ -87,15 +87,17 @@ const actions: ActionTree<OrderState , RootState> ={
 
   async getOrderDetail( { dispatch, state }, payload ) {
     const current = state.current as any
-    const orders = state.open.list as any
+    const orders = JSON.parse(JSON.stringify(state.open.list)) as any
 
-    if(current.orderId === payload.orderId) { return current }
+    if(current.orderId === payload.orderId && current.parts[0].orderPartSeqId === payload.orderPartSeqId) { return current }
 
     if(orders.length) {
       const order = orders.find((order: any) => {
         return order.orderId === payload.orderId;
       })
       if(order) {
+        // storing only the current selected part in the current order
+        order.parts = order.parts.filter((part: any) => part.orderPartSeqId === payload.orderPartSeqId)
         dispatch('updateCurrent', { order })
         return order;
       }

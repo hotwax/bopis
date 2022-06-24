@@ -53,7 +53,7 @@
             </ion-item>
             <div class="border-top">
               <ion-button fill="clear" @click.stop="readyForPickup(order, part)">
-                {{ part.shipmentMethodEnum.shipmentMethodEnumId === 'STOREPICKUP' ? $t("Ready for pickup") : $t("Ready to ship") }}
+                {{ part.shipmentMethodEnum?.shipmentMethodEnumId === 'STOREPICKUP' ? $t("Ready for pickup") : $t("Ready to ship") }}
               </ion-button>
             </div>
           </ion-card>
