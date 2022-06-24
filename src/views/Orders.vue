@@ -7,7 +7,7 @@
 
       <ion-toolbar>
         <div>
-          <ion-searchbar :placeholder= "$t('Search Orders')" />
+          <ion-searchbar @ionFocus="selectSearchBarText($event)" v-model="queryString" @keyup.enter="queryString = $event.target.value; searchOrders()" :placeholder= "$t('Search Orders')" />
           <ion-segment v-model="segmentSelected" @ionChange="segmentChanged">
             <ion-segment-button value="open">
               <ion-label>{{ $t("Open") }}</ion-label>
@@ -21,39 +21,39 @@
     </ion-header>
     <ion-content>
       <div v-if="segmentSelected === 'open'">
-        <div v-for="order in orders" :key="order.orderId" v-show="getShipGroups(order.items).length > 0">
-          <ion-card v-for="(shipGroup, index) in getShipGroups(order.items)" :key="index" @click.prevent="viewOrder(order)">
+        <div v-for="order in orders" :key="order.orderId" v-show="order.parts.length > 0">
+          <ion-card v-for="(part, index) in order.parts" :key="index" @click.prevent="viewOrder(order, part)">
             <ion-item lines="none">
               <ion-label>
-                <h1>{{ order.customerName }}</h1>
+                <h1>{{ order.customer.name }}</h1>
                 <p>{{ order.orderName ? order.orderName : order.orderId }}</p>
               </ion-label>
               <div class="metadata">
-                <ion-badge v-if="order.orderDate" color="dark">{{ moment.utc(order.orderDate).fromNow() }}</ion-badge>
+                <ion-badge v-if="order.placedDate" color="dark">{{ moment.utc(order.placedDate).fromNow() }}</ion-badge>
                 <ion-badge v-if="order.statusId !== 'ORDER_APPROVED'" color="danger">{{ $t('pending approval') }}</ion-badge>
               </div>
               <!-- TODO: Display the packed date of the orders, currently not getting the packed date from API-->
             </ion-item>
 
-            <ProductListItem v-for="item in getShipGroupItems(shipGroup, order.items)" :key="item.itemId" :item="item" />
+            <ProductListItem v-for="item in part.items" :key="item.productId" :item="item" />
 
-            <ion-item v-if="order.phoneNumber">
+            <ion-item v-if="order.customer.phoneNumber">
               <ion-icon :icon="callOutline" slot="start" />
-              <ion-label>{{ order.phoneNumber }}</ion-label>
-              <ion-button fill="outline" slot="end" color="medium" @click="copyToClipboard(order.phoneNumber)">
+              <ion-label>{{ order.customer.phoneNumber }}</ion-label>
+              <ion-button fill="outline" slot="end" color="medium" @click.stop="copyToClipboard(order.customer.phoneNumber)">
                 {{ $t("Copy") }}
               </ion-button>
             </ion-item>
-            <ion-item lines="full" v-if="order.email">
+            <ion-item lines="full" v-if="order.customer.email">
               <ion-icon :icon="mailOutline" slot="start" />
-              <ion-label>{{ order.email }}</ion-label>
-              <ion-button fill="outline" slot="end" color="medium" @click="copyToClipboard(order.email)">
+              <ion-label>{{ order.customer.email }}</ion-label>
+              <ion-button fill="outline" slot="end" color="medium" @click.stop="copyToClipboard(order.customer.email)">
                 {{ $t("Copy") }}
               </ion-button>
             </ion-item>
             <div class="border-top">
-              <ion-button fill="clear" @click.stop="readyForPickup(order, shipGroup)">
-                {{ getShipmentMethod(shipGroup, order.items) === 'STOREPICKUP' ? $t("Ready for pickup") : $t("Ready to ship") }}
+              <ion-button fill="clear" @click.stop="readyForPickup(order, part)">
+                {{ part.shipmentMethodEnum.shipmentMethodEnumId === 'STOREPICKUP' ? $t("Ready for pickup") : $t("Ready to ship") }}
               </ion-button>
             </div>
           </ion-card>
@@ -179,6 +179,11 @@ export default defineComponent({
       isPackingSlipEnabled: 'user/getPackingSlipEnabled'
     })
   },
+  data() {
+    return {
+      queryString: ''
+    }
+  },
   methods: {
     async printPackingSlip(order: any) {
 
@@ -217,24 +222,18 @@ export default defineComponent({
         this.getPackedOrders().then(() => { event.target.complete() });
       }
     },
-    async viewOrder (order: any) {
+    async viewOrder (order: any, part: any) {
       // TODO: find a better approach to handle the case that when in open segment we can click on
       // order card to route on the order details page but not in the packed segment
       await this.store.dispatch('order/updateCurrent', { order }).then(() => {
-        this.$router.push({ path: `/orderdetail/${order.orderId}` })
+        this.$router.push({ path: `/orderdetail/${order.orderId}/${part.orderPartSeqId}` })
       })
     },
     async getPickupOrders (vSize?: any, vIndex?: any) {
       const viewSize = vSize ? vSize : process.env.VUE_APP_VIEW_SIZE;
       const viewIndex = vIndex ? vIndex : 0;
-      const payload = {
-        sortBy: 'orderDate',
-        sortOrder: 'Desc',
-        viewSize,
-        viewIndex,
-        facilityId: this.currentFacility.facilityId
-      }
-      await this.store.dispatch("order/getOpenOrders", payload);
+
+      await this.store.dispatch("order/getOpenOrders", { viewSize, viewIndex, queryString: this.queryString, facilityId: this.currentFacility.facilityId });
     },
     async getPackedOrders (vSize?: any, vIndex?: any) {
       const viewSize = vSize ? vSize : process.env.VUE_APP_VIEW_SIZE;
@@ -265,10 +264,10 @@ export default defineComponent({
         })
       }
     },
-    async readyForPickup (order: any, shipGroup: any) {
-      const pickup = this.getShipmentMethod(shipGroup, order.items) === 'STOREPICKUP';
+    async readyForPickup (order: any, part: any) {
+      const pickup = part.shipmentMethodEnum?.shipmentMethodEnumId === 'STOREPICKUP';
       const header = pickup ? this.$t('Ready for pickup') : this.$t('Ready to ship');
-      const message = pickup ? this.$t('An email notification will be sent to that their order is ready for pickup. This order will also be moved to the packed orders tab.', { customerName: order.customerName, space: '<br/><br/>'}) : '';
+      const message = pickup ? this.$t('An email notification will be sent to that their order is ready for pickup. This order will also be moved to the packed orders tab.', { customerName: order.customer.name, space: '<br/><br/>'}) : '';
 
       const alert = await alertController
         .create({
@@ -280,7 +279,7 @@ export default defineComponent({
           },{
             text: header,
             handler: () => {
-              this.store.dispatch('order/quickShipEntireShipGroup', {order, shipGroupSeqId: shipGroup, facilityId: this.currentFacility.facilityId}).then((resp) => {
+              this.store.dispatch('order/quickShipEntireShipGroup', {order, part, facilityId: this.currentFacility.facilityId}).then((resp) => {
                 if (resp.data._EVENT_MESSAGE_) this.getPickupOrders();
               })
             }
@@ -296,6 +295,7 @@ export default defineComponent({
     segmentChanged (e: CustomEvent) {
       this.segmentSelected = e.detail.value
       this.segmentSelected === 'open' ? this.getPickupOrders() : this.getPackedOrders();
+      this.queryString = ''
     },
     getShipGroups (items: any) {
       // To get unique shipGroup, further it will use on ion-card iteration
@@ -311,7 +311,19 @@ export default defineComponent({
     getShipGroupItems(shipGroupSeqId: any, items: any) {
       // To get all the items of same shipGroup, further it will use on pickup-order-card component to display line items
       return items.filter((item: any) => item.shipGroupSeqId == shipGroupSeqId)
-    }
+    },
+    async searchOrders(ev: CustomEvent) {
+      if(this.segmentSelected === 'open') {
+        this.getPickupOrders()
+      } else {
+        this.getPackedOrders()
+      }
+    },
+    selectSearchBarText(event: any) {
+      event.target.getInputElement().then((element: any) => {
+        element.select();
+      })
+    },
   },
   ionViewWillEnter () {
     this.segmentSelected === 'open' ? this.getPickupOrders() : this.getPackedOrders();
