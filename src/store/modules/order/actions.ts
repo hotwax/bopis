@@ -106,6 +106,8 @@ const actions: ActionTree<OrderState , RootState> ={
     const solrQueryPayload = prepareOISGIRQuery({
       ...payload,
       shippingOrdersStatus: store.state.user.shippingOrders,
+      _shipmentStatusId: '*',
+      _fulfillmentStatus: 'Cancelled',
       orderStatusId: 'ORDER_APPROVED',
       orderTypeId: 'SALES_ORDER'
     })
