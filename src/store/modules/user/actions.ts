@@ -58,13 +58,13 @@ const actions: ActionTree<UserState, RootState> = {
       if (resp.data.userTimeZone !== localTimeZone) {
         emitter.emit('timeZoneDifferent', { profileTimeZone: resp.data.userTimeZone, localTimeZone});
       }
-      const bopisPreferenceResp = await UserService.getShippingOrderPreference({
+      const userPreferenceResp = await UserService.getUserPreference({
         'userPrefTypeId': 'BOPIS_PREFERENCE'
       });
 
-      if (bopisPreferenceResp.status == 200 && !hasError(bopisPreferenceResp && bopisPreferenceResp.data?.userPrefValue)) {
-        const bopisPreference = JSON.parse(bopisPreferenceResp.data.userPrefValue)
-        commit(types.USER_SHIPPING_ORDERS_STATUS_UPDATED, bopisPreference.shippingOrderStatus)
+      if (userPreferenceResp.status == 200 && !hasError(userPreferenceResp) && userPreferenceResp.data?.userPrefValue) {
+        const userPreference = JSON.parse(userPreferenceResp.data.userPrefValue)
+        commit(types.USER_PREFERENCE_UPDATED, userPreference.shippingOrderStatus)
       }
       
       commit(types.USER_INFO_UPDATED, resp.data);
@@ -104,12 +104,12 @@ const actions: ActionTree<UserState, RootState> = {
     }
   },
 
-  setShippingOrdersStatus( {state, commit }, payload){
+  setUserPreference( {state, commit }, payload){
     UserService.setShippingOrderPreference({
       'userPrefTypeId': 'BOPIS_PREFERENCE',
       'userPrefValue': JSON.stringify({shippingOrderStatus: payload})
     });
-    commit(types.USER_SHIPPING_ORDERS_STATUS_UPDATED, payload)
+    commit(types.USER_PREFERENCE_UPDATED, payload)
   }
 }
 export default actions;
