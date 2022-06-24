@@ -247,7 +247,7 @@ export default defineComponent({
       const payload = {
         "json": {
           "params": {
-            "rows": "10",
+            "rows": viewSize,
             "sort": "orderDate desc",
             "group": true,
             "group.field": "orderId",
@@ -256,7 +256,7 @@ export default defineComponent({
             "defType": "edismax",
             "q.op": "AND",
             "qf": "productId productName virtualProductName orderId search_orderIdentifications productSku customerId customerName goodIdentifications",
-            "start": 0
+            "start": viewSize * viewIndex
           },
           "query":"(**)",
           "filter": ["docType:OISGIR", `facilityId: ${this.currentFacility.facilityId}`,"shipmentStatusId: SHIPMENT_PACKED"]
