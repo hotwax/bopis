@@ -62,7 +62,7 @@ const actions: ActionTree<UserState, RootState> = {
         'userPrefTypeId': 'BOPIS_SETTINGS'
       });
 
-      if (shippingOrderPreference.status == 200 && shippingOrderPreference.data && !hasError(shippingOrderPreference)) {
+      if (shippingOrderPreference.status == 200 && shippingOrderPreference.data?.userPrefValue && !hasError(shippingOrderPreference)) {
         const value = JSON.parse(shippingOrderPreference.data.userPrefValue)
         commit(types.USER_SHIPPING_ORDERS_STATUS_UPDATED, value.shippingOrderStatus)
       }
