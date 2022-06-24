@@ -165,15 +165,17 @@ const actions: ActionTree<OrderState , RootState> ={
 
   async getPackedOrders ({ commit, state }, payload) {
     // Show loader only when new query and not the infinite scroll
-    if (payload.json.params.start === 0) emitter.emit("presentLoader");
+    if (payload.viewIndex === 0) emitter.emit("presentLoader");
     let resp;
 
+    const solrQueryPayload = prepareOISGIRQuery({
+      ...payload,
+      shippingOrdersStatus: store.state.user.shippingOrders,
+      shipmentStatusId: "SHIPMENT_PACKED"
+    })
+
     try {
-      const shippingOrdersStatus = store.state.user.shippingOrders;
-      if(!shippingOrdersStatus){
-        payload.json.filter.push("shipmentMethodTypeId: STOREPICKUP")
-      }
-      resp = await OrderService.getPackedOrders(payload)
+      resp = await OrderService.getPackedOrders(solrQueryPayload)
       if (resp.status === 200 && resp.data.grouped?.orderId?.ngroups > 0 && !hasError(resp)) {
         let orders = resp?.data?.grouped?.orderId?.groups.map((order: any) => {
           const orderItem = order.doclist.docs[0]
@@ -216,9 +218,9 @@ const actions: ActionTree<OrderState , RootState> ={
 
         const total = resp.data.grouped?.orderId?.ngroups;
 
-        if(payload.json.params.start && payload.json.params.start > 0) orders = state.packed.list.concat(orders)
+        if(payload.viewIndex && payload.viewIndex > 0) orders = state.packed.list.concat(orders)
         commit(types.ORDER_PACKED_UPDATED, { orders, total })
-        if (payload.json.params.start === 0) emitter.emit("dismissLoader");
+        if (payload.viewIndex === 0) emitter.emit("dismissLoader");
       } else {
         commit(types.ORDER_PACKED_UPDATED, { orders: {}, total: 0 })
         showToast(translate("Orders Not Found"))

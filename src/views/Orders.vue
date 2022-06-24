@@ -238,28 +238,8 @@ export default defineComponent({
     async getPackedOrders (vSize?: any, vIndex?: any) {
       const viewSize = vSize ? vSize : process.env.VUE_APP_VIEW_SIZE;
       const viewIndex = vIndex ? vIndex : 0;
-      const payload = {
-        "json": {
-          "params": {
-            "rows": viewSize,
-            "sort": "orderDate desc",
-            "group": true,
-            "group.field": "orderId",
-            "group.limit": 1000,
-            "group.ngroups": true,
-            "defType": "edismax",
-            "q.op": "AND",
-            "qf": "productId productName virtualProductName orderId search_orderIdentifications productSku customerId customerName goodIdentifications",
-            "start": viewSize * viewIndex
-          },
-          "query":"(**)",
-          "filter": ["docType:OISGIR", `facilityId: ${this.currentFacility.facilityId}`,"shipmentStatusId: SHIPMENT_PACKED"]
-        }
-      };
-      if (this.queryString) {
-        payload.json.query = `(*${this.queryString}*)`
-      }
-      await this.store.dispatch("order/getPackedOrders", payload);
+
+      await this.store.dispatch("order/getPackedOrders", { viewSize, viewIndex, queryString: this.queryString, facilityId: this.currentFacility.facilityId });
     },
     async loadMoreProducts (event: any) {
       if (this.segmentSelected === 'open') {
