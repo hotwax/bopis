@@ -42,7 +42,7 @@ const prepareOISGIRQuery = (params: any) => {
   }
 
   if (params.shipmentStatusId) {
-    payload.json.filter.push(`-shipmentStatusId: ${params.shipmentStatusId}`)
+    payload.json.filter.push(`shipmentStatusId: ${params.shipmentStatusId}`)
   }
 
   if (params._fulfillmentStatus) {
