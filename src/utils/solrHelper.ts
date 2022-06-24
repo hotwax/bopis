@@ -25,7 +25,7 @@ const prepareOISGIRQuery = (params: any) => {
     payload.json.params['defType'] = "edismax"
   }
 
-  if (params.shippingOrdersStatus && !params.shippingOrdersStatus){
+  if (!params.shippingOrdersStatus) {
     payload.json.filter.push("shipmentMethodTypeId: STOREPICKUP")
   }
 
