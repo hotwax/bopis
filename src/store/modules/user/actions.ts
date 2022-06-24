@@ -58,13 +58,13 @@ const actions: ActionTree<UserState, RootState> = {
       if (resp.data.userTimeZone !== localTimeZone) {
         emitter.emit('timeZoneDifferent', { profileTimeZone: resp.data.userTimeZone, localTimeZone});
       }
-      const userPreference = await UserService.getShippingOrderPreference({
+      const userShippingOrderPreference = await UserService.getShippingOrderPreference({
         'userPrefTypeId': 'BOPIS_SETTINGS'
       });
 
-      if (userPreference.status == 200 && userPreference.data?.userPrefValue && !hasError(userPreference)) {
-        const userPreferenceValue = JSON.parse(userPreference.data.userPrefValue)
-        commit(types.USER_SHIPPING_ORDERS_STATUS_UPDATED, userPreferenceValue.shippingOrderStatus)
+      if (userShippingOrderPreference.status == 200 && userShippingOrderPreference.data?.userPrefValue && !hasError(userShippingOrderPreference)) {
+        const userShippingOrderPreferenceValue = JSON.parse(userShippingOrderPreference.data.userPrefValue)
+        commit(types.USER_SHIPPING_ORDERS_STATUS_UPDATED, userShippingOrderPreferenceValue.shippingOrderStatus)
       }
       
       commit(types.USER_INFO_UPDATED, resp.data);
