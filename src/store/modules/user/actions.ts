@@ -51,20 +51,20 @@ const actions: ActionTree<UserState, RootState> = {
   /**
    * Get User profile
    */
-  async getProfile ( { commit, dispatch }) {
+  async getProfile ( { commit }) {
     const resp = await UserService.getProfile()
     if (resp.status === 200) {
       const localTimeZone = moment.tz.guess();
       if (resp.data.userTimeZone !== localTimeZone) {
         emitter.emit('timeZoneDifferent', { profileTimeZone: resp.data.userTimeZone, localTimeZone});
       }
-      const userShippingOrderPreferenceResp = await UserService.getShippingOrderPreference({
+      const bopisPreferenceResp = await UserService.getShippingOrderPreference({
         'userPrefTypeId': 'BOPIS_PREFERENCE'
       });
 
-      if (userShippingOrderPreferenceResp.status == 200 && userShippingOrderPreferenceResp.data?.userPrefValue && !hasError(userShippingOrderPreferenceResp)) {
-        const userShippingOrderPreferenceValue = JSON.parse(userShippingOrderPreferenceResp.data.userPrefValue)
-        commit(types.USER_SHIPPING_ORDERS_STATUS_UPDATED, userShippingOrderPreferenceValue.shippingOrderStatus)
+      if (bopisPreferenceResp.status == 200 && !hasError(bopisPreferenceResp && bopisPreferenceResp.data?.userPrefValue)) {
+        const bopisPreference = JSON.parse(bopisPreferenceResp.data.userPrefValue)
+        commit(types.USER_SHIPPING_ORDERS_STATUS_UPDATED, bopisPreference.shippingOrderStatus)
       }
       
       commit(types.USER_INFO_UPDATED, resp.data);
