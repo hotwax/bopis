@@ -105,7 +105,7 @@ const actions: ActionTree<UserState, RootState> = {
   },
 
   setUserPreference( {state, commit }, payload){
-    UserService.setShippingOrderPreference({
+    UserService.setUserPreference({
       'userPrefTypeId': 'BOPIS_PREFERENCE',
       'userPrefValue': JSON.stringify({shippingOrderStatus: payload})
     });

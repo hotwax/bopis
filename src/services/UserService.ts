@@ -38,7 +38,7 @@ const getUserPreference = async (payload: any): Promise<any> => {
     data: payload
   });
 }
-const setShippingOrderPreference = async (payload: any): Promise<any> => {
+const setUserPreference = async (payload: any): Promise<any> => {
   return api({
     url: "service/setUserPreference",
     method: "post",
@@ -51,5 +51,5 @@ export const UserService = {
     getProfile,
     setUserTimeZone,
     getUserPreference,
-    setShippingOrderPreference
+    setUserPreference
 }
