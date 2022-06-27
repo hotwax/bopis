@@ -11,6 +11,7 @@
   "Copy": "Copy",
   "Depending on the reason you select for not fulfulling an item, an inventory variance will be recorded and all sales channels will be updated with new inventory levels. For example, by selecting “Not in stock” HotWax Commerce will stop routing orders for it to your store and customers will not be able to place BOPIS orders for it at your store on Shopify.": "Depending on the reason you select for not fulfulling an item, an inventory variance will be recorded and all sales channels will be updated with new inventory levels.{ space } For example, by selecting “Not in stock” HotWax Commerce will stop routing orders for it to your store and customers will not be able to place BOPIS orders for it at your store on Shopify.",
   "Dismiss": "Dismiss",
+  "Failed to load packing slip": "Failed to load packing slip",
   "First name": "First name",
   "Handover": "Handover",
   "Inactive store": "Inactive store",

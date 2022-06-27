@@ -90,6 +90,9 @@
               <ion-button fill="clear" @click.stop="deliverShipment(order)">
                 {{ order.shipmentMethodTypeId === 'STOREPICKUP' ? $t("Handover") : $t("Ship") }}
               </ion-button>
+              <ion-button v-if="isPackingSlipEnabled" fill="clear" slot="end" @click="printPackingSlip(order)">
+                <ion-icon slot="icon-only" :icon="print" />
+              </ion-button>
             </div>
           </ion-card>
         </div>
@@ -128,12 +131,14 @@ import {
 } from "@ionic/vue";
 import { defineComponent, ref } from "vue";
 import ProductListItem from '@/components/ProductListItem.vue'
-import { swapVerticalOutline, callOutline, mailOutline } from "ionicons/icons";
+import { swapVerticalOutline, callOutline, mailOutline, print } from "ionicons/icons";
 import { mapGetters, useStore } from 'vuex'
 import { useRouter } from 'vue-router'
-import { copyToClipboard } from '@/utils'
+import { copyToClipboard, hasError, showToast } from '@/utils'
 import * as moment from "moment-timezone";
 import emitter from "@/event-bus"
+import api from "@/api"
+import { translate } from "@/i18n";
 
 export default defineComponent({
   name: 'Orders',
@@ -170,10 +175,41 @@ export default defineComponent({
       packedOrders: 'order/getPackedOrders',
       currentFacility: 'user/getCurrentFacility',
       isPackedOrdersScrollable: 'order/isPackedOrdersScrollable',
-      isOpenOrdersScrollable: 'order/isOpenOrdersScrollable'
+      isOpenOrdersScrollable: 'order/isOpenOrdersScrollable',
+      isPackingSlipEnabled: 'user/getPackingSlipEnabled'
     })
   },
   methods: {
+    async printPackingSlip(order: any) {
+
+      try {
+        // Get packing slip from the server
+        const response: any = await api({
+          method: 'get',
+          url: 'PackingSlip.pdf',
+          params: {
+            shipmentId: order.shipmentId
+          },
+          responseType: "blob"
+        })
+
+        if (!response || response.status !== 200 || hasError(response)) {
+          showToast(translate("Failed to load packing slip"))
+          return;
+        }
+
+        // Generate local file URL for the blob received
+        const pdfUrl = window.URL.createObjectURL(response.data);
+        // Open the file in new tab
+        (window as any).open(pdfUrl, "_blank").focus();
+
+      } catch(err) {
+        showToast(translate("Failed to load packing slip"))
+        console.error(err)
+      }
+
+
+    },
     async refreshOrders(event: any) {
       if(this.segmentSelected === 'open') {
         this.getPickupOrders().then(() => { event.target.complete() });
@@ -290,6 +326,7 @@ export default defineComponent({
       copyToClipboard,
       mailOutline,
       moment,
+      print,
       router,
       segmentSelected,
       swapVerticalOutline,

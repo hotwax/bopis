@@ -67,7 +67,8 @@ const api = async (customConfig: any) => {
         url: customConfig.url,
         method: customConfig.method,
         data: customConfig.data,
-        params: customConfig.params
+        params: customConfig.params,
+        responseType: customConfig.responseType
     }
 
     let baseURL = process.env.VUE_APP_BASE_URL;
