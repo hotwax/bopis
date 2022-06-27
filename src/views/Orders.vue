@@ -287,9 +287,9 @@ export default defineComponent({
       });
     },
     segmentChanged (e: CustomEvent) {
+      this.queryString = ''
       this.segmentSelected = e.detail.value
       this.segmentSelected === 'open' ? this.getPickupOrders() : this.getPackedOrders();
-      this.queryString = ''
     },
     getShipGroups (items: any) {
       // To get unique shipGroup, further it will use on ion-card iteration
