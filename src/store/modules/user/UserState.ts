@@ -3,6 +3,6 @@ export default interface UserState {
     current: object | null;
     currentFacility: object;
     instanceUrl: string;
+    shippingOrders: boolean;
     packingSlipEnabled: boolean;
-    preference: any;
 }
