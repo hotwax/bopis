@@ -15,9 +15,9 @@ const actions: ActionTree<OrderState , RootState> ={
     if (payload.viewIndex === 0) emitter.emit("presentLoader");
     let resp;
 
-    const solrQueryPayload = prepareOrderQuery({
+    const orderQueryPayload = prepareOrderQuery({
       ...payload,
-      shippingOrdersStatus: store.state.user.preference.showShippingOrders,
+      shipmentMethodTypeId: !store.state.user.preference.showShippingOrders ? 'STOREPICKUP' : '',
       '-shipmentStatusId': '*',
       '-fulfillmentStatus': 'Cancelled',
       orderStatusId: 'ORDER_APPROVED',
@@ -25,7 +25,7 @@ const actions: ActionTree<OrderState , RootState> ={
     })
 
     try {
-      resp = await OrderService.getOpenOrders(solrQueryPayload)
+      resp = await OrderService.getOpenOrders(orderQueryPayload)
       if (resp.status === 200 && !hasError(resp) && resp.data.grouped?.orderId?.ngroups > 0) {
 
         let orders = resp.data.grouped?.orderId?.groups.map((order: any) => {
@@ -103,9 +103,9 @@ const actions: ActionTree<OrderState , RootState> ={
       }
     }
 
-    const solrQueryPayload = prepareOrderQuery({
+    const orderQueryPayload = prepareOrderQuery({
       ...payload,
-      shippingOrdersStatus: store.state.user.preference.showShippingOrders,
+      shipmentMethodTypeId: !store.state.user.preference.showShippingOrders ? 'STOREPICKUP' : '',
       '-shipmentStatusId': '*',
       '-fulfillmentStatus': 'Cancelled',
       orderStatusId: 'ORDER_APPROVED',
@@ -114,7 +114,7 @@ const actions: ActionTree<OrderState , RootState> ={
     
     let resp;
     try {
-      resp = await OrderService.getOrderDetails(solrQueryPayload)
+      resp = await OrderService.getOrderDetails(orderQueryPayload)
       if (resp.status === 200 && !hasError(resp) && resp.data.grouped?.orderId?.ngroups > 0) {
         const orders = resp.data.grouped?.orderId?.groups.map((order: any) => {
           const orderItem = order.doclist.docs[0]
@@ -176,7 +176,7 @@ const actions: ActionTree<OrderState , RootState> ={
     let resp;
     const solrQueryPayload = prepareOrderQuery({
       ...payload,
-      shippingOrdersStatus: store.state.user.preference.showShippingOrders,
+      shipmentMethodTypeId: !store.state.user.preference.showShippingOrders ? 'STOREPICKUP' : '',
       shipmentStatusId: "SHIPMENT_PACKED"
     })
 
