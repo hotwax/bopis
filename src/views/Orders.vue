@@ -312,7 +312,7 @@ export default defineComponent({
       // To get all the items of same shipGroup, further it will use on pickup-order-card component to display line items
       return items.filter((item: any) => item.shipGroupSeqId == shipGroupSeqId)
     },
-    async searchOrders(ev: CustomEvent) {
+    async searchOrders() {
       if(this.segmentSelected === 'open') {
         this.getPickupOrders()
       } else {
