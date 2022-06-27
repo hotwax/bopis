@@ -174,8 +174,7 @@ const actions: ActionTree<OrderState , RootState> ={
     // Show loader only when new query and not the infinite scroll
     if (payload.viewIndex === 0) emitter.emit("presentLoader");
     let resp;
-
-    const solrQueryPayload = prepareOISGIRQuery({
+    const solrQueryPayload = prepareOrderQuery({
       ...payload,
       shippingOrdersStatus: store.state.user.shippingOrders,
       shipmentStatusId: "SHIPMENT_PACKED"
