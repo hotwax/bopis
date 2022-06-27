@@ -7,7 +7,6 @@ import { hasError , showToast } from "@/utils";
 import { translate } from "@/i18n";
 import emitter from '@/event-bus'
 import store from "@/store";
-import { prepareOrderQuery } from "@/utils/solrHelper";
 
 const actions: ActionTree<OrderState , RootState> ={
   async getOpenOrders({ commit, state }, payload) {
@@ -15,59 +14,15 @@ const actions: ActionTree<OrderState , RootState> ={
     if (payload.viewIndex === 0) emitter.emit("presentLoader");
     let resp;
 
-    const solrQueryPayload = prepareOrderQuery({
-      ...payload,
-      shippingOrdersStatus: store.state.user.shippingOrders,
-      '-shipmentStatusId': '*',
-      '-fulfillmentStatus': 'Cancelled',
-      orderStatusId: 'ORDER_APPROVED',
-      orderTypeId: 'SALES_ORDER'
-    })
-
     try {
-      resp = await OrderService.getOpenOrders(solrQueryPayload)
-      if (resp.status === 200 && !hasError(resp) && resp.data.grouped?.orderId?.ngroups > 0) {
-
-        let orders = resp.data.grouped?.orderId?.groups.map((order: any) => {
-          const orderItem = order.doclist.docs[0]
-          return {
-            orderId: orderItem.orderId,
-            orderName: orderItem.orderName,
-            customer: {
-              partyId: orderItem.customerId,
-              name: orderItem.customerName
-            },
-            statusId: orderItem.orderStatusId,
-            parts: order.doclist.docs.reduce((arr: Array<any>, item: any) => {
-              const currentOrderPart = arr.find((orderPart: any) => orderPart.orderPartSeqId === item.shipGroupSeqId)
-              if (!currentOrderPart) {
-                arr.push({
-                  orderPartSeqId: item.shipGroupSeqId,
-                  shipmentMethodEnum: {
-                    shipmentMethodEnumId: item.shipmentMethodTypeId,
-                    shipmentMethodEnumDesc: item.shipmentMethodTypeDesc
-                  },
-                  items: [{
-                    orderItemSeqId: item.orderItemSeqId,
-                    productId: item.productId,
-                    facilityId: item.facilityId
-                  }]
-                })
-              } else {
-                currentOrderPart.items.push({
-                  orderItemSeqId: item.orderItemSeqId,
-                  productId: item.productId,
-                  facilityId: item.facilityId
-                })
-              }
-
-              return arr
-            }, []),
-            placedDate: orderItem.orderDate
-          }
-        })
-
-        const total = resp.data.grouped?.orderId?.ngroups;
+      const showShippingOrders = store.state.user.preference.showShippingOrders;
+      if(!showShippingOrders){
+        payload.shipmentMethodTypeId= "STOREPICKUP"
+      }
+      resp = await OrderService.getOpenOrders(payload)
+      if (resp.status === 200 && resp.data.count > 0 && !hasError(resp)) {
+        let orders = resp.data.docs;
+        const total = resp.data.count;
 
         this.dispatch('product/getProductInformation', { orders })
 
@@ -89,7 +44,7 @@ const actions: ActionTree<OrderState , RootState> ={
 
   async getOrderDetail( { dispatch, state }, payload ) {
     const current = state.current as any
-    const orders = JSON.parse(JSON.stringify(state.open.list)) as any
+    const orders = state.open.list as any
 
     if(current.orderId === payload.orderId) { return current }
 
@@ -102,58 +57,12 @@ const actions: ActionTree<OrderState , RootState> ={
         return order;
       }
     }
-
-    const solrQueryPayload = prepareOrderQuery({
-      ...payload,
-      shippingOrdersStatus: store.state.user.shippingOrders,
-      '-shipmentStatusId': '*',
-      '-fulfillmentStatus': 'Cancelled',
-      orderStatusId: 'ORDER_APPROVED',
-      orderTypeId: 'SALES_ORDER'
-    })
     
     let resp;
     try {
-      resp = await OrderService.getOrderDetails(solrQueryPayload)
-      if (resp.status === 200 && !hasError(resp) && resp.data.grouped?.orderId?.ngroups > 0) {
-        const orders = resp.data.grouped?.orderId?.groups.map((order: any) => {
-          const orderItem = order.doclist.docs[0]
-          return {
-            orderId: orderItem.orderId,
-            orderName: orderItem.orderName,
-            customer: {
-              partyId: orderItem.customerId,
-              name: orderItem.customerName
-            },
-            statusId: orderItem.orderStatusId,
-            parts: order.doclist.docs.reduce((arr: Array<any>, item: any) => {
-              const currentOrderPart = arr.find((orderPart: any) => orderPart.orderPartSeqId === item.shipGroupSeqId)
-              if (!currentOrderPart) {
-                arr.push({
-                  orderPartSeqId: item.shipGroupSeqId,
-                  shipmentMethodEnum: {
-                    shipmentMethodEnumId: item.shipmentMethodTypeId,
-                    shipmentMethodEnumDesc: item.shipmentMethodTypeDesc
-                  },
-                  items: [{
-                    orderItemSeqId: item.orderItemSeqId,
-                    productId: item.productId,
-                    facilityId: item.facilityId
-                  }]
-                })
-              } else {
-                currentOrderPart.items.push({
-                  orderItemSeqId: item.orderItemSeqId,
-                  productId: item.productId,
-                  facilityId: item.facilityId
-                })
-              }
-
-              return arr
-            }, []),
-            placedDate: orderItem.orderDate
-          }
-        })
+      resp = await OrderService.getOrderDetails(payload)
+      if (resp.status === 200 && resp.data.count > 0 && !hasError(resp)) {
+        const orders = resp.data.docs
 
         this.dispatch('product/getProductInformation', { orders })
         dispatch('updateCurrent', { order: orders[0] })
@@ -245,7 +154,7 @@ const actions: ActionTree<OrderState , RootState> ={
       weight: '1',
       weightUomId: 'WT_kg',
       facilityId: payload.facilityId,
-      shipGroupSeqId: payload.part.orderPartSeqId
+      shipGroupSeqId: payload.shipGroupSeqId
     }
     
     let resp;
@@ -299,13 +208,13 @@ const actions: ActionTree<OrderState , RootState> ={
       'orderId': data.orderId
     }
 
-    return Promise.all(data.parts.items.map((item: any) => {
+    return Promise.all(data.items.map((item: any) => {
       const params = {
         ...payload,
         'rejectReason': item.reason,
         'facilityId': item.facilityId,
         'orderItemSeqId': item.orderItemSeqId,
-        'shipmentMethodTypeId': data.parts.shipmentMethodEnum.shipmentMethodEnumId,
+        'shipmentMethodTypeId': item.shipmentMethodTypeId,
         'quantity': parseInt(item.quantity)
       }
       return OrderService.rejectOrderItem({'payload': params}).catch((err) => { 
