@@ -39,7 +39,8 @@ const actions: ActionTree<OrderState , RootState> ={
             },
             statusId: orderItem.orderStatusId,
             parts: order.doclist.docs.reduce((arr: Array<any>, item: any) => {
-              if (!arr.some((orderPart: any) => orderPart.orderPartSeqId === item.shipGroupSeqId)) {
+              const currentOrderPart = arr.find((orderPart: any) => orderPart.orderPartSeqId === item.shipGroupSeqId)
+              if (!currentOrderPart) {
                 arr.push({
                   orderPartSeqId: item.shipGroupSeqId,
                   shipmentMethodEnum: {
@@ -53,7 +54,6 @@ const actions: ActionTree<OrderState , RootState> ={
                   }]
                 })
               } else {
-                const currentOrderPart = arr.find((orderPart: any) => orderPart.orderPartSeqId === item.shipGroupSeqId)
                 currentOrderPart.items.push({
                   orderItemSeqId: item.orderItemSeqId,
                   productId: item.productId,
@@ -127,7 +127,8 @@ const actions: ActionTree<OrderState , RootState> ={
             },
             statusId: orderItem.orderStatusId,
             parts: order.doclist.docs.reduce((arr: Array<any>, item: any) => {
-              if (!arr.some((orderPart: any) => orderPart.orderPartSeqId === item.shipGroupSeqId)) {
+              const currentOrderPart = arr.find((orderPart: any) => orderPart.orderPartSeqId === item.shipGroupSeqId)
+              if (!currentOrderPart) {
                 arr.push({
                   orderPartSeqId: item.shipGroupSeqId,
                   shipmentMethodEnum: {
@@ -141,7 +142,6 @@ const actions: ActionTree<OrderState , RootState> ={
                   }]
                 })
               } else {
-                const currentOrderPart = arr.find((orderPart: any) => orderPart.orderPartSeqId === item.shipGroupSeqId)
                 currentOrderPart.items.push({
                   orderItemSeqId: item.orderItemSeqId,
                   productId: item.productId,
@@ -238,14 +238,14 @@ const actions: ActionTree<OrderState , RootState> ={
     emitter.emit("presentLoader")
 
     const params = {
-      orderId: payload.order?.orderId,
+      orderId: payload.order.orderId,
       setPackedOnly: 'Y',
       dimensionUomId: 'WT_kg',
       shipmentBoxTypeId: 'YOURPACKNG',
       weight: '1',
       weightUomId: 'WT_kg',
       facilityId: payload.facilityId,
-      shipGroupSeqId: payload.part?.orderPartSeqId
+      shipGroupSeqId: payload.part.orderPartSeqId
     }
     
     let resp;
