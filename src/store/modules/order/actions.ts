@@ -177,7 +177,9 @@ const actions: ActionTree<OrderState , RootState> ={
     const orderQueryPayload = prepareOrderQuery({
       ...payload,
       shipmentMethodTypeId: !store.state.user.preference.showShippingOrders ? 'STOREPICKUP' : '',
-      shipmentStatusId: "SHIPMENT_PACKED"
+      shipmentStatusId: "SHIPMENT_PACKED",
+      orderTypeId: 'SALES_ORDER',
+      '-fulfillmentStatus': 'Cancelled',
     })
 
     try {
