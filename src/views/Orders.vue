@@ -52,8 +52,8 @@
               </ion-button>
             </ion-item>
             <div class="border-top">
-              <ion-button fill="clear" @click.stop="readyForPickup(order, shipGroup)">
-                {{ getShipmentMethod(shipGroup, order.items) === 'STOREPICKUP' ? $t("Ready for pickup") : $t("Ready to ship") }}
+              <ion-button fill="clear" @click.stop="readyForPickup(order, part)">
+                {{ part.shipmentMethodEnum?.shipmentMethodEnumId === 'STOREPICKUP' ? $t("Ready for pickup") : $t("Ready to ship") }}
               </ion-button>
             </div>
           </ion-card>
@@ -311,7 +311,19 @@ export default defineComponent({
     getShipGroupItems(shipGroupSeqId: any, items: any) {
       // To get all the items of same shipGroup, further it will use on pickup-order-card component to display line items
       return items.filter((item: any) => item.shipGroupSeqId == shipGroupSeqId)
-    }
+    },
+    async searchOrders() {
+      if(this.segmentSelected === 'open') {
+        this.getPickupOrders()
+      } else {
+        this.getPackedOrders()
+      }
+    },
+    selectSearchBarText(event: any) {
+      event.target.getInputElement().then((element: any) => {
+        element.select();
+      })
+    },
   },
   ionViewWillEnter () {
     this.segmentSelected === 'open' ? this.getPickupOrders() : this.getPackedOrders();

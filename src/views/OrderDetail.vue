@@ -42,7 +42,7 @@
       </ion-item>
   
     <main>
-      <ion-card v-for="(item, index) in order?.items" :key="index">
+      <ion-card v-for="(item, index) in getCurrentOrderPart()?.items" :key="index">
         <ProductListItem :item="item" />
         <ion-item lines="none" class="border-top">
           <ion-label>{{ $t("Reason") }}</ion-label>
@@ -122,7 +122,7 @@ export default defineComponent({
   },
   data () {
     return {
-      unfillableReason: JSON.parse(process.env.VUE_APP_UNFILLABLE_REASONS),
+      unfillableReason: JSON.parse(process.env.VUE_APP_UNFILLABLE_REASONS)
     }
   },
   computed: {
@@ -152,7 +152,7 @@ export default defineComponent({
           },{
             text: this.$t('Reject Order'),
             handler: () => {
-              this.store.dispatch('order/setUnfillableOrderOrItem', order).then((resp) => {
+              this.store.dispatch('order/setUnfillableOrderOrItem', { orderId: order.orderId, parts: this.getCurrentOrderPart() }).then((resp) => {
                 if (resp) this.router.push('/tabs/orders')
               })
             },
@@ -166,10 +166,16 @@ export default defineComponent({
         orderId
       }
       await this.store.dispatch("order/getOrderDetail", payload)
+    },
+    getCurrentOrderPart() {
+      if (this.order.parts) {
+        return this.order.parts.find((part) => part.orderPartSeqId === this.$route.params.orderPartSeqId)
+      }
+      return {}
     }
   },
-  mounted() {
-    this.getOrderDetail(this.$route.params.orderId);
+  async mounted() {
+    await this.getOrderDetail(this.$route.params.orderId, this.$route.params.orderPartSeqId);
   },
   setup () {
     const store = useStore();
