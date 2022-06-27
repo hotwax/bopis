@@ -41,6 +41,10 @@ const prepareOrderQuery = (params: any) => {
     payload.json.filter.push(`-shipmentStatusId: ${params['-shipmentStatusId']}`)
   }
 
+  if (params.shipmentStatusId) {
+    payload.json.filter.push(`shipmentStatusId: ${params.shipmentStatusId}`)
+  }
+
   if (params['-fulfillmentStatus']) {
     payload.json.filter.push(`-fulfillmentStatus: ${params['-fulfillmentStatus']}`)
   }

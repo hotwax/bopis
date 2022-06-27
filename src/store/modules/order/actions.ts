@@ -174,15 +174,61 @@ const actions: ActionTree<OrderState , RootState> ={
     // Show loader only when new query and not the infinite scroll
     if (payload.viewIndex === 0) emitter.emit("presentLoader");
     let resp;
+    const orderQueryPayload = prepareOrderQuery({
+      ...payload,
+      shipmentMethodTypeId: !store.state.user.preference.showShippingOrders ? 'STOREPICKUP' : '',
+      shipmentStatusId: "SHIPMENT_PACKED",
+      orderTypeId: 'SALES_ORDER',
+      '-fulfillmentStatus': 'Cancelled',
+    })
 
     try {
-      resp = await OrderService.getPackedOrders(payload)
-      if (resp.status === 200 && resp.data.count > 0 && !hasError(resp)) {
-        let orders = resp.data.docs;
+      resp = await OrderService.getPackedOrders(orderQueryPayload)
+      if (resp.status === 200 && resp.data.grouped?.orderId?.ngroups > 0 && !hasError(resp)) {
+        let orders = resp?.data?.grouped?.orderId?.groups.map((order: any) => {
+          const orderItem = order.doclist.docs[0]
+          return {
+            orderId: orderItem.orderId,
+            orderName: orderItem.orderName,
+            shipmentId: orderItem.shipmentId,
 
-        this.dispatch('product/getProductInformation', { orders })
+            customer: {
+              partyId: orderItem.customerId,
+              name: orderItem.customerName,
+            },
+            statusId: orderItem.orderStatusId,
+            parts: order.doclist.docs.reduce((arr: Array<any>, item: any) => {
+              const currentOrderPart = arr.find((orderPart: any) => orderPart.orderPartSeqId === item.shipGroupSeqId)
+              if (!currentOrderPart) {
+                arr.push({
+                  orderPartSeqId: item.shipGroupSeqId,
+                  shipmentMethodEnum: {
+                    shipmentMethodEnumId: item.shipmentMethodTypeId,
+                    shipmentMethodEnumDesc: item.shipmentMethodTypeDesc
+                  },
+                  items: [{
+                    orderItemSeqId: item.orderItemSeqId,
+                    productId: item.productId,
+                    facilityId: item.facilityId
+                  }]
+                })
+              } else {
+                currentOrderPart.items.push({
+                  orderItemSeqId: item.orderItemSeqId,
+                  productId: item.productId,
+                  facilityId: item.facilityId
+                })
+              }
 
-        const total = resp.data.count;
+              return arr
+            }, []),
+            placedDate: orderItem.orderDate
+          }
+        })
+        this.dispatch('product/getProductInformation', { orders });
+
+        const total = resp.data.grouped?.orderId?.ngroups;
+
         if(payload.viewIndex && payload.viewIndex > 0) orders = state.packed.list.concat(orders)
         commit(types.ORDER_PACKED_UPDATED, { orders, total })
         if (payload.viewIndex === 0) emitter.emit("dismissLoader");
@@ -201,7 +247,6 @@ const actions: ActionTree<OrderState , RootState> ={
 
   async deliverShipment ({ dispatch }, order) {
     emitter.emit("presentLoader");
-
     const params = {
       shipmentId: order.shipmentId,
       statusId: 'SHIPMENT_SHIPPED'
@@ -212,7 +257,7 @@ const actions: ActionTree<OrderState , RootState> ={
     try {
       resp = await OrderService.updateShipment(params)
       if (resp.status === 200 && !hasError(resp)) {
-        showToast(translate('Order delivered to', {customerName: order.customerName}))
+        showToast(translate('Order delivered to', {customerName: order.customer.name}))
       } else {
         showToast(translate("Something went wrong"))
       }
