@@ -105,9 +105,10 @@ const actions: ActionTree<UserState, RootState> = {
   },
 
   setUserPreference( {state, commit }, payload){
+    const userPreference = {...state.preference, ...payload }
     UserService.setUserPreference({
       'userPrefTypeId': 'BOPIS_PREFERENCE',
-      'userPrefValue': JSON.stringify(payload)
+      'userPrefValue': JSON.stringify(userPreference)
     });
     commit(types.USER_PREFERENCE_UPDATED, payload)
   }

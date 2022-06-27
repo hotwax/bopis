@@ -24,7 +24,7 @@ const mutations: MutationTree <UserState> = {
         state.packingSlipEnabled = payload;
     },
     [types.USER_PREFERENCE_UPDATED] (state, payload) {
-        state.preference.showShippingOrders = payload.shippingOrderStatus;
+        state.preference = {...state.preference, ...payload};
     }
 }
 export default mutations;
