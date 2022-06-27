@@ -18,7 +18,7 @@ const getOrderDetails = async (payload: any): Promise <any> => {
 
 const getPackedOrders = async (payload: any): Promise <any> => {
   return api({
-    url: "/solr-query",
+    url: "solr-query",
     method: "post",
     data: payload
   });

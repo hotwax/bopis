@@ -196,22 +196,25 @@ const actions: ActionTree<OrderState , RootState> ={
             },
             statusId: orderItem.orderStatusId,
             parts: order.doclist.docs.reduce((arr: Array<any>, item: any) => {
-              if (!arr.some((orderPart: any) => orderPart.orderPartSeqId === item.shipGroupSeqId)) {
+              const currentOrderPart = arr.find((orderPart: any) => orderPart.orderPartSeqId === item.shipGroupSeqId)
+              if (!currentOrderPart) {
                 arr.push({
                   orderPartSeqId: item.shipGroupSeqId,
                   shipmentMethodEnum: {
-                    shipmentMethodEnumId: item.shipmentMethodTypeId
+                    shipmentMethodEnumId: item.shipmentMethodTypeId,
+                    shipmentMethodEnumDesc: item.shipmentMethodTypeDesc
                   },
                   items: [{
                     orderItemSeqId: item.orderItemSeqId,
-                    productId: item.productId
+                    productId: item.productId,
+                    facilityId: item.facilityId
                   }]
                 })
               } else {
-                const currentOrderPart = arr.find((orderPart: any) => orderPart.orderPartSeqId === item.shipGroupSeqId)
                 currentOrderPart.items.push({
                   orderItemSeqId: item.orderItemSeqId,
-                  productId: item.productId
+                  productId: item.productId,
+                  facilityId: item.facilityId
                 })
               }
 
