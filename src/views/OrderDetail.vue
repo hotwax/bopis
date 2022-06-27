@@ -13,7 +13,7 @@
             <h2>{{ order.customerName }}</h2>
             <p>{{ order.orderName ? order.orderName : order.orderId }}</p>
           </ion-label>
-          <ion-badge v-if="order.orderDate" color="dark" slot="end">{{ moment.utc(order.orderDate).fromNow() }}</ion-badge>
+          <ion-badge v-if="order.orderDate" color="dark" slot="end">{{ timeFromNow(order.orderDate) }}</ion-badge>
         </ion-item>
       </ion-list>
       <ion-item v-if="order.phoneNumber">
@@ -96,7 +96,7 @@ import {
 import ProductListItem from '@/components/ProductListItem.vue'
 import { copyToClipboard } from '@/utils'
 import { useRouter } from 'vue-router'
-import * as moment from "moment-timezone";
+import { DateTime } from 'luxon';
 import ShipToCustomerModal from "@/components/ShipToCustomerModal.vue";
 
 export default defineComponent({
@@ -135,6 +135,11 @@ export default defineComponent({
     if(this.order.items) this.order.items.map((item) => item['reason'] = this.unfillableReason[0].id);
   },
   methods: {
+    timeFromNow (time) {
+      console.log(time)
+      const timeDiff = DateTime.fromISO(time).diff(DateTime.local());
+      return DateTime.local().plus(timeDiff).toRelative();
+    },
     async shipToCustomer() {
       const shipmodal = await modalController.create({
         component: ShipToCustomerModal,
@@ -179,7 +184,6 @@ export default defineComponent({
       callOutline,
       copyToClipboard,
       mailOutline,
-      moment,
       router,
       store,
       swapVerticalOutline,

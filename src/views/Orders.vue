@@ -29,7 +29,7 @@
                 <p>{{ order.orderName ? order.orderName : order.orderId }}</p>
               </ion-label>
               <div class="metadata">
-                <ion-badge v-if="order.orderDate" color="dark">{{ moment.utc(order.orderDate).fromNow() }}</ion-badge>
+                <ion-badge v-if="order.orderDate" color="dark">{{ timeFromNow(order.orderDate) }}</ion-badge>
                 <ion-badge v-if="order.statusId !== 'ORDER_APPROVED'" color="danger">{{ $t('pending approval') }}</ion-badge>
               </div>
               <!-- TODO: Display the packed date of the orders, currently not getting the packed date from API-->
@@ -67,7 +67,7 @@
                 <h1>{{ order.customerName }}</h1>
                 <p>{{ order.orderName ? order.orderName : order.orderId }}</p>
               </ion-label>
-              <ion-badge v-if="order.orderDate" color="dark" slot="end">{{ moment.utc(order.orderDate).fromNow() }}</ion-badge>
+              <ion-badge v-if="order.orderDate" color="dark" slot="end">{{ timeFromNow(order.orderDate) }}</ion-badge>
             </ion-item>
 
             <ProductListItem v-for="item in getShipGroupItems(shipGroup, order.items)" :key="item.itemId" :item="item" />
@@ -135,7 +135,7 @@ import { swapVerticalOutline, callOutline, mailOutline, print } from "ionicons/i
 import { mapGetters, useStore } from 'vuex'
 import { useRouter } from 'vue-router'
 import { copyToClipboard, hasError, showToast } from '@/utils'
-import * as moment from "moment-timezone";
+import { DateTime } from 'luxon';
 import emitter from "@/event-bus"
 import api from "@/api"
 import { translate } from "@/i18n";
@@ -180,6 +180,10 @@ export default defineComponent({
     })
   },
   methods: {
+    timeFromNow (time: any) {
+      const timeDiff = DateTime.fromISO(time).diff(DateTime.local());
+      return DateTime.local().plus(timeDiff).toRelative();
+    },
     async printPackingSlip(order: any) {
 
       try {
@@ -325,7 +329,6 @@ export default defineComponent({
       callOutline,
       copyToClipboard,
       mailOutline,
-      moment,
       print,
       router,
       segmentSelected,
