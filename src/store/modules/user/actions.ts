@@ -84,7 +84,7 @@ const actions: ActionTree<UserState, RootState> = {
   /**
    * Set User Instance Url
    */
-   setUserInstanceUrl ({ state, commit }, instanceUrl){
+   setUserInstanceUrl ({ commit }, instanceUrl){
     commit(types.USER_INSTANCE_URL_UPDATED, instanceUrl)
     const packingSlipEnabledDomain = JSON.parse(process.env.VUE_APP_PACKING_SLP_ENBLD_DMN);
     const packingSlipEnabled = packingSlipEnabledDomain.some((domain: string) => domain === instanceUrl)
