@@ -32,9 +32,26 @@ const setUserTimeZone = async (payload: any): Promise <any>  => {
   });
 }
 
+const getUserPreference = async (payload: any): Promise<any> => {
+  return api({
+    url: "service/getUserPreference",
+    method: "post",
+    data: payload
+  });
+}
+const setUserPreference = async (payload: any): Promise<any> => {
+  return api({
+    url: "service/setUserPreference",
+    method: "post",
+    data: payload
+  });
+}
+
 export const UserService = {
     login,
     getAvailableTimeZones,
     getProfile,
     setUserTimeZone,
+    getUserPreference,
+    setUserPreference
 }
