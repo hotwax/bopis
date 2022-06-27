@@ -110,7 +110,7 @@ const actions: ActionTree<UserState, RootState> = {
       'userPrefTypeId': 'BOPIS_PREFERENCE',
       'userPrefValue': JSON.stringify(userPreference)
     });
-    commit(types.USER_PREFERENCE_UPDATED, payload)
+    commit(types.USER_PREFERENCE_UPDATED, userPreference)
   }
 }
 export default actions;

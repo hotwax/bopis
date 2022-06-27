@@ -89,7 +89,7 @@ export default defineComponent({
       })
     },
     showShippingOrders (ev: any){
-      this.store.dispatch('user/setUserPreference', { shippingOrderStatus: ev.detail.checked })
+      this.store.dispatch('user/setUserPreference', { showShippingOrders: ev.detail.checked })
     }
   },
   setup () {
