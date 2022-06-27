@@ -1,4 +1,4 @@
-const prepareOISGIRQuery = (params: any) => {
+const prepareOrderQuery = (params: any) => {
   const viewSize = params.viewSize ? params.viewSize : process.env.VUE_APP_VIEW_SIZE;
   const viewIndex = params.viewIndex ? params.viewIndex : 0;
 
@@ -37,16 +37,16 @@ const prepareOISGIRQuery = (params: any) => {
     payload.json.filter.push(`orderStatusId: ${params.orderStatusId}`)
   }
 
-  if (params._shipmentStatusId) {
-    payload.json.filter.push(`-shipmentStatusId: ${params._shipmentStatusId}`)
+  if (params['-shipmentStatusId']) {
+    payload.json.filter.push(`-shipmentStatusId: ${params['-shipmentStatusId']}`)
   }
 
   if (params.shipmentStatusId) {
     payload.json.filter.push(`shipmentStatusId: ${params.shipmentStatusId}`)
   }
 
-  if (params._fulfillmentStatus) {
-    payload.json.filter.push(`-fulfillmentStatus: ${params._fulfillmentStatus}`)
+  if (params['-fulfillmentStatus']) {
+    payload.json.filter.push(`-fulfillmentStatus: ${params['-fulfillmentStatus']}`)
   }
 
   if (params.facilityId) {
@@ -64,4 +64,4 @@ const prepareOISGIRQuery = (params: any) => {
   return payload
 }
 
-export { prepareOISGIRQuery }
+export { prepareOrderQuery }

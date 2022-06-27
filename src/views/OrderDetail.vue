@@ -42,7 +42,7 @@
       </ion-item>
   
     <main>
-      <ion-card v-for="(item, index) in order?.parts && order?.parts[0]?.items" :key="index">
+      <ion-card v-for="(item, index) in getCurrentOrderPart()?.items" :key="index">
         <ProductListItem :item="item" />
         <ion-item lines="none" class="border-top">
           <ion-label>{{ $t("Reason") }}</ion-label>
@@ -123,7 +123,7 @@ export default defineComponent({
   },
   data () {
     return {
-      unfillableReason: JSON.parse(process.env.VUE_APP_UNFILLABLE_REASONS),
+      unfillableReason: JSON.parse(process.env.VUE_APP_UNFILLABLE_REASONS)
     }
   },
   computed: {
@@ -133,9 +133,7 @@ export default defineComponent({
     })
   },
   ionViewDidEnter() {
-    if (this.order.parts && this.order.parts[0]) {
-      this.order.parts[0].items.map((item) => item['reason'] = this.unfillableReason[0].id);
-    }
+    if(this.order.items) this.order.items.map((item) => item['reason'] = this.unfillableReason[0].id);
   },
   methods: {
     async shipToCustomer() {
@@ -155,7 +153,7 @@ export default defineComponent({
           },{
             text: this.$t('Reject Order'),
             handler: () => {
-              this.store.dispatch('order/setUnfillableOrderOrItem', order).then((resp) => {
+              this.store.dispatch('order/setUnfillableOrderOrItem', { orderId: order.orderId, parts: this.getCurrentOrderPart() }).then((resp) => {
                 if (resp) this.router.push('/tabs/orders')
               })
             },
@@ -170,10 +168,16 @@ export default defineComponent({
         orderPartSeqId
       }
       await this.store.dispatch("order/getOrderDetail", payload)
+    },
+    getCurrentOrderPart() {
+      if (this.order.parts) {
+        return this.order.parts.find((part) => part.orderPartSeqId === this.$route.params.orderPartSeqId)
+      }
+      return {}
     }
   },
-  mounted() {
-    this.getOrderDetail(this.$route.params.orderId, this.$route.params.orderPartSeqId);
+  async mounted() {
+    await this.getOrderDetail(this.$route.params.orderId, this.$route.params.orderPartSeqId);
   },
   setup () {
     const store = useStore();
