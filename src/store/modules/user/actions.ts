@@ -64,7 +64,7 @@ const actions: ActionTree<UserState, RootState> = {
 
       if (userPreferenceResp.status == 200 && !hasError(userPreferenceResp) && userPreferenceResp.data?.userPrefValue) {
         const userPreference = JSON.parse(userPreferenceResp.data.userPrefValue)
-        commit(types.USER_PREFERENCE_UPDATED, userPreference.shippingOrderStatus)
+        commit(types.USER_PREFERENCE_UPDATED, userPreference)
       }
       
       commit(types.USER_INFO_UPDATED, resp.data);
@@ -107,7 +107,7 @@ const actions: ActionTree<UserState, RootState> = {
   setUserPreference( {state, commit }, payload){
     UserService.setUserPreference({
       'userPrefTypeId': 'BOPIS_PREFERENCE',
-      'userPrefValue': JSON.stringify({shippingOrderStatus: payload})
+      'userPrefValue': JSON.stringify(payload)
     });
     commit(types.USER_PREFERENCE_UPDATED, payload)
   }
