@@ -137,7 +137,6 @@ export default defineComponent({
   },
   methods: {
     timeFromNow (time) {
-      console.log(time)
       const timeDiff = DateTime.fromISO(time).diff(DateTime.local());
       return DateTime.local().plus(timeDiff).toRelative();
     },

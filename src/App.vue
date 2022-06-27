@@ -7,7 +7,6 @@
 <script lang="ts">
 import { IonApp, IonRouterOutlet } from '@ionic/vue';
 import { defineComponent } from 'vue';
-import { useStore } from 'vuex'
 import { loadingController } from '@ionic/vue';
 import emitter from "@/event-bus"
 
@@ -58,12 +57,6 @@ export default defineComponent({
   unmounted() {
     emitter.off('presentLoader', this.presentLoader);
     emitter.off('dismissLoader', this.dismissLoader);
-  },
-  setup(){
-    const store = useStore();
-    return {
-      store,
-    }
-  },
+  }
 });
 </script>
