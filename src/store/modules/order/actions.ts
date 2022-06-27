@@ -174,14 +174,14 @@ const actions: ActionTree<OrderState , RootState> ={
     // Show loader only when new query and not the infinite scroll
     if (payload.viewIndex === 0) emitter.emit("presentLoader");
     let resp;
-    const solrQueryPayload = prepareOrderQuery({
+    const orderQueryPayload = prepareOrderQuery({
       ...payload,
       shipmentMethodTypeId: !store.state.user.preference.showShippingOrders ? 'STOREPICKUP' : '',
       shipmentStatusId: "SHIPMENT_PACKED"
     })
 
     try {
-      resp = await OrderService.getPackedOrders(solrQueryPayload)
+      resp = await OrderService.getPackedOrders(orderQueryPayload)
       if (resp.status === 200 && resp.data.grouped?.orderId?.ngroups > 0 && !hasError(resp)) {
         let orders = resp?.data?.grouped?.orderId?.groups.map((order: any) => {
           const orderItem = order.doclist.docs[0]
