@@ -25,8 +25,8 @@ const prepareOrderQuery = (params: any) => {
     payload.json.params['defType'] = "edismax"
   }
 
-  if (!params.showShippingOrders) {
-    payload.json.filter.push("shipmentMethodTypeId: STOREPICKUP")
+  if (params.shipmentMethodTypeId) {
+    payload.json.filter.push(`shipmentMethodTypeId: ${params.shipmentMethodTypeId}`)
   }
 
   if (params.orderTypeId) {

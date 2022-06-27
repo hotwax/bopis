@@ -17,7 +17,7 @@ const actions: ActionTree<OrderState , RootState> ={
 
     const orderQueryPayload = prepareOrderQuery({
       ...payload,
-      showShippingOrders: store.state.user.preference.showShippingOrders,
+      shipmentMethodTypeId: !store.state.user.preference.showShippingOrders ? 'STOREPICKUP' : '',
       '-shipmentStatusId': '*',
       '-fulfillmentStatus': 'Cancelled',
       orderStatusId: 'ORDER_APPROVED',
@@ -105,7 +105,7 @@ const actions: ActionTree<OrderState , RootState> ={
 
     const orderQueryPayload = prepareOrderQuery({
       ...payload,
-      showShippingOrders: store.state.user.preference.showShippingOrders,
+      shipmentMethodTypeId: !store.state.user.preference.showShippingOrders ? 'STOREPICKUP' : '',
       '-shipmentStatusId': '*',
       '-fulfillmentStatus': 'Cancelled',
       orderStatusId: 'ORDER_APPROVED',
