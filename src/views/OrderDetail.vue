@@ -10,32 +10,32 @@
       <ion-list>
         <ion-item lines="none">
           <ion-label>
-            <h2>{{ order.customer?.name }}</h2>
+            <h2>{{ order.customerName }}</h2>
             <p>{{ order.orderName ? order.orderName : order.orderId }}</p>
           </ion-label>
-          <ion-badge v-if="order.placedDate" color="dark" slot="end">{{ moment.utc(order.placedDate).fromNow() }}</ion-badge>
+          <ion-badge v-if="order.orderDate" color="dark" slot="end">{{ moment.utc(order.orderDate).fromNow() }}</ion-badge>
         </ion-item>
       </ion-list>
-      <ion-item v-if="order.customer?.phoneNumber">
+      <ion-item v-if="order.phoneNumber">
         <ion-icon :icon="callOutline" slot="start" />
-        <ion-label>{{ order.customer?.phoneNumber }}</ion-label>
+        <ion-label>{{ order.phoneNumber }}</ion-label>
         <ion-button
           fill="outline"
           slot="end"
           color="medium"
-          @click="copyToClipboard(order.customer?.phoneNumber)"
+          @click="copyToClipboard(order.phoneNumber)"
         >
           {{ $t("Copy") }}
         </ion-button>
       </ion-item>
-      <ion-item v-if="order.customer?.email" lines="none">
+      <ion-item v-if="order.email" lines="none">
         <ion-icon :icon="mailOutline" slot="start" />
-        <ion-label>{{ order.customer?.email }}</ion-label>
+        <ion-label>{{ order.email }}</ion-label>
         <ion-button
           fill="outline"
           slot="end"
           color="medium"
-          @click="copyToClipboard(order.customer?.email)"
+          @click="copyToClipboard(order.email)"
         >
           {{ $t("Copy") }}
         </ion-button>
@@ -52,11 +52,10 @@
         </ion-item>
       </ion-card>
 
-      <!-- TODO: implement functionality to change shipping address -->
-      <!-- <ion-button expand="block" fill="outline" @click="shipToCustomer()">
+      <ion-button expand="block" fill="outline" @click="shipToCustomer()">
         {{ $t("Ship to customer") }}
         <ion-icon :icon="sendOutline" slot="end" />
-      </ion-button> -->
+      </ion-button>
 
       <ion-button expand="block" color="danger" fill="outline" @click="updateOrder(order)">
         {{ $t("Reject Order") }}
@@ -161,11 +160,10 @@ export default defineComponent({
         });
       return alert.present();
     },
-    async getOrderDetail(orderId, orderPartSeqId) {
+    async getOrderDetail(orderId) {
       const payload = {
         facilityId: this.currentFacility.facilityId,
-        orderId,
-        orderPartSeqId
+        orderId
       }
       await this.store.dispatch("order/getOrderDetail", payload)
     },
