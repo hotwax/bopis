@@ -9,7 +9,7 @@ const productModule: Module<ProductState, RootState> = {
     namespaced: true,
     state: {
       cached: {},
-      products:{
+      products: {
         list: {},
         total: 0 
       }, 

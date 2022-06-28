@@ -5,7 +5,7 @@
         <ion-title>{{ $t("Catalog") }}</ion-title>
       </ion-toolbar>
     </ion-header>
-    <ion-content :fullscreen="true">
+    <ion-content>
       <ion-searchbar v-model="queryString" @keypress.enter="queryString = $event.target.value; getProducts()" />
       <main>
         <ion-card v-for="product in products.list" :key="product.productId">
@@ -49,7 +49,7 @@ import {
 } from '@ionic/vue';
 import { defineComponent } from 'vue';
 import { mapGetters, useStore } from 'vuex';
-import Image from '../components/Image.vue';
+import Image from '@/components/Image.vue';
 
 export default defineComponent({
   name: 'Catalog',
@@ -119,6 +119,7 @@ main{
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
     align-items: start;
+
 }
 
 </style>
