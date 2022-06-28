@@ -58,7 +58,7 @@ const routes: Array<RouteRecordRaw> = [
     beforeEnter: loginGuard
   },
   {
-    path: "/orderdetail/:orderId",
+    path: "/orderdetail/:orderId/:orderPartSeqId",
     name: "OrderDetail",
     component: OrderDetail,
     beforeEnter: authGuard,

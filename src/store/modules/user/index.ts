@@ -12,7 +12,10 @@ const userModule: Module<UserState, RootState> = {
       current: null,
       currentFacility: {},
       instanceUrl: '',
-      shippingOrders: true
+      packingSlipEnabled: false,
+      preference: {
+        showShippingOrders: true,
+      }
     },
     getters,
     actions,

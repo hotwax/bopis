@@ -26,7 +26,7 @@
         <ion-item>
           <ion-icon :icon="codeWorkingOutline" slot="start"/>
           <ion-label>{{ $t("OMS") }}</ion-label>
-          <p slot="end">{{ instanceUrl }}</p>
+          <p slot="end">{{ baseURL ? baseURL : instanceUrl }}</p>
         </ion-item>
         <!-- Profile of user logged in -->
         <ion-item>
@@ -63,6 +63,11 @@ export default defineComponent({
     IonToggle, 
     IonToolbar
   },
+  data(){
+    return {
+      baseURL: process.env.VUE_APP_BASE_URL
+    }
+  },
   computed: {
     ...mapGetters({
       userProfile: 'user/getUserProfile',
@@ -84,7 +89,7 @@ export default defineComponent({
       })
     },
     showShippingOrders (ev: any){
-      this.store.dispatch('user/setShippingOrdersStatus', ev.detail.checked)
+      this.store.dispatch('user/setUserPreference', { showShippingOrders: ev.detail.checked })
     }
   },
   setup () {

@@ -58,6 +58,18 @@ const actions: ActionTree<UserState, RootState> = {
       if (resp.data.userTimeZone !== localTimeZone) {
         emitter.emit('timeZoneDifferent', { profileTimeZone: resp.data.userTimeZone, localTimeZone});
       }
+      try {
+        const userPreferenceResp = await UserService.getUserPreference({
+          'userPrefTypeId': 'BOPIS_PREFERENCE'
+        });
+
+        if (userPreferenceResp.status == 200 && !hasError(userPreferenceResp) && userPreferenceResp.data?.userPrefValue) {
+          const userPreference = JSON.parse(userPreferenceResp.data.userPrefValue)
+          commit(types.USER_PREFERENCE_UPDATED, userPreference)
+        }
+      } catch (err) {
+        console.error(err)
+      }
       commit(types.USER_INFO_UPDATED, resp.data);
       commit(types.USER_CURRENT_FACILITY_UPDATED, resp.data.facilities.length > 0 ? resp.data.facilities[0] : {});
     }
@@ -75,8 +87,11 @@ const actions: ActionTree<UserState, RootState> = {
   /**
    * Set User Instance Url
    */
-   setUserInstanceUrl ({ state, commit }, payload){
-    commit(types.USER_INSTANCE_URL_UPDATED, payload)
+   setUserInstanceUrl ({ commit }, instanceUrl){
+    commit(types.USER_INSTANCE_URL_UPDATED, instanceUrl)
+    const packingSlipEnabledDomain = JSON.parse(process.env.VUE_APP_PACKING_SLP_ENBLD_DMN);
+    const packingSlipEnabled = packingSlipEnabledDomain.some((domain: string) => domain === instanceUrl)
+    commit(types.USER_PACKING_SLIP_ENABLED_UPDATED, packingSlipEnabled)
    },
   
   /**
@@ -92,8 +107,12 @@ const actions: ActionTree<UserState, RootState> = {
     }
   },
 
-  setShippingOrdersStatus( {state, commit }, payload){
-    commit(types.USER_SHIPPING_ORDERS_STATUS_UPDATED, payload)
+  setUserPreference( {state, commit }, payload){
+    commit(types.USER_PREFERENCE_UPDATED, payload)
+    UserService.setUserPreference({
+      'userPrefTypeId': 'BOPIS_PREFERENCE',
+      'userPrefValue': JSON.stringify(state.preference)
+    });
   }
 }
 export default actions;
