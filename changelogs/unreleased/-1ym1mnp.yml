@@ -1,7 +1,0 @@
----
-title: 'Fixed: the issue of empty cards on the orders page and removed the usage of
-  order card component'
-ticket_id: "#1ym1mnp"
-merge_request: 43
-author: Yash Maheshwari
-type: changed
