@@ -19,7 +19,7 @@ const actions: ActionTree<OrderState , RootState> ={
       ...payload,
       shipmentMethodTypeId: !store.state.user.preference.showShippingOrders ? 'STOREPICKUP' : '',
       '-shipmentStatusId': '*',
-      '-fulfillmentStatus': 'Cancelled',
+      '-fulfillmentStatus': '(Cancelled OR Rejected)',
       orderStatusId: 'ORDER_APPROVED',
       orderTypeId: 'SALES_ORDER'
     })
@@ -107,7 +107,7 @@ const actions: ActionTree<OrderState , RootState> ={
       ...payload,
       shipmentMethodTypeId: !store.state.user.preference.showShippingOrders ? 'STOREPICKUP' : '',
       '-shipmentStatusId': '*',
-      '-fulfillmentStatus': 'Cancelled',
+      '-fulfillmentStatus': '(Cancelled OR Rejected)',
       orderStatusId: 'ORDER_APPROVED',
       orderTypeId: 'SALES_ORDER'
     })
@@ -179,7 +179,7 @@ const actions: ActionTree<OrderState , RootState> ={
       shipmentMethodTypeId: !store.state.user.preference.showShippingOrders ? 'STOREPICKUP' : '',
       shipmentStatusId: "SHIPMENT_PACKED",
       orderTypeId: 'SALES_ORDER',
-      '-fulfillmentStatus': 'Cancelled',
+      '-fulfillmentStatus': '(Cancelled OR Rejected)',
     })
 
     try {
