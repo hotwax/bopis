@@ -31,7 +31,6 @@ const actions: ActionTree<ProductState, RootState> = {
       "filters": ['productId: (' + productIdFilter + ')'],
       "viewSize": productIds.length
     })
-
     if (resp.status === 200 && resp.data.response && !hasError(resp)) {
       const products = resp.data.response.docs;
       // Handled empty response in case of failed query
@@ -67,7 +66,7 @@ const actions: ActionTree<ProductState, RootState> = {
       // Remove added loader only when new query and not the infinite scroll
       if (payload.viewIndex === 0) emitter.emit("dismissLoader");
     } catch(error){
-      console.log(error)
+      console.error(error)
       showToast(translate("Something went wrong"));
     }
     // TODO Handle specific error
