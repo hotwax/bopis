@@ -58,7 +58,7 @@ const actions: ActionTree<ProductState, RootState> = {
         let products = resp.data.response.docs;
         const totalProductsCount = resp.data.response?.numFound;
         if (payload.viewIndex && payload.viewIndex > 0) products = state.products.list.concat(products)
-        commit(types.PRODUCT_SEARCH_UPDATED, { products: products, totalProductsCount: totalProductsCount })
+        commit(types.PRODUCT_SEARCH_UPDATED, { products, totalProductsCount })
       } else {
         //showing error whenever getting no products in the response or having any other error
         showToast(translate("Product not found"));
