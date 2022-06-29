@@ -4,30 +4,42 @@
       <ion-toolbar>
         <ion-title>{{ $t("Catalog") }}</ion-title>
       </ion-toolbar>
-    </ion-header>   
+    </ion-header>
     <ion-content>
-      <ion-searchbar/>
-      <main>        
-        <ion-card v-for="items in 10" :key="items">
-          <Image/>
-            <ion-item lines="none">
-              <ion-label>
-                <p>Brand</p>
-                  Parent name
-                <p>$Sale price</p>
-              </ion-label>
-            </ion-item>          
+      <ion-searchbar v-model="queryString" @keypress.enter="queryString = $event.target.value; getProducts()" />
+      <main>
+        <ion-card v-for="product in products.list" :key="product.productId">
+          <Image :src="product.mainImageUrl" />
+          <ion-item lines="none">
+            <ion-label>
+              <p>{{ product.productId }}</p>
+              {{ product.productName }}
+              <p>${{ product.groupPrice }}</p>
+            </ion-label>
+          </ion-item>
         </ion-card>
       </main>
+      <ion-infinite-scroll
+        @ionInfinite="loadMoreProducts($event)"
+        threshold="100px"
+        :disabled="!isScrollable"
+      >
+        <ion-infinite-scroll-content
+          loading-spinner="crescent"
+          :loading-text="$t('Loading')"
+        />
+      </ion-infinite-scroll>
     </ion-content>
   </ion-page>
 </template>
 
 <script lang="ts">
-import { 
+import {
   IonCard,
   IonContent,
   IonHeader,
+  IonInfiniteScrollContent,
+  IonInfiniteScroll,
   IonItem,
   IonLabel,
   IonPage,
@@ -36,7 +48,8 @@ import {
   IonToolbar,
 } from '@ionic/vue';
 import { defineComponent } from 'vue';
-import Image from "../components/Image.vue"
+import { mapGetters, useStore } from 'vuex';
+import Image from '@/components/Image.vue';
 
 export default defineComponent({
   name: 'Catalog',
@@ -45,13 +58,60 @@ export default defineComponent({
     IonCard,
     IonContent,
     IonHeader,
+    IonInfiniteScrollContent,
+    IonInfiniteScroll,
     IonItem,
     IonLabel,
     IonPage,
     IonSearchbar,
     IonTitle,
     IonToolbar,
-  }
+  },
+  data() {
+    return {
+      queryString: "",
+    };
+  },
+  computed: {
+    ...mapGetters({
+      products: "product/getSearchProducts",
+      isScrollable: "product/isScrollable",
+    }),
+  },
+  methods: {
+    async loadMoreProducts(event: any) {
+      this.getProducts(
+        undefined,
+        Math.ceil(
+          this.products.list?.length / (process.env.VUE_APP_VIEW_SIZE as any)
+        ).toString()
+      ).then(() => {
+        event.target.complete();
+      });
+    },
+    async getProducts(vSize?: any, vIndex?: any) {
+      const viewSize = vSize ? vSize : process.env.VUE_APP_VIEW_SIZE;
+      const viewIndex = vIndex ? vIndex : 0;
+      const payload = {
+        viewSize,
+        viewIndex,
+        queryString: "*" + this.queryString + "*",
+      };
+      await this.store.dispatch("product/findProduct", payload);
+     
+    },
+  },
+
+  async mounted() {
+    this.getProducts();
+  },
+  setup() {
+    const store = useStore();
+
+    return {
+      store,
+    };
+  },
 });
 </script>
 <style scoped>
@@ -59,7 +119,7 @@ main{
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
     align-items: start;
-    
+
 }
 
 </style>
