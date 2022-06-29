@@ -50,14 +50,16 @@ const actions: ActionTree<OrderState , RootState> ={
                   items: [{
                     orderItemSeqId: item.orderItemSeqId,
                     productId: item.productId,
-                    facilityId: item.facilityId
+                    facilityId: item.facilityId,
+                    quantity: item.itemQuantity
                   }]
                 })
               } else {
                 currentOrderPart.items.push({
                   orderItemSeqId: item.orderItemSeqId,
                   productId: item.productId,
-                  facilityId: item.facilityId
+                  facilityId: item.facilityId,
+                  quantity: item.itemQuantity
                 })
               }
 
@@ -138,14 +140,16 @@ const actions: ActionTree<OrderState , RootState> ={
                   items: [{
                     orderItemSeqId: item.orderItemSeqId,
                     productId: item.productId,
-                    facilityId: item.facilityId
+                    facilityId: item.facilityId,
+                    quantity: item.itemQuantity
                   }]
                 })
               } else {
                 currentOrderPart.items.push({
                   orderItemSeqId: item.orderItemSeqId,
                   productId: item.productId,
-                  facilityId: item.facilityId
+                  facilityId: item.facilityId,
+                  quantity: item.itemQuantity
                 })
               }
 
