@@ -91,14 +91,16 @@ export default defineComponent({
     },
     async getProducts(vSize?: any, vIndex?: any) {
       const viewSize = vSize ? vSize : process.env.VUE_APP_VIEW_SIZE;
-      const viewIndex = vIndex ? vIndex : 0;
+      const viewIndex = vIndex ? vIndex*10 : 0;
       const payload = {
+        viewSize,
+        viewIndex,
         "json": {
            "params": {
               "qf": "sku productId productName",
               "defType" : "edismax",
-              "rows":10,
-              "start":viewIndex*10,
+              "rows":viewSize,
+              "start":viewIndex,
               "q.op": "AND",
            },
            "query": `(*${this.queryString}*) OR "${this.queryString}"^100`,
