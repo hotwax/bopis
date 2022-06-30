@@ -47,17 +47,13 @@ const actions: ActionTree<ProductState, RootState> = {
     if (payload.viewIndex === 0) emitter.emit("presentLoader");
     let resp;
     try {
-      resp = await ProductService.fetchProducts({
-        // used sku as we are currently only using sku to search for the product
-        "filters": ['sku: ' + payload.queryString],
-        "viewSize": payload.viewSize,
-        "viewIndex": payload.viewIndex
-      })
+      // used sku as we are currently only using sku to search for the product
+      resp = await ProductService.fetchProducts(payload)
       // resp.data.response.numFound tells the number of items in the response
       if (resp.status === 200 && resp.data.response?.numFound > 0 && !hasError(resp)) {
         let products = resp.data.response.docs;
         const totalProductsCount = resp.data.response?.numFound;
-        if (payload.viewIndex && payload.viewIndex > 0) products = state.products.list.concat(products)
+        if (payload.json.params.start && payload.json.params.start > 0) products = state.products.list.concat(products)
         commit(types.PRODUCT_SEARCH_UPDATED, { products, totalProductsCount })
       } else {
         //showing error whenever getting no products in the response or having any other error

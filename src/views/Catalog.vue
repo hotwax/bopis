@@ -93,10 +93,18 @@ export default defineComponent({
       const viewSize = vSize ? vSize : process.env.VUE_APP_VIEW_SIZE;
       const viewIndex = vIndex ? vIndex : 0;
       const payload = {
-        viewSize,
-        viewIndex,
-        queryString: "*" + this.queryString + "*",
-      };
+        "json": {
+           "params": {
+              "qf": "sku productId productName",
+              "defType" : "edismax",
+              "rows":10,
+              "start":viewIndex*10,
+              "q.op": "AND",
+           },
+           "query": `(*${this.queryString}*) OR "${this.queryString}"^100`,
+           "filter": "docType:PRODUCT",
+          },
+        }
       await this.store.dispatch("product/findProduct", payload);
      
     },
