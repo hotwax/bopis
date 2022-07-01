@@ -3,7 +3,7 @@
     <ion-thumbnail slot="start">
       <Image :src="getProduct(item.productId).mainImageUrl" />
     </ion-thumbnail>
-    <ion-label>
+    <ion-label class="ion-text-wrap">
       <h5>{{ getProduct(item.productId).brandName }}</h5>
       <h2>{{ getProduct(item.productId).productName }}</h2>
       <p class="ion-text-wrap">{{ getProduct(item.productId).internalName }}</p>
