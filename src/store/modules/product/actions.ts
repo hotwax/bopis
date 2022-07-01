@@ -27,7 +27,7 @@ const actions: ActionTree<ProductState, RootState> = {
     if (productIdFilter === '') return;
 
     // adding viewSize as by default we are having the viewSize of 10
-    const resp = await ProductService.fetchProducts({
+    const resp = await ProductService.findProducts({
       "filters": ['productId: (' + productIdFilter + ')'],
       "viewSize": productIds.length
     })
@@ -44,11 +44,11 @@ const actions: ActionTree<ProductState, RootState> = {
 
   async findProduct ({ commit, state }, payload) {
     // Show loader only when new query and not the infinite scroll
-    if (payload.viewIndex === 0) emitter.emit("presentLoader");
+    if (payload.json.params.start === 0) emitter.emit("presentLoader");
     let resp;
     try {
       // used sku as we are currently only using sku to search for the product
-      resp = await ProductService.fetchProducts(payload)
+      resp = await ProductService.findProducts(payload)
       // resp.data.response.numFound tells the number of items in the response
       if (resp.status === 200 && resp.data.response?.numFound > 0 && !hasError(resp)) {
         let products = resp.data.response.docs;
