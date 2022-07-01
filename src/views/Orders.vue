@@ -24,7 +24,7 @@
         <div v-for="order in orders" :key="order.orderId" v-show="order.parts.length > 0">
           <ion-card v-for="(part, index) in order.parts" :key="index" @click.prevent="viewOrder(order, part)">
             <ion-item lines="none">
-              <ion-label>
+              <ion-label class="ion-text-wrap">
                 <h1>{{ order.customer.name }}</h1>
                 <p>{{ order.orderName ? order.orderName : order.orderId }}</p>
               </ion-label>
@@ -63,7 +63,7 @@
         <div v-for="order in packedOrders" :key="order.orderId" v-show="order.parts.length > 0">
           <ion-card v-for="(part, index) in order.parts" :key="index">
             <ion-item lines="none">
-              <ion-label>
+              <ion-label class="ion-text-wrap">
                 <h1>{{ order.customer.name }}</h1>
                 <p>{{ order.orderName ? order.orderName : order.orderId }}</p>
               </ion-label>
