@@ -5,19 +5,17 @@
         <ion-title>{{ currentFacility.name }}</ion-title>
       </ion-toolbar>
 
-      <ion-toolbar>
-        <div>
-          <ion-searchbar @ionFocus="selectSearchBarText($event)" v-model="queryString" @keyup.enter="queryString = $event.target.value; searchOrders()" :placeholder= "$t('Search Orders')" />
-          <ion-segment v-model="segmentSelected" @ionChange="segmentChanged">
-            <ion-segment-button value="open">
-              <ion-label>{{ $t("Open") }}</ion-label>
-            </ion-segment-button>
-            <ion-segment-button value="packed">
-              <ion-label>{{ $t("Packed") }}</ion-label>
-            </ion-segment-button>
-          </ion-segment>
-        </div>
-      </ion-toolbar>
+      <div>
+        <ion-searchbar @ionFocus="selectSearchBarText($event)" v-model="queryString" @keyup.enter="queryString = $event.target.value; searchOrders()" :placeholder= "$t('Search Orders')" />
+        <ion-segment v-model="segmentSelected" @ionChange="segmentChanged">
+          <ion-segment-button value="open">
+            <ion-label>{{ $t("Open") }}</ion-label>
+          </ion-segment-button>
+          <ion-segment-button value="packed">
+            <ion-label>{{ $t("Packed") }}</ion-label>
+          </ion-segment-button>
+        </ion-segment>
+      </div>    
     </ion-header>
     <ion-content>
       <div v-if="segmentSelected === 'open'">
@@ -363,7 +361,7 @@ export default defineComponent({
 }
 
 @media (min-width: 991px){
-  ion-toolbar > div {
+  ion-header > div {
     display: flex;
   }
 }
