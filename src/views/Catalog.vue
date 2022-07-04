@@ -49,7 +49,7 @@ import {
 } from '@ionic/vue';
 import { defineComponent } from 'vue';
 import { mapGetters, useStore } from 'vuex';
-import Image from '@/components/Image.vue';
+import Image from "../components/Image.vue"
 
 export default defineComponent({
   name: 'Catalog',
@@ -119,7 +119,6 @@ main{
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
     align-items: start;
-
 }
 
 </style>
