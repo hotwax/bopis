@@ -21,7 +21,7 @@ const getters: GetterTree <UserState, RootState> = {
     getInstanceUrl (state) {
         return state.instanceUrl;
     },
-    getShippingOrders (state) {
+    showShippingOrders (state) {
         return state.preference.showShippingOrders;
     },
     showPackingSlip (state) {
