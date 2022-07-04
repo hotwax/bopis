@@ -74,7 +74,7 @@ export default defineComponent({
   },
   computed: {
     ...mapGetters({
-      products: "product/getSearchProducts",
+      products: "product/getProducts",
       isScrollable: "product/isScrollable",
     }),
   },
