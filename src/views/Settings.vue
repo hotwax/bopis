@@ -22,11 +22,11 @@
           <ion-label>{{$t("Shipping orders")}}</ion-label>
           <ion-toggle :checked="shippingOrders" @ionChange="showShippingOrders($event)" slot="end" />
         </ion-item>
-        <!-- Packing slips document preference -->
+        <!-- Packing document preference -->
         <ion-item>
           <ion-icon :icon="sendOutline" slot="start" />
-          <ion-label>{{$t("Packing slip document")}}</ion-label>
-          <ion-toggle :checked="packingSlipDocument" @ionChange="showPackingSlipDocument($event)" slot="end" />
+          <ion-label>{{$t("Packing document")}}</ion-label>
+          <ion-toggle :checked="packingDocument" @ionChange="showPackingDocument($event)" slot="end" />
         </ion-item>
         <!-- OMS information -->
         <ion-item>
@@ -80,7 +80,7 @@ export default defineComponent({
       currentFacility: 'user/getCurrentFacility',
       instanceUrl: 'user/getInstanceUrl',
       shippingOrders: 'user/getShippingOrders',
-      packingSlipDocument: 'user/getPackingSlipDocument'
+      packingDocument: 'user/getPackingDocument'
     })
   },
   methods: {
@@ -98,8 +98,8 @@ export default defineComponent({
     showShippingOrders (ev: any){
       this.store.dispatch('user/setUserPreference', { showShippingOrders: ev.detail.checked })
     },
-    showPackingSlipDocument (ev: any){
-      this.store.dispatch('user/setUserPreference', { showPackingSlipDocument: ev.detail.checked })
+    showPackingDocument (ev: any){
+      this.store.dispatch('user/setUserPreference', { showPackingDocument: ev.detail.checked })
     }
   },
   setup () {
