@@ -343,12 +343,17 @@ const actions: ActionTree<OrderState , RootState> ={
     }).catch(err => err);
   },
 
-  rejectOrderItems ({ commit }, data) {
+  async rejectOrderItems ({ commit }, data) {
     const payload = {
       'orderId': data.orderId
     }
+    const responses = [];
 
-    return Promise.all(data.parts.items.map((item: any) => {
+    // https://blog.devgenius.io/using-async-await-in-a-foreach-loop-you-cant-c174b31999bd
+    // The forEach, map, reduce loops are not built to work with asynchronous callback functions.
+    // It doesn't wait for the promise of an iteration to be resolved before it goes on to the next iteration.
+    // We could use either the for…of the loop or the for(let i = 0;….)
+    for (const item of data.parts.items) {
       const params = {
         ...payload,
         'rejectReason': item.reason,
@@ -357,10 +362,10 @@ const actions: ActionTree<OrderState , RootState> ={
         'shipmentMethodTypeId': data.parts.shipmentMethodEnum.shipmentMethodEnumId,
         'quantity': parseInt(item.quantity)
       }
-      return OrderService.rejectOrderItem({'payload': params}).catch((err) => { 
-        return err;
-      })
-    }))
+      const resp = await OrderService.rejectOrderItem({'payload': params});
+      responses.push(resp);
+    }
+    return responses;
   },
 
   // clearning the orders state when logout, or user store is changed
