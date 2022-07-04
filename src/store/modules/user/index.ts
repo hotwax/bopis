@@ -14,7 +14,7 @@ const userModule: Module<UserState, RootState> = {
       instanceUrl: '',
       preference: {
         showShippingOrders: true,
-        showPackingDocument: true
+        showPackingSlip: true
       }
     },
     getters,
