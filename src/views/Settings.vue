@@ -25,7 +25,7 @@
         <!-- Packing document preference -->
         <ion-item>
           <ion-icon :icon="sendOutline" slot="start" />
-          <ion-label>{{$t("Packing document")}}</ion-label>
+          <ion-label>{{ $t("Packing document") }}</ion-label>
           <ion-toggle :checked="packingDocument" @ionChange="showPackingDocument($event)" slot="end" />
         </ion-item>
         <!-- OMS information -->
@@ -80,7 +80,7 @@ export default defineComponent({
       currentFacility: 'user/getCurrentFacility',
       instanceUrl: 'user/getInstanceUrl',
       shippingOrders: 'user/getShippingOrders',
-      packingDocument: 'user/getPackingDocument'
+      packingDocument: 'user/isPackingSlipEnabled'
     })
   },
   methods: {
