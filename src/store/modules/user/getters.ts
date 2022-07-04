@@ -24,7 +24,7 @@ const getters: GetterTree <UserState, RootState> = {
     getShippingOrders (state) {
         return state.preference.showShippingOrders;
     },
-    isPackingSlipEnabled (state) {
+    ShowPackingSlip (state) {
         return state.preference.showPackingSlip;
     }
 
