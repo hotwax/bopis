@@ -273,18 +273,14 @@ export default defineComponent({
           },{
             text: header,
             handler: () => {
-              this.store.dispatch('order/quickShipEntireShipGroup', {order, part, facilityId: this.currentFacility.facilityId}).then((resp) => {
-                if (resp.data._EVENT_MESSAGE_) this.getPickupOrders();
-              })
+              this.store.dispatch('order/quickShipEntireShipGroup', {order, part, facilityId: this.currentFacility.facilityId})
             }
           }]
         });
       return alert.present();
     },
     async deliverShipment (order: any) {
-      await this.store.dispatch('order/deliverShipment', order).then((resp) => {
-        if (resp.data._EVENT_MESSAGE_) this.getPackedOrders();
-      });
+      await this.store.dispatch('order/deliverShipment', order)
     },
     segmentChanged (e: CustomEvent) {
       this.queryString = ''
