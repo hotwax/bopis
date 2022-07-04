@@ -176,7 +176,7 @@ export default defineComponent({
       currentFacility: 'user/getCurrentFacility',
       isPackedOrdersScrollable: 'order/isPackedOrdersScrollable',
       isOpenOrdersScrollable: 'order/isOpenOrdersScrollable',
-      showPackingSlip: 'user/ShowPackingSlip'
+      showPackingSlip: 'user/showPackingSlip'
     })
   },
   data() {

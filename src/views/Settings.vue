@@ -26,7 +26,7 @@
         <ion-item>
           <ion-icon :icon="sendOutline" slot="start" />
           <ion-label>{{ $t("Packing slip") }}</ion-label>
-          <ion-toggle :checked="ShowPackingSlip" @ionChange="showPackingSlip($event)" slot="end" />
+          <ion-toggle :checked="packingSlip" @ionChange="showPackingSlip($event)" slot="end" />
         </ion-item>
         <!-- OMS information -->
         <ion-item>
@@ -80,7 +80,7 @@ export default defineComponent({
       currentFacility: 'user/getCurrentFacility',
       instanceUrl: 'user/getInstanceUrl',
       shippingOrders: 'user/getShippingOrders',
-      ShowPackingSlip: 'user/ShowPackingSlip'
+      packingSlip: 'user/showPackingSlip'
     })
   },
   methods: {
