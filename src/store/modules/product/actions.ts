@@ -45,21 +45,21 @@ const actions: ActionTree<ProductState, RootState> = {
     if(cachedProduct.includes(productId)) {
       return productId;
     }
-      let resp;
-      try {
-        resp = await ProductService.fetchProducts({
-          "filters": [`productId: ( ${productId} )`]
-        })
-        if(resp.status == 200 && resp.data.response?.numFound > 0 && !hasError(resp)) {
-          const product = resp.data.response.docs[0];
-          commit(types.PRODUCT_ADD_TO_CACHED, product);
-        } else {
-          showToast(translate('Something went wrong'));
-        }
-      } catch(error) {
-          console.error(error);
-          showToast(translate('Something Went wrong'));
+    let resp;
+    try {
+      resp = await ProductService.fetchProducts({
+        "filters": [`productId: ( ${productId} )`]
+      })
+      if(resp.status == 200 && resp.data.response?.numFound > 0 && !hasError(resp)) {
+        const product = resp.data.response.docs[0];
+        commit(types.PRODUCT_ADD_TO_CACHED, product);
+      } else {
+        showToast(translate('Something went wrong'));
       }
+    } catch(error) {
+        console.error(error);
+        showToast(translate('Something Went wrong'));
+    }
   },
 
   async getProductInformation ({ dispatch }, { orders }) {

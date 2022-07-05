@@ -8,6 +8,7 @@
     <ion-content>
       <ion-searchbar/>
       <main>        
+        <!--TODO Remove hard coded value and make it dynamic-->
         <ion-card v-for="items in 10" :key="items" @click.prevent="() => router.push('/productdetail/12102')">
           <Image/>
             <ion-item lines="none">
