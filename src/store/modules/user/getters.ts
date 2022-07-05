@@ -21,12 +21,11 @@ const getters: GetterTree <UserState, RootState> = {
     getInstanceUrl (state) {
         return state.instanceUrl;
     },
-    getShippingOrders (state) {
+    showShippingOrders (state) {
         return state.preference.showShippingOrders;
     },
-    getPackingSlipEnabled (state) {
-        return state.packingSlipEnabled;
+    showPackingSlip (state) {
+        return state.preference.showPackingSlip;
     }
-
 }
 export default getters;

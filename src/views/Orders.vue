@@ -90,7 +90,7 @@
               <ion-button fill="clear" @click.stop="deliverShipment(order)">
                 {{ part.shipmentMethodEnum.shipmentMethodEnumId === 'STOREPICKUP' ? $t("Handover") : $t("Ship") }}
               </ion-button>
-              <ion-button v-if="isPackingSlipEnabled" fill="clear" slot="end" @click="printPackingSlip(order)">
+              <ion-button v-if="showPackingSlip" fill="clear" slot="end" @click="printPackingSlip(order)">
                 <ion-icon slot="icon-only" :icon="print" />
               </ion-button>
             </div>
@@ -176,7 +176,7 @@ export default defineComponent({
       currentFacility: 'user/getCurrentFacility',
       isPackedOrdersScrollable: 'order/isPackedOrdersScrollable',
       isOpenOrdersScrollable: 'order/isOpenOrdersScrollable',
-      isPackingSlipEnabled: 'user/getPackingSlipEnabled'
+      showPackingSlip: 'user/showPackingSlip'
     })
   },
   data() {
