@@ -57,8 +57,8 @@ const actions: ActionTree<ProductState, RootState> = {
         showToast(translate('Something went wrong'));
       }
     } catch(error) {
-        console.error(error);
-        showToast(translate('Something Went wrong'));
+      console.error(error);
+      showToast(translate('Something went wrong'));
     }
   },
 
