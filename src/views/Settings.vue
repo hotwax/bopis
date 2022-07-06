@@ -16,11 +16,17 @@
             <ion-select-option v-for="facility in (userProfile ? userProfile.facilities : [])" :key="facility.facilityId" :value="facility.facilityId" >{{ facility.name }}</ion-select-option>
           </ion-select>
         </ion-item>
-        <!-- Select store -->
+        <!-- Shipping order preference -->
         <ion-item>
           <ion-icon :icon="sendOutline" slot="start" />
           <ion-label>{{$t("Shipping orders")}}</ion-label>
-          <ion-toggle :checked="shippingOrders" @ionChange="showShippingOrders($event)" slot="end" />
+          <ion-toggle :checked="showShippingOrders" @ionChange="setShowShippingOrdersPreference($event)" slot="end" />
+        </ion-item>
+        <!-- Packing document preference -->
+        <ion-item>
+          <ion-icon :icon="sendOutline" slot="start" />
+          <ion-label>{{ $t("Packing slip") }}</ion-label>
+          <ion-toggle :checked="showPackingSlip" @ionChange="setShowPackingSlipPreference($event)" slot="end" />
         </ion-item>
         <!-- OMS information -->
         <ion-item>
@@ -73,7 +79,8 @@ export default defineComponent({
       userProfile: 'user/getUserProfile',
       currentFacility: 'user/getCurrentFacility',
       instanceUrl: 'user/getInstanceUrl',
-      shippingOrders: 'user/getShippingOrders'
+      showShippingOrders: 'user/showShippingOrders',
+      showPackingSlip: 'user/showPackingSlip'
     })
   },
   methods: {
@@ -88,8 +95,11 @@ export default defineComponent({
         this.router.push('/login');
       })
     },
-    showShippingOrders (ev: any){
+    setShowShippingOrdersPreference (ev: any) {
       this.store.dispatch('user/setUserPreference', { showShippingOrders: ev.detail.checked })
+    },
+    setShowPackingSlipPreference (ev: any){
+      this.store.dispatch('user/setUserPreference', { showPackingSlip: ev.detail.checked })
     }
   },
   setup () {

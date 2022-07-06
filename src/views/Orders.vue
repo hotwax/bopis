@@ -88,7 +88,7 @@
               <ion-button fill="clear" @click.stop="deliverShipment(order)">
                 {{ part.shipmentMethodEnum.shipmentMethodEnumId === 'STOREPICKUP' ? $t("Handover") : $t("Ship") }}
               </ion-button>
-              <ion-button v-if="isPackingSlipEnabled" fill="clear" slot="end" @click="printPackingSlip(order)">
+              <ion-button v-if="showPackingSlip" fill="clear" slot="end" @click="printPackingSlip(order)">
                 <ion-icon slot="icon-only" :icon="print" />
               </ion-button>
             </div>
@@ -174,7 +174,7 @@ export default defineComponent({
       currentFacility: 'user/getCurrentFacility',
       isPackedOrdersScrollable: 'order/isPackedOrdersScrollable',
       isOpenOrdersScrollable: 'order/isOpenOrdersScrollable',
-      isPackingSlipEnabled: 'user/getPackingSlipEnabled'
+      showPackingSlip: 'user/showPackingSlip'
     })
   },
   data() {
@@ -271,18 +271,14 @@ export default defineComponent({
           },{
             text: header,
             handler: () => {
-              this.store.dispatch('order/quickShipEntireShipGroup', {order, part, facilityId: this.currentFacility.facilityId}).then((resp) => {
-                if (resp.data._EVENT_MESSAGE_) this.getPickupOrders();
-              })
+              this.store.dispatch('order/quickShipEntireShipGroup', {order, part, facilityId: this.currentFacility.facilityId})
             }
           }]
         });
       return alert.present();
     },
     async deliverShipment (order: any) {
-      await this.store.dispatch('order/deliverShipment', order).then((resp) => {
-        if (resp.data._EVENT_MESSAGE_) this.getPackedOrders();
-      });
+      await this.store.dispatch('order/deliverShipment', order)
     },
     segmentChanged (e: CustomEvent) {
       this.queryString = ''
@@ -318,6 +314,7 @@ export default defineComponent({
     },
   },
   ionViewWillEnter () {
+    this.queryString = '';
     this.segmentSelected === 'open' ? this.getPickupOrders() : this.getPackedOrders();
   },
   setup () {
