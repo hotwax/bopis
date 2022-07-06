@@ -316,6 +316,7 @@ export default defineComponent({
     },
   },
   ionViewWillEnter () {
+    this.queryString = '';
     this.segmentSelected === 'open' ? this.getPickupOrders() : this.getPackedOrders();
   },
   setup () {
