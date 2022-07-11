@@ -2,10 +2,10 @@
   <ion-page>
     <ion-tabs>
       <ion-tab-bar slot="bottom">
-        <!-- <ion-tab-button tab="catalog" href="/tabs/catalog">
+        <ion-tab-button tab="catalog" href="/tabs/catalog">
           <ion-icon :icon="shirtOutline" />
           <ion-label>{{ $t("Catalog") }}</ion-label>
-        </ion-tab-button> -->
+        </ion-tab-button>
         <ion-tab-button tab="orders" href="/tabs/orders">
           <ion-icon :icon="infiniteOutline" />
           <ion-label>{{ $t("Orders") }}</ion-label>
