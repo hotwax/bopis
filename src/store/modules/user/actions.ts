@@ -27,6 +27,8 @@ const actions: ActionTree<UserState, RootState> = {
             await dispatch('getEComStores', { facilityId: user.data.facilities[0]?.facilityId })
             return resp.data;
           } else {
+            //TODO need to improve this message
+            //this message will be displayed when user is not associated with any facility
             showToast(translate('You do not have permission to login into this app.'));
             return Promise.reject(new Error(resp.data._ERROR_MESSAGE_));
           }
