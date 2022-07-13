@@ -29,4 +29,12 @@ const copyToClipboard = async (text: any) => {
   });
 }
 
-export { copyToClipboard, showToast, hasError }
+const getFeature = (features: any, key: string) => {
+  let featureValue = ''
+  if (features) {
+    featureValue = features.find((data: any) => data.feature.productFeatureTypeEnumId === key)?.feature.description
+  }
+  return featureValue;
+}
+
+export { copyToClipboard, showToast, hasError, getFeature }

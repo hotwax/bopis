@@ -4,32 +4,32 @@ import RootState from '@/store/RootState'
 import ProductState from './ProductState'
 import * as types from './mutation-types'
 import { hasError } from '@/utils'
+import { fetchProducts } from "@hotwax/oms-api/src/product";
+import { isError } from "@hotwax/oms-api/src/util";
 
 
 const actions: ActionTree<ProductState, RootState> = {
 
   async fetchProducts ( { commit, state }, { productIds }) {
     const cachedProductIds = Object.keys(state.cached);
-    const productIdFilter= productIds.reduce((filter: string, productId: any) => {
-      // If product already exist in cached products skip
-      if (cachedProductIds.includes(productId)) {
-        return filter;
-      } else {
-        // checking condition that if the filter is not empty then adding 'OR' to the filter
-        if (filter !== '') filter += ' OR '
-        return filter += productId;
+    const productIdFilter= productIds.reduce((filter: Array<any>, productId: any) => {
+      // If product does not exist in cached products then add the id
+      if (!cachedProductIds.includes(productId) && productId) {
+        filter.push(productId);
       }
-    }, '');
+      return filter;
+    }, []);
 
-    // If there are no products skip the API call
-    if (productIdFilter === '') return;
+    // If there are no product ids to search skip the API call
+    if (productIdFilter.length <= 0) return;
 
     // adding viewSize as by default we are having the viewSize of 10
-    const resp = await ProductService.fetchProducts({
-      "filters": ['productId: (' + productIdFilter + ')'],
-      "viewSize": productIds.length
+    const resp = await fetchProducts({
+      filters: { 'productId': productIdFilter },
+      viewSize: productIdFilter.length,
+      viewIndex: 0
     })
-    if (resp.status === 200 && resp.data.response && !hasError(resp)) {
+    if (!isError(resp)) {
       const products = resp.data.response.docs;
       // Handled empty response in case of failed query
       if (resp.data) commit(types.PRODUCT_ADD_TO_CACHED_MULTIPLE, { products });
