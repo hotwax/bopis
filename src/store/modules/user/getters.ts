@@ -26,6 +26,9 @@ const getters: GetterTree <UserState, RootState> = {
     },
     showPackingSlip (state) {
         return state.preference.showPackingSlip;
+    },
+    getCurrentEComStore(state) {
+        return state.currentEComStore
     }
 }
 export default getters;
