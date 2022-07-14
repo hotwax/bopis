@@ -4,6 +4,7 @@ import Login from '@/views/Login.vue'
 import store from '@/store'
 import Tabs from '@/views/Tabs.vue'
 import OrderDetail from '@/views/OrderDetail.vue'
+import ProductDetail from '@/views/ProductDetail.vue'
 import Shopify from '@/views/Shopify.vue'
 
 
@@ -63,6 +64,12 @@ const routes: Array<RouteRecordRaw> = [
     component: OrderDetail,
     beforeEnter: authGuard,
     props: true
+  },
+  {
+    path: "/product-detail",
+    name: "ProductDetail",
+    component: ProductDetail,
+    beforeEnter: authGuard
   },
   {
     path: '/shopify',
