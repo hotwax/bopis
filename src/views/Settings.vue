@@ -93,10 +93,10 @@ export default defineComponent({
     })
   },
   methods: {
-    setEComStore(store: any) {
+    setEComStore(event: CustomEvent) {
       if(this.userProfile) {
         this.store.dispatch('user/setEComStore', {
-          'eComStore': this.userProfile.stores.find((str: any) => str.productStoreId == store['detail'].value)
+          'eComStore': this.userProfile.stores.find((str: any) => str.productStoreId === event['detail'].value)
         })
       }
     },

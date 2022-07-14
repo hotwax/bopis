@@ -1,5 +1,4 @@
-import api from '@/api'
-import { client } from '@/api';
+import api, { client } from '@/api';
 import store from '@/store';
 
 const login = async (username: string, password: string): Promise <any> => {
@@ -22,7 +21,7 @@ const getProfile = async (payload: any): Promise <any>  => {
 
   return client({
     url: "user-profile",
-    baseURL: `https://${baseURL}.hotwax.io/api/`, 
+    baseURL: baseURL && baseURL.startsWith('http') ? baseURL : `https://${baseURL}.hotwax.io/api/`,
     method: "get",
     headers
   });
