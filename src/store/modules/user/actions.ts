@@ -8,6 +8,7 @@ import { translate } from '@/i18n'
 import moment from 'moment';
 import emitter from '@/event-bus'
 import "moment-timezone";
+import { updateInstanceUrl, updateToken } from '@hotwax/oms-api/api'
 
 const actions: ActionTree<UserState, RootState> = {
 
@@ -20,6 +21,7 @@ const actions: ActionTree<UserState, RootState> = {
       if (resp.status === 200 && resp.data) {
         if (resp.data.token) {
             commit(types.USER_TOKEN_CHANGED, { newToken: resp.data.token })
+            updateToken(resp.data.token)
             await dispatch('getProfile')
             return resp.data;
         } else if (hasError(resp)) {
@@ -46,6 +48,8 @@ const actions: ActionTree<UserState, RootState> = {
   async logout ({ commit }) {
     // TODO add any other tasks if need
     commit(types.USER_END_SESSION)
+    updateToken('')
+    updateInstanceUrl('')
   },
 
   /**
@@ -89,6 +93,7 @@ const actions: ActionTree<UserState, RootState> = {
    */
    setUserInstanceUrl ({ commit }, instanceUrl){
     commit(types.USER_INSTANCE_URL_UPDATED, instanceUrl)
+    updateInstanceUrl(instanceUrl)
    },
   
   /**
