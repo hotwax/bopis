@@ -3,7 +3,6 @@ import { ActionTree } from 'vuex'
 import RootState from '@/store/RootState'
 import ProductState from './ProductState'
 import * as types from './mutation-types'
-import { hasError } from '@/utils'
 import { fetchProducts } from "@hotwax/oms-api/src/product";
 import { isError } from "@hotwax/oms-api/src/util";
 
