@@ -1,4 +1,5 @@
-import api from '@/api'
+import api, { client } from '@/api';
+import store from '@/store';
 
 const login = async (username: string, password: string): Promise <any> => {
   return api({
@@ -11,11 +12,19 @@ const login = async (username: string, password: string): Promise <any> => {
   });
 }
 
-const getProfile = async (): Promise <any>  => {
-    return api({
-      url: "user-profile", 
-      method: "get",
-    });
+const getProfile = async (payload: any): Promise <any>  => {
+  const baseURL = store.getters['user/getInstanceUrl'];
+  const headers = {
+    'Authorization': `Bearer ${payload.token}`,
+    'Content-Type': 'application/json'
+  }
+
+  return client({
+    url: "user-profile",
+    baseURL: baseURL && baseURL.startsWith('http') ? baseURL : `https://${baseURL}.hotwax.io/api/`,
+    method: "get",
+    headers
+  });
 }
 const getAvailableTimeZones = async (): Promise <any>  => {
   return api({
@@ -47,9 +56,18 @@ const setUserPreference = async (payload: any): Promise<any> => {
   });
 }
 
+const getEComStores = async (payload: any): Promise<any> => {
+  return api({
+    url: "performFind",
+    method: "post",
+    data: payload
+  });
+}
+
 export const UserService = {
     login,
     getAvailableTimeZones,
+    getEComStores,
     getProfile,
     setUserTimeZone,
     getUserPreference,

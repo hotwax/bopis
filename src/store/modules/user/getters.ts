@@ -19,13 +19,17 @@ const getters: GetterTree <UserState, RootState> = {
         return state.currentFacility
     },
     getInstanceUrl (state) {
-        return state.instanceUrl;
+        const baseURL = process.env.VUE_APP_BASE_URL;
+        return baseURL ? baseURL : state.instanceUrl;
     },
     showShippingOrders (state) {
         return state.preference.showShippingOrders;
     },
     showPackingSlip (state) {
         return state.preference.showPackingSlip;
+    },
+    getCurrentEComStore(state) {
+        return state.currentEComStore
     }
 }
 export default getters;
