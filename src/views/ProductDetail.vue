@@ -140,16 +140,18 @@ export default defineComponent({
 .product-image {
   text-align: center;
 }  
+
 .product-image > img {
   width: 168px;
 }
 
 @media (min-width: 700px) {
-   main {
+  main {
     display: grid;
     grid-template-columns: auto 500px;
     padding: var(--spacer-sm);
-   }   
+  }   
+
   .product-image > img {
     width: 400px;
   }
