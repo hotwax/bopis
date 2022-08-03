@@ -138,23 +138,20 @@ export default defineComponent({
 
 <style scoped>
 .product-image {
-  flex: 1;
   text-align: center;
 }  
 .product-image > img {
-  width: 200px;
+  width: 168px;
 }
 
 @media (min-width: 700px) {
+   main {
+    display: grid;
+    grid-template-columns: auto 500px;
+    padding: var(--spacer-sm);
+   }   
   .product-image > img {
     width: 400px;
-  }
-  main {
-    display: flex;  
-  } 
-  .product-info {
-    flex-basis: 500px;
-    padding: var(--spacer-sm);
   }
 }
 </style>
