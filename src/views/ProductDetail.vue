@@ -80,7 +80,7 @@
                 <ion-label class="ion-text-wrap">Store name</ion-label>
                 <ion-note slot="end">stock</ion-note>
               </ion-item>
-              <ion-item>
+              <ion-item lines="none">
                 <ion-label class="ion-text-wrap">Store name</ion-label>
                 <ion-note slot="end">stock</ion-note>
               </ion-item>
