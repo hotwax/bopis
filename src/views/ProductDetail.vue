@@ -143,8 +143,6 @@ export default defineComponent({
 }  
 .product-image > img {
   width: 200px;
-  position: sticky;
-  top: var(--spacer-sm);
 }
 
 @media (min-width: 700px) {
