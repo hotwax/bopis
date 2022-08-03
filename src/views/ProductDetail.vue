@@ -6,14 +6,15 @@
         <ion-title>{{ $t("Product details") }}</ion-title>
       </ion-toolbar>
     </ion-header>   
+
     <ion-content>
       <main>
         <section class="product-image">
-          <Image/>  
+          <Image src="https://cdn.shopify.com/s/files/1/0419/6558/4548/products/mh08-brown_main.jpg?v=1632310706"/>
         </section>
         <section class="product-info">
           <ion-item lines="none">
-            <ion-label>
+            <ion-label class="ion-text-wrap">
             <p class="overline">Brand</p>
             <h1>Product name</h1>
             </ion-label>
@@ -21,75 +22,72 @@
           </ion-item>  
 
           <ion-list>
-            <ion-list-header>Colors</ion-list-header>
+            <ion-list-header>{{ $t("Color") }}</ion-list-header>
             <ion-item lines="none">
               <ion-chip outline>
-                <ion-label>Red</ion-label>
+                <ion-label class="ion-text-wrap">Red</ion-label>
               </ion-chip> 
               <ion-chip outline>
-                <ion-label>Green</ion-label>
+                <ion-label class="ion-text-wrap">Green</ion-label>
               </ion-chip> 
               <ion-chip outline>
-                <ion-label>Blue</ion-label>
+                <ion-label class="ion-text-wrap">Blue</ion-label>
               </ion-chip>  
             </ion-item>
           </ion-list>
 
           <ion-list>
-            <ion-list-header>Size</ion-list-header>
+            <ion-list-header>{{ $t("Size") }}</ion-list-header>
             <ion-item lines="none">
               <ion-chip outline>
-                <ion-label>Small</ion-label>
+                <ion-label class="ion-text-wrap">Small</ion-label>
               </ion-chip> 
               <ion-chip outline>
-                <ion-label>Medium</ion-label>
+                <ion-label class="ion-text-wrap">Medium</ion-label>
               </ion-chip> 
               <ion-chip outline>
-                <ion-label>Large</ion-label>
+                <ion-label class="ion-text-wrap">Large</ion-label>
               </ion-chip>  
             </ion-item>
           </ion-list>
 
           <ion-list>
-            <ion-list-header>Inventory</ion-list-header>
+            <ion-list-header>{{ $t("Inventory") }}</ion-list-header>
             <ion-item>
-              <ion-label>In store</ion-label>
-              <ion-note slot="end">15 in stock</ion-note>  
+              <ion-label class="ion-text-wrap">{{ $t("In store") }}</ion-label>
+              <ion-note slot="end">15 {{ $t("in stock") }}</ion-note>  
             </ion-item>
              <ion-item>
-              <ion-label>Other stores</ion-label>
-              <ion-chip slot="end">
-                <ion-label>15 in stock</ion-label>
-              </ion-chip>  
+              <ion-label class="ion-text-wrap">{{ $t("Other stores") }}</ion-label>
+              <ion-button fill="outline">15 {{ $t("in stock") }}</ion-button>
             </ion-item>
              <ion-item lines="none">
-              <ion-label>Warehouse</ion-label>
-              <ion-note slot="end">In stock</ion-note>  
+              <ion-label class="ion-text-wrap">{{ $t("Warehouse") }}</ion-label>
+              <ion-note slot="end">{{ $t("in stock") }}</ion-note>  
             </ion-item>
           </ion-list>
 
           <ion-card>
             <ion-list>
               <ion-item-divider>
-                <ion-label>Other stores</ion-label>
+                <ion-label class="ion-text-wrap">{{ $t("Other stores") }}</ion-label>
               </ion-item-divider>  
               <ion-item>
-                <ion-label>Store name</ion-label>
+                <ion-label class="ion-text-wrap">Store name</ion-label>
                 <ion-note slot="end">stock</ion-note>
               </ion-item>
               <ion-item>
-                <ion-label>Store name</ion-label>
+                <ion-label class="ion-text-wrap">Store name</ion-label>
                 <ion-note slot="end">stock</ion-note>
               </ion-item>
               <ion-item>
-                <ion-label>Store name</ion-label>
+                <ion-label class="ion-text-wrap">Store name</ion-label>
                 <ion-note slot="end">stock</ion-note>
               </ion-item>
             </ion-list>
           </ion-card>
         </section>
       </main>  
-      
     </ion-content>
   </ion-page>
 </template>
@@ -97,24 +95,39 @@
 <script lang="ts">
 import { 
   IonBackButton,
+  IonButton,
   IonCard,
+  IonChip,
   IonContent,
   IonHeader,
   IonItem,
+  IonItemDivider,
   IonLabel,
+  IonList,
+  IonListHeader,
+  IonNote,
   IonPage,
-  IonSearchbar,
   IonTitle,
   IonToolbar,
 } from '@ionic/vue';
 import { defineComponent } from 'vue';
 import Image from "../components/Image.vue"
+
 export default defineComponent({
   name: 'ProductDetail',
   components: {
     IonBackButton,
+    IonButton,
+    IonCard,
+    IonChip,
     IonContent,
     IonHeader,
+    IonItem,
+    IonItemDivider,
+    IonLabel,
+    IonList,
+    IonListHeader,
+    IonNote,
     IonPage,
     IonTitle,
     IonToolbar,
@@ -125,19 +138,25 @@ export default defineComponent({
 
 <style scoped>
 .product-image {
-    width: 100px;
+  flex: 1;
+  text-align: center;
+}  
+.product-image > img {
+  width: 200px;
+  position: sticky;
+  top: var(--spacer-sm);
 }
-@media (min-width: 991px) {
-  .product-image {
-    width: 366px;
-    height: 521px;
-  }  
+
+@media (min-width: 700px) {
+  .product-image > img {
+    width: 400px;
+  }
   main {
     display: flex;  
-    justify-content: space-between;
   } 
   .product-info {
-    flex: 0 1 400px;
+    flex-basis: 500px;
+    padding: var(--spacer-sm);
   }
 }
 </style>
