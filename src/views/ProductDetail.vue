@@ -142,10 +142,10 @@ export default defineComponent({
 }  
 
 .product-image > img {
-  width: 168px;
+  width: 200px;
 }
 
-@media (min-width: 700px) {
+@media (min-width: 720px) {
   main {
     display: grid;
     grid-template-columns: auto 500px;
