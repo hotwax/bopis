@@ -59,9 +59,7 @@
               <ion-note slot="end">15 {{ $t("in stock") }}</ion-note>
             </ion-item>
             <ion-item>
-              <ion-label class="ion-text-wrap">{{
-                $t("Other stores")
-              }}</ion-label>
+              <ion-label class="ion-text-wrap">{{ $t("Other stores") }}</ion-label>
               <ion-button fill="outline">15 {{ $t("in stock") }}</ion-button>
             </ion-item>
             <ion-item lines="none">
