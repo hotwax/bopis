@@ -54,7 +54,9 @@ export default defineComponent({
     IonToolbar,
   },
   setup() {
-    const router = useRouter(); {
+    const router = useRouter(); 
+    
+    return {
       router
     }
   }  
