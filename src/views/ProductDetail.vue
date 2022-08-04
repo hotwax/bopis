@@ -1,6 +1,6 @@
 <template>
   <ion-page>
-    <ion-header :translucent="true">
+    <ion-header>
       <ion-toolbar>
         <ion-back-button slot="start" defaultHref="/" />
         <ion-title>{{ $t("Product details") }}</ion-title>
