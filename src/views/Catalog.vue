@@ -8,7 +8,7 @@
     <ion-content>
       <ion-searchbar/>
       <main>        
-        <ion-card v-for="items in 10" :key="items">
+        <ion-card v-for="items in 10" :key="items" @click="() => $router.push('/product-detail')">
           <Image/>
             <ion-item lines="none">
               <ion-label>
@@ -37,6 +37,7 @@ import {
 } from '@ionic/vue';
 import { defineComponent } from 'vue';
 import Image from "../components/Image.vue"
+import { useRouter } from 'vue-router';
 
 export default defineComponent({
   name: 'Catalog',
@@ -51,7 +52,14 @@ export default defineComponent({
     IonSearchbar,
     IonTitle,
     IonToolbar,
-  }
+  },
+  setup() {
+    const router = useRouter(); 
+    
+    return {
+      router
+    }
+  }  
 });
 </script>
 <style scoped>
