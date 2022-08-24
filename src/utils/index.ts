@@ -32,9 +32,10 @@ const copyToClipboard = async (text: any) => {
 const getFeature = (features: any, key: string) => {
   let featureValue = ''
   if (features) {
-    featureValue = features.find((data: any) => data.feature.productFeatureTypeEnumId === key)?.feature.description
+    featureValue = features.find((feature: any) => feature.desc === key)?.value
   }
-  return featureValue;
+  // returning 0th index as the featureValue is an array
+  return featureValue[0];
 }
 
 export { copyToClipboard, showToast, hasError, getFeature }

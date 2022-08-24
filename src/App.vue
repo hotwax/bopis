@@ -10,7 +10,7 @@ import { defineComponent } from 'vue';
 import { loadingController } from '@ionic/vue';
 import emitter from "@/event-bus"
 import { mapGetters } from 'vuex';
-import { updateToken, updateInstanceUrl } from '@hotwax/oms-api/api'
+import { updateToken, updateInstanceUrl } from '@hotwax/oms-api'
 
 export default defineComponent({
   name: 'App',

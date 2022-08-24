@@ -3,8 +3,7 @@ import { ActionTree } from 'vuex'
 import RootState from '@/store/RootState'
 import ProductState from './ProductState'
 import * as types from './mutation-types'
-import { fetchProducts } from "@hotwax/oms-api/src/product";
-import { isError } from "@hotwax/oms-api/src/util";
+import { fetchProducts, isError } from "@hotwax/oms-api";
 
 
 const actions: ActionTree<ProductState, RootState> = {
@@ -24,14 +23,14 @@ const actions: ActionTree<ProductState, RootState> = {
 
     // adding viewSize as by default we are having the viewSize of 10
     const resp = await fetchProducts({
-      filters: { 'productId': productIdFilter },
+      filters: { 'productId': { 'value': productIdFilter }},
       viewSize: productIdFilter.length,
       viewIndex: 0
     })
-    if (!isError(resp)) {
-      const products = resp.data.response.docs;
+    if (!isError(resp) && resp.total > 0) {
+      const products = resp.products;
       // Handled empty response in case of failed query
-      if (resp.data) commit(types.PRODUCT_ADD_TO_CACHED_MULTIPLE, { products });
+      commit(types.PRODUCT_ADD_TO_CACHED_MULTIPLE, { products });
     } else {
       console.error('Something went wrong')
     }
