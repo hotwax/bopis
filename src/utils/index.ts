@@ -35,7 +35,7 @@ const getFeature = (features: any, key: string) => {
     featureValue = features.find((feature: any) => feature.desc === key)?.value
   }
   // returning 0th index as the featureValue is an array
-  return featureValue[0];
+  return featureValue ? featureValue[0] : '';
 }
 
 export { copyToClipboard, showToast, hasError, getFeature }
