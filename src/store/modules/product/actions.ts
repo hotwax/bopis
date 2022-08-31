@@ -3,9 +3,7 @@ import { ActionTree } from 'vuex'
 import RootState from '@/store/RootState'
 import ProductState from './ProductState'
 import * as types from './mutation-types'
-import { hasError, showToast } from '@/utils'
-import { translate } from '@/i18n'
-import emitter from '@/event-bus'
+import { hasError } from '@/utils'
 
 
 const actions: ActionTree<ProductState, RootState> = {
@@ -28,7 +26,8 @@ const actions: ActionTree<ProductState, RootState> = {
 
     // adding viewSize as by default we are having the viewSize of 10
     const resp = await ProductService.fetchProducts({
-      "filters": ['productId: (' + productIdFilter + ')']
+      "filters": ['productId: (' + productIdFilter + ')'],
+      "viewSize": productIds.length
     })
     if (resp.status === 200 && resp.data.response && !hasError(resp)) {
       const products = resp.data.response.docs;
@@ -43,10 +42,13 @@ const actions: ActionTree<ProductState, RootState> = {
 
   async getProductInformation ({ dispatch }, { orders }) {
     let productIds: any = new Set();
-    orders.forEach((order: any) => {
-      order.items.forEach((item: any) => {
-        if (item.itemId) productIds.add(item.itemId);
-      });
+    orders.map((order: any) => {
+      order.parts.reduce((productIds: Set<any>, part: any) => {
+        part.items.map((item: any) => {
+          productIds.add(item.productId);
+        })
+        return productIds;
+      }, productIds);
     });
     productIds = [...productIds]
     if (productIds.length) {

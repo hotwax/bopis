@@ -60,14 +60,14 @@ app.config.globalProperties.$filters = {
     }
     return externalId;
   },
-  getOrderIdentificationId(identifications: any, id: string) {
-    let  externalId = ''
-    if (identifications) {
-      const externalIdentification = identifications.find((identification: any) => identification.startsWith(id))
-      const externalIdentificationSplit = externalIdentification ? externalIdentification.split('/') : [];
-      externalId = externalIdentificationSplit[1] ? externalIdentificationSplit[1] : '';
+  getFeature(featureHierarchy: any, featureKey: string) {
+    let  featureValue = ''
+    if (featureHierarchy) {
+      const feature = featureHierarchy.find((featureItem: any) => featureItem.startsWith(featureKey))
+      const featureSplit = feature ? feature.split('/') : [];
+      featureValue = featureSplit[2] ? featureSplit[2] : '';
     }
-    return externalId;
+    return featureValue;
   }
 }
 
