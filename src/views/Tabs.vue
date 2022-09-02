@@ -1,7 +1,6 @@
 <template>
   <ion-page>
     <ion-tabs>
-      <ion-router-outlet></ion-router-outlet>
       <ion-tab-bar slot="bottom">
         <!-- <ion-tab-button tab="catalog" href="/tabs/catalog">
           <ion-icon :icon="shirtOutline" />
@@ -22,7 +21,7 @@
 </template>
 
 <script lang="ts">
-import { IonIcon, IonLabel, IonPage, IonTabBar, IonTabButton, IonTabs, IonRouterOutlet } from "@ionic/vue";
+import { IonIcon, IonLabel, IonPage, IonTabBar, IonTabButton, IonTabs } from "@ionic/vue";
 import {
   infiniteOutline,
   settings,
@@ -31,7 +30,7 @@ import {
 
 export default {
   name: "Tabs",
-  components: { IonIcon, IonLabel, IonPage, IonTabBar, IonTabButton, IonTabs, IonRouterOutlet },
+  components: { IonIcon, IonLabel, IonPage, IonTabBar, IonTabButton, IonTabs },
   setup () {
     return {
       infiniteOutline,
