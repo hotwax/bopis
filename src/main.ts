@@ -68,7 +68,18 @@ app.config.globalProperties.$filters = {
       featureValue = featureSplit[2] ? featureSplit[2] : '';
     }
     return featureValue;
-  }
+  },
+  getFeaturesList(featureHierarchy: any, featureKey: string) {
+    let  featuresList = []
+    if (featureHierarchy) {
+      featuresList = featureHierarchy.filter((featureItem: any) => featureItem.startsWith(featureKey)).map((feature: any) => {
+        const featureSplit = feature ? feature.split('/') : [];
+        const featureValue = featureSplit[2] ? featureSplit[2] : '';
+        return featureValue;
+      })
+    }
+    return featuresList;
+  },
 }
 
 

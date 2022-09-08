@@ -3,8 +3,8 @@ import { ActionTree } from 'vuex'
 import RootState from '@/store/RootState'
 import ProductState from './ProductState'
 import * as types from './mutation-types'
-import { hasError } from '@/utils'
-
+import { hasError, showToast } from '@/utils'
+import { translate } from '@/i18n'
 
 const actions: ActionTree<ProductState, RootState> = {
 
@@ -38,6 +38,28 @@ const actions: ActionTree<ProductState, RootState> = {
     }
     // TODO Handle specific error
     return resp;
+  },
+
+  async fetchProduct({ commit, state }, productId ) {
+    const cachedProduct = Object.keys(state.cached);
+    if(cachedProduct.includes(productId)) {
+      return productId;
+    }
+    let resp;
+    try {
+      resp = await ProductService.fetchProducts({
+        "filters": [`productId: ( ${productId} )`]
+      })
+      if(resp.status == 200 && resp.data.response?.numFound > 0 && !hasError(resp)) {
+        const product = resp.data.response.docs[0];
+        commit(types.PRODUCT_ADD_TO_CACHED, product);
+      } else {
+        showToast(translate('Something went wrong'));
+      }
+    } catch(error) {
+      console.error(error);
+      showToast(translate('Something went wrong'));
+    }
   },
 
   async getProductInformation ({ dispatch }, { orders }) {
