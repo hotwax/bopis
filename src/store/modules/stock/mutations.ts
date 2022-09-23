@@ -8,7 +8,7 @@ const mutations: MutationTree <StockState> = {
   },
   [types.STOCK_ADD_PRODUCTS] (state, payload) {
     payload.products.forEach((product: any) => {
-      state.products[product.productId] = product.atp
+      state.products[product.productId] = product.availableToPromiseTotal
     });
   }
 }
