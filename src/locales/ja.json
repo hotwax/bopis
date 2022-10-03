@@ -1,6 +1,6 @@
 {
  "All items were canceled from the order": "全てのアイテムが注文からキャンセルされました",
- "An email notification will be sent to that their order is ready for pickup. This order will also be moved to the packed orders tab.": "{ customerName } に注文受け取り準備が完了したとメール通知が送られます。{ スペース } この注文は梱包済み注文タブに移動されます.",
+ "An email notification will be sent to that their order is ready for pickup. This order will also be moved to the packed orders tab.": "{ customerName } に注文受け取り準備が完了したとメール通知が送られます。{ space } この注文は梱包済み注文タブに移動されます.",
  "Catalog": "カタログ",
  "Cancel": "キャンセル",
  "canceled from the order": "オーダーからキャンセルされました",
@@ -66,6 +66,6 @@
  "Update Order": "注文を更新する",
  "Username": "ユーザーネーム",
  "Worn Display": "すり切れたディスプレイ",
- "This order will be removed from your dashboard. This action cannot be undone.": "この注文はダッシュボードから削除されます。{ スペース } この操作は元に戻せません。",
+ "This order will be removed from your dashboard. This action cannot be undone.": "この注文はダッシュボードから削除されます。{ space } この操作は元に戻せません。",
  "Zipcode": "郵便番号"
 }
