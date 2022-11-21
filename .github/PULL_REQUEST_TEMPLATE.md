@@ -1,20 +1,23 @@
-### Related Issues
-<!--  Put related issue number which this PR is closing. For example #123 -->
+### Current behavior
+---
 
-Closes #
+### Expected behavior
+---
 
-### Short Description and Why It's Useful
-<!-- Describe in a few words what is this Pull Request changing and why it's useful -->
+### Steps to reproduce the issue
+---
 
+### Can you handle fixing this bug by yourself?
+---
+- [ ] YES
+- [ ] NO
 
-### Screenshots of Visual Changes before/after (If There Are Any)
-<!-- If you made any changes in the UI layer, please provide before/after screenshots -->
+### Environment details
+---
+* Browser: 
+* OS: 
+* Code Version:
 
+### Additional information
+---
 
-**IMPORTANT NOTICE** - Remember to add changelog entry
-
-
-### Contribution and Currently Important Rules Acceptance
-<!-- Please get familiar with following info -->
-
-- [ ] I read and followed [contribution rules](https://github.com/hotwax/ionic-bopis#contribution-guideline)
