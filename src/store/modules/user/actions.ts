@@ -112,9 +112,9 @@ const actions: ActionTree<UserState, RootState> = {
     });
   },
 
-  setLocale ({ commit }, payload){
+  setLocale({ commit }, payload) {
     i18n.global.locale = payload.locale
     commit(types.USER_LOCALE_UPDATED, payload)
-   },
+  },
 }
 export default actions;

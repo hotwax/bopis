@@ -38,7 +38,7 @@
         <ion-item>
           <ion-icon :icon="languageOutline" slot="start"/>
           <ion-label>{{$t("Choose language")}}</ion-label>
-          <ion-select interface="popover" :value="locale" @ionChange="switchLocale($event.detail.value)">
+          <ion-select interface="popover" :value="locale" @ionChange="setLocale($event.detail.value)">
             <ion-select-option v-for="locale in Object.keys(locales)" :key="locale" :value="locale" >{{ locales[locale] }}</ion-select-option>
           </ion-select>
         </ion-item>
@@ -93,9 +93,6 @@ export default defineComponent({
       locale: 'user/getLocale'
     })
   },
-  mounted() {
-    //
-  },
   methods: {
     setFacility (facility: any) {
       if (this.userProfile)
@@ -114,7 +111,7 @@ export default defineComponent({
     setShowPackingSlipPreference (ev: any){
       this.store.dispatch('user/setUserPreference', { showPackingSlip: ev.detail.checked })
     },
-    switchLocale(locale: any) {
+    setLocale(locale: any) {
       this.store.dispatch('user/setLocale', { locale })
     }
   },
