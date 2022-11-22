@@ -4,7 +4,7 @@ import RootState from '@/store/RootState'
 import UserState from './UserState'
 import * as types from './mutation-types'
 import { hasError, showToast } from '@/utils'
-import { translate } from '@/i18n'
+import i18n, { translate } from '@/i18n'
 import moment from 'moment';
 import emitter from '@/event-bus'
 import "moment-timezone";
@@ -110,6 +110,11 @@ const actions: ActionTree<UserState, RootState> = {
       'userPrefTypeId': 'BOPIS_PREFERENCE',
       'userPrefValue': JSON.stringify(state.preference)
     });
-  }
+  },
+
+  setLocale ({ commit }, payload){
+    i18n.global.locale = payload.locale
+    commit(types.USER_LOCALE_UPDATED, payload)
+   },
 }
 export default actions;

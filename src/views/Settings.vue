@@ -34,6 +34,14 @@
           <ion-label>{{ $t("OMS") }}</ion-label>
           <p slot="end">{{ baseURL ? baseURL : instanceUrl }}</p>
         </ion-item>
+        <!-- Language Switch -->
+        <ion-item>
+          <ion-icon :icon="languageOutline" slot="start"/>
+          <ion-label>{{$t("Choose language")}}</ion-label>
+          <ion-select interface="popover" :value="locale" @ionChange="switchLocale($event.detail.value)">
+            <ion-select-option v-for="locale in Object.keys(locales)" :key="locale" :value="locale" >{{ locales[locale] }}</ion-select-option>
+          </ion-select>
+        </ion-item>
         <!-- Profile of user logged in -->
         <ion-item>
           <ion-icon :icon="personCircleOutline" slot="start" />
@@ -48,7 +56,7 @@
 <script lang="ts">
 import { IonButton, IonContent, IonHeader, IonIcon, IonItem, IonLabel, IonList, IonPage, IonSelect, IonSelectOption, IonTitle, IonToggle , IonToolbar } from '@ionic/vue';
 import { defineComponent } from 'vue';
-import { ellipsisVertical, personCircleOutline, sendOutline , storefrontOutline, codeWorkingOutline } from 'ionicons/icons'
+import { ellipsisVertical, personCircleOutline, sendOutline , storefrontOutline, codeWorkingOutline, languageOutline } from 'ionicons/icons'
 import { mapGetters, useStore } from 'vuex';
 import { useRouter } from 'vue-router';
 
@@ -71,7 +79,8 @@ export default defineComponent({
   },
   data(){
     return {
-      baseURL: process.env.VUE_APP_BASE_URL
+      baseURL: process.env.VUE_APP_BASE_URL,
+      locales: JSON.parse(process.env.VUE_APP_LOCALES),
     }
   },
   computed: {
@@ -80,8 +89,12 @@ export default defineComponent({
       currentFacility: 'user/getCurrentFacility',
       instanceUrl: 'user/getInstanceUrl',
       showShippingOrders: 'user/showShippingOrders',
-      showPackingSlip: 'user/showPackingSlip'
+      showPackingSlip: 'user/showPackingSlip',
+      locale: 'user/getLocale'
     })
+  },
+  mounted() {
+    //
   },
   methods: {
     setFacility (facility: any) {
@@ -100,6 +113,9 @@ export default defineComponent({
     },
     setShowPackingSlipPreference (ev: any){
       this.store.dispatch('user/setUserPreference', { showPackingSlip: ev.detail.checked })
+    },
+    switchLocale(locale: any) {
+      this.store.dispatch('user/setLocale', { locale })
     }
   },
   setup () {
@@ -113,7 +129,8 @@ export default defineComponent({
       sendOutline,
       store,
       storefrontOutline,
-      codeWorkingOutline
+      codeWorkingOutline,
+      languageOutline
     }
   }
 });
