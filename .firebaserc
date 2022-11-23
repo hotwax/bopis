@@ -6,15 +6,24 @@
   "targets": {
     "hotwax-digital-commerce": {
       "hosting": {
-        "bopis-dev": [
+        "dev": [
           "bopis-dev"
+        ],
+        "uat": [
+          "bopis-uat"
         ]
       }
     },
     "digital-commerce-71eb8": {
       "hosting": {
-        "hotwax-bopis": [
+        "prod": [
           "hotwax-bopis"
+        ],
+        "prod-v1": [
+          "hotwax-bopis"
+        ],
+        "prod-v2": [
+          "hotwax-bopis-v2"
         ]
       }
     }
