@@ -24,7 +24,7 @@ const mutations: MutationTree <UserState> = {
         state.preference = {...state.preference, ...payload};
     },
     [types.USER_LOCALE_UPDATED] (state, payload) {
-        state.locale = payload.locale;
+        state.locale = payload;
     }
 }
 export default mutations;

@@ -80,7 +80,7 @@ export default defineComponent({
   data(){
     return {
       baseURL: process.env.VUE_APP_BASE_URL,
-      locales: JSON.parse(process.env.VUE_APP_LOCALES),
+      locales: process.env.VUE_APP_LOCALES ? JSON.parse(process.env.VUE_APP_LOCALES) : {"en": "English"},
     }
   },
   computed: {
@@ -111,8 +111,8 @@ export default defineComponent({
     setShowPackingSlipPreference (ev: any){
       this.store.dispatch('user/setUserPreference', { showPackingSlip: ev.detail.checked })
     },
-    setLocale(locale: any) {
-      this.store.dispatch('user/setLocale', { locale })
+    setLocale(locale: string) {
+      this.store.dispatch('user/setLocale',locale)
     }
   },
   setup () {
