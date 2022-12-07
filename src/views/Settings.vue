@@ -158,13 +158,6 @@ export default defineComponent({
     setShowPackingSlipPreference (ev: any){
       this.store.dispatch('user/setUserPreference', { showPackingSlip: ev.detail.checked })
     },
-    setEComStore(store: any) {
-      if(this.userProfile) {
-        this.store.dispatch('user/setEcomStore', {
-          'eComStore': this.userProfile.stores.find((str: any) => str.productStoreId == store['detail'].value)
-        })
-      }
-    },
     goToOms(){
       window.location.href = this.instanceUrl.startsWith('http') ? this.instanceUrl.replace('api/', "") : `https://${this.instanceUrl}.hotwax.io/`;
     }
