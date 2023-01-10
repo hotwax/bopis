@@ -121,7 +121,7 @@
 <script lang="ts">
 import { IonAvatar, IonButton, IonCard, IonCardContent, IonCardHeader, IonCardSubtitle, IonCardTitle, IonContent, IonHeader, IonIcon, IonItem, IonLabel, IonPage, IonSelect, IonSelectOption, IonTitle, IonToggle , IonToolbar, modalController } from '@ionic/vue';
 import { defineComponent } from 'vue';
-import { ellipsisVertical, personCircleOutline, sendOutline , storefrontOutline, codeWorkingOutline } from 'ionicons/icons'
+import { ellipsisVertical, personCircleOutline, sendOutline , storefrontOutline, codeWorkingOutline, openOutline } from 'ionicons/icons'
 import { mapGetters, useStore } from 'vuex';
 import { useRouter } from 'vue-router';
 import Image from '@/components/Image.vue';
@@ -130,26 +130,38 @@ import TimeZoneModal from '@/views/TimezoneModal.vue';
 export default defineComponent({
   name: 'Settings',
   components: {
+    IonAvatar,
     IonButton, 
+    IonCard,
+    IonCardContent,
+    IonCardHeader,
+    IonCardSubtitle,
+    IonCardTitle,
     IonContent, 
     IonHeader, 
     IonIcon,
     IonItem, 
     IonLabel, 
-    IonList,
     IonPage, 
     IonSelect, 
     IonSelectOption,
     IonTitle,
     IonToggle, 
-    IonToolbar
+    IonToolbar,
+    Image
+  },
+  data(){
+    return {
+      baseURL: process.env.VUE_APP_BASE_URL
+    }
   },
   computed: {
     ...mapGetters({
       userProfile: 'user/getUserProfile',
       currentFacility: 'user/getCurrentFacility',
       instanceUrl: 'user/getInstanceUrl',
-      shippingOrders: 'user/getShippingOrders'
+      showShippingOrders: 'user/showShippingOrders',
+      showPackingSlip: 'user/showPackingSlip'
     })
   },
   methods: {
@@ -191,7 +203,8 @@ export default defineComponent({
       sendOutline,
       store,
       storefrontOutline,
-      codeWorkingOutline
+      codeWorkingOutline,
+      openOutline
     }
   }
 });

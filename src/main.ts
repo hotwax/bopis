@@ -57,6 +57,15 @@ app.config.globalProperties.$filters = {
       externalId = externalIdentificationSplit[1] ? externalIdentificationSplit[1] : '';
     }
     return externalId;
+  },
+  getFeature(featureHierarchy: any, featureKey: string) {
+    let  featureValue = ''
+    if (featureHierarchy) {
+      const feature = featureHierarchy.find((featureItem: any) => featureItem.startsWith(featureKey))
+      const featureSplit = feature ? feature.split('/') : [];
+      featureValue = featureSplit[2] ? featureSplit[2] : '';
+    }
+    return featureValue;
   }
 }
 

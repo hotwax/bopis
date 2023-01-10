@@ -1,7 +1,7 @@
 {
     "hosting": [
       {
-        "target": "hotwax-bopis",
+        "target": "prod",
         "public": "dist",
         "ignore": [
           "firebase.json",
@@ -12,10 +12,9 @@
           "source": "**",
           "destination": "/index.html"
         } ]
-  
       },
       {
-        "target": "bopis-dev",
+        "target": "prod-v1",
         "public": "dist",
         "ignore": [
           "firebase.json",
@@ -26,7 +25,45 @@
           "source": "**",
           "destination": "/index.html"
         } ]
-  
+      },
+      {
+        "target": "prod-v2",
+        "public": "dist",
+        "ignore": [
+          "firebase.json",
+          "**/.*",
+          "**/node_modules/**"
+        ],
+        "rewrites": [ {
+          "source": "**",
+          "destination": "/index.html"
+        } ]
+      },
+      {
+        "target": "dev",
+        "public": "dist",
+        "ignore": [
+          "firebase.json",
+          "**/.*",
+          "**/node_modules/**"
+        ],
+        "rewrites": [ {
+          "source": "**",
+          "destination": "/index.html"
+        } ]
+      },
+      {
+        "target": "uat",
+        "public": "dist",
+        "ignore": [
+          "firebase.json",
+          "**/.*",
+          "**/node_modules/**"
+        ],
+        "rewrites": [ {
+          "source": "**",
+          "destination": "/index.html"
+        } ]
       }
     ]
   }
