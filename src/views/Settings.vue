@@ -31,7 +31,7 @@
               {{ $t("OMS instance") }}
             </ion-card-subtitle>
             <ion-card-title>
-              {{ instanceUrl }}
+              {{ baseURL ? baseURL : instanceUrl }}
             </ion-card-title>
           </ion-card-header>
           <ion-card-content>
@@ -91,17 +91,41 @@
           </ion-item>
         </ion-card>
       </section>
+
+      <hr />
+
+      <h1>{{ $t('App') }}</h1>
+
+      <section>
+        <ion-card>
+          <ion-card-header>
+            <ion-card-title>
+              {{ $t('Timezone') }}
+            </ion-card-title>
+          </ion-card-header>
+
+          <ion-card-content>
+            {{ $t('The timezone you select is used to ensure automations you schedule are always accurate to the time you select.') }}
+          </ion-card-content>
+
+          <ion-item lines="none">
+            <ion-label> {{ userProfile && userProfile.userTimeZone ? userProfile.userTimeZone : '-' }} </ion-label>
+            <ion-button @click="changeTimeZone()" slot="end" fill="outline" color="dark">{{ $t("Change") }}</ion-button>
+          </ion-item>
+        </ion-card>
+      </section>
     </ion-content>
   </ion-page>
 </template>
 
 <script lang="ts">
-import { IonAvatar, IonButton, IonCard, IonCardContent, IonCardHeader, IonCardSubtitle, IonCardTitle, IonContent, IonHeader, IonIcon, IonItem, IonLabel, IonPage, IonSelect, IonSelectOption, IonTitle, IonToggle , IonToolbar } from '@ionic/vue';
+import { IonAvatar, IonButton, IonCard, IonCardContent, IonCardHeader, IonCardSubtitle, IonCardTitle, IonContent, IonHeader, IonIcon, IonItem, IonLabel, IonPage, IonSelect, IonSelectOption, IonTitle, IonToggle , IonToolbar, modalController } from '@ionic/vue';
 import { defineComponent } from 'vue';
 import { ellipsisVertical, personCircleOutline, sendOutline , storefrontOutline, codeWorkingOutline, openOutline } from 'ionicons/icons'
 import { mapGetters, useStore } from 'vuex';
 import { useRouter } from 'vue-router';
 import Image from '@/components/Image.vue';
+import TimeZoneModal from '@/views/TimezoneModal.vue';
 
 export default defineComponent({
   name: 'Settings',
@@ -160,6 +184,12 @@ export default defineComponent({
     },
     goToOms(){
       window.open(this.instanceUrl.startsWith('http') ? this.instanceUrl.replace('api/', "") : `https://${this.instanceUrl}.hotwax.io/`, '_blank', 'noopener, noreferrer');
+    },
+    async changeTimeZone() {
+      const timeZoneModal = await modalController.create({
+        component: TimeZoneModal,
+      });
+      return timeZoneModal.present();
     }
   },
   setup () {
@@ -195,5 +225,8 @@ export default defineComponent({
   .user-profile {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+  }
+  hr {
+    border-top: 1px solid var(--ion-color-medium);
   }
 </style>
