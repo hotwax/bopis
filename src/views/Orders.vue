@@ -29,7 +29,7 @@
                 <p>{{ order.orderName ? order.orderName : order.orderId }}</p>
               </ion-label>
               <div class="metadata">
-                <ion-badge v-if="order.orderDate" color="dark">{{ moment.utc(order.orderDate).fromNow() }}</ion-badge>
+                <ion-badge v-if="order.placedDate" color="dark">{{ timeFromNow(order.placedDate) }}</ion-badge>
                 <ion-badge v-if="order.statusId !== 'ORDER_APPROVED'" color="danger">{{ $t('pending approval') }}</ion-badge>
               </div>
               <!-- TODO: Display the packed date of the orders, currently not getting the packed date from API-->
@@ -67,7 +67,8 @@
                 <h1>{{ order.customerName }}</h1>
                 <p>{{ order.orderName ? order.orderName : order.orderId }}</p>
               </ion-label>
-              <ion-badge v-if="order.orderDate" color="dark" slot="end">{{ moment.utc(order.orderDate).fromNow() }}</ion-badge>
+              {{ timeFromNow(order.placedDate) }}
+              <ion-badge v-if="order.placedDate" color="dark" slot="end">{{ timeFromNow(order.placedDate) }}</ion-badge>
             </ion-item>
 
             <ProductListItem v-for="item in getShipGroupItems(shipGroup, order.items)" :key="item.itemId" :item="item" />
@@ -131,8 +132,8 @@ import ProductListItem from '@/components/ProductListItem.vue'
 import { swapVerticalOutline, callOutline, mailOutline } from "ionicons/icons";
 import { mapGetters, useStore } from 'vuex'
 import { useRouter } from 'vue-router'
-import { copyToClipboard } from '@/utils'
-import * as moment from "moment-timezone";
+import { copyToClipboard, hasError, showToast } from '@/utils'
+import { DateTime } from 'luxon';
 import emitter from "@/event-bus"
 
 export default defineComponent({
@@ -275,7 +276,23 @@ export default defineComponent({
     getShipGroupItems(shipGroupSeqId: any, items: any) {
       // To get all the items of same shipGroup, further it will use on pickup-order-card component to display line items
       return items.filter((item: any) => item.shipGroupSeqId == shipGroupSeqId)
-    }
+    },
+    async searchOrders() {
+      if(this.segmentSelected === 'open') {
+        this.getPickupOrders()
+      } else {
+        this.getPackedOrders()
+      }
+    },
+    selectSearchBarText(event: any) {
+      event.target.getInputElement().then((element: any) => {
+        element.select();
+      })
+    },
+    timeFromNow (time: any) {
+      const timeDiff = DateTime.fromISO(time).diff(DateTime.local());
+      return DateTime.local().plus(timeDiff).toRelative();
+    },
   },
   ionViewWillEnter () {
     this.segmentSelected === 'open' ? this.getPickupOrders() : this.getPackedOrders();
@@ -289,7 +306,7 @@ export default defineComponent({
       callOutline,
       copyToClipboard,
       mailOutline,
-      moment,
+      print,
       router,
       segmentSelected,
       swapVerticalOutline,

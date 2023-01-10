@@ -13,7 +13,7 @@
             <h2>{{ order.customerName }}</h2>
             <p>{{ order.orderName ? order.orderName : order.orderId }}</p>
           </ion-label>
-          <ion-badge v-if="order.orderDate" color="dark" slot="end">{{ moment.utc(order.orderDate).fromNow() }}</ion-badge>
+          <ion-badge v-if="order.placedDate" color="dark" slot="end">{{ timeFromNow(order.placedDate) }}</ion-badge>
         </ion-item>
       </ion-list>
       <ion-item v-if="order.phoneNumber">
@@ -96,7 +96,7 @@ import {
 import ProductListItem from '@/components/ProductListItem.vue'
 import { copyToClipboard } from '@/utils'
 import { useRouter } from 'vue-router'
-import * as moment from "moment-timezone";
+import { DateTime } from 'luxon';
 import ShipToCustomerModal from "@/components/ShipToCustomerModal.vue";
 
 export default defineComponent({
@@ -166,7 +166,17 @@ export default defineComponent({
         orderId
       }
       await this.store.dispatch("order/getOrderDetail", payload)
-    }
+    },
+    getCurrentOrderPart() {
+      if (this.order.parts) {
+        return this.order.parts.find((part) => part.orderPartSeqId === this.$route.params.orderPartSeqId)
+      }
+      return {}
+    },
+    timeFromNow (time) {
+      const timeDiff = DateTime.fromISO(time).diff(DateTime.local());
+      return DateTime.local().plus(timeDiff).toRelative();
+    },
   },
   mounted() {
     this.getOrderDetail(this.$route.params.orderId);
@@ -179,7 +189,6 @@ export default defineComponent({
       callOutline,
       copyToClipboard,
       mailOutline,
-      moment,
       router,
       store,
       swapVerticalOutline,
