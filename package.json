@@ -12,9 +12,9 @@
     "i18n:report": "vue-cli-service i18n:report --src \"./src/**/*.?(js|vue)\" --locales \"./src/locales/**/*.json\""
   },
   "dependencies": {
-    "@capacitor/android": "^2.4.7",
+    "@capacitor/android": "^2.5.0",
     "@capacitor/core": "^2.4.7",
-    "@capacitor/ios": "^2.4.7",
+    "@capacitor/ios": "^2.5.0",
     "@shopify/app-bridge-utils": "^2.0.4",
     "@ionic/core": "6.2.9",
     "@ionic/vue": "6.2.9",
