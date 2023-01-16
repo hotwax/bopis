@@ -15,6 +15,7 @@
     "@capacitor/android": "^2.4.7",
     "@capacitor/core": "^2.4.7",
     "@capacitor/ios": "^2.4.7",
+    "@hotwax/app-version-info": "^1.0.0",
     "@ionic/vue": "^5.4.0",
     "@ionic/vue-router": "^5.4.0",
     "@shopify/app-bridge-utils": "^2.0.4",
