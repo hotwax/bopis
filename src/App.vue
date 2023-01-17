@@ -9,7 +9,7 @@ import { IonApp, IonRouterOutlet } from '@ionic/vue';
 import { defineComponent } from 'vue';
 import { loadingController } from '@ionic/vue';
 import emitter from "@/event-bus"
-
+import { mapGetters } from 'vuex';
 
 export default defineComponent({
   name: 'App',
@@ -42,6 +42,11 @@ export default defineComponent({
         this.loader = null as any;
       }
     }
+  }, 
+  computed: {
+    ...mapGetters({
+      locale: 'user/getLocale'
+    })
   },
   async mounted() {
     // creating the loader on mounted as loadingController is taking too much time to create initially
@@ -53,6 +58,7 @@ export default defineComponent({
       });
     emitter.on('presentLoader', this.presentLoader);
     emitter.on('dismissLoader', this.dismissLoader);
+    this.$i18n.locale = this.locale;
   },
   unmounted() {
     emitter.off('presentLoader', this.presentLoader);

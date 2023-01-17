@@ -27,6 +27,9 @@ const getters: GetterTree <UserState, RootState> = {
     },
     showPackingSlip (state) {
         return state.preference.showPackingSlip;
+    },
+    getLocale (state) {
+        return state.locale;
     }
 }
 export default getters;

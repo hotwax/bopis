@@ -91,6 +91,14 @@
           </ion-item>
         </ion-card>
       </section>
+      <!-- TODO Define section and add language Switch -->
+      <!-- <ion-item>
+          <ion-icon :icon="languageOutline" slot="start"/>
+          <ion-label>{{$t("Choose language")}}</ion-label>
+          <ion-select interface="popover" :value="locale" @ionChange="setLocale($event.detail.value)">
+            <ion-select-option v-for="locale in Object.keys(locales)" :key="locale" :value="locale" >{{ locales[locale] }}</ion-select-option>
+          </ion-select>
+        </ion-item> -->
     </ion-content>
   </ion-page>
 </template>
@@ -128,7 +136,8 @@ export default defineComponent({
   },
   data(){
     return {
-      baseURL: process.env.VUE_APP_BASE_URL
+      baseURL: process.env.VUE_APP_BASE_URL,
+      locales: process.env.VUE_APP_LOCALES ? JSON.parse(process.env.VUE_APP_LOCALES) : {"en": "English"},
     }
   },
   computed: {
@@ -137,7 +146,8 @@ export default defineComponent({
       currentFacility: 'user/getCurrentFacility',
       instanceUrl: 'user/getInstanceUrl',
       showShippingOrders: 'user/showShippingOrders',
-      showPackingSlip: 'user/showPackingSlip'
+      showPackingSlip: 'user/showPackingSlip',
+      locale: 'user/getLocale'
     })
   },
   methods: {
@@ -160,6 +170,9 @@ export default defineComponent({
     },
     goToOms(){
       window.open(this.instanceUrl.startsWith('http') ? this.instanceUrl.replace('api/', "") : `https://${this.instanceUrl}.hotwax.io/`, '_blank', 'noopener, noreferrer');
+    },
+    setLocale(locale: string) {
+      this.store.dispatch('user/setLocale',locale)
     }
   },
   setup () {
