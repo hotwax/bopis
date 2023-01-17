@@ -14,8 +14,8 @@
               <Image :src="userProfile.partyImageUrl"/>
             </ion-avatar>
             <ion-card-header>
-              <ion-card-subtitle>{{ userProfile?.userLoginId }}</ion-card-subtitle>
-              <ion-card-title>{{ userProfile?.partyName }}</ion-card-title>
+              <ion-card-subtitle>{{ userProfile.userLoginId }}</ion-card-subtitle>
+              <ion-card-title>{{ userProfile.partyName }}</ion-card-title>
             </ion-card-header>
           </ion-item>
           <ion-button fill="outline" color="danger" @click="logout()">{{ $t("Logout") }}</ion-button>
@@ -204,9 +204,6 @@ export default defineComponent({
 <style scoped>
   ion-card > ion-button {
     margin: var(--spacer-xs);
-  }
-  h1 {
-    padding: var(--spacer-xs) 10px 0;
   }
   section {
     display: grid;
