@@ -9,7 +9,7 @@ import { IonApp, IonRouterOutlet } from '@ionic/vue';
 import { defineComponent } from 'vue';
 import { loadingController } from '@ionic/vue';
 import emitter from "@/event-bus"
-import { updateToken, updateInstanceUrl } from "@hotwax/oms-api"
+import { init, resetConfig } from "@/adapter"
 import { mapGetters } from 'vuex';
 
 export default defineComponent({
@@ -20,7 +20,8 @@ export default defineComponent({
   },
   data() {
     return {
-      loader: null as any
+      loader: null as any,
+      maxAge: process.env.VUE_APP_CACHE_MAX_AGE ? parseInt(process.env.VUE_APP_CACHE_MAX_AGE) : 0
     }
   },
   computed: {
@@ -61,15 +62,14 @@ export default defineComponent({
       });
     emitter.on('presentLoader', this.presentLoader);
     emitter.on('dismissLoader', this.dismissLoader);
-    updateToken(this.userToken)
-    updateInstanceUrl(this.instanceUrl)
     this.$i18n.locale = this.locale;
+
+    init(this.userToken, this.instanceUrl, this.maxAge)
   },
   unmounted() {
     emitter.off('presentLoader', this.presentLoader);
     emitter.off('dismissLoader', this.dismissLoader);
-    updateToken('')
-    updateInstanceUrl('')
+    resetConfig()
   },
 });
 </script>
