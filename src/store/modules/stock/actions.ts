@@ -10,10 +10,10 @@ const actions: ActionTree<StockState, RootState> = {
   */
   async addProducts({ commit }, { productIds }) {
     try {
-      const resp: Array<Stock> = await fetchProductsStockAtFacility(productIds, this.state.user.currentFacility.facilityId)
+      const resp: Array<Stock> | Response = await fetchProductsStockAtFacility(productIds, this.state.user.currentFacility.facilityId)
       commit(types.STOCK_ADD_PRODUCTS, resp)
-    } catch(err: Response) {
-      console.error(err.message)
+    } catch(err) {
+      console.error((err as Response).message)
     }
   }
 
