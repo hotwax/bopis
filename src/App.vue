@@ -26,7 +26,8 @@ export default defineComponent({
   computed: {
     ...mapGetters({
       userToken: 'user/getUserToken',
-      instanceUrl: 'user/getInstanceUrl'
+      instanceUrl: 'user/getInstanceUrl',
+      locale: 'user/getLocale'
     })
   },
   methods: {
@@ -62,6 +63,7 @@ export default defineComponent({
     emitter.on('dismissLoader', this.dismissLoader);
     updateToken(this.userToken)
     updateInstanceUrl(this.instanceUrl)
+    this.$i18n.locale = this.locale;
   },
   unmounted() {
     emitter.off('presentLoader', this.presentLoader);

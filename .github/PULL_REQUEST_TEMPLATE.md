@@ -11,9 +11,6 @@ Closes #
 <!-- If you made any changes in the UI layer, please provide before/after screenshots -->
 
 
-**IMPORTANT NOTICE** - Remember to add changelog entry
-
-
 ### Contribution and Currently Important Rules Acceptance
 <!-- Please get familiar with following info -->
 
