@@ -8,8 +8,6 @@
 * Updated: UI of Settings page(#32j3r6t) by @shashwatbangar in https://github.com/hotwax/bopis/pull/156
 * Fixed build issue due to eslint version mismatch in dependencies (#85zrhpak3) by @k2maan in https://github.com/hotwax/bopis/pull/158
 * Added hotwax-apps-theme package by @disha1202 in https://github.com/hotwax/bopis/pull/164
-* Sync develop and main by @adityasharma7 in https://github.com/hotwax/bopis/pull/167
-
 
 **Full Changelog**: https://github.com/hotwax/bopis/compare/v2.1.0...v2.2.0
 
