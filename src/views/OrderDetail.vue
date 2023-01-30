@@ -9,7 +9,7 @@
     <ion-content>
       <ion-list>
         <ion-item lines="none">
-          <ion-label>
+          <ion-label class="ion-text-wrap">
             <h2>{{ order.customer?.name }}</h2>
             <p>{{ order.orderName ? order.orderName : order.orderId }}</p>
           </ion-label>

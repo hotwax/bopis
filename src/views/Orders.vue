@@ -5,26 +5,24 @@
         <ion-title>{{ currentFacility.name }}</ion-title>
       </ion-toolbar>
 
-      <ion-toolbar>
-        <div>
-          <ion-searchbar @ionFocus="selectSearchBarText($event)" v-model="queryString" @keyup.enter="queryString = $event.target.value; searchOrders()" :placeholder= "$t('Search Orders')" />
-          <ion-segment v-model="segmentSelected" @ionChange="segmentChanged">
-            <ion-segment-button value="open">
-              <ion-label>{{ $t("Open") }}</ion-label>
-            </ion-segment-button>
-            <ion-segment-button value="packed">
-              <ion-label>{{ $t("Packed") }}</ion-label>
-            </ion-segment-button>
-          </ion-segment>
-        </div>
-      </ion-toolbar>
+      <div>
+        <ion-searchbar @ionFocus="selectSearchBarText($event)" v-model="queryString" @keyup.enter="queryString = $event.target.value; searchOrders()" :placeholder= "$t('Search Orders')" />
+        <ion-segment v-model="segmentSelected" @ionChange="segmentChanged">
+          <ion-segment-button value="open">
+            <ion-label>{{ $t("Open") }}</ion-label>
+          </ion-segment-button>
+          <ion-segment-button value="packed">
+            <ion-label>{{ $t("Packed") }}</ion-label>
+          </ion-segment-button>
+        </ion-segment>
+      </div>    
     </ion-header>
     <ion-content>
       <div v-if="segmentSelected === 'open'">
         <div v-for="order in orders" :key="order.orderId" v-show="order.parts.length > 0">
           <ion-card v-for="(part, index) in order.parts" :key="index" @click.prevent="viewOrder(order, part)">
             <ion-item lines="none">
-              <ion-label>
+              <ion-label class="ion-text-wrap">
                 <h1>{{ order.customer.name }}</h1>
                 <p>{{ order.orderName ? order.orderName : order.orderId }}</p>
               </ion-label>
@@ -63,7 +61,7 @@
         <div v-for="order in packedOrders" :key="order.orderId" v-show="order.parts.length > 0">
           <ion-card v-for="(part, index) in order.parts" :key="index">
             <ion-item lines="none">
-              <ion-label>
+              <ion-label class="ion-text-wrap">
                 <h1>{{ order.customer.name }}</h1>
                 <p>{{ order.orderName ? order.orderName : order.orderId }}</p>
               </ion-label>
@@ -90,7 +88,7 @@
               <ion-button fill="clear" @click.stop="deliverShipment(order)">
                 {{ part.shipmentMethodEnum.shipmentMethodEnumId === 'STOREPICKUP' ? $t("Handover") : $t("Ship") }}
               </ion-button>
-              <ion-button v-if="isPackingSlipEnabled" fill="clear" slot="end" @click="printPackingSlip(order)">
+              <ion-button v-if="showPackingSlip" fill="clear" slot="end" @click="printPackingSlip(order)">
                 <ion-icon slot="icon-only" :icon="print" />
               </ion-button>
             </div>
@@ -176,7 +174,7 @@ export default defineComponent({
       currentFacility: 'user/getCurrentFacility',
       isPackedOrdersScrollable: 'order/isPackedOrdersScrollable',
       isOpenOrdersScrollable: 'order/isOpenOrdersScrollable',
-      isPackingSlipEnabled: 'user/getPackingSlipEnabled'
+      showPackingSlip: 'user/showPackingSlip'
     })
   },
   data() {
@@ -277,23 +275,19 @@ export default defineComponent({
           },{
             text: header,
             handler: () => {
-              this.store.dispatch('order/quickShipEntireShipGroup', {order, part, facilityId: this.currentFacility.facilityId}).then((resp) => {
-                if (resp.data._EVENT_MESSAGE_) this.getPickupOrders();
-              })
+              this.store.dispatch('order/quickShipEntireShipGroup', {order, part, facilityId: this.currentFacility.facilityId})
             }
           }]
         });
       return alert.present();
     },
     async deliverShipment (order: any) {
-      await this.store.dispatch('order/deliverShipment', order).then((resp) => {
-        if (resp.data._EVENT_MESSAGE_) this.getPackedOrders();
-      });
+      await this.store.dispatch('order/deliverShipment', order)
     },
     segmentChanged (e: CustomEvent) {
+      this.queryString = ''
       this.segmentSelected = e.detail.value
       this.segmentSelected === 'open' ? this.getPickupOrders() : this.getPackedOrders();
-      this.queryString = ''
     },
     getShipGroups (items: any) {
       // To get unique shipGroup, further it will use on ion-card iteration
@@ -324,6 +318,7 @@ export default defineComponent({
     },
   },
   ionViewWillEnter () {
+    this.queryString = '';
     this.segmentSelected === 'open' ? this.getPickupOrders() : this.getPackedOrders();
   },
   setup () {
@@ -366,7 +361,7 @@ export default defineComponent({
 }
 
 @media (min-width: 991px){
-  ion-toolbar > div {
+  ion-header > div {
     display: flex;
   }
 }
