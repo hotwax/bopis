@@ -13,7 +13,7 @@
             <h2>{{ order.customer?.name }}</h2>
             <p>{{ order.orderName ? order.orderName : order.orderId }}</p>
           </ion-label>
-          <ion-badge v-if="order.orderDate" color="dark" slot="end">{{ timeFromNow(order.orderDate) }}</ion-badge>
+          <ion-badge v-if="order.placedDate" color="dark" slot="end">{{ timeFromNow(order.placedDate) }}</ion-badge>
         </ion-item>
       </ion-list>
       <ion-item v-if="order.customer?.phoneNumber">
