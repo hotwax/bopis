@@ -227,7 +227,6 @@ export default defineComponent({
     async viewOrder (order: any, part: any) {
       // TODO: find a better approach to handle the case that when in open segment we can click on
       // order card to route on the order details page but not in the packed segment
-      console.log(this.orders)
       await this.store.dispatch('order/updateCurrent', { order }).then(() => {
         this.$router.push({ path: `/orderdetail/${order.orderId}/${part.orderPartSeqId}` })
       })
