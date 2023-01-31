@@ -13,17 +13,19 @@
             <ion-avatar slot="start" v-if="userProfile?.partyImageUrl">
               <Image :src="userProfile.partyImageUrl"/>
             </ion-avatar>
-            <ion-label>
-              {{ userProfile?.partyName }}
-              <p>{{ userProfile?.userLoginId }}</p>
-            </ion-label>
+            <ion-card-header>
+              <ion-card-subtitle>{{ userProfile.userLoginId }}</ion-card-subtitle>
+              <ion-card-title>{{ userProfile.partyName }}</ion-card-title>
+            </ion-card-header>
           </ion-item>
           <ion-button fill="outline" color="danger" @click="logout()">{{ $t("Logout") }}</ion-button>
           <!-- Commenting this code as we currently do not have reset password functionality -->
           <!-- <ion-button fill="outline" color="medium">{{ $t("Reset password") }}</ion-button> -->
         </ion-card>
       </div>
-      <h1>{{ $t('OMS') }}</h1>
+      <div class="section-header">
+        <h1>{{ $t('OMS') }}</h1>
+      </div>
       <section>
         <ion-card>
           <ion-card-header>
@@ -88,7 +90,16 @@
           </ion-item>
         </ion-card>
       </section>
+
       <hr />
+      <div class="section-header">
+        <h1>
+          {{ $t('App') }}
+          <p class="overline">{{ "Version: " + appVersion }}</p>
+        </h1>
+        <p class="overline">{{ "Built: " + getDateTime(appInfo.builtTime) }}</p>
+      </div>
+
       <section>
         <ion-card>
           <ion-card-header>
@@ -104,6 +115,23 @@
             <ion-button @click="changeTimeZone()" slot="end" fill="outline" color="dark">{{ $t("Change") }}</ion-button>
           </ion-item>
         </ion-card>
+
+        <ion-card>
+          <ion-card-header>
+            <ion-card-title>
+              {{ $t("Language") }}
+            </ion-card-title>
+          </ion-card-header>
+          <ion-card-content>
+            {{ $t('Select your preferred language.') }}
+          </ion-card-content>
+          <ion-item lines="none">
+            <ion-label>{{ $t("Choose language") }}</ion-label>
+            <ion-select interface="popover" :value="locale" @ionChange="setLocale($event.detail.value)">
+              <ion-select-option v-for="locale in Object.keys(locales)" :key="locale" :value="locale" >{{ locales[locale] }}</ion-select-option>
+            </ion-select>
+          </ion-item>
+        </ion-card>
       </section>
     </ion-content>
   </ion-page>
@@ -117,6 +145,7 @@ import { mapGetters, useStore } from 'vuex';
 import { useRouter } from 'vue-router';
 import TimeZoneModal from './TimezoneModal.vue';
 import Image from '@/components/Image.vue';
+import { DateTime } from 'luxon';
 
 export default defineComponent({
   name: 'Settings',
@@ -144,6 +173,8 @@ export default defineComponent({
   data(){
     return {
       baseURL: process.env.VUE_APP_BASE_URL,
+      appInfo: (process.env.VUE_APP_VERSION_INFO ? JSON.parse(process.env.VUE_APP_VERSION_INFO) : {}) as any,
+      appVersion: "",
       locales: process.env.VUE_APP_LOCALES ? JSON.parse(process.env.VUE_APP_LOCALES) : {"en": "English"},
     }
   },
@@ -156,6 +187,9 @@ export default defineComponent({
       showPackingSlip: 'user/showPackingSlip',
       locale: 'user/getLocale'
     })
+  },
+  mounted() {
+    this.appVersion = this.appInfo.branch ? (this.appInfo.branch + "-" + this.appInfo.revision) : this.appInfo.tag;
   },
   methods: {
     setFacility (facility: any) {
@@ -184,6 +218,9 @@ export default defineComponent({
     goToOms(){
       window.open(this.instanceUrl.startsWith('http') ? this.instanceUrl.replace('api/', "") : `https://${this.instanceUrl}.hotwax.io/`, '_blank', 'noopener, noreferrer');
     },
+    getDateTime(time: any) {
+      return DateTime.fromMillis(time).toLocaleString(DateTime.DATETIME_MED);
+    },
     setLocale(locale: string) {
       this.store.dispatch('user/setLocale',locale)
     }
@@ -210,9 +247,6 @@ export default defineComponent({
   ion-card > ion-button {
     margin: var(--spacer-xs);
   }
-  h1 {
-    padding: var(--spacer-xs) 10px 0;
-  }
   section {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
@@ -221,5 +255,14 @@ export default defineComponent({
   .user-profile {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+  }
+  .section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: var(--spacer-xs) 10px 0px;
+  }
+  ion-content {
+    --padding-bottom: 80px;
   }
 </style>

@@ -1,4 +1,5 @@
 {
+  "App": "App",
   "All items were canceled from the order": "All items were canceled from the order",
   "An email notification will be sent to that their order is ready for pickup. This order will also be moved to the packed orders tab.": "An email notification will be sent to { customerName } that their order is ready for pickup.{ space } This order will also be moved to the packed orders tab.",
   "Are you sure you want to change the time zone to?": "Are you sure you want to change the time zone to?",
@@ -26,6 +27,7 @@
   "Instance Url": "Instance Url",
   "In store": "In store",
   "Inventory": "Inventory",
+  "Language": "Language",
   "Last name": "Last name",
   "Learn more about unfillable items": "Learn more about unfillable items",
   "Loading": "Loading",
@@ -63,6 +65,7 @@
   "Search time zones": "Search time zones",
   "Select facility": "Select facility",
   "Select time zone": "Select time zone",
+  "Select your preferred language.": "Select your preferred language.",
   "Settings": "Settings",
   "Ship": "Ship",
   "Shipping method": "Shipping method",
