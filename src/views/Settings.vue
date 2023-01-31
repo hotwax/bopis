@@ -90,6 +90,7 @@
           </ion-item>
         </ion-card>
       </section>
+
       <hr />
       <div class="section-header">
         <h1>
@@ -98,6 +99,7 @@
         </h1>
         <p class="overline">{{ "Built: " + getDateTime(appInfo.builtTime) }}</p>
       </div>
+
       <section>
         <ion-card>
           <ion-card-header>
@@ -111,6 +113,23 @@
           <ion-item lines="none">
             <ion-label> {{ userProfile && userProfile.userTimeZone ? userProfile.userTimeZone : '-' }} </ion-label>
             <ion-button @click="changeTimeZone()" slot="end" fill="outline" color="dark">{{ $t("Change") }}</ion-button>
+          </ion-item>
+        </ion-card>
+
+        <ion-card>
+          <ion-card-header>
+            <ion-card-title>
+              {{ $t("Language") }}
+            </ion-card-title>
+          </ion-card-header>
+          <ion-card-content>
+            {{ $t('Select your preferred language.') }}
+          </ion-card-content>
+          <ion-item lines="none">
+            <ion-label>{{ $t("Choose language") }}</ion-label>
+            <ion-select interface="popover" :value="locale" @ionChange="setLocale($event.detail.value)">
+              <ion-select-option v-for="locale in Object.keys(locales)" :key="locale" :value="locale" >{{ locales[locale] }}</ion-select-option>
+            </ion-select>
           </ion-item>
         </ion-card>
       </section>
@@ -237,13 +256,13 @@ export default defineComponent({
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
   }
-  hr {
-    border-top: 1px solid var(--ion-color-medium);
-  }
   .section-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
     padding: var(--spacer-xs) 10px 0px;
+  }
+  ion-content {
+    --padding-bottom: 80px;
   }
 </style>
