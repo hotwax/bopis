@@ -249,6 +249,75 @@ const actions: ActionTree<OrderState , RootState> ={
     return resp;
   },
 
+  async getCompletedOrders ({ commit, state }, payload) {
+    // Show loader only when new query and not the infinite scroll
+    if (payload.viewIndex === 0) emitter.emit("presentLoader");
+    let resp;
+    const orderQueryPayload = prepareOrderQuery({
+      ...payload,
+      shipmentMethodTypeId: !store.state.user.preference.showShippingOrders ? 'STOREPICKUP' : '',
+      orderItemStatusId: "ITEM_COMPLETED",
+      orderTypeId: 'SALES_ORDER',
+      docType: 'ORDER'
+    })
+
+    try {
+      resp = await OrderService.getCompletedOrders(orderQueryPayload)
+      if (resp.status === 200 && resp.data.grouped?.orderId?.ngroups > 0 && !hasError(resp)) {
+        let orders = resp?.data?.grouped?.orderId?.groups.map((order: any) => {
+          const orderItem = order.doclist.docs[0]
+          return {
+            orderId: orderItem.orderId,
+            orderName: orderItem.orderName,
+            customer: {
+              partyId: orderItem.customerPartyId,
+              name: orderItem.customerPartyName,
+            },
+            statusId: orderItem.orderStatusId,
+            parts: order.doclist.docs.reduce((arr: Array<any>, item: any) => {
+              const currentOrderPart = arr.find((orderPart: any) => orderPart.orderPartSeqId === item.shipGroupSeqId)
+              if (!currentOrderPart) {
+                arr.push({
+                  orderPartSeqId: item.shipGroupSeqId,
+                  items: [{
+                    orderItemSeqId: item.orderItemSeqId,
+                    productId: item.productId,
+                    facilityId: item.facilityId
+                  }]
+                })
+              } else {
+                currentOrderPart.items.push({
+                  orderItemSeqId: item.orderItemSeqId,
+                  productId: item.productId,
+                  facilityId: item.facilityId
+                })
+              }
+
+              return arr
+            }, []),
+            placedDate: orderItem.orderDate
+          }
+        })
+        this.dispatch('product/getProductInformation', { orders });
+
+        const total = resp.data.grouped?.orderId?.ngroups;
+
+        if(payload.viewIndex && payload.viewIndex > 0) orders = state.completed.list.concat(orders)
+        commit(types.ORDER_COMPLETED_UPDATED, { orders, total })
+        if (payload.viewIndex === 0) emitter.emit("dismissLoader");
+      } else {
+        commit(types.ORDER_COMPLETED_UPDATED, { orders: {}, total: 0 })
+        showToast(translate("Orders Not Found"))
+      }
+      emitter.emit("dismissLoader");
+    } catch(err) {
+      console.error(err)
+      showToast(translate("Something went wrong"))
+    }
+
+    return resp;
+  },
+
   async deliverShipment ({ state, commit }, order) {
     emitter.emit("presentLoader");
     const params = {
@@ -397,6 +466,7 @@ const actions: ActionTree<OrderState , RootState> ={
   clearOrders ({ commit }) {
     commit(types.ORDER_OPEN_UPDATED, {orders: {} , total: 0})
     commit(types.ORDER_PACKED_UPDATED, {orders: {} , total: 0})
+    commit(types.ORDER_COMPLETED_UPDATED, {orders: {} , total: 0})
   }
 }
 

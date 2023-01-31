@@ -17,6 +17,12 @@ const getters: GetterTree<OrderState , RootState> = {
   },
   isOpenOrdersScrollable: (state) => {
     return state.open.list.length > 0 && state.open.list.length < state.open.total
+  },
+  getCompletedOrders: (state) => {
+    return state.completed.list;
+  },
+  isCompletedOrdersScrollable: (state) => {
+    return state.completed.list.length > 0 && state.completed.list.length < state.completed.total
   }
 }
 

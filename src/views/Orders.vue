@@ -14,6 +14,9 @@
           <ion-segment-button value="packed">
             <ion-label>{{ $t("Packed") }}</ion-label>
           </ion-segment-button>
+          <ion-segment-button value="completed">
+            <ion-label>{{ $t("Completed") }}</ion-label>
+          </ion-segment-button>
         </ion-segment>
       </div>    
     </ion-header>
@@ -95,10 +98,40 @@
           </ion-card>
         </div>
       </div>
+      <div v-if="segmentSelected === 'completed'">
+        <div v-for="order in completedOrders" :key="order.orderId" v-show="order.parts.length > 0">
+          <ion-card>
+            <ion-item lines="none">
+              <ion-label class="ion-text-wrap">
+                <h1>{{ order.customer.name }}</h1>
+                <p>{{ order.orderName ? order.orderName : order.orderId }}</p>
+              </ion-label>
+              <ion-badge v-if="order.placedDate" color="dark" slot="end">{{ timeFromNow(order.placedDate) }}</ion-badge>
+            </ion-item>
+
+            <ProductListItem v-for="item in getOrderItems(order.parts)" :key="item.productId" :item="item" />
+
+            <ion-item v-if="order.customer.phoneNumber">
+              <ion-icon :icon="callOutline" slot="start" />
+              <ion-label>{{ order.customer.phoneNumber }}</ion-label>
+              <ion-button fill="outline" slot="end" color="medium" @click.stop="copyToClipboard(order.customer.phoneNumber)">
+                {{ $t("Copy") }}
+              </ion-button>
+            </ion-item>
+            <ion-item lines="full" v-if="order.customer.email">
+              <ion-icon :icon="mailOutline" slot="start" />
+              <ion-label>{{ order.customer.email }}</ion-label>
+              <ion-button fill="outline" slot="end" color="medium" @click.stop="copyToClipboard(order.customer.email)">
+                {{ $t("Copy") }}
+              </ion-button>
+            </ion-item>
+          </ion-card>
+        </div>
+      </div>
       <ion-refresher slot="fixed" @ionRefresh="refreshOrders($event)">
         <ion-refresher-content pullingIcon="crescent" refreshingSpinner="crescent" />
       </ion-refresher>
-      <ion-infinite-scroll @ionInfinite="loadMoreProducts($event)" threshold="100px" :disabled="segmentSelected === 'open' ? !isOpenOrdersScrollable : !isPackedOrdersScrollable">
+      <ion-infinite-scroll @ionInfinite="loadMoreProducts($event)" threshold="100px" :disabled="segmentSelected === 'open' ? !isOpenOrdersScrollable : segmentSelected === 'packed' ? !isPackedOrdersScrollable : !isCompletedOrdersScrollable">
         <ion-infinite-scroll-content loading-spinner="crescent" :loading-text="$t('Loading')" />
       </ion-infinite-scroll>
     </ion-content>
@@ -171,9 +204,11 @@ export default defineComponent({
     ...mapGetters({
       orders: 'order/getOpenOrders',
       packedOrders: 'order/getPackedOrders',
+      completedOrders: 'order/getCompletedOrders',
       currentFacility: 'user/getCurrentFacility',
       isPackedOrdersScrollable: 'order/isPackedOrdersScrollable',
       isOpenOrdersScrollable: 'order/isOpenOrdersScrollable',
+      isCompletedOrdersScrollable: 'order/isCompletedOrdersScrollable',
       showPackingSlip: 'user/showPackingSlip'
     })
   },
@@ -220,8 +255,10 @@ export default defineComponent({
     async refreshOrders(event: any) {
       if(this.segmentSelected === 'open') {
         this.getPickupOrders().then(() => { event.target.complete() });
-      } else {
+      } else if (this.segmentSelected === 'packed') {
         this.getPackedOrders().then(() => { event.target.complete() });
+      } else {
+        this.getCompletedOrders().then(() => { event.target.complete() });
       }
     },
     async viewOrder (order: any, part: any) {
@@ -243,6 +280,12 @@ export default defineComponent({
 
       await this.store.dispatch("order/getPackedOrders", { viewSize, viewIndex, queryString: this.queryString, facilityId: this.currentFacility.facilityId });
     },
+    async getCompletedOrders (vSize?: any, vIndex?: any) {
+      const viewSize = vSize ? vSize : process.env.VUE_APP_VIEW_SIZE;
+      const viewIndex = vIndex ? vIndex : 0;
+
+      await this.store.dispatch("order/getCompletedOrders", { viewSize, viewIndex, queryString: this.queryString, facilityId: this.currentFacility.facilityId });
+    },
     async loadMoreProducts (event: any) {
       if (this.segmentSelected === 'open') {
         this.getPickupOrders(
@@ -251,10 +294,17 @@ export default defineComponent({
         ).then(() => {
           event.target.complete();
         })
-      } else {
+      } else if (this.segmentSelected === 'packed') {
         this.getPackedOrders(
           undefined,
           Math.ceil(this.packedOrders.length / process.env.VUE_APP_VIEW_SIZE).toString()
+        ).then(() => {
+          event.target.complete();
+        })
+      } else {
+        this.getCompletedOrders(
+          undefined,
+          Math.ceil(this.completedOrders.length / process.env.VUE_APP_VIEW_SIZE).toString()
         ).then(() => {
           event.target.complete();
         })
@@ -287,7 +337,14 @@ export default defineComponent({
     segmentChanged (e: CustomEvent) {
       this.queryString = ''
       this.segmentSelected = e.detail.value
-      this.segmentSelected === 'open' ? this.getPickupOrders() : this.getPackedOrders();
+
+      if(this.segmentSelected === 'open') {
+        this.getPickupOrders()
+      } else if(this.segmentSelected === 'packed') {
+        this.getPackedOrders()
+      } else {
+        this.getCompletedOrders()
+      }
     },
     getShipGroups (items: any) {
       // To get unique shipGroup, further it will use on ion-card iteration
@@ -307,8 +364,10 @@ export default defineComponent({
     async searchOrders() {
       if(this.segmentSelected === 'open') {
         this.getPickupOrders()
-      } else {
+      } else if(this.segmentSelected === 'packed') {
         this.getPackedOrders()
+      } else {
+        this.getCompletedOrders()
       }
     },
     selectSearchBarText(event: any) {
@@ -316,10 +375,23 @@ export default defineComponent({
         element.select();
       })
     },
+    getOrderItems(orderParts: any) {
+      return orderParts.reduce((items: Array<any>, part: any) => {
+        part.items.map((item: any) => items.push(item))
+        return items;
+      }, [])
+    }
   },
   ionViewWillEnter () {
     this.queryString = '';
-    this.segmentSelected === 'open' ? this.getPickupOrders() : this.getPackedOrders();
+
+    if(this.segmentSelected === 'open') {
+      this.getPickupOrders()
+    } else if(this.segmentSelected === 'packed') {
+      this.getPackedOrders()
+    } else {
+      this.getCompletedOrders()
+    }
   },
   setup () {
     const router = useRouter();
