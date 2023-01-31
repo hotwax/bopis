@@ -269,22 +269,16 @@ const actions: ActionTree<OrderState , RootState> ={
           return {
             orderId: orderItem.orderId,
             orderName: orderItem.orderName,
-            // shipmentId: orderItem.shipmentId, //not available in order doc
-
             customer: {
               partyId: orderItem.customerPartyId,
               name: orderItem.customerPartyName,
             },
             statusId: orderItem.orderStatusId,
             parts: order.doclist.docs.reduce((arr: Array<any>, item: any) => {
-              const currentOrderPart = arr.find((orderPart: any) => orderPart.orderPartSeqId === item.shipGroupSeqId)
+              const currentOrderPart = arr.find((orderPart: any) => orderPart.orderId === item.orderId)
               if (!currentOrderPart) {
                 arr.push({
-                  orderPartSeqId: item.shipGroupSeqId,
-                  shipmentMethodEnum: {
-                    shipmentMethodEnumId: item.shipmentMethodTypeId,
-                    shipmentMethodEnumDesc: item.shipmentMethodTypeDesc
-                  },
+                  orderId: item.orderId,
                   items: [{
                     orderItemSeqId: item.orderItemSeqId,
                     productId: item.productId,
@@ -472,6 +466,7 @@ const actions: ActionTree<OrderState , RootState> ={
   clearOrders ({ commit }) {
     commit(types.ORDER_OPEN_UPDATED, {orders: {} , total: 0})
     commit(types.ORDER_PACKED_UPDATED, {orders: {} , total: 0})
+    commit(types.ORDER_COMPLETED_UPDATED, {orders: {} , total: 0})
   }
 }
 
