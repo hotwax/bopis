@@ -47,18 +47,15 @@
 
         <ion-card>
           <ion-card-header>
-            <ion-card-subtitle>
-              {{ $t("Shopify Config") }}
-            </ion-card-subtitle>
             <ion-card-title>
-              {{ $t("eCommerce") }}
+              {{ $t("Facility") }}
             </ion-card-title>
           </ion-card-header>
           <ion-card-content>
-            {{ $t('eCommerce stores are directly connected to one Shop Configs. If your OMS is connected to multiple eCommerce stores selling the same catalog operating as one Company, you may have multiple Shop Configs for the selected Product Store.') }}
+            {{ $t('Specify which facility you want to operate from. Order, inventory and other configuration data will be specific to the facility you select.') }}
           </ion-card-content>
           <ion-item lines="none">
-            <ion-label>{{ $t("Select eCommerce") }}</ion-label>
+            <ion-label>{{ $t("Select facility") }}</ion-label>
             <ion-select interface="popover" :value="currentFacility.facilityId" @ionChange="setFacility($event)">
               <ion-select-option v-for="facility in (userProfile ? userProfile.facilities : [])" :key="facility.facilityId" :value="facility.facilityId" >{{ facility.name }}</ion-select-option>
             </ion-select>
@@ -92,27 +89,42 @@
             <ion-toggle :checked="showPackingSlip" @ionChange="setShowPackingSlipPreference($event)" slot="end" />
           </ion-item>
         </ion-card>
-
+      </section>
       <hr />
-
       <div class="section-header">
         <h1>
           {{ $t('App') }}
-          <p class="overline" >{{ "Version: " + appVersion }}</p>
+          <p class="overline">{{ "Version: " + appVersion }}</p>
         </h1>
         <p class="overline">{{ "Built: " + getDateTime(appInfo.builtTime) }}</p>
       </div>
+      <section>
+        <ion-card>
+          <ion-card-header>
+            <ion-card-title>
+              {{ $t('Timezone') }}
+            </ion-card-title>
+          </ion-card-header>
+          <ion-card-content>
+            {{ $t('The timezone you select is used to ensure automations you schedule are always accurate to the time you select.') }}
+          </ion-card-content>
+          <ion-item lines="none">
+            <ion-label> {{ userProfile && userProfile.userTimeZone ? userProfile.userTimeZone : '-' }} </ion-label>
+            <ion-button @click="changeTimeZone()" slot="end" fill="outline" color="dark">{{ $t("Change") }}</ion-button>
+          </ion-item>
+        </ion-card>
       </section>
     </ion-content>
   </ion-page>
 </template>
 
 <script lang="ts">
-import { IonAvatar, IonButton, IonCard, IonCardContent, IonCardHeader, IonCardSubtitle, IonCardTitle, IonContent, IonHeader, IonIcon, IonItem, IonLabel, IonPage, IonSelect, IonSelectOption, IonTitle, IonToggle , IonToolbar } from '@ionic/vue';
+import { IonAvatar, IonButton, IonCard, IonCardContent, IonCardHeader, IonCardSubtitle, IonCardTitle, IonContent, IonHeader, IonIcon, IonItem, IonLabel, IonPage, IonSelect, IonSelectOption, IonTitle, IonToggle , IonToolbar, modalController } from '@ionic/vue';
 import { defineComponent } from 'vue';
 import { ellipsisVertical, personCircleOutline, sendOutline , storefrontOutline, codeWorkingOutline, openOutline } from 'ionicons/icons'
 import { mapGetters, useStore } from 'vuex';
 import { useRouter } from 'vue-router';
+import TimeZoneModal from './TimezoneModal.vue';
 import Image from '@/components/Image.vue';
 import { DateTime } from 'luxon';
 
@@ -143,7 +155,8 @@ export default defineComponent({
     return {
       baseURL: process.env.VUE_APP_BASE_URL,
       appInfo: (process.env.VUE_APP_VERSION_INFO ? JSON.parse(process.env.VUE_APP_VERSION_INFO) : {}) as any,
-      appVersion: ""
+      appVersion: "",
+      locales: process.env.VUE_APP_LOCALES ? JSON.parse(process.env.VUE_APP_LOCALES) : {"en": "English"},
     }
   },
   computed: {
@@ -152,7 +165,8 @@ export default defineComponent({
       currentFacility: 'user/getCurrentFacility',
       instanceUrl: 'user/getInstanceUrl',
       showShippingOrders: 'user/showShippingOrders',
-      showPackingSlip: 'user/showPackingSlip'
+      showPackingSlip: 'user/showPackingSlip',
+      locale: 'user/getLocale'
     })
   },
   mounted() {
@@ -164,6 +178,12 @@ export default defineComponent({
         this.store.dispatch('user/setFacility', {
           'facility': this.userProfile.facilities.find((fac: any) => fac.facilityId == facility['detail'].value)
         });
+    },
+    async changeTimeZone() {
+      const timeZoneModal = await modalController.create({
+        component: TimeZoneModal,
+      });
+      return timeZoneModal.present();
     },
     logout () {
       this.store.dispatch('user/logout').then(() => {
@@ -181,6 +201,9 @@ export default defineComponent({
     },
     getDateTime(time: any) {
       return DateTime.fromMillis(time).toLocaleString(DateTime.DATETIME_MED);
+    },
+    setLocale(locale: string) {
+      this.store.dispatch('user/setLocale',locale)
     }
   },
   setup () {
