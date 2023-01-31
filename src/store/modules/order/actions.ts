@@ -275,10 +275,10 @@ const actions: ActionTree<OrderState , RootState> ={
             },
             statusId: orderItem.orderStatusId,
             parts: order.doclist.docs.reduce((arr: Array<any>, item: any) => {
-              const currentOrderPart = arr.find((orderPart: any) => orderPart.orderId === item.orderId)
+              const currentOrderPart = arr.find((orderPart: any) => orderPart.orderPartSeqId === item.shipGroupSeqId)
               if (!currentOrderPart) {
                 arr.push({
-                  orderId: item.orderId,
+                  orderPartSeqId: item.shipGroupSeqId,
                   items: [{
                     orderItemSeqId: item.orderItemSeqId,
                     productId: item.productId,

@@ -100,7 +100,7 @@
       </div>
       <div v-if="segmentSelected === 'completed'">
         <div v-for="order in completedOrders" :key="order.orderId" v-show="order.parts.length > 0">
-          <ion-card v-for="(part, index) in order.parts" :key="index">
+          <ion-card>
             <ion-item lines="none">
               <ion-label class="ion-text-wrap">
                 <h1>{{ order.customer.name }}</h1>
@@ -109,7 +109,7 @@
               <ion-badge v-if="order.placedDate" color="dark" slot="end">{{ timeFromNow(order.placedDate) }}</ion-badge>
             </ion-item>
 
-            <ProductListItem v-for="item in part.items" :key="item.productId" :item="item" />
+            <ProductListItem v-for="item in getOrderItems(order.parts)" :key="item.productId" :item="item" />
 
             <ion-item v-if="order.customer.phoneNumber">
               <ion-icon :icon="callOutline" slot="start" />
@@ -375,6 +375,12 @@ export default defineComponent({
         element.select();
       })
     },
+    getOrderItems(orderParts: any) {
+      return orderParts.reduce((items: Array<any>, part: any) => {
+        part.items.map((item: any) => items.push(item))
+        return items;
+      }, [])
+    }
   },
   ionViewWillEnter () {
     this.queryString = '';
