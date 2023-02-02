@@ -50,7 +50,6 @@ import {
 import { defineComponent } from 'vue';
 import { mapGetters, useStore } from 'vuex';
 import Image from "../components/Image.vue"
-import { useRouter } from 'vue-router';
 
 export default defineComponent({
   name: 'Catalog',
@@ -99,11 +98,11 @@ export default defineComponent({
         queryString: "*" + this.queryString + "*",
       };
       await this.store.dispatch("product/findProduct", payload);
-     
     },
   },
 
-  async mounted() {
+  async ionViewWillEnter() {
+    this.queryString = '';
     this.getProducts();
   },
   setup() {
@@ -116,10 +115,9 @@ export default defineComponent({
 });
 </script>
 <style scoped>
-main{
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
-    align-items: start;
+main {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+  align-items: start;
 }
-
 </style>
