@@ -56,9 +56,9 @@ const actions: ActionTree<ProductState, RootState> = {
       // resp.data.response.numFound tells the number of items in the response
       if (resp.status === 200 && resp.data.response?.numFound > 0 && !hasError(resp)) {
         let products = resp.data.response.docs;
-        const totalProductsCount = resp.data.response?.numFound;
+        const total = resp.data.response?.numFound;
         if (payload.viewIndex && payload.viewIndex > 0) products = state.products.list.concat(products)
-        commit(types.PRODUCT_LIST_UPDATED, { products, totalProductsCount })
+        commit(types.PRODUCT_LIST_UPDATED, { products, total })
       } else {
         //showing error whenever getting no products in the response or having any other error
         showToast(translate("Product not found"));
@@ -88,6 +88,10 @@ const actions: ActionTree<ProductState, RootState> = {
       dispatch('fetchProducts', { productIds })
       this.dispatch('stock/addProducts', { productIds })
     }
+  },
+
+  clearProducts ({ commit }) {
+    commit(types.PRODUCT_LIST_UPDATED, { products: {}, total: 0 })
   }
 }
 

@@ -15,7 +15,7 @@ const prepareOrderQuery = (params: any) => {
         "start": viewIndex * viewSize
       },
       "query":"(*:*)",
-      "filter": ["docType: OISGIR"]
+      "filter": [`docType: ${params.docType ? params.docType : 'OISGIR'}`]
     }
   } as any
 
@@ -59,6 +59,10 @@ const prepareOrderQuery = (params: any) => {
 
   if (params.orderId) {
     payload.json.filter.push(`orderId: ${params.orderId}`)
+  }
+
+  if(params.orderItemStatusId) {
+    payload.json.filter.push(`orderItemStatusId: ${params.orderItemStatusId}`)
   }
 
   return payload
