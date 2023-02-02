@@ -17,6 +17,10 @@ const orderModule: Module<OrderState, RootState> = {
     packed: {
       list: {},
       total: 0
+    },
+    completed: {
+      list: {},
+      total: 0
     }
   },
   getters,
