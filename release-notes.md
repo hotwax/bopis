@@ -1,3 +1,14 @@
+# Release 2.3.0
+
+## What's Changed
+* Implemented: Add time zone support and migrated from moment to luxon (#25k8h53) by @k2maan in https://github.com/hotwax/bopis/pull/174
+* Implemented: Code to show app version and build information on Settings page (#85zrhn8w8) by @k2maan in https://github.com/hotwax/bopis/pull/175
+* Implemented: support for completed orders(#85zrkm9e3) by @ymaheshwari1 in https://github.com/hotwax/bopis/pull/177
+* Implemented: Flow to get and show product on Catalog page (#1uvvc2n)  by @k2maan in https://github.com/hotwax/bopis/pull/179
+
+
+**Full Changelog**: https://github.com/hotwax/bopis/compare/v2.2.0...v.2.3.0
+
 # Release 2.2.0
 
 ## What's Changed
