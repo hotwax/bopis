@@ -6,7 +6,7 @@
       </ion-toolbar>
     </ion-header>
     <ion-content>
-      <ion-searchbar v-model="queryString" @keypress.enter="queryString = $event.target.value; getProducts()" />
+      <ion-searchbar @ionFocus="selectSearchBarText($event)" v-model="queryString" @keypress.enter="queryString = $event.target.value; getProducts()" />
       <main>
         <ion-card v-for="product in products.list" :key="product.productId">
           <Image :src="product.mainImageUrl" />
@@ -98,6 +98,11 @@ export default defineComponent({
         queryString: "*" + this.queryString + "*",
       };
       await this.store.dispatch("product/findProduct", payload);
+    },
+    selectSearchBarText(event: any) {
+      event.target.getInputElement().then((element: any) => {
+        element.select();
+      })
     },
   },
 
