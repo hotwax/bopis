@@ -61,14 +61,14 @@ const actions: ActionTree<ProductState, RootState> = {
         commit(types.PRODUCT_LIST_UPDATED, { products, total })
       } else {
         //showing error whenever getting no products in the response or having any other error
-        commit(types.PRODUCT_LIST_UPDATED, { products: {}, total: 0 })
+        commit(types.PRODUCT_LIST_UPDATED, { products: [], total: 0 })
         showToast(translate("Products not found"));
       }
       // Remove added loader only when new query and not the infinite scroll
       if (payload.viewIndex === 0) emitter.emit("dismissLoader");
     } catch(error){
       console.error(error)
-      commit(types.PRODUCT_LIST_UPDATED, { products: {}, total: 0 })
+      commit(types.PRODUCT_LIST_UPDATED, { products: [], total: 0 })
       showToast(translate("Something went wrong"));
     }
     // TODO Handle specific error
@@ -93,7 +93,7 @@ const actions: ActionTree<ProductState, RootState> = {
   },
 
   clearProducts ({ commit }) {
-    commit(types.PRODUCT_LIST_UPDATED, { products: {}, total: 0 })
+    commit(types.PRODUCT_LIST_UPDATED, { products: [], total: 0 })
   }
 }
 

@@ -10,7 +10,7 @@ const productModule: Module<ProductState, RootState> = {
     state: {
       cached: {},
       products: {
-        list: {},
+        list: [],
         total: 0 
       }, 
     },
