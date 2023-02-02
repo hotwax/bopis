@@ -61,7 +61,7 @@ const actions: ActionTree<ProductState, RootState> = {
         commit(types.PRODUCT_LIST_UPDATED, { products, total })
       } else {
         //showing error whenever getting no products in the response or having any other error
-        showToast(translate("Product not found"));
+        showToast(translate("Products not found"));
       }
       // Remove added loader only when new query and not the infinite scroll
       if (payload.viewIndex === 0) emitter.emit("dismissLoader");
