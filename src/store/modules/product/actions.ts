@@ -42,7 +42,7 @@ const actions: ActionTree<ProductState, RootState> = {
     return resp;
   },
 
-  async findProduct ({ commit, state, dispatch }, payload) {
+  async findProduct ({ commit, state }, payload) {
     // Show loader only when new query and not the infinite scroll
     if (payload.viewIndex === 0) emitter.emit("presentLoader");
     let resp;
