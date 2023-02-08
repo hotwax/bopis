@@ -64,14 +64,15 @@
 
         <ion-card>
           <ion-card-header>
-            <ion-card-subtitle>
-              {{ $t("Shipping orders") }}
-            </ion-card-subtitle>
             <ion-card-title>
               {{ $t("Shipping orders") }}
             </ion-card-title>
           </ion-card-header>
+          <ion-card-content>
+            {{ $t('View shipping orders along with pickup orders.') }}
+          </ion-card-content>
           <ion-item lines="none">
+            <ion-label>{{ $t("Show shipping orders") }}</ion-label>
             <ion-toggle :checked="showShippingOrders" @ionChange="setShowShippingOrdersPreference($event)" slot="end" />
           </ion-item>
         </ion-card>

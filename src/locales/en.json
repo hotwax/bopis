@@ -74,6 +74,7 @@
   "Ship to customer": "Ship to customer",
   "Ship to this address": "Ship to this address",
   "Shop": "Shop",
+  "Show shipping orders": "Show shipping orders",
   "Size": "Size",
   "Something went wrong": "Something went wrong",
   "Specify which facility you want to operate from. Order, inventory and other configuration data will be specific to the facility you select.": "Specify which facility you want to operate from. Order, inventory and other configuration data will be specific to the facility you select.",
@@ -94,5 +95,6 @@
   "Warehouse": "Warehouse",
   "Worn Display": "Worn Display",
   "This order will be removed from your dashboard. This action cannot be undone.": "This order will be removed from your dashboard.{ space } This action cannot be undone.",
+  "View shipping orders along with pickup orders.": "View shipping orders along with pickup orders.",
   "Zipcode": "Zipcode"
 }
