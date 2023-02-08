@@ -168,7 +168,7 @@ import { useRouter } from 'vue-router'
 import { copyToClipboard, hasError, showToast } from '@/utils'
 import { DateTime } from 'luxon';
 import emitter from "@/event-bus"
-import api from "@/api"
+import { api } from '@/adapter';
 import { translate } from "@/i18n";
 
 export default defineComponent({

@@ -9,7 +9,9 @@ import { IonApp, IonRouterOutlet } from '@ionic/vue';
 import { defineComponent } from 'vue';
 import { loadingController } from '@ionic/vue';
 import emitter from "@/event-bus"
-import { mapGetters } from 'vuex';
+import { mapGetters, useStore } from 'vuex';
+import { init, resetConfig } from '@/adapter'
+import { useRouter } from 'vue-router';
 
 export default defineComponent({
   name: 'App',
@@ -19,7 +21,8 @@ export default defineComponent({
   },
   data() {
     return {
-      loader: null as any
+      loader: null as any,
+      maxAge: process.env.VUE_APP_CACHE_MAX_AGE ? parseInt(process.env.VUE_APP_CACHE_MAX_AGE) : 0
     }
   },
   methods: {
@@ -41,12 +44,21 @@ export default defineComponent({
         // on dismiss initializing the loader as null, so it can again be created
         this.loader = null as any;
       }
+    },
+    async unauthorized() {
+      this.store.dispatch("user/logout");
+      this.router.push("/login")
     }
   }, 
   computed: {
     ...mapGetters({
-      locale: 'user/getLocale'
+      locale: 'user/getLocale',
+      userToken: 'user/getUserToken',
+      instanceUrl: 'user/getInstanceUrl'
     })
+  },
+  created() {
+    init(this.userToken, this.instanceUrl, this.maxAge)
   },
   async mounted() {
     // creating the loader on mounted as loadingController is taking too much time to create initially
@@ -58,11 +70,22 @@ export default defineComponent({
       });
     emitter.on('presentLoader', this.presentLoader);
     emitter.on('dismissLoader', this.dismissLoader);
+    emitter.on('unauthorized', this.unauthorized);
     this.$i18n.locale = this.locale;
   },
   unmounted() {
     emitter.off('presentLoader', this.presentLoader);
     emitter.off('dismissLoader', this.dismissLoader);
+    emitter.off('unauthorized', this.unauthorized);
+    resetConfig()
   },
+  setup() {
+    const store = useStore();
+    const router = useRouter();
+    return {
+      router,
+      store
+    }
+  }
 });
 </script>

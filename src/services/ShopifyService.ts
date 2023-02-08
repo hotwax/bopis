@@ -1,4 +1,4 @@
-import { client } from '@/api';
+import { client } from '@/adapter';
 
 const generateAccessToken = async (config: any): Promise <any>  => {
   return client({

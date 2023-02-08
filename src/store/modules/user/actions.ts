@@ -6,6 +6,7 @@ import * as types from './mutation-types'
 import { hasError, showToast } from '@/utils'
 import i18n, { translate } from '@/i18n'
 import { Settings } from 'luxon';
+import { updateInstanceUrl, updateToken, resetConfig } from '@/adapter'
 
 const actions: ActionTree<UserState, RootState> = {
 
@@ -31,6 +32,7 @@ const actions: ActionTree<UserState, RootState> = {
 
             if (checkPermissionResponse.status === 200 && !hasError(checkPermissionResponse) && checkPermissionResponse.data && checkPermissionResponse.data.hasPermission) {
               commit(types.USER_TOKEN_CHANGED, { newToken: resp.data.token })
+              updateToken(resp.data.token)
               dispatch('getProfile')
               if (resp.data._EVENT_MESSAGE_ && resp.data._EVENT_MESSAGE_.startsWith("Alert:")) {
               // TODO Internationalise text
@@ -45,6 +47,7 @@ const actions: ActionTree<UserState, RootState> = {
             }
           } else {
             commit(types.USER_TOKEN_CHANGED, { newToken: resp.data.token })
+            updateToken(resp.data.token)
             await dispatch('getProfile')
             return resp.data;
           }
@@ -73,6 +76,7 @@ const actions: ActionTree<UserState, RootState> = {
     // TODO add any other tasks if need
     dispatch("product/clearProducts", null, { root: true })
     commit(types.USER_END_SESSION)
+    resetConfig();
   },
 
   /**
@@ -116,6 +120,7 @@ const actions: ActionTree<UserState, RootState> = {
    */
    setUserInstanceUrl ({ commit }, instanceUrl){
     commit(types.USER_INSTANCE_URL_UPDATED, instanceUrl)
+    updateInstanceUrl(instanceUrl)
    },
   
   /**
