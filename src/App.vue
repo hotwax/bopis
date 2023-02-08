@@ -57,6 +57,9 @@ export default defineComponent({
       instanceUrl: 'user/getInstanceUrl'
     })
   },
+  created() {
+    init(this.userToken, this.instanceUrl, this.maxAge)
+  },
   async mounted() {
     // creating the loader on mounted as loadingController is taking too much time to create initially
     this.loader = await loadingController
@@ -68,7 +71,6 @@ export default defineComponent({
     emitter.on('presentLoader', this.presentLoader);
     emitter.on('dismissLoader', this.dismissLoader);
     emitter.on('unauthorized', this.unauthorized);
-    init(this.userToken, this.instanceUrl, this.maxAge)
     this.$i18n.locale = this.locale;
   },
   unmounted() {
