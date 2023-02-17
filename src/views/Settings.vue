@@ -64,29 +64,31 @@
 
         <ion-card>
           <ion-card-header>
-            <ion-card-subtitle>
-              {{ $t("Shipping orders") }}
-            </ion-card-subtitle>
             <ion-card-title>
               {{ $t("Shipping orders") }}
             </ion-card-title>
           </ion-card-header>
+          <ion-card-content>
+            {{ $t('View shipping orders along with pickup orders.') }}
+          </ion-card-content>
           <ion-item lines="none">
+            <ion-label>{{ $t("Show shipping orders") }}</ion-label>
             <ion-toggle :checked="showShippingOrders" @ionChange="setShowShippingOrdersPreference($event)" slot="end" />
           </ion-item>
         </ion-card>
 
         <ion-card>
           <ion-card-header>
-            <ion-card-subtitle>
-              {{ $t("Packing slip") }}
-            </ion-card-subtitle>
             <ion-card-title>
-              {{ $t("Packing slip") }}
+              {{ $t("Packing Slip") }}
             </ion-card-title>
           </ion-card-header>
+          <ion-card-content>
+            {{ $t('Packing slips help customer reconcile their order against the delivered items.') }}
+          </ion-card-content>
           <ion-item lines="none">
-            <ion-toggle :checked="showPackingSlip" @ionChange="setShowPackingSlipPreference($event)" slot="end" />
+            <ion-label>{{ $t("Generate packing slips") }}</ion-label>
+            <ion-toggle :checked="showShippingOrders" @ionChange="setShowShippingOrdersPreference($event)" slot="end" />
           </ion-item>
         </ion-card>
       </section>
