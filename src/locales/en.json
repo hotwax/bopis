@@ -22,6 +22,7 @@
   "Facility": "Facility",
   "Failed to load packing slip": "Failed to load packing slip",
   "First name": "First name",
+  "Generate packing slips": "Generate packing slips",
   "Go to OMS": "Go to OMS",
   "Handover": "Handover",
   "Inactive store": "Inactive store",
@@ -55,7 +56,8 @@
   "Orders Not Found": "Orders Not Found",
   "Other stores": "Other stores",
   "Packed": "Packed",
-  "Packing slip": "Packing slip",
+  "Packing Slip": "Packing Slip",
+  "Packing slips help customer reconcile their order against the delivered items.": "Packing slips help customer reconcile their order against the delivered items.",
   "Password": "Password",
   "pending approval": "pending approval",
   "Product details": "Product details",
@@ -78,6 +80,7 @@
   "Ship to customer": "Ship to customer",
   "Ship to this address": "Ship to this address",
   "Shop": "Shop",
+  "Show shipping orders": "Show shipping orders",
   "Size": "Size",
   "Sizes": "Sizes",
   "Something went wrong": "Something went wrong",
@@ -100,5 +103,6 @@
   "Worn Display": "Worn Display",
   "This order will be removed from your dashboard. This action cannot be undone.": "This order will be removed from your dashboard.{ space } This action cannot be undone.",
   "Variants not found": "Variants not found",
+  "View shipping orders along with pickup orders.": "View shipping orders along with pickup orders.",
   "Zipcode": "Zipcode"
 }
