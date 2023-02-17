@@ -42,6 +42,23 @@ const actions: ActionTree<ProductState, RootState> = {
     return resp;
   },
 
+  async fetchProduct ({ commit }, { productId }) {
+    const resp = await ProductService.fetchProducts({
+      "filters": ['productId: ' + productId ]
+    })
+    if (resp.status === 200 && !hasError(resp)) {
+      const product = resp.data.response.docs[0];
+      if (resp.data) commit(types.PRODUCT_ADD_TO_CACHED, { product });
+    }
+    // TODO Handle specific error
+    return resp;
+  },
+
+  async updateCurrent({ commit }, { product }) {
+    commit(types.PRODUCT_CURRENT_UPDATED, { product })
+    commit(types.PRODUCT_ADD_TO_CACHED, { product });
+  },
+
   async findProduct ({ commit, state }, payload) {
     // Show loader only when new query and not the infinite scroll
     if (payload.viewIndex === 0) emitter.emit("presentLoader");
@@ -51,7 +68,8 @@ const actions: ActionTree<ProductState, RootState> = {
         // used sku as we are currently only using sku to search for the product
         "viewSize": payload.viewSize,
         "viewIndex": payload.viewIndex,
-        "keyword": payload.queryString
+        "keyword": payload.queryString,
+        "filters": ['isVirtual: true', 'isVariant: false'],
       })
       // resp.data.response.numFound tells the number of items in the response
       if (resp.status === 200 && resp.data.response?.numFound > 0 && !hasError(resp)) {
@@ -69,6 +87,40 @@ const actions: ActionTree<ProductState, RootState> = {
     } catch(error){
       console.error(error)
       commit(types.PRODUCT_LIST_UPDATED, { products: [], total: 0 })
+      showToast(translate("Something went wrong"));
+    }
+    // TODO Handle specific error
+    return resp;
+  },
+
+  async getVariants({ dispatch, state, commit }, payload) {
+    if (payload.viewIndex === 0) emitter.emit("presentLoader");
+    
+    // checking if product and its variants are in cache
+    let product = JSON.parse(JSON.stringify(this.getters['product/getProduct'](payload.productId)))
+    if(product.variants?.length) return dispatch('updateCurrent', { product })
+
+    let resp;
+    try {
+      resp = await ProductService.findProducts({
+        "filters": [`groupId: ${payload.productId}`],
+      })
+      // resp.data.response.numFound tells the number of items in the response
+      if (resp.status === 200 && resp.data.response?.numFound > 0 && !hasError(resp)) {
+        if (Object.keys(product).length === 0) { 
+          await dispatch('fetchProduct', { productId: payload.productId })
+          product = JSON.parse(JSON.stringify(this.getters['product/getProduct'](payload.productId)))
+        }
+        product['variants'] = JSON.parse(JSON.stringify(resp.data.response.docs))
+        dispatch('updateCurrent', { product })
+        commit(types.PRODUCT_ADD_TO_CACHED, { product });
+      } else {
+        showToast(translate("Variants not found"));
+      }
+      // Remove added loader only when new query and not the infinite scroll
+      if (payload.viewIndex === 0) emitter.emit("dismissLoader");
+    } catch(error){
+      console.error(error)
       showToast(translate("Something went wrong"));
     }
     // TODO Handle specific error

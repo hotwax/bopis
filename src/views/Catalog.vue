@@ -8,13 +8,12 @@
     <ion-content>
       <ion-searchbar @ionFocus="selectSearchBarText($event)" v-model="queryString" @keypress.enter="queryString = $event.target.value; getProducts()" />
       <main>
-        <ion-card v-for="product in products.list" :key="product.productId">
+        <ion-card v-for="product in products.list" :key="product.productId"  @click="viewProduct(product)">
           <Image :src="product.mainImageUrl" />
           <ion-item lines="none">
             <ion-label>
               <p>{{ product.productId }}</p>
               {{ product.productName }}
-              <p>${{ product.groupPrice }}</p>
             </ion-label>
           </ion-item>
         </ion-card>
@@ -50,6 +49,7 @@ import {
 import { defineComponent } from 'vue';
 import { mapGetters, useStore } from 'vuex';
 import Image from "../components/Image.vue"
+import { useRouter } from "vue-router";
 
 export default defineComponent({
   name: 'Catalog',
@@ -104,6 +104,11 @@ export default defineComponent({
         element.select();
       })
     },
+    async viewProduct(product: any) {
+      await this.store.dispatch('product/updateCurrent', { product }).then(() => {
+        this.router.push({ path: `/product-detail/${product.productId}` });
+      })
+    }
   },
 
   async ionViewWillEnter() {
@@ -112,9 +117,10 @@ export default defineComponent({
   },
   setup() {
     const store = useStore();
-
+    const router = useRouter();
     return {
       store,
+      router
     };
   },
 });
