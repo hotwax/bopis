@@ -48,15 +48,14 @@ const actions: ActionTree<ProductState, RootState> = {
     })
     if (resp.status === 200 && !hasError(resp)) {
       const product = resp.data.response.docs[0];
-      if (resp.data) commit(types.PRODUCT_ADD_TO_CACHED, { product });
+      if (resp.data) commit(types.PRODUCT_ADD_TO_CACHED, product);
     }
     // TODO Handle specific error
     return resp;
   },
 
   async updateCurrent({ commit }, { product }) {
-    commit(types.PRODUCT_CURRENT_UPDATED, { product })
-    commit(types.PRODUCT_ADD_TO_CACHED, { product });
+    commit(types.PRODUCT_CURRENT_UPDATED, product)
   },
 
   async findProduct ({ commit, state }, payload) {
@@ -113,7 +112,7 @@ const actions: ActionTree<ProductState, RootState> = {
         }
         product['variants'] = JSON.parse(JSON.stringify(resp.data.response.docs))
         dispatch('updateCurrent', { product })
-        commit(types.PRODUCT_ADD_TO_CACHED, { product });
+        commit(types.PRODUCT_ADD_TO_CACHED, product);
       } else {
         showToast(translate("Variants not found"));
       }
