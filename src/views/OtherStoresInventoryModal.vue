@@ -16,6 +16,9 @@
         <ion-note slot="end">{{ details.stock }}</ion-note>
       </ion-item>
     </ion-list>
+    <div v-else class="ion-text-center">
+      <p>{{ $t("No inventory details found")}}</p>
+    </div>
   </ion-content>
 </template>
 

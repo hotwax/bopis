@@ -172,29 +172,32 @@ export default defineComponent({
       this.currentVariant = variant;
       this.currentStoreInventory = this.otherStoresInventory = this.warehouseInventory = 0;
       this.otherStoresInventoryDetails = []
-      await this.checkInventory(this.currentVariant.productId);
+      await this.checkInventory();
     },
-    async checkInventory(productId: string) {
-      const resp: any = await StockService.checkInventory({
-        "filters": { "productId": productId },
-        "fieldsToSelect": ["productId", "atp", "facilityName", "facilityId", "facilityTypeId"],
-      });
+    async checkInventory() {
+      try {
+        const resp: any = await StockService.checkInventory({
+          "filters": { "productId": this.currentVariant.productId },
+          "fieldsToSelect": ["productId", "atp", "facilityName", "facilityId", "facilityTypeId"],
+        });
 
-      if (resp.status === 200 && !hasError(resp) && resp.data.docs.length) {
-        resp.data.docs.filter((storeInventory: any) => {
-          if (storeInventory.facilityId === this.currentFacility.facilityId) {
-            if (storeInventory.facilityTypeId === 'WAREHOUSE') 
-              this.warehouseInventory = storeInventory.atp
-            return this.currentStoreInventory = storeInventory.atp
-          } else {
-            this.otherStoresInventoryDetails.push({facilityName: storeInventory.facilityName, stock: storeInventory.atp})
-            if (storeInventory.facilityTypeId === 'WAREHOUSE') 
-              this.warehouseInventory = storeInventory.atp
-            return this.otherStoresInventory += storeInventory.atp
-          }
-        })
-      } else {
-        this.currentStoreInventory = this.otherStoresInventory = this.warehouseInventory = 0
+        if (resp.status === 200 && !hasError(resp) && resp.data.docs.length) {
+          resp.data.docs.filter((storeInventory: any) => {
+            if (storeInventory.facilityTypeId === 'WAREHOUSE') this.warehouseInventory = storeInventory.atp
+            if (storeInventory.facilityId === this.currentFacility.facilityId) {
+              this.currentStoreInventory = storeInventory.atp
+            } else {
+              this.otherStoresInventoryDetails.push({ facilityName: storeInventory.facilityName, stock: storeInventory.atp })
+              this.otherStoresInventory += storeInventory.atp
+            }
+          })
+        } else {
+          this.currentStoreInventory = this.otherStoresInventory = this.warehouseInventory = 0
+          this.otherStoresInventoryDetails = []
+        }
+      } catch (error) {
+        console.error(error)
+        showToast(translate("Something went wrong"));
       }
     },
     async getOtherStoresInventoryDetails() {

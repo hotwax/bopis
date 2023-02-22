@@ -92,7 +92,7 @@ const actions: ActionTree<ProductState, RootState> = {
     return resp;
   },
 
-  async getVariants({ dispatch, state, commit }, payload) {
+  async getVariants({ dispatch, commit }, payload) {
     if (payload.viewIndex === 0) emitter.emit("presentLoader");
     
     // checking if product and its variants are in cache
