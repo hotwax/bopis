@@ -34,7 +34,7 @@ import {
   IonToolbar,
   modalController } from "@ionic/vue";
 import { defineComponent } from "vue";
-import { close, save } from "ionicons/icons";
+import { close } from "ionicons/icons";
 import { useStore } from "@/store";
 
 export default defineComponent({
@@ -53,14 +53,6 @@ export default defineComponent({
     IonToolbar 
   },
   props: ["otherStoresInventoryDetails"],
-  data() {
-    return {
-      queryString: '',
-      filteredTimeZones: [],
-      timeZones: [],
-      timeZoneId: ''
-    }
-  },
   methods: {
     closeModal() {
       modalController.dismiss({ dismissed: true });
@@ -70,7 +62,6 @@ export default defineComponent({
     const store = useStore();
     return {
       close,
-      save,
       store
     };
   }

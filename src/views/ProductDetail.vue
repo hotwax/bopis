@@ -32,7 +32,7 @@
               </ion-row>
             </ion-item>
           </ion-list>
-          
+
           <ion-list v-if="selectedSize">
             <ion-list-header>{{ $t("Sizes") }} </ion-list-header>
             <ion-item lines="none">
@@ -169,7 +169,6 @@ export default defineComponent({
           showToast(translate("Selected variant not available"));
         }
       }
-
       this.currentVariant = variant;
       this.currentStoreInventory = this.otherStoresInventory = this.warehouseInventory = 0;
       this.otherStoresInventoryDetails = []
