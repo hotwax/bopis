@@ -8,7 +8,7 @@
     <ion-content>
       <ion-searchbar @ionFocus="selectSearchBarText($event)" v-model="queryString" @keypress.enter="queryString = $event.target.value; getProducts()" />
       <main>
-        <ion-card v-for="product in products.list" :key="product.productId"  @click="viewProduct(product)">
+        <ion-card button v-for="product in products.list" :key="product.productId"  @click="viewProduct(product)">
           <Image :src="product.mainImageUrl" />
           <ion-item lines="none">
             <ion-label>

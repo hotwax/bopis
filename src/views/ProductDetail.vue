@@ -19,10 +19,10 @@
               <p class="overline">{{ currentVariant.brandName }}</p>
               <h1>{{ currentVariant.productName }}</h1>
             </ion-label>
-            <ion-note slot="end">${{ currentVariant.BASE_PRICE_PURCHASE_USD_STORE_GROUP_price }}</ion-note>
+            <ion-note slot="end">${{ currentVariant.LIST_PRICE_PURCHASE_USD_STORE_GROUP_price }}</ion-note>
           </ion-item>
 
-          <ion-list v-if="Object.keys(features)">
+          <ion-list v-if="selectedColor">
             <ion-list-header>{{ $t("Colors") }}</ion-list-header>
             <ion-item lines="none">
               <ion-row>
@@ -33,11 +33,11 @@
             </ion-item>
           </ion-list>
           
-          <ion-list v-if="features[selectedColor]">
+          <ion-list v-if="selectedSize">
             <ion-list-header>{{ $t("Sizes") }} </ion-list-header>
             <ion-item lines="none">
               <ion-row>
-                <ion-chip :outline="selectedSize !== sizeFeature" :key="sizeFeature" v-for="sizeFeature in sortSizes(features[selectedColor])" @click="applyFeature(sizeFeature, 'size')">
+                <ion-chip :outline="selectedSize !== sizeFeature" :key="sizeFeature" v-for="sizeFeature in features[selectedColor]" @click="applyFeature(sizeFeature, 'size')">
                   <ion-label class="ion-text-wrap">{{ sizeFeature }}</ion-label>
                 </ion-chip>
               </ion-row>
@@ -135,35 +135,38 @@ export default defineComponent({
     await this.updateVariant()
   },
   methods: {
-    applyFeature(feature: string, type: string) {
+    async applyFeature(feature: string, type: string) {
       if(type === 'color') this.selectedColor = feature;
       else if(type === 'size') this.selectedSize = feature
-      this.updateVariant();
+      await this.updateVariant();
     },
     getFeatures() {
+      const features = {} as any
       this.product.variants.map((variant: any) => {
-        const size = this.getFeature(variant.featureHierarchy, '1/SIZE/');
-        const color = this.getFeature(variant.featureHierarchy, '1/COLOR/');
-        if(!this.features[color]) this.features[color] = [size];
-        else if(!this.features[color].includes(size)) this.features[color].push(size);
-      })
-      
+        const size = getFeature(variant.featureHierarchy, '1/SIZE/');
+        const color = getFeature(variant.featureHierarchy, '1/COLOR/');
+        if (!features[color]) features[color] = [size];
+        else if(!features[color].includes(size)) features[color].push(size);
+      });
+
+      Object.keys(features).forEach((color) => this.features[color] = sortSizes(features[color]))
+
       this.selectedColor = Object.keys(this.features)[0];
-      this.selectedSize = sortSizes(this.features[this.selectedColor])[0];
+      this.selectedSize = this.features[this.selectedColor][0];
     },
     async updateVariant() {
       let variant;
       if(this.selectedColor || this.selectedSize) {
         variant = this.product.variants.find((variant: any) => {
-          const hasSize =  this.getFeature(variant.featureHierarchy, '1/SIZE/') === this.selectedSize;
-          const hasColor = this.getFeature(variant.featureHierarchy, '1/COLOR/') === this.selectedColor;
+          const hasSize = getFeature(variant.featureHierarchy, '1/SIZE/') === this.selectedSize;
+          const hasColor = getFeature(variant.featureHierarchy, '1/COLOR/') === this.selectedColor;
           if (hasSize && hasColor) return variant;
         })
 
         if(!variant) {
-          showToast(translate("Selected variant not available"));
           this.selectedSize = this.features[this.selectedColor][0];
-          variant = this.product.variants.find((variant: any) => this.getFeature(variant.featureHierarchy, '1/SIZE/') === this.selectedSize)
+          variant = this.product.variants.find((variant: any) => getFeature(variant.featureHierarchy, '1/SIZE/') === this.selectedSize)
+          showToast(translate("Selected variant not available"));
         }
       }
 
@@ -175,7 +178,7 @@ export default defineComponent({
     async checkInventory(productId: string) {
       const resp: any = await StockService.checkInventory({
         "filters": { "productId": productId },
-        "fieldsToSelect": ["productId",  "atp", "facilityName", "facilityId", "facilityTypeId"],
+        "fieldsToSelect": ["productId", "atp", "facilityName", "facilityId", "facilityTypeId"],
       });
 
       if (resp.status === 200 && !hasError(resp) && resp.data.docs.length) {
@@ -201,14 +204,12 @@ export default defineComponent({
         componentProps: { otherStoresInventoryDetails: this.otherStoresInventoryDetails }
       });
       return otherStoresInventoryModal.present();
-    },
+    }
   },
   setup() {
     const store = useStore();
     return {
-      store,
-      getFeature,
-      sortSizes,
+      store
     }
   }
 });
