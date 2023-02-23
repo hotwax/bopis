@@ -105,7 +105,7 @@ export default defineComponent({
       })
     },
     async viewProduct(product: any) {
-      await this.store.dispatch('product/updateCurrent', { product }).then(() => {
+      await this.store.dispatch('product/updateCurrent', product).then(() => {
         this.router.push({ path: `/product-detail/${product.productId}` });
       })
     }

@@ -19,7 +19,8 @@
               <p class="overline">{{ currentVariant.brandName }}</p>
               <h1>{{ currentVariant.productName }}</h1>
             </ion-label>
-            <ion-note slot="end">${{ currentVariant.LIST_PRICE_PURCHASE_USD_STORE_GROUP_price }}</ion-note>
+            <!-- <ion-note slot="end">${{ currentVariant.LIST_PRICE_PURCHASE_USD_STORE_GROUP_price }}</ion-note> -->
+            <ion-note slot="end">${{ $n(currentVariant.LIST_PRICE_PURCHASE_USD_STORE_GROUP_price, 'currency') }}</ion-note>
           </ion-item>
 
           <ion-list v-if="selectedColor">

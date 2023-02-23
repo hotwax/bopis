@@ -43,18 +43,22 @@ const actions: ActionTree<ProductState, RootState> = {
   },
 
   async fetchProduct ({ commit }, { productId }) {
-    const resp = await ProductService.fetchProducts({
-      "filters": ['productId: ' + productId ]
-    })
-    if (resp.status === 200 && !hasError(resp)) {
-      const product = resp.data.response.docs[0];
-      if (resp.data) commit(types.PRODUCT_ADD_TO_CACHED, product);
+    try {
+      const resp = await ProductService.fetchProducts({
+        "filters": ['productId: ' + productId]
+      })
+      if (resp.status === 200 && !hasError(resp)) {
+        const product = resp.data.response.docs[0];
+        if (resp.data) commit(types.PRODUCT_ADD_TO_CACHED, product);
+        return product;
+      }
+    } catch (error) {
+      console.error(error)
+      showToast(translate("Something went wrong"));
     }
-    // TODO Handle specific error
-    return resp;
   },
 
-  async updateCurrent({ commit }, { product }) {
+  async updateCurrent({ commit }, product) {
     commit(types.PRODUCT_CURRENT_UPDATED, product)
   },
 
@@ -95,9 +99,9 @@ const actions: ActionTree<ProductState, RootState> = {
   async getVariants({ dispatch, commit }, payload) {
     if (payload.viewIndex === 0) emitter.emit("presentLoader");
     
-    // checking if product and its variants are in cache
+    // checking if product is in cache
     let product = JSON.parse(JSON.stringify(this.getters['product/getProduct'](payload.productId)))
-    if(product.variants?.length) return dispatch('updateCurrent', { product })
+    if (Object.keys(product).length) return dispatch('updateCurrent', product)
 
     let resp;
     try {
@@ -106,12 +110,9 @@ const actions: ActionTree<ProductState, RootState> = {
       })
       // resp.data.response.numFound tells the number of items in the response
       if (resp.status === 200 && resp.data.response?.numFound > 0 && !hasError(resp)) {
-        if (Object.keys(product).length === 0) { 
-          await dispatch('fetchProduct', { productId: payload.productId })
-          product = JSON.parse(JSON.stringify(this.getters['product/getProduct'](payload.productId)))
-        }
+        product = await dispatch('fetchProduct', { productId: payload.productId })
         product['variants'] = JSON.parse(JSON.stringify(resp.data.response.docs))
-        dispatch('updateCurrent', { product })
+        dispatch('updateCurrent', product)
         commit(types.PRODUCT_ADD_TO_CACHED, product);
       } else {
         showToast(translate("Variants not found"));
