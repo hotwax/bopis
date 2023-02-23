@@ -53,7 +53,7 @@
               </ion-button>
             </ion-item>
             <div class="border-top">
-              <ion-button fill="clear" @click.stop="readyForPickup(order, part)">
+              <ion-button fill="clear" @click.stop="assignPickers()">
                 {{ part.shipmentMethodEnum?.shipmentMethodEnumId === 'STOREPICKUP' ? $t("Ready for pickup") : $t("Ready to ship") }}
               </ion-button>
             </div>
@@ -159,6 +159,7 @@ import {
   IonSegmentButton,
   IonTitle,
   IonToolbar,
+  modalController
 } from "@ionic/vue";
 import { defineComponent, ref } from "vue";
 import ProductListItem from '@/components/ProductListItem.vue'
@@ -170,6 +171,7 @@ import { DateTime } from 'luxon';
 import emitter from "@/event-bus"
 import { api } from '@/adapter';
 import { translate } from "@/i18n";
+import AssignPickerModal from "./AssignPickerModal.vue";
 
 export default defineComponent({
   name: 'Orders',
@@ -195,6 +197,7 @@ export default defineComponent({
     ProductListItem
   },
   created () {
+    this.store.dispatch('picklist/updateAvailablePickers', {});
     emitter.on("refreshPickupOrders", this.getPickupOrders);
   },
   unmounted () {
@@ -218,6 +221,12 @@ export default defineComponent({
     }
   },
   methods: {
+    async assignPickers() {
+      const assignPickerModal = await modalController.create({
+        component: AssignPickerModal
+      });
+      return assignPickerModal.present();
+    },
     timeFromNow (time: any) {
       const timeDiff = DateTime.fromISO(time).diff(DateTime.local());
       return DateTime.local().plus(timeDiff).toRelative();
@@ -312,6 +321,7 @@ export default defineComponent({
     },
     async readyForPickup (order: any, part: any) {
       const pickup = part.shipmentMethodEnum?.shipmentMethodEnumId === 'STOREPICKUP';
+      if(pickup) await this.assignPickers();
       const header = pickup ? this.$t('Ready for pickup') : this.$t('Ready to ship');
       const message = pickup ? this.$t('An email notification will be sent to that their order is ready for pickup. This order will also be moved to the packed orders tab.', { customerName: order.customer.name, space: '<br/><br/>'}) : '';
 
