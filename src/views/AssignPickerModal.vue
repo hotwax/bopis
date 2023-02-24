@@ -24,9 +24,9 @@
       <!-- TODO: added click event on the item as when using the ionChange event then it's getting
       called every time the v-for loop runs and then removes or adds the currently rendered picker
       -->
-      <div v-if="!currentPickers.length">{{ 'No picker found' }}</div>
+      <div v-if="!availablePickers.length">{{ 'No picker found' }}</div>
       <div v-else>
-        <ion-item v-for="(picker, index) in currentPickers" :key="index" @click="pickerChanged(picker.id)">
+        <ion-item v-for="(picker, index) in availablePickers" :key="index" @click="pickerChanged(picker.id)">
           <ion-label>{{ picker.name }}</ion-label>
           <ion-checkbox :checked="isPickerSelected(picker.id)"/>
         </ion-item>
@@ -81,7 +81,6 @@ export default defineComponent({
   computed: {
     ...mapGetters({
       pickers: 'picklist/getAvailablePickers',
-      current: 'user/getUserProfile',
       openOrders: 'order/getOpenOrders'
     })
   },
@@ -89,7 +88,7 @@ export default defineComponent({
     return {
       selectedPickers: [],
       queryString: '',
-      currentPickers: []
+      availablePickers: []
     }
   },
   methods: {
@@ -109,7 +108,7 @@ export default defineComponent({
       }
     },
     async searchPicker () {
-      this.currentPickers = []
+      this.availablePickers = []
       this.fetchPickers()
     },
     printPicklist () {
@@ -162,16 +161,12 @@ export default defineComponent({
       }
 
       await this.store.dispatch('picklist/updateAvailablePickers', payload)
-      this.currentPickers = this.pickers
+      this.availablePickers = this.pickers
     }
   },
   async mounted() {
     // getting picker information on initial load
-    await this.fetchPickers()
-    if(this.pickers.length) {
-      // making the current user as a picker by default
-      this.pickerChanged(this.current.partyId)
-    }
+    await this.fetchPickers();
   },
   setup() {
     const store = useStore();
