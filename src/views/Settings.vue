@@ -91,6 +91,21 @@
             <ion-toggle :checked="showShippingOrders" @ionChange="setShowShippingOrdersPreference($event)" slot="end" />
           </ion-item>
         </ion-card>
+
+        <ion-card>
+          <ion-card-header>
+            <ion-card-title>
+              {{ $t("Configure Picker") }}
+            </ion-card-title>
+          </ion-card-header>
+          <ion-card-content>
+            {{ $t('Configuration to assign picker to orders.') }}
+          </ion-card-content>
+          <ion-item lines="none">
+            <ion-label>{{ $t("Configure picker") }}</ion-label>
+            <ion-toggle :checked="configurePicker" @ionChange="setCongigurePickerPreference($event)" slot="end" />
+          </ion-item>
+        </ion-card>
       </section>
 
       <hr />
@@ -185,6 +200,7 @@ export default defineComponent({
       userProfile: 'user/getUserProfile',
       currentFacility: 'user/getCurrentFacility',
       instanceUrl: 'user/getInstanceUrl',
+      configurePicker: "user/configurePicker",
       showShippingOrders: 'user/showShippingOrders',
       showPackingSlip: 'user/showPackingSlip',
       locale: 'user/getLocale'
@@ -216,6 +232,9 @@ export default defineComponent({
     },
     setShowPackingSlipPreference (ev: any){
       this.store.dispatch('user/setUserPreference', { showPackingSlip: ev.detail.checked })
+    },
+    setCongigurePickerPreference (ev: any){
+      this.store.dispatch('user/setUserPreference', { configurePicker: ev.detail.checked })
     },
     goToOms(){
       window.open(this.instanceUrl.startsWith('http') ? this.instanceUrl.replace('api/', "") : `https://${this.instanceUrl}.hotwax.io/`, '_blank', 'noopener, noreferrer');

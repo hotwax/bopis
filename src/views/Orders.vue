@@ -53,7 +53,7 @@
               </ion-button>
             </ion-item>
             <div class="border-top">
-              <ion-button fill="clear" @click.stop="assignPickers()">
+              <ion-button fill="clear" @click.stop="readyForPickup(order, part)">
                 {{ part.shipmentMethodEnum?.shipmentMethodEnumId === 'STOREPICKUP' ? $t("Ready for pickup") : $t("Ready to ship") }}
               </ion-button>
             </div>
@@ -197,7 +197,6 @@ export default defineComponent({
     ProductListItem
   },
   created () {
-    this.store.dispatch('picklist/updateAvailablePickers', {});
     emitter.on("refreshPickupOrders", this.getPickupOrders);
   },
   unmounted () {
@@ -208,6 +207,7 @@ export default defineComponent({
       orders: 'order/getOpenOrders',
       packedOrders: 'order/getPackedOrders',
       completedOrders: 'order/getCompletedOrders',
+      configurePicker: "user/configurePicker",
       currentFacility: 'user/getCurrentFacility',
       isPackedOrdersScrollable: 'order/isPackedOrdersScrollable',
       isOpenOrdersScrollable: 'order/isOpenOrdersScrollable',
@@ -221,9 +221,10 @@ export default defineComponent({
     }
   },
   methods: {
-    async assignPickers() {
+    async assignPickers(order: any) {
       const assignPickerModal = await modalController.create({
-        component: AssignPickerModal
+        component: AssignPickerModal,
+        componentProps: { order }
       });
       return assignPickerModal.present();
     },
@@ -320,8 +321,8 @@ export default defineComponent({
       }
     },
     async readyForPickup (order: any, part: any) {
+      if(this.configurePicker) return this.assignPickers(order);
       const pickup = part.shipmentMethodEnum?.shipmentMethodEnumId === 'STOREPICKUP';
-      if(pickup) await this.assignPickers();
       const header = pickup ? this.$t('Ready for pickup') : this.$t('Ready to ship');
       const message = pickup ? this.$t('An email notification will be sent to that their order is ready for pickup. This order will also be moved to the packed orders tab.', { customerName: order.customer.name, space: '<br/><br/>'}) : '';
 

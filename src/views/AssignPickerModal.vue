@@ -7,7 +7,7 @@
         </ion-button>
       </ion-buttons>
       <ion-title>{{ $t("Assign Pickers") }}</ion-title>
-      <ion-button fill="clear" slot="end" @click="printPicklist()">Print Picklist</ion-button>
+      <ion-button fill="clear" slot="end" @click="readyForPickup()">Ready for pickup</ion-button>
     </ion-toolbar>
   </ion-header>
 
@@ -19,19 +19,30 @@
       </ion-chip>
     </ion-row>
 
-    <ion-list>
+    <div class="ion-text-center ion-margin-top" v-if="!availablePickers.length">{{ 'No picker found' }}</div>
+
+    <ion-list v-else>
       <ion-list-header>{{ $t("Staff") }}</ion-list-header>
       <!-- TODO: added click event on the item as when using the ionChange event then it's getting
       called every time the v-for loop runs and then removes or adds the currently rendered picker
       -->
-      <div v-if="!availablePickers.length">{{ 'No picker found' }}</div>
-      <div v-else>
+      <div>
         <ion-item v-for="(picker, index) in availablePickers" :key="index" @click="pickerChanged(picker.id)">
           <ion-label>{{ picker.name }}</ion-label>
           <ion-checkbox :checked="isPickerSelected(picker.id)"/>
         </ion-item>
       </div>
     </ion-list>
+    <ion-infinite-scroll
+      @ionInfinite="loadMorePickers($event)"
+      threshold="100px"
+      :disabled="!isScrollable"
+    >
+      <ion-infinite-scroll-content
+        loading-spinner="crescent"
+        :loading-text="$t('Loading')"
+      />
+    </ion-infinite-scroll>
   </ion-content>
 </template>
 
@@ -52,12 +63,15 @@ import {
   IonSearchbar,
   IonTitle,
   IonToolbar,
+  IonInfiniteScroll,
+  IonInfiniteScrollContent,
   modalController } from "@ionic/vue";
 import { defineComponent } from "vue";
 import { closeOutline } from "ionicons/icons";
 import { mapGetters, useStore } from "vuex";
-import { showToast } from "@/utils";
+import { hasError, showToast } from "@/utils";
 import { translate } from "@/i18n";
+import { PicklistService } from '@/services/PicklistService'
 
 export default defineComponent({
   name: "AssignPickerModal",
@@ -77,18 +91,21 @@ export default defineComponent({
     IonSearchbar,
     IonTitle,
     IonToolbar,
+    IonInfiniteScroll,
+    IonInfiniteScrollContent
   },
   computed: {
     ...mapGetters({
-      pickers: 'picklist/getAvailablePickers',
       openOrders: 'order/getOpenOrders'
     })
   },
+  props: ['order'],
   data () {
     return {
       selectedPickers: [],
       queryString: '',
-      availablePickers: []
+      availablePickers: [],
+      isScrollable: true
     }
   },
   methods: {
@@ -104,23 +121,33 @@ export default defineComponent({
         // if picker is already selected then removing that picker from the list on click
         this.selectedPickers = this.selectedPickers.filter((picker) => picker.id != id)
       } else {
-        this.selectedPickers.push(this.pickers.find((picker) => picker.id == id))
+        this.selectedPickers.push(this.availablePickers.find((picker) => picker.id == id))
       }
     },
     async searchPicker () {
       this.availablePickers = []
       this.fetchPickers()
     },
-    printPicklist () {
+    readyForPickup () {
       // TODO: update API support to create a picklist
-      const payload = this.openOrders;
+      const payload = this.order;
       if (this.selectedPickers.length) {
         this.store.dispatch('picklist/createPicklist', payload)
       } else {
         showToast(translate('Select a picker'))
       }
     },
-    async fetchPickers() {
+    async loadMorePickers(event) {
+      this.fetchPickers(
+        undefined,
+        Math.ceil(
+          this.availablePickers.length / (process.env.VUE_APP_VIEW_SIZE)
+        ).toString()
+      ).then(() => {
+        event.target.complete();
+      });
+    },
+    async fetchPickers(vSize, vIndex) {
       let inputFields = {}
 
       if(this.queryString.length > 0) {
@@ -151,7 +178,8 @@ export default defineComponent({
           ...inputFields,
           roleTypeIdTo: 'WAREHOUSE_PICKER'
         },
-        viewSize: 50,
+        viewSize: vSize ? vSize : process.env.VUE_APP_VIEW_SIZE,
+        viewIndex: vIndex ? vIndex : 0,
         entityName: 'PartyRelationshipAndDetail',
         noConditionFind: 'Y',
         orderBy: "firstName ASC",
@@ -159,9 +187,27 @@ export default defineComponent({
         distinct: "Y",
         fieldList: ["firstName", "lastName", "partyId"]
       }
-
-      await this.store.dispatch('picklist/updateAvailablePickers', payload)
-      this.availablePickers = this.pickers
+      let resp;
+      let total = 0;
+      
+      try {
+        resp = await PicklistService.getAvailablePickers(payload);
+        if (resp.status === 200 && !hasError(resp) && resp.data.count > 0) {
+          const pickers = resp.data.docs.map((picker) => ({
+            name: picker.firstName+ ' ' +picker.lastName,
+            id: picker.partyId
+          }))
+          this.availablePickers = this.availablePickers.concat(pickers);
+          total = resp.data.count;
+        } else {
+          console.error(translate('Something went wrong'))
+          this.availablePickers = [];
+        }
+      } catch (err) {
+        console.error(translate('Something went wrong'))
+        this.availablePickers = [];
+      }
+      this.isScrollable = this.availablePickers.length < total;
     }
   },
   async mounted() {

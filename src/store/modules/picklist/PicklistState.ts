@@ -1,4 +1,1 @@
-export default interface PicklistState {
-  size: number;
-  availablePickers: object;
-}
+export default interface PicklistState {}

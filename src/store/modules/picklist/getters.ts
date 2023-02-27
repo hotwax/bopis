@@ -2,12 +2,5 @@ import { GetterTree } from "vuex";
 import PicklistState from "./PicklistState";
 import RootState from "../../RootState";
 
-const getters: GetterTree<PicklistState, RootState> = {
-  getPicklistSize (state) {
-    return state.size;
-  },
-  getAvailablePickers (state) {
-    return state.availablePickers;
-  }
-};
+const getters: GetterTree<PicklistState, RootState> = {};
 export default getters;
