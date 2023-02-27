@@ -10,7 +10,7 @@ import { defineComponent } from 'vue';
 import { loadingController } from '@ionic/vue';
 import emitter from "@/event-bus"
 import { mapGetters, useStore } from 'vuex';
-import { init, resetConfig } from '@/adapter'
+import { initialise, resetConfig } from '@/adapter'
 import { useRouter } from 'vue-router';
 
 export default defineComponent({
@@ -58,7 +58,20 @@ export default defineComponent({
     })
   },
   created() {
-    init(this.userToken, this.instanceUrl, this.maxAge)
+    initialise({
+      token: this.userToken,
+      instanceUrl: this.instanceUrl,
+      cacheMaxAge: this.maxAge,
+      events: {
+        unauthorised: this.unauthorized,
+        responseErrror: () => {
+          setTimeout(() => this.dismissLoader(), 100);
+        },
+        queueTask: (payload: any) => {
+          emitter.emit("queueTask", payload);
+        }
+      }
+    })
   },
   async mounted() {
     // creating the loader on mounted as loadingController is taking too much time to create initially
@@ -70,13 +83,11 @@ export default defineComponent({
       });
     emitter.on('presentLoader', this.presentLoader);
     emitter.on('dismissLoader', this.dismissLoader);
-    emitter.on('unauthorized', this.unauthorized);
     this.$i18n.locale = this.locale;
   },
   unmounted() {
     emitter.off('presentLoader', this.presentLoader);
     emitter.off('dismissLoader', this.dismissLoader);
-    emitter.off('unauthorized', this.unauthorized);
     resetConfig()
   },
   setup() {
