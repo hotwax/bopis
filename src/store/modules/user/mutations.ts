@@ -25,6 +25,9 @@ const mutations: MutationTree <UserState> = {
     },
     [types.USER_LOCALE_UPDATED] (state, payload) {
         state.locale = payload;
+    },
+    [types.USER_CURRENCY_UPDATED] (state, payload) {
+        state.currency = payload
     }
 }
 export default mutations;

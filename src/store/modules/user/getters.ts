@@ -30,6 +30,9 @@ const getters: GetterTree <UserState, RootState> = {
     },
     getLocale (state) {
         return state.locale;
+    },
+    getCurrency (state) {
+        return state.currency ? state.currency : 'USD';
     }
 }
 export default getters;

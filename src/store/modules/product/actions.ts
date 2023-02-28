@@ -75,7 +75,7 @@ const actions: ActionTree<ProductState, RootState> = {
         "filters": ['isVirtual: true', 'isVariant: false'],
       })
       // resp.data.response.numFound tells the number of items in the response
-      if (resp.status === 200 && resp.data.response?.numFound > 0 && !hasError(resp)) {
+      if (resp.status === 200 && !hasError(resp) && resp.data.response?.numFound) {
         let products = resp.data.response.docs;
         const total = resp.data.response?.numFound;
         if (payload.viewIndex && payload.viewIndex > 0) products = state.products.list.concat(products)
@@ -96,12 +96,18 @@ const actions: ActionTree<ProductState, RootState> = {
     return resp;
   },
 
-  async getVariants({ dispatch, commit }, payload) {
+  async updateProductsCache({ commit, state }, payload) {
+    // checking if product is in cache
+    const product = state.cached[payload.productId] ? JSON.parse(JSON.stringify(state.cached[payload.productId])) : {};
+    if (!Object.keys(product).length) commit(types.PRODUCT_ADD_TO_CACHED, payload);
+  },
+
+  async setCurrent({ dispatch, commit, state }, payload) {
     if (payload.viewIndex === 0) emitter.emit("presentLoader");
     
     // checking if product is in cache
-    let product = JSON.parse(JSON.stringify(this.getters['product/getProduct'](payload.productId)))
-    if (Object.keys(product).length) return dispatch('updateCurrent', product)
+    let product = state.cached[payload.productId] ? JSON.parse(JSON.stringify(state.cached[payload.productId])) : {}
+    if (Object.keys(product).length && product.variants?.length) return dispatch('updateCurrent', product)
 
     let resp;
     try {
@@ -109,13 +115,13 @@ const actions: ActionTree<ProductState, RootState> = {
         "filters": [`groupId: ${payload.productId}`],
       })
       // resp.data.response.numFound tells the number of items in the response
-      if (resp.status === 200 && resp.data.response?.numFound > 0 && !hasError(resp)) {
-        product = await dispatch('fetchProduct', { productId: payload.productId })
-        product['variants'] = JSON.parse(JSON.stringify(resp.data.response.docs))
-        dispatch('updateCurrent', product)
+      if (resp.status === 200 && !hasError(resp) && resp.data.response?.numFound) {
+        product = !Object.keys(product).length ? await dispatch('fetchProduct', { productId: payload.productId }) : product; 
+        product['variants'] = resp.data.response.docs;
+        dispatch('updateCurrent', product);
         commit(types.PRODUCT_ADD_TO_CACHED, product);
       } else {
-        showToast(translate("Variants not found"));
+        showToast(translate("Products not found"));
       }
       // Remove added loader only when new query and not the infinite scroll
       if (payload.viewIndex === 0) emitter.emit("dismissLoader");

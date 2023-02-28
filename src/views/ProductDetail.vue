@@ -2,7 +2,7 @@
   <ion-page>
     <ion-header>
       <ion-toolbar>
-        <ion-back-button slot="start" defaultHref="/" />
+        <ion-back-button slot="start" default-href="/tabs/catalog" />
         <ion-title>{{ $t("Product details") }}</ion-title>
       </ion-toolbar>
     </ion-header>
@@ -19,7 +19,8 @@
               <p class="overline">{{ currentVariant.brandName }}</p>
               <h1>{{ currentVariant.productName }}</h1>
             </ion-label>
-            <ion-note slot="end">${{ currentVariant.LIST_PRICE_PURCHASE_USD_STORE_GROUP_price }}</ion-note>
+            <!-- Price is given undefined to $n funtction on first render, hence, conditional rendering with empty string -->
+            <ion-note slot="end">{{ currentVariant.LIST_PRICE_PURCHASE_USD_STORE_GROUP_price ? $n(currentVariant.LIST_PRICE_PURCHASE_USD_STORE_GROUP_price, { key: 'currency', currency }) : '' }}</ion-note>
           </ion-item>
 
           <ion-list v-if="selectedColor">
@@ -127,10 +128,11 @@ export default defineComponent({
     ...mapGetters({
       product: "product/getCurrent",
       currentFacility: 'user/getCurrentFacility',
+      currency: 'user/getCurrency'
     })
   },
   async beforeMount() {
-    await this.store.dispatch('product/getVariants', { productId: this.$route.params.productId })
+    await this.store.dispatch('product/setCurrent', { productId: this.$route.params.productId })
     this.getFeatures()
     await this.updateVariant()
   },
@@ -160,21 +162,25 @@ export default defineComponent({
         variant = this.product.variants.find((variant: any) => {
           const hasSize = getFeature(variant.featureHierarchy, '1/SIZE/') === this.selectedSize;
           const hasColor = getFeature(variant.featureHierarchy, '1/COLOR/') === this.selectedColor;
-          if (hasSize && hasColor) return variant;
+          return hasSize && hasColor;
         })
 
+        // if the selected size is not available for that color, default it to the first size available
         if(!variant) {
           this.selectedSize = this.features[this.selectedColor][0];
           variant = this.product.variants.find((variant: any) => getFeature(variant.featureHierarchy, '1/SIZE/') === this.selectedSize)
           showToast(translate("Selected variant not available"));
         }
       }
-      this.currentVariant = variant;
-      this.currentStoreInventory = this.otherStoresInventory = this.warehouseInventory = 0;
-      this.otherStoresInventoryDetails = []
+      
+      // if the variant does not have color or size as features
+      variant ? this.currentVariant = variant : this.currentVariant = this.product.variants[0];
       await this.checkInventory();
     },
     async checkInventory() {
+      this.currentStoreInventory = this.otherStoresInventory = this.warehouseInventory = 0
+      this.otherStoresInventoryDetails = []
+
       try {
         const resp: any = await StockService.checkInventory({
           "filters": { "productId": this.currentVariant.productId },
@@ -183,12 +189,14 @@ export default defineComponent({
 
         if (resp.status === 200 && !hasError(resp) && resp.data.docs.length) {
           resp.data.docs.filter((storeInventory: any) => {
-            if (storeInventory.facilityTypeId === 'WAREHOUSE') this.warehouseInventory = storeInventory.atp
-            if (storeInventory.facilityId === this.currentFacility.facilityId) {
-              this.currentStoreInventory = storeInventory.atp
-            } else {
-              this.otherStoresInventoryDetails.push({ facilityName: storeInventory.facilityName, stock: storeInventory.atp })
-              this.otherStoresInventory += storeInventory.atp
+            if(storeInventory.atp) {
+              if (storeInventory.facilityTypeId === 'WAREHOUSE') this.warehouseInventory = storeInventory.atp
+              if (storeInventory.facilityId === this.currentFacility.facilityId) {
+                this.currentStoreInventory = storeInventory.atp
+              } else {
+                this.otherStoresInventoryDetails.push({ facilityName: storeInventory.facilityName, stock: storeInventory.atp })
+                this.otherStoresInventory += storeInventory.atp
+              }
             }
           })
         } else {
@@ -203,7 +211,7 @@ export default defineComponent({
     async getOtherStoresInventoryDetails() {
       const otherStoresInventoryModal = await modalController.create({
         component: OtherStoresInventoryModal,
-        componentProps: { otherStoresInventoryDetails: this.otherStoresInventoryDetails }
+        componentProps: { otherStoresInventory: this.otherStoresInventoryDetails }
       });
       return otherStoresInventoryModal.present();
     }

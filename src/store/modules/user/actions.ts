@@ -109,11 +109,28 @@ const actions: ActionTree<UserState, RootState> = {
   /**
    * update current facility information
    */
-  async setFacility ({ commit, dispatch }, payload) {
+  async setFacility ({ commit, dispatch, state }, payload) {
     // clearing the orders state whenever changing the facility
     dispatch("order/clearOrders", null, {root: true})
     dispatch("product/clearProducts", null, {root: true})
     commit(types.USER_CURRENT_FACILITY_UPDATED, payload.facility);
+    try {
+      const resp = await UserService.getEComStores({
+        "inputFields": {
+          "facilityId": (state.currentFacility as any).facilityId,
+        },
+        "fieldList": ["defaultCurrencyUomId"],
+        "entityName": "ProductStoreFacilityDetail",
+        "noConditionFind": "Y",
+      });
+      if (resp.status == 200 && !hasError(resp) && resp.data.docs?.length) {
+        commit(types.USER_CURRENCY_UPDATED, resp.data.docs[0].defaultCurrencyUomId)
+      }
+    } catch (err) {
+      console.error(err)
+    }
+    commit(types.USER_CURRENCY_UPDATED, )
+    
   },
   /**
    * Set User Instance Url

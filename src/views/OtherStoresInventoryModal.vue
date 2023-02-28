@@ -10,8 +10,8 @@
     </ion-toolbar>
   </ion-header>
   <ion-content class="ion-padding">
-    <ion-list v-if="otherStoresInventoryDetails.length">
-      <ion-item v-for="details in otherStoresInventoryDetails" :key="details.facilityName">
+    <ion-list v-if="otherStoresInventory.length">
+      <ion-item v-for="details in otherStoresInventory" :key="details.facilityName">
         <ion-label class="ion-text-wrap">{{ details.facilityName }}</ion-label>
         <ion-note slot="end">{{ details.stock }}</ion-note>
       </ion-item>
@@ -55,7 +55,7 @@ export default defineComponent({
     IonTitle,
     IonToolbar 
   },
-  props: ["otherStoresInventoryDetails"],
+  props: ["otherStoresInventory"],
   methods: {
     closeModal() {
       modalController.dismiss({ dismissed: true });

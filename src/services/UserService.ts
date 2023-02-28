@@ -60,6 +60,14 @@ const setUserPreference = async (payload: any): Promise<any> => {
   });
 }
 
+const getEComStores = async (payload: any): Promise<any> => {
+  return api({
+    url: "performFind",
+    method: "post",
+    data: payload
+  });
+}
+
 export const UserService = {
     login,
     getAvailableTimeZones,
@@ -67,5 +75,6 @@ export const UserService = {
     setUserTimeZone,
     getUserPreference,
     setUserPreference,
-    checkPermission
+    checkPermission,
+    getEComStores
 }
