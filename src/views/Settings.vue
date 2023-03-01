@@ -92,20 +92,6 @@
           </ion-item>
         </ion-card>
 
-        <ion-card>
-          <ion-card-header>
-            <ion-card-title>
-              {{ $t("Configure Picker") }}
-            </ion-card-title>
-          </ion-card-header>
-          <ion-card-content>
-            {{ $t('Configuration to assign picker to orders.') }}
-          </ion-card-content>
-          <ion-item lines="none">
-            <ion-label>{{ $t("Configure Picker") }}</ion-label>
-            <ion-toggle :checked="configurePicker" @ionChange="setCongigurePickerPreference($event)" slot="end" />
-          </ion-item>
-        </ion-card>
       </section>
 
       <hr />
@@ -147,6 +133,21 @@
             <ion-select interface="popover" :value="locale" @ionChange="setLocale($event.detail.value)">
               <ion-select-option v-for="locale in Object.keys(locales)" :key="locale" :value="locale" >{{ locales[locale] }}</ion-select-option>
             </ion-select>
+          </ion-item>
+        </ion-card>
+
+        <ion-card>
+          <ion-card-header>
+            <ion-card-title>
+              {{ $t("Configure Picker") }}
+            </ion-card-title>
+          </ion-card-header>
+          <ion-card-content>
+            {{ $t('Configuration to assign picker to orders.') }}
+          </ion-card-content>
+          <ion-item lines="none">
+            <ion-label>{{ $t("Configure Picker") }}</ion-label>
+            <ion-toggle :checked="configurePicker" @ionChange="setCongigurePickerPreference($event)" slot="end" />
           </ion-item>
         </ion-card>
       </section>
