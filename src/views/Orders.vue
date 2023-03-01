@@ -222,7 +222,7 @@ export default defineComponent({
     }
   },
   methods: {
-    async assignPickers(order: any) {
+    async assignPicker(order: any) {
       const assignPickerModal = await modalController.create({
         component: AssignPickerModal,
         componentProps: { order }
@@ -322,7 +322,7 @@ export default defineComponent({
       }
     },
     async readyForPickup (order: any, part: any) {
-      if(this.configurePicker) return this.assignPickers(order);
+      if(this.configurePicker) return this.assignPicker(order);
       const pickup = part.shipmentMethodEnum?.shipmentMethodEnumId === 'STOREPICKUP';
       const header = pickup ? this.$t('Ready for pickup') : this.$t('Ready to ship');
       const message = pickup ? this.$t('An email notification will be sent to that their order is ready for pickup. This order will also be moved to the packed orders tab.', { customerName: order.customer.name, space: '<br/><br/>'}) : '';
