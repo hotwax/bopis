@@ -88,7 +88,7 @@
           </ion-card-content>
           <ion-item lines="none">
             <ion-label>{{ $t("Generate packing slips") }}</ion-label>
-            <ion-toggle :checked="showShippingOrders" @ionChange="setShowShippingOrdersPreference($event)" slot="end" />
+            <ion-toggle :checked="showPackingSlip" @ionChange="setShowPackingSlipPreference($event)" slot="end" />
           </ion-item>
         </ion-card>
       </section>
