@@ -91,7 +91,6 @@
             <ion-toggle :checked="showShippingOrders" @ionChange="setShowShippingOrdersPreference($event)" slot="end" />
           </ion-item>
         </ion-card>
-
       </section>
 
       <hr />
