@@ -19,7 +19,7 @@
     <ion-list v-else>
       <ion-list-header>{{ $t("Staff") }}</ion-list-header>
       <div>
-        <ion-radio-group :value="selectedPicker">
+        <ion-radio-group v-model="selectedPicker">
           <ion-item v-for="(picker, index) in availablePickers" :key="index">
             <ion-label>{{ picker.name }}</ion-label>
             <ion-radio slot="end" :value="picker.id" ></ion-radio>
@@ -94,7 +94,7 @@ export default defineComponent({
   props: ['order'],
   data () {
     return {
-      selectedPicker: "",
+      selectedPicker: '',
       queryString: '',
       availablePickers: [],
       isScrollable: true
@@ -109,7 +109,7 @@ export default defineComponent({
       this.fetchPickers()
     },
     readyForPickup () {
-      if (!this.selectedPicker) {
+      if (this.selectedPicker.length) {
         this.store.dispatch('picklist/createPicklist', { order: this.order, selectedPicker: this.selectedPicker })
         modalController.dismiss({ dismissed: true });
       } else {
