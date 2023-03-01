@@ -48,18 +48,24 @@ const actions: ActionTree<OrderState , RootState> ={
                     shipmentMethodEnumDesc: item.shipmentMethodTypeDesc
                   },
                   items: [{
+                    shipGroupSeqId: item.shipGroupSeqId,
+                    orderId: orderItem.orderId,
                     orderItemSeqId: item.orderItemSeqId,
                     productId: item.productId,
                     facilityId: item.facilityId,
-                    quantity: item.itemQuantity
+                    quantity: item.itemQuantity,
+                    inventoryItemId: item.inventoryItemId
                   }]
                 })
               } else {
                 currentOrderPart.items.push({
+                  shipGroupSeqId: item.shipGroupSeqId,
+                  orderId: orderItem.orderId,
                   orderItemSeqId: item.orderItemSeqId,
                   productId: item.productId,
                   facilityId: item.facilityId,
-                  quantity: item.itemQuantity
+                  quantity: item.itemQuantity,
+                  inventoryItemId: item.inventoryItemId
                 })
               }
 

@@ -102,7 +102,7 @@
             {{ $t('Configuration to assign picker to orders.') }}
           </ion-card-content>
           <ion-item lines="none">
-            <ion-label>{{ $t("Configure picker") }}</ion-label>
+            <ion-label>{{ $t("Configure Picker") }}</ion-label>
             <ion-toggle :checked="configurePicker" @ionChange="setCongigurePickerPreference($event)" slot="end" />
           </ion-item>
         </ion-card>

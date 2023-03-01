@@ -13,24 +13,18 @@
 
   <ion-content>
     <ion-searchbar v-model="queryString" @keyup.enter="queryString = $event.target.value; searchPicker()"/>
-    <ion-row v-if="selectedPickers.length">
-      <ion-chip v-for="picker in selectedPickers" :key="picker.id">
-        <ion-label>{{ picker.name }}</ion-label>
-      </ion-chip>
-    </ion-row>
 
     <div class="ion-text-center ion-margin-top" v-if="!availablePickers.length">{{ 'No picker found' }}</div>
 
     <ion-list v-else>
       <ion-list-header>{{ $t("Staff") }}</ion-list-header>
-      <!-- TODO: added click event on the item as when using the ionChange event then it's getting
-      called every time the v-for loop runs and then removes or adds the currently rendered picker
-      -->
       <div>
-        <ion-item v-for="(picker, index) in availablePickers" :key="index" @click="pickerChanged(picker.id)">
-          <ion-label>{{ picker.name }}</ion-label>
-          <ion-checkbox :checked="isPickerSelected(picker.id)"/>
-        </ion-item>
+        <ion-radio-group :value="selectedPicker">
+          <ion-item v-for="(picker, index) in availablePickers" :key="index">
+            <ion-label>{{ picker.name }}</ion-label>
+            <ion-radio slot="end" :value="picker.id" ></ion-radio>
+          </ion-item>
+        </ion-radio-group>
       </div>
     </ion-list>
     <ion-infinite-scroll
@@ -50,8 +44,6 @@
 import { 
   IonButtons,
   IonButton,
-  IonCheckbox,
-  IonChip,
   IonContent,
   IonHeader,
   IonIcon,
@@ -59,7 +51,8 @@ import {
   IonLabel,
   IonList,
   IonListHeader,
-  IonRow,
+  IonRadio,
+  IonRadioGroup,
   IonSearchbar,
   IonTitle,
   IonToolbar,
@@ -78,8 +71,6 @@ export default defineComponent({
   components: { 
     IonButtons,
     IonButton,
-    IonCheckbox,
-    IonChip,
     IonContent,
     IonHeader,
     IonIcon,
@@ -87,7 +78,8 @@ export default defineComponent({
     IonLabel,
     IonList,
     IonListHeader,
-    IonRow,
+    IonRadio,
+    IonRadioGroup,
     IonSearchbar,
     IonTitle,
     IonToolbar,
@@ -102,37 +94,24 @@ export default defineComponent({
   props: ['order'],
   data () {
     return {
-      selectedPickers: [],
+      selectedPicker: "",
       queryString: '',
       availablePickers: [],
       isScrollable: true
     }
   },
   methods: {
-    isPickerSelected(id) {
-      return this.selectedPickers.some((picker) => picker.id == id)
-    },
     closeModal() {
       modalController.dismiss({ dismissed: true });
-    },
-    pickerChanged(id) {
-      const picker = this.selectedPickers.some((picker) => picker.id == id)
-      if (picker) {
-        // if picker is already selected then removing that picker from the list on click
-        this.selectedPickers = this.selectedPickers.filter((picker) => picker.id != id)
-      } else {
-        this.selectedPickers.push(this.availablePickers.find((picker) => picker.id == id))
-      }
     },
     async searchPicker () {
       this.availablePickers = []
       this.fetchPickers()
     },
     readyForPickup () {
-      // TODO: update API support to create a picklist
-      const payload = this.order;
-      if (this.selectedPickers.length) {
-        this.store.dispatch('picklist/createPicklist', payload)
+      if (!this.selectedPicker) {
+        this.store.dispatch('picklist/createPicklist', { order: this.order, selectedPicker: this.selectedPicker })
+        modalController.dismiss({ dismissed: true });
       } else {
         showToast(translate('Select a picker'))
       }

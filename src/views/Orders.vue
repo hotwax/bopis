@@ -21,6 +21,7 @@
       </div>    
     </ion-header>
     <ion-content>
+
       <div v-if="segmentSelected === 'open'">
         <div v-for="order in orders" :key="order.orderId" v-show="order.parts.length > 0">
           <ion-card v-for="(part, index) in order.parts" :key="index" @click.prevent="viewOrder(order, part)">
