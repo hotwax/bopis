@@ -82,7 +82,7 @@ const actions: ActionTree<UserState, RootState> = {
   /**
    * Get User profile
    */
-  async getProfile ( { commit }) {
+  async getProfile ( { commit, state }) {
     const resp = await UserService.getProfile()
     if (resp.status === 200) {
       if (resp.data.userTimeZone) {
@@ -102,6 +102,8 @@ const actions: ActionTree<UserState, RootState> = {
       }
       commit(types.USER_INFO_UPDATED, resp.data);
       commit(types.USER_CURRENT_FACILITY_UPDATED, resp.data.facilities.length > 0 ? resp.data.facilities[0] : {});
+      const eComStore = await UserService.getEComStores((state.currentFacility as any).facilityId);
+      commit(types.USER_CURRENT_ECOM_STORE_UPDATED, eComStore)
     }
     return resp;
   },
@@ -109,11 +111,13 @@ const actions: ActionTree<UserState, RootState> = {
   /**
    * update current facility information
    */
-  async setFacility ({ commit, dispatch }, payload) {
+  async setFacility ({ commit, dispatch, state }, payload) {
     // clearing the orders state whenever changing the facility
     dispatch("order/clearOrders", null, {root: true})
     dispatch("product/clearProducts", null, {root: true})
     commit(types.USER_CURRENT_FACILITY_UPDATED, payload.facility);
+    const eComStore = await UserService.getEComStores((state.currentFacility as any).facilityId);
+    commit(types.USER_CURRENT_ECOM_STORE_UPDATED, eComStore)
   },
   /**
    * Set User Instance Url

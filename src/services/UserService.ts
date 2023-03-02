@@ -60,6 +60,29 @@ const setUserPreference = async (payload: any): Promise<any> => {
   });
 }
 
+const getEComStores = async (facilityId: string): Promise<any> => {
+  try {
+    const payload = {
+      "inputFields": {
+        "facilityId": facilityId,
+      },
+      "fieldList": ["defaultCurrencyUomId", "productStoreId"],
+      "entityName": "ProductStoreFacilityDetail",
+      "noConditionFind": "Y",
+    }
+    
+    const resp = await api({
+      url: "performFind",
+      method: "post",
+      data: payload
+    });
+    
+    return resp.data.docs?.length ? resp.data.docs[0] : {};
+  } catch (err) {
+    console.error(err)
+  }
+}
+
 export const UserService = {
     login,
     getAvailableTimeZones,
@@ -67,5 +90,6 @@ export const UserService = {
     setUserTimeZone,
     getUserPreference,
     setUserPreference,
-    checkPermission
+    checkPermission,
+    getEComStores
 }
