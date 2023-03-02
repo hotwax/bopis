@@ -26,8 +26,8 @@ const mutations: MutationTree <UserState> = {
     [types.USER_LOCALE_UPDATED] (state, payload) {
         state.locale = payload;
     },
-    [types.USER_CURRENCY_UPDATED] (state, payload) {
-        state.currency = payload
+    [types.USER_CURRENT_ECOM_STORE_UPDATED] (state, payload) {
+        state.currentEComStore = payload
     }
 }
 export default mutations;

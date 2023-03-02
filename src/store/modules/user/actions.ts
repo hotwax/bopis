@@ -82,7 +82,7 @@ const actions: ActionTree<UserState, RootState> = {
   /**
    * Get User profile
    */
-  async getProfile ( { commit }) {
+  async getProfile ( { commit, state }) {
     const resp = await UserService.getProfile()
     if (resp.status === 200) {
       if (resp.data.userTimeZone) {
@@ -102,6 +102,8 @@ const actions: ActionTree<UserState, RootState> = {
       }
       commit(types.USER_INFO_UPDATED, resp.data);
       commit(types.USER_CURRENT_FACILITY_UPDATED, resp.data.facilities.length > 0 ? resp.data.facilities[0] : {});
+      const eComStore = await UserService.getEComStores((state.currentFacility as any).facilityId);
+      commit(types.USER_CURRENT_ECOM_STORE_UPDATED, eComStore)
     }
     return resp;
   },
@@ -114,23 +116,8 @@ const actions: ActionTree<UserState, RootState> = {
     dispatch("order/clearOrders", null, {root: true})
     dispatch("product/clearProducts", null, {root: true})
     commit(types.USER_CURRENT_FACILITY_UPDATED, payload.facility);
-    try {
-      const resp = await UserService.getEComStores({
-        "inputFields": {
-          "facilityId": (state.currentFacility as any).facilityId,
-        },
-        "fieldList": ["defaultCurrencyUomId"],
-        "entityName": "ProductStoreFacilityDetail",
-        "noConditionFind": "Y",
-      });
-      if (resp.status == 200 && !hasError(resp) && resp.data.docs?.length) {
-        commit(types.USER_CURRENCY_UPDATED, resp.data.docs[0].defaultCurrencyUomId)
-      }
-    } catch (err) {
-      console.error(err)
-    }
-    commit(types.USER_CURRENCY_UPDATED, )
-    
+    const eComStore = await UserService.getEComStores((state.currentFacility as any).facilityId);
+    commit(types.USER_CURRENT_ECOM_STORE_UPDATED, eComStore)
   },
   /**
    * Set User Instance Url

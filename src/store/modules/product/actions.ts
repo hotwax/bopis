@@ -42,26 +42,6 @@ const actions: ActionTree<ProductState, RootState> = {
     return resp;
   },
 
-  async fetchProduct ({ commit }, { productId }) {
-    try {
-      const resp = await ProductService.fetchProducts({
-        "filters": ['productId: ' + productId]
-      })
-      if (resp.status === 200 && !hasError(resp)) {
-        const product = resp.data.response.docs[0];
-        if (resp.data) commit(types.PRODUCT_ADD_TO_CACHED, product);
-        return product;
-      }
-    } catch (error) {
-      console.error(error)
-      showToast(translate("Something went wrong"));
-    }
-  },
-
-  async updateCurrent({ commit }, product) {
-    commit(types.PRODUCT_CURRENT_UPDATED, product)
-  },
-
   async findProduct ({ commit, state }, payload) {
     // Show loader only when new query and not the infinite scroll
     if (payload.viewIndex === 0) emitter.emit("presentLoader");
@@ -96,7 +76,7 @@ const actions: ActionTree<ProductState, RootState> = {
     return resp;
   },
 
-  async updateProductsCache({ commit, state }, payload) {
+  async addProductToCache({ commit, state }, payload) {
     // checking if product is in cache
     const product = state.cached[payload.productId] ? JSON.parse(JSON.stringify(state.cached[payload.productId])) : {};
     if (!Object.keys(product).length) commit(types.PRODUCT_ADD_TO_CACHED, payload);
@@ -107,18 +87,26 @@ const actions: ActionTree<ProductState, RootState> = {
     
     // checking if product is in cache
     let product = state.cached[payload.productId] ? JSON.parse(JSON.stringify(state.cached[payload.productId])) : {}
-    if (Object.keys(product).length && product.variants?.length) return dispatch('updateCurrent', product)
+    const isProductCached = Object.keys(product).length;
+    if (isProductCached && product.variants?.length) return commit(types.PRODUCT_CURRENT_UPDATED, product)
 
     let resp;
+    let productFilterCondition: any = `groupId: ${payload.productId}`;
+    if (!isProductCached) productFilterCondition = `${productFilterCondition} OR productId: ${payload.productId}`;
     try {
       resp = await ProductService.findProducts({
-        "filters": [`groupId: ${payload.productId}`],
+        "filters": [productFilterCondition],
+        "viewSize": 50,
       })
       // resp.data.response.numFound tells the number of items in the response
       if (resp.status === 200 && !hasError(resp) && resp.data.response?.numFound) {
-        product = !Object.keys(product).length ? await dispatch('fetchProduct', { productId: payload.productId }) : product; 
-        product['variants'] = resp.data.response.docs;
-        dispatch('updateCurrent', product);
+        let variants = resp.data.response.docs;
+        if(!isProductCached) {
+          product = resp.data.response.docs.find((product: any) => product.productId === payload.productId);
+          variants = resp.data.response.docs.filter((product: any) => product.productId !== payload.productId);
+        }
+        product['variants'] = variants;
+        commit(types.PRODUCT_CURRENT_UPDATED, product)
         commit(types.PRODUCT_ADD_TO_CACHED, product);
       } else {
         showToast(translate("Products not found"));
