@@ -176,7 +176,6 @@ export default defineComponent({
             name: picker.firstName+ ' ' +picker.lastName,
             id: picker.partyId
           }))
-          if(this.queryString && vIndex === 0) this.availablePickers = pickers;
           this.availablePickers = this.availablePickers.concat(pickers);
           total = resp.data.count;
         } else {
