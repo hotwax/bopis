@@ -104,7 +104,7 @@ export default defineComponent({
       this.getPicker()
     },
     readyForPickup () {
-      if (this.selectedPicker.length) {
+      if (this.selectedPicker) {
         this.store.dispatch('order/packShipGroupItems', { order: this.order, part: this.part, facilityId: this.facilityId, selectedPicker: this.selectedPicker })
         modalController.dismiss({ dismissed: true });
       } else {
