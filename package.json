@@ -2,7 +2,7 @@
   "name": "bopis",
   "version": "2.3.0",
   "private": true,
-  "description": "HotWax Bopis app",
+  "description": "HotWax BOPIS app",
   "scripts": {
     "serve": "vue-cli-service serve",
     "build": "vue-cli-service build",
