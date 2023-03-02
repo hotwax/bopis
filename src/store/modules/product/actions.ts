@@ -65,13 +65,13 @@ const actions: ActionTree<ProductState, RootState> = {
         commit(types.PRODUCT_LIST_UPDATED, { products: [], total: 0 })
         showToast(translate("Products not found"));
       }
-      // Remove added loader only when new query and not the infinite scroll
-      if (payload.viewIndex === 0) emitter.emit("dismissLoader");
     } catch(error){
       console.error(error)
       commit(types.PRODUCT_LIST_UPDATED, { products: [], total: 0 })
       showToast(translate("Something went wrong"));
     }
+    // Remove added loader only when new query and not the infinite scroll
+    if (payload.viewIndex === 0) emitter.emit("dismissLoader");
     // TODO Handle specific error
     return resp;
   },
@@ -85,7 +85,7 @@ const actions: ActionTree<ProductState, RootState> = {
     if (!state.cached[payload.productId]) commit(types.PRODUCT_ADD_TO_CACHED, payload);
   },
 
-  async setCurrent({ dispatch, commit, state }, payload) {
+  async setCurrent({ commit, state }, payload) {
     if (payload.viewIndex === 0) emitter.emit("presentLoader");
     
     // checking if product is in cache
@@ -114,12 +114,12 @@ const actions: ActionTree<ProductState, RootState> = {
       } else {
         showToast(translate("Product not found"));
       }
-      // Remove added loader only when new query and not the infinite scroll
-      if (payload.viewIndex === 0) emitter.emit("dismissLoader");
     } catch(error){
       console.error(error)
       showToast(translate("Something went wrong"));
     }
+    // Remove added loader only when new query and not the infinite scroll
+    if (payload.viewIndex === 0) emitter.emit("dismissLoader");
     // TODO Handle specific error
     return resp;
   },
