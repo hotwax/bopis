@@ -1,5 +1,4 @@
-import { api, client } from '@/adapter';
-import store from '@/store';
+import { api } from '@/adapter';
 
 const getAvailablePickers = async (query: any): Promise <any> => {
   return api({
@@ -10,19 +9,8 @@ const getAvailablePickers = async (query: any): Promise <any> => {
   })
 }
 
-const createPicklist = async (query: any): Promise <any> => {
-  let baseURL = store.getters['user/getInstanceUrl'];
-  baseURL = baseURL && baseURL.startsWith('http') ? baseURL : `https://${baseURL}.hotwax.io/api/`;
-  return client({
-    url: 'createPicklist',
-    method: 'POST',
-    data: query,
-    baseURL,
-    headers: { "Content-Type": "multipart/form-data" },
-  })
-}
+
 
 export const PicklistService = {
-  createPicklist,
   getAvailablePickers
 }

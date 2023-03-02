@@ -8,7 +8,6 @@ import { translate } from "@/i18n";
 import emitter from '@/event-bus'
 import store from "@/store";
 import { prepareOrderQuery } from "@/utils/solrHelper";
-import { PicklistService } from "@/services/PicklistService";
 
 const actions: ActionTree<OrderState , RootState> ={
   async getOpenOrders({ commit, state }, payload) {
@@ -389,7 +388,7 @@ const actions: ActionTree<OrderState , RootState> ={
       });
       
       try {
-        resp = await PicklistService.createPicklist(formData);
+        resp = await OrderService.createPicklist(formData);
         if (resp.status === 200 && !hasError(resp) && resp.data) {
           if(!(resp.data.picklistId && resp.data.picklistBinId)) {
             showToast(translate('Something went wrong. Picklist can not be created.'));
