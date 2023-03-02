@@ -77,9 +77,12 @@ const actions: ActionTree<ProductState, RootState> = {
   },
 
   async addProductToCache({ commit, state }, payload) {
-    // checking if product is in cache
-    const product = state.cached[payload.productId] ? JSON.parse(JSON.stringify(state.cached[payload.productId])) : {};
-    if (!Object.keys(product).length) commit(types.PRODUCT_ADD_TO_CACHED, payload);
+    // checking if product is already in cache
+    // We are using this action to set the virtual product before visiting the pdp page.
+    // Caching the virtual product may reduce the API load.
+    // Considering the case that when the virtual product page is visited, it already had variants with it
+    // It would futile to again set the virtual product payload that doesn't have variants in it
+    if (!state.cached[payload.productId]) commit(types.PRODUCT_ADD_TO_CACHED, payload);
   },
 
   async setCurrent({ dispatch, commit, state }, payload) {
@@ -109,7 +112,7 @@ const actions: ActionTree<ProductState, RootState> = {
         commit(types.PRODUCT_CURRENT_UPDATED, product)
         commit(types.PRODUCT_ADD_TO_CACHED, product);
       } else {
-        showToast(translate("Products not found"));
+        showToast(translate("Product not found"));
       }
       // Remove added loader only when new query and not the infinite scroll
       if (payload.viewIndex === 0) emitter.emit("dismissLoader");

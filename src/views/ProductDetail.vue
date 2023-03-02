@@ -8,7 +8,7 @@
     </ion-header>
 
     <ion-content>
-      <main>
+      <main v-if="Object.keys(product).length > 0">
         <section class="product-image">
           <Image :src="currentVariant.mainImageUrl"/>
         </section>
@@ -133,8 +133,10 @@ export default defineComponent({
   },
   async beforeMount() {
     await this.store.dispatch('product/setCurrent', { productId: this.$route.params.productId })
-    this.getFeatures()
-    await this.updateVariant()
+    if (this.product.variants) {
+      this.getFeatures()
+      await this.updateVariant()
+    }
   },
   methods: {
     async applyFeature(feature: string, type: string) {
@@ -183,14 +185,23 @@ export default defineComponent({
 
       try {
         const resp: any = await StockService.checkInventory({
-          "filters": { "productId": this.currentVariant.productId },
+          "filters": { 
+            "productId": this.currentVariant.productId,
+            "facilityTypeId_fld0_value": 'WAREHOUSE',
+            "facilityTypeId_fld0_op": 'equals',
+            "facilityTypeId_fld0_grp": '1',
+            "facilityTypeId_fld1_value": 'RETAIL_STORE',
+            "facilityTypeId_fld1_op": 'equals',
+            "facilityTypeId_fld1_grp": '2'
+          },
           "fieldsToSelect": ["productId", "atp", "facilityName", "facilityId", "facilityTypeId"],
         });
 
         if (resp.status === 200 && !hasError(resp) && resp.data.docs.length) {
-          resp.data.docs.filter((storeInventory: any) => {
+          resp.data.docs.map((storeInventory: any) => {
             if(storeInventory.atp) {
-              if (storeInventory.facilityTypeId === 'WAREHOUSE') this.warehouseInventory = storeInventory.atp
+              // Considering that we will always have store representative login into app, not the warehouse representative
+              if (storeInventory.facilityTypeId === 'WAREHOUSE') this.warehouseInventory += storeInventory.atp
               if (storeInventory.facilityId === this.currentFacility.facilityId) {
                 this.currentStoreInventory = storeInventory.atp
               } else {
@@ -199,9 +210,6 @@ export default defineComponent({
               }
             }
           })
-        } else {
-          this.currentStoreInventory = this.otherStoresInventory = this.warehouseInventory = 0
-          this.otherStoresInventoryDetails = []
         }
       } catch (error) {
         console.error(error)

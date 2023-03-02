@@ -14,8 +14,8 @@
               <Image :src="userProfile.partyImageUrl"/>
             </ion-avatar>
             <ion-card-header>
-              <ion-card-subtitle>{{ userProfile.userLoginId }}</ion-card-subtitle>
-              <ion-card-title>{{ userProfile.partyName }}</ion-card-title>
+              <ion-card-subtitle>{{ userProfile?.userLoginId }}</ion-card-subtitle>
+              <ion-card-title>{{ userProfile?.partyName }}</ion-card-title>
             </ion-card-header>
           </ion-item>
           <ion-button fill="outline" color="danger" @click="logout()">{{ $t("Logout") }}</ion-button>
