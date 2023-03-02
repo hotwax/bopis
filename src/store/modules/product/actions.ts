@@ -86,13 +86,13 @@ const actions: ActionTree<ProductState, RootState> = {
   },
 
   async setCurrent({ commit, state }, payload) {
-    if (payload.viewIndex === 0) emitter.emit("presentLoader");
     
     // checking if product is in cache
     let product = state.cached[payload.productId] ? JSON.parse(JSON.stringify(state.cached[payload.productId])) : {}
     const isProductCached = Object.keys(product).length;
     if (isProductCached && product.variants?.length) return commit(types.PRODUCT_CURRENT_UPDATED, product)
 
+    emitter.emit("presentLoader");
     let resp;
     let productFilterCondition: any = `groupId: ${payload.productId}`;
     if (!isProductCached) productFilterCondition = `${productFilterCondition} OR productId: ${payload.productId}`;
@@ -118,8 +118,7 @@ const actions: ActionTree<ProductState, RootState> = {
       console.error(error)
       showToast(translate("Something went wrong"));
     }
-    // Remove added loader only when new query and not the infinite scroll
-    if (payload.viewIndex === 0) emitter.emit("dismissLoader");
+    emitter.emit("dismissLoader");
     // TODO Handle specific error
     return resp;
   },
