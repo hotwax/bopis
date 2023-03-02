@@ -200,11 +200,12 @@ export default defineComponent({
         if (resp.status === 200 && !hasError(resp) && resp.data.docs.length) {
           resp.data.docs.map((storeInventory: any) => {
             if(storeInventory.atp) {
-              // Considering that we will always have store representative login into app, not the warehouse representative
-              if (storeInventory.facilityTypeId === 'WAREHOUSE') this.warehouseInventory += storeInventory.atp
-              if (storeInventory.facilityId === this.currentFacility.facilityId) {
-                this.currentStoreInventory = storeInventory.atp
-              } else {
+              const isCurrentStore = storeInventory.facilityId === this.currentFacility.facilityId;
+              if (isCurrentStore) this.currentStoreInventory = storeInventory.atp;
+              if (storeInventory.facilityTypeId === 'WAREHOUSE') {
+                this.warehouseInventory += storeInventory.atp
+              } else if (!isCurrentStore) {
+                // Only add to list if it is not a current store
                 this.otherStoresInventoryDetails.push({ facilityName: storeInventory.facilityName, stock: storeInventory.atp })
                 this.otherStoresInventory += storeInventory.atp
               }
