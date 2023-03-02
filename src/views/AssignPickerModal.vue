@@ -7,7 +7,7 @@
         </ion-button>
       </ion-buttons>
       <ion-title>{{ $t("Assign Pickers") }}</ion-title>
-      <ion-button fill="clear" slot="end" @click="readyForPickup()">{{ order.parts[0].shipmentMethodEnum?.shipmentMethodEnumId === 'STOREPICKUP' ? $t("Ready for pickup") : $t("Ready to ship") }}</ion-button>
+      <ion-button fill="clear" slot="end" @click="readyForPickup()">{{ part.shipmentMethodEnum?.shipmentMethodEnumId === 'STOREPICKUP' ? $t("Ready for pickup") : $t("Ready to ship") }}</ion-button>
     </ion-toolbar>
   </ion-header>
 
@@ -86,7 +86,7 @@ export default defineComponent({
     IonInfiniteScroll,
     IonInfiniteScrollContent
   },
-  props: ['order'],
+  props: ['order', 'part', 'facilityId'],
   data () {
     return {
       selectedPicker: '',
@@ -105,7 +105,7 @@ export default defineComponent({
     },
     readyForPickup () {
       if (this.selectedPicker.length) {
-        this.store.dispatch('order/packShipGroupItems', { order: this.order, part: this.order.parts[0], facilityId: this.order.parts[0].items[0].facilityId, selectedPicker: this.selectedPicker })
+        this.store.dispatch('order/packShipGroupItems', { order: this.order, part: this.part, facilityId: this.facilityId, selectedPicker: this.selectedPicker })
         modalController.dismiss({ dismissed: true });
       } else {
         showToast(translate('Select a picker'))
