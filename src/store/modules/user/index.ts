@@ -17,7 +17,7 @@ const userModule: Module<UserState, RootState> = {
         showPackingSlip: false
       },
       locale: 'en',
-      currency: ''
+      currentEComStore: {},
     },
     getters,
     actions,

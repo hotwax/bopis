@@ -5,5 +5,5 @@ export default interface UserState {
     instanceUrl: string;
     preference: any;
     locale: string;
-    currency: string;
+    currentEComStore: any;
 }

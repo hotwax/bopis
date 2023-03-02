@@ -20,7 +20,7 @@
               <h1>{{ currentVariant.productName }}</h1>
             </ion-label>
             <!-- Price is given undefined to $n funtction on first render, hence, conditional rendering with empty string -->
-            <ion-note slot="end">{{ currentVariant.LIST_PRICE_PURCHASE_USD_STORE_GROUP_price ? $n(currentVariant.LIST_PRICE_PURCHASE_USD_STORE_GROUP_price, { key: 'currency', currency }) : '' }}</ion-note>
+            <ion-note slot="end">{{ currentVariant.LIST_PRICE_PURCHASE_USD_STORE_GROUP_price ? $n(currentVariant.LIST_PRICE_PURCHASE_USD_STORE_GROUP_price, 'currency', currency ) : '' }}</ion-note>
           </ion-item>
 
           <ion-list v-if="selectedColor">
@@ -174,7 +174,7 @@ export default defineComponent({
       }
       
       // if the variant does not have color or size as features
-      variant ? this.currentVariant = variant : this.currentVariant = this.product.variants[0];
+      this.currentVariant = variant || this.product.variants[0];
       await this.checkInventory();
     },
     async checkInventory() {
@@ -205,7 +205,7 @@ export default defineComponent({
         }
       } catch (error) {
         console.error(error)
-        showToast(translate("Something went wrong"));
+        showToast(translate("Something went wrong while fetching inventory"));
       }
     },
     async getOtherStoresInventoryDetails() {

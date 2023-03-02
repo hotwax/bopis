@@ -85,6 +85,7 @@
   "Size": "Size",
   "Sizes": "Sizes",
   "Something went wrong": "Something went wrong",
+  "Something went wrong while fetching inventory": "Something went wrong while fetching inventory",
   "Specify which facility you want to operate from. Order, inventory and other configuration data will be specific to the facility you select.": "Specify which facility you want to operate from. Order, inventory and other configuration data will be specific to the facility you select.",
   "State": "State",
   "Street": "Street",
