@@ -51,10 +51,11 @@ const actions: ActionTree<ProductState, RootState> = {
         // used sku as we are currently only using sku to search for the product
         "viewSize": payload.viewSize,
         "viewIndex": payload.viewIndex,
-        "keyword": payload.queryString
+        "keyword": payload.queryString,
+        "filters": ['isVirtual: true', 'isVariant: false'],
       })
       // resp.data.response.numFound tells the number of items in the response
-      if (resp.status === 200 && resp.data.response?.numFound > 0 && !hasError(resp)) {
+      if (resp.status === 200 && !hasError(resp) && resp.data.response?.numFound) {
         let products = resp.data.response.docs;
         const total = resp.data.response?.numFound;
         if (payload.viewIndex && payload.viewIndex > 0) products = state.products.list.concat(products)
@@ -69,6 +70,51 @@ const actions: ActionTree<ProductState, RootState> = {
     } catch(error){
       console.error(error)
       commit(types.PRODUCT_LIST_UPDATED, { products: [], total: 0 })
+      showToast(translate("Something went wrong"));
+    }
+    // TODO Handle specific error
+    return resp;
+  },
+
+  async addProductToCache({ commit, state }, payload) {
+    // checking if product is in cache
+    const product = state.cached[payload.productId] ? JSON.parse(JSON.stringify(state.cached[payload.productId])) : {};
+    if (!Object.keys(product).length) commit(types.PRODUCT_ADD_TO_CACHED, payload);
+  },
+
+  async setCurrent({ dispatch, commit, state }, payload) {
+    if (payload.viewIndex === 0) emitter.emit("presentLoader");
+    
+    // checking if product is in cache
+    let product = state.cached[payload.productId] ? JSON.parse(JSON.stringify(state.cached[payload.productId])) : {}
+    const isProductCached = Object.keys(product).length;
+    if (isProductCached && product.variants?.length) return commit(types.PRODUCT_CURRENT_UPDATED, product)
+
+    let resp;
+    let productFilterCondition: any = `groupId: ${payload.productId}`;
+    if (!isProductCached) productFilterCondition = `${productFilterCondition} OR productId: ${payload.productId}`;
+    try {
+      resp = await ProductService.findProducts({
+        "filters": [productFilterCondition],
+        "viewSize": 50,
+      })
+      // resp.data.response.numFound tells the number of items in the response
+      if (resp.status === 200 && !hasError(resp) && resp.data.response?.numFound) {
+        let variants = resp.data.response.docs;
+        if(!isProductCached) {
+          product = resp.data.response.docs.find((product: any) => product.productId === payload.productId);
+          variants = resp.data.response.docs.filter((product: any) => product.productId !== payload.productId);
+        }
+        product['variants'] = variants;
+        commit(types.PRODUCT_CURRENT_UPDATED, product)
+        commit(types.PRODUCT_ADD_TO_CACHED, product);
+      } else {
+        showToast(translate("Products not found"));
+      }
+      // Remove added loader only when new query and not the infinite scroll
+      if (payload.viewIndex === 0) emitter.emit("dismissLoader");
+    } catch(error){
+      console.error(error)
       showToast(translate("Something went wrong"));
     }
     // TODO Handle specific error
