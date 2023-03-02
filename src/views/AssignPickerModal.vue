@@ -61,7 +61,7 @@ import {
   modalController } from "@ionic/vue";
 import { defineComponent } from "vue";
 import { closeOutline } from "ionicons/icons";
-import { mapGetters, useStore } from "vuex";
+import { useStore } from "vuex";
 import { hasError, showToast } from "@/utils";
 import { translate } from "@/i18n";
 import { PicklistService } from '@/services/PicklistService'
@@ -85,11 +85,6 @@ export default defineComponent({
     IonToolbar,
     IonInfiniteScroll,
     IonInfiniteScrollContent
-  },
-  computed: {
-    ...mapGetters({
-      openOrders: 'order/getOpenOrders'
-    })
   },
   props: ['order'],
   data () {
