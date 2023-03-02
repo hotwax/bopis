@@ -48,18 +48,24 @@ const actions: ActionTree<OrderState , RootState> ={
                     shipmentMethodEnumDesc: item.shipmentMethodTypeDesc
                   },
                   items: [{
+                    shipGroupSeqId: item.shipGroupSeqId,
+                    orderId: orderItem.orderId,
                     orderItemSeqId: item.orderItemSeqId,
                     productId: item.productId,
                     facilityId: item.facilityId,
-                    quantity: item.itemQuantity
+                    quantity: item.itemQuantity,
+                    inventoryItemId: item.inventoryItemId
                   }]
                 })
               } else {
                 currentOrderPart.items.push({
+                  shipGroupSeqId: item.shipGroupSeqId,
+                  orderId: orderItem.orderId,
                   orderItemSeqId: item.orderItemSeqId,
                   productId: item.productId,
                   facilityId: item.facilityId,
-                  quantity: item.itemQuantity
+                  quantity: item.itemQuantity,
+                  inventoryItemId: item.inventoryItemId
                 })
               }
 
@@ -364,8 +370,36 @@ const actions: ActionTree<OrderState , RootState> ={
     return await OrderService.updateShipment(params)
   },
 
-  async quickShipEntireShipGroup ({ state, dispatch, commit }, payload) {
+  async packShipGroupItems ({ state, dispatch, commit }, payload) {
     emitter.emit("presentLoader")
+
+    if (store.state.user.preference.configurePicker) {
+      let resp;
+
+      const items = payload.order.parts[0].items;
+      const formData = new FormData();
+      formData.append("facilityId", items[0].facilityId);
+      items.map((item: any, index: number) => {
+        formData.append("itemStatusId_o_"+index, "PICKITEM_PENDING")
+        formData.append("pickerIds_o_"+index, payload.selectedPicker)
+        Object.keys(item).map((property) => {
+          if(property !== "facilityId") formData.append(property+'_o_'+index, item[property])
+        })
+      });
+      
+      try {
+        resp = await OrderService.createPicklist(formData);
+        if (resp.status !== 200 || hasError(resp) || !(resp.data.picklistId && resp.data.picklistBinId)) {
+          showToast(translate('Something went wrong. Picklist can not be created.'));
+          emitter.emit("dismissLoader");
+          return;
+        }
+      } catch (err) {
+        showToast(translate('Something went wrong. Picklist can not be created.'));
+        emitter.emit("dismissLoader");
+        return;
+      }
+    }
 
     const params = {
       orderId: payload.order.orderId,

@@ -159,6 +159,7 @@ import {
   IonSegmentButton,
   IonTitle,
   IonToolbar,
+  modalController
 } from "@ionic/vue";
 import { defineComponent, ref } from "vue";
 import ProductListItem from '@/components/ProductListItem.vue'
@@ -170,6 +171,7 @@ import { DateTime } from 'luxon';
 import emitter from "@/event-bus"
 import { api } from '@/adapter';
 import { translate } from "@/i18n";
+import AssignPickerModal from "./AssignPickerModal.vue";
 
 export default defineComponent({
   name: 'Orders',
@@ -205,6 +207,7 @@ export default defineComponent({
       orders: 'order/getOpenOrders',
       packedOrders: 'order/getPackedOrders',
       completedOrders: 'order/getCompletedOrders',
+      configurePicker: "user/configurePicker",
       currentFacility: 'user/getCurrentFacility',
       isPackedOrdersScrollable: 'order/isPackedOrdersScrollable',
       isOpenOrdersScrollable: 'order/isOpenOrdersScrollable',
@@ -218,6 +221,13 @@ export default defineComponent({
     }
   },
   methods: {
+    async assignPicker(order: any, part: any, facilityId: any) {
+      const assignPickerModal = await modalController.create({
+        component: AssignPickerModal,
+        componentProps: { order, part, facilityId }
+      });
+      return assignPickerModal.present();
+    },
     timeFromNow (time: any) {
       const timeDiff = DateTime.fromISO(time).diff(DateTime.local());
       return DateTime.local().plus(timeDiff).toRelative();
@@ -311,6 +321,7 @@ export default defineComponent({
       }
     },
     async readyForPickup (order: any, part: any) {
+      if(this.configurePicker) return this.assignPicker(order, part, this.currentFacility.facilityId);
       const pickup = part.shipmentMethodEnum?.shipmentMethodEnumId === 'STOREPICKUP';
       const header = pickup ? this.$t('Ready for pickup') : this.$t('Ready to ship');
       const message = pickup ? this.$t('An email notification will be sent to that their order is ready for pickup. This order will also be moved to the packed orders tab.', { customerName: order.customer.name, space: '<br/><br/>'}) : '';
@@ -325,7 +336,7 @@ export default defineComponent({
           },{
             text: header,
             handler: () => {
-              this.store.dispatch('order/quickShipEntireShipGroup', {order, part, facilityId: this.currentFacility.facilityId})
+              this.store.dispatch('order/packShipGroupItems', {order, part, facilityId: this.currentFacility.facilityId})
             }
           }]
         });

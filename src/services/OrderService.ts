@@ -1,4 +1,5 @@
-import { api } from '@/adapter';
+import { api, client } from '@/adapter';
+import store from '@/store';
 
 const getOpenOrders = async (payload: any): Promise <any> => {
   return api({
@@ -56,6 +57,18 @@ const rejectOrderItem = async (payload: any): Promise <any> => {
   });
 }
 
+const createPicklist = async (query: any): Promise <any> => {
+  let baseURL = store.getters['user/getInstanceUrl'];
+  baseURL = baseURL && baseURL.startsWith('http') ? baseURL : `https://${baseURL}.hotwax.io/api/`;
+  return client({
+    url: 'createPicklist',
+    method: 'POST',
+    data: query,
+    baseURL,
+    headers: { "Content-Type": "multipart/form-data" },
+  })
+}
+
 export const OrderService = {
   getOpenOrders,
   getOrderDetails,
@@ -63,5 +76,6 @@ export const OrderService = {
   getPackedOrders,
   quickShipEntireShipGroup,
   rejectOrderItem,
-  updateShipment
+  updateShipment,
+  createPicklist
 }

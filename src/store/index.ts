@@ -9,7 +9,6 @@ import orderModule from './modules/order';
 import stockModule from "./modules/stock"
 import productModule from "./modules/product"
 
-
 // TODO check how to register it from the components only
 // Handle same module registering multiple time on page refresh
 //store.registerModule('user', userModule);

@@ -25,6 +25,9 @@ const getters: GetterTree <UserState, RootState> = {
     showShippingOrders (state) {
         return state.preference.showShippingOrders;
     },
+    configurePicker (state) {
+        return state.preference.configurePicker;
+    },
     showPackingSlip (state) {
         return state.preference.showPackingSlip;
     },
