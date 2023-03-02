@@ -15,7 +15,7 @@ const userModule: Module<UserState, RootState> = {
       preference: {
         showShippingOrders: true,
         showPackingSlip: false,
-        configurePicker: true,
+        configurePicker: false,
       },
       locale: 'en',
     },

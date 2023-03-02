@@ -8,8 +8,6 @@ import userModule from './modules/user';
 import orderModule from './modules/order';
 import stockModule from "./modules/stock"
 import productModule from "./modules/product"
-import picklistModule from "./modules/picklist"
-
 
 // TODO check how to register it from the components only
 // Handle same module registering multiple time on page refresh
@@ -36,8 +34,7 @@ const store = createStore<RootState>({
         'user': userModule,
         'order': orderModule,
         'stock': stockModule,
-        'product': productModule,
-        'picklist': picklistModule
+        'product': productModule
     },
 })
 

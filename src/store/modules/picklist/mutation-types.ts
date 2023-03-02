@@ -1,1 +1,0 @@
-export const SN_PICKLIST = 'picklist'
