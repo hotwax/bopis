@@ -1,3 +1,18 @@
+# Release 2.4.0
+## What's Changed
+* Implemented: support for using api and client methods from OMS api package (#85zrm1ktj) by @k2maan in https://github.com/hotwax/bopis/pull/181
+* Updated: UI for packing slip card on settings page (#85zrmkrmq) by @k2maan in https://github.com/hotwax/bopis/pull/182
+* Updated: UI for shipping orders card on settings page (#85zrmkx7q) by @k2maan in https://github.com/hotwax/bopis/pull/183
+* Fixed: show packing slip toggle (#85zrphr3t) by @k2maan in https://github.com/hotwax/bopis/pull/191
+* Fixed: build failure due to node version 18 on github (#85zrmkx7q) by @k2maan in https://github.com/hotwax/bopis/pull/192
+* Implemented: flow to get and show details on product details page (#1uvvc3x) by @adityasharma7 in https://github.com/hotwax/bopis/pull/193
+* Fixed: warehouse should not be in other stores list (#1uvvc3x) by @adityasharma7 in https://github.com/hotwax/bopis/pull/195
+* Fixed: loader should be dismissed when API fails on catalog and product page by @adityasharma7 in https://github.com/hotwax/bopis/pull/196
+* Moved packing slip and shipping order configuration from oms to app settings(#85zrpq1yd) by @disha1202 in https://github.com/hotwax/bopis/pull/197
+
+
+**Full Changelog**: https://github.com/hotwax/bopis/compare/v2.3.0...v2.4.0
+
 # Release 2.3.0
 
 ## What's Changed
