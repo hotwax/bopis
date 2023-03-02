@@ -14,8 +14,8 @@
               <Image :src="userProfile.partyImageUrl"/>
             </ion-avatar>
             <ion-card-header>
-              <ion-card-subtitle>{{ userProfile.userLoginId }}</ion-card-subtitle>
-              <ion-card-title>{{ userProfile.partyName }}</ion-card-title>
+              <ion-card-subtitle>{{ userProfile?.userLoginId }}</ion-card-subtitle>
+              <ion-card-title>{{ userProfile?.partyName }}</ion-card-title>
             </ion-card-header>
           </ion-item>
           <ion-button fill="outline" color="danger" @click="logout()">{{ $t("Logout") }}</ion-button>
@@ -62,35 +62,7 @@
           </ion-item>
         </ion-card>
 
-        <ion-card>
-          <ion-card-header>
-            <ion-card-title>
-              {{ $t("Shipping orders") }}
-            </ion-card-title>
-          </ion-card-header>
-          <ion-card-content>
-            {{ $t('View shipping orders along with pickup orders.') }}
-          </ion-card-content>
-          <ion-item lines="none">
-            <ion-label>{{ $t("Show shipping orders") }}</ion-label>
-            <ion-toggle :checked="showShippingOrders" @ionChange="setShowShippingOrdersPreference($event)" slot="end" />
-          </ion-item>
-        </ion-card>
-
-        <ion-card>
-          <ion-card-header>
-            <ion-card-title>
-              {{ $t("Packing Slip") }}
-            </ion-card-title>
-          </ion-card-header>
-          <ion-card-content>
-            {{ $t('Packing slips help customer reconcile their order against the delivered items.') }}
-          </ion-card-content>
-          <ion-item lines="none">
-            <ion-label>{{ $t("Generate packing slips") }}</ion-label>
-            <ion-toggle :checked="showShippingOrders" @ionChange="setShowShippingOrdersPreference($event)" slot="end" />
-          </ion-item>
-        </ion-card>
+        
       </section>
 
       <hr />
@@ -132,6 +104,36 @@
             <ion-select interface="popover" :value="locale" @ionChange="setLocale($event.detail.value)">
               <ion-select-option v-for="locale in Object.keys(locales)" :key="locale" :value="locale" >{{ locales[locale] }}</ion-select-option>
             </ion-select>
+          </ion-item>
+        </ion-card>
+
+        <ion-card>
+          <ion-card-header>
+            <ion-card-title>
+              {{ $t("Shipping orders") }}
+            </ion-card-title>
+          </ion-card-header>
+          <ion-card-content>
+            {{ $t('View shipping orders along with pickup orders.') }}
+          </ion-card-content>
+          <ion-item lines="none">
+            <ion-label>{{ $t("Show shipping orders") }}</ion-label>
+            <ion-toggle :checked="showShippingOrders" @ionChange="setShowShippingOrdersPreference($event)" slot="end" />
+          </ion-item>
+        </ion-card>
+
+        <ion-card>
+          <ion-card-header>
+            <ion-card-title>
+              {{ $t("Packing Slip") }}
+            </ion-card-title>
+          </ion-card-header>
+          <ion-card-content>
+            {{ $t('Packing slips help customer reconcile their order against the delivered items.') }}
+          </ion-card-content>
+          <ion-item lines="none">
+            <ion-label>{{ $t("Generate packing slips") }}</ion-label>
+            <ion-toggle :checked="showPackingSlip" @ionChange="setShowPackingSlipPreference($event)" slot="end" />
           </ion-item>
         </ion-card>
 

@@ -18,6 +18,7 @@ const userModule: Module<UserState, RootState> = {
         configurePicker: false,
       },
       locale: 'en',
+      currentEComStore: {},
     },
     getters,
     actions,
