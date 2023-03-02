@@ -248,6 +248,8 @@ export default defineComponent({
     display: grid;
     grid-template-columns: auto 500px;
     padding: var(--spacer-sm);
+    max-width: 1042px;
+    margin: auto;
   }
 
   .product-image > img {
