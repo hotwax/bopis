@@ -28,7 +28,7 @@
             <ion-list-header>{{ $t("Colors") }}</ion-list-header>
             <ion-item lines="none">
               <ion-row>
-                <ion-chip :outline="selectedColor !== colorFeature" :key="colorFeature" v-for="colorFeature in Object.keys(features)" @click="applyFeature(colorFeature, 'color')">
+                <ion-chip :outline="selectedColor !== colorFeature" :key="colorFeature" v-for="colorFeature in Object.keys(features)" @click="selectedColor !== colorFeature && applyFeature(colorFeature, 'color')">
                   <ion-label class="ion-text-wrap">{{ colorFeature }}</ion-label>
                 </ion-chip>
               </ion-row>
@@ -39,7 +39,7 @@
             <ion-list-header>{{ $t("Sizes") }} </ion-list-header>
             <ion-item lines="none">
               <ion-row>
-                <ion-chip :outline="selectedSize !== sizeFeature" :key="sizeFeature" v-for="sizeFeature in features[selectedColor]" @click="applyFeature(sizeFeature, 'size')">
+                <ion-chip :outline="selectedSize !== sizeFeature" :key="sizeFeature" v-for="sizeFeature in features[selectedColor]" @click="selectedSize !== sizeFeature && applyFeature(sizeFeature, 'size')">
                   <ion-label class="ion-text-wrap">{{ sizeFeature }}</ion-label>
                 </ion-chip>
               </ion-row>
