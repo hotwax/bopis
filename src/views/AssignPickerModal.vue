@@ -14,7 +14,7 @@
   <ion-content>
     <ion-searchbar v-model="queryString" @keyup.enter="queryString = $event.target.value; searchPicker()"/>
 
-    <div class="ion-text-center ion-margin-top" v-if="!availablePickers.length">{{ 'No picker found' }}</div>
+    <div class="ion-text-center ion-margin-top" v-if="!availablePickers.length">{{ $t('No picker found') }}</div>
 
     <ion-list v-else>
       <ion-list-header>{{ $t("Staff") }}</ion-list-header>
