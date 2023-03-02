@@ -389,13 +389,7 @@ const actions: ActionTree<OrderState , RootState> ={
       
       try {
         resp = await OrderService.createPicklist(formData);
-        if (resp.status === 200 && !hasError(resp) && resp.data) {
-          if(!(resp.data.picklistId && resp.data.picklistBinId)) {
-            showToast(translate('Something went wrong. Picklist can not be created.'));
-            emitter.emit("dismissLoader");
-            return;
-          }
-        } else {
+        if (resp.status !== 200 || hasError(resp) || !(resp.data.picklistId && resp.data.picklistBinId)) {
           showToast(translate('Something went wrong. Picklist can not be created.'));
           emitter.emit("dismissLoader");
           return;
