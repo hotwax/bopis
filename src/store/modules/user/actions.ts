@@ -88,6 +88,13 @@ const actions: ActionTree<UserState, RootState> = {
       if (resp.data.userTimeZone) {
         Settings.defaultZone = resp.data.userTimeZone;
       }
+      // removing duplicate records as a single user can be associated with a facility by multiple roles.
+      resp.data.facilities.reduce((uniqueFacilities: any, facility: any, index: number) => {
+        if(uniqueFacilities.includes(facility.facilityId)) resp.data.facilities.splice(index, 1);
+        else uniqueFacilities.push(facility.facilityId);
+        return uniqueFacilities
+      }, []);
+
       try {
         const userPreferenceResp = await UserService.getUserPreference({
           'userPrefTypeId': 'BOPIS_PREFERENCE'
