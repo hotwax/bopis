@@ -1,3 +1,11 @@
+# Release 2.5.0
+
+## What's Changed
+* implemented: support to add picker for ready to pick orders(#85zrnzf31) by @disha1202 in https://github.com/hotwax/bopis/pull/187
+
+
+**Full Changelog**: https://github.com/hotwax/bopis/compare/v2.4.0...v.2.5.0
+
 # Release 2.4.0
 ## What's Changed
 * Implemented: support for using api and client methods from OMS api package (#85zrm1ktj) by @k2maan in https://github.com/hotwax/bopis/pull/181
