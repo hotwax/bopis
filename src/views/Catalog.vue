@@ -7,7 +7,7 @@
     </ion-header>
     <ion-content>
       <ion-searchbar @ionFocus="selectSearchBarText($event)" v-model="queryString" @keypress.enter="queryString = $event.target.value; getProducts()" />
-      <main>
+      <main v-if="products.list.length">
         <ion-card button v-for="product in products.list" :key="product.productId"  @click="viewProduct(product)">
           <Image :src="product.mainImageUrl" />
           <ion-item lines="none">
@@ -18,6 +18,9 @@
           </ion-item>
         </ion-card>
       </main>
+      <div v-else class="ion-text-center">
+        <p>{{ $t("No products found") }}</p>
+      </div>
       <ion-infinite-scroll
         @ionInfinite="loadMoreProducts($event)"
         threshold="100px"
@@ -76,6 +79,7 @@ export default defineComponent({
     ...mapGetters({
       products: "product/getProducts",
       isScrollable: "product/isScrollable",
+      queryStringInState: "product/getQueryString"
     }),
   },
   methods: {
@@ -95,7 +99,7 @@ export default defineComponent({
       const payload = {
         viewSize,
         viewIndex,
-        queryString: "*" + this.queryString + "*",
+        queryString: this.queryString,
       };
       await this.store.dispatch("product/findProduct", payload);
     },
@@ -112,7 +116,7 @@ export default defineComponent({
   },
 
   async ionViewWillEnter() {
-    this.queryString = '';
+    this.queryString = this.queryStringInState;
     this.getProducts();
   },
   setup() {

@@ -47,11 +47,13 @@ const actions: ActionTree<ProductState, RootState> = {
     if (payload.viewIndex === 0) emitter.emit("presentLoader");
     let resp;
     try {
+      // Updating the queryString here as even if no products are found it must keep queryString search the same
+      commit(types.PRODUCT_QUERYSTRING_UPDATED, payload.queryString)
       resp = await ProductService.findProducts({
         // used sku as we are currently only using sku to search for the product
         "viewSize": payload.viewSize,
         "viewIndex": payload.viewIndex,
-        "keyword": payload.queryString,
+        "keyword": "*" + payload.queryString + "*",
         "filters": ['isVirtual: true', 'isVariant: false'],
       })
       // resp.data.response.numFound tells the number of items in the response
@@ -139,6 +141,10 @@ const actions: ActionTree<ProductState, RootState> = {
       dispatch('fetchProducts', { productIds })
       this.dispatch('stock/addProducts', { productIds })
     }
+  },
+
+  updateQueryString({commit}, payload) {
+    commit(types.PRODUCT_QUERYSTRING_UPDATED, payload)
   },
 
   clearProducts ({ commit }) {

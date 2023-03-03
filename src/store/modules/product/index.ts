@@ -14,6 +14,7 @@ const productModule: Module<ProductState, RootState> = {
         list: [],
         total: 0 
       }, 
+      queryString: ''
     },
     getters,
     actions,
