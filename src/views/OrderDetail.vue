@@ -7,61 +7,61 @@
       </ion-toolbar>
     </ion-header>
     <ion-content>
-      <ion-list>
-        <ion-item lines="none">
-          <ion-label class="ion-text-wrap">
-            <h2>{{ order.customer?.name }}</h2>
-            <p>{{ order.orderName ? order.orderName : order.orderId }}</p>
-          </ion-label>
-          <ion-badge v-if="order.placedDate" color="dark" slot="end">{{ timeFromNow(order.placedDate) }}</ion-badge>
+      <main>
+        <ion-list>
+          <ion-item lines="none">
+            <ion-label class="ion-text-wrap">
+              <h2>{{ order.customer?.name }}</h2>
+              <p>{{ order.orderName ? order.orderName : order.orderId }}</p>
+            </ion-label>
+            <ion-badge v-if="order.placedDate" color="dark" slot="end">{{ timeFromNow(order.placedDate) }}</ion-badge>
+          </ion-item>
+        </ion-list>
+        <ion-item v-if="order.customer?.phoneNumber">
+          <ion-icon :icon="callOutline" slot="start" />
+          <ion-label>{{ order.customer?.phoneNumber }}</ion-label>
+          <ion-button
+            fill="outline"
+            slot="end"
+            color="medium"
+            @click="copyToClipboard(order.customer?.phoneNumber)"
+          >
+            {{ $t("Copy") }}
+          </ion-button>
         </ion-item>
-      </ion-list>
-      <ion-item v-if="order.customer?.phoneNumber">
-        <ion-icon :icon="callOutline" slot="start" />
-        <ion-label>{{ order.customer?.phoneNumber }}</ion-label>
-        <ion-button
-          fill="outline"
-          slot="end"
-          color="medium"
-          @click="copyToClipboard(order.customer?.phoneNumber)"
-        >
-          {{ $t("Copy") }}
-        </ion-button>
-      </ion-item>
-      <ion-item v-if="order.customer?.email" lines="none">
-        <ion-icon :icon="mailOutline" slot="start" />
-        <ion-label>{{ order.customer?.email }}</ion-label>
-        <ion-button
-          fill="outline"
-          slot="end"
-          color="medium"
-          @click="copyToClipboard(order.customer?.email)"
-        >
-          {{ $t("Copy") }}
-        </ion-button>
-      </ion-item>
-  
-    <main>
-      <ion-card v-for="(item, index) in getCurrentOrderPart()?.items" :key="index">
-        <ProductListItem :item="item" />
-        <ion-item lines="none" class="border-top">
-          <ion-label>{{ $t("Reason") }}</ion-label>
-          <ion-select multiple="false" v-model="item.reason">
-            <ion-select-option v-for="reason in unfillableReason" :value="reason.id" :key="reason.id">{{ $t(reason.label) }}</ion-select-option>
-          </ion-select>
+        <ion-item v-if="order.customer?.email" lines="none">
+          <ion-icon :icon="mailOutline" slot="start" />
+          <ion-label>{{ order.customer?.email }}</ion-label>
+          <ion-button
+            fill="outline"
+            slot="end"
+            color="medium"
+            @click="copyToClipboard(order.customer?.email)"
+          >
+            {{ $t("Copy") }}
+          </ion-button>
         </ion-item>
-      </ion-card>
 
-      <!-- TODO: implement functionality to change shipping address -->
-      <!-- <ion-button expand="block" fill="outline" @click="shipToCustomer()">
-        {{ $t("Ship to customer") }}
-        <ion-icon :icon="sendOutline" slot="end" />
-      </ion-button> -->
+        <ion-card v-for="(item, index) in getCurrentOrderPart()?.items" :key="index">
+          <ProductListItem :item="item" />
+          <ion-item lines="none" class="border-top">
+            <ion-label>{{ $t("Reason") }}</ion-label>
+            <ion-select multiple="false" v-model="item.reason">
+              <ion-select-option v-for="reason in unfillableReason" :value="reason.id" :key="reason.id">{{ $t(reason.label) }}</ion-select-option>
+            </ion-select>
+          </ion-item>
+        </ion-card>
 
-      <ion-button expand="block" color="danger" fill="outline" @click="updateOrder(order)">
-        {{ $t("Reject Order") }}
-      </ion-button>
-    </main>  
+        <!-- TODO: implement functionality to change shipping address -->
+        <!-- <ion-button expand="block" fill="outline" @click="shipToCustomer()">
+          {{ $t("Ship to customer") }}
+          <ion-icon :icon="sendOutline" slot="end" />
+        </ion-button> -->
+
+        <ion-button expand="block" color="danger" fill="outline" @click="updateOrder(order)">
+          {{ $t("Reject Order") }}
+        </ion-button>
+      </main>  
     </ion-content>
   </ion-page>
 </template>
