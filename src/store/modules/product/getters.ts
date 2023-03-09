@@ -19,7 +19,7 @@ const getters: GetterTree<ProductState, RootState> = {
     );
   },
   getQueryString(state) {
-    return state.queryString
+    return state.products.queryString
   }
 };
 export default getters;

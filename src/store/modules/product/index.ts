@@ -12,9 +12,9 @@ const productModule: Module<ProductState, RootState> = {
       cached: {},
       products: {
         list: [],
-        total: 0 
+        total: 0,
+        queryString: ''
       }, 
-      queryString: ''
     },
     getters,
     actions,

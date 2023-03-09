@@ -48,7 +48,6 @@ const actions: ActionTree<ProductState, RootState> = {
     let resp;
     try {
       // Updating the queryString here as even if no products are found it must keep queryString search the same
-      commit(types.PRODUCT_QUERYSTRING_UPDATED, payload.queryString)
       resp = await ProductService.findProducts({
         // used sku as we are currently only using sku to search for the product
         "viewSize": payload.viewSize,
@@ -61,17 +60,18 @@ const actions: ActionTree<ProductState, RootState> = {
         let products = resp.data.response.docs;
         const total = resp.data.response?.numFound;
         if (payload.viewIndex && payload.viewIndex > 0) products = state.products.list.concat(products)
-        commit(types.PRODUCT_LIST_UPDATED, { products, total })
+        commit(types.PRODUCT_LIST_UPDATED, { products, total, queryString: payload.queryString })
       } else {
         //showing error whenever getting no products in the response or having any other error
-        commit(types.PRODUCT_LIST_UPDATED, { products: [], total: 0 })
+        // queryString is persisted even if the search results in 'products not found'
+        commit(types.PRODUCT_LIST_UPDATED, { products: [], total: 0, queryString: payload.queryString })
         showToast(translate("Products not found"));
       }
       // Remove added loader only when new query and not the infinite scroll
       if (payload.viewIndex === 0) emitter.emit("dismissLoader");
     } catch(error){
       console.error(error)
-      commit(types.PRODUCT_LIST_UPDATED, { products: [], total: 0 })
+      commit(types.PRODUCT_LIST_UPDATED, { products: [], total: 0, queryString: '' })
       showToast(translate("Something went wrong"));
     }
     // TODO Handle specific error
@@ -143,12 +143,8 @@ const actions: ActionTree<ProductState, RootState> = {
     }
   },
 
-  updateQueryString({commit}, payload) {
-    commit(types.PRODUCT_QUERYSTRING_UPDATED, payload)
-  },
-
   clearProducts ({ commit }) {
-    commit(types.PRODUCT_LIST_UPDATED, { products: [], total: 0 })
+    commit(types.PRODUCT_LIST_UPDATED, { products: [], total: 0, queryString: '' })
   }
 }
 

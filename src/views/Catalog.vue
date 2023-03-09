@@ -78,8 +78,7 @@ export default defineComponent({
   computed: {
     ...mapGetters({
       products: "product/getProducts",
-      isScrollable: "product/isScrollable",
-      queryStringInState: "product/getQueryString"
+      isScrollable: "product/isScrollable"
     }),
   },
   methods: {
@@ -116,7 +115,7 @@ export default defineComponent({
   },
 
   async ionViewWillEnter() {
-    this.queryString = this.queryStringInState;
+    this.queryString = this.products.queryString;
     this.getProducts();
   },
   setup() {

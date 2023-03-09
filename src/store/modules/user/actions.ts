@@ -75,7 +75,6 @@ const actions: ActionTree<UserState, RootState> = {
   async logout ({ commit, dispatch }) {
     // TODO add any other tasks if need
     dispatch("product/clearProducts", null, { root: true })
-    dispatch("product/updateQueryString", '', { root: true })
     commit(types.USER_END_SESSION)
     resetConfig();
   },
