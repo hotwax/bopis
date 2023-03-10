@@ -1,3 +1,15 @@
+# Release 2.6.0
+
+## What's Changed
+* Add Spanish Label by @Adar9 in https://github.com/hotwax/bopis/pull/203
+* Implemented: code to retain product search when navigating to other pages (#85zrptx3u) by @k2maan in https://github.com/hotwax/bopis/pull/202
+* Fixed: Duplicate facility in facility switcher(#85zrpubf1) by @disha1202 in https://github.com/hotwax/bopis/pull/200
+
+## New Contributors
+* @Adar9 made their first contribution in https://github.com/hotwax/bopis/pull/203
+
+**Full Changelog**: https://github.com/hotwax/bopis/compare/v2.5.0...v2.6.0
+
 # Release 2.5.0
 
 ## What's Changed
