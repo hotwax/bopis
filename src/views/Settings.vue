@@ -56,7 +56,7 @@
           </ion-card-content>
           <ion-item lines="none">
             <ion-label>{{ $t("Select facility") }}</ion-label>
-            <ion-select interface="popover" :value="currentFacility.facilityId" @ionChange="setFacility($event)">
+            <ion-select interface="popover" :value="currentFacility?.facilityId" @ionChange="setFacility($event)">
               <ion-select-option v-for="facility in (userProfile ? userProfile.facilities : [])" :key="facility.facilityId" :value="facility.facilityId" >{{ facility.name }}</ion-select-option>
             </ion-select>
           </ion-item>
@@ -212,10 +212,15 @@ export default defineComponent({
     this.appVersion = this.appInfo.branch ? (this.appInfo.branch + "-" + this.appInfo.revision) : this.appInfo.tag;
   },
   methods: {
-    setFacility (facility: any) {
-      if (this.userProfile)
+    setFacility (event: any) {
+      // If the value is same, no need to update
+      // Handled case for programmatical changes
+      // https://github.com/ionic-team/ionic-framework/discussions/25532
+      // https://github.com/ionic-team/ionic-framework/issues/20106
+      // https://github.com/ionic-team/ionic-framework/pull/25858
+      if (this.userProfile && this.currentFacility?.facilityId !== event.detail.value)
         this.store.dispatch('user/setFacility', {
-          'facility': this.userProfile.facilities.find((fac: any) => fac.facilityId == facility['detail'].value)
+          'faciltyId': event.detail.value
         });
     },
     async changeTimeZone() {

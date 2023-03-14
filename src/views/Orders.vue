@@ -2,7 +2,7 @@
   <ion-page>
     <ion-header :translucent="true">
       <ion-toolbar>
-        <ion-title>{{ currentFacility.name }}</ion-title>
+        <ion-title>{{ currentFacility?.name }}</ion-title>
       </ion-toolbar>
 
       <div>
