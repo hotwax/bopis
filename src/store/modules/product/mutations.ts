@@ -19,6 +19,7 @@ const mutations: MutationTree <ProductState> = {
   [types.PRODUCT_LIST_UPDATED] (state, payload) {
     state.products.list = payload.products;
     state.products.total = payload.total;
-  }
+    state.products.queryString = payload.queryString
+  },
 }
 export default mutations;

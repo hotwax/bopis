@@ -3,6 +3,7 @@ export default interface ProductState {
   cached: any,
   products: {
     list: any,
-    total: number
-  }
+    total: number,
+    queryString: string
+  },
 }

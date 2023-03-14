@@ -70,6 +70,13 @@ const actions: ActionTree<UserState, RootState> = {
       }
 
       const userProfile = await UserService.getUserProfile(token);
+
+      // removing duplicate records as a single user can be associated with a facility by multiple roles.
+      userProfile.facilities.reduce((uniqueFacilities: any, facility: any, index: number) => {
+        if(uniqueFacilities.includes(facility.facilityId)) userProfile.facilities.splice(index, 1);
+        else uniqueFacilities.push(facility.facilityId);
+        return uniqueFacilities
+      }, []);
       // TODO Use a separate API for getting facilities, this should handle user like admin accessing the app
       const currentFacility = userProfile.facilities.length > 0 ? userProfile.facilities[0] : {};
       const currentEComStore = await UserService.getCurrentEComStore(token, currentFacility);

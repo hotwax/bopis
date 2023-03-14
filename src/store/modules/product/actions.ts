@@ -47,11 +47,12 @@ const actions: ActionTree<ProductState, RootState> = {
     if (payload.viewIndex === 0) emitter.emit("presentLoader");
     let resp;
     try {
+      // Updating the queryString here as even if no products are found it must keep queryString search the same
       resp = await ProductService.findProducts({
         // used sku as we are currently only using sku to search for the product
         "viewSize": payload.viewSize,
         "viewIndex": payload.viewIndex,
-        "keyword": payload.queryString,
+        "keyword": "*" + payload.queryString + "*",
         "filters": ['isVirtual: true', 'isVariant: false'],
       })
       // resp.data.response.numFound tells the number of items in the response
@@ -59,15 +60,16 @@ const actions: ActionTree<ProductState, RootState> = {
         let products = resp.data.response.docs;
         const total = resp.data.response?.numFound;
         if (payload.viewIndex && payload.viewIndex > 0) products = state.products.list.concat(products)
-        commit(types.PRODUCT_LIST_UPDATED, { products, total })
+        commit(types.PRODUCT_LIST_UPDATED, { products, total, queryString: payload.queryString })
       } else {
         //showing error whenever getting no products in the response or having any other error
-        commit(types.PRODUCT_LIST_UPDATED, { products: [], total: 0 })
+        // queryString is persisted even if the search results in 'products not found'
+        commit(types.PRODUCT_LIST_UPDATED, { products: [], total: 0, queryString: payload.queryString })
         showToast(translate("Products not found"));
       }
     } catch(error){
       console.error(error)
-      commit(types.PRODUCT_LIST_UPDATED, { products: [], total: 0 })
+      commit(types.PRODUCT_LIST_UPDATED, { products: [], total: 0, queryString: '' })
       showToast(translate("Something went wrong"));
     }
     // Remove added loader only when new query and not the infinite scroll
@@ -141,7 +143,7 @@ const actions: ActionTree<ProductState, RootState> = {
   },
 
   clearProducts ({ commit }) {
-    commit(types.PRODUCT_LIST_UPDATED, { products: [], total: 0 })
+    commit(types.PRODUCT_LIST_UPDATED, { products: [], total: 0, queryString: '' })
   }
 }
 
