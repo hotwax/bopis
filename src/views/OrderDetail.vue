@@ -58,7 +58,7 @@
           <ion-icon :icon="sendOutline" slot="end" />
         </ion-button> -->
 
-        <ion-button expand="block" color="danger" fill="outline" @click="updateOrder(order)">
+        <ion-button :disabled="!hasPermission(Actions.APP_ORDER_UPDATE)" expand="block" color="danger" fill="outline" @click="updateOrder(order)">
           {{ $t("Reject Order") }}
         </ion-button>
       </main>  
@@ -99,6 +99,7 @@ import { copyToClipboard } from '@/utils'
 import { useRouter } from 'vue-router'
 import { DateTime } from 'luxon';
 import ShipToCustomerModal from "@/components/ShipToCustomerModal.vue";
+import { Actions, hasPermission } from '@/authorization'
 
 export default defineComponent({
   name: "OrderDetail",
@@ -188,8 +189,10 @@ export default defineComponent({
     const router = useRouter();
 
     return {
+      Actions,
       callOutline,
       copyToClipboard,
+      hasPermission,
       mailOutline,
       router,
       store,
