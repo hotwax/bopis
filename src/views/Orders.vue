@@ -53,7 +53,7 @@
               </ion-button>
             </ion-item>
             <div class="border-top">
-              <ion-button fill="clear" @click.stop="readyForPickup(order, part)">
+              <ion-button :disabled="!hasPermission(Actions.APP_ORDER_UPDATE)" fill="clear" @click.stop="readyForPickup(order, part)">
                 {{ part.shipmentMethodEnum?.shipmentMethodEnumId === 'STOREPICKUP' ? $t("Ready for pickup") : $t("Ready to ship") }}
               </ion-button>
             </div>
@@ -88,7 +88,7 @@
               </ion-button>
             </ion-item>
             <div class="border-top">
-              <ion-button fill="clear" @click.stop="deliverShipment(order)">
+              <ion-button :disabled="!hasPermission(Actions.APP_ORDER_UPDATE)" fill="clear" @click.stop="deliverShipment(order)">
                 {{ part.shipmentMethodEnum.shipmentMethodEnumId === 'STOREPICKUP' ? $t("Handover") : $t("Ship") }}
               </ion-button>
               <ion-button v-if="showPackingSlip" fill="clear" slot="end" @click="printPackingSlip(order)">
@@ -172,6 +172,7 @@ import emitter from "@/event-bus"
 import { api } from '@/adapter';
 import { translate } from "@/i18n";
 import AssignPickerModal from "./AssignPickerModal.vue";
+import { Actions, hasPermission } from '@/authorization'
 
 export default defineComponent({
   name: 'Orders',
@@ -410,8 +411,10 @@ export default defineComponent({
     const segmentSelected = ref('open');
 
     return {
+      Actions,
       callOutline,
       copyToClipboard,
+      hasPermission,
       mailOutline,
       print,
       router,
