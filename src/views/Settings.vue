@@ -62,6 +62,42 @@
           </ion-item>
         </ion-card>
 
+        <ion-card>
+          <ion-card-header>
+            <ion-card-subtitle>
+              {{ $t("Re-route Fulfillment") }}
+            </ion-card-subtitle>
+            <ion-card-title>
+              {{ $t("Order edit permissions") }}
+            </ion-card-title>
+          </ion-card-header>
+          <ion-card-content>
+            {{ $t('Control what your customers are allowed to edit on their order when they are editing their order on Re-route Fulfillment.') }}
+          </ion-card-content>
+          <ion-item lines="none">
+            <ion-label>{{ $t("Delivery method") }}</ion-label>
+            <ion-toggle :disabled="Object.keys(rerouteFulfillmentConfig.allowDeliveryMethodUpdate).length == 0" :checked="rerouteFulfillmentConfig.allowDeliveryMethodUpdate.settingValue" @ionChange="updateRerouteFulfillmentConfiguration(rerouteFulfillmentConfig.allowDeliveryMethodUpdate, $event.detail.checked, $event)" slot="end" />
+          </ion-item>
+          <ion-item lines="none">
+            <ion-label>{{ $t("Delivery address") }}</ion-label>
+            <ion-toggle :disabled="Object.keys(rerouteFulfillmentConfig.allowDeliveryAddressUpdate).length == 0" :checked="rerouteFulfillmentConfig.allowDeliveryAddressUpdate.settingValue" @ionChange="updateRerouteFulfillmentConfiguration(rerouteFulfillmentConfig.allowDeliveryAddressUpdate, ($event.detail.value === 'on'))" slot="end" />
+          </ion-item>
+          <ion-item lines="none">
+            <ion-label>{{ $t("Pick up location") }}</ion-label>
+            <ion-toggle :disabled="Object.keys(rerouteFulfillmentConfig.allowPickupUpdate).length == 0" :checked="rerouteFulfillmentConfig.allowPickupUpdate.settingValue" @ionChange="updateRerouteFulfillmentConfiguration(rerouteFulfillmentConfig.allowPickupUpdate, ($event.detail.value === 'on'))" slot="end" />
+          </ion-item>
+          <ion-item lines="none">
+            <ion-label>{{ $t("Cancel order before fulfillment") }}</ion-label>
+            <!-- <p>Uploading order cancelations to Shopify is currently disabled. Order cancelations in HotWax will not be synced to Shopify.</p> -->
+            <ion-toggle :disabled="Object.keys(rerouteFulfillmentConfig.allowCancel).length == 0" :checked="rerouteFulfillmentConfig.allowCancel.settingValue" @ionChange="updateRerouteFulfillmentConfiguration(rerouteFulfillmentConfig.allowCancel, ($event.detail.value === 'on'))" slot="end" />
+          </ion-item>
+          <ion-item lines="none">
+            <ion-label>{{ $t("Shipment method") }}</ion-label>
+            <ion-select :disabled="Object.keys(rerouteFulfillmentConfig.shippingMethod).length == 0" interface="popover" :value="rerouteFulfillmentConfig.shippingMethod.settingValue" @ionChange="updateRerouteFulfillmentConfiguration(rerouteFulfillmentConfig.shippingMethod, $event.detail.value)">
+              <ion-select-option v-for="shipmentMethod in availableShipmentMethods" :key="shipmentMethod.shipmentMethodTypeId" :value="shipmentMethod.shipmentMethodTypeId" >{{ shipmentMethod.description }}</ion-select-option>
+            </ion-select>
+          </ion-item>
+        </ion-card>
         
       </section>
 
@@ -148,7 +184,7 @@
           </ion-card-content>
           <ion-item lines="none">
             <ion-label>{{ $t("Configure Picker") }}</ion-label>
-            <ion-toggle :checked="configurePicker" @ionChange="setCongigurePickerPreference($event)" slot="end" />
+            <ion-toggle :checked="configurePicker" @ionChange="setConfigurePickerPreference($event)" slot="end" />
           </ion-item>
         </ion-card>
       </section>
@@ -165,6 +201,9 @@ import { useRouter } from 'vue-router';
 import TimeZoneModal from './TimezoneModal.vue';
 import Image from '@/components/Image.vue';
 import { DateTime } from 'luxon';
+import { UserService } from '@/services/UserService'
+import { hasError, showToast } from '@/utils';
+import { translate } from "@/i18n";
 
 export default defineComponent({
   name: 'Settings',
@@ -195,12 +234,23 @@ export default defineComponent({
       appInfo: (process.env.VUE_APP_VERSION_INFO ? JSON.parse(process.env.VUE_APP_VERSION_INFO) : {}) as any,
       appVersion: "",
       locales: process.env.VUE_APP_LOCALES ? JSON.parse(process.env.VUE_APP_LOCALES) : {"en": "English"},
+      rerouteFulfillmentConfig: {
+        // TODO Remove fromDate and directly store values making it loosely coupled with OMS
+        allowDeliveryMethodUpdate: {},
+        allowDeliveryAddressUpdate: {},
+        allowPickupUpdate: {},
+        allowCancel: {},
+        shippingMethod: {}
+      } as any,
+      availableShipmentMethods: [] as any,
+      rerouteFulfillmentConfigMapping: (process.env.VUE_APP_RF_CNFG_MPNG? JSON.parse(process.env.VUE_APP_RF_CNFG_MPNG) : {}) as any
     }
   },
   computed: {
     ...mapGetters({
       userProfile: 'user/getUserProfile',
       currentFacility: 'user/getCurrentFacility',
+      currentEComStore: 'user/getCurrentEComStore',
       instanceUrl: 'user/getInstanceUrl',
       configurePicker: "user/configurePicker",
       showShippingOrders: 'user/showShippingOrders',
@@ -210,6 +260,13 @@ export default defineComponent({
   },
   mounted() {
     this.appVersion = this.appInfo.branch ? (this.appInfo.branch + "-" + this.appInfo.revision) : this.appInfo.tag;
+  },
+  ionViewWillEnter() {
+    // Only fetch configuration when environment mapping exists
+    if (Object.keys(this.rerouteFulfillmentConfigMapping).length > 0) {
+      this.getAvailableShipmentMethods();
+      this.getRerouteFulfillmentConfiguration();
+    }
   },
   methods: {
     setFacility (facility: any) {
@@ -235,7 +292,7 @@ export default defineComponent({
     setShowPackingSlipPreference (ev: any){
       this.store.dispatch('user/setUserPreference', { showPackingSlip: ev.detail.checked })
     },
-    setCongigurePickerPreference (ev: any){
+    setConfigurePickerPreference (ev: any){
       this.store.dispatch('user/setUserPreference', { configurePicker: ev.detail.checked })
     },
     goToOms(){
@@ -246,6 +303,86 @@ export default defineComponent({
     },
     setLocale(locale: string) {
       this.store.dispatch('user/setLocale',locale)
+    },
+    async getAvailableShipmentMethods () {
+      this.availableShipmentMethods = [];
+      try {
+        const resp = await UserService.getRerouteFulfillmentConfig({
+          "inputFields": {
+            "productStoreId": this.currentEComStore?.productStoreId,
+            "shipmentMethodTypeId": "STOREPICKUP",
+            "shipmentMethodTypeId_op": "notEqual"
+          },
+          "filterByDate": 'Y',
+          "entityName": "ProductStoreShipmentMethView",
+          "fieldList": ["shipmentMethodTypeId", "description"],
+          "viewSize": 10
+        }) as any;
+        if (!hasError(resp) && resp.data?.docs) {
+          this.availableShipmentMethods = resp.data.docs;
+        }
+      } catch(err) {
+        console.error(err)
+      }
+    },
+    async getRerouteFulfillmentConfiguration(settingTypeEnumId?: any) {
+      try {
+        const payload = {
+          "inputFields": {
+            "productStoreId": this.currentEComStore?.productStoreId,
+            settingTypeEnumId
+          },
+          "filterByDate": 'Y',
+          "entityName": "ProductStoreSetting",
+          "fieldList": ["settingTypeEnumId", "settingValue", "fromDate"],
+          "viewSize": 5
+        } as any
+
+        // get all values
+        if (!payload.inputFields.settingTypeEnumId) {
+          payload.inputFields.settingTypeEnumId = Object.values(this.rerouteFulfillmentConfigMapping);
+          payload.inputFields.settingTypeEnumId_op = "in"
+
+        }
+
+        const resp = await UserService.getRerouteFulfillmentConfig(payload) as any
+        if (!hasError(resp) && resp.data?.docs) {
+          const rerouteFulfillmentConfigMappingFlipped = Object.fromEntries(Object.entries(this.rerouteFulfillmentConfigMapping).map(([key, value]) => [value, key])) as any;
+          resp.data.docs.map((config: any) => {
+            this.rerouteFulfillmentConfig[rerouteFulfillmentConfigMappingFlipped[config.settingTypeEnumId]] = config;
+          })
+        }
+      } catch(err) {
+        console.error(err)
+      }
+    },
+    async updateRerouteFulfillmentConfiguration(config: any, value: any) {
+      // Handled initial programmatical update
+      // When storing boolean values, it is stored as string. Further comparison needs conversion
+      if (config.settingValue === value || (typeof value === 'boolean' && (config.settingValue == 'true') === value)) {
+        return;
+      }
+      
+      const params = {
+        "fromDate": config.fromDate,
+        "productStoreId": this.currentEComStore?.productStoreId,
+        "settingTypeEnumId": config.settingTypeEnumId,
+        "settingValue": value
+      }
+
+      try {
+        const resp = await UserService.updateRerouteFulfillmentConfig(params) as any
+        if(!hasError(resp)) {
+          showToast(translate('Configuration updated'))
+        } else {
+          showToast(translate('Failed to update configuration'))
+        }
+      } catch(err) {
+        showToast(translate('Failed to update configuration'))
+        console.error(err)
+      }
+      // Fetch the updated configuration
+      await this.getRerouteFulfillmentConfiguration(config.settingTypeEnumId);
     }
   },
   setup () {
