@@ -69,6 +69,14 @@ const createPicklist = async (query: any): Promise <any> => {
   })
 }
 
+const sendReadyToPickupItemNotification = async (payload: any): Promise <any> => {
+  return api({
+    url: "service/sendReadyToPickupItemNotification",
+    method: "post",
+    data: payload
+  });
+}
+
 export const OrderService = {
   getOpenOrders,
   getOrderDetails,
@@ -77,5 +85,6 @@ export const OrderService = {
   quickShipEntireShipGroup,
   rejectOrderItem,
   updateShipment,
-  createPicklist
+  createPicklist,
+  sendReadyToPickupItemNotification
 }
