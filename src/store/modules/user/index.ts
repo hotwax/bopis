@@ -9,7 +9,7 @@ const userModule: Module<UserState, RootState> = {
     namespaced: true,
     state: {
       token: '',
-      current: null,
+      current: {},
       currentFacility: {},
       instanceUrl: '',
       preference: {
@@ -19,6 +19,7 @@ const userModule: Module<UserState, RootState> = {
       },
       locale: 'en',
       currentEComStore: {},
+      permissions: [],
     },
     getters,
     actions,

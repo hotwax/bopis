@@ -103,6 +103,8 @@
   "Sizes": "Sizes",
   "Something went wrong": "Something went wrong",
   "Something went wrong. Picklist can not be created.": "Something went wrong. Picklist can not be created.",
+  "Something went wrong while login. Please contact administrator": "Something went wrong while login. Please contact administrator.",
+  "Sorry, your username or password is incorrect. Please try again.": "Sorry, your username or password is incorrect. Please try again.",
   "Specify which facility you want to operate from. Order, inventory and other configuration data will be specific to the facility you select.": "Specify which facility you want to operate from. Order, inventory and other configuration data will be specific to the facility you select.",
   "State": "State",
   "Staff": "Staff",
@@ -123,5 +125,6 @@
   "Worn Display": "Worn Display",
   "This order will be removed from your dashboard. This action cannot be undone.": "This order will be removed from your dashboard.{ space } This action cannot be undone.",
   "View shipping orders along with pickup orders.": "View shipping orders along with pickup orders.",
+  "You do not have permission to access this page": "You do not have permission to access this page",
   "Zipcode": "Zipcode"
 }
