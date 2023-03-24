@@ -4,4 +4,5 @@ export default {
     "APP_ORDER_DETAIL_VIEW": "",
     "APP_PRODUCT_DETAIL_VIEW": "",
     "APP_ORDER_UPDATE": "",
+    "APP_RF_CONFIG_UPDATE": "COMMON_ADMIN"
 } as any 

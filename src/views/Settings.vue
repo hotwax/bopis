@@ -76,24 +76,24 @@
           </ion-card-content>
           <ion-item lines="none">
             <ion-label>{{ $t("Delivery method") }}</ion-label>
-            <ion-toggle :disabled="Object.keys(rerouteFulfillmentConfig.allowDeliveryMethodUpdate).length == 0" :checked="rerouteFulfillmentConfig.allowDeliveryMethodUpdate.settingValue" @ionChange="updateRerouteFulfillmentConfiguration(rerouteFulfillmentConfig.allowDeliveryMethodUpdate, $event.detail.checked, $event)" slot="end" />
+            <ion-toggle :disabled="!hasPermission(Actions.APP_RF_CONFIG_UPDATE) || Object.keys(rerouteFulfillmentConfig.allowDeliveryMethodUpdate).length == 0" :checked="rerouteFulfillmentConfig.allowDeliveryMethodUpdate.settingValue" @ionChange="updateRerouteFulfillmentConfiguration(rerouteFulfillmentConfig.allowDeliveryMethodUpdate, $event.detail.checked, $event)" slot="end" />
           </ion-item>
           <ion-item lines="none">
             <ion-label>{{ $t("Delivery address") }}</ion-label>
-            <ion-toggle :disabled="Object.keys(rerouteFulfillmentConfig.allowDeliveryAddressUpdate).length == 0" :checked="rerouteFulfillmentConfig.allowDeliveryAddressUpdate.settingValue" @ionChange="updateRerouteFulfillmentConfiguration(rerouteFulfillmentConfig.allowDeliveryAddressUpdate, ($event.detail.value === 'on'))" slot="end" />
+            <ion-toggle :disabled="!hasPermission(Actions.APP_RF_CONFIG_UPDATE) || Object.keys(rerouteFulfillmentConfig.allowDeliveryAddressUpdate).length == 0" :checked="rerouteFulfillmentConfig.allowDeliveryAddressUpdate.settingValue" @ionChange="updateRerouteFulfillmentConfiguration(rerouteFulfillmentConfig.allowDeliveryAddressUpdate, ($event.detail.value === 'on'))" slot="end" />
           </ion-item>
           <ion-item lines="none">
             <ion-label>{{ $t("Pick up location") }}</ion-label>
-            <ion-toggle :disabled="Object.keys(rerouteFulfillmentConfig.allowPickupUpdate).length == 0" :checked="rerouteFulfillmentConfig.allowPickupUpdate.settingValue" @ionChange="updateRerouteFulfillmentConfiguration(rerouteFulfillmentConfig.allowPickupUpdate, ($event.detail.value === 'on'))" slot="end" />
+            <ion-toggle :disabled="!hasPermission(Actions.APP_RF_CONFIG_UPDATE) || Object.keys(rerouteFulfillmentConfig.allowPickupUpdate).length == 0" :checked="rerouteFulfillmentConfig.allowPickupUpdate.settingValue" @ionChange="updateRerouteFulfillmentConfiguration(rerouteFulfillmentConfig.allowPickupUpdate, ($event.detail.value === 'on'))" slot="end" />
           </ion-item>
           <ion-item lines="none">
             <ion-label>{{ $t("Cancel order before fulfillment") }}</ion-label>
             <!-- <p>Uploading order cancelations to Shopify is currently disabled. Order cancelations in HotWax will not be synced to Shopify.</p> -->
-            <ion-toggle :disabled="Object.keys(rerouteFulfillmentConfig.allowCancel).length == 0" :checked="rerouteFulfillmentConfig.allowCancel.settingValue" @ionChange="updateRerouteFulfillmentConfiguration(rerouteFulfillmentConfig.allowCancel, ($event.detail.value === 'on'))" slot="end" />
+            <ion-toggle :disabled="!hasPermission(Actions.APP_RF_CONFIG_UPDATE) || Object.keys(rerouteFulfillmentConfig.allowCancel).length == 0" :checked="rerouteFulfillmentConfig.allowCancel.settingValue" @ionChange="updateRerouteFulfillmentConfiguration(rerouteFulfillmentConfig.allowCancel, ($event.detail.value === 'on'))" slot="end" />
           </ion-item>
           <ion-item lines="none">
             <ion-label>{{ $t("Shipment method") }}</ion-label>
-            <ion-select :disabled="Object.keys(rerouteFulfillmentConfig.shippingMethod).length == 0" interface="popover" :value="rerouteFulfillmentConfig.shippingMethod.settingValue" @ionChange="updateRerouteFulfillmentConfiguration(rerouteFulfillmentConfig.shippingMethod, $event.detail.value)">
+            <ion-select :disabled="!hasPermission(Actions.APP_RF_CONFIG_UPDATE) || Object.keys(rerouteFulfillmentConfig.shippingMethod).length == 0" interface="popover" :value="rerouteFulfillmentConfig.shippingMethod.settingValue" @ionChange="updateRerouteFulfillmentConfiguration(rerouteFulfillmentConfig.shippingMethod, $event.detail.value)">
               <ion-select-option v-for="shipmentMethod in availableShipmentMethods" :key="shipmentMethod.shipmentMethodTypeId" :value="shipmentMethod.shipmentMethodTypeId" >{{ shipmentMethod.description }}</ion-select-option>
             </ion-select>
           </ion-item>
@@ -204,6 +204,7 @@ import { DateTime } from 'luxon';
 import { UserService } from '@/services/UserService'
 import { hasError, showToast } from '@/utils';
 import { translate } from "@/i18n";
+import { Actions, hasPermission } from '@/authorization'
 
 export default defineComponent({
   name: 'Settings',
@@ -395,7 +396,9 @@ export default defineComponent({
     const router = useRouter();
 
     return {
+      Actions,
       ellipsisVertical,
+      hasPermission,
       personCircleOutline,
       router,
       sendOutline,
