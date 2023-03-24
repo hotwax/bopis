@@ -44,6 +44,9 @@ const getters: GetterTree <UserState, RootState> = {
     },
     getUserPermissions (state) {
         return state.permissions;
+    },
+    getCurrentEComStore(state) {
+        return state.currentEComStore;
     }
 }
 export default getters;

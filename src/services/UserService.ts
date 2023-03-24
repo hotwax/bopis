@@ -116,6 +116,22 @@ const getCurrentEComStore = async (token: any, facilityId: any): Promise<any> =>
     return Promise.reject(error)
   }
 }
+const getRerouteFulfillmentConfig = async (payload: any): Promise<any> => {
+  return api({
+    url: "performFind",
+    method: "get",
+    params: payload,
+  });
+}
+
+const updateRerouteFulfillmentConfig = async (payload: any): Promise<any> => {
+  return api({
+    url: "service/updateProductStoreSetting",
+    method: "post",
+    data: payload
+  });
+}
+
 
 
 const getUserPermissions = async (payload: any, token: any): Promise<any> => {
@@ -211,9 +227,11 @@ export const UserService = {
     login,
     getAvailableTimeZones,
     getCurrentEComStore,
+    getRerouteFulfillmentConfig,
     setUserTimeZone,
     getUserPreference,
     setUserPreference,
     getUserPermissions,
-    getUserProfile
+    getUserProfile,
+    updateRerouteFulfillmentConfig
 }

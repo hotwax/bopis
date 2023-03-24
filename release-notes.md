@@ -1,3 +1,11 @@
+# Release 2.7.0
+
+## What's Changed
+* Implemented: Feature to update Reroute fulfillment configuration from settings page (#208) by @adityasharma7 in https://github.com/hotwax/bopis/pull/211
+
+
+**Full Changelog**: https://github.com/hotwax/bopis/compare/v2.6.0...v.2.7.0
+
 # Release 2.6.0
 
 ## What's Changed
