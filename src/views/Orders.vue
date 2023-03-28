@@ -91,6 +91,9 @@
               <ion-button :disabled="!hasPermission(Actions.APP_ORDER_UPDATE)" fill="clear" @click.stop="deliverShipment(order)">
                 {{ part.shipmentMethodEnum.shipmentMethodEnumId === 'STOREPICKUP' ? $t("Handover") : $t("Ship") }}
               </ion-button>
+              <ion-button v-if="part.shipmentMethodEnum.shipmentMethodEnumId === 'STOREPICKUP'" fill="clear" slot="end" @click="sendReadyForPickupEmail(order)">
+                <ion-icon slot="icon-only" :icon="mail" />
+              </ion-button>
               <ion-button v-if="showPackingSlip" fill="clear" slot="end" @click="printPackingSlip(order)">
                 <ion-icon slot="icon-only" :icon="print" />
               </ion-button>
@@ -163,7 +166,7 @@ import {
 } from "@ionic/vue";
 import { defineComponent, ref } from "vue";
 import ProductListItem from '@/components/ProductListItem.vue'
-import { swapVerticalOutline, callOutline, mailOutline, print } from "ionicons/icons";
+import { swapVerticalOutline, callOutline, mail, mailOutline, print } from "ionicons/icons";
 import { mapGetters, useStore } from 'vuex'
 import { useRouter } from 'vue-router'
 import { copyToClipboard, hasError, showToast } from '@/utils'
@@ -172,6 +175,7 @@ import emitter from "@/event-bus"
 import { api } from '@/adapter';
 import { translate } from "@/i18n";
 import AssignPickerModal from "./AssignPickerModal.vue";
+import { OrderService } from "@/services/OrderService";
 import { Actions, hasPermission } from '@/authorization'
 
 export default defineComponent({
@@ -392,6 +396,36 @@ export default defineComponent({
         part.items.map((item: any) => items.push(item))
         return items;
       }, [])
+    },
+    async sendReadyForPickupEmail(order: any) {
+      const header = this.$t('Resend ready for pickup email')
+      const message = this.$t('An email notification will be sent to that their order is ready for pickup.', { customerName: order.customer.name });
+
+      const alert = await alertController
+        .create({
+          header: header,
+          message: message,
+          buttons: [{
+            text: this.$t('Cancel'),
+            role: 'cancel'
+          },{
+            text: this.$t('Send'),
+            handler: async () => {
+              try {
+                const resp = await OrderService.sendReadyToPickupItemNotification({ shipmentId: order.shipmentId });
+                if (!hasError(resp)) {
+                  showToast(translate("Email sent successfully"))
+                } else {
+                  showToast(translate("Something went wrong while sending the email."))
+                }
+              } catch (error) {
+                showToast(translate("Something went wrong while sending the email."))
+                console.error(error)
+              }
+            }
+          }]
+        });
+      return alert.present();
     }
   },
   ionViewWillEnter () {
@@ -414,6 +448,7 @@ export default defineComponent({
       Actions,
       callOutline,
       copyToClipboard,
+      mail,
       hasPermission,
       mailOutline,
       print,
