@@ -36,6 +36,9 @@ const getters: GetterTree <UserState, RootState> = {
     },
     getCurrency (state) {
         return state.currentEComStore.defaultCurrencyUomId ? state.currentEComStore.defaultCurrencyUomId : 'USD';
+    },
+    getCurrentEComStore(state) {
+        return state.currentEComStore;
     }
 }
 export default getters;

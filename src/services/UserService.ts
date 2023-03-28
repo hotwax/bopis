@@ -82,14 +82,32 @@ const getEComStores = async (facilityId: string): Promise<any> => {
     console.error(err)
   }
 }
+const getRerouteFulfillmentConfig = async (payload: any): Promise<any> => {
+  return api({
+    url: "performFind",
+    method: "get",
+    params: payload,
+  });
+}
+
+const updateRerouteFulfillmentConfig = async (payload: any): Promise<any> => {
+  return api({
+    url: "service/updateProductStoreSetting",
+    method: "post",
+    data: payload
+  });
+}
+
 
 export const UserService = {
     login,
     getAvailableTimeZones,
     getProfile,
+    getRerouteFulfillmentConfig,
     setUserTimeZone,
     getUserPreference,
     setUserPreference,
     checkPermission,
-    getEComStores
+    getEComStores,
+    updateRerouteFulfillmentConfig
 }
