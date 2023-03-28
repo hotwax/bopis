@@ -176,15 +176,15 @@
         <ion-card>
           <ion-card-header>
             <ion-card-title>
-              {{ $t("Configure Picker") }}
+              {{ $t("Track Pickers") }}
             </ion-card-title>
           </ion-card-header>
           <ion-card-content>
-            {{ $t('Configuration to assign picker to orders.') }}
+            {{ $t('Track who picked orders by entering picker IDs when packing an order.') }}
           </ion-card-content>
           <ion-item lines="none">
-            <ion-label>{{ $t("Configure Picker") }}</ion-label>
-            <ion-toggle :checked="configurePicker" @ionChange="setConfigurePickerPreference($event)" slot="end" />
+            <ion-label>{{ $t("Track Pickers") }}</ion-label>
+            <ion-toggle :checked="trackPicker" @ionChange="settrackPickerPreference($event)" slot="end" />
           </ion-item>
         </ion-card>
       </section>
