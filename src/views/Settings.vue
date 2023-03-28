@@ -183,8 +183,8 @@
             {{ $t('Track who picked orders by entering picker IDs when packing an order.') }}
           </ion-card-content>
           <ion-item lines="none">
-            <ion-label>{{ $t("Track Pickers") }}</ion-label>
-            <ion-toggle :checked="trackPicker" @ionChange="settrackPickerPreference($event)" slot="end" />
+            <ion-label>{{ $t("Enable tracking") }}</ion-label>
+            <ion-toggle :checked="enableTracking" @ionChange="setenableTrackingPreference($event)" slot="end" />
           </ion-item>
         </ion-card>
       </section>
