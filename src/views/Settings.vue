@@ -184,7 +184,7 @@
           </ion-card-content>
           <ion-item lines="none">
             <ion-label>{{ $t("Enable tracking") }}</ion-label>
-            <ion-toggle :checked="enableTracking" @ionChange="setenableTrackingPreference($event)" slot="end" />
+            <ion-toggle :checked="configurePicker" @ionChange="setConfigurePickerPreference($event)" slot="end" />
           </ion-item>
         </ion-card>
       </section>
