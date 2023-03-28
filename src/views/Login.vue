@@ -76,12 +76,11 @@ export default defineComponent({
       if(!this.baseURL) this.store.dispatch("user/setUserInstanceUrl", this.alias[instanceURL] ? this.alias[instanceURL] : instanceURL);
       
       const { username, password } = this;
-      this.store.dispatch("user/login", { username, password }).then((data: any) => {
-        if (data.token) {
-          this.username = ''
-          this.password = ''
-          this.$router.push('/')
-        }
+      this.store.dispatch("user/login", { username: username.trim(), password }).then(() => {
+        // All the failure cases are handled in action, if then block is executing, login is successful
+        this.username = ''
+        this.password = ''
+        this.$router.push('/')
       })
     }
   },

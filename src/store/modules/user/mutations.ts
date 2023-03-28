@@ -8,8 +8,9 @@ const mutations: MutationTree <UserState> = {
     },
     [types.USER_END_SESSION] (state) {
       state.token = ''
-      state.current = null
+      state.current = {}
       state.currentFacility = {}
+      state.permissions = []
     },
     [types.USER_INFO_UPDATED] (state, payload) {
         state.current = payload
@@ -28,6 +29,9 @@ const mutations: MutationTree <UserState> = {
     },
     [types.USER_CURRENT_ECOM_STORE_UPDATED] (state, payload) {
         state.currentEComStore = payload
+    },
+    [types.USER_PERMISSIONS_UPDATED] (state, payload) {
+        state.permissions = payload
     }
 }
 export default mutations;
