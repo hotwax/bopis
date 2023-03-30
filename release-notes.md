@@ -1,3 +1,17 @@
+# Release 2.8.0
+
+## What's Changed
+* Implemented: disabling of buttons on orders page based on order update permission (#85zrthgeq) by @k2maan in https://github.com/hotwax/bopis/pull/209 and https://github.com/hotwax/bopis/pull/210
+* Implemented: logic to identify authorisations for the given user (#205) by @adityasharma7 in https://github.com/hotwax/bopis/pull/206
+* Improved: the assigning picker setting's description on the Settings page. by @Dhiraj1405 in https://github.com/hotwax/bopis/pull/215
+* Implemented: code to resend ready for pickup email (#85zrtpgxb) by @k2maan in https://github.com/hotwax/bopis/pull/212
+* Fixed: Updating Delivery address permission for reroute fulfillment doesn't works  (#217) by @adityasharma7 in https://github.com/hotwax/bopis/pull/218
+
+## New Contributors
+* @Dhiraj1405 made their first contribution in https://github.com/hotwax/bopis/pull/215
+
+**Full Changelog**: https://github.com/hotwax/bopis/compare/v2.7.0...v2.8.0
+
 # Release 2.7.0
 
 ## What's Changed
