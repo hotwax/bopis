@@ -91,11 +91,11 @@
               <ion-button :disabled="!hasPermission(Actions.APP_ORDER_UPDATE)" fill="clear" @click.stop="deliverShipment(order)">
                 {{ part.shipmentMethodEnum.shipmentMethodEnumId === 'STOREPICKUP' ? $t("Handover") : $t("Ship") }}
               </ion-button>
-              <ion-button v-if="part.shipmentMethodEnum.shipmentMethodEnumId === 'STOREPICKUP'" fill="clear" slot="end" @click="sendReadyForPickupEmail(order)">
-                <ion-icon slot="icon-only" :icon="mail" />
-              </ion-button>
               <ion-button v-if="showPackingSlip" fill="clear" slot="end" @click="printPackingSlip(order)">
-                <ion-icon slot="icon-only" :icon="print" />
+                <ion-icon slot="icon-only" :icon="printOutline" />
+              </ion-button>
+              <ion-button v-if="part.shipmentMethodEnum.shipmentMethodEnumId === 'STOREPICKUP'" fill="clear" slot="end" @click="sendReadyForPickupEmail(order)">
+                <ion-icon slot="icon-only" :icon="mailOutline" />
               </ion-button>
             </div>
           </ion-card>
@@ -166,7 +166,7 @@ import {
 } from "@ionic/vue";
 import { defineComponent, ref } from "vue";
 import ProductListItem from '@/components/ProductListItem.vue'
-import { swapVerticalOutline, callOutline, mail, mailOutline, print } from "ionicons/icons";
+import { swapVerticalOutline, callOutline, mailOutline, printOutline } from "ionicons/icons";
 import { mapGetters, useStore } from 'vuex'
 import { useRouter } from 'vue-router'
 import { copyToClipboard, hasError, showToast } from '@/utils'
@@ -448,10 +448,9 @@ export default defineComponent({
       Actions,
       callOutline,
       copyToClipboard,
-      mail,
       hasPermission,
       mailOutline,
-      print,
+      printOutline,
       router,
       segmentSelected,
       swapVerticalOutline,
@@ -472,6 +471,13 @@ export default defineComponent({
 
 .border-top {
   border-top: 1px solid rgba(0, 0, 0, 0.12);
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: max-content max-content 1fr;
+}
+
+.border-top :last-child {
+  justify-self: end;
 }
 
 .metadata {
