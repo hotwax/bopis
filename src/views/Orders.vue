@@ -61,7 +61,7 @@
         </div>
       </div>      
       <div v-if="segmentSelected === 'packed'">
-        <div v-for="order in packedOrders" :key="order.orderId" v-show="order.parts.length > 0">
+        <div v-for="order in packedOrdersByParts" :key="order.orderId" v-show="order.parts.length > 0">
           <ion-card v-for="(part, index) in order.parts" :key="index">
             <ion-item lines="none">
               <ion-label class="ion-text-wrap">
@@ -222,7 +222,8 @@ export default defineComponent({
   },
   data() {
     return {
-      queryString: ''
+      queryString: '',
+      packedOrdersByParts: [] as Array<any>
     }
   },
   methods: {
@@ -294,6 +295,7 @@ export default defineComponent({
       const viewIndex = vIndex ? vIndex : 0;
 
       await this.store.dispatch("order/getPackedOrders", { viewSize, viewIndex, queryString: this.queryString, facilityId: this.currentFacility.facilityId });
+      this.getPackedOrdersByParts(this.packedOrders);
     },
     async getCompletedOrders (vSize?: any, vIndex?: any) {
       const viewSize = vSize ? vSize : process.env.VUE_APP_VIEW_SIZE;
@@ -426,6 +428,11 @@ export default defineComponent({
           }]
         });
       return alert.present();
+    },
+    getPackedOrdersByParts(packedOrders: Array<any>) {
+      this.packedOrdersByParts = packedOrders.flatMap((order: any) => 
+        order.parts.length > 1 ? order.parts.map((item: any) => ({ ...order, parts: [item] })) : order
+      )
     }
   },
   ionViewWillEnter () {
