@@ -62,7 +62,7 @@
       </div>      
       <div v-if="segmentSelected === 'packed'">
         <div v-for="order in packedOrdersByParts" :key="order.orderId" v-show="order.parts.length > 0">
-          <ion-card v-for="(part, index) in order.parts" :key="index">
+          <ion-card>
             <ion-item lines="none">
               <ion-label class="ion-text-wrap">
                 <h1>{{ order.customer.name }}</h1>
@@ -71,7 +71,7 @@
               <ion-badge v-if="order.placedDate" color="dark" slot="end">{{ timeFromNow(order.placedDate) }}</ion-badge>
             </ion-item>
 
-            <ProductListItem v-for="item in part.items" :key="item.productId" :item="item" />
+            <ProductListItem v-for="item in order.part.items" :key="item.productId" :item="item" />
 
             <ion-item v-if="order.customer.phoneNumber">
               <ion-icon :icon="callOutline" slot="start" />
@@ -89,9 +89,9 @@
             </ion-item>
             <div class="border-top">
               <ion-button :disabled="!hasPermission(Actions.APP_ORDER_UPDATE)" fill="clear" @click.stop="deliverShipment(order)">
-                {{ part.shipmentMethodEnum.shipmentMethodEnumId === 'STOREPICKUP' ? $t("Handover") : $t("Ship") }}
+                {{ order.part.shipmentMethodEnum.shipmentMethodEnumId === 'STOREPICKUP' ? $t("Handover") : $t("Ship") }}
               </ion-button>
-              <ion-button v-if="part.shipmentMethodEnum.shipmentMethodEnumId === 'STOREPICKUP'" fill="clear" slot="end" @click="sendReadyForPickupEmail(order)">
+              <ion-button v-if="order.part.shipmentMethodEnum.shipmentMethodEnumId === 'STOREPICKUP'" fill="clear" slot="end" @click="sendReadyForPickupEmail(order)">
                 <ion-icon slot="icon-only" :icon="mail" />
               </ion-button>
               <ion-button v-if="showPackingSlip" fill="clear" slot="end" @click="printPackingSlip(order)">
@@ -430,9 +430,7 @@ export default defineComponent({
       return alert.present();
     },
     getPackedOrdersByParts(packedOrders: Array<any>) {
-      this.packedOrdersByParts = packedOrders.flatMap((order: any) => 
-        order.parts.length > 1 ? order.parts.map((item: any) => ({ ...order, parts: [item] })) : order
-      )
+      this.packedOrdersByParts = packedOrders.flatMap((order: any) => order.parts.map((part: any) => ({ ...order, part })))
     }
   },
   ionViewWillEnter () {
