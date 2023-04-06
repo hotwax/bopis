@@ -22,8 +22,8 @@
     </ion-header>
     <ion-content>
       <div v-if="segmentSelected === 'open'">
-        <div v-for="order in orders" :key="order.orderId" v-show="order.parts.length > 0">
-          <ion-card v-for="(part, index) in order.parts" :key="index" @click.prevent="viewOrder(order, part)">
+        <div v-for="order in openOrdersByPart" :key="order.orderId" v-show="order.parts.length > 0">
+          <ion-card button @click.prevent="viewOrder(order, order.part)">
             <ion-item lines="none">
               <ion-label class="ion-text-wrap">
                 <h1>{{ order.customer.name }}</h1>
@@ -36,7 +36,7 @@
               <!-- TODO: Display the packed date of the orders, currently not getting the packed date from API-->
             </ion-item>
 
-            <ProductListItem v-for="item in part.items" :key="item.productId" :item="item" />
+            <ProductListItem v-for="item in order.part.items" :key="item.productId" :item="item" />
 
             <ion-item v-if="order.customer.phoneNumber">
               <ion-icon :icon="callOutline" slot="start" />
@@ -53,15 +53,15 @@
               </ion-button>
             </ion-item>
             <div class="border-top">
-              <ion-button :disabled="!hasPermission(Actions.APP_ORDER_UPDATE)" fill="clear" @click.stop="readyForPickup(order, part)">
-                {{ part.shipmentMethodEnum?.shipmentMethodEnumId === 'STOREPICKUP' ? $t("Ready for pickup") : $t("Ready to ship") }}
+              <ion-button :disabled="!hasPermission(Actions.APP_ORDER_UPDATE)" fill="clear" @click.stop="readyForPickup(order, order.part)">
+                {{ order.part.shipmentMethodEnum?.shipmentMethodEnumId === 'STOREPICKUP' ? $t("Ready for pickup") : $t("Ready to ship") }}
               </ion-button>
             </div>
           </ion-card>
         </div>
       </div>      
       <div v-if="segmentSelected === 'packed'">
-        <div v-for="order in packedOrdersByParts" :key="order.orderId" v-show="order.parts.length > 0">
+        <div v-for="order in packedOrdersByPart" :key="order.orderId" v-show="order.parts.length > 0">
           <ion-card>
             <ion-item lines="none">
               <ion-label class="ion-text-wrap">
@@ -102,7 +102,7 @@
         </div>
       </div>
       <div v-if="segmentSelected === 'completed'">
-        <div v-for="order in completedOrders" :key="order.orderId" v-show="order.parts.length > 0">
+        <div v-for="order in completedOrdersByPart" :key="order.orderId" v-show="order.parts.length > 0">
           <ion-card>
             <ion-item lines="none">
               <ion-label class="ion-text-wrap">
@@ -112,7 +112,7 @@
               <ion-badge v-if="order.placedDate" color="dark" slot="end">{{ timeFromNow(order.placedDate) }}</ion-badge>
             </ion-item>
 
-            <ProductListItem v-for="item in getOrderItems(order.parts)" :key="item.productId" :item="item" />
+            <ProductListItem v-for="item in order.part.items" :key="item.productId" :item="item" />
 
             <ion-item v-if="order.customer.phoneNumber">
               <ion-icon :icon="callOutline" slot="start" />
@@ -223,7 +223,9 @@ export default defineComponent({
   data() {
     return {
       queryString: '',
-      packedOrdersByParts: [] as Array<any>
+      openOrdersByPart: [] as Array<any>,
+      packedOrdersByPart: [] as Array<any>,
+      completedOrdersByPart: [] as Array<any>
     }
   },
   methods: {
@@ -289,19 +291,21 @@ export default defineComponent({
       const viewIndex = vIndex ? vIndex : 0;
 
       await this.store.dispatch("order/getOpenOrders", { viewSize, viewIndex, queryString: this.queryString, facilityId: this.currentFacility.facilityId });
+      this.getOrdersByPart(this.orders, 'open');
     },
     async getPackedOrders (vSize?: any, vIndex?: any) {
       const viewSize = vSize ? vSize : process.env.VUE_APP_VIEW_SIZE;
       const viewIndex = vIndex ? vIndex : 0;
 
       await this.store.dispatch("order/getPackedOrders", { viewSize, viewIndex, queryString: this.queryString, facilityId: this.currentFacility.facilityId });
-      this.getPackedOrdersByParts(this.packedOrders);
+      this.getOrdersByPart(this.packedOrders, 'packed');
     },
     async getCompletedOrders (vSize?: any, vIndex?: any) {
       const viewSize = vSize ? vSize : process.env.VUE_APP_VIEW_SIZE;
       const viewIndex = vIndex ? vIndex : 0;
 
       await this.store.dispatch("order/getCompletedOrders", { viewSize, viewIndex, queryString: this.queryString, facilityId: this.currentFacility.facilityId });
+      this.getOrdersByPart(this.completedOrders, 'completed');
     },
     async loadMoreProducts (event: any) {
       if (this.segmentSelected === 'open') {
@@ -393,12 +397,6 @@ export default defineComponent({
         element.select();
       })
     },
-    getOrderItems(orderParts: any) {
-      return orderParts.reduce((items: Array<any>, part: any) => {
-        part.items.map((item: any) => items.push(item))
-        return items;
-      }, [])
-    },
     async sendReadyForPickupEmail(order: any) {
       const header = this.$t('Resend ready for pickup email')
       const message = this.$t('An email notification will be sent to that their order is ready for pickup.', { customerName: order.customer.name });
@@ -429,8 +427,15 @@ export default defineComponent({
         });
       return alert.present();
     },
-    getPackedOrdersByParts(packedOrders: Array<any>) {
-      this.packedOrdersByParts = packedOrders.flatMap((order: any) => order.parts.map((part: any) => ({ ...order, part })))
+    getOrdersByPart(orders: Array<any>, type: string) {
+      const orderByParts = orders.flatMap((order: any) => order.parts.map((part: any) => ({ ...order, part })))
+      if (type === 'open') {
+        this.openOrdersByPart = orderByParts
+      } else if (type === 'packed') {
+        this.packedOrdersByPart = orderByParts
+      } else {
+        this.completedOrdersByPart = orderByParts
+      }
     }
   },
   ionViewWillEnter () {
