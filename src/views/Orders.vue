@@ -22,7 +22,7 @@
     </ion-header>
     <ion-content>
       <div v-if="segmentSelected === 'open'">
-        <div v-for="order in openOrdersByPart" :key="order.orderId" v-show="order.parts.length > 0">
+        <div v-for="(order, index) in getOrdersByPart(orders)" :key="index" v-show="order.parts.length > 0">
           <ion-card button @click.prevent="viewOrder(order, order.part)">
             <ion-item lines="none">
               <ion-label class="ion-text-wrap">
@@ -61,7 +61,7 @@
         </div>
       </div>      
       <div v-if="segmentSelected === 'packed'">
-        <div v-for="order in packedOrdersByPart" :key="order.orderId" v-show="order.parts.length > 0">
+        <div v-for="(order, index) in getOrdersByPart(packedOrders)" :key="index" v-show="order.parts.length > 0">
           <ion-card>
             <ion-item lines="none">
               <ion-label class="ion-text-wrap">
@@ -102,7 +102,7 @@
         </div>
       </div>
       <div v-if="segmentSelected === 'completed'">
-        <div v-for="order in completedOrdersByPart" :key="order.orderId" v-show="order.parts.length > 0">
+        <div v-for="(order, index) in getOrdersByPart(completedOrders)" :key="index" v-show="order.parts.length > 0">
           <ion-card>
             <ion-item lines="none">
               <ion-label class="ion-text-wrap">
@@ -222,10 +222,7 @@ export default defineComponent({
   },
   data() {
     return {
-      queryString: '',
-      openOrdersByPart: [] as Array<any>,
-      packedOrdersByPart: [] as Array<any>,
-      completedOrdersByPart: [] as Array<any>
+      queryString: ''
     }
   },
   methods: {
@@ -291,21 +288,18 @@ export default defineComponent({
       const viewIndex = vIndex ? vIndex : 0;
 
       await this.store.dispatch("order/getOpenOrders", { viewSize, viewIndex, queryString: this.queryString, facilityId: this.currentFacility.facilityId });
-      this.getOrdersByPart(this.orders, 'open');
     },
     async getPackedOrders (vSize?: any, vIndex?: any) {
       const viewSize = vSize ? vSize : process.env.VUE_APP_VIEW_SIZE;
       const viewIndex = vIndex ? vIndex : 0;
 
       await this.store.dispatch("order/getPackedOrders", { viewSize, viewIndex, queryString: this.queryString, facilityId: this.currentFacility.facilityId });
-      this.getOrdersByPart(this.packedOrders, 'packed');
     },
     async getCompletedOrders (vSize?: any, vIndex?: any) {
       const viewSize = vSize ? vSize : process.env.VUE_APP_VIEW_SIZE;
       const viewIndex = vIndex ? vIndex : 0;
 
       await this.store.dispatch("order/getCompletedOrders", { viewSize, viewIndex, queryString: this.queryString, facilityId: this.currentFacility.facilityId });
-      this.getOrdersByPart(this.completedOrders, 'completed');
     },
     async loadMoreProducts (event: any) {
       if (this.segmentSelected === 'open') {
@@ -427,14 +421,9 @@ export default defineComponent({
         });
       return alert.present();
     },
-    getOrdersByPart(orders: Array<any>, type: string) {
-      const orderByParts = orders.flatMap((order: any) => order.parts.map((part: any) => ({ ...order, part })))
-      if (type === 'open') {
-        this.openOrdersByPart = orderByParts
-      } else if (type === 'packed') {
-        this.packedOrdersByPart = orderByParts
-      } else {
-        this.completedOrdersByPart = orderByParts
+    getOrdersByPart(orders: Array<any>) {
+      if(Object.keys(orders).length) {
+        return orders.flatMap((order: any) => order.parts.map((part: any) => ({ ...order, part })))
       }
     }
   },
