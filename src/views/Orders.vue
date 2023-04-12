@@ -22,8 +22,8 @@
     </ion-header>
     <ion-content>
       <div v-if="segmentSelected === 'open'">
-        <div v-for="order in orders" :key="order.orderId" v-show="order.parts.length > 0">
-          <ion-card v-for="(part, index) in order.parts" :key="index" @click.prevent="viewOrder(order, part)">
+        <div v-for="(order, index) in getOrdersByPart(orders)" :key="index" v-show="order.parts.length > 0">
+          <ion-card button @click.prevent="viewOrder(order, order.part)">
             <ion-item lines="none">
               <ion-label class="ion-text-wrap">
                 <h1>{{ order.customer.name }}</h1>
@@ -36,7 +36,7 @@
               <!-- TODO: Display the packed date of the orders, currently not getting the packed date from API-->
             </ion-item>
 
-            <ProductListItem v-for="item in part.items" :key="item.productId" :item="item" />
+            <ProductListItem v-for="item in order.part.items" :key="item.productId" :item="item" />
 
             <ion-item v-if="order.customer.phoneNumber">
               <ion-icon :icon="callOutline" slot="start" />
@@ -53,16 +53,16 @@
               </ion-button>
             </ion-item>
             <div class="border-top">
-              <ion-button :disabled="!hasPermission(Actions.APP_ORDER_UPDATE)" fill="clear" @click.stop="readyForPickup(order, part)">
-                {{ part.shipmentMethodEnum?.shipmentMethodEnumId === 'STOREPICKUP' ? $t("Ready for pickup") : $t("Ready to ship") }}
+              <ion-button :disabled="!hasPermission(Actions.APP_ORDER_UPDATE)" fill="clear" @click.stop="readyForPickup(order, order.part)">
+                {{ order.part.shipmentMethodEnum?.shipmentMethodEnumId === 'STOREPICKUP' ? $t("Ready for pickup") : $t("Ready to ship") }}
               </ion-button>
             </div>
           </ion-card>
         </div>
       </div>      
       <div v-if="segmentSelected === 'packed'">
-        <div v-for="order in packedOrders" :key="order.orderId" v-show="order.parts.length > 0">
-          <ion-card v-for="(part, index) in order.parts" :key="index">
+        <div v-for="(order, index) in getOrdersByPart(packedOrders)" :key="index" v-show="order.parts.length > 0">
+          <ion-card>
             <ion-item lines="none">
               <ion-label class="ion-text-wrap">
                 <h1>{{ order.customer.name }}</h1>
@@ -71,7 +71,7 @@
               <ion-badge v-if="order.placedDate" color="dark" slot="end">{{ timeFromNow(order.placedDate) }}</ion-badge>
             </ion-item>
 
-            <ProductListItem v-for="item in part.items" :key="item.productId" :item="item" />
+            <ProductListItem v-for="item in order.part.items" :key="item.productId" :item="item" />
 
             <ion-item v-if="order.customer.phoneNumber">
               <ion-icon :icon="callOutline" slot="start" />
@@ -89,12 +89,12 @@
             </ion-item>
             <div class="border-top">
               <ion-button :disabled="!hasPermission(Actions.APP_ORDER_UPDATE)" fill="clear" @click.stop="deliverShipment(order)">
-                {{ part.shipmentMethodEnum.shipmentMethodEnumId === 'STOREPICKUP' ? $t("Handover") : $t("Ship") }}
+                {{ order.part.shipmentMethodEnum.shipmentMethodEnumId === 'STOREPICKUP' ? $t("Handover") : $t("Ship") }}
               </ion-button>
               <ion-button v-if="showPackingSlip" fill="clear" slot="end" @click="printPackingSlip(order)">
                 <ion-icon slot="icon-only" :icon="printOutline" />
               </ion-button>
-              <ion-button v-if="part.shipmentMethodEnum.shipmentMethodEnumId === 'STOREPICKUP'" fill="clear" slot="end" @click="sendReadyForPickupEmail(order)">
+              <ion-button v-if="order.part.shipmentMethodEnum.shipmentMethodEnumId === 'STOREPICKUP'" fill="clear" slot="end" @click="sendReadyForPickupEmail(order)">
                 <ion-icon slot="icon-only" :icon="mailOutline" />
               </ion-button>
             </div>
@@ -102,7 +102,7 @@
         </div>
       </div>
       <div v-if="segmentSelected === 'completed'">
-        <div v-for="order in completedOrders" :key="order.orderId" v-show="order.parts.length > 0">
+        <div v-for="(order, index) in getOrdersByPart(completedOrders)" :key="index" v-show="order.parts.length > 0">
           <ion-card>
             <ion-item lines="none">
               <ion-label class="ion-text-wrap">
@@ -112,7 +112,7 @@
               <ion-badge v-if="order.placedDate" color="dark" slot="end">{{ timeFromNow(order.placedDate) }}</ion-badge>
             </ion-item>
 
-            <ProductListItem v-for="item in getOrderItems(order.parts)" :key="item.productId" :item="item" />
+            <ProductListItem v-for="item in order.part.items" :key="item.productId" :item="item" />
 
             <ion-item v-if="order.customer.phoneNumber">
               <ion-icon :icon="callOutline" slot="start" />
@@ -391,12 +391,6 @@ export default defineComponent({
         element.select();
       })
     },
-    getOrderItems(orderParts: any) {
-      return orderParts.reduce((items: Array<any>, part: any) => {
-        part.items.map((item: any) => items.push(item))
-        return items;
-      }, [])
-    },
     async sendReadyForPickupEmail(order: any) {
       const header = this.$t('Resend ready for pickup email')
       const message = this.$t('An email notification will be sent to that their order is ready for pickup.', { customerName: order.customer.name });
@@ -426,6 +420,9 @@ export default defineComponent({
           }]
         });
       return alert.present();
+    },
+    getOrdersByPart(orders: Array<any>) {
+      return Object.keys(orders).length ? orders.flatMap((order: any) => order.parts.map((part: any) => ({ ...order, part }))) : [];
     }
   },
   ionViewWillEnter () {
