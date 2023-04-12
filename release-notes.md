@@ -1,3 +1,15 @@
+# Release 2.9.0
+
+## What's Changed
+* Changed the order of icons in packed section by @dt2patel in https://github.com/hotwax/bopis/pull/223 and by @ymaheshwari1 in https://github.com/hotwax/bopis/pull/224
+* Fixed: typo when defining the config object by @ymaheshwari1 in https://github.com/hotwax/bopis/pull/221
+* Implemented: show order cards horizontally based on order ship group/part (#85zrv9fhc) by @k2maan in https://github.com/hotwax/bopis/pull/225
+
+## New Contributors
+* @dt2patel made their first contribution in https://github.com/hotwax/bopis/pull/223
+
+**Full Changelog**: https://github.com/hotwax/bopis/compare/v2.8.0...v2.9.0
+
 # Release 2.8.0
 
 ## What's Changed
