@@ -422,9 +422,7 @@ export default defineComponent({
       return alert.present();
     },
     getOrdersByPart(orders: Array<any>) {
-      if(Object.keys(orders).length) {
-        return orders.flatMap((order: any) => order.parts.map((part: any) => ({ ...order, part })))
-      }
+      return Object.keys(orders).length ? orders.flatMap((order: any) => order.parts.map((part: any) => ({ ...order, part }))) : [];
     }
   },
   ionViewWillEnter () {
