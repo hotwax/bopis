@@ -278,7 +278,7 @@ export default defineComponent({
       // https://github.com/ionic-team/ionic-framework/pull/25858
       if (this.userProfile && this.currentFacility?.facilityId !== event.detail.value)
         this.store.dispatch('user/setFacility', {
-          'faciltyId': event.detail.value
+          'facilityId': event.detail.value
         });
     },
     async changeTimeZone() {
