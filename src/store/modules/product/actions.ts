@@ -52,7 +52,7 @@ const actions: ActionTree<ProductState, RootState> = {
         // used sku as we are currently only using sku to search for the product
         "viewSize": payload.viewSize,
         "viewIndex": payload.viewIndex,
-        "keyword": "*" + payload.queryString + "*",
+        "keyword": payload.queryString,
         "filters": ['isVirtual: true', 'isVariant: false'],
       })
       // resp.data.response.numFound tells the number of items in the response
