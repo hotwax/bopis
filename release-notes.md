@@ -1,3 +1,12 @@
+# Release 2.10.0
+## What's Changed
+* Improved: search query by removing wildcards by @adityasharma7 in https://github.com/hotwax/bopis/pull/228
+* Fixed: facility not changed from the settings page by @adityasharma7 in https://github.com/hotwax/bopis/pull/229
+* Fixed: Packing slip not generated (#230) by @adityasharma7 in https://github.com/hotwax/bopis/pull/231
+* Updated: app version for minor release (2.10.0) by @k2maan in https://github.com/hotwax/bopis/pull/232
+
+
+**Full Changelog**: https://github.com/hotwax/bopis/compare/v2.9.0...v2.10.0
 # Release 2.9.0
 
 ## What's Changed
