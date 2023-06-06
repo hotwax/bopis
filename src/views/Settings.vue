@@ -187,6 +187,27 @@
             <ion-toggle :checked="configurePicker" @ionChange="setConfigurePickerPreference($event)" slot="end" />
           </ion-item>
         </ion-card>
+
+        <ion-card>
+          <ion-card-header>
+            <ion-card-title>
+              {{ $t("Product Identification") }}
+            </ion-card-title>
+          </ion-card-header>
+          <ion-item>
+            <ion-label>{{ $t("Primary Product Identifier") }}</ion-label>
+            <ion-select interface="popover" :placeholder="$t('primary identifier')" @ionChange="setProductIdentificationPref($event.detail.value, 'primaryId')">
+              <ion-select-option v-for="identification in utilStore.productIdentificationOptions" :key="identification" :value="identification" >{{ identification }}</ion-select-option>
+            </ion-select>
+          </ion-item>
+          <ion-item>
+            <ion-label>{{ $t("Secondary Product Identifier") }}</ion-label>
+            <ion-select interface="popover" :placeholder="$t('secondary identifier')" >
+              <ion-select-option v-for="identification in utilStore.productIdentificationOptions" :key="identification" :value="identification" >{{ identification }}</ion-select-option>
+              <ion-select-option value="">{{ $t("None") }}</ion-select-option>
+            </ion-select>
+          </ion-item>
+        </ion-card>
       </section>
     </ion-content>
   </ion-page>
@@ -205,6 +226,7 @@ import { UserService } from '@/services/UserService'
 import { hasError, showToast } from '@/utils';
 import { translate } from "@/i18n";
 import { Actions, hasPermission } from '@/authorization'
+import { useUtilStore, useUserStore } from 'hc-plugin';
 
 export default defineComponent({
   name: 'Settings',
@@ -389,11 +411,21 @@ export default defineComponent({
       }
       // Fetch the updated configuration
       await this.getRerouteFulfillmentConfiguration(config.settingTypeEnumId);
+    },
+    setProductIdentificationPref(value: string, id: string) {
+      // Not dispatching an action if the value for id is same as saved in state
+      // if(this.productIdentificationPref[id] == value) {
+      //   return;
+      // }
+      this.userStore.setProductIdentificationPref({ id, value })
     }
   },
   setup () {
     const store = useStore();
     const router = useRouter();
+
+    const utilStore = useUtilStore();
+    const userStore = useUserStore();
 
     return {
       Actions,
@@ -405,7 +437,9 @@ export default defineComponent({
       store,
       storefrontOutline,
       codeWorkingOutline,
-      openOutline
+      openOutline,
+      userStore,
+      utilStore
     }
   }
 });

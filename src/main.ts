@@ -31,6 +31,8 @@ import store from './store'
 import permissionPlugin from '@/authorization';
 import permissionRules from '@/authorization/Rules';
 import permissionActions from '@/authorization/Actions';
+import { productIdentifier } from 'hc-plugin';
+import { initialise } from '@/adapter';
 
 const app = createApp(App)
   .use(IonicVue, {
@@ -77,6 +79,17 @@ app.config.globalProperties.$filters = {
     return featureValue;
   }
 }
+
+const omsApi = new initialise({
+  token: store.getters['user/getUserToken'],
+  instanceUrl: store.getters['user/getInstanceUrl'],
+  cacheMaxAge: 3000,
+})
+
+console.log('omsapi', { omsApi })
+app.use(productIdentifier, { omsApi })
+
+// console.log('omsapi', omsApi)
 
 
 router.isReady().then(() => {

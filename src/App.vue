@@ -57,22 +57,6 @@ export default defineComponent({
       instanceUrl: 'user/getInstanceUrl'
     })
   },
-  created() {
-    initialise({
-      token: this.userToken,
-      instanceUrl: this.instanceUrl,
-      cacheMaxAge: this.maxAge,
-      events: {
-        unauthorised: this.unauthorised,
-        responseError: () => {
-          setTimeout(() => this.dismissLoader(), 100);
-        },
-        queueTask: (payload: any) => {
-          emitter.emit("queueTask", payload);
-        }
-      }
-    })
-  },
   async mounted() {
     // creating the loader on mounted as loadingController is taking too much time to create initially
     this.loader = await loadingController
