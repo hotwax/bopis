@@ -3,6 +3,11 @@
     <ion-header :translucent="true">
       <ion-toolbar>
         <ion-title>{{ currentFacility?.name }}</ion-title>
+        <ion-buttons slot="end">
+          <ion-button @click="viewShipToStoreOrders()">
+            <ion-icon slot="icon-only" :icon="trailSignOutline" />
+          </ion-button>
+        </ion-buttons>
       </ion-toolbar>
 
       <div>
@@ -146,6 +151,7 @@ import {
   alertController,
   IonBadge,
   IonButton,
+  IonButtons,
   IonCard,
   IonContent,
   IonHeader,
@@ -166,7 +172,7 @@ import {
 } from "@ionic/vue";
 import { defineComponent, ref } from "vue";
 import ProductListItem from '@/components/ProductListItem.vue'
-import { swapVerticalOutline, callOutline, mailOutline, printOutline } from "ionicons/icons";
+import { swapVerticalOutline, callOutline, mailOutline, printOutline, trailSignOutline } from "ionicons/icons";
 import { mapGetters, useStore } from 'vuex'
 import { useRouter } from 'vue-router'
 import { copyToClipboard, hasError, showToast } from '@/utils'
@@ -183,6 +189,7 @@ export default defineComponent({
   components: {
     IonBadge,
     IonButton,
+    IonButtons,
     IonCard,
     IonContent,
     IonHeader,
@@ -362,21 +369,6 @@ export default defineComponent({
         this.getCompletedOrders()
       }
     },
-    getShipGroups (items: any) {
-      // To get unique shipGroup, further it will use on ion-card iteration
-      return Array.from(new Set(items.map((ele: any) => ele.shipGroupSeqId)))
-    },
-    getShipmentMethod (shipGroupSeqId: any, items: any) {
-      /* To display the button label as per the shipmentMethodTypeId, this will only used on orders segment.
-        Because we get the shipmentMethodTypeId on items level in wms-orders API.
-        As we already get shipmentMethodTypeId on order level in readytoshiporders API hence we will not use this method on packed orders segment.
-      */
-      return items.find((ele: any) => ele.shipGroupSeqId == shipGroupSeqId).shipmentMethodTypeId
-    },
-    getShipGroupItems(shipGroupSeqId: any, items: any) {
-      // To get all the items of same shipGroup, further it will use on pickup-order-card component to display line items
-      return items.filter((item: any) => item.shipGroupSeqId == shipGroupSeqId)
-    },
     async searchOrders() {
       if(this.segmentSelected === 'open') {
         this.getPickupOrders()
@@ -423,6 +415,9 @@ export default defineComponent({
     },
     getOrdersByPart(orders: Array<any>) {
       return Object.keys(orders).length ? orders.flatMap((order: any) => order.parts.map((part: any) => ({ ...order, part }))) : [];
+    },
+    viewShipToStoreOrders() {
+      this.$router.push({ path: 'ship-to-store-orders' })
     }
   },
   ionViewWillEnter () {
@@ -451,7 +446,8 @@ export default defineComponent({
       router,
       segmentSelected,
       swapVerticalOutline,
-      store
+      store,
+      trailSignOutline
     };
   },
 });

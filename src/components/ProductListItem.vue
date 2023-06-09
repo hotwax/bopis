@@ -11,7 +11,8 @@
       <p v-if="$filters.getFeature(getProduct(item.productId).featureHierarchy, '1/COLOR/')">{{ $t("Color") }}: {{ $filters.getFeature(getProduct(item.productId).featureHierarchy, '1/COLOR/') }}</p>
       <p v-if="$filters.getFeature(getProduct(item.productId).featureHierarchy, '1/SIZE/')">{{ $t("Size") }}: {{ $filters.getFeature(getProduct(item.productId).featureHierarchy, '1/SIZE/') }}</p>
     </ion-label>
-    <ion-note slot = "end">{{ getProductStock(item.productId) }} {{ $t("in stock") }}</ion-note>
+    <!-- Only show stock if its not a ship to store order -->
+    <ion-note v-if="!isShipToStoreOrder" slot="end">{{ getProductStock(item.productId) }} {{ $t("in stock") }}</ion-note>
   </ion-item>
 </template>
 
@@ -33,7 +34,13 @@ export default {
       goodIdentificationTypeId: process.env.VUE_APP_PRDT_IDENT_TYPE_ID
     }
   },
-  props: ["item"],
+  props: {
+    item: Object,
+    isShipToStoreOrder: {
+      type: Boolean,
+      default: false
+    }
+  },
   computed: {
     ...mapGetters({
       getProduct: 'product/getProduct',

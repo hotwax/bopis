@@ -77,6 +77,22 @@ const sendReadyToPickupItemNotification = async (payload: any): Promise <any> =>
   });
 }
 
+const getShipToStoreOrders = async (query: any): Promise<any> => {
+  return api({
+    url: 'performFind',
+    method: 'POST',
+    data: query
+  })
+}
+
+const getShipmentItems = async (query: any): Promise<any> => {
+  return api({
+    url: 'performFind',
+    method: 'POST',
+    data: query
+  })
+}
+
 export const OrderService = {
   getOpenOrders,
   getOrderDetails,
@@ -86,5 +102,7 @@ export const OrderService = {
   rejectOrderItem,
   updateShipment,
   createPicklist,
-  sendReadyToPickupItemNotification
+  sendReadyToPickupItemNotification,
+  getShipToStoreOrders,
+  getShipmentItems
 }

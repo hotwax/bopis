@@ -68,6 +68,10 @@ const routes: Array<RouteRecordRaw> = [
         path: 'settings',
         component: () => import('@/views/Settings.vue')
       },
+      {
+        path: 'ship-to-store-orders',
+        component: () => import('@/views/ShipToStoreOrders.vue')
+      },
     ],
     beforeEnter: authGuard,
     meta: {

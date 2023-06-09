@@ -17,6 +17,18 @@ const mutations: MutationTree <ProductState> = {
   [types.ORDER_COMPLETED_UPDATED] (state, payload) {
     state.completed.list = payload.orders
     state.completed.total = payload.total
+  },
+  [types.ORDER_SHIP_TO_STORE_INCOMING_UPDATED] (state, payload) {
+    state.shipToStore.incoming.list = payload.orders
+    state.shipToStore.incoming.total = payload.total
+  },
+  [types.ORDER_SHIP_TO_STORE_RDYFORPCKUP_UPDATED] (state, payload) {
+    state.shipToStore.readyForPickup.list = payload.orders
+    state.shipToStore.readyForPickup.total = payload.total
+  },
+  [types.ORDER_SHIP_TO_STORE_COMPLETED_UPDATED] (state, payload) {
+    state.shipToStore.completed.list = payload.orders
+    state.shipToStore.completed.total = payload.total
   }
 }
 
