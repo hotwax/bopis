@@ -63,6 +63,9 @@
               <ion-button :disabled="!hasPermission(Actions.APP_ORDER_UPDATE)" fill="clear" @click.stop="handoverOrder(order.shipmentId)">
                 {{ $t("Handover") }}
               </ion-button>
+              <ion-button fill="clear" slot="end" @click="sendReadyForPickupEmail(order)">
+                <ion-icon slot="icon-only" :icon="mailOutline" />
+              </ion-button>
             </div>
           </ion-card>
         </div>
@@ -117,13 +120,15 @@ import {
 } from "@ionic/vue";
 import { defineComponent, ref } from "vue";
 import ProductListItem from '@/components/ProductListItem.vue'
-import { swapVerticalOutline, callOutline, mailOutline, printOutline, trailSignOutline } from "ionicons/icons";
+import { mailOutline } from "ionicons/icons";
 import { mapGetters, useStore } from 'vuex'
 import { useRouter } from 'vue-router'
-import { copyToClipboard } from '@/utils'
+import { copyToClipboard, hasError, showToast } from '@/utils'
 import { DateTime } from 'luxon';
 import emitter from "@/event-bus"
 import { Actions, hasPermission } from '@/authorization'
+import { OrderService } from "@/services/OrderService";
+import { translate } from "@/i18n";
 
 export default defineComponent({
   name: 'Orders',
@@ -291,7 +296,37 @@ export default defineComponent({
           }]
         });
       return alert.present();
-    }
+    },
+    async sendReadyForPickupEmail(order: any) {
+      const header = this.$t('Resend ready for pickup email')
+      const message = this.$t('An email notification will be sent to that their order is ready for pickup.', { customerName: order.customer.name });
+
+      const alert = await alertController
+        .create({
+          header: header,
+          message: message,
+          buttons: [{
+            text: this.$t('Cancel'),
+            role: 'cancel'
+          }, {
+            text: this.$t('Send'),
+            handler: async () => {
+              try {
+                const resp = await OrderService.sendReadyToPickupItemNotification({ shipmentId: order.shipmentId });
+                if (!hasError(resp)) {
+                  showToast(translate("Email sent successfully"))
+                } else {
+                  showToast(translate("Something went wrong while sending the email."))
+                }
+              } catch (error) {
+                showToast(translate("Something went wrong while sending the email."))
+                console.error(error)
+              }
+            }
+          }]
+        });
+      return alert.present();
+    },
   },
   ionViewWillEnter () {
     this.queryString = '';
@@ -310,16 +345,12 @@ export default defineComponent({
 
     return {
       Actions,
-      callOutline,
       copyToClipboard,
       hasPermission,
       mailOutline,
-      printOutline,
       router,
       segmentSelected,
-      swapVerticalOutline,
-      store,
-      trailSignOutline
+      store
     };
   },
 });
@@ -338,7 +369,7 @@ export default defineComponent({
   border-top: 1px solid rgba(0, 0, 0, 0.12);
   display: grid;
   grid-auto-flow: column;
-  grid-auto-columns: max-content max-content 1fr;
+  grid-auto-columns: max-content 1fr;
 }
 
 .border-top :last-child {
