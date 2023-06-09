@@ -417,7 +417,7 @@ export default defineComponent({
       return Object.keys(orders).length ? orders.flatMap((order: any) => order.parts.map((part: any) => ({ ...order, part }))) : [];
     },
     viewShipToStoreOrders() {
-      this.$router.push({ path: 'ship-to-store-orders' })
+      this.$router.push({ path: '/ship-to-store-orders' })
     }
   },
   ionViewWillEnter () {

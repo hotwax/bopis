@@ -5,6 +5,7 @@ import store from '@/store'
 import Tabs from '@/views/Tabs.vue'
 import OrderDetail from '@/views/OrderDetail.vue'
 import ProductDetail from '@/views/ProductDetail.vue'
+import ShipToStoreOrders from '@/views/ShipToStoreOrders.vue'
 import Shopify from '@/views/Shopify.vue'
 
 import { hasPermission } from '@/authorization';
@@ -64,13 +65,9 @@ const routes: Array<RouteRecordRaw> = [
           permissionId: "APP_CATALOG_VIEW"
         }
       },
-       {
+      {
         path: 'settings',
         component: () => import('@/views/Settings.vue')
-      },
-      {
-        path: 'ship-to-store-orders',
-        component: () => import('@/views/ShipToStoreOrders.vue')
       },
     ],
     beforeEnter: authGuard,
@@ -102,6 +99,12 @@ const routes: Array<RouteRecordRaw> = [
     meta: {
       permissionId: "APP_PRODUCT_DETAIL_VIEW"
     }
+  },
+  {
+    path: '/ship-to-store-orders',
+    name: "ShipToStoreOrders",
+    component: ShipToStoreOrders,
+    beforeEnter: authGuard,
   },
   {
     path: '/shopify',

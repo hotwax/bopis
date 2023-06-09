@@ -6,7 +6,7 @@
         <ion-title>{{ $t("Shipping to store") }}</ion-title>
       </ion-toolbar>
       <div>
-        <ion-searchbar @ionFocus="selectSearchBarText($event)" v-model="queryString" @keyup.enter="queryString = $event.target.value; searchOrders()" :placeholder= "$t('Search customer')" />
+        <ion-searchbar @ionFocus="selectSearchBarText($event)" v-model="queryString" @keyup.enter="queryString = $event.target.value; searchOrders()" :placeholder= "$t('Search')" />
         <ion-segment v-model="segmentSelected" @ionChange="segmentChanged">
           <ion-segment-button value="incoming">
             <ion-label>{{ $t("Incoming") }}</ion-label>
@@ -105,10 +105,12 @@ import {
   IonCard,
   IonContent,
   IonHeader,
+  IonIcon,
   IonInfiniteScroll,
   IonInfiniteScrollContent,
   IonItem,
   IonLabel,
+  IonNote,
   IonPage,
   IonRefresher,
   IonRefresherContent,
@@ -131,17 +133,19 @@ import { OrderService } from "@/services/OrderService";
 import { translate } from "@/i18n";
 
 export default defineComponent({
-  name: 'Orders',
+  name: 'ShipToStoreOrders',
   components: {
     IonBackButton,
     IonButton,
     IonCard,
     IonContent,
     IonHeader,
+    IonIcon,
     IonInfiniteScroll,
     IonInfiniteScrollContent,
     IonItem,
     IonLabel,
+    IonNote,
     IonPage,
     IonRefresher,
     IonRefresherContent,
@@ -204,7 +208,7 @@ export default defineComponent({
       const viewSize = vSize ? vSize : process.env.VUE_APP_VIEW_SIZE;
       const viewIndex = vIndex ? vIndex : 0;
 
-      await this.store.dispatch("order/getCompletedOrders", { viewSize, viewIndex, queryString: this.queryString, facilityId: this.currentFacility.facilityId });
+      await this.store.dispatch("order/getShipToStoreCompletedOrders", { viewSize, viewIndex, queryString: this.queryString, facilityId: this.currentFacility.facilityId });
     },
     async loadMoreProducts (event: any) {
       if (this.segmentSelected === 'incoming') {
@@ -259,7 +263,7 @@ export default defineComponent({
     },
     async scheduleOrderForPickup(order: any) {
       const header = this.$t('Ready for pickup')
-      const message = this.$t('Order will be marked as ready for pickup and an email notification will be sent to . This action is irreversible.', { customer: order.firstName + order.lastName })
+      const message = this.$t('Order will be marked as ready for pickup and an email notification will be sent to . This action is irreversible.', { customerName: `${order.firstName} ${order.lastName}` });
 
       const alert = await alertController
         .create({
@@ -269,7 +273,7 @@ export default defineComponent({
             text: this.$t('Cancel'),
             role: 'cancel'
           },{
-            text: this.$t('Send'),
+            text: this.$t('Ready for pickup'),
             handler: async () => {
               await this.store.dispatch("order/scheduleOrderForPickup", order.shipmentId);
             }
@@ -299,7 +303,7 @@ export default defineComponent({
     },
     async sendReadyForPickupEmail(order: any) {
       const header = this.$t('Resend ready for pickup email')
-      const message = this.$t('An email notification will be sent to that their order is ready for pickup.', { customerName: order.customer.name });
+      const message = this.$t('An email notification will be sent to that their order is ready for pickup.', { customerName: `${order.firstName} ${order.lastName}` })
 
       const alert = await alertController
         .create({

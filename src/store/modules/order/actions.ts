@@ -508,8 +508,9 @@ const actions: ActionTree<OrderState , RootState> ={
       },
       viewSize: payload.viewSize ? payload.viewSize : process.env.VUE_APP_VIEW_SIZE,
       viewIndex: payload.viewIndex ? payload.viewIndex : 0,
-      entityName: 'ShipmentAndOrderAndPerson',
+      entityName: 'ShipmentAndOrderHeader',
       noConditionFind: "Y",
+      distinct: "Y",
       fieldList: ['shipmentId', 'firstName', 'createdDate', 'lastName', 'orderId']
     } as any
 
@@ -536,20 +537,22 @@ const actions: ActionTree<OrderState , RootState> ={
       let shipments = {} as any
       if (!hasError(resp)) {
         shipments = resp.data.docs.reduce((shipments: any, shipment: any) => {
-          shipments[shipment.shipmentId] = shipment 
+          shipments[shipment.shipmentId] = shipment
           return shipments
         }, {})
+
+        incomingOrders = await OrderService.getShipmentItems(shipments)
+
+        if (payload.viewIndex) incomingOrders = state.shipToStore.incoming.list.concat(incomingOrders)
+      } else {
+        showToast(translate("Orders Not Found"))
       }
-
-      incomingOrders = await dispatch('getShipmentItems', shipments)
-
-      if (payload.viewIndex && payload.viewIndex > 0) incomingOrders = state.shipToStore.incoming.list.concat(incomingOrders)
-      if (payload.viewIndex === 0) emitter.emit("dismissLoader")
-    } catch(err) {
+    } catch (err) {
       console.error(err)
       showToast(translate("Something went wrong"))
     } finally {
-      commit(types.ORDER_SHIP_TO_STORE_INCOMING_UPDATED, { orders: incomingOrders, total: resp.data?.count ? resp.data?.count : 0 })
+      emitter.emit("dismissLoader")
+      commit(types.ORDER_SHIP_TO_STORE_INCOMING_UPDATED, { orders: incomingOrders, total: resp.data?.count ? resp.data.count  : 0 })
     }
     return resp;
   },
@@ -566,8 +569,9 @@ const actions: ActionTree<OrderState , RootState> ={
       },
       viewSize: payload.viewSize ? payload.viewSize : process.env.VUE_APP_VIEW_SIZE,
       viewIndex: payload.viewIndex ? payload.viewIndex : 0,
-      entityName: 'ShipmentAndOrderAndPerson',
+      entityName: 'ShipmentAndOrderHeader',
       noConditionFind: "Y",
+      distinct: "Y",
       fieldList: ['shipmentId', 'firstName', 'createdDate', 'lastName', 'orderId']
     } as any
 
@@ -597,17 +601,19 @@ const actions: ActionTree<OrderState , RootState> ={
           shipments[shipment.shipmentId] = shipment
           return shipments
         }, {})
+
+        readyForPickupOrders = await OrderService.getShipmentItems(shipments)
+
+        if (payload.viewIndex) readyForPickupOrders = state.shipToStore.readyForPickup.list.concat(readyForPickupOrders)
+      } else {
+        showToast(translate("Orders Not Found"))
       }
-
-      readyForPickupOrders = await dispatch('getShipmentItems', shipments)
-
-      if (payload.viewIndex && payload.viewIndex > 0) readyForPickupOrders = state.shipToStore.incoming.list.concat(readyForPickupOrders)
-      if (payload.viewIndex === 0) emitter.emit("dismissLoader")
-    } catch(err) {
+    } catch (err) {
       console.error(err)
       showToast(translate("Something went wrong"))
     } finally {
-      commit(types.ORDER_SHIP_TO_STORE_RDYFORPCKUP_UPDATED, { orders: readyForPickupOrders, total: resp.data?.count ? resp.data?.count : 0 })
+      emitter.emit("dismissLoader")
+      commit(types.ORDER_SHIP_TO_STORE_RDYFORPCKUP_UPDATED, { orders: readyForPickupOrders, total: resp.data?.count ? resp.data.count : 0 })
     }
 
     return resp;
@@ -625,8 +631,9 @@ const actions: ActionTree<OrderState , RootState> ={
       },
       viewSize: payload.viewSize ? payload.viewSize : process.env.VUE_APP_VIEW_SIZE,
       viewIndex: payload.viewIndex ? payload.viewIndex : 0,
-      entityName: 'ShipmentAndOrderAndPerson',
+      entityName: 'ShipmentAndOrderHeader',
       noConditionFind: "Y",
+      distinct: "Y",
       fieldList: ['shipmentId', 'firstName', 'createdDate', 'lastName', 'orderId']
     } as any
 
@@ -656,76 +663,22 @@ const actions: ActionTree<OrderState , RootState> ={
           shipments[shipment.shipmentId] = shipment 
           return shipments
         }, {})
+
+        completedOrders = await OrderService.getShipmentItems(shipments)
+
+        if (payload.viewIndex) completedOrders = state.shipToStore.completed.list.concat(completedOrders)
+      } else {
+        showToast(translate("Orders Not Found"))
       }
-
-      completedOrders = await dispatch('getShipmentItems', shipments)
-
-      if (payload.viewIndex && payload.viewIndex > 0) completedOrders = state.shipToStore.incoming.list.concat(completedOrders)
-      if (payload.viewIndex === 0) emitter.emit("dismissLoader")
     } catch(err) {
       console.error(err)
       showToast(translate("Something went wrong"))
     } finally {
-      commit(types.ORDER_SHIP_TO_STORE_COMPLETED_UPDATED, { orders: completedOrders, total: resp.data?.count ? resp.data?.count : 0 })
+      emitter.emit("dismissLoader")
+      commit(types.ORDER_SHIP_TO_STORE_COMPLETED_UPDATED, { orders: completedOrders, total: resp.data?.count ? resp.data.count : 0 })
     }
 
     return resp;
-  },
-
-  async getShipmentItems({ state }, shipments) {
-    if (!Object.keys(shipments).length) return []
-    const requests = []
-    let orders = []
-
-    try {
-      const shipmentList = Object.values(shipments)
-      while(shipmentList.length) {
-        const batch = shipmentList.splice(0, 15)
-        const params = {
-          inputFields: {
-            shipmentId: batch.map((shipmentItem: any) => shipmentItem.shipmentId)
-          },
-          viewSize: 150, // batch of 15 shipments * 10 shipment items in each to fetch
-          entityName: 'ShipmentItem',
-          noConditionFind: "Y",
-          fieldList: ['shipmentId', 'productId', 'shipmentItemSeqId']
-        }
-        requests.push(params)
-      }
-
-      let orderShipmentItemsResps = await Promise.all(requests.map((params) => OrderService.getShipmentItems(params)))
-
-      orderShipmentItemsResps = orderShipmentItemsResps.reduce((responseData: any, response: any) => {
-        if (!hasError(response)) responseData.push(...response.data.docs)
-        return responseData
-      }, [])
-
-      if (!orderShipmentItemsResps.length) return []
-      orders = orderShipmentItemsResps.reduce((shipmentsWithItems: any, shipmentItem: any) => {
-        if (!shipmentsWithItems[shipmentItem.shipmentId]) {
-          shipmentsWithItems[shipmentItem.shipmentId] = { ...shipments[shipmentItem.shipmentId], items: [shipmentItem] }
-        } else {
-          shipmentsWithItems[shipmentItem.shipmentId].items.push(shipmentItem)
-        }
-        return shipmentsWithItems
-      }, {})
-
-      orders = Object.values(orders)
-      let productIds: any = new Set();
-
-      orders.map((shipment: any) => {
-        shipment.items.map((item: any) => productIds.add(item.productId))
-        return productIds
-      });
-
-      productIds = [...productIds]
-      this.dispatch('product/fetchProducts', { productIds })
-    } catch(err) {
-      console.error(err)
-      showToast(translate("Something went wrong"))
-    }
-
-    return orders
   },
 
   async scheduleOrderForPickup ({ state, commit }, shipmentId) {
