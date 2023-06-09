@@ -508,9 +508,9 @@ const actions: ActionTree<OrderState , RootState> ={
       },
       viewSize: payload.viewSize ? payload.viewSize : process.env.VUE_APP_VIEW_SIZE,
       viewIndex: payload.viewIndex ? payload.viewIndex : 0,
-      entityName: 'Shipment',
+      entityName: 'ShipmentAndOrderAndPerson',
       noConditionFind: "Y",
-      // fieldList: ['shipmentId', 'firstName', 'createdDate', 'lastName', 'orderId]
+      fieldList: ['shipmentId', 'firstName', 'createdDate', 'lastName', 'orderId']
     } as any
 
     if(payload.queryString.length) {
@@ -542,7 +542,6 @@ const actions: ActionTree<OrderState , RootState> ={
       }
 
       incomingOrders = await dispatch('getShipmentItems', shipments)
-      if (!incomingOrders.length) return
 
       if (payload.viewIndex && payload.viewIndex > 0) incomingOrders = state.shipToStore.incoming.list.concat(incomingOrders)
       if (payload.viewIndex === 0) emitter.emit("dismissLoader")
@@ -552,7 +551,6 @@ const actions: ActionTree<OrderState , RootState> ={
     } finally {
       commit(types.ORDER_SHIP_TO_STORE_INCOMING_UPDATED, { orders: incomingOrders, total: resp.data?.count ? resp.data?.count : 0 })
     }
-    emitter.emit("dismissLoader")
     return resp;
   },
 
@@ -568,9 +566,9 @@ const actions: ActionTree<OrderState , RootState> ={
       },
       viewSize: payload.viewSize ? payload.viewSize : process.env.VUE_APP_VIEW_SIZE,
       viewIndex: payload.viewIndex ? payload.viewIndex : 0,
-      entityName: 'Shipment',
+      entityName: 'ShipmentAndOrderAndPerson',
       noConditionFind: "Y",
-      // fieldList: ['shipmentId', 'firstName', 'createdDate', 'lastName', 'orderId]
+      fieldList: ['shipmentId', 'firstName', 'createdDate', 'lastName', 'orderId']
     } as any
 
     if(payload.queryString.length) {
@@ -595,7 +593,6 @@ const actions: ActionTree<OrderState , RootState> ={
       resp = await OrderService.getShipToStoreOrders(params)
       let shipments = {} as any
       if (!hasError(resp)) {
-        console.log('here')
         shipments = resp.data.docs.reduce((shipments: any, shipment: any) => {
           shipments[shipment.shipmentId] = shipment
           return shipments
@@ -603,7 +600,6 @@ const actions: ActionTree<OrderState , RootState> ={
       }
 
       readyForPickupOrders = await dispatch('getShipmentItems', shipments)
-      if (!readyForPickupOrders.length) return
 
       if (payload.viewIndex && payload.viewIndex > 0) readyForPickupOrders = state.shipToStore.incoming.list.concat(readyForPickupOrders)
       if (payload.viewIndex === 0) emitter.emit("dismissLoader")
@@ -612,7 +608,6 @@ const actions: ActionTree<OrderState , RootState> ={
       showToast(translate("Something went wrong"))
     } finally {
       commit(types.ORDER_SHIP_TO_STORE_RDYFORPCKUP_UPDATED, { orders: readyForPickupOrders, total: resp.data?.count ? resp.data?.count : 0 })
-      emitter.emit("dismissLoader")
     }
 
     return resp;
@@ -630,9 +625,9 @@ const actions: ActionTree<OrderState , RootState> ={
       },
       viewSize: payload.viewSize ? payload.viewSize : process.env.VUE_APP_VIEW_SIZE,
       viewIndex: payload.viewIndex ? payload.viewIndex : 0,
-      entityName: 'Shipment',
+      entityName: 'ShipmentAndOrderAndPerson',
       noConditionFind: "Y",
-      // fieldList: ['shipmentId', 'firstName', 'createdDate', 'lastName', 'orderId]
+      fieldList: ['shipmentId', 'firstName', 'createdDate', 'lastName', 'orderId']
     } as any
 
     // enbaling search on first name, last name, and orderId
@@ -666,20 +661,19 @@ const actions: ActionTree<OrderState , RootState> ={
       completedOrders = await dispatch('getShipmentItems', shipments)
 
       if (payload.viewIndex && payload.viewIndex > 0) completedOrders = state.shipToStore.incoming.list.concat(completedOrders)
-
       if (payload.viewIndex === 0) emitter.emit("dismissLoader")
     } catch(err) {
       console.error(err)
       showToast(translate("Something went wrong"))
     } finally {
       commit(types.ORDER_SHIP_TO_STORE_COMPLETED_UPDATED, { orders: completedOrders, total: resp.data?.count ? resp.data?.count : 0 })
-      emitter.emit("dismissLoader")
     }
 
     return resp;
   },
 
   async getShipmentItems({ state }, shipments) {
+    if (!Object.keys(shipments).length) return []
     const requests = []
     let orders = []
 
