@@ -17,26 +17,14 @@
             <ion-badge v-if="order.placedDate" color="dark" slot="end">{{ timeFromNow(order.placedDate) }}</ion-badge>
           </ion-item>
         </ion-list>
-        <ion-item v-if="order.customer?.phoneNumber">
-          <ion-icon :icon="callOutline" slot="start" />
-          <ion-label>{{ order.customer?.phoneNumber }}</ion-label>
-          <ion-button
-            fill="outline"
-            slot="end"
-            color="medium"
-            @click="copyToClipboard(order.customer?.phoneNumber)"
-          >
-            {{ $t("Copy") }}
-          </ion-button>
-        </ion-item>
-        <ion-item v-if="order.customer?.email" lines="none">
+        <ion-item v-if="customerEmail" lines="none">
           <ion-icon :icon="mailOutline" slot="start" />
-          <ion-label>{{ order.customer?.email }}</ion-label>
+          <ion-label>{{ customerEmail }}</ion-label>
           <ion-button
             fill="outline"
             slot="end"
             color="medium"
-            @click="copyToClipboard(order.customer?.email)"
+            @click="copyToClipboard(customerEmail)"
           >
             {{ $t("Copy") }}
           </ion-button>
@@ -95,11 +83,12 @@ import {
   mailOutline,
 } from "ionicons/icons";
 import ProductListItem from '@/components/ProductListItem.vue'
-import { copyToClipboard } from '@/utils'
+import { copyToClipboard, hasError } from '@/utils'
 import { useRouter } from 'vue-router'
 import { DateTime } from 'luxon';
 import ShipToCustomerModal from "@/components/ShipToCustomerModal.vue";
 import { Actions, hasPermission } from '@/authorization'
+import { OrderService } from "@/services/OrderService";
 
 export default defineComponent({
   name: "OrderDetail",
@@ -124,7 +113,8 @@ export default defineComponent({
   },
   data () {
     return {
-      unfillableReason: JSON.parse(process.env.VUE_APP_UNFILLABLE_REASONS)
+      unfillableReason: JSON.parse(process.env.VUE_APP_UNFILLABLE_REASONS),
+      customerEmail: ''
     }
   },
   computed: {
@@ -179,10 +169,21 @@ export default defineComponent({
         return this.order.parts.find((part) => part.orderPartSeqId === this.$route.params.orderPartSeqId)
       }
       return {}
+    },
+    async getCustomerContactDetails() {
+      try {
+        const resp = await OrderService.getCustomerContactDetails(this.$route.params.orderId)
+        if (!hasError(resp)) {
+          this.customerEmail = resp.data.orderContacts.email.email
+        }
+      } catch (error) {
+        console.error(error)
+      }
     }
-  },
+   },
   async mounted() {
     await this.getOrderDetail(this.$route.params.orderId, this.$route.params.orderPartSeqId);
+    await this.getCustomerContactDetails()
   },
   setup () {
     const store = useStore();
