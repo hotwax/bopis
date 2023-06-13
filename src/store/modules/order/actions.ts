@@ -524,10 +524,10 @@ const actions: ActionTree<OrderState , RootState> ={
         lastName_op: 'contains',
         lastName_ic: 'Y',
         lastName_grp: '2',
-        shipmentId_value: payload.queryString,
-        shipmentId_op: 'contains',
-        shipmentId_ic: 'Y',
-        shipmentId_grp: '3',
+        orderId_value: payload.queryString,
+        orderId_op: 'contains',
+        orderId_ic: 'Y',
+        orderId_grp: '3',
       }
     }
 
