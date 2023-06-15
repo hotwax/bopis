@@ -69,9 +69,9 @@ const createPicklist = async (query: any): Promise <any> => {
   })
 }
 
-const sendReadyToPickupItemNotification = async (payload: any): Promise <any> => {
+const sendPickupScheduledNotification = async (payload: any): Promise <any> => {
   return api({
-    url: "service/sendReadyToPickupItemNotification",
+    url: "service/sendPickupScheduledNotification",
     method: "post",
     data: payload
   });
@@ -129,7 +129,7 @@ export const OrderService = {
   rejectOrderItem,
   updateShipment,
   createPicklist,
-  sendReadyToPickupItemNotification,
+  sendPickupScheduledNotification,
   getShipToStoreOrders,
   getShipmentItems
 }

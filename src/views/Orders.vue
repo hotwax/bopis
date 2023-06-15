@@ -398,7 +398,7 @@ export default defineComponent({
             text: this.$t('Send'),
             handler: async () => {
               try {
-                const resp = await OrderService.sendReadyToPickupItemNotification({ shipmentId: order.shipmentId });
+                const resp = await OrderService.sendPickupScheduledNotification({ shipmentId: order.shipmentId });
                 if (!hasError(resp)) {
                   showToast(translate("Email sent successfully"))
                 } else {

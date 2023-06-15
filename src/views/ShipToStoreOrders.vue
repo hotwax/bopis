@@ -292,7 +292,7 @@ export default defineComponent({
           statusId: 'PICKUP_SCHEDULED'
         })
         if (!hasError(resp)) {
-          resp = await OrderService.sendReadyToPickupItemNotification({ shipmentId })
+          resp = await OrderService.sendPickupScheduledNotification({ shipmentId })
           this.getIncomingOrders()
 
           if (!hasError(resp)) showToast(translate('Order marked as ready for pickup, an email notification has been sent to the customer'))
@@ -371,7 +371,7 @@ export default defineComponent({
             text: this.$t('Send'),
             handler: async () => {
               try {
-                const resp = await OrderService.sendReadyToPickupItemNotification({ shipmentId: order.shipmentId });
+                const resp = await OrderService.sendPickupScheduledNotification({ shipmentId: order.shipmentId });
                 if (!hasError(resp)) {
                   showToast(translate("Email sent successfully"))
                 } else {
