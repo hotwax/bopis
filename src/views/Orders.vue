@@ -176,10 +176,9 @@ import { swapVerticalOutline, callOutline, mailOutline, printOutline, trailSignO
 import { mapGetters, useStore } from 'vuex'
 import { useRouter } from 'vue-router'
 import { copyToClipboard, showToast } from '@/utils'
-import { hasError } from '@/adapter'
 import { DateTime } from 'luxon';
 import emitter from "@/event-bus"
-import { api } from '@/adapter';
+import { api, hasError } from '@/adapter';
 import { translate } from "@/i18n";
 import AssignPickerModal from "./AssignPickerModal.vue";
 import { OrderService } from "@/services/OrderService";

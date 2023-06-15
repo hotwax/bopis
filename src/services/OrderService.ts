@@ -1,6 +1,5 @@
-import { api, client } from '@/adapter';
+import { api, client, hasError } from '@/adapter';
 import store from '@/store';
-import { hasError } from '@/adapter'
 
 const getOpenOrders = async (payload: any): Promise <any> => {
   return api({

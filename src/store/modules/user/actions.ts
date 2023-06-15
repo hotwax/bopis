@@ -4,10 +4,9 @@ import RootState from '@/store/RootState'
 import UserState from './UserState'
 import * as types from './mutation-types'
 import { showToast } from '@/utils'
-import { hasError } from '@/adapter'
 import i18n, { translate } from '@/i18n'
 import { Settings } from 'luxon';
-import { updateInstanceUrl, updateToken, resetConfig } from '@/adapter'
+import { hasError, updateInstanceUrl, updateToken, resetConfig } from '@/adapter'
 import {
   getServerPermissionsFromRules,
   prepareAppPermissions,
