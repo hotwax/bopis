@@ -202,7 +202,8 @@ import TimeZoneModal from './TimezoneModal.vue';
 import Image from '@/components/Image.vue';
 import { DateTime } from 'luxon';
 import { UserService } from '@/services/UserService'
-import { hasError, showToast } from '@/utils';
+import { showToast } from '@/utils';
+import { hasError } from '@/adapter'
 import { translate } from "@/i18n";
 import { Actions, hasPermission } from '@/authorization'
 

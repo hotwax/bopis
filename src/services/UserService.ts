@@ -1,5 +1,5 @@
 import { api, client } from '@/adapter';
-import { hasError } from '@/utils'
+import { hasError } from '@/adapter'
 
 import store from '@/store';
 

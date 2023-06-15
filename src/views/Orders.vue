@@ -175,7 +175,8 @@ import ProductListItem from '@/components/ProductListItem.vue'
 import { swapVerticalOutline, callOutline, mailOutline, printOutline, trailSignOutline } from "ionicons/icons";
 import { mapGetters, useStore } from 'vuex'
 import { useRouter } from 'vue-router'
-import { copyToClipboard, hasError, showToast } from '@/utils'
+import { copyToClipboard, showToast } from '@/utils'
+import { hasError } from '@/adapter'
 import { DateTime } from 'luxon';
 import emitter from "@/event-bus"
 import { api } from '@/adapter';

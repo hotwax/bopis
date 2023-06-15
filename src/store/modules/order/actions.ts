@@ -3,7 +3,8 @@ import { ActionTree } from 'vuex'
 import RootState from '@/store/RootState'
 import OrderState from './OrderState'
 import * as types from './mutation-types'
-import { hasError , showToast } from "@/utils";
+import { showToast } from "@/utils";
+import { hasError } from '@/adapter'
 import { translate } from "@/i18n";
 import emitter from '@/event-bus'
 import store from "@/store";
@@ -496,7 +497,7 @@ const actions: ActionTree<OrderState , RootState> ={
     return responses;
   },
 
-  async getShipToStoreIncomingOrders({ dispatch, commit, state }, payload) {
+  async getShipToStoreIncomingOrders({ commit, state }, payload) {
     // Show loader only when new query and not the infinite scroll
     if (payload.viewIndex === 0) emitter.emit("presentLoader")
     let resp: any
@@ -511,10 +512,10 @@ const actions: ActionTree<OrderState , RootState> ={
       entityName: 'ShipmentAndOrderHeader',
       noConditionFind: "Y",
       distinct: "Y",
-      fieldList: ['shipmentId', 'firstName', 'createdDate', 'lastName', 'orderId']
+      fieldList: ['shipmentId', 'firstName', 'createdDate', 'lastName', 'orderName']
     } as any
 
-    if(payload.queryString.length) {
+    if (payload.queryString.length) {
       params.inputFields = {
         firstName_value: payload.queryString,
         firstName_op: 'contains',
@@ -524,10 +525,10 @@ const actions: ActionTree<OrderState , RootState> ={
         lastName_op: 'contains',
         lastName_ic: 'Y',
         lastName_grp: '2',
-        orderId_value: payload.queryString,
-        orderId_op: 'contains',
-        orderId_ic: 'Y',
-        orderId_grp: '3',
+        orderName_value: payload.queryString,
+        orderName_op: 'contains',
+        orderName_ic: 'Y',
+        orderName_grp: '3',
       }
     }
 
@@ -541,7 +542,31 @@ const actions: ActionTree<OrderState , RootState> ={
           return shipments
         }, {})
 
-        incomingOrders = await OrderService.getShipmentItems(shipments)
+        const shipmentItems = await OrderService.getShipmentItems(Object.keys(shipments))
+          
+        if (!shipmentItems?.length) {
+          showToast(translate("Orders Not Found"))
+          return
+        }
+
+        incomingOrders = Object.values(shipmentItems.reduce((shipmentItems: any, shipmentItem: any) => {
+          if (!shipmentItems[shipmentItem.shipmentId]) {
+            shipmentItems[shipmentItem.shipmentId] = { ...shipments[shipmentItem.shipmentId], items: [shipmentItem] }
+          } else {
+            shipmentItems[shipmentItem.shipmentId].items.push(shipmentItem)
+          }
+          return shipmentItems
+        }, {}))
+
+        let productIds: any = new Set();
+
+        incomingOrders.map((order: any) => {
+          order.items.map((item: any) => productIds.add(item.productId))
+          return productIds
+        });
+
+        productIds = [...productIds]
+        store.dispatch('product/fetchProducts', { productIds })
 
         if (payload.viewIndex) incomingOrders = state.shipToStore.incoming.list.concat(incomingOrders)
       } else {
@@ -557,7 +582,7 @@ const actions: ActionTree<OrderState , RootState> ={
     return resp;
   },
 
-  async getShipToStoreReadyForPickupOrders({ dispatch, commit, state }, payload) {
+  async getShipToStoreReadyForPickupOrders({ commit, state }, payload) {
     // Show loader only when new query and not the infinite scroll
     if (payload.viewIndex === 0) emitter.emit("presentLoader")
     let resp: any
@@ -572,10 +597,10 @@ const actions: ActionTree<OrderState , RootState> ={
       entityName: 'ShipmentAndOrderHeader',
       noConditionFind: "Y",
       distinct: "Y",
-      fieldList: ['shipmentId', 'firstName', 'createdDate', 'lastName', 'orderId']
+      fieldList: ['shipmentId', 'firstName', 'createdDate', 'lastName', 'orderName']
     } as any
 
-    if(payload.queryString.length) {
+    if (payload.queryString.length) {
       params.inputFields = {
         firstName_value: payload.queryString,
         firstName_op: 'contains',
@@ -585,10 +610,10 @@ const actions: ActionTree<OrderState , RootState> ={
         lastName_op: 'contains',
         lastName_ic: 'Y',
         lastName_grp: '2',
-        orderId_value: payload.queryString,
-        orderId_op: 'contains',
-        orderId_ic: 'Y',
-        orderId_grp: '3',
+        orderName_value: payload.queryString,
+        orderName_op: 'contains',
+        orderName_ic: 'Y',
+        orderName_grp: '3',
       }
     }
 
@@ -602,8 +627,31 @@ const actions: ActionTree<OrderState , RootState> ={
           return shipments
         }, {})
 
-        readyForPickupOrders = await OrderService.getShipmentItems(shipments)
+        const shipmentItems = await OrderService.getShipmentItems(Object.keys(shipments))
 
+        if (!shipmentItems?.length) {
+          showToast(translate("Orders Not Found"))
+          return
+        }
+
+        readyForPickupOrders = Object.values(shipmentItems.reduce((shipmentItems: any, shipmentItem: any) => {
+          if (!shipmentItems[shipmentItem.shipmentId]) {
+            shipmentItems[shipmentItem.shipmentId] = { ...shipments[shipmentItem.shipmentId], items: [shipmentItem] }
+          } else {
+            shipmentItems[shipmentItem.shipmentId].items.push(shipmentItem)
+          }
+          return shipmentItems
+        }, {}))
+
+        let productIds: any = new Set();
+
+        readyForPickupOrders.map((order: any) => {
+          order.items.map((item: any) => productIds.add(item.productId))
+          return productIds
+        });
+
+        productIds = [...productIds]
+        store.dispatch('product/fetchProducts', { productIds })
         if (payload.viewIndex) readyForPickupOrders = state.shipToStore.readyForPickup.list.concat(readyForPickupOrders)
       } else {
         showToast(translate("Orders Not Found"))
@@ -619,7 +667,7 @@ const actions: ActionTree<OrderState , RootState> ={
     return resp;
   },
   
-  async getShipToStoreCompletedOrders({ dispatch, commit, state }, payload) {
+  async getShipToStoreCompletedOrders({ commit, state }, payload) {
     // Show loader only when new query and not the infinite scroll
     if (payload.viewIndex === 0) emitter.emit("presentLoader")
     let resp: any
@@ -634,11 +682,11 @@ const actions: ActionTree<OrderState , RootState> ={
       entityName: 'ShipmentAndOrderHeader',
       noConditionFind: "Y",
       distinct: "Y",
-      fieldList: ['shipmentId', 'firstName', 'createdDate', 'lastName', 'orderId']
+      fieldList: ['shipmentId', 'firstName', 'createdDate', 'lastName', 'orderName']
     } as any
 
     // enbaling search on first name, last name, and orderId
-    if(payload.queryString.length) {
+    if (payload.queryString.length) {
       params.inputFields = {
         firstName_value: payload.queryString,
         firstName_op: 'contains',
@@ -648,24 +696,48 @@ const actions: ActionTree<OrderState , RootState> ={
         lastName_op: 'contains',
         lastName_ic: 'Y',
         lastName_grp: '2',
-        orderId_value: payload.queryString,
-        orderId_op: 'contains',
-        orderId_ic: 'Y',
-        orderId_grp: '3',
+        orderName_value: payload.queryString,
+        orderName_op: 'contains',
+        orderName_ic: 'Y',
+        orderName_grp: '3',
       }
     }
+
     let completedOrders = []
     try {
       resp = await OrderService.getShipToStoreOrders(params)
       let shipments = {} as any
       if (!hasError(resp)) {
         shipments = resp.data.docs.reduce((shipments: any, shipment: any) => {
-          shipments[shipment.shipmentId] = shipment 
+          shipments[shipment.shipmentId] = shipment
           return shipments
         }, {})
 
-        completedOrders = await OrderService.getShipmentItems(shipments)
+        const shipmentItems = await OrderService.getShipmentItems(Object.keys(shipments))
 
+        if (!shipmentItems?.length) {
+          showToast(translate("Orders Not Found"))
+          return
+        }
+
+        completedOrders = Object.values(shipmentItems.reduce((shipmentItems: any, shipmentItem: any) => {
+          if (!shipmentItems[shipmentItem.shipmentId]) {
+            shipmentItems[shipmentItem.shipmentId] = { ...shipments[shipmentItem.shipmentId], items: [shipmentItem] }
+          } else {
+            shipmentItems[shipmentItem.shipmentId].items.push(shipmentItem)
+          }
+          return shipmentItems
+        }, {}))
+
+        let productIds: any = new Set();
+
+        completedOrders.map((order: any) => {
+          order.items.map((item: any) => productIds.add(item.productId))
+          return productIds
+        });
+
+        productIds = [...productIds]
+        store.dispatch('product/fetchProducts', { productIds })
         if (payload.viewIndex) completedOrders = state.shipToStore.completed.list.concat(completedOrders)
       } else {
         showToast(translate("Orders Not Found"))
@@ -679,67 +751,6 @@ const actions: ActionTree<OrderState , RootState> ={
     }
 
     return resp;
-  },
-
-  async scheduleOrderForPickup ({ state, commit }, shipmentId) {
-    emitter.emit("presentLoader");
-
-    let resp
-    try {
-      resp = await OrderService.updateShipment({ shipmentId: shipmentId, statusId: 'SHIPMENT_SCHEDULED' })
-      if (!hasError(resp)) {
-        resp = await OrderService.sendReadyToPickupItemNotification({ shipmentId })
-        // Remove order from the list if action is successful
-        const orderIndex = state.shipToStore.incoming.list.findIndex((order: any) => order.shipmentId === shipmentId)
-        if (orderIndex > -1) {
-          state.shipToStore.incoming.list.splice(orderIndex, 1);
-          commit(types.ORDER_SHIP_TO_STORE_INCOMING_UPDATED, { orders: state.shipToStore.incoming.list, total: state.shipToStore.incoming.total - 1 })
-        }
-        if (!hasError(resp)) showToast(translate('Order marked as ready for pickup, an email notification has been sent to the customer'))
-        else showToast(translate('Order marked as ready for pickup but something went wrong while sending the email notification'))
-      } else {
-        showToast(translate("Something went wrong"))
-      }
-      emitter.emit("dismissLoader")
-    } catch(err) {
-      console.error(err)
-      showToast(translate("Something went wrong"))
-    }
-
-    emitter.emit("dismissLoader")
-    return resp;
-  },
-
-  async handoverOrder({ state, commit }, shipmentId) {
-    emitter.emit("presentLoader");
-    const params = {
-      shipmentId: shipmentId,
-      statusId: 'SHIPMENT_COMPLETED'
-    }
-
-    let resp
-
-    try {
-      resp = await OrderService.updateShipment(params)
-      if (!hasError(resp)) {
-        // Remove order from the list if action is successful
-        const orderIndex = state.shipToStore.readyForPickup.list.findIndex((order: any) => order.shipmentId === shipmentId)
-        if (orderIndex > -1) {
-          state.shipToStore.readyForPickup.list.splice(orderIndex, 1);
-          commit(types.ORDER_SHIP_TO_STORE_RDYFORPCKUP_UPDATED, { orders: state.shipToStore.readyForPickup.list, total: state.shipToStore.readyForPickup.total - 1 })
-        }
-        showToast(translate('Order marked as complete'))
-      } else {
-        showToast(translate("Something went wrong"))
-      }
-      emitter.emit("dismissLoader")
-    } catch(err) {
-      console.error(err)
-      showToast(translate("Something went wrong"))
-    }
-
-    emitter.emit("dismissLoader")
-    return resp
   },
 
   // clearning the orders state when logout, or user store is changed

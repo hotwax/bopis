@@ -1,7 +1,6 @@
 import { api, client } from '@/adapter';
-import { translate } from '@/i18n';
 import store from '@/store';
-import { hasError, showToast } from '@/utils';
+import { hasError } from '@/adapter'
 
 const getOpenOrders = async (payload: any): Promise <any> => {
   return api({
@@ -87,64 +86,39 @@ const getShipToStoreOrders = async (query: any): Promise<any> => {
   })
 }
 
-const getShipmentItems = async (shipments: any): Promise<any> => {
-  if (!Object.keys(shipments).length) return []
+const getShipmentItems = async (shipmentIds: any): Promise<any> => {
+  if (!shipmentIds.length) return []
   const requests = []
-  let orders = []
 
-  try {
-    const shipmentList = Object.values(shipments)
-    while (shipmentList.length) {
-      const batch = shipmentList.splice(0, 20)
-      const params = {
-        inputFields: {
-          shipmentId: batch.map((shipmentItem: any) => shipmentItem.shipmentId)
-        },
-        viewSize: 200, // batch of 20 shipments * 10 shipment items in each to fetch
-        entityName: 'ShipmentItem',
-        noConditionFind: "Y",
-        fieldList: ['shipmentId', 'productId', 'shipmentItemSeqId']
-      }
-      requests.push(params)
+  const shipmentIdList = shipmentIds
+  while (shipmentIdList.length) {
+    const batch = shipmentIdList.splice(0, 20)
+    const params = {
+      inputFields: {
+        shipmentId: batch
+      },
+      viewSize: 250, // maximum view size
+      entityName: 'ShipmentItem',
+      noConditionFind: "Y",
+      fieldList: ['shipmentId', 'productId', 'shipmentItemSeqId']
     }
-
-    let orderShipmentItemsResps = await Promise.all(requests.map((params) => api({
-      url: 'performFind',
-      method: 'POST',
-      data: params
-    })))
-
-    orderShipmentItemsResps = orderShipmentItemsResps.reduce((responseData: any, response: any) => {
-      if (!hasError(response)) responseData.push(...response.data.docs)
-      return responseData
-    }, [])
-
-    if (!orderShipmentItemsResps.length) return []
-    orders = orderShipmentItemsResps.reduce((shipmentsWithItems: any, shipmentItem: any) => {
-      if (!shipmentsWithItems[shipmentItem.shipmentId]) {
-        shipmentsWithItems[shipmentItem.shipmentId] = { ...shipments[shipmentItem.shipmentId], items: [shipmentItem] }
-      } else {
-        shipmentsWithItems[shipmentItem.shipmentId].items.push(shipmentItem)
-      }
-      return shipmentsWithItems
-    }, {})
-
-    orders = Object.values(orders)
-    let productIds: any = new Set();
-
-    orders.map((shipment: any) => {
-      shipment.items.map((item: any) => productIds.add(item.productId))
-      return productIds
-    });
-
-    productIds = [...productIds]
-    store.dispatch('product/fetchProducts', { productIds })
-  } catch (err) {
-    console.error(err)
-    showToast(translate("Something went wrong"))
+    requests.push(params)
   }
 
-  return orders
+  const shipmentItemsResps = await Promise.all(requests.map((params) => api({
+    url: 'performFind',
+    method: 'POST',
+    data: params
+  })))
+
+  const hasFailedResponse = shipmentItemsResps.some((response: any) => hasError(response) && response.data.error !== "No record found")
+
+  if (hasFailedResponse) return Promise.reject(shipmentItemsResps);
+
+  return shipmentItemsResps.reduce((responseData: any, response: any) => {
+    if (!hasError(response)) responseData.push(...response.data.docs)
+    return responseData
+  }, [])
 }
 
 export const OrderService = {

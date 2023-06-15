@@ -37,7 +37,7 @@
             <ProductListItem v-for="item in order.items" :key="item.productId" :item="item" :isShipToStoreOrder=true />
 
             <div class="border-top">
-              <ion-button :disabled="!hasPermission(Actions.APP_ORDER_UPDATE)" fill="clear" @click.stop="scheduleOrderForPickup(order)">
+              <ion-button :disabled="!hasPermission(Actions.APP_ORDER_UPDATE)" fill="clear" @click.stop="confirmScheduleOrderForPickup(order)">
                 {{ $t("Arrived") }}
               </ion-button>
             </div>
@@ -60,7 +60,7 @@
             <ProductListItem v-for="item in order.items" :key="item.productId" :item="item" :isShipToStoreOrder=true />
 
             <div class="border-top">
-              <ion-button :disabled="!hasPermission(Actions.APP_ORDER_UPDATE)" fill="clear" @click.stop="handoverOrder(order.shipmentId)">
+              <ion-button :disabled="!hasPermission(Actions.APP_ORDER_UPDATE)" fill="clear" @click.stop="confirmHandoverOrder(order.shipmentId)">
                 {{ $t("Handover") }}
               </ion-button>
               <ion-button fill="clear" slot="end" @click="sendReadyForPickupEmail(order)">
@@ -90,7 +90,7 @@
       <ion-refresher slot="fixed" @ionRefresh="refreshOrders($event)">
         <ion-refresher-content pullingIcon="crescent" refreshingSpinner="crescent" />
       </ion-refresher>
-      <ion-infinite-scroll @ionInfinite="loadMoreProducts($event)" threshold="100px" :disabled="segmentSelected === 'incoming' ? !isIncomingOrdersScrollable : segmentSelected === 'readyForPickup' ? !isReadyForPickupOrdersScrollable : !isCompletedOrdersScrollable">
+      <ion-infinite-scroll @ionInfinite="loadMoreOrders($event)" threshold="100px" :disabled="segmentSelected === 'incoming' ? !isIncomingOrdersScrollable : segmentSelected === 'readyForPickup' ? !isReadyForPickupOrdersScrollable : !isCompletedOrdersScrollable">
         <ion-infinite-scroll-content loading-spinner="crescent" :loading-text="$t('Loading')" />
       </ion-infinite-scroll>
     </ion-content>
@@ -125,7 +125,8 @@ import ProductListItem from '@/components/ProductListItem.vue'
 import { mailOutline } from "ionicons/icons";
 import { mapGetters, useStore } from 'vuex'
 import { useRouter } from 'vue-router'
-import { copyToClipboard, hasError, showToast } from '@/utils'
+import { copyToClipboard, showToast } from '@/utils'
+import { hasError } from '@/adapter'
 import { DateTime } from 'luxon';
 import emitter from "@/event-bus"
 import { Actions, hasPermission } from '@/authorization'
@@ -210,7 +211,7 @@ export default defineComponent({
 
       await this.store.dispatch("order/getShipToStoreCompletedOrders", { viewSize, viewIndex, queryString: this.queryString, facilityId: this.currentFacility.facilityId });
     },
-    async loadMoreProducts (event: any) {
+    async loadMoreOrders (event: any) {
       if (this.segmentSelected === 'incoming') {
         this.getIncomingOrders(
           undefined,
@@ -261,7 +262,7 @@ export default defineComponent({
         element.select();
       })
     },
-    async scheduleOrderForPickup(order: any) {
+    async confirmScheduleOrderForPickup(order: any) {
       const header = this.$t('Ready for pickup')
       const message = this.$t('Order will be marked as ready for pickup and an email notification will be sent to . This action is irreversible.', { customerName: `${order.firstName} ${order.lastName}` });
 
@@ -275,13 +276,37 @@ export default defineComponent({
           },{
             text: this.$t('Ready for pickup'),
             handler: async () => {
-              await this.store.dispatch("order/scheduleOrderForPickup", order.shipmentId);
+              await this.scheduleOrderForPickup(order.shipmentId)
             }
           }]
         });
       return alert.present();
     },
-    async handoverOrder(shipmentId: string) {
+    async scheduleOrderForPickup(shipmentId: string) {
+      emitter.emit("presentLoader");
+
+      let resp
+      try {
+        resp = await OrderService.updateShipment({ shipmentId: shipmentId, statusId: 'SHIPMENT_SCHEDULED' })
+        if (!hasError(resp)) {
+          resp = await OrderService.sendReadyToPickupItemNotification({ shipmentId })
+          this.getIncomingOrders()
+
+          if (!hasError(resp)) showToast(translate('Order marked as ready for pickup, an email notification has been sent to the customer'))
+          else showToast(translate('Order marked as ready for pickup but something went wrong while sending the email notification'))
+        } else {
+          showToast(translate("Something went wrong"))
+        }
+        emitter.emit("dismissLoader")
+      } catch (err) {
+        console.error(err)
+        showToast(translate("Something went wrong"))
+      }
+
+      emitter.emit("dismissLoader")
+      return resp;
+    },
+    async confirmHandoverOrder(shipmentId: string) {
       const header = this.$t('Complete order')
       const message = this.$t('Order will be marked as completed. This action is irreversible.');
 
@@ -295,12 +320,39 @@ export default defineComponent({
           },{
             text: this.$t('Complete'),
             handler: async () => {
-              await this.store.dispatch("order/handoverOrder", shipmentId);
+              await this.handoverOrder(shipmentId)
             }
           }]
         });
       return alert.present();
     },
+    async handoverOrder(shipmentId: string) {
+      emitter.emit("presentLoader");
+      const params = {
+        shipmentId: shipmentId,
+        statusId: 'SHIPMENT_COMPLETED'
+      }
+
+      let resp
+
+      try {
+        resp = await OrderService.updateShipment(params)
+        if (!hasError(resp)) {
+          this.getReadyForPickupOrders()          
+          showToast(translate('Order marked as complete'))
+        } else {
+          showToast(translate("Something went wrong"))
+        }
+        emitter.emit("dismissLoader")
+      } catch (err) {
+        console.error(err)
+        showToast(translate("Something went wrong"))
+      }
+
+      emitter.emit("dismissLoader")
+      return resp
+    },
+
     async sendReadyForPickupEmail(order: any) {
       const header = this.$t('Resend ready for pickup email')
       const message = this.$t('An email notification will be sent to that their order is ready for pickup.', { customerName: `${order.firstName} ${order.lastName}` })
@@ -332,11 +384,11 @@ export default defineComponent({
       return alert.present();
     },
   },
-  ionViewWillEnter () {
+  ionViewWillEnter() {
     this.queryString = '';
-    if(this.segmentSelected === 'incoming') {
+    if (this.segmentSelected === 'incoming') {
       this.getIncomingOrders()
-    } else if(this.segmentSelected === 'packed') {
+    } else if (this.segmentSelected === 'packed') {
       this.getReadyForPickupOrders()
     } else {
       this.getCompletedOrders()
