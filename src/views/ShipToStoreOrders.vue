@@ -287,7 +287,10 @@ export default defineComponent({
 
       let resp
       try {
-        resp = await OrderService.updateShipment({ shipmentId: shipmentId, statusId: 'SHIPMENT_SCHEDULED' })
+        resp = await OrderService.updateShipment({
+          shipmentId: shipmentId,
+          statusId: 'PICKUP_SCHEDULED'
+        })
         if (!hasError(resp)) {
           resp = await OrderService.sendReadyToPickupItemNotification({ shipmentId })
           this.getIncomingOrders()
