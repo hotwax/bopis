@@ -675,7 +675,7 @@ const actions: ActionTree<OrderState , RootState> ={
     const params = {
       inputFields: {
         // TODO check status
-        statusId: "SHIPMENT_COMPLETED",
+        statusId: "SHIPMENT_DELIVERED",
       },
       viewSize: payload.viewSize ? payload.viewSize : process.env.VUE_APP_VIEW_SIZE,
       viewIndex: payload.viewIndex ? payload.viewIndex : 0,

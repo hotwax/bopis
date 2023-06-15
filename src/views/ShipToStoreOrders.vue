@@ -333,7 +333,7 @@ export default defineComponent({
       emitter.emit("presentLoader");
       const params = {
         shipmentId: shipmentId,
-        statusId: 'SHIPMENT_COMPLETED'
+        statusId: 'SHIPMENT_DELIVERED'
       }
 
       let resp
