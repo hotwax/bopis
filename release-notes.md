@@ -1,3 +1,15 @@
+# Release 2.11.0
+
+## What's Changed
+* Updated favicon by @Nidbhagwat in https://github.com/hotwax/bopis/pull/242
+* Updated: added customer email on order details page (#85zt94890) by @k2maan in https://github.com/hotwax/bopis/pull/240
+* Implemented: ship to store page (#85zt824d7) by @k2maan in https://github.com/hotwax/bopis/pull/239
+
+## New Contributors
+* @Nidbhagwat made their first contribution in https://github.com/hotwax/bopis/pull/242
+
+**Full Changelog**: https://github.com/hotwax/bopis/compare/v2.10.0...v2.11.0
+
 # Release 2.10.0
 ## What's Changed
 * Improved: search query by removing wildcards by @adityasharma7 in https://github.com/hotwax/bopis/pull/228
