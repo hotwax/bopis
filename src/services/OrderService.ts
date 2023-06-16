@@ -17,6 +17,14 @@ const getOrderDetails = async (payload: any): Promise <any> => {
   });
 }
 
+const getCustomerContactDetails = async (orderId: any): Promise <any>  => {
+  return api({
+    url: `orders/${orderId}`,
+    method: "get",
+    cache: true
+  });
+}
+
 const getPackedOrders = async (payload: any): Promise <any> => {
   return api({
     url: "solr-query",
@@ -131,5 +139,6 @@ export const OrderService = {
   createPicklist,
   sendPickupScheduledNotification,
   getShipToStoreOrders,
-  getShipmentItems
+  getShipmentItems,
+  getCustomerContactDetails
 }
