@@ -21,6 +21,20 @@ const orderModule: Module<OrderState, RootState> = {
     completed: {
       list: {},
       total: 0
+    },
+    shipToStore: {
+      incoming: {
+        list: {},
+        total: 0
+      },
+      readyForPickup: {
+        list: {},
+        total: 0
+      },
+      completed: {
+        list: {},
+        total: 0
+      }
     }
   },
   getters,

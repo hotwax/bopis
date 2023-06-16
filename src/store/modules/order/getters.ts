@@ -23,6 +23,24 @@ const getters: GetterTree<OrderState , RootState> = {
   },
   isCompletedOrdersScrollable: (state) => {
     return state.completed.list.length > 0 && state.completed.list.length < state.completed.total
+  },
+  getShipToStoreIncomingOrders: (state) => {
+    return state.shipToStore.incoming.list;
+  },
+  isShipToStoreIncmngOrdrsScrlbl: (state) => {
+    return state.shipToStore.incoming.list.length > 0 && state.shipToStore.incoming.list.length < state.shipToStore.incoming.total
+  },
+  getShipToStoreReadyForPickupOrders: (state) => {
+    return state.shipToStore.readyForPickup.list;
+  },
+  isShipToStoreRdyForPckupOrdrsScrlbl: (state) => {
+    return state.shipToStore.readyForPickup.list.length > 0 && state.shipToStore.readyForPickup.list.length < state.shipToStore.readyForPickup.total
+  },
+  getShipToStoreCompletedOrders: (state) => {
+    return state.shipToStore.completed.list;
+  },
+  isShipToStoreCmpltdOrdrsScrlbl: (state) => {
+    return state.shipToStore.completed.list.length > 0 && state.shipToStore.completed.list.length < state.shipToStore.completed.total
   }
 }
 

@@ -3,7 +3,8 @@ import { ActionTree } from 'vuex'
 import RootState from '@/store/RootState'
 import OrderState from './OrderState'
 import * as types from './mutation-types'
-import { hasError , showToast } from "@/utils";
+import { showToast } from "@/utils";
+import { hasError } from '@/adapter'
 import { translate } from "@/i18n";
 import emitter from '@/event-bus'
 import store from "@/store";
@@ -494,6 +495,265 @@ const actions: ActionTree<OrderState , RootState> ={
       responses.push(resp);
     }
     return responses;
+  },
+
+  async getShipToStoreIncomingOrders({ commit, state }, payload) {
+    // Show loader only when new query and not the infinite scroll
+    if (payload.viewIndex === 0) emitter.emit("presentLoader")
+    let resp: any
+
+    const params = {
+      inputFields: {
+        statusId: "SHIPMENT_SHIPPED",
+        shipmentMethodTypeId: "SHIP_TO_STORE",
+        orderFacilityId: this.state.user.currentFacility.facilityId
+      },
+      viewSize: payload.viewSize ? payload.viewSize : process.env.VUE_APP_VIEW_SIZE,
+      viewIndex: payload.viewIndex ? payload.viewIndex : 0,
+      entityName: 'ShipmentAndOrderHeader',
+      noConditionFind: "Y",
+      distinct: "Y",
+      fieldList: ['shipmentId', 'firstName', 'createdDate', 'lastName', 'orderName']
+    } as any
+
+    if (payload.queryString.length) {
+      params.inputFields = {
+        firstName_value: payload.queryString,
+        firstName_op: 'contains',
+        firstName_ic: 'Y',
+        firstName_grp: '1',
+        lastName_value: payload.queryString,
+        lastName_op: 'contains',
+        lastName_ic: 'Y',
+        lastName_grp: '2',
+        orderName_value: payload.queryString,
+        orderName_op: 'contains',
+        orderName_ic: 'Y',
+        orderName_grp: '3',
+      }
+    }
+
+    let incomingOrders = [] as any
+    try {
+      resp = await OrderService.getShipToStoreOrders(params)
+      let shipments = {} as any
+      if (!hasError(resp)) {
+        shipments = resp.data.docs.reduce((shipments: any, shipment: any) => {
+          shipments[shipment.shipmentId] = shipment
+          return shipments
+        }, {})
+
+        const shipmentItems = await OrderService.getShipmentItems(Object.keys(shipments))
+          
+        if (!shipmentItems?.length) {
+          showToast(translate("Orders Not Found"))
+          return
+        }
+
+        incomingOrders = Object.values(shipmentItems.reduce((shipmentItems: any, shipmentItem: any) => {
+          if (!shipmentItems[shipmentItem.shipmentId]) {
+            shipmentItems[shipmentItem.shipmentId] = { ...shipments[shipmentItem.shipmentId], items: [shipmentItem] }
+          } else {
+            shipmentItems[shipmentItem.shipmentId].items.push(shipmentItem)
+          }
+          return shipmentItems
+        }, {}))
+
+        let productIds: any = new Set();
+
+        incomingOrders.map((order: any) => {
+          order.items.map((item: any) => productIds.add(item.productId))
+          return productIds
+        });
+
+        productIds = [...productIds]
+        store.dispatch('product/fetchProducts', { productIds })
+
+        if (payload.viewIndex) incomingOrders = state.shipToStore.incoming.list.concat(incomingOrders)
+      } else {
+        showToast(translate("Orders Not Found"))
+      }
+    } catch (err) {
+      console.error(err)
+      showToast(translate("Something went wrong"))
+    } finally {
+      emitter.emit("dismissLoader")
+      commit(types.ORDER_SHIP_TO_STORE_INCOMING_UPDATED, { orders: incomingOrders, total: resp.data?.count ? resp.data.count  : 0 })
+    }
+    return resp;
+  },
+
+  async getShipToStoreReadyForPickupOrders({ commit, state }, payload) {
+    // Show loader only when new query and not the infinite scroll
+    if (payload.viewIndex === 0) emitter.emit("presentLoader")
+    let resp: any
+
+    const params = {
+      inputFields: {
+        statusId: "PICKUP_SCHEDULED",
+        shipmentMethodTypeId: "SHIP_TO_STORE",
+        orderFacilityId: this.state.user.currentFacility.facilityId
+      },
+      viewSize: payload.viewSize ? payload.viewSize : process.env.VUE_APP_VIEW_SIZE,
+      viewIndex: payload.viewIndex ? payload.viewIndex : 0,
+      entityName: 'ShipmentAndOrderHeader',
+      noConditionFind: "Y",
+      distinct: "Y",
+      fieldList: ['shipmentId', 'firstName', 'createdDate', 'lastName', 'orderName']
+    } as any
+
+    if (payload.queryString.length) {
+      params.inputFields = {
+        firstName_value: payload.queryString,
+        firstName_op: 'contains',
+        firstName_ic: 'Y',
+        firstName_grp: '1',
+        lastName_value: payload.queryString,
+        lastName_op: 'contains',
+        lastName_ic: 'Y',
+        lastName_grp: '2',
+        orderName_value: payload.queryString,
+        orderName_op: 'contains',
+        orderName_ic: 'Y',
+        orderName_grp: '3',
+      }
+    }
+
+    let readyForPickupOrders = []
+    try {
+      resp = await OrderService.getShipToStoreOrders(params)
+      let shipments = {} as any
+      if (!hasError(resp)) {
+        shipments = resp.data.docs.reduce((shipments: any, shipment: any) => {
+          shipments[shipment.shipmentId] = shipment
+          return shipments
+        }, {})
+
+        const shipmentItems = await OrderService.getShipmentItems(Object.keys(shipments))
+
+        if (!shipmentItems?.length) {
+          showToast(translate("Orders Not Found"))
+          return
+        }
+
+        readyForPickupOrders = Object.values(shipmentItems.reduce((shipmentItems: any, shipmentItem: any) => {
+          if (!shipmentItems[shipmentItem.shipmentId]) {
+            shipmentItems[shipmentItem.shipmentId] = { ...shipments[shipmentItem.shipmentId], items: [shipmentItem] }
+          } else {
+            shipmentItems[shipmentItem.shipmentId].items.push(shipmentItem)
+          }
+          return shipmentItems
+        }, {}))
+
+        let productIds: any = new Set();
+
+        readyForPickupOrders.map((order: any) => {
+          order.items.map((item: any) => productIds.add(item.productId))
+          return productIds
+        });
+
+        productIds = [...productIds]
+        store.dispatch('product/fetchProducts', { productIds })
+        if (payload.viewIndex) readyForPickupOrders = state.shipToStore.readyForPickup.list.concat(readyForPickupOrders)
+      } else {
+        showToast(translate("Orders Not Found"))
+      }
+    } catch (err) {
+      console.error(err)
+      showToast(translate("Something went wrong"))
+    } finally {
+      emitter.emit("dismissLoader")
+      commit(types.ORDER_SHIP_TO_STORE_RDYFORPCKUP_UPDATED, { orders: readyForPickupOrders, total: resp.data?.count ? resp.data.count : 0 })
+    }
+
+    return resp;
+  },
+  
+  async getShipToStoreCompletedOrders({ commit, state }, payload) {
+    // Show loader only when new query and not the infinite scroll
+    if (payload.viewIndex === 0) emitter.emit("presentLoader")
+    let resp: any
+
+    const params = {
+      inputFields: {
+        statusId: "SHIPMENT_DELIVERED",
+        shipmentMethodTypeId: "SHIP_TO_STORE",
+        orderFacilityId: this.state.user.currentFacility.facilityId
+      },
+      viewSize: payload.viewSize ? payload.viewSize : process.env.VUE_APP_VIEW_SIZE,
+      viewIndex: payload.viewIndex ? payload.viewIndex : 0,
+      entityName: 'ShipmentAndOrderHeader',
+      noConditionFind: "Y",
+      distinct: "Y",
+      fieldList: ['shipmentId', 'firstName', 'createdDate', 'lastName', 'orderName']
+    } as any
+
+    // enbaling search on first name, last name, and orderId
+    if (payload.queryString.length) {
+      params.inputFields = {
+        firstName_value: payload.queryString,
+        firstName_op: 'contains',
+        firstName_ic: 'Y',
+        firstName_grp: '1',
+        lastName_value: payload.queryString,
+        lastName_op: 'contains',
+        lastName_ic: 'Y',
+        lastName_grp: '2',
+        orderName_value: payload.queryString,
+        orderName_op: 'contains',
+        orderName_ic: 'Y',
+        orderName_grp: '3',
+      }
+    }
+
+    let completedOrders = []
+    try {
+      resp = await OrderService.getShipToStoreOrders(params)
+      let shipments = {} as any
+      if (!hasError(resp)) {
+        shipments = resp.data.docs.reduce((shipments: any, shipment: any) => {
+          shipments[shipment.shipmentId] = shipment
+          return shipments
+        }, {})
+
+        const shipmentItems = await OrderService.getShipmentItems(Object.keys(shipments))
+
+        if (!shipmentItems?.length) {
+          showToast(translate("Orders Not Found"))
+          return
+        }
+
+        completedOrders = Object.values(shipmentItems.reduce((shipmentItems: any, shipmentItem: any) => {
+          if (!shipmentItems[shipmentItem.shipmentId]) {
+            shipmentItems[shipmentItem.shipmentId] = { ...shipments[shipmentItem.shipmentId], items: [shipmentItem] }
+          } else {
+            shipmentItems[shipmentItem.shipmentId].items.push(shipmentItem)
+          }
+          return shipmentItems
+        }, {}))
+
+        let productIds: any = new Set();
+
+        completedOrders.map((order: any) => {
+          order.items.map((item: any) => productIds.add(item.productId))
+          return productIds
+        });
+
+        productIds = [...productIds]
+        store.dispatch('product/fetchProducts', { productIds })
+        if (payload.viewIndex) completedOrders = state.shipToStore.completed.list.concat(completedOrders)
+      } else {
+        showToast(translate("Orders Not Found"))
+      }
+    } catch(err) {
+      console.error(err)
+      showToast(translate("Something went wrong"))
+    } finally {
+      emitter.emit("dismissLoader")
+      commit(types.ORDER_SHIP_TO_STORE_COMPLETED_UPDATED, { orders: completedOrders, total: resp.data?.count ? resp.data.count : 0 })
+    }
+
+    return resp;
   },
 
   // clearning the orders state when logout, or user store is changed

@@ -1,4 +1,4 @@
-import { api, client } from '@/adapter';
+import { api, client, hasError } from '@/adapter';
 import store from '@/store';
 
 const getOpenOrders = async (payload: any): Promise <any> => {
@@ -77,12 +77,55 @@ const createPicklist = async (query: any): Promise <any> => {
   })
 }
 
-const sendReadyToPickupItemNotification = async (payload: any): Promise <any> => {
+const sendPickupScheduledNotification = async (payload: any): Promise <any> => {
   return api({
-    url: "service/sendReadyToPickupItemNotification",
+    url: "service/sendPickupScheduledNotification",
     method: "post",
     data: payload
   });
+}
+
+const getShipToStoreOrders = async (query: any): Promise<any> => {
+  return api({
+    url: 'performFind',
+    method: 'POST',
+    data: query
+  })
+}
+
+const getShipmentItems = async (shipmentIds: any): Promise<any> => {
+  if (!shipmentIds.length) return []
+  const requests = []
+
+  const shipmentIdList = shipmentIds
+  while (shipmentIdList.length) {
+    const batch = shipmentIdList.splice(0, 20)
+    const params = {
+      inputFields: {
+        shipmentId: batch
+      },
+      viewSize: 250, // maximum view size
+      entityName: 'ShipmentItem',
+      noConditionFind: "Y",
+      fieldList: ['shipmentId', 'productId', 'shipmentItemSeqId']
+    }
+    requests.push(params)
+  }
+
+  const shipmentItemsResps = await Promise.all(requests.map((params) => api({
+    url: 'performFind',
+    method: 'POST',
+    data: params
+  })))
+
+  const hasFailedResponse = shipmentItemsResps.some((response: any) => hasError(response) && response.data.error !== "No record found")
+
+  if (hasFailedResponse) return Promise.reject(shipmentItemsResps);
+
+  return shipmentItemsResps.reduce((responseData: any, response: any) => {
+    if (!hasError(response)) responseData.push(...response.data.docs)
+    return responseData
+  }, [])
 }
 
 export const OrderService = {
@@ -94,6 +137,8 @@ export const OrderService = {
   rejectOrderItem,
   updateShipment,
   createPicklist,
-  sendReadyToPickupItemNotification,
+  sendPickupScheduledNotification,
+  getShipToStoreOrders,
+  getShipmentItems,
   getCustomerContactDetails
 }

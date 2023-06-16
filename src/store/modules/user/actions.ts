@@ -3,10 +3,10 @@ import { ActionTree } from 'vuex'
 import RootState from '@/store/RootState'
 import UserState from './UserState'
 import * as types from './mutation-types'
-import { hasError, showToast } from '@/utils'
+import { showToast } from '@/utils'
 import i18n, { translate } from '@/i18n'
 import { Settings } from 'luxon';
-import { updateInstanceUrl, updateToken, resetConfig } from '@/adapter'
+import { hasError, updateInstanceUrl, updateToken, resetConfig } from '@/adapter'
 import {
   getServerPermissionsFromRules,
   prepareAppPermissions,

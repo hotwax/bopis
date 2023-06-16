@@ -62,7 +62,8 @@ import {
 import { defineComponent } from "vue";
 import { closeOutline } from "ionicons/icons";
 import { useStore } from "vuex";
-import { hasError, showToast } from "@/utils";
+import { showToast } from "@/utils";
+import { hasError } from '@/adapter'
 import { translate } from "@/i18n";
 import { PicklistService } from '@/services/PicklistService'
 

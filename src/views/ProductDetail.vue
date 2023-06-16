@@ -89,7 +89,8 @@ import { defineComponent } from "vue";
 import { mapGetters, useStore } from "vuex";
 import Image from "../components/Image.vue";
 import { StockService } from '@/services/StockService'
-import { hasError, getFeature, showToast } from "@/utils";
+import { getFeature, showToast } from "@/utils";
+import { hasError } from '@/adapter'
 import { sortSizes } from '@/apparel-sorter';
 import OtherStoresInventoryModal from "./OtherStoresInventoryModal.vue";
 import { translate } from "@/i18n";
