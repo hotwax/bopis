@@ -504,8 +504,9 @@ const actions: ActionTree<OrderState , RootState> ={
 
     const params = {
       inputFields: {
-        // TODO check status
         statusId: "SHIPMENT_SHIPPED",
+        shipmentMethodTypeId: "SHIP_TO_STORE",
+        orderFacilityId: this.state.user.currentFacility.facilityId
       },
       viewSize: payload.viewSize ? payload.viewSize : process.env.VUE_APP_VIEW_SIZE,
       viewIndex: payload.viewIndex ? payload.viewIndex : 0,
@@ -589,8 +590,9 @@ const actions: ActionTree<OrderState , RootState> ={
 
     const params = {
       inputFields: {
-        // TODO check status
         statusId: "PICKUP_SCHEDULED",
+        shipmentMethodTypeId: "SHIP_TO_STORE",
+        orderFacilityId: this.state.user.currentFacility.facilityId
       },
       viewSize: payload.viewSize ? payload.viewSize : process.env.VUE_APP_VIEW_SIZE,
       viewIndex: payload.viewIndex ? payload.viewIndex : 0,
@@ -674,8 +676,9 @@ const actions: ActionTree<OrderState , RootState> ={
 
     const params = {
       inputFields: {
-        // TODO check status
         statusId: "SHIPMENT_DELIVERED",
+        shipmentMethodTypeId: "SHIP_TO_STORE",
+        orderFacilityId: this.state.user.currentFacility.facilityId
       },
       viewSize: payload.viewSize ? payload.viewSize : process.env.VUE_APP_VIEW_SIZE,
       viewIndex: payload.viewIndex ? payload.viewIndex : 0,
