@@ -12,6 +12,8 @@ import emitter from "@/event-bus"
 import { mapGetters, useStore } from 'vuex';
 import { initialise, resetConfig } from '@/adapter'
 import { useRouter } from 'vue-router';
+import { dxpComponents } from 'dxp-components';
+import app from './main'
 
 export default defineComponent({
   name: 'App',
@@ -56,6 +58,25 @@ export default defineComponent({
       userToken: 'user/getUserToken',
       instanceUrl: 'user/getInstanceUrl'
     })
+  },
+  created() {
+    console.log('App is created')
+    initialise({
+      token: this.userToken,
+      instanceUrl: this.instanceUrl,
+      cacheMaxAge: this.maxAge,
+      events: {
+        unauthorised: this.unauthorised,
+        responseError: () => {
+          setTimeout(() => this.dismissLoader(), 100);
+        },
+        queueTask: (payload: any) => {
+          emitter.emit("queueTask", payload);
+        }
+      }
+    })
+
+    app.use(dxpComponents)
   },
   async mounted() {
     // creating the loader on mounted as loadingController is taking too much time to create initially

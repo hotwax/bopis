@@ -13,6 +13,7 @@ import {
   resetPermissions,
   setPermissions
 } from '@/authorization'
+import { useProductIdentificationStore } from 'dxp-components'
 
 const actions: ActionTree<UserState, RootState> = {
 
@@ -97,6 +98,9 @@ const actions: ActionTree<UserState, RootState> = {
       commit(types.USER_PREFERENCE_UPDATED, userPreference)
       commit(types.USER_PERMISSIONS_UPDATED, appPermissions);
       commit(types.USER_TOKEN_CHANGED, { newToken: token })
+
+      currentEComStore && useProductIdentificationStore().getIdentificationPref(currentEComStore.productStoreId);
+      console.log('get current e com store after login')
       
       // Handling case for warnings like password may expire in few days
       if (resp.data._EVENT_MESSAGE_ && resp.data._EVENT_MESSAGE_.startsWith("Alert:")) {
@@ -138,6 +142,9 @@ const actions: ActionTree<UserState, RootState> = {
     commit(types.USER_CURRENT_FACILITY_UPDATED, facility);
     const eComStore = await UserService.getCurrentEComStore(undefined, facility?.facilityId);
     commit(types.USER_CURRENT_ECOM_STORE_UPDATED, eComStore)
+
+    eComStore && useProductIdentificationStore().getIdentificationPref(eComStore.productStoreId);
+    console.log('get current e com store')
   },
   /**
    * Set User Instance Url

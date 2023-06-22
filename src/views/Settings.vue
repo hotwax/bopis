@@ -196,14 +196,14 @@
           </ion-card-header>
           <ion-item>
             <ion-label>{{ $t("Primary Product Identifier") }}</ion-label>
-            <ion-select interface="popover" :placeholder="$t('primary identifier')" @ionChange="setProductIdentificationPref($event.detail.value, 'primaryId')">
-              <ion-select-option v-for="identification in utilStore.productIdentificationOptions" :key="identification" :value="identification" >{{ identification }}</ion-select-option>
+            <ion-select interface="popover" :placeholder="$t('primary identifier')" :value="primaryId" @ionChange="setProductIdentificationPref($event.detail.value, 'primaryId')">
+              <ion-select-option v-for="identification in productIdentificationOptions" :key="identification" :value="identification" >{{ identification }}</ion-select-option>
             </ion-select>
           </ion-item>
           <ion-item>
             <ion-label>{{ $t("Secondary Product Identifier") }}</ion-label>
-            <ion-select interface="popover" :placeholder="$t('secondary identifier')" >
-              <ion-select-option v-for="identification in utilStore.productIdentificationOptions" :key="identification" :value="identification" >{{ identification }}</ion-select-option>
+            <ion-select interface="popover" :placeholder="$t('secondary identifier')" :value="secondaryId" @ionChange="setProductIdentificationPref($event.detail.value, 'secondaryId')">
+              <ion-select-option v-for="identification in productIdentificationOptions" :key="identification" :value="identification" >{{ identification }}</ion-select-option>
               <ion-select-option value="">{{ $t("None") }}</ion-select-option>
             </ion-select>
           </ion-item>
@@ -215,7 +215,7 @@
 
 <script lang="ts">
 import { IonAvatar, IonButton, IonCard, IonCardContent, IonCardHeader, IonCardSubtitle, IonCardTitle, IonContent, IonHeader, IonIcon, IonItem, IonLabel, IonPage, IonSelect, IonSelectOption, IonTitle, IonToggle , IonToolbar, modalController } from '@ionic/vue';
-import { defineComponent } from 'vue';
+import { computed, defineComponent, ref } from 'vue';
 import { ellipsisVertical, personCircleOutline, sendOutline , storefrontOutline, codeWorkingOutline, openOutline } from 'ionicons/icons'
 import { mapGetters, useStore } from 'vuex';
 import { useRouter } from 'vue-router';
@@ -226,7 +226,7 @@ import { UserService } from '@/services/UserService'
 import { hasError, showToast } from '@/utils';
 import { translate } from "@/i18n";
 import { Actions, hasPermission } from '@/authorization'
-import { useUtilStore, useUserStore } from 'hc-plugin';
+import { useProductIdentificationStore } from 'dxp-components';
 
 export default defineComponent({
   name: 'Settings',
@@ -290,6 +290,8 @@ export default defineComponent({
       this.getAvailableShipmentMethods();
       this.getRerouteFulfillmentConfiguration();
     }
+
+    this.productIdentificationStore.getIdentificationPref(this.currentEComStore.productStoreId)
   },
   methods: {
     setFacility (event: any) {
@@ -411,21 +413,33 @@ export default defineComponent({
       }
       // Fetch the updated configuration
       await this.getRerouteFulfillmentConfiguration(config.settingTypeEnumId);
-    },
-    setProductIdentificationPref(value: string, id: string) {
-      // Not dispatching an action if the value for id is same as saved in state
-      // if(this.productIdentificationPref[id] == value) {
-      //   return;
-      // }
-      this.userStore.setProductIdentificationPref({ id, value })
     }
   },
   setup () {
     const store = useStore();
     const router = useRouter();
 
-    const utilStore = useUtilStore();
-    const userStore = useUserStore();
+    const productIdentificationStore = useProductIdentificationStore();
+
+    let primaryId = ref('productId')
+    let secondaryId = ref('');
+
+    const productIdentificationOptions = productIdentificationStore.getProductIdentificationOptions
+
+    productIdentificationStore.$subscribe((watch, state) => {
+      primaryId.value = state.productIdentificationPref.primaryId
+      secondaryId.value = state.productIdentificationPref.secondaryId
+    })
+
+    function callbackFunction() {
+      console.log('called callback function')
+    }
+
+    function setProductIdentificationPref(value: string, id: string) {
+      const eComStoreId = store.getters['user/getCurrentEComStore'].productStoreId
+
+      productIdentificationStore.setProductIdentificationPref(id, value, eComStoreId, callbackFunction)
+    }
 
     return {
       Actions,
@@ -438,8 +452,11 @@ export default defineComponent({
       storefrontOutline,
       codeWorkingOutline,
       openOutline,
-      userStore,
-      utilStore
+      primaryId,
+      secondaryId,
+      setProductIdentificationPref,
+      productIdentificationOptions,
+      productIdentificationStore
     }
   }
 });
