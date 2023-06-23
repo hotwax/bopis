@@ -83,7 +83,8 @@ import {
   mailOutline,
 } from "ionicons/icons";
 import ProductListItem from '@/components/ProductListItem.vue'
-import { copyToClipboard, hasError } from '@/utils'
+import { copyToClipboard } from '@/utils'
+import { hasError } from '@/adapter';
 import { useRouter } from 'vue-router'
 import { DateTime } from 'luxon';
 import ShipToCustomerModal from "@/components/ShipToCustomerModal.vue";
