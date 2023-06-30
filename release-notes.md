@@ -1,3 +1,6 @@
+Latest release notes are maintained on Github only. Refer to below link:
+https://github.com/hotwax/bopis/releases
+
 # Release 2.11.0
 
 ## What's Changed
