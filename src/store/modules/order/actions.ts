@@ -472,24 +472,25 @@ const actions: ActionTree<OrderState , RootState> ={
     }).catch(err => err);
   },
 
-  async rejectOrderItems ({ commit }, data) {
+  async rejectOrderItems ({ commit }, order) {
     const payload = {
-      'orderId': data.orderId
+      'orderId': order.orderId
     }
-    const responses = [];
+    const responses = [] as any;
 
     // https://blog.devgenius.io/using-async-await-in-a-foreach-loop-you-cant-c174b31999bd
     // The forEach, map, reduce loops are not built to work with asynchronous callback functions.
     // It doesn't wait for the promise of an iteration to be resolved before it goes on to the next iteration.
     // We could use either the for…of the loop or the for(let i = 0;….)
-    for (const item of data.parts.items) {
+    for (const item of order.part.items) {
       const params = {
         ...payload,
         'rejectReason': item.reason,
         'facilityId': item.facilityId,
         'orderItemSeqId': item.orderItemSeqId,
-        'shipmentMethodTypeId': data.parts.shipmentMethodEnum.shipmentMethodEnumId,
-        'quantity': parseInt(item.quantity)
+        'shipmentMethodTypeId': order.part.shipmentMethodEnum.shipmentMethodEnumId,
+        'quantity': parseInt(item.quantity),
+        ...(order.part.shipmentMethodEnum.shipmentMethodEnumId === "STOREPICKUP" && ({"naFacilityId": "PICKUP_REJECTED"})),
       }
       const resp = await OrderService.rejectOrderItem({'payload': params});
       responses.push(resp);
