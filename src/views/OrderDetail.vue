@@ -149,7 +149,7 @@ export default defineComponent({
           },{
             text: this.$t('Reject Order'),
             handler: () => {
-              this.store.dispatch('order/setUnfillableOrderOrItem', { orderId: order.orderId, parts: this.getCurrentOrderPart() }).then((resp) => {
+              this.store.dispatch('order/setUnfillableOrderOrItem', { orderId: order.orderId, part: this.getCurrentOrderPart() }).then((resp) => {
                 if (resp) this.router.push('/tabs/orders')
               })
             },
