@@ -9,7 +9,7 @@
       <ion-searchbar @ionFocus="selectSearchBarText($event)" v-model="queryString" @keypress.enter="queryString = $event.target.value; getProducts()" />
       <main v-if="products.list.length">
         <ion-card button v-for="product in products.list" :key="product.productId"  @click="viewProduct(product)">
-          <Image :src="product.mainImageUrl" />
+          <ShopifyImg :src="product.mainImageUrl"/>
           <ion-item lines="none">
             <ion-label>
               <p>{{ product.productId }}</p>
@@ -51,13 +51,12 @@ import {
 } from '@ionic/vue';
 import { defineComponent } from 'vue';
 import { mapGetters, useStore } from 'vuex';
-import Image from "../components/Image.vue"
 import { useRouter } from "vue-router";
+import { ShopifyImg } from 'dxp-components'
 
 export default defineComponent({
   name: 'Catalog',
   components: {
-    Image,
     IonCard,
     IonContent,
     IonHeader,
@@ -69,6 +68,7 @@ export default defineComponent({
     IonSearchbar,
     IonTitle,
     IonToolbar,
+    ShopifyImg,
   },
   data() {
     return {
