@@ -27,7 +27,7 @@
             <ion-item lines="none">
               <ion-label class="ion-text-wrap">
                 <h1>{{ order.firstName }} {{ order.lastName }}</h1>
-                <p>{{ order.orderId }}</p>
+                <p>{{ order.orderName }}</p>
               </ion-label>
               <div class="metadata">
                 <ion-note v-if="order.createdDate">{{ getDateTime(order.createdDate) }}</ion-note>
@@ -50,7 +50,7 @@
             <ion-item lines="none">
               <ion-label class="ion-text-wrap">
                 <h1>{{ order.firstName }} {{ order.lastName }}</h1>
-                <p>{{ order.orderId }}</p>
+                <p>{{ order.orderName }}</p>
               </ion-label>
               <div class="metadata">
                 <ion-note v-if="order.createdDate">{{ getDateTime(order.createdDate) }}</ion-note>
@@ -76,7 +76,7 @@
             <ion-item lines="none">
               <ion-label class="ion-text-wrap">
                 <h1>{{ order.firstName }} {{ order.lastName }}</h1>
-                <p>{{ order.orderId }}</p>
+                <p>{{ order.orderName }}</p>
               </ion-label>
               <div class="metadata">
                 <ion-note v-if="order.createdDate">{{ getDateTime(order.createdDate) }}</ion-note>
