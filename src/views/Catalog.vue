@@ -9,7 +9,7 @@
       <ion-searchbar @ionFocus="selectSearchBarText($event)" v-model="queryString" @keypress.enter="queryString = $event.target.value; getProducts()" />
       <main v-if="products.list.length">
         <ion-card button v-for="product in products.list" :key="product.productId"  @click="viewProduct(product)">
-          <ShopifyImg :src="product.mainImageUrl"/>
+          <ShopifyImg :src="product.mainImageUrl" size="large"/>
           <ion-item lines="none">
             <ion-label>
               <p>{{ product.productId }}</p>
@@ -52,7 +52,7 @@ import {
 import { defineComponent } from 'vue';
 import { mapGetters, useStore } from 'vuex';
 import { useRouter } from "vue-router";
-import { ShopifyImg } from 'dxp-components'
+import { ShopifyImg } from '@hotwax/dxp-components'
 
 export default defineComponent({
   name: 'Catalog',

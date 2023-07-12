@@ -87,7 +87,7 @@ import {
 } from "@ionic/vue";
 import { defineComponent } from "vue";
 import { mapGetters, useStore } from "vuex";
-import { ShopifyImg } from 'dxp-components'
+import { ShopifyImg } from '@hotwax/dxp-components'
 import { StockService } from '@/services/StockService'
 import { getFeature, showToast } from "@/utils";
 import { hasError } from '@/adapter'
