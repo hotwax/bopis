@@ -53,7 +53,6 @@
   "Mismatch": "ミスマッチ",
   "More": "もっと",
   "No inventory details found": "No inventory details found",
-  "Not in stock": "在庫切れ",
   "Not in Stock": "在庫切れ",
   "No products found": "No products found",
   "No reason": "理由はございません",
@@ -76,8 +75,8 @@
   "Orders": "注文",
   "Orders Not Found": "注文が見つかりません",
   "Other stores": "Other stores",
-  "Packed": "梱包済み",
-  "Packing Slip": "Packing Slip",
+  "Packed": "梱包済み",,
+  "Packing slip": "納品書"
   "Packing slips help customer reconcile their order against the delivered items.": "Packing slips help customer reconcile their order against the delivered items.",
   "Password": "パスワード",
   "pending approval": "承認待ち",
@@ -140,6 +139,5 @@
   "This order will be removed from your dashboard. This action cannot be undone.": "この注文はダッシュボードから削除されます。{ space } この操作は元に戻せません。",
   "View shipping orders along with pickup orders.": "View shipping orders along with pickup orders.",
   "You do not have permission to access this page": "You do not have permission to access this page",
-  "Zipcode": "郵便番号",
-  "Packing slip": "納品書"
+  "Zipcode": "郵便番号"
 }
