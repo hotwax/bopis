@@ -428,10 +428,6 @@ export default defineComponent({
     const productIdentificationStore = useProductIdentificationStore();
     const eComStoreId = store.getters['user/getCurrentEComStore'].productStoreId
 
-    // TO DO: The setProductIdentificationPref function runs when refreshing setup view and
-    //        hence toast pops up of identifier preference change as ion change hits. This
-    //        only happens when user directly lends to the settings view for the first time.
-
     // Reactive state
     let primaryId = ref(productIdentificationStore.$state.productIdentificationPref.primaryId);
     let secondaryId = ref(productIdentificationStore.$state.productIdentificationPref.secondaryId);
@@ -439,7 +435,7 @@ export default defineComponent({
     const productIdentificationOptions = productIdentificationStore.getProductIdentificationOptions;
 
     // Subscribing to store and changing the value of primariId and secondaryId when state changes
-    productIdentificationStore.$subscribe((watch, state) => {       
+    productIdentificationStore.$subscribe((watch, state) => {             
       primaryId.value = state.productIdentificationPref.primaryId;
       secondaryId.value = state.productIdentificationPref.secondaryId;
     });
@@ -447,7 +443,13 @@ export default defineComponent({
     // Function to set the value of productIdentificationPref using dxp-component
     const setProductIdentificationPref = (value: string, id: string) =>  {      
       productIdentificationStore.setProductIdentificationPref(id, value, eComStoreId)
-        .then(() => showToast('Product identifier preference updated'))
+        .then(() => {
+          // TO DO: The setProductIdentificationPref function runs when refreshing setup view and
+          //        hence toast pops up of identifier preference change as ion change hits. This
+          //        only happens when user directly lends to the settings view for the first time.
+          //        Also the toast pops up for 2 times
+          showToast('Product identifier preference updated');
+        })
         .catch(error => console.log(error)); 
     }
 
