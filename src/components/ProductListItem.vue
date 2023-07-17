@@ -6,8 +6,9 @@
     <ion-label class="ion-text-wrap">
       <h5>{{ getProduct(item.productId).brandName }}</h5>
       <h2>{{ getProduct(item.productId).productName }}</h2>
-      <p class="ion-text-wrap">{{ getProduct(item.productId).internalName }}</p>
-      <p class="overline">{{ $filters.getIdentificationId(getProduct(item.productId).goodIdentifications, goodIdentificationTypeId) }}</p>
+      <p class="ion-text-wrap">{{ getProductIdentificationValue(productIdentificationPref.primaryId, getProduct(item.productId)) }}</p>
+      <p class="overline">{{ getProductIdentificationValue(productIdentificationPref.secondaryId, getProduct(item.productId)) }}</p>
+              
       <p v-if="$filters.getFeature(getProduct(item.productId).featureHierarchy, '1/COLOR/')">{{ $t("Color") }}: {{ $filters.getFeature(getProduct(item.productId).featureHierarchy, '1/COLOR/') }}</p>
       <p v-if="$filters.getFeature(getProduct(item.productId).featureHierarchy, '1/SIZE/')">{{ $t("Size") }}: {{ $filters.getFeature(getProduct(item.productId).featureHierarchy, '1/SIZE/') }}</p>
     </ion-label>
@@ -20,6 +21,9 @@
 import { IonItem, IonLabel, IonNote, IonThumbnail } from "@ionic/vue";
 import Image from './Image.vue'
 import { mapGetters } from 'vuex';
+import { getProductIdentificationValue } from "@/utils";
+import { useProductIdentificationStore } from "@hotwax/dxp-components";
+import { ref } from "vue";
 
 export default {
   components: {
@@ -46,6 +50,21 @@ export default {
       getProduct: 'product/getProduct',
       getProductStock: 'stock/getProductStock'
     })
+  },
+  setup() {
+
+    // reactive state for productIdentificationPref
+    let productIdentificationPref = ref(useProductIdentificationStore().$state.productIdentificationPref);
+
+    // subscribing to useProductIdentificationStore and changing the value of productIdentificationPref when state changes
+    useProductIdentificationStore().$subscribe((watch, state) => {      
+      productIdentificationPref.value = state.productIdentificationPref;
+    });
+
+    return  {
+      getProductIdentificationValue,
+      productIdentificationPref
+    }
   }
 }
 </script>

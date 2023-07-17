@@ -17,8 +17,9 @@
           <ion-item lines="none">
             <ion-label class="ion-text-wrap">
               <p class="overline">{{ currentVariant.brandName }}</p>
-              <h1>{{ currentVariant.parentProductName }}</h1>
-              <h2>{{ currentVariant.productName }}</h2>
+              <h1>{{ getProductIdentificationValue(productIdentificationPref.primaryId, product) }}</h1>
+              <h2>{{ getProductIdentificationValue(productIdentificationPref.secondaryId, product) }}</h2>
+              
             </ion-label>
             <!-- Price is given undefined to $n funtction on first render, hence, conditional rendering with empty string -->
             <ion-note slot="end">{{ currentVariant.LIST_PRICE_PURCHASE_USD_STORE_GROUP_price ? $n(currentVariant.LIST_PRICE_PURCHASE_USD_STORE_GROUP_price, 'currency', currency ) : '' }}</ion-note>
@@ -85,15 +86,16 @@ import {
   IonToolbar,
   modalController
 } from "@ionic/vue";
-import { defineComponent } from "vue";
+import { defineComponent, ref } from "vue";
 import { mapGetters, useStore } from "vuex";
 import Image from "../components/Image.vue";
 import { StockService } from '@/services/StockService'
-import { getFeature, showToast } from "@/utils";
+import { getFeature, showToast, getProductIdentificationValue } from "@/utils";
 import { hasError } from '@/adapter'
 import { sortSizes } from '@/apparel-sorter';
 import OtherStoresInventoryModal from "./OtherStoresInventoryModal.vue";
 import { translate } from "@/i18n";
+import { useProductIdentificationStore } from "@hotwax/dxp-components";
 
 export default defineComponent({
   name: "ProductDetail",
@@ -229,8 +231,19 @@ export default defineComponent({
   },
   setup() {
     const store = useStore();
+
+    // reactive state for productIdentificationPref
+    let productIdentificationPref = ref(useProductIdentificationStore().$state.productIdentificationPref);
+
+    // subscribing to useProductIdentificationStore and changing the value of productIdentificationPref when state changes
+    useProductIdentificationStore().$subscribe((watch, state) => {      
+      productIdentificationPref.value = state.productIdentificationPref;
+    });
+
     return {
-      store
+      store,
+      getProductIdentificationValue,
+      productIdentificationPref
     }
   }
 });

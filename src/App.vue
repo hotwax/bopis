@@ -12,6 +12,7 @@ import emitter from "@/event-bus"
 import { mapGetters, useStore } from 'vuex';
 import { initialise, resetConfig } from '@/adapter'
 import { useRouter } from 'vue-router';
+import { useProductIdentificationStore } from '@hotwax/dxp-components';
 
 export default defineComponent({
   name: 'App',
@@ -54,7 +55,8 @@ export default defineComponent({
     ...mapGetters({
       locale: 'user/getLocale',
       userToken: 'user/getUserToken',
-      instanceUrl: 'user/getInstanceUrl'
+      instanceUrl: 'user/getInstanceUrl',
+      currentEComStore: 'user/getCurrentEComStore'
     })
   },
   created() {
@@ -84,6 +86,9 @@ export default defineComponent({
     emitter.on('presentLoader', this.presentLoader);
     emitter.on('dismissLoader', this.dismissLoader);
     this.$i18n.locale = this.locale;
+
+    // Get product identification from api using dxp-component and set the state 
+    await useProductIdentificationStore().getIdentificationPref(this.currentEComStore.productStoreId);
   },
   unmounted() {
     emitter.off('presentLoader', this.presentLoader);

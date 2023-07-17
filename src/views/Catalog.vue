@@ -12,8 +12,8 @@
           <Image :src="product.mainImageUrl" />
           <ion-item lines="none">
             <ion-label>
-              <p>{{ product.productId }}</p>
-              {{ product.productName }}
+              <p>{{ getProductIdentificationValue(productIdentificationPref.secondaryId, product) }}</p>
+              {{ getProductIdentificationValue(productIdentificationPref.primaryId, product) }}
             </ion-label>
           </ion-item>
         </ion-card>
@@ -49,10 +49,12 @@ import {
   IonTitle,
   IonToolbar,
 } from '@ionic/vue';
-import { defineComponent } from 'vue';
+import { defineComponent, ref } from 'vue';
 import { mapGetters, useStore } from 'vuex';
 import Image from "../components/Image.vue"
 import { useRouter } from "vue-router";
+import { getProductIdentificationValue } from '@/utils';
+import { useProductIdentificationStore } from '@hotwax/dxp-components';
 
 export default defineComponent({
   name: 'Catalog',
@@ -117,13 +119,25 @@ export default defineComponent({
   async ionViewWillEnter() {
     this.queryString = this.products.queryString;
     this.getProducts();
+
   },
   setup() {
     const store = useStore();
     const router = useRouter();
+
+    // reactive state for productIdentificationPref
+    let productIdentificationPref = ref(useProductIdentificationStore().$state.productIdentificationPref);
+
+    // subscribing to useProductIdentificationStore and changing the value of productIdentificationPref when state changes
+    useProductIdentificationStore().$subscribe((watch, state) => {      
+      productIdentificationPref.value = state.productIdentificationPref;
+    });
+
     return {
       store,
-      router
+      router,
+      getProductIdentificationValue,
+      productIdentificationPref
     };
   },
 });

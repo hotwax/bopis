@@ -187,6 +187,35 @@
             <ion-toggle :checked="configurePicker" @ionChange="setConfigurePickerPreference($event)" slot="end" />
           </ion-item>
         </ion-card>
+
+        <!-- Product Identifier -->
+
+        <ion-card>
+          <ion-card-header>
+            <ion-card-title>
+              {{ $t('Product Identifier') }}
+            </ion-card-title>
+          </ion-card-header>
+
+          <ion-card-content>
+            {{ $t('Choosing a product identifier allows you to view products with your preferred identifiers.') }}
+          </ion-card-content>
+
+          <ion-item>
+            <ion-label>{{ $t("Primary Product Identifier") }}</ion-label>
+            <ion-select interface="popover" :placeholder="$t('primary identifier')" :value="primaryId" @ionChange="setProductIdentificationPref($event.detail.value, 'primaryId')">
+              <ion-select-option v-for="identification in productIdentificationOptions" :key="identification" :value="identification" >{{ identification }}</ion-select-option>
+            </ion-select>
+          </ion-item>
+          <ion-item>
+            <ion-label>{{ $t("Secondary Product Identifier") }}</ion-label>
+            <ion-select interface="popover" :placeholder="$t('secondary identifier')" :value="secondaryId" @ionChange="setProductIdentificationPref($event.detail.value, 'secondaryId')">
+              <ion-select-option v-for="identification in productIdentificationOptions" :key="identification" :value="identification" >{{ identification }}</ion-select-option>
+              <ion-select-option value="">{{ $t("None") }}</ion-select-option>
+            </ion-select>
+          </ion-item>
+        </ion-card>
+
       </section>
     </ion-content>
   </ion-page>
@@ -194,7 +223,7 @@
 
 <script lang="ts">
 import { IonAvatar, IonButton, IonCard, IonCardContent, IonCardHeader, IonCardSubtitle, IonCardTitle, IonContent, IonHeader, IonIcon, IonItem, IonLabel, IonPage, IonSelect, IonSelectOption, IonTitle, IonToggle , IonToolbar, modalController } from '@ionic/vue';
-import { defineComponent } from 'vue';
+import { defineComponent, ref } from 'vue';
 import { ellipsisVertical, personCircleOutline, sendOutline , storefrontOutline, codeWorkingOutline, openOutline } from 'ionicons/icons'
 import { mapGetters, useStore } from 'vuex';
 import { useRouter } from 'vue-router';
@@ -206,6 +235,7 @@ import { showToast } from '@/utils';
 import { hasError } from '@/adapter'
 import { translate } from "@/i18n";
 import { Actions, hasPermission } from '@/authorization'
+import { useProductIdentificationStore } from '@hotwax/dxp-components';
 
 export default defineComponent({
   name: 'Settings',
@@ -395,6 +425,31 @@ export default defineComponent({
   setup () {
     const store = useStore();
     const router = useRouter();
+    const productIdentificationStore = useProductIdentificationStore();
+    const eComStoreId = store.getters['user/getCurrentEComStore'].productStoreId
+
+    // TO DO: The setProductIdentificationPref function runs when refreshing setup view and
+    //        hence toast pops up of identifier preference change as ion change hits. This
+    //        only happens when user directly lends to the settings view for the first time.
+
+    // Reactive state
+    let primaryId = ref(productIdentificationStore.$state.productIdentificationPref.primaryId);
+    let secondaryId = ref(productIdentificationStore.$state.productIdentificationPref.secondaryId);
+
+    const productIdentificationOptions = productIdentificationStore.getProductIdentificationOptions;
+
+    // Subscribing to store and changing the value of primariId and secondaryId when state changes
+    productIdentificationStore.$subscribe((watch, state) => {       
+      primaryId.value = state.productIdentificationPref.primaryId;
+      secondaryId.value = state.productIdentificationPref.secondaryId;
+    });
+
+    // Function to set the value of productIdentificationPref using dxp-component
+    const setProductIdentificationPref = (value: string, id: string) =>  {      
+      productIdentificationStore.setProductIdentificationPref(id, value, eComStoreId)
+        .then(() => showToast('Product identifier preference updated'))
+        .catch(error => console.log(error)); 
+    }
 
     return {
       Actions,
@@ -406,7 +461,12 @@ export default defineComponent({
       store,
       storefrontOutline,
       codeWorkingOutline,
-      openOutline
+      openOutline,
+      primaryId,
+      secondaryId,
+      setProductIdentificationPref,
+      productIdentificationOptions,
+      productIdentificationStore
     }
   }
 });
