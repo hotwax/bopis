@@ -81,10 +81,9 @@ const actions: ActionTree<UserState, RootState> = {
       // TODO Use a separate API for getting facilities, this should handle user like admin accessing the app
       const currentFacility = userProfile.facilities.length > 0 ? userProfile.facilities[0] : {};
       const currentEComStore = await UserService.getCurrentEComStore(token, currentFacility?.facilityId);
-      const userPreference = await UserService.getUserPreference(token)
+      const userPreference = await UserService.getUserPreference(token);
 
       /*  ---- Guard clauses ends here --- */
-
       setPermissions(appPermissions);
       if (userProfile.userTimeZone) {
         Settings.defaultZone = userProfile.userTimeZone;
@@ -140,8 +139,11 @@ const actions: ActionTree<UserState, RootState> = {
     const eComStore = await UserService.getCurrentEComStore(undefined, facility?.facilityId);
     commit(types.USER_CURRENT_ECOM_STORE_UPDATED, eComStore);
 
-    // Get product identification from api using dxp-component and set the state 
-    await useProductIdentificationStore().getIdentificationPref(eComStore.productStoreId);
+    // Get product identification from api using dxp-component and set the state if eComStore is defined
+    if(eComStore.productStoreId){
+      await useProductIdentificationStore().getIdentificationPref(eComStore.productStoreId)
+        .catch((error) => console.log(error));
+    }
   },
   /**
    * Set User Instance Url

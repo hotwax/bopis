@@ -203,13 +203,13 @@
 
           <ion-item>
             <ion-label>{{ $t("Primary Product Identifier") }}</ion-label>
-            <ion-select interface="popover" :placeholder="$t('primary identifier')" :value="primaryId" @ionChange="setProductIdentificationPref($event.detail.value, 'primaryId')">
+            <ion-select interface="popover" :placeholder="$t('primary identifier')" :value="productIdentificationPref.primaryId" @ionChange="setProductIdentificationPref($event.detail.value, 'primaryId')">
               <ion-select-option v-for="identification in productIdentificationOptions" :key="identification" :value="identification" >{{ identification }}</ion-select-option>
             </ion-select>
           </ion-item>
           <ion-item>
             <ion-label>{{ $t("Secondary Product Identifier") }}</ion-label>
-            <ion-select interface="popover" :placeholder="$t('secondary identifier')" :value="secondaryId" @ionChange="setProductIdentificationPref($event.detail.value, 'secondaryId')">
+            <ion-select interface="popover" :placeholder="$t('secondary identifier')" :value="productIdentificationPref.secondaryId" @ionChange="setProductIdentificationPref($event.detail.value, 'secondaryId')">
               <ion-select-option v-for="identification in productIdentificationOptions" :key="identification" :value="identification" >{{ identification }}</ion-select-option>
               <ion-select-option value="">{{ $t("None") }}</ion-select-option>
             </ion-select>
@@ -223,7 +223,7 @@
 
 <script lang="ts">
 import { IonAvatar, IonButton, IonCard, IonCardContent, IonCardHeader, IonCardSubtitle, IonCardTitle, IonContent, IonHeader, IonIcon, IonItem, IonLabel, IonPage, IonSelect, IonSelectOption, IonTitle, IonToggle , IonToolbar, modalController } from '@ionic/vue';
-import { defineComponent, ref } from 'vue';
+import { defineComponent, inject, ref } from 'vue';
 import { ellipsisVertical, personCircleOutline, sendOutline , storefrontOutline, codeWorkingOutline, openOutline } from 'ionicons/icons'
 import { mapGetters, useStore } from 'vuex';
 import { useRouter } from 'vue-router';
@@ -425,33 +425,25 @@ export default defineComponent({
   setup () {
     const store = useStore();
     const router = useRouter();
+
+    /* Start Product Identifier */
+
     const productIdentificationStore = useProductIdentificationStore();
-    const eComStoreId = store.getters['user/getCurrentEComStore'].productStoreId
-
-    // Reactive state
-    let primaryId = ref(productIdentificationStore.$state.productIdentificationPref.primaryId);
-    let secondaryId = ref(productIdentificationStore.$state.productIdentificationPref.secondaryId);
-
     const productIdentificationOptions = productIdentificationStore.getProductIdentificationOptions;
 
-    // Subscribing to store and changing the value of primariId and secondaryId when state changes
-    productIdentificationStore.$subscribe((watch, state) => {             
-      primaryId.value = state.productIdentificationPref.primaryId;
-      secondaryId.value = state.productIdentificationPref.secondaryId;
-    });
+    // Injecting identifier preference from app.view
+    const productIdentificationPref: any  = inject("productIdentificationPref");
 
     // Function to set the value of productIdentificationPref using dxp-component
-    const setProductIdentificationPref = (value: string, id: string) =>  {      
-      productIdentificationStore.setProductIdentificationPref(id, value, eComStoreId)
-        .then(() => {
-          // TO DO: The setProductIdentificationPref function runs when refreshing setup view and
-          //        hence toast pops up of identifier preference change as ion change hits. This
-          //        only happens when user directly lends to the settings view for the first time.
-          //        Also the toast pops up for 2 times
-          showToast('Product identifier preference updated');
-        })
-        .catch(error => console.log(error)); 
+    const setProductIdentificationPref = (value: string, id: string) =>  {   
+      const eComStore = store.getters['user/getCurrentEComStore'];
+      if(eComStore.productStoreId){
+        productIdentificationStore.setProductIdentificationPref(id, value, eComStore.productStoreId)
+          .catch(error => console.log(error)); 
+      } 
     }
+
+    /* End Product Identifier */
 
     return {
       Actions,
@@ -464,8 +456,7 @@ export default defineComponent({
       storefrontOutline,
       codeWorkingOutline,
       openOutline,
-      primaryId,
-      secondaryId,
+      productIdentificationPref,
       setProductIdentificationPref,
       productIdentificationOptions,
       productIdentificationStore

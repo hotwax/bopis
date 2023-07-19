@@ -49,12 +49,11 @@ import {
   IonTitle,
   IonToolbar,
 } from '@ionic/vue';
-import { defineComponent, ref } from 'vue';
+import { defineComponent, inject } from 'vue';
 import { mapGetters, useStore } from 'vuex';
 import Image from "../components/Image.vue"
 import { useRouter } from "vue-router";
-import { getProductIdentificationValue } from '@/utils';
-import { useProductIdentificationStore } from '@hotwax/dxp-components';
+import { getProductIdentificationValue } from "@/utils";
 
 export default defineComponent({
   name: 'Catalog',
@@ -119,19 +118,13 @@ export default defineComponent({
   async ionViewWillEnter() {
     this.queryString = this.products.queryString;
     this.getProducts();
-
   },
   setup() {
     const store = useStore();
     const router = useRouter();
-
-    // reactive state for productIdentificationPref
-    let productIdentificationPref = ref(useProductIdentificationStore().$state.productIdentificationPref);
-
-    // subscribing to useProductIdentificationStore and changing the value of productIdentificationPref when state changes
-    useProductIdentificationStore().$subscribe((watch, state) => {      
-      productIdentificationPref.value = state.productIdentificationPref;
-    });
+    
+    // Injecting product identification preference from app.vue
+    const productIdentificationPref: any  = inject("productIdentificationPref");
 
     return {
       store,

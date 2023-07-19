@@ -22,8 +22,7 @@ import { IonItem, IonLabel, IonNote, IonThumbnail } from "@ionic/vue";
 import Image from './Image.vue'
 import { mapGetters } from 'vuex';
 import { getProductIdentificationValue } from "@/utils";
-import { useProductIdentificationStore } from "@hotwax/dxp-components";
-import { ref } from "vue";
+import { inject } from "vue";
 
 export default {
   components: {
@@ -52,14 +51,7 @@ export default {
     })
   },
   setup() {
-
-    // reactive state for productIdentificationPref
-    let productIdentificationPref = ref(useProductIdentificationStore().$state.productIdentificationPref);
-
-    // subscribing to useProductIdentificationStore and changing the value of productIdentificationPref when state changes
-    useProductIdentificationStore().$subscribe((watch, state) => {      
-      productIdentificationPref.value = state.productIdentificationPref;
-    });
+    const productIdentificationPref: any  = inject("productIdentificationPref");
 
     return  {
       getProductIdentificationValue,

@@ -86,7 +86,7 @@ import {
   IonToolbar,
   modalController
 } from "@ionic/vue";
-import { defineComponent, ref } from "vue";
+import { defineComponent, inject } from "vue";
 import { mapGetters, useStore } from "vuex";
 import Image from "../components/Image.vue";
 import { StockService } from '@/services/StockService'
@@ -95,7 +95,6 @@ import { hasError } from '@/adapter'
 import { sortSizes } from '@/apparel-sorter';
 import OtherStoresInventoryModal from "./OtherStoresInventoryModal.vue";
 import { translate } from "@/i18n";
-import { useProductIdentificationStore } from "@hotwax/dxp-components";
 
 export default defineComponent({
   name: "ProductDetail",
@@ -232,13 +231,8 @@ export default defineComponent({
   setup() {
     const store = useStore();
 
-    // reactive state for productIdentificationPref
-    let productIdentificationPref = ref(useProductIdentificationStore().$state.productIdentificationPref);
-
-    // subscribing to useProductIdentificationStore and changing the value of productIdentificationPref when state changes
-    useProductIdentificationStore().$subscribe((watch, state) => {      
-      productIdentificationPref.value = state.productIdentificationPref;
-    });
+    // Injecting identifier preference from app.view
+    const productIdentificationPref: any  = inject("productIdentificationPref");
 
     return {
       store,

@@ -434,7 +434,7 @@ export default defineComponent({
   setup () {
     const router = useRouter();
     const store = useStore();
-    const segmentSelected = ref('open');
+    const segmentSelected = ref('open'); 
 
     return {
       Actions,

@@ -32,6 +32,7 @@ import permissionPlugin from '@/authorization';
 import permissionRules from '@/authorization/Rules';
 import permissionActions from '@/authorization/Actions';
 import { dxpComponents } from '@hotwax/dxp-components';
+import { setProductIdentificationPref, getProductIdentificationPref } from '@hotwax/oms-api';
 
 const app = createApp(App)
   .use(IonicVue, {
@@ -45,7 +46,9 @@ const app = createApp(App)
     actions: permissionActions
   })
   .use(dxpComponents, {
-    defaultImgUrl: require("@/assets/images/defaultImage.png")
+    defaultImgUrl: require("@/assets/images/defaultImage.png"),
+    setProductIdentificationPref,
+    getProductIdentificationPref
   });
 
 // Filters are removed in Vue 3 and global filter introduced https://v3.vuejs.org/guide/migration/filters.html#global-filters
