@@ -5,39 +5,38 @@
 </template>
 
 <script lang="ts">
-import { IonApp, IonRouterOutlet } from "@ionic/vue";
-import { defineComponent, provide, ref } from "vue";
-import { loadingController } from "@ionic/vue";
-import emitter from "@/event-bus";
-import { mapGetters, useStore } from "vuex";
-import { initialise, resetConfig } from "@/adapter";
-import { useRouter } from "vue-router";
+import { IonApp, IonRouterOutlet } from '@ionic/vue';
+import { defineComponent, ref, provide } from 'vue';
+import { loadingController } from '@ionic/vue';
+import emitter from "@/event-bus"
+import { mapGetters, useStore } from 'vuex';
+import { initialise, resetConfig } from '@/adapter'
+import { useRouter } from 'vue-router';
 import { useProductIdentificationStore } from "@hotwax/dxp-components";
 import { showToast } from "./utils";
 
 export default defineComponent({
-  name: "App",
+  name: 'App',
   components: {
     IonApp,
-    IonRouterOutlet,
+    IonRouterOutlet
   },
   data() {
     return {
       loader: null as any,
-      maxAge: process.env.VUE_APP_CACHE_MAX_AGE
-        ? parseInt(process.env.VUE_APP_CACHE_MAX_AGE)
-        : 0,
-    };
+      maxAge: process.env.VUE_APP_CACHE_MAX_AGE ? parseInt(process.env.VUE_APP_CACHE_MAX_AGE) : 0
+    }
   },
   methods: {
     async presentLoader() {
       // if currently loader is not present then creating a new loader
       if (!this.loader) {
-        this.loader = await loadingController.create({
-          message: this.$t("Click the backdrop to dismiss."),
-          translucent: true,
-          backdropDismiss: true,
-        });
+        this.loader = await loadingController
+          .create({
+            message: this.$t("Click the backdrop to dismiss."),
+            translucent: true,
+            backdropDismiss: true
+          });
       }
       this.loader.present();
     },
@@ -50,16 +49,16 @@ export default defineComponent({
     },
     async unauthorised() {
       this.store.dispatch("user/logout");
-      this.router.push("/login");
-    },
-  },
+      this.router.push("/login")
+    }
+  }, 
   computed: {
     ...mapGetters({
-      locale: "user/getLocale",
-      userToken: "user/getUserToken",
-      instanceUrl: "user/getInstanceUrl",
-      currentEComStore: "user/getCurrentEComStore",
-    }),
+      locale: 'user/getLocale',
+      userToken: 'user/getUserToken',
+      instanceUrl: 'user/getInstanceUrl',
+      currentEComStore: 'user/getCurrentEComStore'
+    })
   },
   created() {
     initialise({
@@ -73,19 +72,20 @@ export default defineComponent({
         },
         queueTask: (payload: any) => {
           emitter.emit("queueTask", payload);
-        },
-      },
-    });
+        }
+      }
+    })
   },
   async mounted() {
     // creating the loader on mounted as loadingController is taking too much time to create initially
-    this.loader = await loadingController.create({
-      message: this.$t("Click the backdrop to dismiss."),
-      translucent: true,
-      backdropDismiss: true,
-    });
-    emitter.on("presentLoader", this.presentLoader);
-    emitter.on("dismissLoader", this.dismissLoader);
+    this.loader = await loadingController
+      .create({
+        message: this.$t("Click the backdrop to dismiss."),
+        translucent: true,
+        backdropDismiss: true
+      });
+    emitter.on('presentLoader', this.presentLoader);
+    emitter.on('dismissLoader', this.dismissLoader);
     this.$i18n.locale = this.locale;
 
     // Get product identification from api using dxp-component and set the state if eComStore is defined
@@ -95,14 +95,14 @@ export default defineComponent({
     }
   },
   unmounted() {
-    emitter.off("presentLoader", this.presentLoader);
-    emitter.off("dismissLoader", this.dismissLoader);
-    resetConfig();
+    emitter.off('presentLoader', this.presentLoader);
+    emitter.off('dismissLoader', this.dismissLoader);
+    resetConfig()
   },
   setup() {
     const store = useStore();
     const router = useRouter();
-    
+
     /* Start Product Identifier */
 
     const productIdentificationStore = useProductIdentificationStore();
@@ -138,8 +138,9 @@ export default defineComponent({
 
     return {
       router,
-      store,
-    };
-  },
+      store
+    }
+  }
 });
 </script>
+
