@@ -13,14 +13,13 @@ import {
   resetPermissions,
   setPermissions
 } from '@/authorization'
-import { useProductIdentificationStore } from '@hotwax/dxp-components'
 
 const actions: ActionTree<UserState, RootState> = {
 
   /**
  * Login user and return token
  */
-  async login ({ commit }, { username, password }) {
+  async login({ commit }, { username, password }) {
     try {
       const resp = await UserService.login(username, password);
       // Further we will have only response having 2xx status
@@ -60,7 +59,7 @@ const actions: ActionTree<UserState, RootState> = {
       if (permissionId) {
         // As the token is not yet set in the state passing token headers explicitly
         // TODO Abstract this out, how token is handled should be part of the method not the callee
-        const hasPermission = appPermissions.some((appPermissionId: any) => appPermissionId === permissionId );
+        const hasPermission = appPermissions.some((appPermissionId: any) => appPermissionId === permissionId);
         // If there are any errors or permission check fails do not allow user to login
         if (hasPermission) {
           const permissionError = 'You do not have permission to access the app.';
@@ -74,7 +73,7 @@ const actions: ActionTree<UserState, RootState> = {
 
       // removing duplicate records as a single user can be associated with a facility by multiple roles.
       userProfile.facilities.reduce((uniqueFacilities: any, facility: any, index: number) => {
-        if(uniqueFacilities.includes(facility.facilityId)) userProfile.facilities.splice(index, 1);
+        if (uniqueFacilities.includes(facility.facilityId)) userProfile.facilities.splice(index, 1);
         else uniqueFacilities.push(facility.facilityId);
         return uniqueFacilities
       }, []);
@@ -97,10 +96,10 @@ const actions: ActionTree<UserState, RootState> = {
       commit(types.USER_PREFERENCE_UPDATED, userPreference)
       commit(types.USER_PERMISSIONS_UPDATED, appPermissions);
       commit(types.USER_TOKEN_CHANGED, { newToken: token })
-      
+
       // Handling case for warnings like password may expire in few days
       if (resp.data._EVENT_MESSAGE_ && resp.data._EVENT_MESSAGE_.startsWith("Alert:")) {
-      // TODO Internationalise text
+        // TODO Internationalise text
         showToast(translate(resp.data._EVENT_MESSAGE_));
       }
 
@@ -116,7 +115,7 @@ const actions: ActionTree<UserState, RootState> = {
   /**
    * Logout user
    */
-  async logout ({ commit, dispatch }) {
+  async logout({ commit, dispatch }) {
     // TODO add any other tasks if need
     dispatch("product/clearProducts", null, { root: true })
     commit(types.USER_END_SESSION)
@@ -127,36 +126,30 @@ const actions: ActionTree<UserState, RootState> = {
   /**
    * update current facility information
    */
-  async setFacility ({ commit, dispatch, state }, payload) {
+  async setFacility({ commit, dispatch, state }, payload) {
     let facility = payload.facility;
-    if(!facility && state.current?.facilities) {
+    if (!facility && state.current?.facilities) {
       facility = state.current.facilities.find((facility: any) => facility.facilityId === payload.facilityId);
     }
     // clearing the orders state whenever changing the facility
-    dispatch("order/clearOrders", null, {root: true})
-    dispatch("product/clearProducts", null, {root: true})
+    dispatch("order/clearOrders", null, { root: true })
+    dispatch("product/clearProducts", null, { root: true })
     commit(types.USER_CURRENT_FACILITY_UPDATED, facility);
     const eComStore = await UserService.getCurrentEComStore(undefined, facility?.facilityId);
     commit(types.USER_CURRENT_ECOM_STORE_UPDATED, eComStore);
-
-    // Get product identification from api using dxp-component and set the state if eComStore is defined
-    if(eComStore.productStoreId){
-      await useProductIdentificationStore().getIdentificationPref(eComStore.productStoreId)
-        .catch((error) => console.log(error));
-    }
   },
   /**
    * Set User Instance Url
    */
-   setUserInstanceUrl ({ commit }, instanceUrl){
+  setUserInstanceUrl({ commit }, instanceUrl) {
     commit(types.USER_INSTANCE_URL_UPDATED, instanceUrl)
     updateInstanceUrl(instanceUrl)
-   },
-  
+  },
+
   /**
    * Update user timeZone
    */
-  async setUserTimeZone ( { state, commit }, payload) {
+  async setUserTimeZone({ state, commit }, payload) {
     const resp = await UserService.setUserTimeZone(payload)
     if (resp.status === 200 && !hasError(resp)) {
       const current: any = state.current;
@@ -167,7 +160,7 @@ const actions: ActionTree<UserState, RootState> = {
     }
   },
 
-  setUserPreference( {state, commit }, payload){
+  setUserPreference({ state, commit }, payload) {
     commit(types.USER_PREFERENCE_UPDATED, payload)
     UserService.setUserPreference({
       'userPrefTypeId': 'BOPIS_PREFERENCE',
