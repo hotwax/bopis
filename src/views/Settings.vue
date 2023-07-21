@@ -203,13 +203,13 @@
 
           <ion-item>
             <ion-label>{{ $t("Primary Product Identifier") }}</ion-label>
-            <ion-select interface="popover" :placeholder="$t('primary identifier')" :value="productIdentificationPref.primaryId" @ionChange.="setProductIdentificationPref($event, 'primaryId')">
+            <ion-select interface="popover" :placeholder="$t('primary identifier')" :value="productIdentificationPref.primaryId" @ionChange.="setProductIdentificationPref($event.detail.value, 'primaryId')">
               <ion-select-option v-for="identification in productIdentificationOptions" :key="identification" :value="identification" >{{ identification }}</ion-select-option>
             </ion-select>
           </ion-item>
           <ion-item>
             <ion-label>{{ $t("Secondary Product Identifier") }}</ion-label>
-            <ion-select interface="popover" :placeholder="$t('secondary identifier')" :value="productIdentificationPref.secondaryId" @ionChange="setProductIdentificationPref($event, 'secondaryId')">
+            <ion-select interface="popover" :placeholder="$t('secondary identifier')" :value="productIdentificationPref.secondaryId" @ionChange="setProductIdentificationPref($event.detail.value, 'secondaryId')">
               <ion-select-option v-for="identification in productIdentificationOptions" :key="identification" :value="identification" >{{ identification }}</ion-select-option>
               <ion-select-option value="">{{ $t("None") }}</ion-select-option>
             </ion-select>
@@ -434,41 +434,15 @@ export default defineComponent({
     // Injecting identifier preference from app.view
     const productIdentificationPref: any  = inject("productIdentificationPref");
 
-    // If primaryId and secondaryId == '' then the settings is mounted on refreshing the settings page
-    // and initial state value will be fetched which will be changed after api call and will trigger the 
-    // ionchange event as productIdentification preference changes this will call setIdentification function 
-    // and to avoid the unncessary api calls storing initial value of primary and secondary in 
-    // variables and if the event calls the set function and this variable is having undefined values then
-    // not to call api for that preference 
-    let prevPrimaryId = productIdentificationPref.primaryId;
-    let prevSecondaryId = productIdentificationPref.secondaryId;
-
-    console.log('initial', productIdentificationPref.primaryId);
-    
-    if(productIdentificationPref.primaryId == '' && productIdentificationPref.secondaryId == ''){
-      prevPrimaryId = undefined;
-      prevSecondaryId = undefined;
-    }
-
     // Function to set the value of productIdentificationPref using dxp-component
-    const setProductIdentificationPref = (event:any, id: string) =>  {
-      console.log('event', event.detail.value);
-      const eComStore = store.getters['user/getCurrentEComStore'];
+    const setProductIdentificationPref = (value:any, id: string) =>  {
+      const eComStore = store.getters['user/getCurrentEComStore']; 
 
-      if(id === 'primaryId' && prevPrimaryId === undefined){
-        prevPrimaryId = event.detail.value;
-        return;
-      }
-      else if(id === 'secondaryId' && prevSecondaryId === undefined){
-        prevSecondaryId = event.detail.value;
-        return;
-      }
-
-      if(eComStore.productStoreId){
-        productIdentificationStore.setProductIdentificationPref(id, event.detail.value, eComStore.productStoreId)
+      // If productPreference value is same as ion change value then not calling the set function as there is no cahnge 
+      if(eComStore.productStoreId && (productIdentificationPref.value[id] !== value)){
+        productIdentificationStore.setProductIdentificationPref(id, value, eComStore.productStoreId)
           .then(() => {
             showToast("Product identifier preference updated");
-            console.log('toast');
           })
           .catch(error => console.log(error)); 
       } 

@@ -13,7 +13,6 @@ import { mapGetters, useStore } from 'vuex';
 import { initialise, resetConfig } from '@/adapter'
 import { useRouter } from 'vue-router';
 import { useProductIdentificationStore } from "@hotwax/dxp-components";
-import { showToast } from "./utils";
 
 export default defineComponent({
   name: 'App',
@@ -91,10 +90,6 @@ export default defineComponent({
     // Get product identification from api using dxp-component and set the state if eComStore is defined
     if (this.currentEComStore.productStoreId) {
       await useProductIdentificationStore().getIdentificationPref(this.currentEComStore.productStoreId)
-        .then(() => {
-          console.log('success in app****');
-          
-        })
         .catch((error) => console.log(error));
     }
   },
@@ -120,13 +115,8 @@ export default defineComponent({
     provide('productIdentificationPref', productIdentificationPref);
 
     // Subscribing to productIdentificationStore state change and changing value productIdentificationPref 
-    // to store state based on condition
     productIdentificationStore.$subscribe((mutation: any, state) => {
-        console.log('subscribe -------- ', mutation);
         productIdentificationPref.value = state.productIdentificationPref;
-        // If old state value is same as the new state value then not changing the preference
-        // if (mutation.events.oldValue.primaryId != state.productIdentificationPref.primaryId || mutation.events.oldValue.secondaryId != state.productIdentificationPref.secondaryId) {
-        // }
     }, {detached: true});
 
     /* End Product Identifier */
