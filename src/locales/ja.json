@@ -70,7 +70,7 @@
   "Order marked as ready for pickup but something went wrong while sending the email notification": "注文された商品の受取準備完了とマークされましたが、Eメールによる通知の送信中に何かしらの問題が発生しました。",
   "Order not found": "注文が見つかりません",
   "Order packed and ready for delivery": "注文が梱包され、配送の準備ができました",
-  "Order will be marked as ready for pickup and an email notification will be sent to . This action is irreversible.": "注文された商品の受取準備完了とマークされ、Eメールによる通知がお客様に送信されます。この操作は元に戻せません。",
+  "Order will be marked as ready for pickup and an email notification will be sent to . This action is irreversible.": "注文された商品の受取準備完了とマークされ、Eメールによる通知がお客様に送信されます { customerName }。この操作は元に戻せません。",
   "Order will be marked as completed. This action is irreversible.": "注文の完了がマークされます。この操作は元に戻せません。",
   "Orders": "注文",
   "Orders Not Found": "注文が見つかりません",
