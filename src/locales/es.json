@@ -21,7 +21,7 @@
   "Completed": "Completado",
   "Configuration updated": "Configuración actualizada",
   "Confirm": "Confirmar",
-  "Copied": "Copiado {texto}",
+  "Copied": "Copiado { text }",
   "Copy": "Copiar",
   "Depending on the reason you select for not fulfilling an item, an inventory variance will be recorded and all sales channels will be updated with new inventory levels. For example, by selecting “Not in stock” HotWax Commerce will stop routing orders for it to your store and customers will not be able to place BOPIS orders for it at your store on Shopify.": "Dependiendo de la razón que selecciones para no cumplir con un artículo, se registrará una variación de inventario y se actualizarán todos los canales de ventas con nuevos niveles de inventario. Por ejemplo, al seleccionar “No disponible en el inventario” HotWax Commerce dejará de dirigir los pedidos para él a tu tienda y los clientes no podrán hacer pedidos BOPIS para él en tu tienda en Shopify.",
   "Delivery address": "Dirección de entrega",
