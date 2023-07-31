@@ -1,10 +1,13 @@
-{
+{ 
+  "A user is already logged in via. Do you want to end the current session and login with the entered details?": "A user is already logged in via {appOms}. Do you want to end the current session and login with the entered details?",
   "App": "App",
+  "Active session": "Active session",
   "All items were canceled from the order": "All items were canceled from the order",
   "An email notification will be sent to that their order is ready for pickup. This order will also be moved to the packed orders tab.": "An email notification will be sent to { customerName } that their order is ready for pickup.{ space } This order will also be moved to the packed orders tab.",
   "An email notification will be sent to that their order is ready for pickup.": "An email notification will be sent to { customerName } that their order is ready for pickup.",
   "Are you sure you want to change the time zone to?": "Are you sure you want to change the time zone to?",
   "Arrived": "Arrived",
+  "Authenticating": "Authenticating",
   "Assign Pickers": "Assign Pickers",
   "Catalog": "Catalog",
   "Cancel": "Cancel",
@@ -49,6 +52,7 @@
   "Learn more about unfillable items": "Learn more about unfillable items",
   "Loading": "Loading",
   "Login": "Login",
+  "Logging in": "Logging in",
   "Logout": "Logout",
   "Mismatch": "Mismatch",
   "More": "More",

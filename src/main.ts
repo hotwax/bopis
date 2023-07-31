@@ -31,6 +31,9 @@ import store from './store'
 import permissionPlugin from '@/authorization';
 import permissionRules from '@/authorization/Rules';
 import permissionActions from '@/authorization/Actions';
+import { dxpComponents } from '@hotwax/dxp-components'
+import { login, confirmSessionEnd, logout, loader } from './user-utils';
+
 
 const app = createApp(App)
   .use(IonicVue, {
@@ -42,6 +45,13 @@ const app = createApp(App)
   .use(permissionPlugin, {
     rules: permissionRules,
     actions: permissionActions
+  })
+  .use(dxpComponents, {
+    login,
+    confirmSessionEnd,
+    logout,
+    loader,
+    appLoginUrl: process.env.VUE_APP_LOGIN_URL as string
   });
 
 // Filters are removed in Vue 3 and global filter introduced https://v3.vuejs.org/guide/migration/filters.html#global-filters

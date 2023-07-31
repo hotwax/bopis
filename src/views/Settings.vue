@@ -290,7 +290,7 @@ export default defineComponent({
     },
     logout () {
       this.store.dispatch('user/logout').then(() => {
-        this.router.push('/login');
+        window.location.href = process.env.VUE_APP_LOGIN_URL as string
       })
     },
     setShowShippingOrdersPreference (ev: any) {
