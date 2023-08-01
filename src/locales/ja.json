@@ -1,5 +1,4 @@
 {
-  "A user is already logged in via. Do you want to end the current session and login with the entered details?": "A user is already logged in via {appOms}. Do you want to end the current session and login with the entered details?",
   "App": "App",
   "Active session": "Active session",
   "All items were canceled from the order": "全ての商品が注文からキャンセルされました",
