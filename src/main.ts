@@ -32,7 +32,7 @@ import permissionPlugin from '@/authorization';
 import permissionRules from '@/authorization/Rules';
 import permissionActions from '@/authorization/Actions';
 import { dxpComponents } from '@hotwax/dxp-components'
-import { login, confirmSessionEnd, logout, loader } from './user-utils';
+import { login, logout, loader } from './user-utils';
 
 
 const app = createApp(App)
@@ -48,7 +48,6 @@ const app = createApp(App)
   })
   .use(dxpComponents, {
     login,
-    confirmSessionEnd,
     logout,
     loader,
     appLoginUrl: process.env.VUE_APP_LOGIN_URL as string
