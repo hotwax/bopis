@@ -223,7 +223,7 @@
 
 <script lang="ts">
 import { IonAvatar, IonButton, IonCard, IonCardContent, IonCardHeader, IonCardSubtitle, IonCardTitle, IonContent, IonHeader, IonIcon, IonItem, IonLabel, IonPage, IonSelect, IonSelectOption, IonTitle, IonToggle , IonToolbar, modalController } from '@ionic/vue';
-import { defineComponent, inject, ref } from 'vue';
+import { defineComponent, inject } from 'vue';
 import { ellipsisVertical, personCircleOutline, sendOutline , storefrontOutline, codeWorkingOutline, openOutline } from 'ionicons/icons'
 import { mapGetters, useStore } from 'vuex';
 import { useRouter } from 'vue-router';
