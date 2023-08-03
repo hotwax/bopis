@@ -1,6 +1,5 @@
 { 
   "App": "App",
-  "Active session": "Active session",
   "All items were canceled from the order": "All items were canceled from the order",
   "An email notification will be sent to that their order is ready for pickup. This order will also be moved to the packed orders tab.": "An email notification will be sent to { customerName } that their order is ready for pickup.{ space } This order will also be moved to the packed orders tab.",
   "An email notification will be sent to that their order is ready for pickup.": "An email notification will be sent to { customerName } that their order is ready for pickup.",

@@ -1,6 +1,5 @@
 {
   "App": "Aplicación",
-  "Active session": "Active session",
   "All items were canceled from the order": "Todos los artículos se cancelaron del pedido",
   "An email notification will be sent to that their order is ready for pickup. This order will also be moved to the packed orders tab.": "Se enviará una notificación por correo electrónico a {customerName} de que su pedido está listo para recoger.{ space } Este pedido también se moverá a la pestaña de pedidos empacados.",
   "An email notification will be sent to that their order is ready for pickup.": "Se enviará una notificación por correo electrónico a {customerName} de que su pedido está listo para recoger.",
