@@ -33,7 +33,6 @@
               <ion-label class="ion-text-wrap">
                 <h1>{{ order.customer.name }}</h1>
                 <p>{{ order.orderName ? order.orderName : order.orderId }}</p>
-                <p>Picked by {{ order.pickers[0].split('/')[1] }}</p>
               </ion-label>
               <div class="metadata">
                 <ion-badge v-if="order.placedDate" color="dark">{{ timeFromNow(order.placedDate) }}</ion-badge>
@@ -73,6 +72,8 @@
               <ion-label class="ion-text-wrap">
                 <h1>{{ order.customer.name }}</h1>
                 <p>{{ order.orderName ? order.orderName : order.orderId }}</p>
+                <p v-if="order.pickers && configurePicker">{{ getPickersForOrder(order.pickers) }}</p>
+                <p v-if="!order.pickers && configurePicker">No picker assigned.</p>
               </ion-label>
               <ion-badge v-if="order.placedDate" color="dark" slot="end">{{ timeFromNow(order.placedDate) }}</ion-badge>
             </ion-item>
@@ -114,6 +115,8 @@
               <ion-label class="ion-text-wrap">
                 <h1>{{ order.customer.name }}</h1>
                 <p>{{ order.orderName ? order.orderName : order.orderId }}</p>
+                <p v-if="order.pickers && configurePicker">{{ getPickersForOrder(order.pickers) }}</p>
+                <p v-if="!order.pickers && configurePicker">No picker assigned.</p>
               </ion-label>
               <ion-badge v-if="order.placedDate" color="dark" slot="end">{{ timeFromNow(order.placedDate) }}</ion-badge>
             </ion-item>
@@ -419,6 +422,16 @@ export default defineComponent({
     },
     viewShipToStoreOrders() {
       this.$router.push({ path: '/ship-to-store-orders' })
+    },
+    getPickersForOrder(pickers: [string]){
+      let pickersInfo = 'Picked by ';
+      pickers.forEach((picker: any, index: number) => {
+        pickersInfo += picker.split('/')[1];
+        if(pickers.length != index + 1){
+          pickersInfo += ', ';
+        }
+      });
+      return pickersInfo;
     }
   },
   ionViewWillEnter () {

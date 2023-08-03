@@ -72,8 +72,7 @@ const actions: ActionTree<OrderState , RootState> ={
 
               return arr
             }, []),
-            placedDate: orderItem.orderDate,
-            pickers: orderItem.pickers
+            placedDate: orderItem.orderDate
           }
         })
 
@@ -163,8 +162,7 @@ const actions: ActionTree<OrderState , RootState> ={
 
               return arr
             }, []),
-            placedDate: orderItem.orderDate,
-            pickers: orderItem.pickers
+            placedDate: orderItem.orderDate
           }
         })
 
