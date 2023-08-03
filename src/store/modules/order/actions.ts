@@ -72,7 +72,8 @@ const actions: ActionTree<OrderState , RootState> ={
 
               return arr
             }, []),
-            placedDate: orderItem.orderDate
+            placedDate: orderItem.orderDate,
+            pickers: orderItem.pickers
           }
         })
 
@@ -162,7 +163,8 @@ const actions: ActionTree<OrderState , RootState> ={
 
               return arr
             }, []),
-            placedDate: orderItem.orderDate
+            placedDate: orderItem.orderDate,
+            pickers: orderItem.pickers
           }
         })
 
@@ -233,7 +235,8 @@ const actions: ActionTree<OrderState , RootState> ={
 
               return arr
             }, []),
-            placedDate: orderItem.orderDate
+            placedDate: orderItem.orderDate,
+            pickers: orderItem.pickers
           }
         })
         this.dispatch('product/getProductInformation', { orders });
@@ -302,7 +305,8 @@ const actions: ActionTree<OrderState , RootState> ={
 
               return arr
             }, []),
-            placedDate: orderItem.orderDate
+            placedDate: orderItem.orderDate,
+            pickers: orderItem.pickers
           }
         })
         this.dispatch('product/getProductInformation', { orders });
