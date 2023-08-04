@@ -72,8 +72,8 @@
               <ion-label class="ion-text-wrap">
                 <h1>{{ order.customer.name }}</h1>
                 <p>{{ order.orderName ? order.orderName : order.orderId }}</p>
-                <p v-if="order.pickers && configurePicker">{{ getPickersForOrder(order.pickers) }}</p>
-                <p v-if="!order.pickers && configurePicker">No picker assigned.</p>
+                <p v-if="order.pickers && configurePicker && order.pickers.length">{{ $t("Picked by", { pickers: getPickersForOrder(order.pickers) }) }}</p>
+                <p v-if="(!order.pickers || !order.pickers.length) && configurePicker">{{ $t("No picker assigned.") }}</p>
               </ion-label>
               <ion-badge v-if="order.placedDate" color="dark" slot="end">{{ timeFromNow(order.placedDate) }}</ion-badge>
             </ion-item>
@@ -115,8 +115,6 @@
               <ion-label class="ion-text-wrap">
                 <h1>{{ order.customer.name }}</h1>
                 <p>{{ order.orderName ? order.orderName : order.orderId }}</p>
-                <p v-if="order.pickers && configurePicker">{{ getPickersForOrder(order.pickers) }}</p>
-                <p v-if="!order.pickers && configurePicker">No picker assigned.</p>
               </ion-label>
               <ion-badge v-if="order.placedDate" color="dark" slot="end">{{ timeFromNow(order.placedDate) }}</ion-badge>
             </ion-item>
@@ -424,7 +422,7 @@ export default defineComponent({
       this.$router.push({ path: '/ship-to-store-orders' })
     },
     getPickersForOrder(pickers: [string]){
-      let pickersInfo = 'Picked by ';
+      let pickersInfo = '';
       pickers.forEach((picker: any, index: number) => {
         pickersInfo += picker.split('/')[1];
         if(pickers.length != index + 1){

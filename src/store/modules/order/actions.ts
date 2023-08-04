@@ -303,8 +303,7 @@ const actions: ActionTree<OrderState , RootState> ={
 
               return arr
             }, []),
-            placedDate: orderItem.orderDate,
-            pickers: orderItem.pickers
+            placedDate: orderItem.orderDate
           }
         })
         this.dispatch('product/getProductInformation', { orders });
