@@ -43,7 +43,7 @@
 
             <ion-item v-if="order.shippingInstructions" color="light" lines="none">
               <ion-label class="ion-text-wrap">
-                <h3>Handling Instructions</h3>
+                <h3>{{ $t("Handling Instructions") }}</h3>
                   <ion-text color="medium">
                     <p>{{ order.shippingInstructions }}</p>
                   </ion-text>
@@ -87,7 +87,7 @@
 
             <ion-item v-if="order.shippingInstructions" color="light" lines="none">
               <ion-label class="ion-text-wrap">
-                <h3>Handling Instructions</h3>
+                <h3>{{ $t("Handling Instructions") }}</h3>
                   <ion-text color="medium">
                     <p>{{ order.shippingInstructions }}</p>
                   </ion-text>
@@ -184,6 +184,7 @@ import {
   IonSearchbar,
   IonSegment,
   IonSegmentButton,
+  IonText,
   IonTitle,
   IonToolbar,
   modalController
@@ -222,6 +223,7 @@ export default defineComponent({
     IonSearchbar,
     IonSegment,
     IonSegmentButton,
+    IonText,
     IonTitle,
     IonToolbar,
     ProductListItem
