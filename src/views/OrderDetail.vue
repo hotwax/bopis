@@ -17,6 +17,14 @@
             <ion-badge v-if="order.placedDate" color="dark" slot="end">{{ timeFromNow(order.placedDate) }}</ion-badge>
           </ion-item>
         </ion-list>
+        <ion-item v-if="order.shippingInstructions" color="light" lines="none">
+          <ion-label class="ion-text-wrap">
+            <h3>Handling Instructions</h3>
+              <ion-text color="medium">
+                <p>{{ order.shippingInstructions }}</p>
+              </ion-text>
+          </ion-label>
+        </ion-item>
         <ion-item v-if="customerEmail" lines="none">
           <ion-icon :icon="mailOutline" slot="start" />
           <ion-label>{{ customerEmail }}</ion-label>

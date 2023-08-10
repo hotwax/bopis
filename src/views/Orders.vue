@@ -41,6 +41,15 @@
               <!-- TODO: Display the packed date of the orders, currently not getting the packed date from API-->
             </ion-item>
 
+            <ion-item v-if="order.shippingInstructions" color="light" lines="none">
+              <ion-label class="ion-text-wrap">
+                <h3>Handling Instructions</h3>
+                  <ion-text color="medium">
+                    <p>{{ order.shippingInstructions }}</p>
+                  </ion-text>
+              </ion-label>
+            </ion-item>
+
             <ProductListItem v-for="item in order.part.items" :key="item.productId" :item="item" />
 
             <ion-item v-if="order.customer.phoneNumber">
@@ -74,6 +83,15 @@
                 <p>{{ order.orderName ? order.orderName : order.orderId }}</p>
               </ion-label>
               <ion-badge v-if="order.placedDate" color="dark" slot="end">{{ timeFromNow(order.placedDate) }}</ion-badge>
+            </ion-item>
+
+            <ion-item v-if="order.shippingInstructions" color="light" lines="none">
+              <ion-label class="ion-text-wrap">
+                <h3>Handling Instructions</h3>
+                  <ion-text color="medium">
+                    <p>{{ order.shippingInstructions }}</p>
+                  </ion-text>
+              </ion-label>
             </ion-item>
 
             <ProductListItem v-for="item in order.part.items" :key="item.productId" :item="item" />
