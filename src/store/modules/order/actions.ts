@@ -9,6 +9,7 @@ import { translate } from "@/i18n";
 import emitter from '@/event-bus'
 import store from "@/store";
 import { prepareOrderQuery } from "@/utils/solrHelper";
+import OrdersVue from "@/views/Orders.vue";
 
 const actions: ActionTree<OrderState , RootState> ={
   async getOpenOrders({ commit, state }, payload) {
@@ -234,7 +235,10 @@ const actions: ActionTree<OrderState , RootState> ={
               return arr
             }, []),
             placedDate: orderItem.orderDate,
-            pickers: orderItem.pickers
+            pickers: (orderItem.pickers.reduce((names: any, picker: string) => {
+              names.push(picker.split('/')[1]);
+              return names;
+            }, [])).join(', ')
           }
         })
         this.dispatch('product/getProductInformation', { orders });
