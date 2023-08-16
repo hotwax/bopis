@@ -9,7 +9,6 @@ import { translate } from "@/i18n";
 import emitter from '@/event-bus'
 import store from "@/store";
 import { prepareOrderQuery } from "@/utils/solrHelper";
-import OrdersVue from "@/views/Orders.vue";
 
 const actions: ActionTree<OrderState , RootState> ={
   async getOpenOrders({ commit, state }, payload) {
