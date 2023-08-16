@@ -198,6 +198,7 @@ const actions: ActionTree<OrderState , RootState> ={
       if (resp.status === 200 && resp.data.grouped?.orderId?.ngroups > 0 && !hasError(resp)) {
         let orders = resp?.data?.grouped?.orderId?.groups.map((order: any) => {
           const orderItem = order.doclist.docs[0]
+          console.log("🚀 ~ file: actions.ts:201 ~ orders ~ orderItem:", orderItem)
           return {
             orderId: orderItem.orderId,
             orderName: orderItem.orderName,
@@ -234,10 +235,10 @@ const actions: ActionTree<OrderState , RootState> ={
               return arr
             }, []),
             placedDate: orderItem.orderDate,
-            pickers: (orderItem.pickers.reduce((names: any, picker: string) => {
+            pickers: orderItem.pickers ? (orderItem.pickers.reduce((names: any, picker: string) => {
               names.push(picker.split('/')[1]);
               return names;
-            }, [])).join(', ')
+            }, [])).join(', ') : ""
           }
         })
         this.dispatch('product/getProductInformation', { orders });
