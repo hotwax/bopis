@@ -233,7 +233,11 @@ const actions: ActionTree<OrderState , RootState> ={
 
               return arr
             }, []),
-            placedDate: orderItem.orderDate
+            placedDate: orderItem.orderDate,
+            pickers: orderItem.pickers ? (orderItem.pickers.reduce((names: any, picker: string) => {
+              names.push(picker.split('/')[1]);
+              return names;
+            }, [])).join(', ') : ""
           }
         })
         this.dispatch('product/getProductInformation', { orders });
