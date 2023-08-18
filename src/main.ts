@@ -48,7 +48,6 @@ const app = createApp(App)
     actions: permissionActions
   })
   .use(dxpComponents, {
-    defaultImgUrl: require("@/assets/images/defaultImage.png"),
     setProductIdentificationPref,
     getProductIdentificationPref,
     login,

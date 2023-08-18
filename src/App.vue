@@ -103,8 +103,6 @@ export default defineComponent({
     const store = useStore();
     const router = useRouter();
 
-    /* Start Product Identifier */
-
     const productIdentificationStore = useProductIdentificationStore();
 
     // Reactive state for productIdentificationPref
@@ -116,11 +114,9 @@ export default defineComponent({
     provide('productIdentificationPref', productIdentificationPref);
 
     // Subscribing to productIdentificationStore state change and changing value productIdentificationPref 
-    productIdentificationStore.$subscribe((mutation: any, state) => {
+    productIdentificationStore.$subscribe((mutation, state) => {
         productIdentificationPref.value = state.productIdentificationPref;
     });
-
-    /* End Product Identifier */
 
     return {
       router,

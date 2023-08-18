@@ -210,13 +210,13 @@
 
           <ion-item>
             <ion-label>{{ $t("Primary Product Identifier") }}</ion-label>
-            <ion-select interface="popover" :placeholder="$t('primary identifier')" :value="productIdentificationPref.primaryId" @ionChange.="setProductIdentificationPref($event.detail.value, 'primaryId')">
+            <ion-select interface="popover" :disabled="!currentEComStore.productStoreId" :placeholder="$t('primary identifier')" :value="productIdentificationPref.primaryId" @ionChange.="setProductIdentificationPref($event.detail.value, 'primaryId')">
               <ion-select-option v-for="identification in productIdentificationOptions" :key="identification" :value="identification" >{{ identification }}</ion-select-option>
             </ion-select>
           </ion-item>
           <ion-item>
             <ion-label>{{ $t("Secondary Product Identifier") }}</ion-label>
-            <ion-select interface="popover" :placeholder="$t('secondary identifier')" :value="productIdentificationPref.secondaryId" @ionChange="setProductIdentificationPref($event.detail.value, 'secondaryId')">
+            <ion-select interface="popover" :disabled="!currentEComStore.productStoreId" :placeholder="$t('secondary identifier')" :value="productIdentificationPref.secondaryId" @ionChange="setProductIdentificationPref($event.detail.value, 'secondaryId')">
               <ion-select-option v-for="identification in productIdentificationOptions" :key="identification" :value="identification" >{{ identification }}</ion-select-option>
               <ion-select-option value="">{{ $t("None") }}</ion-select-option>
             </ion-select>
@@ -437,8 +437,6 @@ export default defineComponent({
     const store = useStore();
     const router = useRouter();
 
-    /* Start Product Identifier */
-
     const productIdentificationStore = useProductIdentificationStore();
     const productIdentificationOptions = productIdentificationStore.getProductIdentificationOptions;
 
@@ -453,13 +451,11 @@ export default defineComponent({
       if(eComStore.productStoreId && (productIdentificationPref.value[id] !== value)){
         productIdentificationStore.setProductIdentificationPref(id, value, eComStore.productStoreId)
           .then(() => {
-            showToast("Product identifier preference updated");
+            showToast(translate("Product identifier preference updated"));
           })
           .catch(error => console.log(error)); 
       } 
     }
-
-    /* End Product Identifier */
 
     return {
       Actions,
