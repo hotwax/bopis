@@ -90,8 +90,7 @@ export default defineComponent({
 
     // Get product identification from api using dxp-component and set the state if eComStore is defined
     if (this.currentEComStore.productStoreId) {
-      await useProductIdentificationStore().getIdentificationPref(this.currentEComStore.productStoreId)
-        .catch((error) => console.error(error));
+      await useProductIdentificationStore().getIdentificationPref(this.currentEComStore.productStoreId);
     }
   },
   unmounted() {
@@ -113,7 +112,7 @@ export default defineComponent({
     // Providing productIdentificationPref to child components
     provide('productIdentificationPref', productIdentificationPref);
 
-    // Subscribing to productIdentificationStore state change and changing value productIdentificationPref 
+    // Subscribing to productIdentificationStore state changes and changing value of productIdentificationPref 
     productIdentificationStore.$subscribe((mutation, state) => {
         productIdentificationPref.value = state.productIdentificationPref;
     });

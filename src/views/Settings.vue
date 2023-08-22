@@ -453,8 +453,11 @@ export default defineComponent({
           .then(() => {
             showToast(translate("Product identifier preference updated"));
           })
-          .catch(error => console.log(error)); 
-      } 
+          .catch((error) => {
+            showToast(translate("Failed to update Product identifier preference"));
+            console.error(error)
+          });
+      }
     }
 
     return {
