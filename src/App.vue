@@ -47,7 +47,8 @@ export default defineComponent({
     },
     async unauthorised() {
       this.store.dispatch("user/logout");
-      this.router.push("/login")
+      const redirectUrl = window.location.origin + '/login'
+      window.location.href = `${process.env.VUE_APP_LOGIN_URL}?redirectUrl=${redirectUrl}`
     }
   }, 
   computed: {

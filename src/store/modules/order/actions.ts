@@ -233,7 +233,11 @@ const actions: ActionTree<OrderState , RootState> ={
 
               return arr
             }, []),
-            placedDate: orderItem.orderDate
+            placedDate: orderItem.orderDate,
+            pickers: orderItem.pickers ? (orderItem.pickers.reduce((names: any, picker: string) => {
+              names.push(picker.split('/')[1]);
+              return names;
+            }, [])).join(', ') : ""
           }
         })
         this.dispatch('product/getProductInformation', { orders });
@@ -514,7 +518,7 @@ const actions: ActionTree<OrderState , RootState> ={
       entityName: 'ShipmentAndOrderHeader',
       noConditionFind: "Y",
       distinct: "Y",
-      fieldList: ['shipmentId', 'firstName', 'createdDate', 'lastName', 'orderName']
+      fieldList: ['shipmentId', 'firstName', 'createdDate', 'lastName', 'orderName', 'orderId']
     } as any
 
     if (payload.queryString.length) {
@@ -600,7 +604,7 @@ const actions: ActionTree<OrderState , RootState> ={
       entityName: 'ShipmentAndOrderHeader',
       noConditionFind: "Y",
       distinct: "Y",
-      fieldList: ['shipmentId', 'firstName', 'createdDate', 'lastName', 'orderName']
+      fieldList: ['shipmentId', 'firstName', 'createdDate', 'lastName', 'orderName', 'orderId']
     } as any
 
     if (payload.queryString.length) {
@@ -686,7 +690,7 @@ const actions: ActionTree<OrderState , RootState> ={
       entityName: 'ShipmentAndOrderHeader',
       noConditionFind: "Y",
       distinct: "Y",
-      fieldList: ['shipmentId', 'firstName', 'createdDate', 'lastName', 'orderName']
+      fieldList: ['shipmentId', 'firstName', 'createdDate', 'lastName', 'orderName', 'orderId']
     } as any
 
     // enbaling search on first name, last name, and orderId
