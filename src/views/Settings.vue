@@ -195,8 +195,6 @@
           </ion-item>
         </ion-card>
 
-        <!-- Product Identifier -->
-
         <ion-card>
           <ion-card-header>
             <ion-card-title>
@@ -457,7 +455,7 @@ export default defineComponent({
           .catch((error) => {
             // Assigning the previous preference to productIdentificationPrefForSettings if preference failed to update
             productIdentificationPrefForSettings.value[id] = productIdentificationPref.value[id];
-            showToast(translate("Failed to update Product identifier preference"));
+            showToast(translate("Failed to update product identifier preference"));
             console.error(error)
           });
       }

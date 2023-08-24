@@ -18,8 +18,7 @@
             <ion-label class="ion-text-wrap">
               <p class="overline">{{ currentVariant.brandName }}</p>
               <h1>{{ getProductIdentificationValue(productIdentificationPref.primaryId, product) }}</h1>
-              <h2>{{ getProductIdentificationValue(productIdentificationPref.secondaryId, product) }}</h2>
-              
+              <h2>{{ getProductIdentificationValue(productIdentificationPref.secondaryId, product) }}</h2> 
             </ion-label>
             <!-- Price is given undefined to $n funtction on first render, hence, conditional rendering with empty string -->
             <ion-note slot="end">{{ currentVariant.LIST_PRICE_PURCHASE_USD_STORE_GROUP_price ? $n(currentVariant.LIST_PRICE_PURCHASE_USD_STORE_GROUP_price, 'currency', currency ) : '' }}</ion-note>
