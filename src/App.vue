@@ -101,20 +101,20 @@ export default defineComponent({
   setup() {
     const store = useStore();
     const router = useRouter();
-
     const productIdentificationStore = useProductIdentificationStore();
 
     // Reactive state for productIdentificationPref
-    let productIdentificationPref = ref(
-      productIdentificationStore.$state.productIdentificationPref
-    );
+    let productIdentificationPref = ref(JSON.parse(JSON.stringify(productIdentificationStore.$state.productIdentificationPref)));
+    let productIdentificationPrefForSettings = ref(JSON.parse(JSON.stringify(productIdentificationStore.$state.productIdentificationPref)));
 
     // Providing productIdentificationPref to child components
     provide('productIdentificationPref', productIdentificationPref);
+    provide('productIdentificationPrefForSettings', productIdentificationPrefForSettings);
 
     // Subscribing to productIdentificationStore state changes and changing value of productIdentificationPref 
     productIdentificationStore.$subscribe((mutation, state) => {
-        productIdentificationPref.value = state.productIdentificationPref;
+      productIdentificationPref.value = JSON.parse(JSON.stringify(state.productIdentificationPref));
+      productIdentificationPrefForSettings.value = JSON.parse(JSON.stringify(state.productIdentificationPref));
     });
 
     return {

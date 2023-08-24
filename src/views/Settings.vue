@@ -210,13 +210,13 @@
 
           <ion-item>
             <ion-label>{{ $t("Primary Product Identifier") }}</ion-label>
-            <ion-select interface="popover" :disabled="!currentEComStore.productStoreId" :placeholder="$t('primary identifier')" :value="productIdentificationPref.primaryId" @ionChange.="setProductIdentificationPref($event.detail.value, 'primaryId')">
+            <ion-select interface="popover" :disabled="!currentEComStore.productStoreId" :placeholder="$t('primary identifier')" v-model="productIdentificationPrefForSettings.primaryId" @ionChange.="setProductIdentificationPref($event.detail.value, 'primaryId')">
               <ion-select-option v-for="identification in productIdentificationOptions" :key="identification" :value="identification" >{{ identification }}</ion-select-option>
             </ion-select>
           </ion-item>
           <ion-item>
             <ion-label>{{ $t("Secondary Product Identifier") }}</ion-label>
-            <ion-select interface="popover" :disabled="!currentEComStore.productStoreId" :placeholder="$t('secondary identifier')" :value="productIdentificationPref.secondaryId" @ionChange="setProductIdentificationPref($event.detail.value, 'secondaryId')">
+            <ion-select interface="popover" :disabled="!currentEComStore.productStoreId" :placeholder="$t('secondary identifier')" v-model="productIdentificationPrefForSettings.secondaryId" @ionChange="setProductIdentificationPref($event.detail.value, 'secondaryId')">
               <ion-select-option v-for="identification in productIdentificationOptions" :key="identification" :value="identification" >{{ identification }}</ion-select-option>
               <ion-select-option value="">{{ $t("None") }}</ion-select-option>
             </ion-select>
@@ -441,19 +441,22 @@ export default defineComponent({
     const productIdentificationOptions = productIdentificationStore.getProductIdentificationOptions;
 
     // Injecting identifier preference from app.view
-    const productIdentificationPref: any  = inject("productIdentificationPref");
+    const productIdentificationPrefForSettings: any  = inject("productIdentificationPrefForSettings");
+    const productIdentificationPref: any = inject("productIdentificationPref");
 
-    // Function to set the value of productIdentificationPref using dxp-component
+    // Function to set the value of productIdentificationPref using dxp-components
     const setProductIdentificationPref = (value: string, id: string) =>  {
       const eComStore = store.getters['user/getCurrentEComStore']; 
 
-      // If productPreference value is same as ion change value then not calling the set function as there is no cahnge 
+      // If productPreference value is same as ion change value then not calling the set function as there is no change 
       if(eComStore.productStoreId && (productIdentificationPref.value[id] !== value)){
         productIdentificationStore.setProductIdentificationPref(id, value, eComStore.productStoreId)
           .then(() => {
             showToast(translate("Product identifier preference updated"));
           })
           .catch((error) => {
+            // Assigning the previous preference to productIdentificationPrefForSettings if preference failed to update
+            productIdentificationPrefForSettings.value[id] = productIdentificationPref.value[id];
             showToast(translate("Failed to update Product identifier preference"));
             console.error(error)
           });
@@ -465,16 +468,15 @@ export default defineComponent({
       ellipsisVertical,
       hasPermission,
       personCircleOutline,
+      productIdentificationPrefForSettings,
+      productIdentificationOptions,
       router,
       sendOutline,
+      setProductIdentificationPref,
       store,
       storefrontOutline,
       codeWorkingOutline,
-      openOutline,
-      productIdentificationPref,
-      setProductIdentificationPref,
-      productIdentificationOptions,
-      productIdentificationStore
+      openOutline
     }
   }
 });
