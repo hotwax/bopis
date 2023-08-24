@@ -19,10 +19,8 @@
         </ion-list>
         <ion-item v-if="order.shippingInstructions" color="light" lines="none">
           <ion-label class="ion-text-wrap">
-            <h3>{{ $t("Handling Instructions") }}</h3>
-            <ion-text color="medium">
-              <p>{{ order.shippingInstructions }}</p>
-            </ion-text>
+            <p class="overline">{{ $t("Handling Instructions") }}</p>
+            <p>{{ order.shippingInstructions }}</p>
           </ion-label>
         </ion-item>
         <ion-item v-if="customerEmail" lines="none">
