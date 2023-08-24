@@ -76,7 +76,6 @@ import {
   IonPage,
   IonSelect,
   IonSelectOption,
-  IonText,
   IonTitle,
   IonToolbar,
   modalController
@@ -115,7 +114,6 @@ export default defineComponent({
     IonPage,
     IonSelect,
     IonSelectOption,
-    IonText,
     IonTitle,
     IonToolbar,
     ProductListItem
