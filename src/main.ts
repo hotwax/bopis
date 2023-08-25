@@ -33,7 +33,7 @@ import permissionRules from '@/authorization/Rules';
 import permissionActions from '@/authorization/Actions';
 import { dxpComponents } from '@hotwax/dxp-components'
 import { login, logout, loader } from './user-utils';
-
+import { getNotificationPreferences, storeClientRegistrationToken, removeClientRegistrationToken, subscribeTopic, unsubscribeTopic } from '@hotwax/oms-api';
 
 const app = createApp(App)
   .use(IonicVue, {
@@ -47,10 +47,15 @@ const app = createApp(App)
     actions: permissionActions
   })
   .use(dxpComponents, {
+    appLoginUrl: process.env.VUE_APP_LOGIN_URL as string,
+    getNotificationPreferences,
+    loader,
     login,
     logout,
-    loader,
-    appLoginUrl: process.env.VUE_APP_LOGIN_URL as string
+    removeClientRegistrationToken,
+    storeClientRegistrationToken, 
+    subscribeTopic,
+    unsubscribeTopic
   });
 
 // Filters are removed in Vue 3 and global filter introduced https://v3.vuejs.org/guide/migration/filters.html#global-filters

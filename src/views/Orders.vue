@@ -4,6 +4,9 @@
       <ion-toolbar>
         <ion-title>{{ currentFacility?.name }}</ion-title>
         <ion-buttons slot="end">
+          <ion-button @click="viewNotifications()">
+            <ion-icon slot="icon-only" :icon="notificationsOutline" :color="notificationIconColor" />
+          </ion-button>
           <ion-button @click="viewShipToStoreOrders()">
             <ion-icon slot="icon-only" :icon="trailSignOutline" />
           </ion-button>
@@ -171,9 +174,16 @@ import {
   IonToolbar,
   modalController
 } from "@ionic/vue";
-import { defineComponent, ref } from "vue";
+import { computed, defineComponent, ref } from "vue";
 import ProductListItem from '@/components/ProductListItem.vue'
-import { swapVerticalOutline, callOutline, mailOutline, printOutline, trailSignOutline } from "ionicons/icons";
+import {
+  swapVerticalOutline,
+  callOutline,
+  mailOutline,
+  notificationsOutline,
+  printOutline,
+  trailSignOutline
+} from "ionicons/icons";
 import { mapGetters, useStore } from 'vuex'
 import { useRouter } from 'vue-router'
 import { copyToClipboard, showToast } from '@/utils'
@@ -184,6 +194,7 @@ import { translate } from "@/i18n";
 import AssignPickerModal from "./AssignPickerModal.vue";
 import { OrderService } from "@/services/OrderService";
 import { Actions, hasPermission } from '@/authorization'
+import { useNotificationStore } from '@hotwax/dxp-components'
 
 export default defineComponent({
   name: 'Orders',
@@ -419,6 +430,9 @@ export default defineComponent({
     },
     viewShipToStoreOrders() {
       this.$router.push({ path: '/ship-to-store-orders' })
+    },
+    viewNotifications() {
+      this.$router.push({ path: '/notifications' })
     }
   },
   ionViewWillEnter () {
@@ -436,12 +450,17 @@ export default defineComponent({
     const router = useRouter();
     const store = useStore();
     const segmentSelected = ref('open');
+    const notificationsStore = useNotificationStore()
+    const notificationIconColor = computed(() => notificationsStore.getNotifications.length ? 'primary' : '')
 
     return {
       Actions,
       callOutline,
       copyToClipboard,
       hasPermission,
+      notificationIconColor,
+      notificationsOutline,
+      notificationsStore,
       mailOutline,
       printOutline,
       router,
