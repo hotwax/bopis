@@ -10,7 +10,7 @@
     <ion-content>
       <main v-if="Object.keys(product).length > 0">
         <section class="product-image">
-          <Image :src="currentVariant.mainImageUrl"/>
+          <ShopifyImg :src="currentVariant.mainImageUrl" />
         </section>
 
         <section class="product-info">
@@ -87,7 +87,7 @@ import {
 } from "@ionic/vue";
 import { defineComponent } from "vue";
 import { mapGetters, useStore } from "vuex";
-import Image from "../components/Image.vue";
+import { ShopifyImg } from '@hotwax/dxp-components'
 import { StockService } from '@/services/StockService'
 import { getFeature, showToast } from "@/utils";
 import { hasError } from '@/adapter'
@@ -112,7 +112,7 @@ export default defineComponent({
     IonRow,
     IonTitle,
     IonToolbar,
-    Image
+    ShopifyImg
   },
   data() {
     return {

@@ -34,7 +34,6 @@ import permissionActions from '@/authorization/Actions';
 import { dxpComponents } from '@hotwax/dxp-components'
 import { login, logout, loader } from './user-utils';
 
-
 const app = createApp(App)
   .use(IonicVue, {
     mode: 'md'
@@ -47,6 +46,7 @@ const app = createApp(App)
     actions: permissionActions
   })
   .use(dxpComponents, {
+    defaultImgUrl: require("@/assets/images/defaultImage.png"),
     login,
     logout,
     loader,
