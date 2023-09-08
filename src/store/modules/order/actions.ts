@@ -72,7 +72,8 @@ const actions: ActionTree<OrderState , RootState> ={
 
               return arr
             }, []),
-            placedDate: orderItem.orderDate
+            placedDate: orderItem.orderDate,
+            shippingInstructions: orderItem.shippingInstructions
           }
         })
 
@@ -162,7 +163,8 @@ const actions: ActionTree<OrderState , RootState> ={
 
               return arr
             }, []),
-            placedDate: orderItem.orderDate
+            placedDate: orderItem.orderDate,
+            shippingInstructions: orderItem.shippingInstructions
           }
         })
 
@@ -234,6 +236,7 @@ const actions: ActionTree<OrderState , RootState> ={
               return arr
             }, []),
             placedDate: orderItem.orderDate,
+            shippingInstructions: orderItem.shippingInstructions,
             pickers: orderItem.pickers ? (orderItem.pickers.reduce((names: any, picker: string) => {
               names.push(picker.split('/')[1]);
               return names;
