@@ -13,7 +13,7 @@ import {
   resetPermissions,
   setPermissions
 } from '@/authorization'
-import { useAuthStore, useNotificationStore } from '@hotwax/dxp-components'
+import { useAuthStore } from '@hotwax/dxp-components'
 
 const actions: ActionTree<UserState, RootState> = {
 
@@ -94,7 +94,6 @@ const actions: ActionTree<UserState, RootState> = {
    */
   async logout ({ commit, dispatch }) {
     const authStore = useAuthStore()
-    const notificationsStore = useNotificationStore()
     // TODO add any other tasks if need
     dispatch("product/clearProducts", null, { root: true })
     commit(types.USER_END_SESSION)
@@ -103,8 +102,6 @@ const actions: ActionTree<UserState, RootState> = {
 
     // reset plugin state on logout
     authStore.$reset()
-    // TODO pass applicationID from ENV
-    notificationsStore.removeClientRegistrationToken('BOPIS')
   },
 
   /**

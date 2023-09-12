@@ -33,7 +33,16 @@ import permissionRules from '@/authorization/Rules';
 import permissionActions from '@/authorization/Actions';
 import { dxpComponents } from '@hotwax/dxp-components'
 import { login, logout, loader } from './user-utils';
-import { getNotificationPreferences, storeClientRegistrationToken, removeClientRegistrationToken, subscribeTopic, unsubscribeTopic } from '@hotwax/oms-api';
+import {
+  getConfig,
+  getNotificationEnumIds,
+  getNotificationUserPrefTypeIds,
+  initialise,
+  storeClientRegistrationToken,
+  removeClientRegistrationToken,
+  subscribeTopic,
+  unsubscribeTopic
+} from '@hotwax/oms-api';
 
 const app = createApp(App)
   .use(IonicVue, {
@@ -48,7 +57,12 @@ const app = createApp(App)
   })
   .use(dxpComponents, {
     appLoginUrl: process.env.VUE_APP_LOGIN_URL as string,
-    getNotificationPreferences,
+    notificationApplicationId: process.env.VUE_APP_NOTIF_APP_ID,
+    notificationEnumTypeId: process.env.VUE_APP_NOTIF_ENUM_TYPE_ID,
+    getConfig,
+    getNotificationEnumIds,
+    getNotificationUserPrefTypeIds,
+    initialise,
     loader,
     login,
     logout,

@@ -213,6 +213,7 @@ import { showToast } from '@/utils';
 import { hasError } from '@/adapter'
 import { translate } from "@/i18n";
 import { Actions, hasPermission } from '@/authorization'
+import { useNotificationStore } from '@hotwax/dxp-components'
 
 export default defineComponent({
   name: 'Settings',
@@ -295,7 +296,10 @@ export default defineComponent({
       });
       return timeZoneModal.present();
     },
-    logout () {
+    async logout () {
+      // remove firebase notification registration token -
+      // OMS and auth is required hence, remove it before logout (clearing state)
+      await this.notificationsStore.removeClientRegistrationToken()
       this.store.dispatch('user/logout').then(() => {
         const redirectUrl = window.location.origin + '/login'
         window.location.href = `${process.env.VUE_APP_LOGIN_URL}?isLoggedOut=true&redirectUrl=${redirectUrl}`
@@ -406,11 +410,13 @@ export default defineComponent({
   setup () {
     const store = useStore();
     const router = useRouter();
+    const notificationsStore = useNotificationStore()
 
     return {
       Actions,
       ellipsisVertical,
       hasPermission,
+      notificationsStore,
       personCircleOutline,
       router,
       sendOutline,
