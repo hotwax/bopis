@@ -61,6 +61,7 @@ const app = createApp(App)
   .use(dxpComponents, {
     appLoginUrl: process.env.VUE_APP_LOGIN_URL as string,
     appFirebaseConfig: JSON.parse(process.env.VUE_APP_FIREBASE_CONFIG),
+    appFirebaseVapidKey: process.env.VUE_APP_FIREBAE_VAPID_KEY,
     defaultImgUrl: require("@/assets/images/defaultImage.png"),
     getConfig,
     getNotificationEnumIds,
