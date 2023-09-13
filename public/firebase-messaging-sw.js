@@ -1,7 +1,7 @@
-importScripts('http://localhost:8101/firebase-messaging-common.js');
+importScripts('https://launchpad.hotwax.io/firebase-messaging-common.js');
 
 self.addEventListener('activate', () => {
-  const clickActionURL = "http://localhost:8100/"
+  const clickActionURL = window.location.protocol + "//" + window.location.host
   const iconUrl = "/img/icons/msapplication-icon-144x144.png"
   self.setClickActionAndIcon(clickActionURL, iconUrl);
 });
