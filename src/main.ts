@@ -60,9 +60,8 @@ const app = createApp(App)
   })
   .use(dxpComponents, {
     appLoginUrl: process.env.VUE_APP_LOGIN_URL as string,
-    notificationApplicationId: process.env.VUE_APP_NOTIF_APP_ID,
-    notificationEnumTypeId: process.env.VUE_APP_NOTIF_ENUM_TYPE_ID,
     appFirebaseConfig: JSON.parse(process.env.VUE_APP_FIREBASE_CONFIG),
+    defaultImgUrl: require("@/assets/images/defaultImage.png"),
     getConfig,
     getNotificationEnumIds,
     getNotificationUserPrefTypeIds,
@@ -70,6 +69,8 @@ const app = createApp(App)
     loader,
     login,
     logout,
+    notificationApplicationId: process.env.VUE_APP_NOTIF_APP_ID,
+    notificationEnumTypeId: process.env.VUE_APP_NOTIF_ENUM_TYPE_ID,
     removeClientRegistrationToken,
     showNewNotificationToast,
     storeClientRegistrationToken, 
