@@ -14,7 +14,7 @@ import { translate } from '@/i18n'
 
 import 'vue-router'
 import { Login, useAuthStore } from '@hotwax/dxp-components';
-import { loader } from '@/user-utils';
+import { loader } from '@/utils/user';
 
 // Defining types for the meta values
 declare module 'vue-router' {

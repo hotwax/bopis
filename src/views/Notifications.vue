@@ -10,10 +10,13 @@
     <ion-content>
       <main>
         <section>
-          <ion-list v-if="notificationsStore.getNotifications.length">
-            <ion-item v-for="(notificationData, index) in notificationsStore.getNotifications" :key="index">
-              <ion-label class="ion-text-wrap">{{ notificationData.notification.title }}</ion-label>
-              <ion-note slot="end">{{ timeTillNotification(notificationData.data['google.c.a.ts']) }}</ion-note>
+          <ion-list v-if="notifications.length">
+            <ion-item v-for="(notificationData, index) in notifications" :key="index">
+              <ion-label class="ion-text-wrap">
+                <h3>{{ notificationData.data.title }}</h3>
+                <p>{{ notificationData.data.body }}</p>
+              </ion-label>
+              <ion-note slot="end">{{ timeTillNotification(notificationData.time) }}</ion-note>
             </ion-item>
           </ion-list>
           <div v-else class="ion-text-center">
@@ -51,7 +54,7 @@ import {
   cogOutline,
   document,
 } from 'ionicons/icons';
-import { defineComponent } from "vue";
+import { computed, defineComponent } from "vue";
 import { useStore } from "vuex";
 import { DateTime } from "luxon";
 import NotificationPreferenceModal from "./NotificationPreferenceModal.vue";
@@ -82,16 +85,19 @@ export default defineComponent({
       return timeZoneModal.present();
     },
     timeTillNotification(time: string) {
-      const timeDiff = DateTime.fromSeconds(+time).diff(DateTime.local());
+      const timeDiff = DateTime.fromMillis(+time).diff(DateTime.local());
       return DateTime.local().plus(timeDiff).toRelative();
     }
   },
   setup() {
     const store = useStore();
     const notificationsStore = useNotificationStore()
+    const notifications = computed(() => notificationsStore.getNotifications)
+
     return {
       cogOutline,
       document,
+      notifications,
       notificationsStore,
       store
     }
