@@ -5,10 +5,7 @@ import Tabs from '@/views/Tabs.vue'
 import OrderDetail from '@/views/OrderDetail.vue'
 import ProductDetail from '@/views/ProductDetail.vue'
 import ShipToStoreOrders from '@/views/ShipToStoreOrders.vue'
-<<<<<<< Updated upstream
-=======
 // import Notifications from '@/views/Notifications.vue'
->>>>>>> Stashed changes
 import Shopify from '@/views/Shopify.vue'
 
 import { hasPermission } from '@/authorization';
@@ -16,13 +13,8 @@ import { showToast } from '@/utils'
 import { translate } from '@/i18n'
 
 import 'vue-router'
-<<<<<<< Updated upstream
-import { Login, useAuthStore } from '@hotwax/dxp-components';
 import { loader } from '@/user-utils';
-=======
 import { Login, Notifications, useAuthStore } from '@hotwax/dxp-components';
-import { loader } from '@/utils/user';
->>>>>>> Stashed changes
 
 // Defining types for the meta values
 declare module 'vue-router' {
