@@ -162,10 +162,12 @@ const actions: ActionTree<UserState, RootState> = {
     commit(types.USER_LOCALE_UPDATED, payload)
   },
 
-  addNotification({ state, commit }, notification) {
+  addNotification({ state, commit }, payload) {
     const notifications = JSON.parse(JSON.stringify(state.notifications))
-    notifications.push({ ...notification, time: DateTime.now().toMillis() })
-    showToast(translate("New notification received."));
+    notifications.push({ ...payload.notification, time: DateTime.now().toMillis() })
+    if (payload.isForeground) {
+      showToast(translate("New notification received."));
+    }
     commit(types.USER_NOTIFICATIONS_UPDATED, notifications)
   },
 
