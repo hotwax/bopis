@@ -49,10 +49,14 @@ import {
 import { defineComponent } from "vue";
 import { closeOutline } from "ionicons/icons";
 import { mapGetters, useStore } from "vuex";
-import { useNotificationStore } from '@hotwax/dxp-components'
 import { translate } from "@/i18n";
 import { showToast } from "@/utils";
 import emitter from "@/event-bus"
+import { generateTopicName } from "@/utils/firebase";
+import {
+  subscribeTopic,
+  unsubscribeTopic
+} from '@hotwax/oms-api';
 
 export default defineComponent({
   name: "NotificationPreference",
@@ -73,7 +77,6 @@ export default defineComponent({
   },
   data() {
     return {
-      notificationPrefs: [] as any,
       initialNotificationPref: {} as any,
       notificationPrefToUpate: {
         subscribe: [],
@@ -84,11 +87,12 @@ export default defineComponent({
   computed: {
     ...mapGetters({
       currentFacility: 'user/getCurrentFacility',
-      instanceUrl: 'user/getInstanceUrl'
+      instanceUrl: 'user/getInstanceUrl',
+      notificationPrefs: 'user/getNotificationPrefs'
     })
   },
   async beforeMount() {
-    this.notificationPrefs = await this.notificationsStore.fetchNotificationPreferences(this.instanceUrl, this.currentFacility.facilityId)
+    await this.store.dispatch('user/fetchNotificationPreferences')
     this.initialNotificationPref = this.notificationPrefs.reduce((notificationPref: any, pref: any) => {
       notificationPref[pref.enumId] = pref.isEnabled
       return notificationPref
@@ -115,15 +119,41 @@ export default defineComponent({
       // TODO disbale button if initial and final are same
       emitter.emit("presentLoader");
       try {
-        const successCount: any = await this.notificationsStore.handleTopicSubscription(this.notificationPrefToUpate, this.instanceUrl, this.currentFacility.facilityId)
-        this.handlePreferenceUpdateMessage(successCount)
+        await this.handleTopicSubscription()
       } catch (error) {
         console.error(error)
       } finally {
         emitter.emit("dismissLoader")
       }
     },
-    handlePreferenceUpdateMessage(successCount: number) {
+    async handleTopicSubscription() {
+      const subscribeRequests = [] as any
+      const oms = this.instanceUrl
+      const facilityId = (this.currentFacility as any).facilityId
+      this.notificationPrefToUpate.subscribe.map(async (enumId: string) => {
+        const topicName = generateTopicName(oms, facilityId, enumId)
+        await subscribeRequests.push(subscribeTopic(topicName, process.env.VUE_APP_NOTIF_APP_ID).catch((err: any) => {
+          return err;
+        }))
+      })
+
+      const unsubscribeRequests = [] as any
+      this.notificationPrefToUpate.unsubscribe.map(async (enumId: string) => {
+        const topicName = generateTopicName(oms, facilityId, enumId)
+        await unsubscribeRequests.push(unsubscribeTopic(topicName, process.env.VUE_APP_NOTIF_APP_ID).catch((err: any) => {
+          return err;
+        }))
+      })
+
+      const responses = await Promise.all([...subscribeRequests, ...unsubscribeRequests])
+      const successCount = responses.reduce((successCount: number, response: any) => {
+        if (response.data.successMessage) {
+          successCount++
+        }
+        return successCount
+      }, 0)
+
+      // using successCount count to handle toast message
       if (successCount === this.notificationPrefToUpate.subscribe.length + this.notificationPrefToUpate.unsubscribe.length) {
         showToast(translate('Notification preferences updated.'))
       } else {
@@ -153,12 +183,10 @@ export default defineComponent({
   },
   setup() {
     const store = useStore();
-    const notificationsStore = useNotificationStore()
 
     return {
       closeOutline,
       save,
-      notificationsStore,
       store
     };
   },

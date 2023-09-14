@@ -35,17 +35,11 @@ import permissionActions from '@/authorization/Actions';
 
 import { dxpComponents } from '@hotwax/dxp-components'
 import { login, logout, loader } from '@/utils/user';
-import { showNewNotificationToast } from '@/utils/notifications';
-import {
-  getConfig,
-  getNotificationEnumIds,
-  getNotificationUserPrefTypeIds,
-  initialise,
-  storeClientRegistrationToken,
-  removeClientRegistrationToken,
-  subscribeTopic,
-  unsubscribeTopic
-} from '@hotwax/oms-api';
+import { 
+  addNotification,
+  storeClientRegistrationToken
+} from '@/utils/firebase';
+import { getConfig, initialise } from '@hotwax/oms-api';
 
 const app = createApp(App)
   .use(IonicVue, {
@@ -59,24 +53,17 @@ const app = createApp(App)
     actions: permissionActions
   })
   .use(dxpComponents, {
+    addNotification,
     appLoginUrl: process.env.VUE_APP_LOGIN_URL as string,
     appFirebaseConfig: JSON.parse(process.env.VUE_APP_FIREBASE_CONFIG),
     appFirebaseVapidKey: process.env.VUE_APP_FIREBAE_VAPID_KEY,
     defaultImgUrl: require("@/assets/images/defaultImage.png"),
     getConfig,
-    getNotificationEnumIds,
-    getNotificationUserPrefTypeIds,
     initialise,
     loader,
     login,
     logout,
-    notificationApplicationId: process.env.VUE_APP_NOTIF_APP_ID,
-    notificationEnumTypeId: process.env.VUE_APP_NOTIF_ENUM_TYPE_ID,
-    removeClientRegistrationToken,
-    showNewNotificationToast,
-    storeClientRegistrationToken, 
-    subscribeTopic,
-    unsubscribeTopic
+    storeClientRegistrationToken,
   });
 
 // Filters are removed in Vue 3 and global filter introduced https://v3.vuejs.org/guide/migration/filters.html#global-filters

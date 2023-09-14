@@ -208,7 +208,6 @@ import { translate } from "@/i18n";
 import AssignPickerModal from "./AssignPickerModal.vue";
 import { OrderService } from "@/services/OrderService";
 import { Actions, hasPermission } from '@/authorization'
-import { useNotificationStore } from '@hotwax/dxp-components'
 
 export default defineComponent({
   name: 'Orders',
@@ -250,8 +249,13 @@ export default defineComponent({
       isPackedOrdersScrollable: 'order/isPackedOrdersScrollable',
       isOpenOrdersScrollable: 'order/isOpenOrdersScrollable',
       isCompletedOrdersScrollable: 'order/isCompletedOrdersScrollable',
-      showPackingSlip: 'user/showPackingSlip'
-    })
+      showPackingSlip: 'user/showPackingSlip',
+      notifications: 'user/getNotifications',
+    }),
+    notificationIconColor: function() {
+      const notifications = JSON.parse(JSON.stringify(this.notifications));
+      return notifications.length ? 'primary' : ''
+    },
   },
   data() {
     return {
@@ -464,17 +468,13 @@ export default defineComponent({
     const router = useRouter();
     const store = useStore();
     const segmentSelected = ref('open');
-    const notificationsStore = useNotificationStore()
-    const notificationIconColor = computed(() => notificationsStore.getNotifications.length ? 'primary' : '')
 
     return {
       Actions,
       callOutline,
       copyToClipboard,
       hasPermission,
-      notificationIconColor,
       notificationsOutline,
-      notificationsStore,
       mailOutline,
       printOutline,
       router,

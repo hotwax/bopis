@@ -5,7 +5,7 @@ import UserState from './UserState'
 import * as types from './mutation-types'
 import { showToast } from '@/utils'
 import i18n, { translate } from '@/i18n'
-import { Settings } from 'luxon';
+import { DateTime, Settings } from 'luxon';
 import { hasError, updateInstanceUrl, updateToken, resetConfig } from '@/adapter'
 import {
   getServerPermissionsFromRules,
@@ -13,7 +13,14 @@ import {
   resetPermissions,
   setPermissions
 } from '@/authorization'
-import { useAuthStore, useNotificationStore } from '@hotwax/dxp-components'
+import { useAuthStore } from '@hotwax/dxp-components'
+import {
+  getNotificationEnumIds,
+  getNotificationUserPrefTypeIds,
+  storeClientRegistrationToken,
+  removeClientRegistrationToken,
+} from '@hotwax/oms-api';
+import { generateDeviceId, generateTopicName } from '@/utils/firebase'
 
 const actions: ActionTree<UserState, RootState> = {
 
@@ -94,16 +101,15 @@ const actions: ActionTree<UserState, RootState> = {
    */
   async logout ({ commit, dispatch }) {
     const authStore = useAuthStore()
-    const notificationStore = useNotificationStore()
     // TODO add any other tasks if need
     dispatch("product/clearProducts", null, { root: true })
+    dispatch('clearNotificaionsState')
     commit(types.USER_END_SESSION)
     resetPermissions();
     resetConfig();
 
     // reset plugin state on logout
     authStore.$reset()
-    notificationStore.$reset()
   },
 
   /**
@@ -155,5 +161,58 @@ const actions: ActionTree<UserState, RootState> = {
     i18n.global.locale = payload
     commit(types.USER_LOCALE_UPDATED, payload)
   },
+
+  addNotification({ state, commit }, notification) {
+    const notifications = JSON.parse(JSON.stringify(state.notifications))
+    notifications.push({ ...notification, time: DateTime.now().toMillis() })
+    showToast(translate("New notification received."));
+    commit(types.USER_NOTIFICATIONS_UPDATED, notifications)
+  },
+
+  async fetchNotificationPreferences({ commit, state }) {
+    try {
+      const enumerationResp = await getNotificationEnumIds(process.env.VUE_APP_NOTIF_ENUM_TYPE_ID)
+      const userPrefResp = await getNotificationUserPrefTypeIds(process.env.VUE_APP_NOTIF_APP_ID)
+      const userPrefIds = userPrefResp?.map((userPref: any) => userPref.userPrefTypeId)
+
+      const oms = state.instanceUrl
+      const facilityId = (state.currentFacility as any).facilityId
+      const notificationPreferences = enumerationResp.reduce((notifactionPref: any, pref: any) => {
+        const userPrefTypeIdToSearch = generateTopicName(oms, facilityId, pref.enumId)
+        notifactionPref.push({ ...pref, isEnabled: userPrefIds.includes(userPrefTypeIdToSearch) })
+        return notifactionPref
+      }, [])
+
+      commit(types.USER_NOTIFICATIONS_PREFERENCES_UPDATED, notificationPreferences)
+      return notificationPreferences
+    } catch (error) {
+      console.error(error)
+    }
+  },
+
+  async storeClientRegistrationToken({ commit }, registrationToken) {
+    const firebaseDeviceId = generateDeviceId()
+    commit(types.USER_FIREBASE_DEVICEID_UPDATED, firebaseDeviceId)
+
+    try {
+      await storeClientRegistrationToken(registrationToken, firebaseDeviceId, process.env.VUE_APP_NOTIF_APP_ID)
+    } catch (error) {
+      console.error(error)
+    }
+  },
+
+  async removeClientRegistrationToken({ state }) {
+    try {
+      await removeClientRegistrationToken(state.firebaseDeviceId, process.env.VUE_APP_NOTIF_APP_ID)
+    } catch (error) {
+      console.error(error)
+    }
+  },
+
+  clearNotificaionsState({ commit }) {
+    commit(types.USER_NOTIFICATIONS_UPDATED, [])
+    commit(types.USER_NOTIFICATIONS_PREFERENCES_UPDATED, [])
+    commit(types.USER_FIREBASE_DEVICEID_UPDATED, '')
+  }
 }
 export default actions;

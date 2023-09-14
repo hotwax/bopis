@@ -20,6 +20,9 @@ const userModule: Module<UserState, RootState> = {
       locale: 'en',
       currentEComStore: {},
       permissions: [],
+      notifications: [],
+      notificationPrefs: [],
+      firebaseDeviceId: ''
     },
     getters,
     actions,

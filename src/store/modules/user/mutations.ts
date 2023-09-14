@@ -32,6 +32,15 @@ const mutations: MutationTree <UserState> = {
     },
     [types.USER_PERMISSIONS_UPDATED] (state, payload) {
         state.permissions = payload
+    },
+    [types.USER_NOTIFICATIONS_UPDATED] (state, payload) {
+        state.notifications = payload
+    },
+    [types.USER_NOTIFICATIONS_PREFERENCES_UPDATED] (state, payload) {
+        state.notificationPrefs = payload
+    },
+    [types.USER_FIREBASE_DEVICEID_UPDATED] (state, payload) {
+        state.firebaseDeviceId = payload
     }
 }
 export default mutations;

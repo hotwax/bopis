@@ -50,15 +50,11 @@ import {
   IonToolbar,
   modalController,
 } from "@ionic/vue";
-import {
-  cogOutline,
-  document,
-} from 'ionicons/icons';
-import { computed, defineComponent } from "vue";
-import { useStore } from "vuex";
+import { cogOutline } from 'ionicons/icons';
+import { defineComponent } from "vue";
+import { mapGetters, useStore } from "vuex";
 import { DateTime } from "luxon";
 import NotificationPreferenceModal from "./NotificationPreferenceModal.vue";
-import { useNotificationStore } from '@hotwax/dxp-components'
 
 export default defineComponent({
   name: "Notifications",
@@ -77,6 +73,11 @@ export default defineComponent({
     IonTitle,
     IonToolbar,
   },
+  computed: {
+    ...mapGetters({
+      notifications: 'user/getNotifications',
+    })
+  },
   methods: {
     async openNotificationSettings() {
       const timeZoneModal = await modalController.create({
@@ -91,14 +92,9 @@ export default defineComponent({
   },
   setup() {
     const store = useStore();
-    const notificationsStore = useNotificationStore()
-    const notifications = computed(() => notificationsStore.getNotifications)
 
     return {
       cogOutline,
-      document,
-      notifications,
-      notificationsStore,
       store
     }
   }
