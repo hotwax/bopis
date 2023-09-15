@@ -11,7 +11,10 @@
   </ion-header>
 
   <ion-content>
-    <ion-list>
+    <div v-if="!notificationPrefs.length" class="ion-text-center">
+      <p>{{ $t("Notification preferences not found.")}}</p>
+    </div>
+    <ion-list v-else>
       <ion-item :key="pref.enumId" v-for="pref in notificationPrefs">
         <ion-label class="ion-text-wrap">{{ pref.description }}</ion-label>
         <ion-toggle @ionChange="toggleNotificationPref(pref.enumId, $event.detail.checked)" :checked="pref.isEnabled" slot="end" />

@@ -68,6 +68,7 @@
   "No time zone found": "タイムゾーンが見つかりません",
   "Notifications": "Notifications",
   "Notification Preference": "Notification Preference",
+  "Notification preferences not found.": "Notification preferences not found.",
   "Notification preferences updated.": "Notification preferences updated.",
   "Notification preferences not updated. Please try again.": "Notification preferences not updated. Please try again.",
   "Open": "オープン",

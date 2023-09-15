@@ -172,22 +172,26 @@ const actions: ActionTree<UserState, RootState> = {
   },
 
   async fetchNotificationPreferences({ commit, state }) {
+    const oms = state.instanceUrl
+    const facilityId = (state.currentFacility as any).facilityId
+    let notificationPreferences = [], enumerationResp = [], userPrefResp = [], userPrefIds = [] as any
     try {
-      const enumerationResp = await getNotificationEnumIds(process.env.VUE_APP_NOTIF_ENUM_TYPE_ID)
-      const userPrefResp = await getNotificationUserPrefTypeIds(process.env.VUE_APP_NOTIF_APP_ID)
-      const userPrefIds = userPrefResp?.map((userPref: any) => userPref.userPrefTypeId)
-
-      const oms = state.instanceUrl
-      const facilityId = (state.currentFacility as any).facilityId
-      const notificationPreferences = enumerationResp.reduce((notifactionPref: any, pref: any) => {
-        const userPrefTypeIdToSearch = generateTopicName(oms, facilityId, pref.enumId)
-        notifactionPref.push({ ...pref, isEnabled: userPrefIds.includes(userPrefTypeIdToSearch) })
-        return notifactionPref
-      }, [])
-
-      commit(types.USER_NOTIFICATIONS_PREFERENCES_UPDATED, notificationPreferences)
+      enumerationResp = await getNotificationEnumIds(process.env.VUE_APP_NOTIF_ENUM_TYPE_ID)
+      userPrefResp = await getNotificationUserPrefTypeIds(process.env.VUE_APP_NOTIF_APP_ID)
+      userPrefIds = userPrefResp?.map((userPref: any) => userPref.userPrefTypeId)
     } catch (error) {
       console.error(error)
+    } finally {
+      // checking enumerationResp as we want to show disbaled prefs if only getNotificationEnumIds returns
+      // data and getNotificationUserPrefTypeIds fails or returns empty response (all disbaled)
+      if (enumerationResp.length) {
+        notificationPreferences = enumerationResp.reduce((notifactionPref: any, pref: any) => {
+          const userPrefTypeIdToSearch = generateTopicName(oms, facilityId, pref.enumId)
+          notifactionPref.push({ ...pref, isEnabled: userPrefIds.includes(userPrefTypeIdToSearch) })
+          return notifactionPref
+        }, [])
+      }
+      commit(types.USER_NOTIFICATIONS_PREFERENCES_UPDATED, notificationPreferences)
     }
   },
 
