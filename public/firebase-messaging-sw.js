@@ -51,10 +51,11 @@ self.addEventListener('notificationclick', event => {
   event.notification.close();
   const deepLink = event.notification.data.click_action;
   event.waitUntil(
-    clients.matchAll({ type: 'window' }).then(windowClients => {
+    clients.matchAll({ includeUncontrolled: true, type: 'window' }).then(windowClients => {
       // Check if the app window is already open
       for (let client of windowClients) {
-        if (client.url === deepLink && 'focus' in client) {
+        const clientPath = (new URL(client.url)).pathname;
+        if (clientPath === deepLink && 'focus' in client) {
           return client.focus();
         }
       }
