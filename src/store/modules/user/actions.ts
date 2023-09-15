@@ -149,8 +149,6 @@ const actions: ActionTree<UserState, RootState> = {
   },
 
   setLocale({ commit }, payload) {
-    console.log('set locale in action **');
-    i18n.global.locale = payload.locale;
     commit(types.USER_LOCALE_UPDATED, payload)
   },
 }
