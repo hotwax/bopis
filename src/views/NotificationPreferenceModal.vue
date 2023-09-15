@@ -150,7 +150,7 @@ export default defineComponent({
 
       const responses = await Promise.all([...subscribeRequests, ...unsubscribeRequests])
       const successCount = responses.reduce((successCount: number, response: any) => {
-        if (response.data.successMessage) {
+        if (response.successMessage) {
           successCount++
         }
         return successCount

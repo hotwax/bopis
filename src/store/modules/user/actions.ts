@@ -172,13 +172,15 @@ const actions: ActionTree<UserState, RootState> = {
   },
 
   async fetchNotificationPreferences({ commit, state }) {
+    let resp = {} as any
     const oms = state.instanceUrl
     const facilityId = (state.currentFacility as any).facilityId
-    let notificationPreferences = [], enumerationResp = [], userPrefResp = [], userPrefIds = [] as any
+    let notificationPreferences = [], enumerationResp = [], userPrefIds = [] as any
     try {
-      enumerationResp = await getNotificationEnumIds(process.env.VUE_APP_NOTIF_ENUM_TYPE_ID)
-      userPrefResp = await getNotificationUserPrefTypeIds(process.env.VUE_APP_NOTIF_APP_ID)
-      userPrefIds = userPrefResp?.map((userPref: any) => userPref.userPrefTypeId)
+      resp = await getNotificationEnumIds(process.env.VUE_APP_NOTIF_ENUM_TYPE_ID)
+      enumerationResp = resp.docs
+      resp = await getNotificationUserPrefTypeIds(process.env.VUE_APP_NOTIF_APP_ID)
+      userPrefIds = resp.docs.map((userPref: any) => userPref.userPrefTypeId)
     } catch (error) {
       console.error(error)
     } finally {
