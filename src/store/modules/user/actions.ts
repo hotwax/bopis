@@ -186,7 +186,6 @@ const actions: ActionTree<UserState, RootState> = {
       }, [])
 
       commit(types.USER_NOTIFICATIONS_PREFERENCES_UPDATED, notificationPreferences)
-      return notificationPreferences
     } catch (error) {
       console.error(error)
     }
