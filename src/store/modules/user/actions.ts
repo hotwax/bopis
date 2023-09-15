@@ -4,7 +4,6 @@ import RootState from '@/store/RootState'
 import UserState from './UserState'
 import * as types from './mutation-types'
 import { showToast } from '@/utils'
-import i18n, { translate } from '@/i18n'
 import { Settings } from 'luxon';
 import { hasError, updateInstanceUrl, updateToken, resetConfig } from '@/adapter'
 import {
@@ -13,7 +12,7 @@ import {
   resetPermissions,
   setPermissions
 } from '@/authorization'
-import { useAuthStore } from '@hotwax/dxp-components'
+import { useAuthStore, i18n, translate } from '@hotwax/dxp-components'
 
 const actions: ActionTree<UserState, RootState> = {
 
@@ -150,7 +149,8 @@ const actions: ActionTree<UserState, RootState> = {
   },
 
   setLocale({ commit }, payload) {
-    i18n.global.locale = payload
+    console.log('set locale in action **');
+    i18n.global.locale = payload.locale;
     commit(types.USER_LOCALE_UPDATED, payload)
   },
 }

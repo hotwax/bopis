@@ -5,7 +5,7 @@ import ProductState from './ProductState'
 import * as types from './mutation-types'
 import { showToast } from '@/utils'
 import { hasError } from '@/adapter'
-import { translate } from '@/i18n'
+import { translate } from '@hotwax/dxp-components'
 import emitter from '@/event-bus'
 
 

@@ -75,6 +75,7 @@ import {
   closeOutline,
   storefrontOutline,
 } from 'ionicons/icons';
+import { translate } from "@hotwax/dxp-components";
 
 export default defineComponent({
   name: 'ShipToCustomerModal',
@@ -99,9 +100,9 @@ export default defineComponent({
     async shipToCustomer() {
       const alert = await alertController
         .create({
-          header: this.$t('Ship to customer'),
-          message: this.$t('This order will be rejected from this store with the selected reason and shipped to the address that has been inputed.Please make sure the address you have entered is correct.', {space: '<br /><br />'}),
-          buttons: [this.$t('Cancel'), this.$t('Ship')],
+          header: translate('Ship to customer'),
+          message: translate('This order will be rejected from this store with the selected reason and shipped to the address that has been inputed.Please make sure the address you have entered is correct.', {space: '<br /><br />'}),
+          buttons: [translate('Cancel'), translate('Ship')],
         });
       return alert.present();
     },

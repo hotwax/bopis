@@ -64,6 +64,7 @@ import { useStore } from "@/store";
 import { UserService } from "@/services/UserService";
 import { hasError } from '@/adapter'
 import { DateTime } from 'luxon';
+import { translate } from "@hotwax/dxp-components";
 
 export default defineComponent({
   name: "TimeZoneModal",
@@ -97,16 +98,16 @@ export default defineComponent({
       modalController.dismiss({ dismissed: true });
     },
     async saveAlert() {
-      const message = this.$t("Are you sure you want to change the time zone to?", { timeZoneId: this.timeZoneId });
+      const message = translate("Are you sure you want to change the time zone to?", { timeZoneId: this.timeZoneId });
       const alert = await alertController.create({
-        header: this.$t("Update time zone"),
+        header: translate("Update time zone"),
         message,
         buttons: [
           {
-            text: this.$t("Cancel"),
+            text: translate("Cancel"),
           },
           {
-            text: this.$t("Confirm"),
+            text: translate("Confirm"),
             handler: () => {
               this.setUserTimeZone();
             }

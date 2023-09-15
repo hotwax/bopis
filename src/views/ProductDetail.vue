@@ -93,7 +93,7 @@ import { getFeature, showToast } from "@/utils";
 import { hasError } from '@/adapter'
 import { sortSizes } from '@/apparel-sorter';
 import OtherStoresInventoryModal from "./OtherStoresInventoryModal.vue";
-import { translate } from "@/i18n";
+import { translate } from "@hotwax/dxp-components";
 
 export default defineComponent({
   name: "ProductDetail",

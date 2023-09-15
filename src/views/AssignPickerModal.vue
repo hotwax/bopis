@@ -64,7 +64,7 @@ import { closeOutline } from "ionicons/icons";
 import { useStore } from "vuex";
 import { showToast } from "@/utils";
 import { hasError } from '@/adapter'
-import { translate } from "@/i18n";
+import { translate } from "@hotwax/dxp-components";
 import { PicklistService } from '@/services/PicklistService'
 
 export default defineComponent({

@@ -96,6 +96,7 @@ import { DateTime } from 'luxon';
 import ShipToCustomerModal from "@/components/ShipToCustomerModal.vue";
 import { Actions, hasPermission } from '@/authorization'
 import { OrderService } from "@/services/OrderService";
+import { translate } from "@hotwax/dxp-components";
 
 export default defineComponent({
   name: "OrderDetail",
@@ -147,13 +148,13 @@ export default defineComponent({
     async updateOrder (order) {
       const alert = await alertController
         .create({
-          header: this.$t('Update Order'),
-          message: this.$t(`This order will be removed from your dashboard. This action cannot be undone.`, { space: '<br /><br />' }),
+          header: translate('Update Order'),
+          message: translate(`This order will be removed from your dashboard. This action cannot be undone.`, { space: '<br /><br />' }),
           buttons: [{
-            text: this.$t('Cancel'),
+            text: translate('Cancel'),
             role: 'cancel'
           },{
-            text: this.$t('Reject Order'),
+            text: translate('Reject Order'),
             handler: () => {
               this.store.dispatch('order/setUnfillableOrderOrItem', { orderId: order.orderId, part: this.getCurrentOrderPart() }).then((resp) => {
                 if (resp) this.router.push('/tabs/orders')

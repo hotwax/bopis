@@ -194,7 +194,7 @@ import { copyToClipboard, showToast } from '@/utils'
 import { DateTime } from 'luxon';
 import emitter from "@/event-bus"
 import { api, hasError } from '@/adapter';
-import { translate } from "@/i18n";
+import { translate } from "@hotwax/dxp-components";
 import AssignPickerModal from "./AssignPickerModal.vue";
 import { OrderService } from "@/services/OrderService";
 import { Actions, hasPermission } from '@/authorization'
@@ -350,15 +350,15 @@ export default defineComponent({
     async readyForPickup (order: any, part: any) {
       if(this.configurePicker) return this.assignPicker(order, part, this.currentFacility.facilityId);
       const pickup = part.shipmentMethodEnum?.shipmentMethodEnumId === 'STOREPICKUP';
-      const header = pickup ? this.$t('Ready for pickup') : this.$t('Ready to ship');
-      const message = pickup ? this.$t('An email notification will be sent to that their order is ready for pickup. This order will also be moved to the packed orders tab.', { customerName: order.customer.name, space: '<br/><br/>'}) : '';
+      const header = pickup ? translate('Ready for pickup') : translate('Ready to ship');
+      const message = pickup ? translate('An email notification will be sent to that their order is ready for pickup. This order will also be moved to the packed orders tab.', { customerName: order.customer.name, space: '<br/><br/>'}) : '';
 
       const alert = await alertController
         .create({
           header: header,
           message: message,
           buttons: [{
-            text: this.$t('Cancel'),
+            text: translate('Cancel'),
             role: 'cancel'
           },{
             text: header,
@@ -399,18 +399,18 @@ export default defineComponent({
       })
     },
     async sendReadyForPickupEmail(order: any) {
-      const header = this.$t('Resend ready for pickup email')
-      const message = this.$t('An email notification will be sent to that their order is ready for pickup.', { customerName: order.customer.name });
+      const header = translate('Resend ready for pickup email')
+      const message = translate('An email notification will be sent to that their order is ready for pickup.', { customerName: order.customer.name });
 
       const alert = await alertController
         .create({
           header: header,
           message: message,
           buttons: [{
-            text: this.$t('Cancel'),
+            text: translate('Cancel'),
             role: 'cancel'
           },{
-            text: this.$t('Send'),
+            text: translate('Send'),
             handler: async () => {
               try {
                 const resp = await OrderService.sendPickupScheduledNotification({ shipmentId: order.shipmentId });

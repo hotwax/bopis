@@ -131,7 +131,7 @@ import { DateTime } from 'luxon';
 import emitter from "@/event-bus"
 import { Actions, hasPermission } from '@/authorization'
 import { OrderService } from "@/services/OrderService";
-import { translate } from "@/i18n";
+import { translate } from "@hotwax/dxp-components";
 
 export default defineComponent({
   name: 'ShipToStoreOrders',
@@ -263,18 +263,18 @@ export default defineComponent({
       })
     },
     async confirmScheduleOrderForPickup(order: any) {
-      const header = this.$t('Ready for pickup')
-      const message = this.$t('Order will be marked as ready for pickup and an email notification will be sent to . This action is irreversible.', { customerName: `${order.firstName} ${order.lastName}` });
+      const header = translate('Ready for pickup')
+      const message = translate('Order will be marked as ready for pickup and an email notification will be sent to . This action is irreversible.', { customerName: `${order.firstName} ${order.lastName}` });
 
       const alert = await alertController
         .create({
           header: header,
           message: message,
           buttons: [{
-            text: this.$t('Cancel'),
+            text: translate('Cancel'),
             role: 'cancel'
           },{
-            text: this.$t('Ready for pickup'),
+            text: translate('Ready for pickup'),
             handler: async () => {
               await this.scheduleOrderForPickup(order.shipmentId)
             }
@@ -310,18 +310,18 @@ export default defineComponent({
       return resp;
     },
     async confirmHandoverOrder(shipmentId: string) {
-      const header = this.$t('Complete order')
-      const message = this.$t('Order will be marked as completed. This action is irreversible.');
+      const header = translate('Complete order')
+      const message = translate('Order will be marked as completed. This action is irreversible.');
 
       const alert = await alertController
         .create({
           header: header,
           message: message,
           buttons: [{
-            text: this.$t('Cancel'),
+            text: translate('Cancel'),
             role: 'cancel'
           },{
-            text: this.$t('Complete'),
+            text: translate('Complete'),
             handler: async () => {
               await this.handoverOrder(shipmentId)
             }
@@ -357,18 +357,18 @@ export default defineComponent({
     },
 
     async sendReadyForPickupEmail(order: any) {
-      const header = this.$t('Resend ready for pickup email')
-      const message = this.$t('An email notification will be sent to that their order is ready for pickup.', { customerName: `${order.firstName} ${order.lastName}` })
+      const header = translate('Resend ready for pickup email')
+      const message = translate('An email notification will be sent to that their order is ready for pickup.', { customerName: `${order.firstName} ${order.lastName}` })
 
       const alert = await alertController
         .create({
           header: header,
           message: message,
           buttons: [{
-            text: this.$t('Cancel'),
+            text: translate('Cancel'),
             role: 'cancel'
           }, {
-            text: this.$t('Send'),
+            text: translate('Send'),
             handler: async () => {
               try {
                 const resp = await OrderService.sendPickupScheduledNotification({ shipmentId: order.shipmentId });
