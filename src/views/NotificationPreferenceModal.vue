@@ -21,7 +21,7 @@
       </ion-item>
     </ion-list>
     <ion-fab vertical="bottom" horizontal="end" slot="fixed">
-      <ion-fab-button @click="confirmSave()">
+      <ion-fab-button :disabled="isButtonDisabled" @click="confirmSave()">
         <ion-icon :icon="save" />
       </ion-fab-button>
     </ion-fab>
@@ -80,11 +80,12 @@ export default defineComponent({
   },
   data() {
     return {
-      initialNotificationPref: {} as any,
+      notificationPrefsByEnumTypeId: {} as any,
       notificationPrefToUpate: {
         subscribe: [],
         unsubscribe: []
-      } as any
+      } as any,
+      initialNotificationPrefsByEnumTypeId: {} as any
     }
   },
   computed: {
@@ -92,26 +93,38 @@ export default defineComponent({
       currentFacility: 'user/getCurrentFacility',
       instanceUrl: 'user/getInstanceUrl',
       notificationPrefs: 'user/getNotificationPrefs'
-    })
+    }),
+    // checks initial and final state of prefs to enable/disable the save button
+    isButtonDisabled(): boolean {
+      const enumTypeIds = Object.keys(this.initialNotificationPrefsByEnumTypeId);
+      return enumTypeIds.every(enumTypeId => this.notificationPrefsByEnumTypeId[enumTypeId] === this.initialNotificationPrefsByEnumTypeId[enumTypeId]);
+    },
   },
   async beforeMount() {
     await this.store.dispatch('user/fetchNotificationPreferences')
-    this.initialNotificationPref = this.notificationPrefs.reduce((notificationPref: any, pref: any) => {
-      notificationPref[pref.enumId] = pref.isEnabled
-      return notificationPref
-    }, {})
+    this.notificationPrefsByEnumTypeId = this.generateNotificationPrefsByEnumTypeId(this.notificationPrefs)
+    this.initialNotificationPrefsByEnumTypeId = JSON.parse(JSON.stringify(this.notificationPrefsByEnumTypeId))
   },
   methods: {
     closeModal() {
       modalController.dismiss({ dismissed: true });
     },
+    generateNotificationPrefsByEnumTypeId(notificationPrefs: any) {
+      return notificationPrefs.reduce((notificationPref: any, pref: any) => {
+        notificationPref[pref.enumId] = pref.isEnabled
+        return notificationPref
+      }, {})
+    },
     toggleNotificationPref(enumId: string, value: boolean) {
       // updates the notificationPrefToUpate to check which pref
       // values were updated from their initial values
-      if (value !== this.initialNotificationPref[enumId]) {
+      if (value !== this.notificationPrefsByEnumTypeId[enumId]) {
+        // updating this.initialNotificationPref as it is used to
+        // determine the save button disable state, hence, updating
+        // is necessary to recompute isButtonDisabled property
         value
-          ? this.notificationPrefToUpate.subscribe.push(enumId)
-          : this.notificationPrefToUpate.unsubscribe.push(enumId)
+          ? (this.notificationPrefToUpate.subscribe.push(enumId), this.notificationPrefsByEnumTypeId[enumId] = true)
+          : (this.notificationPrefToUpate.unsubscribe.push(enumId), this.notificationPrefsByEnumTypeId[enumId] = false)
       } else {
         !value
           ? this.notificationPrefToUpate.subscribe.splice(this.notificationPrefToUpate.subscribe.indexOf(enumId), 1)
@@ -120,6 +133,7 @@ export default defineComponent({
     },
     async updateNotificationPref() {
       // TODO disbale button if initial and final are same
+      // added loader as the API call is in pending state for too long, blocking the flow
       emitter.emit("presentLoader");
       try {
         await this.handleTopicSubscription()

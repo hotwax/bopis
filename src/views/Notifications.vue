@@ -85,8 +85,8 @@ export default defineComponent({
       });
       return timeZoneModal.present();
     },
-    timeTillNotification(time: string) {
-      const timeDiff = DateTime.fromMillis(+time).diff(DateTime.local());
+    timeTillNotification(time: number) {
+      const timeDiff = DateTime.fromMillis(time).diff(DateTime.local());
       return DateTime.local().plus(timeDiff).toRelative();
     }
   },
