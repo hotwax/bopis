@@ -1,12 +1,13 @@
 import { UserService } from '@/services/UserService'
 import { ActionTree } from 'vuex'
 import RootState from '@/store/RootState'
+import store from '@/store';
 import UserState from './UserState'
 import * as types from './mutation-types'
 import { showToast } from '@/utils'
 import i18n, { translate } from '@/i18n'
 import { DateTime, Settings } from 'luxon';
-import { hasError, updateInstanceUrl, updateToken, resetConfig } from '@/adapter'
+import { hasError, updateInstanceUrl, updateToken, resetConfig, getUserFacilities } from '@/adapter'
 import {
   getServerPermissionsFromRules,
   prepareAppPermissions,
@@ -60,6 +61,12 @@ const actions: ActionTree<UserState, RootState> = {
       }
 
       const userProfile = await UserService.getUserProfile(token);
+
+      //fetching user facilities
+      const isAdminUser = appPermissions.some((appPermission: any) => appPermission?.action === "APP_STOREFULFILLMENT_ADMIN" );
+      const baseURL = store.getters['user/getBaseUrl'];
+      const facilities = await getUserFacilities(token, baseURL, userProfile?.partyId, "PICKUP", isAdminUser);
+      userProfile.facilities = facilities;
 
       // removing duplicate records as a single user can be associated with a facility by multiple roles.
       userProfile.facilities.reduce((uniqueFacilities: any, facility: any, index: number) => {
