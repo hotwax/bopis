@@ -1,5 +1,14 @@
 require("@hotwax/app-version-info")
+const path = require('path');
+
 module.exports = {
+  configureWebpack: {
+    resolve: {
+      alias: {
+        vue: path.resolve('./node_modules/vue')
+      }
+    }
+  },
   pluginOptions: {
     i18n: {
       locale: 'en',
@@ -12,5 +21,6 @@ module.exports = {
       enableInSFC: true
     }
   },
-  runtimeCompiler: true
+  runtimeCompiler: true,
+  transpileDependencies: ['@hotwax/dxp-components']
 }

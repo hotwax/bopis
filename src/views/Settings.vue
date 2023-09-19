@@ -133,22 +133,7 @@
           </ion-item>
         </ion-card>
 
-        <ion-card>
-          <ion-card-header>
-            <ion-card-title>
-              {{ $t("Language") }}
-            </ion-card-title>
-          </ion-card-header>
-          <ion-card-content>
-            {{ $t('Select your preferred language.') }}
-          </ion-card-content>
-          <ion-item lines="none">
-            <ion-label>{{ $t("Choose language") }}</ion-label>
-            <ion-select interface="popover" :value="locale" @ionChange="setLocale($event.detail.value)">
-              <ion-select-option v-for="locale in Object.keys(locales)" :key="locale" :value="locale" >{{ locales[locale] }}</ion-select-option>
-            </ion-select>
-          </ion-item>
-        </ion-card>
+        <LanguageSwitcher />
 
         <ion-card>
           <ion-card-header>
@@ -242,7 +227,6 @@ export default defineComponent({
       baseURL: process.env.VUE_APP_BASE_URL,
       appInfo: (process.env.VUE_APP_VERSION_INFO ? JSON.parse(process.env.VUE_APP_VERSION_INFO) : {}) as any,
       appVersion: "",
-      locales: process.env.VUE_APP_LOCALES ? JSON.parse(process.env.VUE_APP_LOCALES) : {"en": "English"},
       rerouteFulfillmentConfig: {
         // TODO Remove fromDate and directly store values making it loosely coupled with OMS
         allowDeliveryMethodUpdate: {},
@@ -263,8 +247,7 @@ export default defineComponent({
       instanceUrl: 'user/getInstanceUrl',
       configurePicker: "user/configurePicker",
       showShippingOrders: 'user/showShippingOrders',
-      showPackingSlip: 'user/showPackingSlip',
-      locale: 'user/getLocale'
+      showPackingSlip: 'user/showPackingSlip'
     })
   },
   mounted() {
@@ -318,9 +301,6 @@ export default defineComponent({
     },
     getDateTime(time: any) {
       return DateTime.fromMillis(time).toLocaleString(DateTime.DATETIME_MED);
-    },
-    setLocale(locale: string) {
-      this.store.dispatch('user/setLocale',locale)
     },
     async getAvailableShipmentMethods () {
       this.availableShipmentMethods = [];
