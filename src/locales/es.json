@@ -47,6 +47,7 @@
   "Instance Url": "URL de la instancia",
   "In store": "En tienda",
   "Inventory": "Inventario",
+  "If you cannot fulfill this order, will be sent an email and the order item will be removed from your dashboard.": "If you cannot fulfill this order, { customerName } will be sent an email and the order item will be removed from your dashboard.",
   "Language": "Idioma",
   "Last name": "Apellido",
   "Learn more about unfillable items": "Obtenga más información sobre artículos que no se pueden cumplir",

@@ -47,6 +47,7 @@
   "Instance Url": "インスタンスURL",
   "In store": "店頭",
   "Inventory": "在庫",
+  "If you cannot fulfill this order, will be sent an email and the order item will be removed from your dashboard.": "If you cannot fulfill this order, { customerName } will be sent an email and the order item will be removed from your dashboard.",
   "Language": "言語",
   "Last name": "姓",
   "Learn more about unfillable items": "記入できない項目の詳細",

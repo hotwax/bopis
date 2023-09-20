@@ -47,6 +47,7 @@
   "Instance Url": "Instance Url",
   "In store": "In store",
   "Inventory": "Inventory",
+  "If you cannot fulfill this order, will be sent an email and the order item will be removed from your dashboard.": "If you cannot fulfill this order, { customerName } will be sent an email and the order item will be removed from your dashboard.",
   "Language": "Language",
   "Last name": "Last name",
   "Learn more about unfillable items": "Learn more about unfillable items",
