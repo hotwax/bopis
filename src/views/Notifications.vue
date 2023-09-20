@@ -11,12 +11,12 @@
       <main>
         <section>
           <ion-list v-if="notifications.length">
-            <ion-item v-for="(notificationData, index) in notifications" :key="index">
+            <ion-item v-for="(notification, index) in notifications" :key="index">
               <ion-label class="ion-text-wrap">
-                <h3>{{ notificationData.data.title }}</h3>
-                <p>{{ notificationData.data.body }}</p>
+                <h3>{{ notification.data.title }}</h3>
+                <p>{{ notification.data.body }}</p>
               </ion-label>
-              <ion-note slot="end">{{ timeTillNotification(notificationData.time) }}</ion-note>
+              <ion-note slot="end">{{ timeTillNotification(notification.time) }}</ion-note>
             </ion-item>
           </ion-list>
           <div v-else class="ion-text-center">

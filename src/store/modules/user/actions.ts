@@ -110,7 +110,7 @@ const actions: ActionTree<UserState, RootState> = {
     const authStore = useAuthStore()
     // TODO add any other tasks if need
     dispatch("product/clearProducts", null, { root: true })
-    dispatch('clearNotificaionsState')
+    dispatch('clearNotificationState')
     commit(types.USER_END_SESSION)
     resetPermissions();
     resetConfig();
@@ -223,7 +223,7 @@ const actions: ActionTree<UserState, RootState> = {
     }
   },
 
-  clearNotificaionsState({ commit }) {
+  clearNotificationState({ commit }) {
     commit(types.USER_NOTIFICATIONS_UPDATED, [])
     commit(types.USER_NOTIFICATIONS_PREFERENCES_UPDATED, [])
     commit(types.USER_FIREBASE_DEVICEID_UPDATED, '')

@@ -46,9 +46,7 @@ import {
   modalController,
   alertController,
 } from "@ionic/vue";
-import {
-  save
-} from 'ionicons/icons';
+import { save } from 'ionicons/icons';
 import { defineComponent } from "vue";
 import { closeOutline } from "ionicons/icons";
 import { mapGetters, useStore } from "vuex";
@@ -80,12 +78,12 @@ export default defineComponent({
   },
   data() {
     return {
-      notificationPrefsByEnumTypeId: {} as any,
+      notificationPrefState: {} as any,
       notificationPrefToUpate: {
         subscribe: [],
         unsubscribe: []
       } as any,
-      initialNotificationPrefsByEnumTypeId: {} as any
+      initialNotificationPrefState: {} as any
     }
   },
   computed: {
@@ -96,35 +94,32 @@ export default defineComponent({
     }),
     // checks initial and final state of prefs to enable/disable the save button
     isButtonDisabled(): boolean {
-      const enumTypeIds = Object.keys(this.initialNotificationPrefsByEnumTypeId);
-      return enumTypeIds.every(enumTypeId => this.notificationPrefsByEnumTypeId[enumTypeId] === this.initialNotificationPrefsByEnumTypeId[enumTypeId]);
+      const enumTypeIds = Object.keys(this.initialNotificationPrefState);
+      return enumTypeIds.every(enumTypeId => this.notificationPrefState[enumTypeId] === this.initialNotificationPrefState[enumTypeId]);
     },
   },
   async beforeMount() {
     await this.store.dispatch('user/fetchNotificationPreferences')
-    this.notificationPrefsByEnumTypeId = this.generateNotificationPrefsByEnumTypeId(this.notificationPrefs)
-    this.initialNotificationPrefsByEnumTypeId = JSON.parse(JSON.stringify(this.notificationPrefsByEnumTypeId))
+    this.notificationPrefState = this.notificationPrefs.reduce((prefs: any, pref: any) => {
+      prefs[pref.enumId] = pref.isEnabled
+      return prefs
+    }, {})
+    this.initialNotificationPrefState = JSON.parse(JSON.stringify(this.notificationPrefState))
   },
   methods: {
     closeModal() {
       modalController.dismiss({ dismissed: true });
     },
-    generateNotificationPrefsByEnumTypeId(notificationPrefs: any) {
-      return notificationPrefs.reduce((notificationPref: any, pref: any) => {
-        notificationPref[pref.enumId] = pref.isEnabled
-        return notificationPref
-      }, {})
-    },
     toggleNotificationPref(enumId: string, value: boolean) {
       // updates the notificationPrefToUpate to check which pref
       // values were updated from their initial values
-      if (value !== this.notificationPrefsByEnumTypeId[enumId]) {
+      if (value !== this.notificationPrefState[enumId]) {
         // updating this.initialNotificationPref as it is used to
         // determine the save button disable state, hence, updating
         // is necessary to recompute isButtonDisabled property
         value
-          ? (this.notificationPrefToUpate.subscribe.push(enumId), this.notificationPrefsByEnumTypeId[enumId] = true)
-          : (this.notificationPrefToUpate.unsubscribe.push(enumId), this.notificationPrefsByEnumTypeId[enumId] = false)
+          ? (this.notificationPrefToUpate.subscribe.push(enumId), this.notificationPrefState[enumId] = true)
+          : (this.notificationPrefToUpate.unsubscribe.push(enumId), this.notificationPrefState[enumId] = false)
       } else {
         !value
           ? this.notificationPrefToUpate.subscribe.splice(this.notificationPrefToUpate.subscribe.indexOf(enumId), 1)

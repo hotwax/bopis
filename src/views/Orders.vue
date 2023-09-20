@@ -188,7 +188,7 @@ import {
   IonToolbar,
   modalController
 } from "@ionic/vue";
-import { computed, defineComponent, ref } from "vue";
+import { defineComponent, ref } from "vue";
 import ProductListItem from '@/components/ProductListItem.vue'
 import {
   swapVerticalOutline,
