@@ -15,89 +15,50 @@
       </ion-toolbar>
     </ion-header>
     <ion-content>
-      <ion-grid :fixed="true">
-        <ion-row>
-          <ion-col push-md="6">
-            <ion-list>
-              <ion-item lines="none">
-                <ion-label class="ion-text-wrap">
-                  <h2>{{ order.customer?.name }}</h2>
-                  <p>{{ order.orderName ? order.orderName : order.orderId }}</p>
-                </ion-label>
-                <ion-badge v-if="order.placedDate" slot="end">{{ timeFromNow(order.placedDate) }}</ion-badge>
-              </ion-item>
-            </ion-list>
-            <ion-item v-if="customerEmail" lines="none">
-              <ion-icon :icon="mailOutline" slot="start" />
-              <ion-label>{{ customerEmail }}</ion-label>
-              <ion-icon :icon="copyOutline" slot="end" @click="copyToClipboard(customerEmail)" />
+      <main :class="{ 'desktop-only' : isDesktop }">
+        <OrderInfo v-if="!isDesktop" :orderId="$route.params.orderId" :orderPartSeqId="$route.params.orderPartSeqId" />
+        <section>
+          <ion-card v-for="(item, index) in getCurrentOrderPart()?.items" :key="index">
+            <ProductListItem :item="item" />
+            <ion-item lines="none" class="border-top">
+              <ion-button fill="clear">
+                {{ $t("Report an issue") }}
+              </ion-button>
+              <!-- <ion-label>{{ $t("Reason") }}</ion-label>
+              <ion-select multiple="false" v-model="item.reason">
+                <ion-select-option v-for="reason in unfillableReason" :value="reason.id" :key="reason.id">{{ $t(reason.label) }}</ion-select-option>
+              </ion-select> -->
             </ion-item>
-            <ion-item v-if="order.shippingInstructions" color="light" lines="none">
-              <ion-label class="ion-text-wrap">
-                <p class="overline">{{ $t("Handling Instructions") }}</p>
-                <p>{{ order.shippingInstructions }}</p>
-              </ion-label>
+          </ion-card>
+          <ion-card v-for="(item, index) in getCurrentOrderPart()?.items" :key="index">
+            <ProductListItem :item="item" />
+            <ion-item lines="none" class="border-top">
+              <ion-button fill="clear">
+                {{ $t("Report an issue") }}
+              </ion-button>
+              <!-- <ion-label>{{ $t("Reason") }}</ion-label>
+              <ion-select multiple="false" v-model="item.reason">
+                <ion-select-option v-for="reason in unfillableReason" :value="reason.id" :key="reason.id">{{ $t(reason.label) }}</ion-select-option>
+              </ion-select> -->
             </ion-item>
-
-            <!-- TODO: implement functionality to change shipping address -->
-            <!-- <ion-button expand="block" fill="outline" @click="shipToCustomer()">
-              {{ $t("Ship to customer") }}
-              <ion-icon :icon="sendOutline" slot="end" />
-            </ion-button> -->
-            <ion-button v-if="isDesktop" class="ion-margin-top" :disabled="!hasPermission(Actions.APP_ORDER_UPDATE)" expand="block">
-              {{ $t("Ready for pickup") }}
-            </ion-button>
-            <ion-button v-if="isDesktop" :disabled="!hasPermission(Actions.APP_ORDER_UPDATE)" expand="block" color="danger" fill="outline" @click="updateOrder(order)">
-              {{ $t("Reject Order") }}
-            </ion-button>
-            <ion-item lines="none">
-              <ion-label class="ion-text-wrap">
-                <p>{{ $t("If you cannot fulfill this order, will be sent an email and the order item will be removed from your dashboard.", { customerName: order.customer.name ? order.customer.name : '' }) }}</p>
-              </ion-label>
+          </ion-card>
+          <ion-card v-for="(item, index) in getCurrentOrderPart()?.items" :key="index">
+            <ProductListItem :item="item" />
+            <ion-item lines="none" class="border-top">
+              <ion-button fill="clear">
+                {{ $t("Report an issue") }}
+              </ion-button>
+              <!-- <ion-label>{{ $t("Reason") }}</ion-label>
+              <ion-select multiple="false" v-model="item.reason">
+                <ion-select-option v-for="reason in unfillableReason" :value="reason.id" :key="reason.id">{{ $t(reason.label) }}</ion-select-option>
+              </ion-select> -->
             </ion-item>
-          </ion-col>
-          <ion-col pull-md="6">
-            <section :class="{ 'order-items': isDesktop }">
-            <ion-card v-for="(item, index) in getCurrentOrderPart()?.items" :key="index">
-              <ProductListItem :item="item" />
-              <ion-item lines="none" class="border-top">
-                <ion-button fill="clear">
-                  {{ $t("Report an issue") }}
-                </ion-button>
-                <!-- <ion-label>{{ $t("Reason") }}</ion-label>
-                <ion-select multiple="false" v-model="item.reason">
-                  <ion-select-option v-for="reason in unfillableReason" :value="reason.id" :key="reason.id">{{ $t(reason.label) }}</ion-select-option>
-                </ion-select> -->
-              </ion-item>
-            </ion-card>
-            <ion-card v-for="(item, index) in getCurrentOrderPart()?.items" :key="index">
-              <ProductListItem :item="item" />
-              <ion-item lines="none" class="border-top">
-                <ion-button fill="clear">
-                  {{ $t("Report an issue") }}
-                </ion-button>
-                <!-- <ion-label>{{ $t("Reason") }}</ion-label>
-                <ion-select multiple="false" v-model="item.reason">
-                  <ion-select-option v-for="reason in unfillableReason" :value="reason.id" :key="reason.id">{{ $t(reason.label) }}</ion-select-option>
-                </ion-select> -->
-              </ion-item>
-            </ion-card>
-            <ion-card v-for="(item, index) in getCurrentOrderPart()?.items" :key="index">
-              <ProductListItem :item="item" />
-              <ion-item lines="none" class="border-top">
-                <ion-button fill="clear">
-                  {{ $t("Report an issue") }}
-                </ion-button>
-                <!-- <ion-label>{{ $t("Reason") }}</ion-label>
-                <ion-select multiple="false" v-model="item.reason">
-                  <ion-select-option v-for="reason in unfillableReason" :value="reason.id" :key="reason.id">{{ $t(reason.label) }}</ion-select-option>
-                </ion-select> -->
-              </ion-item>
-            </ion-card>
-          </section>
-          </ion-col>
-        </ion-row>
-      </ion-grid>
+          </ion-card>
+        </section>
+        <aside v-if="isDesktop">
+          <OrderInfo :orderId="$route.params.orderId" :orderPartSeqId="$route.params.orderPartSeqId" />
+        </aside>
+      </main>
 
       <ion-fab v-if="!isDesktop" vertical="bottom" horizontal="end" slot="fixed">
         <ion-fab-button :disabled="!hasPermission(Actions.APP_ORDER_UPDATE)">
@@ -112,21 +73,19 @@
 import {
   alertController,
   IonBackButton,
-  IonBadge,
   IonButton,
+  IonButtons,
   IonCard,
-  IonCol,
   IonContent,
-  IonGrid,
   IonHeader,
   IonIcon,
   IonItem,
-  IonLabel,
   IonList,
   IonPage,
-  IonRow,
   IonTitle,
   IonToolbar,
+  IonFab,
+  IonFabButton,
   modalController,
   isPlatform,
 } from "@ionic/vue";
@@ -135,11 +94,6 @@ import { mapGetters, useStore } from "vuex";
 import {
   bagHandleOutline,
   bagRemoveOutline,
-  callOutline,
-  copyOutline,
-  mailOutline,
-  sendOutline,
-  swapVerticalOutline,
   timeOutline,
 } from "ionicons/icons";
 import ProductListItem from '@/components/ProductListItem.vue'
@@ -151,28 +105,28 @@ import ShipToCustomerModal from "@/components/ShipToCustomerModal.vue";
 import { Actions, hasPermission } from '@/authorization'
 import { OrderService } from "@/services/OrderService";
 import OrderItemRejHistoryModal from './OrderItemRejHistoryModal.vue';
+import OrderInfo from './OrderInfo';
+import emitter from "@/event-bus"
 
 export default defineComponent({
   name: "OrderDetail",
   props: ['orderId'],
   components: {
     IonBackButton,
-    IonBadge,
     IonButton,
+    IonButtons,
     IonCard,
-    IonCol,
     IonContent,
-    IonGrid,
     IonHeader,
     IonIcon,
     IonItem,
-    IonLabel,
-    IonList,
     IonPage,
-    IonRow,
     IonTitle,
     IonToolbar,
-    ProductListItem
+    ProductListItem,
+    OrderInfo,
+    IonFab,
+    IonFabButton,
   },
   data () {
     return {
@@ -188,42 +142,9 @@ export default defineComponent({
     })
   },
   ionViewDidEnter() {
-    setTimeout(() => {
-      
-      console.log('this.order -- ',this.order);
-    }, 3000);
     if(this.order.items) this.order.items.map((item) => item['reason'] = this.unfillableReason[0].id);
   },
   methods: {
-    timeFromNow (time) {
-      const timeDiff = DateTime.fromISO(time).diff(DateTime.local());
-      return DateTime.local().plus(timeDiff).toRelative();
-    },
-    async shipToCustomer() {
-      const shipmodal = await modalController.create({
-        component: ShipToCustomerModal,
-      });
-      return shipmodal.present();
-    },
-    async updateOrder (order) {
-      const alert = await alertController
-        .create({
-          header: this.$t('Update Order'),
-          message: this.$t(`This order will be removed from your dashboard. This action cannot be undone.`, { space: '<br /><br />' }),
-          buttons: [{
-            text: this.$t('Cancel'),
-            role: 'cancel'
-          },{
-            text: this.$t('Reject Order'),
-            handler: () => {
-              this.store.dispatch('order/setUnfillableOrderOrItem', { orderId: order.orderId, part: this.getCurrentOrderPart() }).then((resp) => {
-                if (resp) this.router.push('/tabs/orders')
-              })
-            },
-          }]
-        });
-      return alert.present();
-    },
     async getOrderDetail(orderId, orderPartSeqId) {
       const payload = {
         facilityId: this.currentFacility.facilityId,
@@ -238,28 +159,33 @@ export default defineComponent({
       }
       return {}
     },
-    async getCustomerContactDetails() {
-      try {
-        const resp = await OrderService.getCustomerContactDetails(this.$route.params.orderId)
-        if (!hasError(resp)) {
-          console.log('resp.data.orderContacts -', resp.data);
-          this.customerEmail = resp.data.orderContacts.email.email
-        }
-      } catch (error) {
-        console.error(error)
-      }
-    },
-    async orderItemRejectionHistory() {
-      const modal = await modalController
+    async updateOrder(order) {
+      console.log(order);
+      const alert = await alertController
         .create({
-          component: OrderItemRejHistoryModal
-        })
-      return modal.present();
-    },
+          header: this.$t('Update Order'),
+          message: this.$t(`This order will be removed from your dashboard. This action cannot be undone.`, { space: '<br /><br />' }),
+          buttons: [{
+            text: this.$t('Cancel'),
+            role: 'cancel'
+          }, {
+            text: this.$t('Reject Order'),
+            handler: () => {
+              this.store.dispatch('order/setUnfillableOrderOrItem', { orderId: order.orderId, part: this.getCurrentOrderPart() }).then((resp) => {
+                if (resp) this.router.push('/tabs/orders')
+              })
+            },
+          }]
+        });
+      return alert.present();
+    }
    },
   async mounted() {
     await this.getOrderDetail(this.$route.params.orderId, this.$route.params.orderPartSeqId);
-    await this.getCustomerContactDetails()
+    emitter.on('updateOrder', this.updateOrder);
+  },
+  unmounted() {
+    emitter.off('updateOrder', this.updateOrder);
   },
   setup () {
     const store = useStore();
@@ -269,15 +195,9 @@ export default defineComponent({
       Actions,
       bagHandleOutline,
       bagRemoveOutline,
-      callOutline,
-      copyOutline,
-      copyToClipboard,
       hasPermission,
-      mailOutline,
       router,
       store,
-      swapVerticalOutline,
-      sendOutline,
       timeOutline
     };
   }
@@ -289,18 +209,33 @@ export default defineComponent({
   border-top: 1px solid #ccc;
 }
 
-.order-items {
-  height: calc(100vh - 81px);
-  overflow-y: auto;
-  /* Hide scrollbar for Firfox */
-  scrollbar-width: none;
-  /* Hide scrollbar for IE, Edge, and Safari */
-  -ms-overflow-style: none;
+main {
+  max-width: 445px;
+  margin: var(--spacer-base) auto 0; 
 }
 
-/* Hide scrollbar for Chrome */
-.order-items::-webkit-scrollbar {
-  display: none;
+aside {
+  position: sticky;
+  top: var(--spacer-lg);
+}
+
+.desktop-only {
+  display: flex;
+  justify-content: center;
+  align-items: start;
+  gap: var(--spacer-2xl);
+  max-width: 990px;
+  margin: var(--spacer-base) auto 0;
+}
+
+.desktop-only > * {
+  width: calc(50% - var(--spacer-xl));
+}
+
+.actions {
+  display: flex;
+  justify-content: space-between;
+  margin: var(--spacer-base) var(--spacer-sm) var(--spacer-base);
 }
 
 </style>
