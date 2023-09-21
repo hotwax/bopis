@@ -94,7 +94,7 @@ export default defineComponent({
     // checks initial and final state of prefs to enable/disable the save button
     isButtonDisabled(): boolean {
       const enumTypeIds = Object.keys(this.initialNotificationPrefState);
-      return enumTypeIds.every(enumTypeId => this.notificationPrefState[enumTypeId] === this.initialNotificationPrefState[enumTypeId]);
+      return enumTypeIds.every((enumTypeId: string) => this.notificationPrefState[enumTypeId] === this.initialNotificationPrefState[enumTypeId]);
     },
   },
   async beforeMount() {
@@ -160,9 +160,11 @@ export default defineComponent({
 
       const responses = await Promise.allSettled([...subscribeRequests, ...unsubscribeRequests])
       const hasFailedResponse = responses.some((response: any) => response.status === "rejected")
-      hasFailedResponse
-        ? showToast(translate('Notification preferences not updated. Please try again.'))
-        : showToast(translate('Notification preferences updated.'))
+      showToast(
+        hasFailedResponse
+          ? translate('Notification preferences not updated. Please try again.')
+          : translate('Notification preferences updated.')
+      )
     },
     async confirmSave() {
       const message = this.$t("Are you sure you want to update the notification preferences?");
