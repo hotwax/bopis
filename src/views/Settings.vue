@@ -118,7 +118,7 @@
       </div>
 
       <section>
-        <ion-card>
+        <!-- <ion-card>
           <ion-card-header>
             <ion-card-title>
               {{ $t('Timezone') }}
@@ -131,7 +131,8 @@
             <ion-label> {{ userProfile && userProfile.userTimeZone ? userProfile.userTimeZone : '-' }} </ion-label>
             <ion-button @click="changeTimeZone()" slot="end" fill="outline" color="dark">{{ $t("Change") }}</ion-button>
           </ion-item>
-        </ion-card>
+        </ion-card> -->
+        <TimeZoneSwitcher />
 
         <ion-card>
           <ion-card-header>
