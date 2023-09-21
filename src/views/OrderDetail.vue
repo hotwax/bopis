@@ -16,7 +16,7 @@
     </ion-header>
     <ion-content>
       <main :class="{ 'desktop-only' : isDesktop }">
-        <OrderInfo v-if="!isDesktop" :orderId="$route.params.orderId" :orderPartSeqId="$route.params.orderPartSeqId" />
+        <OrderInfo v-if="!isDesktop" :orderId="$route.params.orderId" />
         <section>
           <ion-card v-for="(item, index) in getCurrentOrderPart()?.items" :key="index">
             <ProductListItem :item="item" />
@@ -56,7 +56,7 @@
           </ion-card>
         </section>
         <aside v-if="isDesktop">
-          <OrderInfo :orderId="$route.params.orderId" :orderPartSeqId="$route.params.orderPartSeqId" />
+          <OrderInfo :orderId="$route.params.orderId" />
         </aside>
       </main>
 

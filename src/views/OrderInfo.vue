@@ -27,12 +27,10 @@
         {{ $t("Ship to customer") }}
         <ion-icon :icon="sendOutline" slot="end" />
       </ion-button> -->
-      <ion-button class="ion-margin-top" :disabled="!hasPermission(Actions.APP_ORDER_UPDATE)"
-        expand="block">
+      <ion-button class="ion-margin-top" :disabled="!hasPermission(Actions.APP_ORDER_UPDATE)" expand="block">
         {{ $t("Ready for pickup") }}
       </ion-button>
-      <ion-button :disabled="!hasPermission(Actions.APP_ORDER_UPDATE)" expand="block"
-        color="danger" fill="outline" @click="emitter.emit('updateOrder', order)">
+      <ion-button :disabled="!hasPermission(Actions.APP_ORDER_UPDATE)" expand="block" color="danger" fill="outline" @click="emitter.emit('updateOrder', order)">
         {{ $t("Reject Order") }}
       </ion-button>
     </div>
@@ -46,41 +44,33 @@
   
 <script>
 import {
-  alertController,
+  isPlatform,
+  IonBadge,
   IonButton,
   IonIcon,
   IonItem,
   IonLabel,
   IonList,
-  IonBadge,
   modalController,
-  isPlatform,
 } from "@ionic/vue";
 import { defineComponent } from "vue";
-import { mapGetters, useStore } from "vuex";
+import { mapGetters } from "vuex";
 import {
-  bagHandleOutline,
-  bagRemoveOutline,
-  callOutline,
   copyOutline,
   mailOutline,
-  sendOutline,
-  swapVerticalOutline,
-  timeOutline,
+  sendOutline
 } from "ionicons/icons";
 import { copyToClipboard } from '@/utils'
 import { hasError } from '@/adapter';
-import { useRouter } from 'vue-router'
 import { DateTime } from 'luxon';
 import ShipToCustomerModal from "@/components/ShipToCustomerModal.vue";
 import { Actions, hasPermission } from '@/authorization'
 import { OrderService } from "@/services/OrderService";
-import OrderItemRejHistoryModal from './OrderItemRejHistoryModal.vue';
 import emitter from "@/event-bus";
 
 export default defineComponent({
   name: "OrderInfo",
-  props: ['orderId', 'orderPartSeqId'],
+  props: ['orderId'],
   components: {
     IonButton,
     IonIcon,
@@ -91,7 +81,6 @@ export default defineComponent({
   },
   data() {
     return {
-      unfillableReason: JSON.parse(process.env.VUE_APP_UNFILLABLE_REASONS),
       customerEmail: '',
       isDesktop: isPlatform('desktop')
     }
@@ -112,12 +101,6 @@ export default defineComponent({
       });
       return shipmodal.present();
     },
-    getCurrentOrderPart() {
-      if (this.order.parts) {
-        return this.order.parts.find((part) => part.orderPartSeqId === this.orderPartSeqId)
-      }
-      return {}
-    },
     async getCustomerContactDetails() {
       try {
         const resp = await OrderService.getCustomerContactDetails(this.orderId)
@@ -133,24 +116,14 @@ export default defineComponent({
     await this.getCustomerContactDetails()
   },
   setup() {
-    const store = useStore();
-    const router = useRouter();
-
     return {
       Actions,
-      bagHandleOutline,
-      bagRemoveOutline,
-      callOutline,
+      emitter,
       copyOutline,
       copyToClipboard,
       hasPermission,
       mailOutline,
-      router,
-      store,
-      swapVerticalOutline,
       sendOutline,
-      timeOutline,
-      emitter
     };
   }
 });
