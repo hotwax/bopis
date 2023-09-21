@@ -2,7 +2,7 @@
   <ion-page>
     <ion-header :translucent="true">
       <ion-toolbar>
-        <ion-title>{{ currentFacility?.name }}</ion-title>
+        <ion-title>{{ currentFacility?.facilityName }}</ion-title>
         <ion-buttons slot="end">
           <ion-button @click="viewShipToStoreOrders()">
             <ion-icon slot="icon-only" :icon="trailSignOutline" />
