@@ -2,7 +2,7 @@
   <ion-page>
     <ion-header :translucent="true">
       <ion-toolbar>
-        <ion-title>{{ $t("Settings") }}</ion-title>
+        <ion-title>{{ translate("Settings") }}</ion-title>
       </ion-toolbar>
     </ion-header>
     
@@ -21,33 +21,33 @@
               <ion-card-title>{{ userProfile?.partyName }}</ion-card-title>
             </ion-card-header>
           </ion-item>
-          <ion-button color="danger" @click="logout()">{{ $t("Logout") }}</ion-button>
+          <ion-button color="danger" @click="logout()">{{ translate("Logout") }}</ion-button>
           <ion-button fill="outline" @click="goToLaunchpad()">
-            {{ $t("Go to Launchpad") }}
+            {{ translate("Go to Launchpad") }}
             <ion-icon slot="end" :icon="openOutline" />
           </ion-button>
           <!-- Commenting this code as we currently do not have reset password functionality -->
-          <!-- <ion-button fill="outline" color="medium">{{ $t("Reset password") }}</ion-button> -->
+          <!-- <ion-button fill="outline" color="medium">{{ translate("Reset password") }}</ion-button> -->
         </ion-card>
       </div>
       <div class="section-header">
-        <h1>{{ $t('OMS') }}</h1>
+        <h1>{{ translate('OMS') }}</h1>
       </div>
       <section>
         <ion-card>
           <ion-card-header>
             <ion-card-subtitle>
-              {{ $t("OMS instance") }}
+              {{ translate("OMS instance") }}
             </ion-card-subtitle>
             <ion-card-title>
               {{ instanceUrl }}
             </ion-card-title>
           </ion-card-header>
           <ion-card-content>
-            {{ $t('This is the name of the OMS you are connected to right now. Make sure that you are connected to the right instance before proceeding.') }}
+            {{ translate('This is the name of the OMS you are connected to right now. Make sure that you are connected to the right instance before proceeding.') }}
           </ion-card-content>
           <ion-button @click="goToOms" fill="clear">
-            {{ $t('Go to OMS') }}
+            {{ translate('Go to OMS') }}
             <ion-icon slot="end" :icon="openOutline" />
           </ion-button>
         </ion-card>
@@ -55,14 +55,14 @@
         <ion-card>
           <ion-card-header>
             <ion-card-title>
-              {{ $t("Facility") }}
+              {{ translate("Facility") }}
             </ion-card-title>
           </ion-card-header>
           <ion-card-content>
-            {{ $t('Specify which facility you want to operate from. Order, inventory and other configuration data will be specific to the facility you select.') }}
+            {{ translate('Specify which facility you want to operate from. Order, inventory and other configuration data will be specific to the facility you select.') }}
           </ion-card-content>
           <ion-item lines="none">
-            <ion-label>{{ $t("Select facility") }}</ion-label>
+            <ion-label>{{ translate("Select facility") }}</ion-label>
             <ion-select interface="popover" :value="currentFacility?.facilityId" @ionChange="setFacility($event)">
               <ion-select-option v-for="facility in (userProfile ? userProfile.facilities : [])" :key="facility.facilityId" :value="facility.facilityId" >{{ facility.name }}</ion-select-option>
             </ion-select>
@@ -72,34 +72,34 @@
         <ion-card>
           <ion-card-header>
             <ion-card-subtitle>
-              {{ $t("Re-route Fulfillment") }}
+              {{ translate("Re-route Fulfillment") }}
             </ion-card-subtitle>
             <ion-card-title>
-              {{ $t("Order edit permissions") }}
+              {{ translate("Order edit permissions") }}
             </ion-card-title>
           </ion-card-header>
           <ion-card-content>
-            {{ $t('Control what your customers are allowed to edit on their order when they are editing their order on Re-route Fulfillment.') }}
+            {{ translate('Control what your customers are allowed to edit on their order when they are editing their order on Re-route Fulfillment.') }}
           </ion-card-content>
           <ion-item lines="none">
-            <ion-label>{{ $t("Delivery method") }}</ion-label>
+            <ion-label>{{ translate("Delivery method") }}</ion-label>
             <ion-toggle :disabled="!hasPermission(Actions.APP_RF_CONFIG_UPDATE) || Object.keys(rerouteFulfillmentConfig.allowDeliveryMethodUpdate).length == 0" :checked="rerouteFulfillmentConfig.allowDeliveryMethodUpdate.settingValue" @ionChange="updateRerouteFulfillmentConfiguration(rerouteFulfillmentConfig.allowDeliveryMethodUpdate, $event.detail.checked)" slot="end" />
           </ion-item>
           <ion-item lines="none">
-            <ion-label>{{ $t("Delivery address") }}</ion-label>
+            <ion-label>{{ translate("Delivery address") }}</ion-label>
             <ion-toggle :disabled="!hasPermission(Actions.APP_RF_CONFIG_UPDATE) || Object.keys(rerouteFulfillmentConfig.allowDeliveryAddressUpdate).length == 0" :checked="rerouteFulfillmentConfig.allowDeliveryAddressUpdate.settingValue" @ionChange="updateRerouteFulfillmentConfiguration(rerouteFulfillmentConfig.allowDeliveryAddressUpdate, $event.detail.checked)" slot="end" />
           </ion-item>
           <ion-item lines="none">
-            <ion-label>{{ $t("Pick up location") }}</ion-label>
+            <ion-label>{{ translate("Pick up location") }}</ion-label>
             <ion-toggle :disabled="!hasPermission(Actions.APP_RF_CONFIG_UPDATE) || Object.keys(rerouteFulfillmentConfig.allowPickupUpdate).length == 0" :checked="rerouteFulfillmentConfig.allowPickupUpdate.settingValue" @ionChange="updateRerouteFulfillmentConfiguration(rerouteFulfillmentConfig.allowPickupUpdate, $event.detail.checked)" slot="end" />
           </ion-item>
           <ion-item lines="none">
-            <ion-label>{{ $t("Cancel order before fulfillment") }}</ion-label>
+            <ion-label>{{ translate("Cancel order before fulfillment") }}</ion-label>
             <!-- <p>Uploading order cancelations to Shopify is currently disabled. Order cancelations in HotWax will not be synced to Shopify.</p> -->
             <ion-toggle :disabled="!hasPermission(Actions.APP_RF_CONFIG_UPDATE) || Object.keys(rerouteFulfillmentConfig.allowCancel).length == 0" :checked="rerouteFulfillmentConfig.allowCancel.settingValue" @ionChange="updateRerouteFulfillmentConfiguration(rerouteFulfillmentConfig.allowCancel, $event.detail.checked)" slot="end" />
           </ion-item>
           <ion-item lines="none">
-            <ion-label>{{ $t("Shipment method") }}</ion-label>
+            <ion-label>{{ translate("Shipment method") }}</ion-label>
             <ion-select :disabled="!hasPermission(Actions.APP_RF_CONFIG_UPDATE) || Object.keys(rerouteFulfillmentConfig.shippingMethod).length == 0" interface="popover" :value="rerouteFulfillmentConfig.shippingMethod.settingValue" @ionChange="updateRerouteFulfillmentConfiguration(rerouteFulfillmentConfig.shippingMethod, $event.detail.value)">
               <ion-select-option v-for="shipmentMethod in availableShipmentMethods" :key="shipmentMethod.shipmentMethodTypeId" :value="shipmentMethod.shipmentMethodTypeId" >{{ shipmentMethod.description }}</ion-select-option>
             </ion-select>
@@ -111,7 +111,7 @@
       <hr />
       <div class="section-header">
         <h1>
-          {{ $t('App') }}
+          {{ translate('App') }}
           <p class="overline">{{ "Version: " + appVersion }}</p>
         </h1>
         <p class="overline">{{ "Built: " + getDateTime(appInfo.builtTime) }}</p>
@@ -121,15 +121,15 @@
         <ion-card>
           <ion-card-header>
             <ion-card-title>
-              {{ $t('Timezone') }}
+              {{ translate('Timezone') }}
             </ion-card-title>
           </ion-card-header>
           <ion-card-content>
-            {{ $t('The timezone you select is used to ensure automations you schedule are always accurate to the time you select.') }}
+            {{ translate('The timezone you select is used to ensure automations you schedule are always accurate to the time you select.') }}
           </ion-card-content>
           <ion-item lines="none">
             <ion-label> {{ userProfile && userProfile.userTimeZone ? userProfile.userTimeZone : '-' }} </ion-label>
-            <ion-button @click="changeTimeZone()" slot="end" fill="outline" color="dark">{{ $t("Change") }}</ion-button>
+            <ion-button @click="changeTimeZone()" slot="end" fill="outline" color="dark">{{ translate("Change") }}</ion-button>
           </ion-item>
         </ion-card>
 
@@ -138,14 +138,14 @@
         <ion-card>
           <ion-card-header>
             <ion-card-title>
-              {{ $t("Shipping orders") }}
+              {{ translate("Shipping orders") }}
             </ion-card-title>
           </ion-card-header>
           <ion-card-content>
-            {{ $t('View shipping orders along with pickup orders.') }}
+            {{ translate('View shipping orders along with pickup orders.') }}
           </ion-card-content>
           <ion-item lines="none">
-            <ion-label>{{ $t("Show shipping orders") }}</ion-label>
+            <ion-label>{{ translate("Show shipping orders") }}</ion-label>
             <ion-toggle :checked="showShippingOrders" @ionChange="setShowShippingOrdersPreference($event)" slot="end" />
           </ion-item>
         </ion-card>
@@ -153,14 +153,14 @@
         <ion-card>
           <ion-card-header>
             <ion-card-title>
-              {{ $t("Packing Slip") }}
+              {{ translate("Packing Slip") }}
             </ion-card-title>
           </ion-card-header>
           <ion-card-content>
-            {{ $t('Packing slips help customer reconcile their order against the delivered items.') }}
+            {{ translate('Packing slips help customer reconcile their order against the delivered items.') }}
           </ion-card-content>
           <ion-item lines="none">
-            <ion-label>{{ $t("Generate packing slips") }}</ion-label>
+            <ion-label>{{ translate("Generate packing slips") }}</ion-label>
             <ion-toggle :checked="showPackingSlip" @ionChange="setShowPackingSlipPreference($event)" slot="end" />
           </ion-item>
         </ion-card>
@@ -168,14 +168,14 @@
         <ion-card>
           <ion-card-header>
             <ion-card-title>
-              {{ $t("Track Pickers") }}
+              {{ translate("Track Pickers") }}
             </ion-card-title>
           </ion-card-header>
           <ion-card-content>
-            {{ $t('Track who picked orders by entering picker IDs when packing an order.') }}
+            {{ translate('Track who picked orders by entering picker IDs when packing an order.') }}
           </ion-card-content>
           <ion-item lines="none">
-            <ion-label>{{ $t("Enable tracking") }}</ion-label>
+            <ion-label>{{ translate("Enable tracking") }}</ion-label>
             <ion-toggle :checked="configurePicker" @ionChange="setConfigurePickerPreference($event)" slot="end" />
           </ion-item>
         </ion-card>
@@ -186,7 +186,7 @@
 
 <script lang="ts">
 import { IonAvatar, IonButton, IonCard, IonCardContent, IonCardHeader, IonCardSubtitle, IonCardTitle, IonContent, IonHeader, IonIcon, IonItem, IonLabel, IonPage, IonSelect, IonSelectOption, IonTitle, IonToggle , IonToolbar, modalController } from '@ionic/vue';
-import { defineComponent } from 'vue';
+import { computed, defineComponent } from 'vue';
 import { ellipsisVertical, personCircleOutline, sendOutline , storefrontOutline, codeWorkingOutline, openOutline } from 'ionicons/icons'
 import { mapGetters, useStore } from 'vuex';
 import { useRouter } from 'vue-router';
@@ -196,7 +196,7 @@ import { DateTime } from 'luxon';
 import { UserService } from '@/services/UserService'
 import { showToast } from '@/utils';
 import { hasError } from '@/adapter'
-import { translate } from "@hotwax/dxp-components";
+import { translate, useUserStore } from "@hotwax/dxp-components";
 import { Actions, hasPermission } from '@/authorization'
 
 export default defineComponent({
@@ -386,6 +386,9 @@ export default defineComponent({
   setup () {
     const store = useStore();
     const router = useRouter();
+    const userStore = useUserStore();
+
+    const locale = computed(() => userStore.getLocale);
 
     return {
       Actions,
@@ -397,7 +400,9 @@ export default defineComponent({
       store,
       storefrontOutline,
       codeWorkingOutline,
-      openOutline
+      openOutline,
+      locale,
+      translate
     }
   }
 });

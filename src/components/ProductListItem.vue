@@ -8,18 +8,18 @@
       <h2>{{ getProduct(item.productId).productName }}</h2>
       <p class="ion-text-wrap">{{ getProduct(item.productId).internalName }}</p>
       <p class="overline">{{ $filters.getIdentificationId(getProduct(item.productId).goodIdentifications, goodIdentificationTypeId) }}</p>
-      <p v-if="$filters.getFeature(getProduct(item.productId).featureHierarchy, '1/COLOR/')">{{ $t("Color") }}: {{ $filters.getFeature(getProduct(item.productId).featureHierarchy, '1/COLOR/') }}</p>
-      <p v-if="$filters.getFeature(getProduct(item.productId).featureHierarchy, '1/SIZE/')">{{ $t("Size") }}: {{ $filters.getFeature(getProduct(item.productId).featureHierarchy, '1/SIZE/') }}</p>
+      <p v-if="$filters.getFeature(getProduct(item.productId).featureHierarchy, '1/COLOR/')">{{ translate("Color") }}: {{ $filters.getFeature(getProduct(item.productId).featureHierarchy, '1/COLOR/') }}</p>
+      <p v-if="$filters.getFeature(getProduct(item.productId).featureHierarchy, '1/SIZE/')">{{ translate("Size") }}: {{ $filters.getFeature(getProduct(item.productId).featureHierarchy, '1/SIZE/') }}</p>
     </ion-label>
     <!-- Only show stock if its not a ship to store order -->
-    <ion-note v-if="!isShipToStoreOrder" slot="end">{{ getProductStock(item.productId) }} {{ $t("in stock") }}</ion-note>
+    <ion-note v-if="!isShipToStoreOrder" slot="end">{{ getProductStock(item.productId) }} {{ translate("in stock") }}</ion-note>
   </ion-item>
 </template>
 
 <script lang="ts">
 import { IonItem, IonLabel, IonNote, IonThumbnail } from "@ionic/vue";
 import { mapGetters } from 'vuex';
-import { ShopifyImg } from '@hotwax/dxp-components'
+import { ShopifyImg, translate } from '@hotwax/dxp-components'
 
 export default {
   components: {
@@ -46,6 +46,11 @@ export default {
       getProduct: 'product/getProduct',
       getProductStock: 'stock/getProductStock'
     })
+  },
+  setup() {
+    return {
+      translate
+    }
   }
 }
 </script>

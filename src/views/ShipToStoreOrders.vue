@@ -3,19 +3,19 @@
     <ion-header :translucent="true">
       <ion-toolbar>
         <ion-back-button default-href="/" slot="start" />
-        <ion-title>{{ $t("Shipping to store") }}</ion-title>
+        <ion-title>{{ translate("Shipping to store") }}</ion-title>
       </ion-toolbar>
       <div>
-        <ion-searchbar @ionFocus="selectSearchBarText($event)" v-model="queryString" @keyup.enter="queryString = $event.target.value; searchOrders()" :placeholder= "$t('Search')" />
+        <ion-searchbar @ionFocus="selectSearchBarText($event)" v-model="queryString" @keyup.enter="queryString = $event.target.value; searchOrders()" :placeholder= "translate('Search')" />
         <ion-segment v-model="segmentSelected" @ionChange="segmentChanged">
           <ion-segment-button value="incoming">
-            <ion-label>{{ $t("Incoming") }}</ion-label>
+            <ion-label>{{ translate("Incoming") }}</ion-label>
           </ion-segment-button>
           <ion-segment-button value="readyForPickup">
-            <ion-label>{{ $t("Ready for pickup") }}</ion-label>
+            <ion-label>{{ translate("Ready for pickup") }}</ion-label>
           </ion-segment-button>
           <ion-segment-button value="completed">
-            <ion-label>{{ $t("Completed") }}</ion-label>
+            <ion-label>{{ translate("Completed") }}</ion-label>
           </ion-segment-button>
         </ion-segment>
       </div>    
@@ -38,7 +38,7 @@
 
             <div class="border-top">
               <ion-button :disabled="!hasPermission(Actions.APP_ORDER_UPDATE)" fill="clear" @click.stop="confirmScheduleOrderForPickup(order)">
-                {{ $t("Arrived") }}
+                {{ translate("Arrived") }}
               </ion-button>
             </div>
           </ion-card>
@@ -61,7 +61,7 @@
 
             <div class="border-top">
               <ion-button :disabled="!hasPermission(Actions.APP_ORDER_UPDATE)" fill="clear" @click.stop="confirmHandoverOrder(order.shipmentId)">
-                {{ $t("Handover") }}
+                {{ translate("Handover") }}
               </ion-button>
               <ion-button fill="clear" slot="end" @click="sendReadyForPickupEmail(order)">
                 <ion-icon slot="icon-only" :icon="mailOutline" />
@@ -91,7 +91,7 @@
         <ion-refresher-content pullingIcon="crescent" refreshingSpinner="crescent" />
       </ion-refresher>
       <ion-infinite-scroll @ionInfinite="loadMoreOrders($event)" threshold="100px" :disabled="segmentSelected === 'incoming' ? !isIncomingOrdersScrollable : segmentSelected === 'readyForPickup' ? !isReadyForPickupOrdersScrollable : !isCompletedOrdersScrollable">
-        <ion-infinite-scroll-content loading-spinner="crescent" :loading-text="$t('Loading')" />
+        <ion-infinite-scroll-content loading-spinner="crescent" :loading-text="translate('Loading')" />
       </ion-infinite-scroll>
     </ion-content>
   </ion-page>
@@ -409,7 +409,8 @@ export default defineComponent({
       mailOutline,
       router,
       segmentSelected,
-      store
+      store,
+      translate
     };
   },
 });

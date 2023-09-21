@@ -12,7 +12,7 @@ import {
   resetPermissions,
   setPermissions
 } from '@/authorization'
-import { useAuthStore, i18n, translate } from '@hotwax/dxp-components'
+import { useAuthStore, translate } from '@hotwax/dxp-components'
 
 const actions: ActionTree<UserState, RootState> = {
 

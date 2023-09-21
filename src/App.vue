@@ -85,7 +85,6 @@ export default defineComponent({
       });
     emitter.on('presentLoader', this.presentLoader);
     emitter.on('dismissLoader', this.dismissLoader);
-    // this.$i18n.locale = this.locale;
   },
   unmounted() {
     emitter.off('presentLoader', this.presentLoader);
@@ -97,7 +96,8 @@ export default defineComponent({
     const router = useRouter();
     return {
       router,
-      store
+      store,
+      translate
     }
   }
 });

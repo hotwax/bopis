@@ -11,16 +11,16 @@
       </ion-toolbar>
 
       <div>
-        <ion-searchbar @ionFocus="selectSearchBarText($event)" v-model="queryString" @keyup.enter="queryString = $event.target.value; searchOrders()" :placeholder= "$t('Search Orders')" />
+        <ion-searchbar @ionFocus="selectSearchBarText($event)" v-model="queryString" @keyup.enter="queryString = $event.target.value; searchOrders()" :placeholder="translate('Search Orders')" />
         <ion-segment v-model="segmentSelected" @ionChange="segmentChanged">
           <ion-segment-button value="open">
-            <ion-label>{{ $t("Open") }}</ion-label>
+            <ion-label>{{ translate("Open") }}</ion-label>
           </ion-segment-button>
           <ion-segment-button value="packed">
-            <ion-label>{{ $t("Packed") }}</ion-label>
+            <ion-label>{{ translate("Packed") }}</ion-label>
           </ion-segment-button>
           <ion-segment-button value="completed">
-            <ion-label>{{ $t("Completed") }}</ion-label>
+            <ion-label>{{ translate("Completed") }}</ion-label>
           </ion-segment-button>
         </ion-segment>
       </div>    
@@ -36,14 +36,14 @@
               </ion-label>
               <div class="metadata">
                 <ion-badge v-if="order.placedDate" color="dark">{{ timeFromNow(order.placedDate) }}</ion-badge>
-                <ion-badge v-if="order.statusId !== 'ORDER_APPROVED'" color="danger">{{ $t('pending approval') }}</ion-badge>
+                <ion-badge v-if="order.statusId !== 'ORDER_APPROVED'" color="danger">{{ translate('pending approval') }}</ion-badge>
               </div>
               <!-- TODO: Display the packed date of the orders, currently not getting the packed date from API-->
             </ion-item>
 
             <ion-item v-if="order.shippingInstructions" color="light" lines="none">
               <ion-label class="ion-text-wrap">
-                <p class="overline">{{ $t("Handling Instructions") }}</p>
+                <p class="overline">{{ translate("Handling Instructions") }}</p>
                 <p>{{ order.shippingInstructions }}</p>
               </ion-label>
             </ion-item>
@@ -54,19 +54,19 @@
               <ion-icon :icon="callOutline" slot="start" />
               <ion-label>{{ order.customer.phoneNumber }}</ion-label>
               <ion-button fill="outline" slot="end" color="medium" @click.stop="copyToClipboard(order.customer.phoneNumber)">
-                {{ $t("Copy") }}
+                {{ translate("Copy") }}
               </ion-button>
             </ion-item>
             <ion-item lines="full" v-if="order.customer.email">
               <ion-icon :icon="mailOutline" slot="start" />
               <ion-label>{{ order.customer.email }}</ion-label>
               <ion-button fill="outline" slot="end" color="medium" @click.stop="copyToClipboard(order.customer.email)">
-                {{ $t("Copy") }}
+                {{ translate("Copy") }}
               </ion-button>
             </ion-item>
             <div class="border-top">
               <ion-button :disabled="!hasPermission(Actions.APP_ORDER_UPDATE)" fill="clear" @click.stop="readyForPickup(order, order.part)">
-                {{ order.part.shipmentMethodEnum?.shipmentMethodEnumId === 'STOREPICKUP' ? $t("Ready for pickup") : $t("Ready to ship") }}
+                {{ order.part.shipmentMethodEnum?.shipmentMethodEnumId === 'STOREPICKUP' ? translate("Ready for pickup") : translate("Ready to ship") }}
               </ion-button>
             </div>
           </ion-card>
@@ -79,14 +79,14 @@
               <ion-label class="ion-text-wrap">
                 <h1>{{ order.customer.name }}</h1>
                 <p>{{ order.orderName ? order.orderName : order.orderId }}</p>
-                <p v-if="configurePicker">{{ order.pickers ? $t("Picked by", { pickers: order.pickers }) : $t("No picker assigned.") }}</p>
+                <p v-if="configurePicker">{{ order.pickers ? translate("Picked by", { pickers: order.pickers }) : translate("No picker assigned.") }}</p>
               </ion-label>
               <ion-badge v-if="order.placedDate" color="dark" slot="end">{{ timeFromNow(order.placedDate) }}</ion-badge>
             </ion-item>
 
             <ion-item v-if="order.shippingInstructions" color="light" lines="none">
               <ion-label class="ion-text-wrap">
-                <p class="overline">{{ $t("Handling Instructions") }}</p>
+                <p class="overline">{{ translate("Handling Instructions") }}</p>
                 <p>{{ order.shippingInstructions }}</p>
               </ion-label>
             </ion-item>
@@ -97,19 +97,19 @@
               <ion-icon :icon="callOutline" slot="start" />
               <ion-label>{{ order.customer.phoneNumber }}</ion-label>
               <ion-button fill="outline" slot="end" color="medium" @click.stop="copyToClipboard(order.customer.phoneNumber)">
-                {{ $t("Copy") }}
+                {{ translate("Copy") }}
               </ion-button>
             </ion-item>
             <ion-item lines="full" v-if="order.customer.email">
               <ion-icon :icon="mailOutline" slot="start" />
               <ion-label>{{ order.customer.email }}</ion-label>
               <ion-button fill="outline" slot="end" color="medium" @click.stop="copyToClipboard(order.customer.email)">
-                {{ $t("Copy") }}
+                {{ translate("Copy") }}
               </ion-button>
             </ion-item>
             <div class="border-top">
               <ion-button :disabled="!hasPermission(Actions.APP_ORDER_UPDATE)" fill="clear" @click.stop="deliverShipment(order)">
-                {{ order.part.shipmentMethodEnum.shipmentMethodEnumId === 'STOREPICKUP' ? $t("Handover") : $t("Ship") }}
+                {{ order.part.shipmentMethodEnum.shipmentMethodEnumId === 'STOREPICKUP' ? translate("Handover") : translate("Ship") }}
               </ion-button>
               <ion-button v-if="showPackingSlip" fill="clear" slot="end" @click="printPackingSlip(order)">
                 <ion-icon slot="icon-only" :icon="printOutline" />
@@ -138,14 +138,14 @@
               <ion-icon :icon="callOutline" slot="start" />
               <ion-label>{{ order.customer.phoneNumber }}</ion-label>
               <ion-button fill="outline" slot="end" color="medium" @click.stop="copyToClipboard(order.customer.phoneNumber)">
-                {{ $t("Copy") }}
+                {{ translate("Copy") }}
               </ion-button>
             </ion-item>
             <ion-item lines="full" v-if="order.customer.email">
               <ion-icon :icon="mailOutline" slot="start" />
               <ion-label>{{ order.customer.email }}</ion-label>
               <ion-button fill="outline" slot="end" color="medium" @click.stop="copyToClipboard(order.customer.email)">
-                {{ $t("Copy") }}
+                {{ translate("Copy") }}
               </ion-button>
             </ion-item>
           </ion-card>
@@ -155,7 +155,7 @@
         <ion-refresher-content pullingIcon="crescent" refreshingSpinner="crescent" />
       </ion-refresher>
       <ion-infinite-scroll @ionInfinite="loadMoreProducts($event)" threshold="100px" :disabled="segmentSelected === 'open' ? !isOpenOrdersScrollable : segmentSelected === 'packed' ? !isPackedOrdersScrollable : !isCompletedOrdersScrollable">
-        <ion-infinite-scroll-content loading-spinner="crescent" :loading-text="$t('Loading')" />
+        <ion-infinite-scroll-content loading-spinner="crescent" :loading-text="translate('Loading')" />
       </ion-infinite-scroll>
     </ion-content>
   </ion-page>
@@ -462,7 +462,8 @@ export default defineComponent({
       segmentSelected,
       swapVerticalOutline,
       store,
-      trailSignOutline
+      trailSignOutline,
+      translate
     };
   },
 });

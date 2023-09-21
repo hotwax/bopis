@@ -3,7 +3,7 @@
     <ion-header>
       <ion-toolbar>
         <ion-back-button default-href="/" slot="start" />
-        <ion-title>{{ $t("Order details") }}</ion-title>
+        <ion-title>{{ translate("Order details") }}</ion-title>
       </ion-toolbar>
     </ion-header>
     <ion-content>
@@ -19,7 +19,7 @@
         </ion-list>
         <ion-item v-if="order.shippingInstructions" color="light" lines="none">
           <ion-label class="ion-text-wrap">
-            <p class="overline">{{ $t("Handling Instructions") }}</p>
+            <p class="overline">{{ translate("Handling Instructions") }}</p>
             <p>{{ order.shippingInstructions }}</p>
           </ion-label>
         </ion-item>
@@ -32,28 +32,28 @@
             color="medium"
             @click="copyToClipboard(customerEmail)"
           >
-            {{ $t("Copy") }}
+            {{ translate("Copy") }}
           </ion-button>
         </ion-item>
 
         <ion-card v-for="(item, index) in getCurrentOrderPart()?.items" :key="index">
           <ProductListItem :item="item" />
           <ion-item lines="none" class="border-top">
-            <ion-label>{{ $t("Reason") }}</ion-label>
+            <ion-label>{{ translate("Reason") }}</ion-label>
             <ion-select multiple="false" v-model="item.reason">
-              <ion-select-option v-for="reason in unfillableReason" :value="reason.id" :key="reason.id">{{ $t(reason.label) }}</ion-select-option>
+              <ion-select-option v-for="reason in unfillableReason" :value="reason.id" :key="reason.id">{{ translate(reason.label) }}</ion-select-option>
             </ion-select>
           </ion-item>
         </ion-card>
 
         <!-- TODO: implement functionality to change shipping address -->
         <!-- <ion-button expand="block" fill="outline" @click="shipToCustomer()">
-          {{ $t("Ship to customer") }}
+          {{ translate("Ship to customer") }}
           <ion-icon :icon="sendOutline" slot="end" />
         </ion-button> -->
 
         <ion-button :disabled="!hasPermission(Actions.APP_ORDER_UPDATE)" expand="block" color="danger" fill="outline" @click="updateOrder(order)">
-          {{ $t("Reject Order") }}
+          {{ translate("Reject Order") }}
         </ion-button>
       </main>  
     </ion-content>
@@ -206,7 +206,8 @@ export default defineComponent({
       router,
       store,
       swapVerticalOutline,
-      sendOutline
+      sendOutline,
+      translate
     };
   }
 });

@@ -3,7 +3,7 @@
     <ion-header>
       <ion-toolbar>
         <ion-back-button slot="start" default-href="/tabs/catalog" />
-        <ion-title>{{ $t("Product details") }}</ion-title>
+        <ion-title>{{ translate("Product details") }}</ion-title>
       </ion-toolbar>
     </ion-header>
 
@@ -25,7 +25,7 @@
           </ion-item>
 
           <ion-list v-if="selectedColor">
-            <ion-list-header>{{ $t("Colors") }}</ion-list-header>
+            <ion-list-header>{{ translate("Colors") }}</ion-list-header>
             <ion-item lines="none">
               <ion-row>
                 <ion-chip :outline="selectedColor !== colorFeature" :key="colorFeature" v-for="colorFeature in Object.keys(features)" @click="selectedColor !== colorFeature && applyFeature(colorFeature, 'color')">
@@ -36,7 +36,7 @@
           </ion-list>
 
           <ion-list v-if="selectedSize">
-            <ion-list-header>{{ $t("Sizes") }} </ion-list-header>
+            <ion-list-header>{{ translate("Sizes") }} </ion-list-header>
             <ion-item lines="none">
               <ion-row>
                 <ion-chip :outline="selectedSize !== sizeFeature" :key="sizeFeature" v-for="sizeFeature in features[selectedColor]" @click="selectedSize !== sizeFeature && applyFeature(sizeFeature, 'size')">
@@ -47,18 +47,18 @@
           </ion-list>
 
           <ion-list>
-            <ion-list-header>{{ $t("Inventory") }}</ion-list-header>
+            <ion-list-header>{{ translate("Inventory") }}</ion-list-header>
             <ion-item>
-              <ion-label class="ion-text-wrap">{{ $t("In store") }}</ion-label>
-              <ion-note slot="end"> {{ currentStoreInventory }} {{ $t("in stock") }}</ion-note>
+              <ion-label class="ion-text-wrap">{{ translate("In store") }}</ion-label>
+              <ion-note slot="end"> {{ currentStoreInventory }} {{ translate("in stock") }}</ion-note>
             </ion-item>
             <ion-item>
-              <ion-label class="ion-text-wrap">{{ $t("Other stores") }}</ion-label>
-              <ion-button @click="getOtherStoresInventoryDetails()" fill="outline">{{ otherStoresInventory }} {{ $t("in stock") }}</ion-button>
+              <ion-label class="ion-text-wrap">{{ translate("Other stores") }}</ion-label>
+              <ion-button @click="getOtherStoresInventoryDetails()" fill="outline">{{ otherStoresInventory }} {{ translate("in stock") }}</ion-button>
             </ion-item>
             <ion-item lines="none">
-              <ion-label class="ion-text-wrap">{{ $t("Warehouse") }}</ion-label>
-              <ion-note slot="end">{{ warehouseInventory }} {{ $t("in stock") }}</ion-note>
+              <ion-label class="ion-text-wrap">{{ translate("Warehouse") }}</ion-label>
+              <ion-note slot="end">{{ warehouseInventory }} {{ translate("in stock") }}</ion-note>
             </ion-item>
           </ion-list>
         </section>
@@ -230,7 +230,8 @@ export default defineComponent({
   setup() {
     const store = useStore();
     return {
-      store
+      store,
+      translate
     }
   }
 });

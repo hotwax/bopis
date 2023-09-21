@@ -6,17 +6,17 @@
           <ion-icon :icon="close" />
         </ion-button>
       </ion-buttons>
-      <ion-title>{{ $t("Select time zone") }}</ion-title>
+      <ion-title>{{ translate("Select time zone") }}</ion-title>
     </ion-toolbar>
     <ion-toolbar>
-      <ion-searchbar @ionFocus="selectSearchBarText($event)" :placeholder="$t('Search time zones')"  v-model="queryString" @keyup.enter="queryString = $event.target.value; findTimeZone()" @keydown="preventSpecialCharacters($event)" />
+      <ion-searchbar @ionFocus="selectSearchBarText($event)" :placeholder="translate('Search time zones')"  v-model="queryString" @keyup.enter="queryString = $event.target.value; findTimeZone()" @keydown="preventSpecialCharacters($event)" />
     </ion-toolbar>
   </ion-header>
 
   <ion-content class="ion-padding">
     <!-- Empty state -->
     <div class="empty-state" v-if="filteredTimeZones.length === 0">
-      <p>{{ $t("No time zone found")}}</p>
+      <p>{{ translate("No time zone found")}}</p>
     </div>
 
     <!-- Timezones -->
@@ -155,7 +155,8 @@ export default defineComponent({
     return {
       close,
       save,
-      store
+      store,
+      translate
     };
   }
 });

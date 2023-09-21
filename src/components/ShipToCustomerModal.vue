@@ -6,38 +6,38 @@
           <ion-icon :icon="closeOutline" slot="icon-only" />
         </ion-button>
       </ion-buttons>
-      <ion-title>{{ $t("Ship to customer") }}</ion-title>
+      <ion-title>{{ translate("Ship to customer") }}</ion-title>
     </ion-toolbar>
   </ion-header>
 
   <ion-content>
     <main>  
       <ion-item>
-        <ion-label position="fixed">{{ $t("First name") }}</ion-label>
+        <ion-label position="fixed">{{ translate("First name") }}</ion-label>
         <ion-input />
       </ion-item>
       <ion-item>
-        <ion-label position="fixed">{{ $t("Last name") }}</ion-label>
+        <ion-label position="fixed">{{ translate("Last name") }}</ion-label>
         <ion-input />
       </ion-item>
       <ion-item>
-        <ion-label position="fixed">{{ $t("Street") }}</ion-label>
+        <ion-label position="fixed">{{ translate("Street") }}</ion-label>
         <ion-input />
       </ion-item>
       <ion-item>
-        <ion-label position="fixed">{{ $t("City") }}</ion-label>
+        <ion-label position="fixed">{{ translate("City") }}</ion-label>
         <ion-input />
       </ion-item>
       <ion-item>
-        <ion-label position="fixed">{{ $t("State") }}</ion-label>
+        <ion-label position="fixed">{{ translate("State") }}</ion-label>
         <ion-input />
       </ion-item>
       <ion-item>
-        <ion-label position="fixed">{{ $t("Zipcode") }}</ion-label>
+        <ion-label position="fixed">{{ translate("Zipcode") }}</ion-label>
         <ion-input />
       </ion-item>
       <ion-item>
-        <ion-label>{{ $t("Shipping method") }}</ion-label>
+        <ion-label>{{ translate("Shipping method") }}</ion-label>
         <ion-select value="next-day">
           <ion-select-option value="same-day">Same day</ion-select-option>
           <ion-select-option value="next-day">Next day</ion-select-option>
@@ -46,7 +46,7 @@
       </ion-item>
 
       <div class="ion-padding ion-text-center">
-        <ion-button @click="shipToCustomer" size="small">{{ $t("Ship to this address") }}</ion-button>
+        <ion-button @click="shipToCustomer" size="small">{{ translate("Ship to this address") }}</ion-button>
       </div>
     </main>
   </ion-content> 
@@ -112,6 +112,7 @@ export default defineComponent({
       businessOutline,
       closeOutline,
       storefrontOutline,
+      translate
     };
   },
 });
