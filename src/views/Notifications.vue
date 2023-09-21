@@ -54,7 +54,7 @@ import { cogOutline } from 'ionicons/icons';
 import { defineComponent } from "vue";
 import { mapGetters, useStore } from "vuex";
 import { DateTime } from "luxon";
-import NotificationPreferenceModal from "./NotificationPreferenceModal.vue";
+import NotificationPreferenceModal from '@/components/NotificationPreferenceModal.vue'
 
 export default defineComponent({
   name: "Notifications",

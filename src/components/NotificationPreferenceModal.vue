@@ -17,7 +17,7 @@
     <ion-list v-else>
       <ion-item :key="pref.enumId" v-for="pref in notificationPrefs">
         <ion-label class="ion-text-wrap">{{ pref.description }}</ion-label>
-        <ion-toggle @ionChange="toggleNotificationPref(pref.enumId, $event.detail.checked)" :checked="pref.isEnabled" slot="end" />
+        <ion-toggle @click="toggleNotificationPref(pref.enumId, $event)" :checked="pref.isEnabled" slot="end" />
       </ion-item>
     </ion-list>
     <ion-fab vertical="bottom" horizontal="end" slot="fixed">
@@ -46,9 +46,8 @@ import {
   modalController,
   alertController,
 } from "@ionic/vue";
-import { save } from 'ionicons/icons';
 import { defineComponent } from "vue";
-import { closeOutline } from "ionicons/icons";
+import { closeOutline, save } from "ionicons/icons";
 import { mapGetters, useStore } from "vuex";
 import { translate } from "@/i18n";
 import { showToast } from "@/utils";
@@ -57,13 +56,13 @@ import { generateTopicName } from "@/utils/firebase";
 import {
   subscribeTopic,
   unsubscribeTopic
-} from '@hotwax/oms-api';
+} from '@/adapter';
 
 export default defineComponent({
-  name: "NotificationPreference",
+  name: "NotificationPreferenceModal",
   components: { 
-    IonButtons,
     IonButton,
+    IonButtons,
     IonContent,
     IonHeader,
     IonFab,
@@ -110,21 +109,27 @@ export default defineComponent({
     closeModal() {
       modalController.dismiss({ dismissed: true });
     },
-    toggleNotificationPref(enumId: string, value: boolean) {
+    toggleNotificationPref(enumId: string, event: any) {
+      // used click event and extracted value this way as ionChange was
+      // running when the ion-toggle hydrates and hence, updated the 
+      // initialNotificationPrefState here
+      const value = !event.target.checked
       // updates the notificationPrefToUpate to check which pref
       // values were updated from their initial values
-      if (value !== this.notificationPrefState[enumId]) {
-        // updating this.initialNotificationPref as it is used to
-        // determine the save button disable state, hence, updating
-        // is necessary to recompute isButtonDisabled property
+      if (value !== this.initialNotificationPrefState[enumId]) {
         value
-          ? (this.notificationPrefToUpate.subscribe.push(enumId), this.notificationPrefState[enumId] = true)
-          : (this.notificationPrefToUpate.unsubscribe.push(enumId), this.notificationPrefState[enumId] = false)
+          ? this.notificationPrefToUpate.subscribe.push(enumId)
+          : this.notificationPrefToUpate.unsubscribe.push(enumId)
       } else {
         !value
           ? this.notificationPrefToUpate.subscribe.splice(this.notificationPrefToUpate.subscribe.indexOf(enumId), 1)
           : this.notificationPrefToUpate.unsubscribe.splice(this.notificationPrefToUpate.subscribe.indexOf(enumId), 1)
       }
+
+      // updating this.notificationPrefState as it is used to
+      // determine the save button disable state, hence, updating
+      // is necessary to recompute isButtonDisabled property
+      this.notificationPrefState[enumId] = value
     },
     async updateNotificationPref() {
       // TODO disbale button if initial and final are same
@@ -139,38 +144,25 @@ export default defineComponent({
       }
     },
     async handleTopicSubscription() {
-      const subscribeRequests = [] as any
       const oms = this.instanceUrl
       const facilityId = (this.currentFacility as any).facilityId
+      const subscribeRequests = [] as any
       this.notificationPrefToUpate.subscribe.map(async (enumId: string) => {
         const topicName = generateTopicName(oms, facilityId, enumId)
-        await subscribeRequests.push(subscribeTopic(topicName, process.env.VUE_APP_NOTIF_APP_ID).catch((err: any) => {
-          return err;
-        }))
+        await subscribeRequests.push(subscribeTopic(topicName, process.env.VUE_APP_NOTIF_APP_ID))
       })
 
       const unsubscribeRequests = [] as any
       this.notificationPrefToUpate.unsubscribe.map(async (enumId: string) => {
         const topicName = generateTopicName(oms, facilityId, enumId)
-        await unsubscribeRequests.push(unsubscribeTopic(topicName, process.env.VUE_APP_NOTIF_APP_ID).catch((err: any) => {
-          return err;
-        }))
+        await unsubscribeRequests.push(unsubscribeTopic(topicName, process.env.VUE_APP_NOTIF_APP_ID))
       })
 
-      const responses = await Promise.all([...subscribeRequests, ...unsubscribeRequests])
-      const successCount = responses.reduce((successCount: number, response: any) => {
-        if (response.successMessage) {
-          successCount++
-        }
-        return successCount
-      }, 0)
-
-      // using successCount count to handle toast message
-      if (successCount === this.notificationPrefToUpate.subscribe.length + this.notificationPrefToUpate.unsubscribe.length) {
-        showToast(translate('Notification preferences updated.'))
-      } else {
-        showToast(translate('Notification preferences not updated. Please try again.'))
-      }
+      const responses = await Promise.allSettled([...subscribeRequests, ...unsubscribeRequests])
+      const hasFailedResponse = responses.some((response: any) => response.status === "rejected")
+      hasFailedResponse
+        ? showToast(translate('Notification preferences not updated. Please try again.'))
+        : showToast(translate('Notification preferences updated.'))
     },
     async confirmSave() {
       const message = this.$t("Are you sure you want to update the notification preferences?");
@@ -204,6 +196,3 @@ export default defineComponent({
   },
 });
 </script>
-
-<style scoped>
-</style>
