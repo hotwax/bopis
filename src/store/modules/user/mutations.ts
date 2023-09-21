@@ -32,6 +32,10 @@ const mutations: MutationTree <UserState> = {
     },
     [types.USER_PERMISSIONS_UPDATED] (state, payload) {
         state.permissions = payload
+    },
+    [types.USER_PARTIAL_ORDER_REJECTION_CONFIG_UPDATED] (state, payload) {
+        state.partialOrderRejectionConfig = payload
     }
+    
 }
 export default mutations;

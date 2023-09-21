@@ -1,6 +1,7 @@
 { 
   "App": "App",
   "All items were canceled from the order": "All items were canceled from the order",
+  "Allow partial rejection": "Allow partial rejection",
   "An email notification will be sent to that their order is ready for pickup. This order will also be moved to the packed orders tab.": "An email notification will be sent to { customerName } that their order is ready for pickup.{ space } This order will also be moved to the packed orders tab.",
   "An email notification will be sent to that their order is ready for pickup.": "An email notification will be sent to { customerName } that their order is ready for pickup.",
   "Are you sure you want to change the time zone to?": "Are you sure you want to change the time zone to?",
@@ -84,6 +85,7 @@
   "Packed": "Packed",
   "Packing Slip": "Packing Slip",
   "Packing slips help customer reconcile their order against the delivered items.": "Packing slips help customer reconcile their order against the delivered items.",
+  "Partial Order rejection": "Partial Order rejection",
   "Password": "Password",
   "pending approval": "pending approval",
   "Picked by": "Picked by { pickers }",
@@ -123,6 +125,7 @@
   "Something went wrong while sending the email.": "Something went wrong while sending the email.",
   "Something went wrong while login. Please contact administrator": "Something went wrong while login. Please contact administrator.",
   "Sorry, your username or password is incorrect. Please try again.": "Sorry, your username or password is incorrect. Please try again.",
+  "Specify whether you reject a BOPIS order partially when any order item inventory is insufficient at the store.": "Specify whether you reject a BOPIS order partially when any order item inventory is insufficient at the store.",
   "Specify which facility you want to operate from. Order, inventory and other configuration data will be specific to the facility you select.": "Specify which facility you want to operate from. Order, inventory and other configuration data will be specific to the facility you select.",
   "State": "State",
   "Staff": "Staff",

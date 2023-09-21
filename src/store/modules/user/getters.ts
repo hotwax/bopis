@@ -47,6 +47,9 @@ const getters: GetterTree <UserState, RootState> = {
     },
     getCurrentEComStore(state) {
         return state.currentEComStore;
+    },
+    getPartialOrderRejectionConfig(state) {
+        return state.partialOrderRejectionConfig;
     }
 }
 export default getters;

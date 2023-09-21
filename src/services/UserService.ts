@@ -131,7 +131,29 @@ const updateRerouteFulfillmentConfig = async (payload: any): Promise<any> => {
   });
 }
 
+const getPartialOrderRejectionConfig = async (payload: any): Promise<any> => {
+  return api({
+    url: "performFind",
+    method: "get",
+    params: payload,
+  });
+}
 
+const createPartialOrderRejectionConfig = async (payload: any): Promise<any> => {
+  return api({
+    url: "service/createProductStoreSetting",
+    method: "post",
+    data: payload
+  });
+}
+
+const updatePartialOrderRejectionConfig = async (payload: any): Promise<any> => {
+  return api({
+    url: "service/updateProductStoreSetting",
+    method: "post",
+    data: payload
+  });
+}
 
 const getUserPermissions = async (payload: any, token: any): Promise<any> => {
   const baseURL = store.getters['user/getBaseUrl'];
@@ -232,5 +254,8 @@ export const UserService = {
     setUserPreference,
     getUserPermissions,
     getUserProfile,
-    updateRerouteFulfillmentConfig
+    updateRerouteFulfillmentConfig,
+    getPartialOrderRejectionConfig,
+    createPartialOrderRejectionConfig,
+    updatePartialOrderRejectionConfig
 }

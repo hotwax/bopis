@@ -6,7 +6,7 @@ import UserState from './UserState'
 import * as types from './mutation-types'
 import { showToast } from '@/utils'
 import i18n, { translate } from '@/i18n'
-import { Settings } from 'luxon';
+import { Settings, DateTime } from 'luxon';
 import { hasError, updateInstanceUrl, updateToken, resetConfig, getUserFacilities } from '@/adapter'
 import {
   getServerPermissionsFromRules,
@@ -87,6 +87,10 @@ const actions: ActionTree<UserState, RootState> = {
       commit(types.USER_PREFERENCE_UPDATED, userPreference)
       commit(types.USER_PERMISSIONS_UPDATED, appPermissions);
       commit(types.USER_TOKEN_CHANGED, { newToken: token })
+
+      //fetching partial order rejection config for BOPIS orders
+      await dispatch("getPartialOrderRejectionConfig");
+      
     } catch (err: any) {
       // If any of the API call in try block has status code other than 2xx it will be handled in common catch block.
       // TODO Check if handling of specific status codes is required.
@@ -146,6 +150,64 @@ const actions: ActionTree<UserState, RootState> = {
       Settings.defaultZone = current.userTimeZone;
       showToast(translate("Time zone updated successfully"));
     }
+  },
+
+  async getPartialOrderRejectionConfig ({ commit }, payload) {
+    let config = {};
+    const params = {
+      "inputFields": {
+        "productStoreId": this.state.user.currentEComStore.productStoreId,
+        settingTypeEnumId: "BOPIS_PART_ODR_REJ"
+      },
+      "filterByDate": 'Y',
+      "entityName": "ProductStoreSetting",
+      "fieldList": ["productStoreId", "settingTypeEnumId", "settingValue", "fromDate"],
+      "viewSize": 1
+    } as any
+
+    try {
+      const resp = await UserService.getPartialOrderRejectionConfig(params)
+      if (resp.status === 200 && !hasError(resp) && resp.data?.docs) {
+        config = resp.data?.docs[0];
+      } else {
+        console.error('Failed to fetch partial order rejection configuration');
+      }
+    } catch (err) {
+      console.error(err);
+    } 
+    commit(types.USER_PARTIAL_ORDER_REJECTION_CONFIG_UPDATED, config);   
+  },
+
+  async updatePartialOrderRejectionConfig ({ dispatch }, payload) {  
+    let resp = {};
+    try {
+      
+      if (!payload.fromDate) {
+        //Create Product Store Setting
+        payload = {
+          ...payload, 
+          "productStoreId": this.state.user.currentEComStore.productStoreId,
+          "settingTypeEnumId": "BOPIS_PART_ODR_REJ",
+          "fromDate": DateTime.now().toMillis()
+        }
+        resp = await UserService.createPartialOrderRejectionConfig(payload) as any
+      } else {
+        //Update Product Store Setting
+        resp = await UserService.updatePartialOrderRejectionConfig(payload) as any
+      }
+
+      if (!hasError(resp)) {
+        showToast(translate('Configuration updated'))
+      } else {
+        showToast(translate('Failed to update configuration'))
+      }
+    } catch(err) {
+      showToast(translate('Failed to update configuration'))
+      console.error(err)
+    }
+
+    // Fetch the updated configuration
+    await dispatch("getPartialOrderRejectionConfig");
   },
 
   setUserPreference( {state, commit }, payload){
