@@ -12,5 +12,6 @@ module.exports = {
       enableInSFC: true
     }
   },
-  runtimeCompiler: true
+  runtimeCompiler: true,
+  transpileDependencies: ['@hotwax/dxp-components']
 }
