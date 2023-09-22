@@ -5,7 +5,7 @@
         <ion-title>{{ currentFacility?.name }}</ion-title>
         <ion-buttons slot="end">
           <ion-button @click="viewNotifications()">
-            <ion-icon slot="icon-only" :icon="notificationsOutline" :color="notificationIconColor" />
+            <ion-icon slot="icon-only" :icon="notificationsOutline" :color="notifications.length ? 'primary' : ''" />
           </ion-button>
           <ion-button @click="viewShipToStoreOrders()">
             <ion-icon slot="icon-only" :icon="trailSignOutline" />
@@ -251,11 +251,7 @@ export default defineComponent({
       isCompletedOrdersScrollable: 'order/isCompletedOrdersScrollable',
       showPackingSlip: 'user/showPackingSlip',
       notifications: 'user/getNotifications',
-    }),
-    notificationIconColor: function() {
-      const notifications = JSON.parse(JSON.stringify(this.notifications));
-      return notifications.length ? 'primary' : ''
-    },
+    })
   },
   data() {
     return {
