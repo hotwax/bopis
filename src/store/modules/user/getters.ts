@@ -54,7 +54,7 @@ const getters: GetterTree <UserState, RootState> = {
     getNotificationPrefs(state) {
         return state.notificationPrefs
     },
-    getDeviceId(state) {
+    getFirebaseDeviceId(state) {
         return state.firebaseDeviceId
     }
 }

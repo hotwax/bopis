@@ -1,12 +1,31 @@
-import { api, client, hasError, getUserFacilities, initialise, resetConfig, subscribeTopic, unsubscribeTopic, updateInstanceUrl, updateToken } from '@hotwax/oms-api'
+import {
+  api,
+  client,
+  hasError,
+  getUserFacilities,
+  getNotificationEnumIds,
+  getNotificationUserPrefTypeIds,
+  initialise,
+  resetConfig,
+  removeClientRegistrationToken,
+  storeClientRegistrationToken,
+  subscribeTopic,
+  unsubscribeTopic,
+  updateInstanceUrl,
+  updateToken
+} from '@hotwax/oms-api'
 
 export {
   api,
   client,
-  getUserFacilities,
-  initialise,
   hasError,
+  getUserFacilities,
+  getNotificationEnumIds,
+  getNotificationUserPrefTypeIds,
+  initialise,
   resetConfig,
+  removeClientRegistrationToken,
+  storeClientRegistrationToken,
   subscribeTopic,
   unsubscribeTopic,
   updateInstanceUrl,

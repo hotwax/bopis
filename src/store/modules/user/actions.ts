@@ -18,9 +18,8 @@ import { useAuthStore } from '@hotwax/dxp-components'
 import {
   getNotificationEnumIds,
   getNotificationUserPrefTypeIds,
-  storeClientRegistrationToken,
-  removeClientRegistrationToken,
-} from '@hotwax/oms-api';
+  storeClientRegistrationToken
+} from '@/adapter';
 import { generateDeviceId, generateTopicName } from '@/utils/firebase'
 
 const actions: ActionTree<UserState, RootState> = {
@@ -210,14 +209,6 @@ const actions: ActionTree<UserState, RootState> = {
 
     try {
       await storeClientRegistrationToken(registrationToken, firebaseDeviceId, process.env.VUE_APP_NOTIF_APP_ID)
-    } catch (error) {
-      console.error(error)
-    }
-  },
-
-  async removeClientRegistrationToken({ state }) {
-    try {
-      await removeClientRegistrationToken(state.firebaseDeviceId, process.env.VUE_APP_NOTIF_APP_ID)
     } catch (error) {
       console.error(error)
     }
