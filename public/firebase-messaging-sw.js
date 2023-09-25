@@ -72,6 +72,5 @@ function handleFirebaseInit() {
 }
 
 // wrapping the logic inside function and calling it
-// to provide return support as return in only 
-// availed inside functions in JS
+// to provide return statement support
 handleFirebaseInit()
