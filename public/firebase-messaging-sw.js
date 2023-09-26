@@ -8,15 +8,7 @@ importScripts('https://www.gstatic.com/firebasejs/8.10.1/firebase-messaging.js')
 const clickActionURL = '/notifications';
 const iconURL = 'img/icons/msapplication-icon-144x144.png';
 
-const firebaseConfig = {
-  apiKey: "",
-  authDomain: "",
-  databaseURL: "",
-  projectId: "",
-  storageBucket: "",
-  messagingSenderId: "",
-  appId: ""
-}
+const firebaseConfig = {apiKey: "", authDomain: "", databaseURL: "", projectId: "", storageBucket: "", messagingSenderId: "", appId: ""}
 
 // Initialize the Firebase app in the service worker by passing in
 // your app's Firebase config object.
