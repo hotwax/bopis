@@ -31,7 +31,7 @@ import { mapGetters, useStore } from "vuex";
 import { DateTime } from 'luxon';
 
 export default defineComponent({
-  name: "ReceivingHistoryModal",
+  name: "OrderItemRejHistoryModal",
   components: {
     IonButton,
     IonButtons,

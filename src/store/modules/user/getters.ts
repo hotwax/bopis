@@ -27,6 +27,9 @@ const getters: GetterTree <UserState, RootState> = {
         const baseUrl = process.env.VUE_APP_BASE_URL;
         return baseUrl ? baseUrl : state.instanceUrl;
     },
+    partialOrderRejection (state) {
+        return state.preference.partialOrderRejection;
+    },
     showShippingOrders (state) {
         return state.preference.showShippingOrders;
     },

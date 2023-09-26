@@ -16,6 +16,7 @@ const userModule: Module<UserState, RootState> = {
         showShippingOrders: true,
         showPackingSlip: false,
         configurePicker: false,
+        partialOrderRejection: false
       },
       locale: 'en',
       currentEComStore: {},

@@ -5,7 +5,7 @@
         <ion-back-button default-href="/" slot="start" />
         <ion-title>{{ $t("Order details") }}</ion-title>
         <ion-buttons slot="end">
-          <ion-button @click="orderItemRejectionHistory()">
+          <ion-button @click="openOrderItemRejHistoryModal()">
             <ion-icon slot="icon-only" :icon="timeOutline" />
           </ion-button>
           <ion-button v-if="!isDesktop" :disabled="!hasPermission(Actions.APP_ORDER_UPDATE)" @click="updateOrder(order)">
@@ -30,31 +30,8 @@
               </ion-select> -->
             </ion-item>
           </ion-card>
-          <ion-card v-for="(item, index) in getCurrentOrderPart()?.items" :key="index">
-            <ProductListItem :item="item" />
-            <ion-item lines="none" class="border-top">
-              <ion-button fill="clear">
-                {{ $t("Report an issue") }}
-              </ion-button>
-              <!-- <ion-label>{{ $t("Reason") }}</ion-label>
-              <ion-select multiple="false" v-model="item.reason">
-                <ion-select-option v-for="reason in unfillableReason" :value="reason.id" :key="reason.id">{{ $t(reason.label) }}</ion-select-option>
-              </ion-select> -->
-            </ion-item>
-          </ion-card>
-          <ion-card v-for="(item, index) in getCurrentOrderPart()?.items" :key="index">
-            <ProductListItem :item="item" />
-            <ion-item lines="none" class="border-top">
-              <ion-button fill="clear">
-                {{ $t("Report an issue") }}
-              </ion-button>
-              <!-- <ion-label>{{ $t("Reason") }}</ion-label>
-              <ion-select multiple="false" v-model="item.reason">
-                <ion-select-option v-for="reason in unfillableReason" :value="reason.id" :key="reason.id">{{ $t(reason.label) }}</ion-select-option>
-              </ion-select> -->
-            </ion-item>
-          </ion-card>
         </section>
+
         <aside v-if="isDesktop">
           <OrderInfo :orderId="$route.params.orderId" />
         </aside>
@@ -80,7 +57,6 @@ import {
   IonHeader,
   IonIcon,
   IonItem,
-  IonList,
   IonPage,
   IonTitle,
   IonToolbar,
@@ -139,6 +115,7 @@ export default defineComponent({
     ...mapGetters({
       order: "order/getCurrent",
       currentFacility: 'user/getCurrentFacility',
+      partialOrderRejection: 'user/partialOrderRejection'
     })
   },
   ionViewDidEnter() {
@@ -178,6 +155,12 @@ export default defineComponent({
           }]
         });
       return alert.present();
+    },
+    async openOrderItemRejHistoryModal(){
+      const orderItemRejHistoryModal = await modalController.create({
+        component: OrderItemRejHistoryModal,
+      });
+      return orderItemRejHistoryModal.present();
     }
    },
   async mounted() {
@@ -209,6 +192,7 @@ export default defineComponent({
   border-top: 1px solid #ccc;
 }
 
+/* If not in desktop */
 main {
   max-width: 445px;
   margin: var(--spacer-base) auto 0; 

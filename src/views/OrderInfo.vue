@@ -23,12 +23,8 @@
 
     <div class="actions" v-if="isDesktop">
       <!-- TODO: implement functionality to change shipping address -->
-      <!-- <ion-button expand="block" fill="outline" @click="shipToCustomer()">
-        {{ $t("Ship to customer") }}
-        <ion-icon :icon="sendOutline" slot="end" />
-      </ion-button> -->
       <ion-button class="ion-margin-top" :disabled="!hasPermission(Actions.APP_ORDER_UPDATE)" expand="block">
-        {{ $t("Ready for pickup") }}
+        {{ order.part.shipmentMethodEnum.shipmentMethodEnumId === 'STOREPICKUP' ? $t("Ready for pickup") : $t("Ready to ship") }}
       </ion-button>
       <ion-button :disabled="!hasPermission(Actions.APP_ORDER_UPDATE)" expand="block" color="danger" fill="outline" @click="emitter.emit('updateOrder', order)">
         {{ $t("Reject Order") }}
@@ -36,7 +32,7 @@
     </div>
     <ion-item lines="none">
       <ion-label class="ion-text-wrap">
-        <p>{{ $t("If you cannot fulfill this order, will be sent an email and the order item will be removed from your dashboard.", { customerName: order.customer.name ? order.customer.name : '' }) }}</p>
+        <p>{{ $t(order.part.shipmentMethodEnum.shipmentMethodEnumId === 'STOREPICKUP' ? "If you cannot fulfill this order, will be sent an email and the order item will be removed from your dashboard." : "If you cannot fulfill this order, will be sent an email with alternate fulfillment options and this order will be removed from your dashboard.", { customerName: order.customer.name ? order.customer.name : '' }) }}</p>
       </ion-label>
     </ion-item>
   </section>
