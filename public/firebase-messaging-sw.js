@@ -4,10 +4,6 @@
 importScripts('https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js');
 importScripts('https://www.gstatic.com/firebasejs/8.10.1/firebase-messaging.js');
 
-// Initialize a default click_action URL
-const clickActionURL = '/notifications';
-const iconURL = 'img/icons/msapplication-icon-144x144.png';
-
 const firebaseConfig = {apiKey: "", authDomain: "", databaseURL: "", projectId: "", storageBucket: "", messagingSenderId: "", appId: ""}
 
 // Initialize the Firebase app in the service worker by passing in
@@ -23,9 +19,9 @@ messaging.onBackgroundMessage(payload => {
   const notificationTitle = payload.data.title;
   const notificationOptions = {
     body: payload.data.body,
-    icon: iconURL,
+    icon: "/img/icons/msapplication-icon-144x144.png",
     data: {
-      click_action: clickActionURL
+      click_action: "/notifications"
     }
   };
   self.registration.showNotification(notificationTitle, notificationOptions);
