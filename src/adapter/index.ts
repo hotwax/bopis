@@ -1,6 +1,7 @@
 import {
   api,
   client,
+  getProductIdentificationPref,
   hasError,
   getUserFacilities,
   getNotificationEnumIds,
@@ -8,6 +9,7 @@ import {
   initialise,
   resetConfig,
   removeClientRegistrationToken,
+  setProductIdentificationPref,
   storeClientRegistrationToken,
   subscribeTopic,
   unsubscribeTopic,
@@ -18,6 +20,7 @@ import {
 export {
   api,
   client,
+  getProductIdentificationPref,
   hasError,
   getUserFacilities,
   getNotificationEnumIds,
@@ -25,6 +28,7 @@ export {
   initialise,
   resetConfig,
   removeClientRegistrationToken,
+  setProductIdentificationPref,
   storeClientRegistrationToken,
   subscribeTopic,
   unsubscribeTopic,

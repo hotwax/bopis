@@ -39,7 +39,7 @@ import {
   addNotification,
   storeClientRegistrationToken
 } from '@/utils/firebase';
-import { getConfig, initialise } from '@hotwax/oms-api';
+import { getConfig, getProductIdentificationPref, initialise, setProductIdentificationPref } from '@hotwax/oms-api';
 
 const app = createApp(App)
   .use(IonicVue, {
@@ -59,11 +59,13 @@ const app = createApp(App)
     appFirebaseVapidKey: process.env.VUE_APP_FIREBAE_VAPID_KEY,
     defaultImgUrl: require("@/assets/images/defaultImage.png"),
     getConfig,
+    getProductIdentificationPref,
     initialise,
     loader,
     login,
     logout,
     storeClientRegistrationToken,
+    setProductIdentificationPref
   });
 
 // Filters are removed in Vue 3 and global filter introduced https://v3.vuejs.org/guide/migration/filters.html#global-filters
