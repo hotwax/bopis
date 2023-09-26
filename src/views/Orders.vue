@@ -2,8 +2,11 @@
   <ion-page>
     <ion-header :translucent="true">
       <ion-toolbar>
-        <ion-title>{{ currentFacility?.name }}</ion-title>
+        <ion-title>{{ currentFacility?.facilityName }}</ion-title>
         <ion-buttons slot="end">
+          <ion-button @click="viewNotifications()">
+            <ion-icon slot="icon-only" :icon="notificationsOutline" :color="notifications.length ? 'primary' : ''" />
+          </ion-button>
           <ion-button @click="viewShipToStoreOrders()">
             <ion-icon slot="icon-only" :icon="trailSignOutline" />
           </ion-button>
@@ -187,7 +190,14 @@ import {
 } from "@ionic/vue";
 import { defineComponent, ref } from "vue";
 import ProductListItem from '@/components/ProductListItem.vue'
-import { swapVerticalOutline, callOutline, mailOutline, printOutline, trailSignOutline } from "ionicons/icons";
+import {
+  swapVerticalOutline,
+  callOutline,
+  mailOutline,
+  notificationsOutline,
+  printOutline,
+  trailSignOutline
+} from "ionicons/icons";
 import { mapGetters, useStore } from 'vuex'
 import { useRouter } from 'vue-router'
 import { copyToClipboard, showToast } from '@/utils'
@@ -239,7 +249,8 @@ export default defineComponent({
       isPackedOrdersScrollable: 'order/isPackedOrdersScrollable',
       isOpenOrdersScrollable: 'order/isOpenOrdersScrollable',
       isCompletedOrdersScrollable: 'order/isCompletedOrdersScrollable',
-      showPackingSlip: 'user/showPackingSlip'
+      showPackingSlip: 'user/showPackingSlip',
+      notifications: 'user/getNotifications',
     })
   },
   data() {
@@ -433,6 +444,9 @@ export default defineComponent({
     },
     viewShipToStoreOrders() {
       this.$router.push({ path: '/ship-to-store-orders' })
+    },
+    viewNotifications() {
+      this.$router.push({ path: '/notifications' })
     }
   },
   ionViewWillEnter () {
@@ -456,6 +470,7 @@ export default defineComponent({
       callOutline,
       copyToClipboard,
       hasPermission,
+      notificationsOutline,
       mailOutline,
       printOutline,
       router,

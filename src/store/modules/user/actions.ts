@@ -1,12 +1,13 @@
 import { UserService } from '@/services/UserService'
 import { ActionTree } from 'vuex'
 import RootState from '@/store/RootState'
+import store from '@/store';
 import UserState from './UserState'
 import * as types from './mutation-types'
 import { showToast } from '@/utils'
 import i18n, { translate } from '@/i18n'
-import { Settings } from 'luxon';
-import { hasError, logout, updateInstanceUrl, updateToken, resetConfig } from '@/adapter'
+import { DateTime, Settings } from 'luxon';
+import { hasError, logout, updateInstanceUrl, updateToken, resetConfig, getUserFacilities } from '@/adapter'
 import {
   getServerPermissionsFromRules,
   prepareAppPermissions,
@@ -14,6 +15,12 @@ import {
   setPermissions
 } from '@/authorization'
 import { useAuthStore } from '@hotwax/dxp-components'
+import {
+  getNotificationEnumIds,
+  getNotificationUserPrefTypeIds,
+  storeClientRegistrationToken
+} from '@/adapter';
+import { generateDeviceId, generateTopicName } from '@/utils/firebase'
 import emitter from '@/event-bus'
 
 const actions: ActionTree<UserState, RootState> = {
@@ -54,6 +61,12 @@ const actions: ActionTree<UserState, RootState> = {
       }
 
       const userProfile = await UserService.getUserProfile(token);
+
+      //fetching user facilities
+      const isAdminUser = appPermissions.some((appPermission: any) => appPermission?.action === "APP_STOREFULFILLMENT_ADMIN" );
+      const baseURL = store.getters['user/getBaseUrl'];
+      const facilities = await getUserFacilities(token, baseURL, userProfile?.partyId, "PICKUP", isAdminUser);
+      userProfile.facilities = facilities;
 
       // removing duplicate records as a single user can be associated with a facility by multiple roles.
       userProfile.facilities.reduce((uniqueFacilities: any, facility: any, index: number) => {
@@ -115,6 +128,7 @@ const actions: ActionTree<UserState, RootState> = {
     const authStore = useAuthStore()
     // TODO add any other tasks if need
     dispatch("product/clearProducts", null, { root: true })
+    dispatch('clearNotificationState')
     commit(types.USER_END_SESSION)
     resetPermissions();
     resetConfig();
@@ -180,5 +194,57 @@ const actions: ActionTree<UserState, RootState> = {
     i18n.global.locale = payload
     commit(types.USER_LOCALE_UPDATED, payload)
   },
+
+  addNotification({ state, commit }, payload) {
+    const notifications = JSON.parse(JSON.stringify(state.notifications))
+    notifications.push({ ...payload.notification, time: DateTime.now().toMillis() })
+    if (payload.isForeground) {
+      showToast(translate("New notification received."));
+    }
+    commit(types.USER_NOTIFICATIONS_UPDATED, notifications)
+  },
+
+  async fetchNotificationPreferences({ commit, state }) {
+    let resp = {} as any
+    const oms = state.instanceUrl
+    const facilityId = (state.currentFacility as any).facilityId
+    let notificationPreferences = [], enumerationResp = [], userPrefIds = [] as any
+    try {
+      resp = await getNotificationEnumIds(process.env.VUE_APP_NOTIF_ENUM_TYPE_ID)
+      enumerationResp = resp.docs
+      resp = await getNotificationUserPrefTypeIds(process.env.VUE_APP_NOTIF_APP_ID)
+      userPrefIds = resp.docs.map((userPref: any) => userPref.userPrefTypeId)
+    } catch (error) {
+      console.error(error)
+    } finally {
+      // checking enumerationResp as we want to show disbaled prefs if only getNotificationEnumIds returns
+      // data and getNotificationUserPrefTypeIds fails or returns empty response (all disbaled)
+      if (enumerationResp.length) {
+        notificationPreferences = enumerationResp.reduce((notifactionPref: any, pref: any) => {
+          const userPrefTypeIdToSearch = generateTopicName(oms, facilityId, pref.enumId)
+          notifactionPref.push({ ...pref, isEnabled: userPrefIds.includes(userPrefTypeIdToSearch) })
+          return notifactionPref
+        }, [])
+      }
+      commit(types.USER_NOTIFICATIONS_PREFERENCES_UPDATED, notificationPreferences)
+    }
+  },
+
+  async storeClientRegistrationToken({ commit }, registrationToken) {
+    const firebaseDeviceId = generateDeviceId()
+    commit(types.USER_FIREBASE_DEVICEID_UPDATED, firebaseDeviceId)
+
+    try {
+      await storeClientRegistrationToken(registrationToken, firebaseDeviceId, process.env.VUE_APP_NOTIF_APP_ID)
+    } catch (error) {
+      console.error(error)
+    }
+  },
+
+  clearNotificationState({ commit }) {
+    commit(types.USER_NOTIFICATIONS_UPDATED, [])
+    commit(types.USER_NOTIFICATIONS_PREFERENCES_UPDATED, [])
+    commit(types.USER_FIREBASE_DEVICEID_UPDATED, '')
+  }
 }
 export default actions;
