@@ -126,7 +126,6 @@ export default defineComponent({
       return {}
     },
     async updateOrder(order) {
-      console.log(order);
       const alert = await alertController
         .create({
           header: this.$t('Update Order'),
