@@ -20,14 +20,10 @@
         <section>
           <ion-card v-for="(item, index) in getCurrentOrderPart()?.items" :key="index">
             <ProductListItem :item="item" />
-            <ion-item lines="none" class="border-top">
-              <ion-button fill="clear">
+            <ion-item v-if="partialOrderRejection" lines="none" class="border-top">
+              <ion-button fill="clear" @click="openReportAnIssueModal()">
                 {{ $t("Report an issue") }}
               </ion-button>
-              <!-- <ion-label>{{ $t("Reason") }}</ion-label>
-              <ion-select multiple="false" v-model="item.reason">
-                <ion-select-option v-for="reason in unfillableReason" :value="reason.id" :key="reason.id">{{ $t(reason.label) }}</ion-select-option>
-              </ion-select> -->
             </ion-item>
           </ion-card>
         </section>
@@ -67,11 +63,7 @@ import {
 } from "@ionic/vue";
 import { defineComponent } from "vue";
 import { mapGetters, useStore } from "vuex";
-import {
-  bagHandleOutline,
-  bagRemoveOutline,
-  timeOutline,
-} from "ionicons/icons";
+import { bagHandleOutline, bagRemoveOutline, timeOutline } from "ionicons/icons";
 import ProductListItem from '@/components/ProductListItem.vue'
 import { copyToClipboard } from '@/utils'
 import { hasError } from '@/adapter';
@@ -80,8 +72,9 @@ import { DateTime } from 'luxon';
 import ShipToCustomerModal from "@/components/ShipToCustomerModal.vue";
 import { Actions, hasPermission } from '@/authorization'
 import { OrderService } from "@/services/OrderService";
-import OrderItemRejHistoryModal from './OrderItemRejHistoryModal.vue';
-import OrderInfo from './OrderInfo';
+import OrderItemRejHistoryModal from '@/components/OrderItemRejHistoryModal.vue';
+import ReportAnIssueModal from '@/components/ReportAnIssueModal.vue';
+import OrderInfo from '@/components/OrderInfo';
 import emitter from "@/event-bus"
 
 export default defineComponent({
@@ -106,7 +99,6 @@ export default defineComponent({
   },
   data () {
     return {
-      unfillableReason: JSON.parse(process.env.VUE_APP_UNFILLABLE_REASONS),
       customerEmail: '',
       isDesktop: isPlatform('desktop')
     }
@@ -117,9 +109,6 @@ export default defineComponent({
       currentFacility: 'user/getCurrentFacility',
       partialOrderRejection: 'user/partialOrderRejection'
     })
-  },
-  ionViewDidEnter() {
-    if(this.order.items) this.order.items.map((item) => item['reason'] = this.unfillableReason[0].id);
   },
   methods: {
     async getOrderDetail(orderId, orderPartSeqId) {
@@ -161,6 +150,12 @@ export default defineComponent({
         component: OrderItemRejHistoryModal,
       });
       return orderItemRejHistoryModal.present();
+    },
+    async openReportAnIssueModal(){
+      const reportAnIssueModal = await modalController.create({
+        component: ReportAnIssueModal,
+      });
+      return reportAnIssueModal.present();
     }
    },
   async mounted() {
@@ -215,11 +210,4 @@ aside {
 .desktop-only > * {
   width: calc(50% - var(--spacer-xl));
 }
-
-.actions {
-  display: flex;
-  justify-content: space-between;
-  margin: var(--spacer-base) var(--spacer-sm) var(--spacer-base);
-}
-
 </style>

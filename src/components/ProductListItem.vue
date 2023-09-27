@@ -12,7 +12,7 @@
       <p v-if="$filters.getFeature(getProduct(item.productId).featureHierarchy, '1/SIZE/')">{{ $t("Size") }}: {{ $filters.getFeature(getProduct(item.productId).featureHierarchy, '1/SIZE/') }}</p>
     </ion-label>
     <!-- Only show stock if its not a ship to store order -->
-    <ion-note v-if="!isShipToStoreOrder" slot="end">{{ getProductStock(item.productId) }} {{ $t("in stock") }}</ion-note>
+    <ion-note v-if="!isShipToStoreOrder" slot="end" :color="updateColor(getProductStock(item.productId))">{{ getProductStock(item.productId) }} {{ $t("in stock") }}</ion-note>
   </ion-item>
 </template>
 
@@ -46,6 +46,11 @@ export default {
       getProduct: 'product/getProduct',
       getProductStock: 'stock/getProductStock'
     })
+  },
+  methods: {
+    updateColor(stock: number) {
+      return stock ? stock < 10 ? 'warning' : 'success' : 'danger';
+    }
   }
 }
 </script>

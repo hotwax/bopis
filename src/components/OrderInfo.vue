@@ -1,5 +1,9 @@
 <template>
   <section>
+    <ion-item color="light" lines="none">
+      <ion-icon :icon="checkmarkCircleOutline" color="success" slot="start" />
+      <ion-label class="ion-text-wrap">{{ $t("Order is now ready for handover.") }}</ion-label>
+    </ion-item>
     <ion-list>
       <ion-item lines="none">
         <ion-label class="ion-text-wrap">
@@ -20,8 +24,7 @@
         <p>{{ order.shippingInstructions }}</p>
       </ion-label>
     </ion-item>
-
-    <div class="actions" v-if="isDesktop">
+    <div v-if="isDesktop">
       <!-- TODO: implement functionality to change shipping address -->
       <ion-button class="ion-margin-top" :disabled="!hasPermission(Actions.APP_ORDER_UPDATE)" expand="block">
         {{ order.part.shipmentMethodEnum.shipmentMethodEnumId === 'STOREPICKUP' ? $t("Ready for pickup") : $t("Ready to ship") }}
@@ -53,6 +56,7 @@ import { defineComponent } from "vue";
 import { mapGetters } from "vuex";
 import {
   copyOutline,
+  checkmarkCircleOutline,
   mailOutline,
   sendOutline
 } from "ionicons/icons";
@@ -115,6 +119,7 @@ export default defineComponent({
     return {
       Actions,
       emitter,
+      checkmarkCircleOutline,
       copyOutline,
       copyToClipboard,
       hasPermission,
@@ -124,11 +129,4 @@ export default defineComponent({
   }
 });
 </script>
-  
-<style scoped>
-.actions {
-  display: flex;
-  flex-direction: column;
-}
-</style>
   
