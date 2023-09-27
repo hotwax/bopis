@@ -22,7 +22,7 @@
           <p v-if="$filters.getFeature(getProduct('10002').featureHierarchy, '1/SIZE/')">{{ $t("Size") }}: {{ $filters.getFeature(getProduct("10002").featureHierarchy, '1/SIZE/') }}</p>
         </ion-label>
         <ion-label slot="end" class="ion-text-right">
-          <h2>{{ '<rejection reason></rejection>' }}</h2>
+          <h2>{{ 'Not in stock' }}</h2>
           <p>{{ $t('Rejected by', { userName: 'user-name', rejectionTime: 'rejection-time' }) }}</p>
         </ion-label>
       </ion-item>

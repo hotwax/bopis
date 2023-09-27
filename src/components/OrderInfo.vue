@@ -33,11 +33,11 @@
         {{ $t("Reject Order") }}
       </ion-button>
     </div>
-    <ion-item lines="none">
+    <!-- <ion-item lines="none">
       <ion-label class="ion-text-wrap">
         <p>{{ $t(order?.part?.shipmentMethodEnum?.shipmentMethodEnumId === 'STOREPICKUP' ? "If you cannot fulfill this order, will be sent an email and the order item will be removed from your dashboard." : "If you cannot fulfill this order, will be sent an email with alternate fulfillment options and this order will be removed from your dashboard.", { customerName: order?.customer?.name ? order?.customer?.name : '' }) }}</p>
       </ion-label>
-    </ion-item>
+    </ion-item> -->
   </section>
 </template>
   
