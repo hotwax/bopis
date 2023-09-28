@@ -55,7 +55,9 @@ export default defineComponent({
     ...mapGetters({
       locale: 'user/getLocale',
       userToken: 'user/getUserToken',
-      instanceUrl: 'user/getInstanceUrl'
+      instanceUrl: 'user/getInstanceUrl',
+      notifications: 'user/getNotifications',
+      notificationsCheckStatus: 'user/getNotificationsCheckStatus'
     })
   },
   created() {
@@ -85,6 +87,10 @@ export default defineComponent({
     emitter.on('presentLoader', this.presentLoader);
     emitter.on('dismissLoader', this.dismissLoader);
     this.$i18n.locale = this.locale;
+    // null check to only update the status once when the app mounts for the fist tine
+    if (this.notificationsCheckStatus === null) {
+      this.store.dispatch('user/setNotificationsCheckStatus', !this.notifications.length)
+    }
   },
   unmounted() {
     emitter.off('presentLoader', this.presentLoader);

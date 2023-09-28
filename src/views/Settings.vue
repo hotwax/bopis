@@ -194,15 +194,60 @@
             <ion-toggle :checked="configurePicker" @ionChange="setConfigurePickerPreference($event)" slot="end" />
           </ion-item>
         </ion-card>
+
+        <ion-card v-if="notificationPrefs.length">
+          <ion-card-header>
+            <ion-card-title>
+              {{ $t("Notification Preference") }}
+            </ion-card-title>
+          </ion-card-header>
+          <ion-card-content>
+            {{ $t('Select the notifications you want to receive.') }}
+          </ion-card-content>
+          <ion-list>
+            <ion-item :key="pref.enumId" v-for="pref in notificationPrefs" lines="none">
+              <ion-label class="ion-text-wrap">{{ pref.description }}</ion-label>
+              <ion-toggle @click="confirmNotificationPrefUpdate(pref.enumId, $event)" :checked="pref.isEnabled" slot="end" />
+            </ion-item>
+          </ion-list>
+        </ion-card>
       </section>
     </ion-content>
   </ion-page>
 </template>
 
 <script lang="ts">
-import { IonAvatar, IonButton, IonCard, IonCardContent, IonCardHeader, IonCardSubtitle, IonCardTitle, IonContent, IonHeader, IonIcon, IonItem, IonLabel, IonPage, IonSelect, IonSelectOption, IonTitle, IonToggle , IonToolbar, modalController } from '@ionic/vue';
+import {
+  alertController,
+  IonAvatar,
+  IonButton,
+  IonCard,
+  IonCardContent,
+  IonCardHeader,
+  IonCardSubtitle,
+  IonCardTitle,
+  IonContent,
+  IonHeader,
+  IonIcon,
+  IonItem,
+  IonLabel,
+  IonPage,
+  IonSelect,
+  IonSelectOption,
+  IonTitle,
+  IonToggle,
+  IonToolbar,
+  modalController
+} from '@ionic/vue';
 import { defineComponent } from 'vue';
-import { ellipsisVertical, personCircleOutline, sendOutline , storefrontOutline, codeWorkingOutline, openOutline } from 'ionicons/icons'
+import {
+  ellipsisVertical,
+  personCircleOutline,
+  sendOutline,
+  storefrontOutline,
+  codeWorkingOutline,
+  openOutline
+} from 'ionicons/icons'
 import { mapGetters, useStore } from 'vuex';
 import { useRouter } from 'vue-router';
 import TimeZoneModal from './TimezoneModal.vue';
@@ -213,6 +258,9 @@ import { showToast } from '@/utils';
 import { hasError, removeClientRegistrationToken } from '@/adapter'
 import { translate } from "@/i18n";
 import { Actions, hasPermission } from '@/authorization'
+import { generateTopicName } from "@/utils/firebase";
+import { subscribeTopic, unsubscribeTopic } from '@/adapter'
+import emitter from "@/event-bus"
 
 export default defineComponent({
   name: 'Settings',
@@ -266,17 +314,21 @@ export default defineComponent({
       showPackingSlip: 'user/showPackingSlip',
       locale: 'user/getLocale',
       firebaseDeviceId: 'user/getFirebaseDeviceId',
+      notificationPrefs: 'user/getNotificationPrefs'
     })
   },
   mounted() {
     this.appVersion = this.appInfo.branch ? (this.appInfo.branch + "-" + this.appInfo.revision) : this.appInfo.tag;
   },
-  ionViewWillEnter() {
+  async ionViewWillEnter() {
     // Only fetch configuration when environment mapping exists
     if (Object.keys(this.rerouteFulfillmentConfigMapping).length > 0) {
       this.getAvailableShipmentMethods();
       this.getRerouteFulfillmentConfiguration();
     }
+    // as notification prefs can also be updated from the notification pref modal,
+    // latest state is fetched each time we open the settings page
+    await this.store.dispatch('user/fetchNotificationPreferences')
   },
   methods: {
     setFacility (event: any) {
@@ -410,6 +462,48 @@ export default defineComponent({
       }
       // Fetch the updated configuration
       await this.getRerouteFulfillmentConfiguration(config.settingTypeEnumId);
+    },
+    async updateNotificationPref(enumId: string, event: any) {
+      emitter.emit("presentLoader");
+      const value = !event.target.value
+      try {
+        const oms = this.instanceUrl
+        const facilityId = (this.currentFacility as any).facilityId
+        const topicName = generateTopicName(oms, facilityId, enumId)
+        !value
+          ? await subscribeTopic(topicName, process.env.VUE_APP_NOTIF_APP_ID)
+          : await unsubscribeTopic(topicName, process.env.VUE_APP_NOTIF_APP_ID)
+        showToast(translate('Notification preference updated.'))
+      } catch (error) {
+        event.target.checked = value;
+        showToast(translate('Failed to update notification preference. Please try again.'))
+      } finally {
+        emitter.emit("dismissLoader")
+      }
+    },
+    async confirmNotificationPrefUpdate(enumId: string, event: any) {
+      const value = !event.target.value
+      const message = this.$t("Are you sure you want to update the notification preference?");
+      const alert = await alertController.create({
+        header: this.$t("Update notification preference"),
+        message,
+        buttons: [
+          {
+            text: this.$t("Cancel"),
+            handler: () => {
+              event.target.checked = value;
+            }
+          },
+          {
+            text: this.$t("Confirm"),
+            handler: async () => {
+              // passing event reference for updation in case the API fails
+              await this.updateNotificationPref(enumId, event)
+            }
+          }
+        ],
+      });
+      return alert.present();
     }
   },
   setup () {

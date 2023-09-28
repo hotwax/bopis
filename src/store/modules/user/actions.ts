@@ -171,6 +171,7 @@ const actions: ActionTree<UserState, RootState> = {
   addNotification({ state, commit }, payload) {
     const notifications = JSON.parse(JSON.stringify(state.notifications))
     notifications.push({ ...payload.notification, time: DateTime.now().toMillis() })
+    commit(types.USER_NOTIFICATIONS_CHECK_STATUS_UPDATED, false)
     if (payload.isForeground) {
       showToast(translate("New notification received."));
     }
@@ -218,6 +219,11 @@ const actions: ActionTree<UserState, RootState> = {
     commit(types.USER_NOTIFICATIONS_UPDATED, [])
     commit(types.USER_NOTIFICATIONS_PREFERENCES_UPDATED, [])
     commit(types.USER_FIREBASE_DEVICEID_UPDATED, '')
+    commit(types.USER_NOTIFICATIONS_CHECK_STATUS_UPDATED, null)
+  },
+
+  setNotificationsCheckStatus({ commit }, payload) {
+    commit(types.USER_NOTIFICATIONS_CHECK_STATUS_UPDATED, payload)
   }
 }
 export default actions;

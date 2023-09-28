@@ -53,10 +53,7 @@ import { translate } from "@/i18n";
 import { showToast } from "@/utils";
 import emitter from "@/event-bus"
 import { generateTopicName } from "@/utils/firebase";
-import {
-  subscribeTopic,
-  unsubscribeTopic
-} from '@/adapter';
+import { subscribeTopic, unsubscribeTopic } from '@/adapter'
 
 export default defineComponent({
   name: "NotificationPreferenceModal",
@@ -132,7 +129,6 @@ export default defineComponent({
       this.notificationPrefState[enumId] = value
     },
     async updateNotificationPref() {
-      // TODO disbale button if initial and final are same
       // added loader as the API call is in pending state for too long, blocking the flow
       emitter.emit("presentLoader");
       try {
