@@ -118,20 +118,6 @@
       </div>
 
       <section>
-        <!-- <ion-card>
-          <ion-card-header>
-            <ion-card-title>
-              {{ $t('Timezone') }}
-            </ion-card-title>
-          </ion-card-header>
-          <ion-card-content>
-            {{ $t('The timezone you select is used to ensure automations you schedule are always accurate to the time you select.') }}
-          </ion-card-content>
-          <ion-item lines="none">
-            <ion-label> {{ userProfile && userProfile.userTimeZone ? userProfile.userTimeZone : '-' }} </ion-label>
-            <ion-button @click="changeTimeZone()" slot="end" fill="outline" color="dark">{{ $t("Change") }}</ion-button>
-          </ion-item>
-        </ion-card> -->
         <TimeZoneSwitcher />
 
         <ion-card>
@@ -289,12 +275,6 @@ export default defineComponent({
         this.store.dispatch('user/setFacility', {
           'facilityId': event.detail.value
         });
-    },
-    async changeTimeZone() {
-      const timeZoneModal = await modalController.create({
-        component: TimeZoneModal,
-      });
-      return timeZoneModal.present();
     },
     logout () {
       this.store.dispatch('user/logout').then(() => {
