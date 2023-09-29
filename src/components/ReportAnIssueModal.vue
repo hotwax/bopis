@@ -11,7 +11,7 @@
   </ion-header>
   <ion-content>
     <ion-item lines="none">
-      <p>{{ $t('On rejecting this item, <customer name> will be sent an email with alternate fulfillment options and this order item will be removed from your dashboard.') }}</p>
+      <p>{{ $t('On rejecting this item, will be sent an email with alternate fulfillment options and this order item will be removed from your dashboard.', { customerName: order.customer?.name }) }}</p>
     </ion-item>
     <ion-list>
       <ion-list-header>{{ $t("Select reason") }}</ion-list-header>
@@ -51,6 +51,7 @@ import {
 } from '@ionic/vue';
 import { defineComponent } from 'vue';
 import { closeOutline, saveOutline } from 'ionicons/icons';
+import { mapGetters, useStore } from 'vuex'
 
 export default defineComponent({
   name: "ReportAnIssueModal",
@@ -71,24 +72,46 @@ export default defineComponent({
     IonRadio,
     IonRadioGroup
   },
+  props: ['item'],
   data () {
     return {
       unfillableReason: JSON.parse(process.env.VUE_APP_UNFILLABLE_REASONS),
       rejectReasonId: ''
     }
   },
+  computed: {
+    ...mapGetters({
+      order: "order/getCurrent"
+    })
+  },
   methods: {
     closeModal() {
       modalController.dismiss({ dismissed: true });
     },
     confirmSave () {
-      console.log('save changes', this.rejectReasonId);
+      console.log('this.getCurrentOrderPartWithSelectedItem() -- ', this.getCurrentOrderPartWithSelectedItem());
+      
+      // this.store.dispatch('order/setUnfillableOrderOrItem', { orderId: this.order.orderId, part: this.getCurrentOrderPartWithSelectedItem() }).then((resp) => {
+      //   console.log('');
+        
+      // })
+    },
+    getCurrentOrderPartWithSelectedItem() {
+      const part = this.order.parts?.find((part: any) => part.orderPartSeqId === this.$route.params.orderPartSeqId);
+      if (part) {
+        part.items = [Object.assign(this.item, { reason: this.rejectReasonId })];
+        return part;
+      }
+      return {};
     }
   },
   setup() {
+    const store = useStore();
+
     return {
       closeOutline,
-      saveOutline
+      saveOutline,
+      store
     };
   }
 });

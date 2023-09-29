@@ -67,6 +67,7 @@
   "Open": "Open",
   "OMS": "OMS",
   "OMS instance": "OMS instance",
+  "On rejecting this item, will be sent an email with alternate fulfillment options and this order item will be removed from your dashboard.": "On rejecting this item, { customerName } will be sent an email with alternate fulfillment options and this order item will be removed from your dashboard.",
   "Other stores inventory": "Other stores inventory",
   "Order": "Order",
   "Order delivered to": "Order delivered to { customerName }",

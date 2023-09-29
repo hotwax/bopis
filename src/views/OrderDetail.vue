@@ -21,7 +21,7 @@
           <ion-card v-for="(item, index) in getCurrentOrderPart()?.items" :key="index">
             <ProductListItem :item="item" />
             <ion-item v-if="partialOrderRejection" lines="none" class="border-top">
-              <ion-button fill="clear" @click="openReportAnIssueModal()">
+              <ion-button fill="clear" @click="openReportAnIssueModal(item)">
                 {{ $t("Report an issue") }}
               </ion-button>
             </ion-item>
@@ -155,9 +155,10 @@ export default defineComponent({
       });
       return orderItemRejHistoryModal.present();
     },
-    async openReportAnIssueModal(){
+    async openReportAnIssueModal(item: any){
       const reportAnIssueModal = await modalController.create({
         component: ReportAnIssueModal,
+        componentProps: { item }
       });
       return reportAnIssueModal.present();
     },

@@ -473,7 +473,7 @@ const actions: ActionTree<OrderState , RootState> ={
     return await dispatch("rejectOrderItems", payload).then((resp) => {
       const refreshPickupOrders = resp.find((response: any) => !(response.data._ERROR_MESSAGE_ || response.data._ERROR_MESSAGE_LIST_))
       if (refreshPickupOrders) {
-        showToast(translate('All items were canceled from the order') + ' ' + payload.orderId);
+        showToast(payload.part.items.length === 1 ? translate('Item has been rejected successfully') : translate('All items were canceled from the order') + ' ' + payload.orderId);
       } else {
         showToast(translate('Something went wrong'));
       }
