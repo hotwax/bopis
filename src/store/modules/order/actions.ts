@@ -100,9 +100,10 @@ const actions: ActionTree<OrderState , RootState> ={
   async getOrderDetail( { dispatch, state }, payload ) {
     const current = state.current as any
     const orders = JSON.parse(JSON.stringify(state.open.list)) as any
-
-    if(current.orderId === payload.orderId) { return current }
-
+    if(current.orderId === payload.orderId) { 
+      this.dispatch('product/getProductInformation', { orders: [ current ] })
+      return current 
+    }
     if(orders.length) {
       const order = orders.find((order: any) => {
         return order.orderId === payload.orderId;
@@ -112,7 +113,6 @@ const actions: ActionTree<OrderState , RootState> ={
         return order;
       }
     }
-
     const orderQueryPayload = prepareOrderQuery({
       ...payload,
       shipmentMethodTypeId: !store.state.user.preference.showShippingOrders ? 'STOREPICKUP' : '',
@@ -450,6 +450,9 @@ const actions: ActionTree<OrderState , RootState> ={
             }
           })
         }
+        // Mark current order as ready to handover
+        dispatch('updateCurrent', { order : { ...payload.order, readyToHandover: true } })
+
         showToast(translate("Order packed and ready for delivery"))
       } else {
         showToast(translate("Something went wrong"))

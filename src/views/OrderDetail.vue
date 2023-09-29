@@ -8,7 +8,7 @@
           <ion-button @click="openOrderItemRejHistoryModal()">
             <ion-icon slot="icon-only" :icon="timeOutline" />
           </ion-button>
-          <ion-button v-if="!isDesktop" :disabled="!hasPermission(Actions.APP_ORDER_UPDATE)" @click="updateOrder(order)">
+          <ion-button v-if="!isDesktop" :disabled="!hasPermission(Actions.APP_ORDER_UPDATE) || order?.readyToHandover || order?.rejected" @click="updateOrder(order)">
             <ion-icon slot="icon-only" color="danger" :icon="bagRemoveOutline" />
           </ion-button>
         </ion-buttons>
@@ -16,7 +16,7 @@
     </ion-header>
     <ion-content>
       <main :class="{ 'desktop-only' : isDesktop }">
-        <OrderInfo v-if="!isDesktop" :orderId="$route.params.orderId" />
+        <OrderInfo v-if="!isDesktop" />
         <section>
           <ion-card v-for="(item, index) in getCurrentOrderPart()?.items" :key="index">
             <ProductListItem :item="item" />
@@ -29,12 +29,12 @@
         </section>
 
         <aside v-if="isDesktop">
-          <OrderInfo :orderId="$route.params.orderId" />
+          <OrderInfo />
         </aside>
       </main>
 
-      <ion-fab v-if="!isDesktop" vertical="bottom" horizontal="end" slot="fixed">
-        <ion-fab-button :disabled="!hasPermission(Actions.APP_ORDER_UPDATE)">
+      <ion-fab v-if="!isDesktop" vertical="bottom" horizontal="end" slot="fixed" @click="readyForPickup({ order, part: getCurrentOrderPart() })">
+        <ion-fab-button :disabled="!hasPermission(Actions.APP_ORDER_UPDATE) || order?.readyToHandover || order?.rejected">
           <ion-icon :icon="bagHandleOutline" />
         </ion-fab-button>
       </ion-fab>
@@ -42,7 +42,7 @@
   </ion-page>
 </template>
 
-<script>
+<script lang="ts">
 import {
   alertController,
   IonBackButton,
@@ -65,17 +65,13 @@ import { defineComponent } from "vue";
 import { mapGetters, useStore } from "vuex";
 import { bagHandleOutline, bagRemoveOutline, timeOutline } from "ionicons/icons";
 import ProductListItem from '@/components/ProductListItem.vue'
-import { copyToClipboard } from '@/utils'
-import { hasError } from '@/adapter';
 import { useRouter } from 'vue-router'
-import { DateTime } from 'luxon';
-import ShipToCustomerModal from "@/components/ShipToCustomerModal.vue";
 import { Actions, hasPermission } from '@/authorization'
-import { OrderService } from "@/services/OrderService";
 import OrderItemRejHistoryModal from '@/components/OrderItemRejHistoryModal.vue';
 import ReportAnIssueModal from '@/components/ReportAnIssueModal.vue';
-import OrderInfo from '@/components/OrderInfo';
+import OrderInfo from '@/components/OrderInfo.vue';
 import emitter from "@/event-bus"
+import AssignPickerModal from "@/views/AssignPickerModal.vue";
 
 export default defineComponent({
   name: "OrderDetail",
@@ -107,11 +103,19 @@ export default defineComponent({
     ...mapGetters({
       order: "order/getCurrent",
       currentFacility: 'user/getCurrentFacility',
+      configurePicker: "user/configurePicker",
       partialOrderRejection: 'user/partialOrderRejection'
     })
   },
   methods: {
-    async getOrderDetail(orderId, orderPartSeqId) {
+    async assignPicker(order: any, part: any, facilityId: any) {      
+      const assignPickerModal = await modalController.create({
+        component: AssignPickerModal,
+        componentProps: { order, part, facilityId }
+      });
+      return assignPickerModal.present();
+    },
+    async getOrderDetail(orderId: any, orderPartSeqId: any) {
       const payload = {
         facilityId: this.currentFacility.facilityId,
         orderId,
@@ -121,11 +125,11 @@ export default defineComponent({
     },
     getCurrentOrderPart() {
       if (this.order.parts) {
-        return this.order.parts.find((part) => part.orderPartSeqId === this.$route.params.orderPartSeqId)
+        return this.order.parts.find((part: any) => part.orderPartSeqId === this.$route.params.orderPartSeqId)
       }
       return {}
     },
-    async updateOrder(order) {
+    async updateOrder(order: any) {
       const alert = await alertController
         .create({
           header: this.$t('Update Order'),
@@ -137,7 +141,8 @@ export default defineComponent({
             text: this.$t('Reject Order'),
             handler: () => {
               this.store.dispatch('order/setUnfillableOrderOrItem', { orderId: order.orderId, part: this.getCurrentOrderPart() }).then((resp) => {
-                if (resp) this.router.push('/tabs/orders')
+                // Mark current order as rejected
+                this.store.dispatch('order/updateCurrent', { order : { ...order, rejected: true } })
               })
             },
           }]
@@ -155,14 +160,38 @@ export default defineComponent({
         component: ReportAnIssueModal,
       });
       return reportAnIssueModal.present();
+    },
+    async readyForPickup (orderInfo: any) {
+      if(this.configurePicker) return this.assignPicker(orderInfo.order, orderInfo.part, this.currentFacility.facilityId);
+      const pickup = orderInfo.part?.shipmentMethodEnum?.shipmentMethodEnumId === 'STOREPICKUP';
+      const header = pickup ? this.$t('Ready for pickup') : this.$t('Ready to ship');
+      const message = pickup ? this.$t('An email notification will be sent to that their order is ready for pickup. This order will also be moved to the packed orders tab.', { customerName: orderInfo.order.customer.name, space: '<br/><br/>'}) : '';
+
+      const alert = await alertController
+        .create({
+          header: header,
+          message: message,
+          buttons: [{
+            text: this.$t('Cancel'),
+            role: 'cancel'
+          },{
+            text: header,
+            handler: async () => {
+              await this.store.dispatch('order/packShipGroupItems', { order: orderInfo.order, part: orderInfo.part, facilityId: this.currentFacility.facilityId})
+            }
+          }]
+        });
+      return alert.present();
     }
    },
   async mounted() {
     await this.getOrderDetail(this.$route.params.orderId, this.$route.params.orderPartSeqId);
     emitter.on('updateOrder', this.updateOrder);
+    emitter.on('readyForPickupOfOrderDetail', this.readyForPickup);
   },
   unmounted() {
     emitter.off('updateOrder', this.updateOrder);
+    emitter.off('readyForPickupOfOrderDetail', this.readyForPickup);
   },
   setup () {
     const store = useStore();
