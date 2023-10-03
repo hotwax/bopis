@@ -26,8 +26,8 @@
     </ion-item>
     <div v-if="isDesktop">
       <!-- TODO: implement functionality to change shipping address -->
-      <ion-button class="ion-margin-top" :disabled="!hasPermission(Actions.APP_ORDER_UPDATE) || order?.readyToHandover || order?.rejected" expand="block" @click.stop="emitter.emit('readyForPickupOfOrderDetail', { order, part: getCurrentOrderPart() })">
-        {{ getCurrentOrderPart()?.shipmentMethodEnum?.shipmentMethodEnumId === 'STOREPICKUP' ? $t("Ready for pickup") : $t("Ready to ship") }}
+      <ion-button class="ion-margin-top" :disabled="!hasPermission(Actions.APP_ORDER_UPDATE) || order?.readyToHandover || order?.rejected" expand="block" @click.stop="emitter.emit('readyForPickupOfOrderDetail', { order, part: order.part })">
+        {{ order.part.shipmentMethodEnum?.shipmentMethodEnumId === 'STOREPICKUP' ? $t("Ready for pickup") : $t("Ready to ship") }}
       </ion-button>
       <ion-button :disabled="!hasPermission(Actions.APP_ORDER_UPDATE) || order?.readyToHandover || order?.rejected" expand="block" color="danger" fill="outline" @click="emitter.emit('updateOrder', order)">
         {{ $t("Reject Order") }}
@@ -106,12 +106,6 @@ export default defineComponent({
       } catch (error) {
         console.error(error)
       }
-    },
-    getCurrentOrderPart() {
-      if (this.order.parts) {
-        return this.order.parts.find((part: any) => part.orderPartSeqId === this.$route.params.orderPartSeqId)
-      }
-      return {}
     }
   },
   async mounted() {

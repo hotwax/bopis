@@ -89,20 +89,18 @@ export default defineComponent({
       modalController.dismiss({ dismissed: true });
     },
     confirmSave () {
-      console.log('this.getCurrentOrderPartWithSelectedItem() -- ', this.getCurrentOrderPartWithSelectedItem());
-      
-      // this.store.dispatch('order/setUnfillableOrderOrItem', { orderId: this.order.orderId, part: this.getCurrentOrderPartWithSelectedItem() }).then((resp) => {
-      //   console.log('');
-        
-      // })
-    },
-    getCurrentOrderPartWithSelectedItem() {
-      const part = this.order.parts?.find((part: any) => part.orderPartSeqId === this.$route.params.orderPartSeqId);
-      if (part) {
-        part.items = [Object.assign(this.item, { reason: this.rejectReasonId })];
-        return part;
-      }
-      return {};
+      this.store.dispatch('order/setUnfillableOrderOrItem', { orderId: this.order.orderId, part: { ...this.order.part, items: [{ ...this.item, reason: this.rejectReasonId }] } }).then((resp) => {
+        if (resp) {
+          // creating an current order copy by removing the selected item from the order.part
+          const order = { ...this.order, part: { ...this.order.part, items: this.order.part.items.filter((item: any) => !(item.orderItemSeqId === this.item.orderItemSeqId && item.productId === this.item.productId)) }};
+    
+          // If this is the last item of the order then the order is fully rejected
+          if(this.order.part.items.length === 1) order.rejected = true;
+  
+          this.store.dispatch('order/updateCurrent', { order });
+        }
+        this.closeModal();
+      })
     }
   },
   setup() {

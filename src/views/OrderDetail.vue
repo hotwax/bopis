@@ -15,10 +15,10 @@
       </ion-toolbar>
     </ion-header>
     <ion-content>
-      <main :class="{ 'desktop-only' : isDesktop }">
+      <main :class="{ 'desktop-only' : isDesktop && order?.part?.items?.length }">
         <OrderInfo v-if="!isDesktop" />
         <section>
-          <ion-card v-for="(item, index) in getCurrentOrderPart()?.items" :key="index">
+          <ion-card v-for="(item, index) in order.part?.items" :key="index">
             <ProductListItem :item="item" />
             <ion-item v-if="partialOrderRejection" lines="none" class="border-top">
               <ion-button fill="clear" @click="openReportAnIssueModal(item)">
@@ -33,7 +33,7 @@
         </aside>
       </main>
 
-      <ion-fab v-if="!isDesktop" vertical="bottom" horizontal="end" slot="fixed" @click="readyForPickup({ order, part: getCurrentOrderPart() })">
+      <ion-fab v-if="!isDesktop" vertical="bottom" horizontal="end" slot="fixed" @click="readyForPickup({ order, part: order.part })">
         <ion-fab-button :disabled="!hasPermission(Actions.APP_ORDER_UPDATE) || order?.readyToHandover || order?.rejected">
           <ion-icon :icon="bagHandleOutline" />
         </ion-fab-button>
@@ -123,12 +123,6 @@ export default defineComponent({
       }
       await this.store.dispatch("order/getOrderDetail", payload)
     },
-    getCurrentOrderPart() {
-      if (this.order.parts) {
-        return this.order.parts.find((part: any) => part.orderPartSeqId === this.$route.params.orderPartSeqId)
-      }
-      return {}
-    },
     async updateOrder(order: any) {
       const alert = await alertController
         .create({
@@ -140,9 +134,11 @@ export default defineComponent({
           }, {
             text: this.$t('Reject Order'),
             handler: () => {
-              this.store.dispatch('order/setUnfillableOrderOrItem', { orderId: order.orderId, part: this.getCurrentOrderPart() }).then((resp) => {
-                // Mark current order as rejected
-                this.store.dispatch('order/updateCurrent', { order : { ...order, rejected: true } })
+              this.store.dispatch('order/setUnfillableOrderOrItem', { orderId: order.orderId, part: order.part }).then((resp) => {
+                if (resp) {
+                  // Mark current order as rejected
+                  this.store.dispatch('order/updateCurrent', { order : { ...order, rejected: true } })
+                }
               })
             },
           }]
