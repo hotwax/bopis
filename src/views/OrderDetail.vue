@@ -177,10 +177,14 @@ export default defineComponent({
           }]
         });
       return alert.present();
+    },
+    async fetchRejectReasons() {
+      await this.store.dispatch('util/fetchRejectReasons');
     }
    },
   async mounted() {
     await this.getOrderDetail(this.$route.params.orderId, this.$route.params.orderPartSeqId);
+    await this.fetchRejectReasons();
     emitter.on('updateOrder', this.updateOrder);
     emitter.on('readyForPickupOfOrderDetail', this.readyForPickup);
   },

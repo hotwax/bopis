@@ -41,7 +41,10 @@ const getters: GetterTree<OrderState , RootState> = {
   },
   isShipToStoreCmpltdOrdrsScrlbl: (state) => {
     return state.shipToStore.completed.list.length > 0 && state.shipToStore.completed.list.length < state.shipToStore.completed.total
-  }
+  },
+  getOrderItemRejectionHistory: (state) => {
+    return state.orderItemRejectionHistory
+  },
 }
 
 export default getters;

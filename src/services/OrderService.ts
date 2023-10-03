@@ -128,11 +128,20 @@ const getShipmentItems = async (shipmentIds: any): Promise<any> => {
   }, [])
 }
 
+const getOrderItemRejHistory = async (payload: any): Promise<any> => {
+  return api({
+    url: 'performFind',
+    method: 'POST',
+    data: payload
+  })
+}
+
 export const OrderService = {
   getOpenOrders,
   getOrderDetails,
   getCompletedOrders,
   getPackedOrders,
+  getOrderItemRejHistory,
   quickShipEntireShipGroup,
   rejectOrderItem,
   updateShipment,

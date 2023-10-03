@@ -767,6 +767,36 @@ const actions: ActionTree<OrderState , RootState> ={
     return resp;
   },
 
+  async getOrderItemRejHistory({ commit, state }, payload) {
+    let rejectionHistory = [] as any;
+
+    try {
+      const params = {
+        inputFields: {
+          orderId: payload.orderId,
+          orderId_op: "equals",
+          changeReasonEnumId: payload.rejectReasons,
+          changeReasonEnumId_op: "in",
+        },
+        fieldList: ['orderItemSeqId', 'changeDatetime', 'changeUserLogin'],
+        entityName: 'OrderFacilityChange',
+        orderBy: 'changeDatetime DESC',
+        viewSize: 20,
+      }
+      const resp = await OrderService.getOrderItemRejHistory(params);
+
+      if (!hasError(resp) && resp.data.count > 0) {
+        rejectionHistory = resp.data.docs;
+      } else {
+        throw resp.data
+      }
+    } catch (err) {
+      console.error('Failed to fetch order item rejection history', err)
+    }
+
+    commit(types.ORDER_ITEM_REJECTION_HISTORY_UPDATED, rejectionHistory)
+  },
+
   // clearning the orders state when logout, or user store is changed
   clearOrders ({ commit }) {
     commit(types.ORDER_OPEN_UPDATED, {orders: {} , total: 0})

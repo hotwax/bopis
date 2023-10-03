@@ -52,7 +52,7 @@ import {
 } from '@ionic/vue';
 import { defineComponent } from 'vue';
 import { closeOutline } from 'ionicons/icons';
-import { mapGetters } from "vuex";
+import { mapGetters, useStore } from "vuex";
 
 export default defineComponent({
   name: "OrderItemRejHistoryModal",
@@ -71,8 +71,16 @@ export default defineComponent({
   },
   computed: {
     ...mapGetters({
-      getProduct: 'product/getProduct'
+      getProduct: 'product/getProduct',
+      order: "order/getCurrent",
+      rejectReasons: 'util/getRejectReasons',
+      rejectionHistory: 'order/getOrderItemRejectionHistory'
     })
+  },
+  async mounted() {
+    await this.store.dispatch('order/getOrderItemRejHistory', { orderId: this.order.orderId, rejectReasons: this.rejectReasons.reduce((enumIds: [], reason: any) => [ ...enumIds, reason.enumId ], []) });
+    console.log('--- ', this.rejectionHistory);
+    
   },
   methods: {
     closeModal() {
@@ -80,8 +88,11 @@ export default defineComponent({
     }
   },
   setup() {
+    const store = useStore();
+
     return {
-      closeOutline
+      closeOutline,
+      store
     };
   },
 });

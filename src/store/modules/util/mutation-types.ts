@@ -1,0 +1,2 @@
+export const SN_UTIL = 'util'
+export const UTIL_REJECT_REASONS_UPDATED = SN_UTIL + '/REJECT_REASONS_UPDATED'
