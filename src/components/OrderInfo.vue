@@ -7,8 +7,8 @@
     <ion-list>
       <ion-item lines="none">
         <ion-label class="ion-text-wrap">
-          <h2>{{ order.customer?.name }}</h2>
-          <p>{{ order.orderName ? order.orderName : order.orderId }}</p>
+          <h2>{{ order?.customer?.name }}</h2>
+          <p>{{ order?.orderName ? order?.orderName : order?.orderId }}</p>
         </ion-label>
         <ion-badge v-if="order.placedDate" slot="end">{{ timeFromNow(order.placedDate) }}</ion-badge>
       </ion-item>
@@ -27,7 +27,7 @@
     <div v-if="isDesktop">
       <!-- TODO: implement functionality to change shipping address -->
       <ion-button class="ion-margin-top" :disabled="!hasPermission(Actions.APP_ORDER_UPDATE) || order?.readyToHandover || order?.rejected" expand="block" @click.stop="emitter.emit('readyForPickupOfOrderDetail', { order, part: order.part })">
-        {{ order.part.shipmentMethodEnum?.shipmentMethodEnumId === 'STOREPICKUP' ? $t("Ready for pickup") : $t("Ready to ship") }}
+        {{ order?.part?.shipmentMethodEnum?.shipmentMethodEnumId === 'STOREPICKUP' ? $t("Ready for pickup") : $t("Ready to ship") }}
       </ion-button>
       <ion-button :disabled="!hasPermission(Actions.APP_ORDER_UPDATE) || order?.readyToHandover || order?.rejected" expand="block" color="danger" fill="outline" @click="emitter.emit('updateOrder', order)">
         {{ $t("Reject Order") }}
@@ -55,7 +55,7 @@ import {
   sendOutline
 } from "ionicons/icons";
 import { defineComponent } from "vue";
-import { mapGetters, useStore } from 'vuex'
+import { mapGetters } from 'vuex'
 import { copyToClipboard } from '@/utils'
 import { hasError } from '@/adapter';
 import { DateTime } from 'luxon';
@@ -112,7 +112,6 @@ export default defineComponent({
     await this.getCustomerContactDetails()
   },
   setup() {
-    const store = useStore();
 
     return {
       Actions,
@@ -123,8 +122,7 @@ export default defineComponent({
       closeCircleOutline,
       hasPermission,
       mailOutline,
-      sendOutline,
-      store
+      sendOutline
     };
   }
 });

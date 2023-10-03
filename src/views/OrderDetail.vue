@@ -75,7 +75,6 @@ import AssignPickerModal from "@/views/AssignPickerModal.vue";
 
 export default defineComponent({
   name: "OrderDetail",
-  props: ['orderId'],
   components: {
     IonBackButton,
     IonButton,
@@ -95,7 +94,6 @@ export default defineComponent({
   },
   data () {
     return {
-      customerEmail: '',
       isDesktop: isPlatform('desktop')
     }
   },
