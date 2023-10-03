@@ -255,11 +255,10 @@ import Image from '@/components/Image.vue';
 import { DateTime } from 'luxon';
 import { UserService } from '@/services/UserService'
 import { showToast } from '@/utils';
-import { hasError, removeClientRegistrationToken } from '@/adapter'
+import { hasError, removeClientRegistrationToken, subscribeTopic, unsubscribeTopic } from '@/adapter'
 import { translate } from "@/i18n";
 import { Actions, hasPermission } from '@/authorization'
 import { generateTopicName } from "@/utils/firebase";
-import { subscribeTopic, unsubscribeTopic } from '@/adapter'
 import emitter from "@/event-bus"
 
 export default defineComponent({
@@ -473,19 +472,19 @@ export default defineComponent({
         !value
           ? await subscribeTopic(topicName, process.env.VUE_APP_NOTIF_APP_ID)
           : await unsubscribeTopic(topicName, process.env.VUE_APP_NOTIF_APP_ID)
-        showToast(translate('Notification preference updated.'))
+        showToast(translate('Notification preferences updated.'))
       } catch (error) {
         event.target.checked = value;
-        showToast(translate('Failed to update notification preference. Please try again.'))
+        showToast(translate('Notification preferences not updated. Please try again.'))
       } finally {
         emitter.emit("dismissLoader")
       }
     },
     async confirmNotificationPrefUpdate(enumId: string, event: any) {
       const value = !event.target.value
-      const message = this.$t("Are you sure you want to update the notification preference?");
+      const message = this.$t("Are you sure you want to update the notification preferences?");
       const alert = await alertController.create({
-        header: this.$t("Update notification preference"),
+        header: this.$t("Update notification preferences"),
         message,
         buttons: [
           {

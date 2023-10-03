@@ -88,9 +88,6 @@ export default defineComponent({
     emitter.on('dismissLoader', this.dismissLoader);
     this.$i18n.locale = this.locale;
     // null check to only update the status once when the app mounts for the fist tine
-    if (this.notificationsCheckStatus === null) {
-      this.store.dispatch('user/setNotificationsCheckStatus', !this.notifications.length)
-    }
   },
   unmounted() {
     emitter.off('presentLoader', this.presentLoader);
