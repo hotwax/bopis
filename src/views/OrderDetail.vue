@@ -14,23 +14,54 @@
         </ion-buttons>
       </ion-toolbar>
     </ion-header>
+
     <ion-content>
-      <main :class="{ 'desktop-only' : isDesktop && order?.part?.items?.length }">
-        <OrderInfo v-if="!isDesktop" />
+      <main>
+        <aside class="orderHeader">
+          <ion-item v-if="order?.readyToHandover || order?.rejected" color="light" lines="none">
+            <ion-icon :icon="order?.readyToHandover ? checkmarkCircleOutline : order?.rejected ? closeCircleOutline : ''" :color="order?.readyToHandover ? 'success' : order?.rejected ? 'danger' : ''" slot="start" />
+            <ion-label class="ion-text-wrap">{{ order?.readyToHandover ? $t("Order is now ready to handover.") : order?.rejected ? $t("Order has been rejected.") : '' }}</ion-label>
+          </ion-item>
+          <ion-list>
+            <ion-item lines="none">
+              <ion-label class="ion-text-wrap">
+                <h2>{{ order?.customer?.name }}</h2>
+                <p>{{ order?.orderName ? order?.orderName : order?.orderId }}</p>
+              </ion-label>
+              <ion-badge v-if="order.placedDate" slot="end">{{ timeFromNow(order.placedDate) }}</ion-badge>
+            </ion-item>
+          </ion-list>
+          <ion-item v-if="customerEmail" lines="none">
+            <ion-icon :icon="mailOutline" slot="start" />
+            <ion-label>{{ customerEmail }}</ion-label>
+            <ion-icon :icon="copyOutline" slot="end" @click="copyToClipboard(customerEmail)" />
+          </ion-item>
+          <ion-item v-if="order.shippingInstructions" color="light" lines="none">
+            <ion-label class="ion-text-wrap">
+              <p class="overline">{{ $t("Handling Instructions") }}</p>
+              <p>{{ order?.shippingInstructions }}</p>
+            </ion-label>
+          </ion-item>
+          <div class="ion-margin-top ion-hide-md-down">
+            <!-- TODO: implement functionality to change shipping address -->
+            <ion-button :disabled="!hasPermission(Actions.APP_ORDER_UPDATE) || order?.readyToHandover || order?.rejected" expand="block" @click.stop="emitter.emit('readyForPickupOfOrderDetail', { order, part: order.part })">
+              {{ order?.part?.shipmentMethodEnum?.shipmentMethodEnumId === 'STOREPICKUP' ? $t("Ready for pickup") : $t("Ready to ship") }}
+            </ion-button>
+            <ion-button :disabled="!hasPermission(Actions.APP_ORDER_UPDATE) || order?.readyToHandover || order?.rejected" expand="block" color="danger" fill="outline" @click="emitter.emit('updateOrder', order)">
+              {{ $t("Reject Order") }}
+            </ion-button>
+          </div>
+        </aside>
         <section>
           <ion-card v-for="(item, index) in order.part?.items" :key="index">
             <ProductListItem :item="item" />
-            <ion-item v-if="partialOrderRejection" lines="none" class="border-top">
+            <div v-if="partialOrderRejection" class="border-top">
               <ion-button fill="clear" @click="openReportAnIssueModal(item)">
                 {{ $t("Report an issue") }}
               </ion-button>
-            </ion-item>
+            </div>
           </ion-card>
         </section>
-
-        <aside v-if="isDesktop">
-          <OrderInfo />
-        </aside>
       </main>
 
       <ion-fab v-if="!isDesktop" vertical="bottom" horizontal="end" slot="fixed" @click="readyForPickup({ order, part: order.part })">
@@ -210,31 +241,17 @@ export default defineComponent({
 </script>
 
 <style scoped>
-.border-top {
-  border-top: 1px solid #ccc;
+//.border-top {
+//  border-top: 1px solid #ccc;
+//}
+
+@media (min-width: 768px) {
+  main {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--spacer-base);
+    margin-top: var(--spacer-lg);
+  }
 }
 
-/* If not in desktop */
-main {
-  max-width: 445px;
-  margin: var(--spacer-base) auto 0; 
-}
-
-aside {
-  position: sticky;
-  top: var(--spacer-lg);
-}
-
-.desktop-only {
-  display: flex;
-  justify-content: center;
-  align-items: start;
-  gap: var(--spacer-2xl);
-  max-width: 990px;
-  margin: var(--spacer-base) auto 0;
-}
-
-.desktop-only > * {
-  width: calc(50% - var(--spacer-xl));
-}
 </style>

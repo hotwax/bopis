@@ -1,8 +1,8 @@
 <template>
-  <section>
+  <section class="orderHeader">
     <ion-item v-if="order?.readyToHandover || order?.rejected" color="light" lines="none">
       <ion-icon :icon="order?.readyToHandover ? checkmarkCircleOutline : order?.rejected ? closeCircleOutline : ''" :color="order?.readyToHandover ? 'success' : order?.rejected ? 'danger' : ''" slot="start" />
-      <ion-label class="ion-text-wrap">{{ order?.readyToHandover ? $t("Order is now ready for handover.") : order?.rejected ? $t("Order is marked rejected.") : '' }}</ion-label>
+      <ion-label class="ion-text-wrap">{{ order?.readyToHandover ? $t("Order is now ready to handover.") : order?.rejected ? $t("Order has been rejected.") : '' }}</ion-label>
     </ion-item>
     <ion-list>
       <ion-item lines="none">
@@ -24,9 +24,9 @@
         <p>{{ order?.shippingInstructions }}</p>
       </ion-label>
     </ion-item>
-    <div v-if="isDesktop">
+    <div class="ion-margin-top ion-hide-md-down">
       <!-- TODO: implement functionality to change shipping address -->
-      <ion-button class="ion-margin-top" :disabled="!hasPermission(Actions.APP_ORDER_UPDATE) || order?.readyToHandover || order?.rejected" expand="block" @click.stop="emitter.emit('readyForPickupOfOrderDetail', { order, part: order.part })">
+      <ion-button :disabled="!hasPermission(Actions.APP_ORDER_UPDATE) || order?.readyToHandover || order?.rejected" expand="block" @click.stop="emitter.emit('readyForPickupOfOrderDetail', { order, part: order.part })">
         {{ order?.part?.shipmentMethodEnum?.shipmentMethodEnumId === 'STOREPICKUP' ? $t("Ready for pickup") : $t("Ready to ship") }}
       </ion-button>
       <ion-button :disabled="!hasPermission(Actions.APP_ORDER_UPDATE) || order?.readyToHandover || order?.rejected" expand="block" color="danger" fill="outline" @click="emitter.emit('updateOrder', order)">
