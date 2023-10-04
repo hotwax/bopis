@@ -61,6 +61,30 @@
               </ion-button>
             </div>
           </ion-card>
+          <ion-card v-for="(item, index) in order.part?.items" :key="index">
+            <ProductListItem :item="item" />
+            <div v-if="partialOrderRejection" class="border-top">
+              <ion-button fill="clear" @click="openReportAnIssueModal(item)">
+                {{ $t("Report an issue") }}
+              </ion-button>
+            </div>
+          </ion-card>
+          <ion-card v-for="(item, index) in order.part?.items" :key="index">
+            <ProductListItem :item="item" />
+            <div v-if="partialOrderRejection" class="border-top">
+              <ion-button fill="clear" @click="openReportAnIssueModal(item)">
+                {{ $t("Report an issue") }}
+              </ion-button>
+            </div>
+          </ion-card>
+          <ion-card v-for="(item, index) in order.part?.items" :key="index">
+            <ProductListItem :item="item" />
+            <div v-if="partialOrderRejection" class="border-top">
+              <ion-button fill="clear" @click="openReportAnIssueModal(item)">
+                {{ $t("Report an issue") }}
+              </ion-button>
+            </div>
+          </ion-card>
         </section>
       </main>
 

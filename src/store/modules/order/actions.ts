@@ -774,12 +774,11 @@ const actions: ActionTree<OrderState , RootState> ={
       const params = {
         inputFields: {
           orderId: payload.orderId,
-          orderId_op: "equals",
-          changeReasonEnumId: payload.rejectReasons,
+          changeReasonEnumId: payload.rejectReasonEnumIds,
           changeReasonEnumId_op: "in",
         },
-        fieldList: ['orderItemSeqId', 'changeDatetime', 'changeUserLogin'],
-        entityName: 'OrderFacilityChange',
+        fieldList: ['changeDatetime', 'changeUserLogin', 'productId', 'changeReasonEnumId'],
+        entityName: 'OrderFacilityChangeAndOrderItem',
         orderBy: 'changeDatetime DESC',
         viewSize: 20,
       }

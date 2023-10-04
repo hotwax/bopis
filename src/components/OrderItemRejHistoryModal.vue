@@ -10,26 +10,27 @@
     </ion-toolbar>
   </ion-header>
   <ion-content>
-    <ion-list v-for="(item, index) in [1]" :key="index">
+    <ion-list v-for="(history, index) in rejectionHistory" :key="index">
       <ion-item>
         <ion-thumbnail slot="start">
-          <ShopifyImg :src="getProduct('10002').mainImageUrl" />
+          <ShopifyImg :src="getProduct(history.productId).mainImageUrl" size="small" />
         </ion-thumbnail>
         <ion-label>
-          <h5>{{ getProduct("10002").brandName }}</h5>
-          <h2>{{ getProduct("10002").productName }}</h2>
-          <p v-if="$filters.getFeature(getProduct('10002').featureHierarchy, '1/COLOR/')">{{ $t("Color") }}: {{ $filters.getFeature(getProduct("10002").featureHierarchy, '1/COLOR/') }}</p>
-          <p v-if="$filters.getFeature(getProduct('10002').featureHierarchy, '1/SIZE/')">{{ $t("Size") }}: {{ $filters.getFeature(getProduct("10002").featureHierarchy, '1/SIZE/') }}</p>
+          <h5>{{ getProduct(history.productId).brandName }}</h5>
+          <h2>{{ getProduct(history.productId).productName }}</h2>
+          <p v-if="$filters.getFeature(getProduct(history.productId).featureHierarchy, '1/COLOR/')">{{ $t("Color") }}: {{ $filters.getFeature(getProduct(history.productId).featureHierarchy, '1/COLOR/') }}</p>
+          <p v-if="$filters.getFeature(getProduct(history.productId).featureHierarchy, '1/SIZE/')">{{ $t("Size") }}: {{ $filters.getFeature(getProduct(history.productId).featureHierarchy, '1/SIZE/') }}</p>
         </ion-label>
         <ion-label slot="end" class="ion-text-right">
-          <h2>{{ 'Not in stock' }}</h2>
-          <p>{{ $t('Rejected by', { userName: 'user-name', rejectionTime: 'rejection-time' }) }}</p>
+          <h2>{{ getRejectReasonDescription(history?.changeReasonEnumId) }}</h2>
+          <p>{{ history?.changeUserLogin }}</p>
+          <p>{{ getTime(history.changeDatetime) }}</p>
         </ion-label>
       </ion-item>
     </ion-list>
 
     <!-- Empty state -->
-    <div v-if="!([1,3].length)" class="empty-state">
+    <div v-if="!rejectionHistory.length" class="empty-state">
       <p>{{ $t('No records found.') }}</p>
     </div>
   </ion-content>
@@ -53,6 +54,7 @@ import {
 import { defineComponent } from 'vue';
 import { closeOutline } from 'ionicons/icons';
 import { mapGetters, useStore } from "vuex";
+import { DateTime } from 'luxon';
 
 export default defineComponent({
   name: "OrderItemRejHistoryModal",
@@ -78,13 +80,17 @@ export default defineComponent({
     })
   },
   async mounted() {
-    await this.store.dispatch('order/getOrderItemRejHistory', { orderId: this.order.orderId, rejectReasons: this.rejectReasons.reduce((enumIds: [], reason: any) => [ ...enumIds, reason.enumId ], []) });
-    console.log('--- ', this.rejectionHistory);
-    
+    await this.store.dispatch('order/getOrderItemRejHistory', { orderId: this.order.orderId, rejectReasonEnumIds: this.rejectReasons.reduce((enumIds: [], reason: any) => [...enumIds, reason.enumId], []) });
   },
   methods: {
     closeModal() {
       modalController.dismiss({ dismissed: true });
+    },
+    getRejectReasonDescription(rejectReasonEnumId: string) {
+      return this.rejectReasons.find((reason: any) => reason.enumId === rejectReasonEnumId).description;
+    },
+    getTime(time: number) {
+      return DateTime.fromMillis(time).toLocaleString(DateTime.DATETIME_MED)
     }
   },
   setup() {
