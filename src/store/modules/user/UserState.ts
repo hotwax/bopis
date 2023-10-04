@@ -6,4 +6,7 @@ export default interface UserState {
     preference: any;
     permissions: any;
     currentEComStore: any;
+    notifications: any;
+    notificationPrefs: any;
+    firebaseDeviceId: string;
 }

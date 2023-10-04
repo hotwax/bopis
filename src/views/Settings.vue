@@ -64,7 +64,7 @@
           <ion-item lines="none">
             <ion-label>{{ translate("Select facility") }}</ion-label>
             <ion-select interface="popover" :value="currentFacility?.facilityId" @ionChange="setFacility($event)">
-              <ion-select-option v-for="facility in (userProfile ? userProfile.facilities : [])" :key="facility.facilityId" :value="facility.facilityId" >{{ facility.name }}</ion-select-option>
+              <ion-select-option v-for="facility in (userProfile ? userProfile.facilities : [])" :key="facility.facilityId" :value="facility.facilityId" >{{ facility.facilityName }}</ion-select-option>
             </ion-select>
           </ion-item>
         </ion-card>
@@ -195,8 +195,8 @@ import Image from '@/components/Image.vue';
 import { DateTime } from 'luxon';
 import { UserService } from '@/services/UserService'
 import { showToast } from '@/utils';
-import { hasError } from '@/adapter'
 import { translate } from "@hotwax/dxp-components";
+import { hasError, removeClientRegistrationToken } from '@/adapter'
 import { Actions, hasPermission } from '@/authorization'
 
 export default defineComponent({
@@ -247,7 +247,8 @@ export default defineComponent({
       instanceUrl: 'user/getInstanceUrl',
       configurePicker: "user/configurePicker",
       showShippingOrders: 'user/showShippingOrders',
-      showPackingSlip: 'user/showPackingSlip'
+      showPackingSlip: 'user/showPackingSlip',
+      firebaseDeviceId: 'user/getFirebaseDeviceId',
     })
   },
   mounted() {
@@ -278,7 +279,15 @@ export default defineComponent({
       });
       return timeZoneModal.present();
     },
-    logout () {
+    async logout () {
+      // remove firebase notification registration token -
+      // OMS and auth is required hence, removing it before logout (clearing state)
+      try {
+        await removeClientRegistrationToken(this.firebaseDeviceId, process.env.VUE_APP_NOTIF_APP_ID)
+      } catch (error) {
+        console.error(error)
+      }
+
       this.store.dispatch('user/logout').then(() => {
         const redirectUrl = window.location.origin + '/login'
         window.location.href = `${process.env.VUE_APP_LOGIN_URL}?isLoggedOut=true&redirectUrl=${redirectUrl}`

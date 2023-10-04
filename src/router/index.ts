@@ -5,6 +5,7 @@ import Tabs from '@/views/Tabs.vue'
 import OrderDetail from '@/views/OrderDetail.vue'
 import ProductDetail from '@/views/ProductDetail.vue'
 import ShipToStoreOrders from '@/views/ShipToStoreOrders.vue'
+import Notifications from '@/views/Notifications.vue'
 import Shopify from '@/views/Shopify.vue'
 
 import { hasPermission } from '@/authorization';
@@ -13,7 +14,7 @@ import { translate } from '@hotwax/dxp-components'
 
 import 'vue-router'
 import { Login, useAuthStore } from '@hotwax/dxp-components';
-import { loader } from '@/user-utils';
+import { loader } from '@/utils/user';
 
 // Defining types for the meta values
 declare module 'vue-router' {
@@ -108,6 +109,12 @@ const routes: Array<RouteRecordRaw> = [
     path: '/ship-to-store-orders',
     name: "ShipToStoreOrders",
     component: ShipToStoreOrders,
+    beforeEnter: authGuard,
+  },
+  {
+    path: '/notifications',
+    name: "Notifications",
+    component: Notifications,
     beforeEnter: authGuard,
   },
   {

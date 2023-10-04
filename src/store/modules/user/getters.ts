@@ -44,6 +44,15 @@ const getters: GetterTree <UserState, RootState> = {
     },
     getCurrentEComStore(state) {
         return state.currentEComStore;
+    },
+    getNotifications(state) {
+        return state.notifications.sort((a: any, b: any) => b.time - a.time)
+    },
+    getNotificationPrefs(state) {
+        return state.notificationPrefs
+    },
+    getFirebaseDeviceId(state) {
+        return state.firebaseDeviceId
     }
 }
 export default getters;

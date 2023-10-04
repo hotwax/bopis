@@ -19,6 +19,9 @@ const userModule: Module<UserState, RootState> = {
       },
       currentEComStore: {},
       permissions: [],
+      notifications: [],
+      notificationPrefs: [],
+      firebaseDeviceId: ''
     },
     getters,
     actions,

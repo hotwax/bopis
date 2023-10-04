@@ -27,15 +27,19 @@ import './theme/variables.css';
 import "@hotwax/apps-theme";
 
 import store from './store'
+
 import permissionPlugin from '@/authorization';
 import permissionRules from '@/authorization/Rules';
 import permissionActions from '@/authorization/Actions';
-import { dxpComponents } from '@hotwax/dxp-components'
-import { login, logout, loader } from './user-utils';
-import localeMessages from './locales';
-import { getConfig, initialise } from './adapter';
-import { getUserPreference, setUserPreference } from '@/adapter';
 
+import { dxpComponents } from '@hotwax/dxp-components'
+import localeMessages from './locales';
+import { getConfig, initialise, getUserPreference, setUserPreference } from '@/adapter';
+import { login, logout, loader } from '@/utils/user';
+import { addNotification, storeClientRegistrationToken } from '@/utils/firebase';
+
+console.log("Firease Config: " + process.env.VUE_APP_FIREBASE_CONFIG);
+console.log("Firebase VAPID key: " + process.env.VUE_APP_FIREBASE_VAPID_KEY);
 const app = createApp(App)
   .use(IonicVue, {
     mode: 'md'
@@ -47,16 +51,20 @@ const app = createApp(App)
     actions: permissionActions
   })
   .use(dxpComponents, {
-    defaultImgUrl: require("@/assets/images/defaultImage.png"),
-    login,
-    logout,
-    loader,
+    addNotification,
     appLoginUrl: process.env.VUE_APP_LOGIN_URL as string,
-    localeMessages,
+    appFirebaseConfig: JSON.parse(process.env.VUE_APP_FIREBASE_CONFIG),
+    appFirebaseVapidKey: process.env.VUE_APP_FIREBASE_VAPID_KEY,
+    defaultImgUrl: require("@/assets/images/defaultImage.png"),
     getConfig,
     initialise,
+    loader,
+    login,
+    logout,
+    localeMessages,
     getUserPreference,
-    setUserPreference
+    setUserPreference,
+    storeClientRegistrationToken,
   });
 
 // Filters are removed in Vue 3 and global filter introduced https://v3.vuejs.org/guide/migration/filters.html#global-filters
