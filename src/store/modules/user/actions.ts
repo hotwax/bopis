@@ -5,7 +5,14 @@ import UserState from './UserState'
 import * as types from './mutation-types'
 import { showToast } from '@/utils'
 import { Settings } from 'luxon';
-import { hasError, updateInstanceUrl, updateToken, resetConfig } from '@/adapter'
+import {
+  getUserPreference,
+  hasError,
+  resetConfig,
+  setUserPreference,
+  updateInstanceUrl,
+  updateToken
+} from '@/adapter'
 import {
   getServerPermissionsFromRules,
   prepareAppPermissions,
@@ -19,7 +26,7 @@ const actions: ActionTree<UserState, RootState> = {
   /**
  * Login user and return token
  */
-  async login ({ commit, dispatch }, payload) {
+  async login ({ commit, dispatch, getters }, payload) {
     try {
       const {token, oms} = payload;
       dispatch("setUserInstanceUrl", oms);
@@ -62,7 +69,7 @@ const actions: ActionTree<UserState, RootState> = {
       // TODO Use a separate API for getting facilities, this should handle user like admin accessing the app
       const currentFacility = userProfile.facilities.length > 0 ? userProfile.facilities[0] : {};
       const currentEComStore = await UserService.getCurrentEComStore(token, currentFacility?.facilityId);
-      const userPreference = await UserService.getUserPreference(token)
+      const userPreference = await getUserPreference(token, getters['getBaseUrl'], 'BOPIS_PREFERENCE')
 
       /*  ---- Guard clauses ends here --- */
 
@@ -142,7 +149,7 @@ const actions: ActionTree<UserState, RootState> = {
 
   setUserPreference( {state, commit }, payload){
     commit(types.USER_PREFERENCE_UPDATED, payload)
-    UserService.setUserPreference({
+    setUserPreference({
       'userPrefTypeId': 'BOPIS_PREFERENCE',
       'userPrefValue': JSON.stringify(state.preference)
     });
