@@ -6,13 +6,13 @@
           <ion-icon slot="icon-only" :icon="closeOutline" />
         </ion-button>
       </ion-buttons>
-      <ion-title>{{ $t("Notification Preference") }}</ion-title>
+      <ion-title>{{ translate("Notification Preference") }}</ion-title>
     </ion-toolbar>
   </ion-header>
 
   <ion-content>
     <div v-if="!notificationPrefs.length" class="ion-text-center">
-      <p>{{ $t("Notification preferences not found.")}}</p>
+      <p>{{ translate("Notification preferences not found.")}}</p>
     </div>
     <ion-list v-else>
       <ion-item :key="pref.enumId" v-for="pref in notificationPrefs">
@@ -49,7 +49,7 @@ import {
 import { defineComponent } from "vue";
 import { closeOutline, save } from "ionicons/icons";
 import { mapGetters, useStore } from "vuex";
-import { translate } from "@/i18n";
+import { translate } from '@hotwax/dxp-components'
 import { showToast } from "@/utils";
 import emitter from "@/event-bus"
 import { generateTopicName } from "@/utils/firebase";
@@ -167,16 +167,16 @@ export default defineComponent({
       )
     },
     async confirmSave() {
-      const message = this.$t("Are you sure you want to update the notification preferences?");
+      const message = this.translate("Are you sure you want to update the notification preferences?");
       const alert = await alertController.create({
-        header: this.$t("Update notification preferences"),
+        header: this.translate("Update notification preferences"),
         message,
         buttons: [
           {
-            text: this.$t("Cancel"),
+            text: this.translate("Cancel"),
           },
           {
-            text: this.$t("Confirm"),
+            text: this.translate("Confirm"),
             handler: async () => {
               await this.updateNotificationPref();
               modalController.dismiss({ dismissed: true });
@@ -192,6 +192,7 @@ export default defineComponent({
 
     return {
       closeOutline,
+      translate,
       save,
       store
     };

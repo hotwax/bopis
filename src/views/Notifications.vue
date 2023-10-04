@@ -3,7 +3,7 @@
     <ion-header>
       <ion-toolbar>
         <ion-back-button slot="start" default-href="/tabs/orders" />
-        <ion-title>{{ $t("Notifications") }}</ion-title>
+        <ion-title>{{ translate("Notifications") }}</ion-title>
       </ion-toolbar>
     </ion-header>
 
@@ -20,7 +20,7 @@
             </ion-item>
           </ion-list>
           <div v-else class="ion-text-center">
-            {{ $t('No notifications to show') }}
+            {{ translate('No notifications to show') }}
           </div>
         </section>
       </main>
@@ -55,6 +55,7 @@ import { defineComponent } from "vue";
 import { mapGetters, useStore } from "vuex";
 import { DateTime } from "luxon";
 import NotificationPreferenceModal from '@/components/NotificationPreferenceModal.vue'
+import { translate } from "@hotwax/dxp-components";
 
 export default defineComponent({
   name: "Notifications",
@@ -95,6 +96,7 @@ export default defineComponent({
 
     return {
       cogOutline,
+      translate,
       store
     }
   }
