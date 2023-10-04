@@ -54,7 +54,6 @@ export default defineComponent({
   }, 
   computed: {
     ...mapGetters({
-      locale: 'user/getLocale',
       userToken: 'user/getUserToken',
       instanceUrl: 'user/getInstanceUrl'
     })

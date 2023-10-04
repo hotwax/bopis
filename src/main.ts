@@ -34,6 +34,7 @@ import { dxpComponents } from '@hotwax/dxp-components'
 import { login, logout, loader } from './user-utils';
 import localeMessages from './locales';
 import { getConfig, initialise } from './adapter';
+import { getUserPreference, setUserPreference } from '@/adapter';
 
 const app = createApp(App)
   .use(IonicVue, {
@@ -53,7 +54,9 @@ const app = createApp(App)
     appLoginUrl: process.env.VUE_APP_LOGIN_URL as string,
     localeMessages,
     getConfig,
-    initialise
+    initialise,
+    getUserPreference,
+    setUserPreference
   });
 
 // Filters are removed in Vue 3 and global filter introduced https://v3.vuejs.org/guide/migration/filters.html#global-filters

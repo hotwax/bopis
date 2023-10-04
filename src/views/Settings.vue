@@ -186,7 +186,7 @@
 
 <script lang="ts">
 import { IonAvatar, IonButton, IonCard, IonCardContent, IonCardHeader, IonCardSubtitle, IonCardTitle, IonContent, IonHeader, IonIcon, IonItem, IonLabel, IonPage, IonSelect, IonSelectOption, IonTitle, IonToggle , IonToolbar, modalController } from '@ionic/vue';
-import { computed, defineComponent } from 'vue';
+import { defineComponent } from 'vue';
 import { ellipsisVertical, personCircleOutline, sendOutline , storefrontOutline, codeWorkingOutline, openOutline } from 'ionicons/icons'
 import { mapGetters, useStore } from 'vuex';
 import { useRouter } from 'vue-router';
@@ -196,7 +196,7 @@ import { DateTime } from 'luxon';
 import { UserService } from '@/services/UserService'
 import { showToast } from '@/utils';
 import { hasError } from '@/adapter'
-import { translate, useUserStore } from "@hotwax/dxp-components";
+import { translate } from "@hotwax/dxp-components";
 import { Actions, hasPermission } from '@/authorization'
 
 export default defineComponent({
@@ -386,9 +386,6 @@ export default defineComponent({
   setup () {
     const store = useStore();
     const router = useRouter();
-    const userStore = useUserStore();
-
-    const locale = computed(() => userStore.getLocale);
 
     return {
       Actions,
@@ -401,7 +398,6 @@ export default defineComponent({
       storefrontOutline,
       codeWorkingOutline,
       openOutline,
-      locale,
       translate
     }
   }

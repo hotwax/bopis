@@ -1,4 +1,4 @@
-import { api, client, getConfig, hasError, initialise, resetConfig, updateInstanceUrl, updateToken } from '@hotwax/oms-api'
+import { api, client, getConfig, hasError, initialise, resetConfig, updateInstanceUrl, updateToken, getUserPreference, setUserPreference } from '@hotwax/oms-api'
 
 export {
   api,
@@ -8,5 +8,7 @@ export {
   hasError,
   resetConfig,
   updateInstanceUrl,
-  updateToken
+  updateToken,
+  getUserPreference,
+  setUserPreference
 }

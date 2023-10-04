@@ -24,9 +24,6 @@ const mutations: MutationTree <UserState> = {
     [types.USER_PREFERENCE_UPDATED] (state, payload) {
         state.preference = {...state.preference, ...payload};
     },
-    [types.USER_LOCALE_UPDATED] (state, payload) {
-        state.locale = payload;
-    },
     [types.USER_CURRENT_ECOM_STORE_UPDATED] (state, payload) {
         state.currentEComStore = payload
     },

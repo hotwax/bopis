@@ -146,10 +146,6 @@ const actions: ActionTree<UserState, RootState> = {
       'userPrefTypeId': 'BOPIS_PREFERENCE',
       'userPrefValue': JSON.stringify(state.preference)
     });
-  },
-
-  setLocale({ commit }, payload) {
-    commit(types.USER_LOCALE_UPDATED, payload)
-  },
+  }
 }
 export default actions;
