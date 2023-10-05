@@ -57,8 +57,8 @@ const getters: GetterTree <UserState, RootState> = {
     getFirebaseDeviceId(state) {
         return state.firebaseDeviceId
     },
-    getNotificationsCheckStatus(state) {
-        return state.notificationsCheckStatus
+    getUnreadNotificationsStatus(state) {
+        return state.hasUnreadNotifications
     }
 }
 export default getters;

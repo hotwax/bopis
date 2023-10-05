@@ -219,10 +219,10 @@ const actions: ActionTree<UserState, RootState> = {
     commit(types.USER_NOTIFICATIONS_UPDATED, [])
     commit(types.USER_NOTIFICATIONS_PREFERENCES_UPDATED, [])
     commit(types.USER_FIREBASE_DEVICEID_UPDATED, '')
-    commit(types.USER_NOTIFICATIONS_CHECK_STATUS_UPDATED, null)
+    commit(types.USER_NOTIFICATIONS_CHECK_STATUS_UPDATED, false)
   },
 
-  setNotificationsCheckStatus({ commit }, payload) {
+  setUnreadNotificationsStatus({ commit }, payload) {
     commit(types.USER_NOTIFICATIONS_CHECK_STATUS_UPDATED, payload)
   }
 }

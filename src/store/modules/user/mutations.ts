@@ -43,7 +43,7 @@ const mutations: MutationTree <UserState> = {
         state.firebaseDeviceId = payload
     },
     [types.USER_NOTIFICATIONS_CHECK_STATUS_UPDATED] (state, payload) {
-        state.notificationsCheckStatus = payload
+        state.hasUnreadNotifications = payload
     }
 }
 export default mutations;

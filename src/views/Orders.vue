@@ -5,7 +5,7 @@
         <ion-title>{{ currentFacility?.facilityName }}</ion-title>
         <ion-buttons slot="end">
           <ion-button @click="viewNotifications()">
-            <ion-icon slot="icon-only" :icon="notificationsOutline" :color="(!notificationsCheckStatus && notifications.length) ? 'primary' : ''" />
+            <ion-icon slot="icon-only" :icon="notificationsOutline" :color="(!unreadNotificationsStatus && notifications.length) ? 'primary' : ''" />
           </ion-button>
           <ion-button @click="viewShipToStoreOrders()">
             <ion-icon slot="icon-only" :icon="trailSignOutline" />
@@ -251,7 +251,7 @@ export default defineComponent({
       isCompletedOrdersScrollable: 'order/isCompletedOrdersScrollable',
       showPackingSlip: 'user/showPackingSlip',
       notifications: 'user/getNotifications',
-      notificationsCheckStatus: 'user/getNotificationsCheckStatus'
+      unreadNotificationsStatus: 'user/getUnreadNotificationsStatus'
     })
   },
   data() {
@@ -447,7 +447,7 @@ export default defineComponent({
       this.$router.push({ path: '/ship-to-store-orders' })
     },
     viewNotifications() {
-      this.store.dispatch('user/setNotificationsCheckStatus', true)
+      this.store.dispatch('user/setUnreadNotificationsStatus', true)
       this.$router.push({ path: '/notifications' })
     }
   },
