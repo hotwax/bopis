@@ -61,30 +61,6 @@
               </ion-button>
             </div>
           </ion-card>
-          <ion-card v-for="(item, index) in order.part?.items" :key="index">
-            <ProductListItem :item="item" />
-            <div v-if="partialOrderRejection" class="border-top">
-              <ion-button fill="clear" @click="openReportAnIssueModal(item)">
-                {{ $t("Report an issue") }}
-              </ion-button>
-            </div>
-          </ion-card>
-          <ion-card v-for="(item, index) in order.part?.items" :key="index">
-            <ProductListItem :item="item" />
-            <div v-if="partialOrderRejection" class="border-top">
-              <ion-button fill="clear" @click="openReportAnIssueModal(item)">
-                {{ $t("Report an issue") }}
-              </ion-button>
-            </div>
-          </ion-card>
-          <ion-card v-for="(item, index) in order.part?.items" :key="index">
-            <ProductListItem :item="item" />
-            <div v-if="partialOrderRejection" class="border-top">
-              <ion-button fill="clear" @click="openReportAnIssueModal(item)">
-                {{ $t("Report an issue") }}
-              </ion-button>
-            </div>
-          </ion-card>
         </section>
       </main>
 
@@ -310,21 +286,16 @@ export default defineComponent({
   main {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    grid-template-areas: 'left right';
     gap: var(--spacer-base);
-    margin: var(--spacer-lg) var(--spacer-lg) 0;
   }
 
   aside {
-    grid-area: right;
+    grid-column: 2;
+    grid-row: 1;
     /* Order Info section to stay fixed and not scrollable as there can be multiple order items which will increase the grid container size */
     height: fit-content; 
     position: sticky;
-    top: var(--spacer-lg);
-  }
-
-  section {
-    grid-area: left;
+    top: 0;
   }
 }
 </style>
