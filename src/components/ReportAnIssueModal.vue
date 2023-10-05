@@ -32,6 +32,7 @@
     
 <script lang="ts">
 import {
+  alertController,
   IonButton,
   IonButtons,
   IonContent,
@@ -81,26 +82,42 @@ export default defineComponent({
   },
   computed: {
     ...mapGetters({
-      order: "order/getCurrent"
+      order: "order/getCurrent",
+      getProduct: 'product/getProduct',
     })
   },
   methods: {
     closeModal() {
       modalController.dismiss({ dismissed: true });
     },
-    confirmSave () {
-      this.store.dispatch('order/setUnfillableOrderOrItem', { orderId: this.order.orderId, part: { ...this.order.part, items: [{ ...this.item, reason: this.rejectReasonId }] } }).then((resp) => {
-        if (resp) {
-          // creating an current order copy by removing the selected item from the order.part
-          const order = { ...this.order, part: { ...this.order.part, items: this.order.part.items.filter((item: any) => !(item.orderItemSeqId === this.item.orderItemSeqId && item.productId === this.item.productId)) }};
-    
-          // If this is the last item of the order then the order is fully rejected
-          if(this.order.part.items.length === 1) order.rejected = true;
-  
-          this.store.dispatch('order/updateCurrent', { order });
-        }
-        this.closeModal();
-      })
+    async confirmSave () {
+      const alert = await alertController
+        .create({
+          header: this.$t('Reject Order Item'),
+          // TODO: Show primary identifier in message instead of productName when product identifier functionality implemented in the app.
+          message: this.$t('will be removed from your dashboard. This action cannot be undone.', { productName: this.getProduct(this.item.productId)?.productName, space: '<br /><br />' }),
+          buttons: [{
+            text: this.$t('Cancel'),
+            role: 'cancel'
+          }, {
+            text: this.$t('Reject'),
+            handler: () => {
+              this.store.dispatch('order/setUnfillableOrderOrItem', { orderId: this.order.orderId, part: { ...this.order.part, items: [{ ...this.item, reason: this.rejectReasonId }] } }).then((resp) => {
+                if (resp) {
+                  // creating an current order copy by removing the selected item from the order.part
+                  const order = { ...this.order, part: { ...this.order.part, items: this.order.part.items.filter((item: any) => !(item.orderItemSeqId === this.item.orderItemSeqId && item.productId === this.item.productId)) } };
+
+                  // If this is the last item of the order then the order is fully rejected
+                  if (this.order.part.items.length === 1) order.rejected = true;
+
+                  this.store.dispatch('order/updateCurrent', { order });
+                }
+                this.closeModal();
+              })
+            },
+          }]
+        });
+      return alert.present();
     }
   },
   setup() {
