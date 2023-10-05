@@ -184,13 +184,13 @@ export default defineComponent({
     async updateOrder(order: any) {
       const alert = await alertController
         .create({
-          header: this.$t('Update Order'),
+          header: this.$t('Reject Order'),
           message: this.$t(`This order will be removed from your dashboard. This action cannot be undone.`, { space: '<br /><br />' }),
           buttons: [{
             text: this.$t('Cancel'),
             role: 'cancel'
           }, {
-            text: this.$t('Reject Order'),
+            text: this.$t('Reject'),
             handler: () => {
               this.store.dispatch('order/setUnfillableOrderOrItem', { orderId: order.orderId, part: order.part }).then((resp) => {
                 if (resp) {
