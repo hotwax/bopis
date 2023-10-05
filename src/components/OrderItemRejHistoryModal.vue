@@ -93,7 +93,7 @@ export default defineComponent({
       modalController.dismiss({ dismissed: true });
     },
     getRejectReasonDescription(rejectReasonEnumId: string) {
-      return this.rejectReasons.find((reason: any) => reason.enumId === rejectReasonEnumId).description;
+      return this.rejectReasons.find((reason: any) => reason.enumId === rejectReasonEnumId)?.description;
     },
     getTime(time: number) {
       return DateTime.fromMillis(time).toLocaleString(DateTime.DATETIME_MED)

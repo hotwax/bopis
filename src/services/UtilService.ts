@@ -1,6 +1,6 @@
 import { api } from '@/adapter';
 
-const fetchRejectReasons = async(query: any): Promise<any> => {
+const fetchRejectReasons = async (query: any): Promise<any> => {
   return api({
     url: "performFind",
     method: "get",

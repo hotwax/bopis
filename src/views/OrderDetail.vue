@@ -28,7 +28,7 @@
                 <h2>{{ order?.customer?.name }}</h2>
                 <p>{{ order?.orderName ? order?.orderName : order?.orderId }}</p>
               </ion-label>
-              <ion-badge v-if="order.placedDate" slot="end">{{ timeFromNow(order.placedDate) }}</ion-badge>
+              <ion-badge v-if="order?.placedDate" slot="end">{{ timeFromNow(order.placedDate) }}</ion-badge>
             </ion-item>
           </ion-list>
           <ion-item v-if="customerEmail" lines="none">
@@ -228,7 +228,7 @@ export default defineComponent({
     async fetchRejectReasons() {
       await this.store.dispatch('util/fetchRejectReasons');
     },
-    timeFromNow(time: string) {
+    timeFromNow(time: any) {
       const timeDiff = DateTime.fromISO(time).diff(DateTime.local());
       return DateTime.local().plus(timeDiff).toRelative();
     },

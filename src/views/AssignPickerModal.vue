@@ -7,7 +7,7 @@
         </ion-button>
       </ion-buttons>
       <ion-title>{{ $t("Assign Pickers") }}</ion-title>
-      <ion-button fill="clear" slot="end" @click="readyForPickup()">{{ part?.shipmentMethodEnum?.shipmentMethodEnumId === 'STOREPICKUP' ? $t("Ready for pickup") : $t("Ready to ship") }}</ion-button>
+      <ion-button fill="clear" slot="end" @click="readyForPickup()">{{ part.shipmentMethodEnum?.shipmentMethodEnumId === 'STOREPICKUP' ? $t("Ready for pickup") : $t("Ready to ship") }}</ion-button>
     </ion-toolbar>
   </ion-header>
 

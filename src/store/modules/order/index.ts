@@ -36,7 +36,7 @@ const orderModule: Module<OrderState, RootState> = {
         list: {},
         total: 0
       }
-    },
+    }
   },
   getters,
   actions,

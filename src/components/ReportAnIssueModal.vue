@@ -11,12 +11,12 @@
   </ion-header>
   <ion-content>
     <ion-item lines="none">
-      <p>{{ $t('On rejecting this item, will be sent an email with alternate fulfillment options and this order item will be removed from your dashboard.', { customerName: order.customer?.name }) }}</p>
+      <p>{{ $t('On rejecting this item, will be sent an email with alternate fulfillment options and this order item will be removed from your dashboard.', { customerName: order?.customer?.name }) }}</p>
     </ion-item>
     <ion-list>
       <ion-list-header>{{ $t("Select reason") }}</ion-list-header>
       <ion-radio-group v-model="rejectReasonId">
-        <ion-item v-for="reason in unfillableReason" :key="reason.id">
+        <ion-item v-for="reason in unfillableReasons" :key="reason.id">
           <ion-radio slot="start" :value="reason.id"/>
           <ion-label>{{ $t(reason.label) }}</ion-label>
         </ion-item>
@@ -76,7 +76,7 @@ export default defineComponent({
   props: ['item'],
   data () {
     return {
-      unfillableReason: JSON.parse(process.env.VUE_APP_UNFILLABLE_REASONS),
+      unfillableReasons: JSON.parse(process.env.VUE_APP_UNFILLABLE_REASONS),
       rejectReasonId: ''
     }
   },
