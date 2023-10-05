@@ -767,7 +767,8 @@ const actions: ActionTree<OrderState , RootState> ={
     return resp;
   },
 
-  async getOrderItemRejHistory({ commit, state }, payload) {
+  async getOrderItemRejHistory({ commit }, payload) {
+    emitter.emit("presentLoader");
     let rejectionHistory = [] as any;
 
     try {
@@ -786,6 +787,11 @@ const actions: ActionTree<OrderState , RootState> ={
 
       if (!hasError(resp) && resp.data.count > 0) {
         rejectionHistory = resp.data.docs;
+        const productIds = [ ...(resp.data.docs.reduce((productIds: any, history: any) => productIds.add(history.productId), new Set())) ];
+
+        // Get products that exist in order item rejection history
+        await this.dispatch('product/fetchProducts', { productIds })
+        await this.dispatch('stock/addProducts', { productIds })
       } else {
         throw resp.data
       }
@@ -794,6 +800,7 @@ const actions: ActionTree<OrderState , RootState> ={
     }
 
     commit(types.ORDER_ITEM_REJECTION_HISTORY_UPDATED, rejectionHistory)
+    emitter.emit("dismissLoader");
   },
 
   // clearning the orders state when logout, or user store is changed

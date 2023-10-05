@@ -30,7 +30,7 @@
     </ion-list>
 
     <!-- Empty state -->
-    <div v-if="!rejectionHistory.length" class="empty-state">
+    <div v-if="!rejectionHistory.length && !isLoading" class="empty-state">
       <p>{{ $t('No records found.') }}</p>
     </div>
   </ion-content>
@@ -71,6 +71,11 @@ export default defineComponent({
     IonTitle,
     IonToolbar,
   },
+  data () {
+    return {
+      isLoading: true
+    }
+  },
   computed: {
     ...mapGetters({
       getProduct: 'product/getProduct',
@@ -81,6 +86,7 @@ export default defineComponent({
   },
   async mounted() {
     await this.store.dispatch('order/getOrderItemRejHistory', { orderId: this.order.orderId, rejectReasonEnumIds: this.rejectReasons.reduce((enumIds: [], reason: any) => [...enumIds, reason.enumId], []) });
+    this.isLoading = false;
   },
   methods: {
     closeModal() {
