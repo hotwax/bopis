@@ -25,7 +25,7 @@
 
 <script lang="ts">
 import { defineComponent } from "vue";
-import { IonItem, IonLabel, IonNote, IonThumbnail } from "@ionic/vue";
+import { IonIcon, IonItem, IonLabel, IonNote, IonThumbnail } from "@ionic/vue";
 import { mapGetters, useStore } from 'vuex';
 import { ShopifyImg } from '@hotwax/dxp-components'
 import { cubeOutline } from 'ionicons/icons'
@@ -33,6 +33,7 @@ import { cubeOutline } from 'ionicons/icons'
 export default defineComponent({
   name: "ProductListItem",
   components: {
+    IonIcon,
     IonItem,
     IonLabel,
     IonNote,
