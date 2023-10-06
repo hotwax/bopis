@@ -1,6 +1,6 @@
 {
   "App": "App",
-  "All items were canceled from the order": "全ての商品が注文からキャンセルされました",
+  "All items were rejected from the order": "All items were rejected from the order",
   "Allow partial rejection": "Allow partial rejection",
   "An email notification will be sent to that their order is ready for pickup. This order will also be moved to the packed orders tab.": "{ customerName }様宛に注文の受け取り準備が完了したことをお知らするメールが送信されます。{ space } この注文は「梱包済み注文」タブに移動されます.",
   "An email notification will be sent to that their order is ready for pickup.": "{ customerName }様宛に注文の受け取り準備が完了したことをお知らするメールが送信されます。",

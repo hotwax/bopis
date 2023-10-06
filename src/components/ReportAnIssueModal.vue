@@ -53,6 +53,7 @@ import {
 import { defineComponent } from 'vue';
 import { closeOutline, saveOutline } from 'ionicons/icons';
 import { mapGetters, useStore } from 'vuex'
+import { OrderService } from "@/services/OrderService";
 
 export default defineComponent({
   name: "ReportAnIssueModal",
@@ -102,7 +103,7 @@ export default defineComponent({
           }, {
             text: this.$t('Reject'),
             handler: () => {
-              this.store.dispatch('order/setUnfillableOrderOrItem', { orderId: this.order.orderId, part: { ...this.order.part, items: [{ ...this.item, reason: this.rejectReasonId }] } }).then((resp) => {
+              OrderService.rejectItem({ orderId: this.order.orderId, shipmentMethodEnumId: this.order.part.shipmentMethodEnum.shipmentMethodEnumId, item: { ...this.item, reason: this.rejectReasonId } }).then((resp) => {
                 if (resp) {
                   // creating an current order copy by removing the selected item from the order.part
                   const order = { ...this.order, part: { ...this.order.part, items: this.order.part.items.filter((item: any) => !(item.orderItemSeqId === this.item.orderItemSeqId && item.productId === this.item.productId)) } };

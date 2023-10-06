@@ -1,5 +1,8 @@
 import { api, client, hasError } from '@/adapter';
+import emitter from '@/event-bus';
+import { translate } from '@/i18n';
 import store from '@/store';
+import { showToast } from '@/utils';
 
 const getOpenOrders = async (payload: any): Promise <any> => {
   return api({
@@ -55,6 +58,38 @@ const quickShipEntireShipGroup = async (payload: any): Promise <any> => {
     method: "post",
     data: payload
   });
+}
+
+const rejectItem = async (payload: any): Promise<any> => {
+  try {
+    emitter.emit("presentLoader");
+    const params = {
+      'orderId': payload.orderId,
+      'rejectReason': payload.item.reason,
+      'facilityId': payload.item.facilityId,
+      'orderItemSeqId': payload.item.orderItemSeqId,
+      'shipmentMethodTypeId': payload.shipmentMethodEnumId,
+      'quantity': parseInt(payload.item.quantity),
+      ...(payload.shipmentMethodEnumId === "STOREPICKUP" && ({ "naFacilityId": "PICKUP_REJECTED" })),
+    }
+
+    const resp = await api({
+      url: "rejectOrderItem",
+      method: "post",
+      data: { 'payload': params }
+    });
+
+    if (!hasError(resp)) {
+      showToast(translate('Item has been rejected successfully'));
+    } else {
+      showToast(translate('Something went wrong'));
+    }
+    return resp;
+  } catch (error) {
+    console.error(error);
+  } finally {
+    emitter.emit("dismissLoader");
+  }
 }
 
 const rejectOrderItem = async (payload: any): Promise <any> => {
@@ -143,6 +178,7 @@ export const OrderService = {
   getPackedOrders,
   getOrderItemRejHistory,
   quickShipEntireShipGroup,
+  rejectItem,
   rejectOrderItem,
   updateShipment,
   createPicklist,
