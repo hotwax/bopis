@@ -225,7 +225,7 @@ import Image from '@/components/Image.vue';
 import { DateTime } from 'luxon';
 import { UserService } from '@/services/UserService'
 import { showToast } from '@/utils';
-import { hasError } from '@/adapter'
+import { hasError, removeClientRegistrationToken } from '@/adapter'
 import { translate } from "@/i18n";
 import { Actions, hasPermission } from '@/authorization'
 
@@ -280,7 +280,8 @@ export default defineComponent({
       showShippingOrders: 'user/showShippingOrders',
       showPackingSlip: 'user/showPackingSlip',
       partialOrderRejectionConfig: 'user/getPartialOrderRejectionConfig',
-      locale: 'user/getLocale'
+      locale: 'user/getLocale',
+      firebaseDeviceId: 'user/getFirebaseDeviceId',
     })
   },
   mounted() {
@@ -311,7 +312,15 @@ export default defineComponent({
       });
       return timeZoneModal.present();
     },
-    logout () {
+    async logout () {
+      // remove firebase notification registration token -
+      // OMS and auth is required hence, removing it before logout (clearing state)
+      try {
+        await removeClientRegistrationToken(this.firebaseDeviceId, process.env.VUE_APP_NOTIF_APP_ID)
+      } catch (error) {
+        console.error(error)
+      }
+
       this.store.dispatch('user/logout').then(() => {
         const redirectUrl = window.location.origin + '/login'
         window.location.href = `${process.env.VUE_APP_LOGIN_URL}?isLoggedOut=true&redirectUrl=${redirectUrl}`

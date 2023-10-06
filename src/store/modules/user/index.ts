@@ -21,6 +21,9 @@ const userModule: Module<UserState, RootState> = {
       currentEComStore: {},
       partialOrderRejectionConfig: {},
       permissions: [],
+      notifications: [],
+      notificationPrefs: [],
+      firebaseDeviceId: ''
     },
     getters,
     actions,

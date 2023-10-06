@@ -50,6 +50,15 @@ const getters: GetterTree <UserState, RootState> = {
     },
     getPartialOrderRejectionConfig(state) {
         return state.partialOrderRejectionConfig;
+    },
+    getNotifications(state) {
+        return state.notifications.sort((a: any, b: any) => b.time - a.time)
+    },
+    getNotificationPrefs(state) {
+        return state.notificationPrefs
+    },
+    getFirebaseDeviceId(state) {
+        return state.firebaseDeviceId
     }
 }
 export default getters;
