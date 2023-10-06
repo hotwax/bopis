@@ -84,6 +84,7 @@ export default defineComponent({
   },
   computed: {
     ...mapGetters({
+      userProfile: 'user/getUserProfile',
       currentFacility: 'user/getCurrentFacility',
       instanceUrl: 'user/getInstanceUrl',
       notificationPrefs: 'user/getNotificationPrefs'
@@ -140,17 +141,17 @@ export default defineComponent({
       }
     },
     async handleTopicSubscription() {
-      const oms = this.instanceUrl
+      const ofbizInstanceName = this.userProfile.ofbizInstanceName
       const facilityId = (this.currentFacility as any).facilityId
       const subscribeRequests = [] as any
       this.notificationPrefToUpdate.subscribe.map(async (enumId: string) => {
-        const topicName = generateTopicName(oms, facilityId, enumId)
+        const topicName = generateTopicName(ofbizInstanceName, facilityId, enumId)
         await subscribeRequests.push(subscribeTopic(topicName, process.env.VUE_APP_NOTIF_APP_ID))
       })
 
       const unsubscribeRequests = [] as any
       this.notificationPrefToUpdate.unsubscribe.map(async (enumId: string) => {
-        const topicName = generateTopicName(oms, facilityId, enumId)
+        const topicName = generateTopicName(ofbizInstanceName, facilityId, enumId)
         await unsubscribeRequests.push(unsubscribeTopic(topicName, process.env.VUE_APP_NOTIF_APP_ID))
       })
 

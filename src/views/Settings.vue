@@ -241,12 +241,12 @@ import {
 } from '@ionic/vue';
 import { defineComponent } from 'vue';
 import {
+  codeWorkingOutline,
   ellipsisVertical,
+  openOutline,
   personCircleOutline,
   sendOutline,
-  storefrontOutline,
-  codeWorkingOutline,
-  openOutline
+  storefrontOutline
 } from 'ionicons/icons'
 import { mapGetters, useStore } from 'vuex';
 import { useRouter } from 'vue-router';
@@ -466,9 +466,9 @@ export default defineComponent({
       emitter.emit("presentLoader");
       const value = !event.target.checked
       try {
-        const oms = this.instanceUrl
+        const ofbizInstanceName = this.userProfile.ofbizInstanceName
         const facilityId = (this.currentFacility as any).facilityId
-        const topicName = generateTopicName(oms, facilityId, enumId)
+        const topicName = generateTopicName(ofbizInstanceName, facilityId, enumId)
         !value
           ? await subscribeTopic(topicName, process.env.VUE_APP_NOTIF_APP_ID)
           : await unsubscribeTopic(topicName, process.env.VUE_APP_NOTIF_APP_ID)

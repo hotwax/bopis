@@ -9,7 +9,7 @@ const addNotification = async (notification: any) => store.dispatch('user/addNot
 const generateDeviceId = () => (DateTime.now().toFormat('ddMMyy') + String(DateTime.now().toMillis()).slice(-6))
 
 // topic name: oms-facilityId-enumId(enumCode)
-const generateTopicName = (oms: string, facilityId: string, enumId: string) => `${oms}-${facilityId}-${enumId}`
+const generateTopicName = (ofbizInstanceName: string, facilityId: string, enumId: string) => `${ofbizInstanceName}-${facilityId}-${enumId}`
 
 export {
   addNotification,

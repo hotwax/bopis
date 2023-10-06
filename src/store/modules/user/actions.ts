@@ -180,7 +180,7 @@ const actions: ActionTree<UserState, RootState> = {
 
   async fetchNotificationPreferences({ commit, state }) {
     let resp = {} as any
-    const oms = state.instanceUrl
+    const ofbizInstanceName = state.current.ofbizInstanceName
     const facilityId = (state.currentFacility as any).facilityId
     let notificationPreferences = [], enumerationResp = [], userPrefIds = [] as any
     try {
@@ -195,7 +195,7 @@ const actions: ActionTree<UserState, RootState> = {
       // data and getNotificationUserPrefTypeIds fails or returns empty response (all disbaled)
       if (enumerationResp.length) {
         notificationPreferences = enumerationResp.reduce((notifactionPref: any, pref: any) => {
-          const userPrefTypeIdToSearch = generateTopicName(oms, facilityId, pref.enumId)
+          const userPrefTypeIdToSearch = generateTopicName(ofbizInstanceName, facilityId, pref.enumId)
           notifactionPref.push({ ...pref, isEnabled: userPrefIds.includes(userPrefTypeIdToSearch) })
           return notifactionPref
         }, [])
