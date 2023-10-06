@@ -4,26 +4,14 @@
 importScripts('https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js');
 importScripts('https://www.gstatic.com/firebasejs/8.10.1/firebase-messaging.js');
 
-// Initialize a default click_action URL
-const clickActionURL = '/notifications';
-const iconURL = 'img/icons/msapplication-icon-144x144.png';
+// wrapping the logic inside function and calling it as an IIFE
+// to provide return statement support
+(function () {
+  const firebaseConfig = { apiKey: "", authDomain: "", databaseURL: "", projectId: "", storageBucket: "", messagingSenderId: "", appId: "" }
 
-function handleFirebaseInit() {
-  const firebaseConfig = {
-    apiKey: "",
-    authDomain: "",
-    databaseURL: "",
-    projectId: "",
-    storageBucket: "",
-    messagingSenderId: "",
-    appId: ""
-  }
-
-  // return if configurations are empty
   if (Object.values(firebaseConfig).some(value => !value)) {
     return
   }
-
   // Initialize the Firebase app in the service worker by passing in
   // your app's Firebase config object.
   // https://firebase.google.com/docs/web/setup#config-object
@@ -37,9 +25,9 @@ function handleFirebaseInit() {
     const notificationTitle = payload.data.title;
     const notificationOptions = {
       body: payload.data.body,
-      icon: iconURL,
+      icon: "/img/icons/msapplication-icon-144x144.png",
       data: {
-        click_action: clickActionURL
+        click_action: "/notifications"
       }
     };
     self.registration.showNotification(notificationTitle, notificationOptions);
@@ -69,8 +57,4 @@ function handleFirebaseInit() {
       })
     );
   });
-}
-
-// wrapping the logic inside function and calling it
-// to provide return statement support
-handleFirebaseInit()
+})()
