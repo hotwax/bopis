@@ -10,8 +10,8 @@
     </ion-toolbar>
   </ion-header>
   <ion-content>
-    <ion-list v-for="(history, index) in rejectionHistory" :key="index">
-      <ion-item>
+    <ion-list>
+      <ion-item v-for="(history, index) in rejectionHistory" :key="index">
         <ion-thumbnail slot="start">
           <ShopifyImg :src="getProduct(history.productId).mainImageUrl" size="small" />
         </ion-thumbnail>

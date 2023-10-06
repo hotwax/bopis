@@ -450,7 +450,7 @@ const actions: ActionTree<OrderState , RootState> ={
             }
           })
         }
-        // Mark current order as ready to handover
+        // Added ready to handover because we need to show the user that the order has moved to the packed tab (ready to handover)
         dispatch('updateCurrent', { order : { ...payload.order, readyToHandover: true } })
 
         showToast(translate("Order packed and ready for delivery"))

@@ -32,7 +32,6 @@
     
 <script lang="ts">
 import {
-  alertController,
   IonButton,
   IonButtons,
   IonContent,
@@ -46,9 +45,10 @@ import {
   IonListHeader,
   IonTitle,
   IonToolbar,
-  modalController,
   IonRadio,
-  IonRadioGroup
+  IonRadioGroup,
+  alertController,
+  modalController,
 } from '@ionic/vue';
 import { defineComponent } from 'vue';
 import { closeOutline, saveOutline } from 'ionicons/icons';

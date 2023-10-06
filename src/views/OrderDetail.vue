@@ -19,8 +19,8 @@
       <main>
         <aside>
           <ion-item v-if="order?.readyToHandover || order?.rejected" color="light" lines="none">
-            <ion-icon :icon="order?.readyToHandover ? checkmarkCircleOutline : order?.rejected ? closeCircleOutline : ''" :color="order?.readyToHandover ? 'success' : order?.rejected ? 'danger' : ''" slot="start" />
-            <ion-label class="ion-text-wrap">{{ order?.readyToHandover ? $t("Order is now ready to handover.") : order?.rejected ? $t("Order has been rejected.") : '' }}</ion-label>
+            <ion-icon :icon="order.readyToHandover ? checkmarkCircleOutline : closeCircleOutline" :color="order.readyToHandover ? 'success' : 'danger'" slot="start" />
+            <ion-label class="ion-text-wrap">{{ order.readyToHandover ? $t("Order is now ready to handover.") : $t("Order has been rejected.") }}</ion-label>
           </ion-item>
           <ion-list>
             <ion-item lines="none">
@@ -39,7 +39,7 @@
           <ion-item v-if="order?.shippingInstructions" color="light" lines="none">
             <ion-label class="ion-text-wrap">
               <p class="overline">{{ $t("Handling Instructions") }}</p>
-              <p>{{ order?.shippingInstructions }}</p>
+              <p>{{ order.shippingInstructions }}</p>
             </ion-label>
           </ion-item>
           <div class="ion-margin-top ion-hide-md-down">
@@ -292,10 +292,6 @@ export default defineComponent({
   aside {
     grid-column: 2;
     grid-row: 1;
-    /* Order Info section to stay fixed and not scrollable as there can be multiple order items which will increase the grid container size */
-    height: fit-content; 
-    position: sticky;
-    top: 0;
   }
 }
 </style>

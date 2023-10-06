@@ -80,7 +80,7 @@ const rejectItem = async (payload: any): Promise<any> => {
     });
 
     if (!hasError(resp)) {
-      showToast(translate('Item has been rejected successfully'));
+      showToast(translate('Item has been rejected successfully.'));
     } else {
       showToast(translate('Something went wrong'));
     }
