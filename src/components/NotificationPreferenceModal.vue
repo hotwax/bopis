@@ -75,7 +75,7 @@ export default defineComponent({
   data() {
     return {
       notificationPrefState: {} as any,
-      notificationPrefToUpate: {
+      notificationPrefToUpdate: {
         subscribe: [],
         unsubscribe: []
       } as any,
@@ -111,16 +111,16 @@ export default defineComponent({
       // running when the ion-toggle hydrates and hence, updated the 
       // initialNotificationPrefState here
       const value = !event.target.checked
-      // updates the notificationPrefToUpate to check which pref
+      // updates the notificationPrefToUpdate to check which pref
       // values were updated from their initial values
       if (value !== this.initialNotificationPrefState[enumId]) {
         value
-          ? this.notificationPrefToUpate.subscribe.push(enumId)
-          : this.notificationPrefToUpate.unsubscribe.push(enumId)
+          ? this.notificationPrefToUpdate.subscribe.push(enumId)
+          : this.notificationPrefToUpdate.unsubscribe.push(enumId)
       } else {
         !value
-          ? this.notificationPrefToUpate.subscribe.splice(this.notificationPrefToUpate.subscribe.indexOf(enumId), 1)
-          : this.notificationPrefToUpate.unsubscribe.splice(this.notificationPrefToUpate.subscribe.indexOf(enumId), 1)
+          ? this.notificationPrefToUpdate.subscribe.splice(this.notificationPrefToUpdate.subscribe.indexOf(enumId), 1)
+          : this.notificationPrefToUpdate.unsubscribe.splice(this.notificationPrefToUpdate.subscribe.indexOf(enumId), 1)
       }
 
       // updating this.notificationPrefState as it is used to
@@ -143,13 +143,13 @@ export default defineComponent({
       const oms = this.instanceUrl
       const facilityId = (this.currentFacility as any).facilityId
       const subscribeRequests = [] as any
-      this.notificationPrefToUpate.subscribe.map(async (enumId: string) => {
+      this.notificationPrefToUpdate.subscribe.map(async (enumId: string) => {
         const topicName = generateTopicName(oms, facilityId, enumId)
         await subscribeRequests.push(subscribeTopic(topicName, process.env.VUE_APP_NOTIF_APP_ID))
       })
 
       const unsubscribeRequests = [] as any
-      this.notificationPrefToUpate.unsubscribe.map(async (enumId: string) => {
+      this.notificationPrefToUpdate.unsubscribe.map(async (enumId: string) => {
         const topicName = generateTopicName(oms, facilityId, enumId)
         await unsubscribeRequests.push(unsubscribeTopic(topicName, process.env.VUE_APP_NOTIF_APP_ID))
       })
