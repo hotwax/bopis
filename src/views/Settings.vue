@@ -463,26 +463,24 @@ export default defineComponent({
       await this.getRerouteFulfillmentConfiguration(config.settingTypeEnumId);
     },
     async updateNotificationPref(enumId: string, event: any) {
-      emitter.emit("presentLoader");
-      const value = !event.target.checked
       try {
         const ofbizInstanceName = this.userProfile.ofbizInstanceName
         const facilityId = (this.currentFacility as any).facilityId
         const topicName = generateTopicName(ofbizInstanceName, facilityId, enumId)
-        !value
+        event.target.checked
           ? await subscribeTopic(topicName, process.env.VUE_APP_NOTIF_APP_ID)
           : await unsubscribeTopic(topicName, process.env.VUE_APP_NOTIF_APP_ID)
         showToast(translate('Notification preferences updated.'))
       } catch (error) {
-        event.target.checked = !value;
+        // reverting the value of toggle as event.target.checked is 
+        // updated on click event, and revert is needed on API fail
+        event.target.checked = !event.target.checked;
         showToast(translate('Notification preferences not updated. Please try again.'))
       } finally {
         emitter.emit("dismissLoader")
       }
     },
     async confirmNotificationPrefUpdate(enumId: string, event: any) {
-      const value = !event.target.checked
-
       const message = this.$t("Are you sure you want to update the notification preferences?");
       const alert = await alertController.create({
         header: this.$t("Update notification preferences"),
@@ -491,7 +489,9 @@ export default defineComponent({
           {
             text: this.$t("Cancel"),
             handler: () => {
-              event.target.checked = !value;
+              // reverting the value of toggle as event.target.checked is 
+              // updated on click event and revert is needed on "Cancel"
+              event.target.checked = !event.target.checked
             }
           },
           {
