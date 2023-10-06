@@ -12,16 +12,26 @@
       <p v-if="$filters.getFeature(getProduct(item.productId).featureHierarchy, '1/SIZE/')">{{ $t("Size") }}: {{ $filters.getFeature(getProduct(item.productId).featureHierarchy, '1/SIZE/') }}</p>
     </ion-label>
     <!-- Only show stock if its not a ship to store order -->
-    <ion-note v-if="!isShipToStoreOrder" slot="end">{{ getProductStock(item.productId) }} {{ $t("in stock") }}</ion-note>
+    <div v-if="!isShipToStoreOrder">
+      <ion-note v-if="getProductStock(item.productId).quantityOnHandTotal >= 0">
+        {{ getProductStock(item.productId).quantityOnHandTotal }} {{ $t('pieces in stock') }}
+      </ion-note>
+      <ion-button v-else fill="clear" @click.stop="fetchProductStock(item.productId)">
+        <ion-icon color="medium" slot="icon-only" :icon="cubeOutline"/>
+      </ion-button>
+    </div>
   </ion-item>
 </template>
 
 <script lang="ts">
+import { defineComponent } from "vue";
 import { IonItem, IonLabel, IonNote, IonThumbnail } from "@ionic/vue";
-import { mapGetters } from 'vuex';
+import { mapGetters, useStore } from 'vuex';
 import { ShopifyImg } from '@hotwax/dxp-components'
+import { cubeOutline } from 'ionicons/icons'
 
-export default {
+export default defineComponent({
+  name: "ProductListItem",
   components: {
     IonItem,
     IonLabel,
@@ -46,8 +56,20 @@ export default {
       getProduct: 'product/getProduct',
       getProductStock: 'stock/getProductStock'
     })
+  },
+  methods: {
+    fetchProductStock(productId: string) {
+      this.store.dispatch('stock/fetchStock', { productId })
+    }
+  },
+  setup() {
+    const store = useStore();
+    return {
+      cubeOutline,
+      store
+    }
   }
-}
+})
 </script>
 
 <style>
