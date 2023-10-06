@@ -16,6 +16,7 @@
       <ion-note v-if="getProductStock(item.productId).quantityOnHandTotal >= 0">
         {{ getProductStock(item.productId).quantityOnHandTotal }} {{ $t('pieces in stock') }}
       </ion-note>
+      <ion-spinner v-else-if="isFetchingStock" color="medium" name="crescent" />
       <ion-button v-else fill="clear" @click.stop="fetchProductStock(item.productId)">
         <ion-icon color="medium" slot="icon-only" :icon="cubeOutline"/>
       </ion-button>
@@ -25,7 +26,7 @@
 
 <script lang="ts">
 import { defineComponent } from "vue";
-import { IonIcon, IonItem, IonLabel, IonNote, IonThumbnail } from "@ionic/vue";
+import { IonIcon, IonItem, IonLabel, IonNote, IonSpinner, IonThumbnail } from "@ionic/vue";
 import { mapGetters, useStore } from 'vuex';
 import { ShopifyImg } from '@hotwax/dxp-components'
 import { cubeOutline } from 'ionicons/icons'
@@ -37,12 +38,14 @@ export default defineComponent({
     IonItem,
     IonLabel,
     IonNote,
+    IonSpinner,
     IonThumbnail,
     ShopifyImg
   },
   data () {
     return {
-      goodIdentificationTypeId: process.env.VUE_APP_PRDT_IDENT_TYPE_ID
+      goodIdentificationTypeId: process.env.VUE_APP_PRDT_IDENT_TYPE_ID,
+      isFetchingStock: false
     }
   },
   props: {
@@ -59,8 +62,10 @@ export default defineComponent({
     })
   },
   methods: {
-    fetchProductStock(productId: string) {
-      this.store.dispatch('stock/fetchStock', { productId })
+    async fetchProductStock(productId: string) {
+      this.isFetchingStock = true
+      await this.store.dispatch('stock/fetchStock', { productId })
+      this.isFetchingStock = false
     }
   },
   setup() {
