@@ -159,7 +159,7 @@ const actions: ActionTree<UserState, RootState> = {
     }
   },
 
-  async getPartialOrderRejectionConfig ({ commit }, payload) {
+  async getPartialOrderRejectionConfig ({ commit }) {
     let config = {};
     const params = {
       "inputFields": {
