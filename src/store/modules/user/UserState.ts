@@ -11,4 +11,5 @@ export default interface UserState {
     notifications: any;
     notificationPrefs: any;
     firebaseDeviceId: string;
+    hasUnreadNotifications: boolean
 }

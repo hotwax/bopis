@@ -23,7 +23,8 @@ const userModule: Module<UserState, RootState> = {
       permissions: [],
       notifications: [],
       notificationPrefs: [],
-      firebaseDeviceId: ''
+      firebaseDeviceId: '',
+      hasUnreadNotifications: true
     },
     getters,
     actions,
