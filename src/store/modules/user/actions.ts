@@ -114,6 +114,7 @@ const actions: ActionTree<UserState, RootState> = {
     // TODO add any other tasks if need
     dispatch("product/clearProducts", null, { root: true })
     dispatch('clearNotificationState')
+    dispatch('clearPartialOrderRejectionConfig');
     commit(types.USER_END_SESSION)
     resetPermissions();
     resetConfig();
@@ -286,6 +287,10 @@ const actions: ActionTree<UserState, RootState> = {
 
   setUnreadNotificationsStatus({ commit }, payload) {
     commit(types.USER_UNREAD_NOTIFICATIONS_STATUS_UPDATED, payload)
+  },
+
+  clearPartialOrderRejectionConfig ({ commit }) {
+    commit(types.USER_PARTIAL_ORDER_REJECTION_CONFIG_UPDATED, {})
   }
 }
 export default actions;
