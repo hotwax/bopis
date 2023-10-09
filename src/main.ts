@@ -34,9 +34,9 @@ import permissionActions from '@/authorization/Actions';
 
 import { dxpComponents } from '@hotwax/dxp-components'
 import localeMessages from './locales';
-import { getConfig, initialise, getUserPreference, setUserPreference } from '@/adapter';
 import { login, logout, loader } from '@/utils/user';
 import { addNotification, storeClientRegistrationToken } from '@/utils/firebase';
+import { getConfig, initialise, setUserLocale } from '@/adapter';
 
 console.log("Firease Config: " + process.env.VUE_APP_FIREBASE_CONFIG);
 console.log("Firebase VAPID key: " + process.env.VUE_APP_FIREBASE_VAPID_KEY);
@@ -62,8 +62,7 @@ const app = createApp(App)
     login,
     logout,
     localeMessages,
-    getUserPreference,
-    setUserPreference,
+    setUserLocale,
     storeClientRegistrationToken,
   });
 
