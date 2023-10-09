@@ -244,7 +244,6 @@ export default defineComponent({
       userProfile: 'user/getUserProfile',
       currentFacility: 'user/getCurrentFacility',
       currentEComStore: 'user/getCurrentEComStore',
-      instanceUrl: 'user/getInstanceUrl',
       configurePicker: "user/configurePicker",
       showShippingOrders: 'user/showShippingOrders',
       showPackingSlip: 'user/showPackingSlip',
