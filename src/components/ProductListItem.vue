@@ -12,26 +12,40 @@
       <p v-if="$filters.getFeature(getProduct(item.productId).featureHierarchy, '1/SIZE/')">{{ $t("Size") }}: {{ $filters.getFeature(getProduct(item.productId).featureHierarchy, '1/SIZE/') }}</p>
     </ion-label>
     <!-- Only show stock if its not a ship to store order -->
-    <ion-note v-if="!isShipToStoreOrder" slot="end">{{ getProductStock(item.productId) }} {{ $t("in stock") }}</ion-note>
+    <div v-if="!isShipToStoreOrder">
+      <ion-note v-if="getProductStock(item.productId).quantityOnHandTotal >= 0">
+        {{ getProductStock(item.productId).quantityOnHandTotal }} {{ $t('pieces in stock') }}
+      </ion-note>
+      <ion-spinner v-else-if="isFetchingStock" color="medium" name="crescent" />
+      <ion-button v-else fill="clear" @click.stop="fetchProductStock(item.productId)">
+        <ion-icon color="medium" slot="icon-only" :icon="cubeOutline"/>
+      </ion-button>
+    </div>
   </ion-item>
 </template>
 
 <script lang="ts">
-import { IonItem, IonLabel, IonNote, IonThumbnail } from "@ionic/vue";
-import { mapGetters } from 'vuex';
+import { defineComponent } from "vue";
+import { IonIcon, IonItem, IonLabel, IonNote, IonSpinner, IonThumbnail } from "@ionic/vue";
+import { mapGetters, useStore } from 'vuex';
 import { ShopifyImg } from '@hotwax/dxp-components'
+import { cubeOutline } from 'ionicons/icons'
 
-export default {
+export default defineComponent({
+  name: "ProductListItem",
   components: {
+    IonIcon,
     IonItem,
     IonLabel,
     IonNote,
+    IonSpinner,
     IonThumbnail,
     ShopifyImg
   },
   data () {
     return {
-      goodIdentificationTypeId: process.env.VUE_APP_PRDT_IDENT_TYPE_ID
+      goodIdentificationTypeId: process.env.VUE_APP_PRDT_IDENT_TYPE_ID,
+      isFetchingStock: false
     }
   },
   props: {
@@ -46,8 +60,22 @@ export default {
       getProduct: 'product/getProduct',
       getProductStock: 'stock/getProductStock'
     })
+  },
+  methods: {
+    async fetchProductStock(productId: string) {
+      this.isFetchingStock = true
+      await this.store.dispatch('stock/fetchStock', { productId })
+      this.isFetchingStock = false
+    }
+  },
+  setup() {
+    const store = useStore();
+    return {
+      cubeOutline,
+      store
+    }
   }
-}
+})
 </script>
 
 <style>
