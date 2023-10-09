@@ -467,6 +467,10 @@ export default defineComponent({
         const ofbizInstanceName = this.userProfile.ofbizInstanceName
         const facilityId = (this.currentFacility as any).facilityId
         const topicName = generateTopicName(ofbizInstanceName, facilityId, enumId)
+        // event.target.checked returns the initial value (the value that was there before clicking
+        // and updating the toggle). But it returns the updated value on further references (if passed
+        // as a parameter in other function, here in our case, passed from confirmNotificationPrefUpdate)
+        // Hence, event.target.checked here holds the updated value (value after the toggle action)
         event.target.checked
           ? await subscribeTopic(topicName, process.env.VUE_APP_NOTIF_APP_ID)
           : await unsubscribeTopic(topicName, process.env.VUE_APP_NOTIF_APP_ID)
