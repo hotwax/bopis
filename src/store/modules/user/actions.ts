@@ -98,6 +98,10 @@ const actions: ActionTree<UserState, RootState> = {
       commit(types.USER_PREFERENCE_UPDATED, userPreference)
       commit(types.USER_PERMISSIONS_UPDATED, appPermissions);
       commit(types.USER_TOKEN_CHANGED, { newToken: token })
+
+      //fetching partial order rejection config for BOPIS orders
+      await dispatch("getPartialOrderRejectionConfig");
+      
     } catch (err: any) {
       // If any of the API call in try block has status code other than 2xx it will be handled in common catch block.
       // TODO Check if handling of specific status codes is required.
@@ -115,6 +119,7 @@ const actions: ActionTree<UserState, RootState> = {
     // TODO add any other tasks if need
     dispatch("product/clearProducts", null, { root: true })
     dispatch('clearNotificationState')
+    dispatch('clearPartialOrderRejectionConfig');
     commit(types.USER_END_SESSION)
     resetPermissions();
     resetConfig();
@@ -160,6 +165,64 @@ const actions: ActionTree<UserState, RootState> = {
     }
   },
 
+  async getPartialOrderRejectionConfig ({ commit }) {
+    let config = {};
+    const params = {
+      "inputFields": {
+        "productStoreId": this.state.user.currentEComStore.productStoreId,
+        settingTypeEnumId: "BOPIS_PART_ODR_REJ"
+      },
+      "filterByDate": 'Y',
+      "entityName": "ProductStoreSetting",
+      "fieldList": ["productStoreId", "settingTypeEnumId", "settingValue", "fromDate"],
+      "viewSize": 1
+    } as any
+
+    try {
+      const resp = await UserService.getPartialOrderRejectionConfig(params)
+      if (resp.status === 200 && !hasError(resp) && resp.data?.docs) {
+        config = resp.data?.docs[0];
+      } else {
+        console.error('Failed to fetch partial order rejection configuration');
+      }
+    } catch (err) {
+      console.error(err);
+    } 
+    commit(types.USER_PARTIAL_ORDER_REJECTION_CONFIG_UPDATED, config);   
+  },
+
+  async updatePartialOrderRejectionConfig ({ dispatch }, payload) {  
+    let resp = {};
+    try {
+      
+      if (!payload.fromDate) {
+        //Create Product Store Setting
+        payload = {
+          ...payload, 
+          "productStoreId": this.state.user.currentEComStore.productStoreId,
+          "settingTypeEnumId": "BOPIS_PART_ODR_REJ",
+          "fromDate": DateTime.now().toMillis()
+        }
+        resp = await UserService.createPartialOrderRejectionConfig(payload) as any
+      } else {
+        //Update Product Store Setting
+        resp = await UserService.updatePartialOrderRejectionConfig(payload) as any
+      }
+
+      if (!hasError(resp)) {
+        showToast(translate('Configuration updated'))
+      } else {
+        showToast(translate('Failed to update configuration'))
+      }
+    } catch(err) {
+      showToast(translate('Failed to update configuration'))
+      console.error(err)
+    }
+
+    // Fetch the updated configuration
+    await dispatch("getPartialOrderRejectionConfig");
+  },
+
   setUserPreference( {state, commit }, payload){
     commit(types.USER_PREFERENCE_UPDATED, payload)
     setUserPreference({
@@ -171,6 +234,7 @@ const actions: ActionTree<UserState, RootState> = {
   addNotification({ state, commit }, payload) {
     const notifications = JSON.parse(JSON.stringify(state.notifications))
     notifications.push({ ...payload.notification, time: DateTime.now().toMillis() })
+    commit(types.USER_UNREAD_NOTIFICATIONS_STATUS_UPDATED, true)
     if (payload.isForeground) {
       showToast(translate("New notification received."));
     }
@@ -179,7 +243,7 @@ const actions: ActionTree<UserState, RootState> = {
 
   async fetchNotificationPreferences({ commit, state }) {
     let resp = {} as any
-    const oms = state.instanceUrl
+    const ofbizInstanceName = state.current.ofbizInstanceName
     const facilityId = (state.currentFacility as any).facilityId
     let notificationPreferences = [], enumerationResp = [], userPrefIds = [] as any
     try {
@@ -194,7 +258,7 @@ const actions: ActionTree<UserState, RootState> = {
       // data and getNotificationUserPrefTypeIds fails or returns empty response (all disbaled)
       if (enumerationResp.length) {
         notificationPreferences = enumerationResp.reduce((notifactionPref: any, pref: any) => {
-          const userPrefTypeIdToSearch = generateTopicName(oms, facilityId, pref.enumId)
+          const userPrefTypeIdToSearch = generateTopicName(ofbizInstanceName, facilityId, pref.enumId)
           notifactionPref.push({ ...pref, isEnabled: userPrefIds.includes(userPrefTypeIdToSearch) })
           return notifactionPref
         }, [])
@@ -218,6 +282,15 @@ const actions: ActionTree<UserState, RootState> = {
     commit(types.USER_NOTIFICATIONS_UPDATED, [])
     commit(types.USER_NOTIFICATIONS_PREFERENCES_UPDATED, [])
     commit(types.USER_FIREBASE_DEVICEID_UPDATED, '')
+    commit(types.USER_UNREAD_NOTIFICATIONS_STATUS_UPDATED, true)
+  },
+
+  setUnreadNotificationsStatus({ commit }, payload) {
+    commit(types.USER_UNREAD_NOTIFICATIONS_STATUS_UPDATED, payload)
+  },
+
+  clearPartialOrderRejectionConfig ({ commit }) {
+    commit(types.USER_PARTIAL_ORDER_REJECTION_CONFIG_UPDATED, {})
   }
 }
 export default actions;

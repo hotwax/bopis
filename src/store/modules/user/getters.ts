@@ -45,6 +45,9 @@ const getters: GetterTree <UserState, RootState> = {
     getCurrentEComStore(state) {
         return state.currentEComStore;
     },
+    getPartialOrderRejectionConfig(state) {
+        return state.partialOrderRejectionConfig;
+    },
     getNotifications(state) {
         return state.notifications.sort((a: any, b: any) => b.time - a.time)
     },
@@ -53,6 +56,9 @@ const getters: GetterTree <UserState, RootState> = {
     },
     getFirebaseDeviceId(state) {
         return state.firebaseDeviceId
+    },
+    getUnreadNotificationsStatus(state) {
+        return state.hasUnreadNotifications
     }
 }
 export default getters;

@@ -53,10 +53,7 @@ import { translate } from '@hotwax/dxp-components'
 import { showToast } from "@/utils";
 import emitter from "@/event-bus"
 import { generateTopicName } from "@/utils/firebase";
-import {
-  subscribeTopic,
-  unsubscribeTopic
-} from '@/adapter';
+import { subscribeTopic, unsubscribeTopic } from '@/adapter'
 
 export default defineComponent({
   name: "NotificationPreferenceModal",
@@ -78,7 +75,7 @@ export default defineComponent({
   data() {
     return {
       notificationPrefState: {} as any,
-      notificationPrefToUpate: {
+      notificationPrefToUpdate: {
         subscribe: [],
         unsubscribe: []
       } as any,
@@ -87,6 +84,7 @@ export default defineComponent({
   },
   computed: {
     ...mapGetters({
+      userProfile: 'user/getUserProfile',
       currentFacility: 'user/getCurrentFacility',
       instanceUrl: 'user/getInstanceUrl',
       notificationPrefs: 'user/getNotificationPrefs'
@@ -114,16 +112,16 @@ export default defineComponent({
       // running when the ion-toggle hydrates and hence, updated the 
       // initialNotificationPrefState here
       const value = !event.target.checked
-      // updates the notificationPrefToUpate to check which pref
+      // updates the notificationPrefToUpdate to check which pref
       // values were updated from their initial values
       if (value !== this.initialNotificationPrefState[enumId]) {
         value
-          ? this.notificationPrefToUpate.subscribe.push(enumId)
-          : this.notificationPrefToUpate.unsubscribe.push(enumId)
+          ? this.notificationPrefToUpdate.subscribe.push(enumId)
+          : this.notificationPrefToUpdate.unsubscribe.push(enumId)
       } else {
         !value
-          ? this.notificationPrefToUpate.subscribe.splice(this.notificationPrefToUpate.subscribe.indexOf(enumId), 1)
-          : this.notificationPrefToUpate.unsubscribe.splice(this.notificationPrefToUpate.subscribe.indexOf(enumId), 1)
+          ? this.notificationPrefToUpdate.subscribe.splice(this.notificationPrefToUpdate.subscribe.indexOf(enumId), 1)
+          : this.notificationPrefToUpdate.unsubscribe.splice(this.notificationPrefToUpdate.subscribe.indexOf(enumId), 1)
       }
 
       // updating this.notificationPrefState as it is used to
@@ -132,7 +130,6 @@ export default defineComponent({
       this.notificationPrefState[enumId] = value
     },
     async updateNotificationPref() {
-      // TODO disbale button if initial and final are same
       // added loader as the API call is in pending state for too long, blocking the flow
       emitter.emit("presentLoader");
       try {
@@ -144,17 +141,17 @@ export default defineComponent({
       }
     },
     async handleTopicSubscription() {
-      const oms = this.instanceUrl
+      const ofbizInstanceName = this.userProfile.ofbizInstanceName
       const facilityId = (this.currentFacility as any).facilityId
       const subscribeRequests = [] as any
-      this.notificationPrefToUpate.subscribe.map(async (enumId: string) => {
-        const topicName = generateTopicName(oms, facilityId, enumId)
+      this.notificationPrefToUpdate.subscribe.map(async (enumId: string) => {
+        const topicName = generateTopicName(ofbizInstanceName, facilityId, enumId)
         await subscribeRequests.push(subscribeTopic(topicName, process.env.VUE_APP_NOTIF_APP_ID))
       })
 
       const unsubscribeRequests = [] as any
-      this.notificationPrefToUpate.unsubscribe.map(async (enumId: string) => {
-        const topicName = generateTopicName(oms, facilityId, enumId)
+      this.notificationPrefToUpdate.unsubscribe.map(async (enumId: string) => {
+        const topicName = generateTopicName(ofbizInstanceName, facilityId, enumId)
         await unsubscribeRequests.push(unsubscribeTopic(topicName, process.env.VUE_APP_NOTIF_APP_ID))
       })
 

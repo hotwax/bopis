@@ -18,10 +18,12 @@ const userModule: Module<UserState, RootState> = {
         configurePicker: false,
       },
       currentEComStore: {},
+      partialOrderRejectionConfig: {},
       permissions: [],
       notifications: [],
       notificationPrefs: [],
-      firebaseDeviceId: ''
+      firebaseDeviceId: '',
+      hasUnreadNotifications: true
     },
     getters,
     actions,
