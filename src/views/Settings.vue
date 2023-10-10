@@ -89,6 +89,21 @@
             </ion-select>
           </ion-item>
         </ion-card>
+
+        <ion-card>
+          <ion-card-header>
+            <ion-card-title>
+              {{ $t("Partial Order rejection") }}
+            </ion-card-title>
+          </ion-card-header>
+          <ion-card-content>
+            {{ $t('Specify whether you reject a BOPIS order partially when any order item inventory is insufficient at the store.') }}
+          </ion-card-content>
+          <ion-item lines="none">
+            <ion-label>{{ $t("Allow partial rejection") }}</ion-label>
+            <ion-toggle :disabled="!hasPermission(Actions.APP_PARTIAL_ORDER_REJECTION_CONFIG_UPDATE)" :checked="partialOrderRejectionConfig.settingValue" @ionChange="updatePartialOrderRejectionConfig(partialOrderRejectionConfig, $event.detail.checked)" slot="end" />
+          </ion-item>
+        </ion-card>
         
       </section>
 
@@ -294,6 +309,7 @@ export default defineComponent({
       configurePicker: "user/configurePicker",
       showShippingOrders: 'user/showShippingOrders',
       showPackingSlip: 'user/showPackingSlip',
+      partialOrderRejectionConfig: 'user/getPartialOrderRejectionConfig',
       locale: 'user/getLocale',
       firebaseDeviceId: 'user/getFirebaseDeviceId',
       notificationPrefs: 'user/getNotificationPrefs'
@@ -441,6 +457,13 @@ export default defineComponent({
       }
       // Fetch the updated configuration
       await this.getRerouteFulfillmentConfiguration(config.settingTypeEnumId);
+    },
+    async updatePartialOrderRejectionConfig(config: any, value: any) {
+      const params = {
+        ...config,
+        "settingValue": value
+      }
+      await this.store.dispatch('user/updatePartialOrderRejectionConfig', params)
     },
     async updateNotificationPref(enumId: string, event: any) {
       try {
