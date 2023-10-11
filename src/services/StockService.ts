@@ -8,6 +8,15 @@ const checkInventory = async (query: any): Promise <any>  => {
   });
 }
 
+const getInventoryAvailableByFacility = async (query: any): Promise <any> => {
+  return api({
+    url: "service/getInventoryAvailableByFacility",
+    method: "post",
+    data: query
+  });
+}
+
 export const StockService = {
-  checkInventory
+  checkInventory,
+  getInventoryAvailableByFacility
 }

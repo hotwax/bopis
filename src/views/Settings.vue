@@ -34,23 +34,7 @@
         <h1>{{ $t('OMS') }}</h1>
       </div>
       <section>
-        <ion-card>
-          <ion-card-header>
-            <ion-card-subtitle>
-              {{ $t("OMS instance") }}
-            </ion-card-subtitle>
-            <ion-card-title>
-              {{ instanceUrl }}
-            </ion-card-title>
-          </ion-card-header>
-          <ion-card-content>
-            {{ $t('This is the name of the OMS you are connected to right now. Make sure that you are connected to the right instance before proceeding.') }}
-          </ion-card-content>
-          <ion-button @click="goToOms" fill="clear">
-            {{ $t('Go to OMS') }}
-            <ion-icon slot="end" :icon="openOutline" />
-          </ion-button>
-        </ion-card>
+        <OmsInstanceNavigator />
 
         <ion-card>
           <ion-card-header>
@@ -103,6 +87,21 @@
             <ion-select :disabled="!hasPermission(Actions.APP_RF_CONFIG_UPDATE) || Object.keys(rerouteFulfillmentConfig.shippingMethod).length == 0" interface="popover" :value="rerouteFulfillmentConfig.shippingMethod.settingValue" @ionChange="updateRerouteFulfillmentConfiguration(rerouteFulfillmentConfig.shippingMethod, $event.detail.value)">
               <ion-select-option v-for="shipmentMethod in availableShipmentMethods" :key="shipmentMethod.shipmentMethodTypeId" :value="shipmentMethod.shipmentMethodTypeId" >{{ shipmentMethod.description }}</ion-select-option>
             </ion-select>
+          </ion-item>
+        </ion-card>
+
+        <ion-card>
+          <ion-card-header>
+            <ion-card-title>
+              {{ $t("Partial Order rejection") }}
+            </ion-card-title>
+          </ion-card-header>
+          <ion-card-content>
+            {{ $t('Specify whether you reject a BOPIS order partially when any order item inventory is insufficient at the store.') }}
+          </ion-card-content>
+          <ion-item lines="none">
+            <ion-label>{{ $t("Allow partial rejection") }}</ion-label>
+            <ion-toggle :disabled="!hasPermission(Actions.APP_PARTIAL_ORDER_REJECTION_CONFIG_UPDATE)" :checked="partialOrderRejectionConfig.settingValue" @ionChange="updatePartialOrderRejectionConfig(partialOrderRejectionConfig, $event.detail.checked)" slot="end" />
           </ion-item>
         </ion-card>
         
@@ -209,15 +208,60 @@
             <ion-toggle :checked="partialOrderRejection" @ionChange="setPartialOrderRejectionPreference($event)" slot="end" />
           </ion-item>
         </ion-card>
+
+        <ion-card v-if="notificationPrefs.length">
+          <ion-card-header>
+            <ion-card-title>
+              {{ $t("Notification Preference") }}
+            </ion-card-title>
+          </ion-card-header>
+          <ion-card-content>
+            {{ $t('Select the notifications you want to receive.') }}
+          </ion-card-content>
+          <ion-list>
+            <ion-item :key="pref.enumId" v-for="pref in notificationPrefs" lines="none">
+              <ion-label class="ion-text-wrap">{{ pref.description }}</ion-label>
+              <ion-toggle @click="confirmNotificationPrefUpdate(pref.enumId, $event)" :checked="pref.isEnabled" slot="end" />
+            </ion-item>
+          </ion-list>
+        </ion-card>
       </section>
     </ion-content>
   </ion-page>
 </template>
 
 <script lang="ts">
-import { IonAvatar, IonButton, IonCard, IonCardContent, IonCardHeader, IonCardSubtitle, IonCardTitle, IonContent, IonHeader, IonIcon, IonItem, IonLabel, IonPage, IonSelect, IonSelectOption, IonTitle, IonToggle , IonToolbar, modalController } from '@ionic/vue';
+import {
+  alertController,
+  IonAvatar,
+  IonButton,
+  IonCard,
+  IonCardContent,
+  IonCardHeader,
+  IonCardSubtitle,
+  IonCardTitle,
+  IonContent,
+  IonHeader,
+  IonIcon,
+  IonItem,
+  IonLabel,
+  IonPage,
+  IonSelect,
+  IonSelectOption,
+  IonTitle,
+  IonToggle,
+  IonToolbar,
+  modalController
+} from '@ionic/vue';
 import { defineComponent } from 'vue';
-import { ellipsisVertical, personCircleOutline, sendOutline , storefrontOutline, codeWorkingOutline, openOutline } from 'ionicons/icons'
+import {
+  codeWorkingOutline,
+  ellipsisVertical,
+  openOutline,
+  personCircleOutline,
+  sendOutline,
+  storefrontOutline
+} from 'ionicons/icons'
 import { mapGetters, useStore } from 'vuex';
 import { useRouter } from 'vue-router';
 import TimeZoneModal from './TimezoneModal.vue';
@@ -225,9 +269,11 @@ import Image from '@/components/Image.vue';
 import { DateTime } from 'luxon';
 import { UserService } from '@/services/UserService'
 import { showToast } from '@/utils';
-import { hasError } from '@/adapter'
+import { hasError, removeClientRegistrationToken, subscribeTopic, unsubscribeTopic } from '@/adapter'
 import { translate } from "@/i18n";
 import { Actions, hasPermission } from '@/authorization'
+import { generateTopicName } from "@/utils/firebase";
+import emitter from "@/event-bus"
 
 export default defineComponent({
   name: 'Settings',
@@ -275,23 +321,28 @@ export default defineComponent({
       userProfile: 'user/getUserProfile',
       currentFacility: 'user/getCurrentFacility',
       currentEComStore: 'user/getCurrentEComStore',
-      instanceUrl: 'user/getInstanceUrl',
       configurePicker: "user/configurePicker",
       partialOrderRejection: 'user/partialOrderRejection',
       showShippingOrders: 'user/showShippingOrders',
       showPackingSlip: 'user/showPackingSlip',
-      locale: 'user/getLocale'
+      partialOrderRejectionConfig: 'user/getPartialOrderRejectionConfig',
+      locale: 'user/getLocale',
+      firebaseDeviceId: 'user/getFirebaseDeviceId',
+      notificationPrefs: 'user/getNotificationPrefs'
     })
   },
   mounted() {
     this.appVersion = this.appInfo.branch ? (this.appInfo.branch + "-" + this.appInfo.revision) : this.appInfo.tag;
   },
-  ionViewWillEnter() {
+  async ionViewWillEnter() {
     // Only fetch configuration when environment mapping exists
     if (Object.keys(this.rerouteFulfillmentConfigMapping).length > 0) {
       this.getAvailableShipmentMethods();
       this.getRerouteFulfillmentConfiguration();
     }
+    // as notification prefs can also be updated from the notification pref modal,
+    // latest state is fetched each time we open the settings page
+    await this.store.dispatch('user/fetchNotificationPreferences')
   },
   methods: {
     setFacility (event: any) {
@@ -311,10 +362,21 @@ export default defineComponent({
       });
       return timeZoneModal.present();
     },
-    logout () {
-      this.store.dispatch('user/logout').then(() => {
-        const redirectUrl = window.location.origin + '/login'
-        window.location.href = `${process.env.VUE_APP_LOGIN_URL}?isLoggedOut=true&redirectUrl=${redirectUrl}`
+    async logout () {
+      // remove firebase notification registration token -
+      // OMS and auth is required hence, removing it before logout (clearing state)
+      try {
+        await removeClientRegistrationToken(this.firebaseDeviceId, process.env.VUE_APP_NOTIF_APP_ID)
+      } catch (error) {
+        console.error(error)
+      }
+
+      this.store.dispatch('user/logout', { isUserUnauthorised: false }).then((redirectionUrl) => {
+        // if not having redirection url then redirect the user to launchpad
+        if(!redirectionUrl) {
+          const redirectUrl = window.location.origin + '/login'
+          window.location.href = `${process.env.VUE_APP_LOGIN_URL}?isLoggedOut=true&redirectUrl=${redirectUrl}`
+        }
       })
     },
     goToLaunchpad() {
@@ -331,9 +393,6 @@ export default defineComponent({
     },
     setConfigurePickerPreference (ev: any){
       this.store.dispatch('user/setUserPreference', { configurePicker: ev.detail.checked })
-    },
-    goToOms(){
-      window.open(this.instanceUrl.startsWith('http') ? this.instanceUrl.replace('api/', "") : `https://${this.instanceUrl}.hotwax.io/`, '_blank', 'noopener, noreferrer');
     },
     getDateTime(time: any) {
       return DateTime.fromMillis(time).toLocaleString(DateTime.DATETIME_MED);
@@ -420,6 +479,60 @@ export default defineComponent({
       }
       // Fetch the updated configuration
       await this.getRerouteFulfillmentConfiguration(config.settingTypeEnumId);
+    },
+    async updatePartialOrderRejectionConfig(config: any, value: any) {
+      const params = {
+        ...config,
+        "settingValue": value
+      }
+      await this.store.dispatch('user/updatePartialOrderRejectionConfig', params)
+    },
+    async updateNotificationPref(enumId: string, event: any) {
+      try {
+        const ofbizInstanceName = this.userProfile.ofbizInstanceName
+        const facilityId = (this.currentFacility as any).facilityId
+        const topicName = generateTopicName(ofbizInstanceName, facilityId, enumId)
+        // event.target.checked returns the initial value (the value that was there before clicking
+        // and updating the toggle). But it returns the updated value on further references (if passed
+        // as a parameter in other function, here in our case, passed from confirmNotificationPrefUpdate)
+        // Hence, event.target.checked here holds the updated value (value after the toggle action)
+        event.target.checked
+          ? await subscribeTopic(topicName, process.env.VUE_APP_NOTIF_APP_ID)
+          : await unsubscribeTopic(topicName, process.env.VUE_APP_NOTIF_APP_ID)
+        showToast(translate('Notification preferences updated.'))
+      } catch (error) {
+        // reverting the value of toggle as event.target.checked is 
+        // updated on click event, and revert is needed on API fail
+        event.target.checked = !event.target.checked;
+        showToast(translate('Notification preferences not updated. Please try again.'))
+      } finally {
+        emitter.emit("dismissLoader")
+      }
+    },
+    async confirmNotificationPrefUpdate(enumId: string, event: any) {
+      const message = this.$t("Are you sure you want to update the notification preferences?");
+      const alert = await alertController.create({
+        header: this.$t("Update notification preferences"),
+        message,
+        buttons: [
+          {
+            text: this.$t("Cancel"),
+            handler: () => {
+              // reverting the value of toggle as event.target.checked is 
+              // updated on click event and revert is needed on "Cancel"
+              event.target.checked = !event.target.checked
+            }
+          },
+          {
+            text: this.$t("Confirm"),
+            handler: async () => {
+              // passing event reference for updation in case the API fails
+              await this.updateNotificationPref(enumId, event)
+            }
+          }
+        ],
+      });
+      return alert.present();
     }
   },
   setup () {
