@@ -117,6 +117,8 @@
       </div>
 
       <section>
+        <ProductIdentifier />
+
         <ion-card>
           <ion-card-header>
             <ion-card-title>
@@ -230,6 +232,7 @@ import {
   IonIcon,
   IonItem,
   IonLabel,
+  IonList,
   IonPage,
   IonSelect,
   IonSelectOption,
@@ -275,6 +278,7 @@ export default defineComponent({
     IonIcon,
     IonItem, 
     IonLabel, 
+    IonList,
     IonPage, 
     IonSelect, 
     IonSelectOption,
