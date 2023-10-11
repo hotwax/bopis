@@ -791,7 +791,6 @@ const actions: ActionTree<OrderState , RootState> ={
 
         // Get products that exist in order item rejection history
         await this.dispatch('product/fetchProducts', { productIds })
-        await this.dispatch('stock/addProducts', { productIds })
       } else {
         throw resp.data
       }
