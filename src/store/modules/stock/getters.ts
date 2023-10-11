@@ -4,7 +4,7 @@ import RootState from '../../RootState'
 
 const getters: GetterTree <StockState, RootState> = {
   getProductStock: (state) => (productId: string) => {
-    return state.products[productId] ? state.products[productId] : 0
+    return state.products[productId] ? state.products[productId] : {}
   }
 }
 export default getters;

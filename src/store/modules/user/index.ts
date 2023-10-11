@@ -19,10 +19,12 @@ const userModule: Module<UserState, RootState> = {
       },
       locale: 'en',
       currentEComStore: {},
+      partialOrderRejectionConfig: {},
       permissions: [],
       notifications: [],
       notificationPrefs: [],
-      firebaseDeviceId: ''
+      firebaseDeviceId: '',
+      hasUnreadNotifications: true
     },
     getters,
     actions,

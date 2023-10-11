@@ -41,6 +41,8 @@ import {
 } from '@/utils/firebase';
 import { getConfig, getProductIdentificationPref, initialise, setProductIdentificationPref } from '@hotwax/oms-api';
 
+console.log("Firease Config: " + process.env.VUE_APP_FIREBASE_CONFIG);
+console.log("Firebase VAPID key: " + process.env.VUE_APP_FIREBASE_VAPID_KEY);
 const app = createApp(App)
   .use(IonicVue, {
     mode: 'md'
@@ -56,7 +58,7 @@ const app = createApp(App)
     addNotification,
     appLoginUrl: process.env.VUE_APP_LOGIN_URL as string,
     appFirebaseConfig: JSON.parse(process.env.VUE_APP_FIREBASE_CONFIG),
-    appFirebaseVapidKey: process.env.VUE_APP_FIREBAE_VAPID_KEY,
+    appFirebaseVapidKey: process.env.VUE_APP_FIREBASE_VAPID_KEY,
     defaultImgUrl: require("@/assets/images/defaultImage.png"),
     getConfig,
     getProductIdentificationPref,

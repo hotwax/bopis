@@ -7,7 +7,9 @@ export default interface UserState {
     locale: string;
     permissions: any;
     currentEComStore: any;
+    partialOrderRejectionConfig: any
     notifications: any;
     notificationPrefs: any;
     firebaseDeviceId: string;
+    hasUnreadNotifications: boolean
 }
