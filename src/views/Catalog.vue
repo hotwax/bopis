@@ -12,8 +12,8 @@
           <ShopifyImg :src="product.mainImageUrl" size="large"/>
           <ion-item lines="none">
             <ion-label>
-              <p>{{ product.productId }}</p>
-              {{ product.productName }}
+              <p>{{ getProductIdentificationValue(productIdentificationPref.secondaryId, product) }}</p>
+              {{ getProductIdentificationValue(productIdentificationPref.primaryId, product) ? getProductIdentificationValue(productIdentificationPref.primaryId, product) : product.productName }}
             </ion-label>
           </ion-item>
         </ion-card>
@@ -49,10 +49,10 @@ import {
   IonTitle,
   IonToolbar,
 } from '@ionic/vue';
-import { defineComponent } from 'vue';
+import { computed, defineComponent } from 'vue';
 import { mapGetters, useStore } from 'vuex';
 import { useRouter } from "vue-router";
-import { ShopifyImg } from '@hotwax/dxp-components'
+import { getProductIdentificationValue, ShopifyImg, useProductIdentificationStore } from '@hotwax/dxp-components'
 
 export default defineComponent({
   name: 'Catalog',
@@ -121,9 +121,14 @@ export default defineComponent({
   setup() {
     const store = useStore();
     const router = useRouter();
+    const productIdentificationStore = useProductIdentificationStore();
+    let productIdentificationPref = computed(() => productIdentificationStore.getProductIdentificationPref)
+
     return {
+      getProductIdentificationValue,
+      productIdentificationPref,
+      router,
       store,
-      router
     };
   },
 });

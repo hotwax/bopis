@@ -17,8 +17,8 @@
           <ion-item lines="none">
             <ion-label class="ion-text-wrap">
               <p class="overline">{{ currentVariant.brandName }}</p>
-              <h1>{{ currentVariant.parentProductName }}</h1>
-              <h2>{{ currentVariant.productName }}</h2>
+              <h1>{{ getProductIdentificationValue(productIdentificationPref.primaryId, currentVariant) ? getProductIdentificationValue(productIdentificationPref.primaryId, currentVariant) : currentVariant.productName }}</h1>
+              <h2>{{ getProductIdentificationValue(productIdentificationPref.secondaryId, currentVariant) }}</h2>
             </ion-label>
             <!-- Price is given undefined to $n funtction on first render, hence, conditional rendering with empty string -->
             <ion-note slot="end">{{ currentVariant.LIST_PRICE_PURCHASE_USD_STORE_GROUP_price ? $n(currentVariant.LIST_PRICE_PURCHASE_USD_STORE_GROUP_price, 'currency', currency ) : '' }}</ion-note>
@@ -85,9 +85,9 @@ import {
   IonToolbar,
   modalController
 } from "@ionic/vue";
-import { defineComponent } from "vue";
+import { computed, defineComponent } from "vue";
 import { mapGetters, useStore } from "vuex";
-import { ShopifyImg } from '@hotwax/dxp-components'
+import { getProductIdentificationValue, ShopifyImg, useProductIdentificationStore } from '@hotwax/dxp-components'
 import { StockService } from '@/services/StockService'
 import { getFeature, showToast } from "@/utils";
 import { hasError } from '@/adapter'
@@ -229,7 +229,12 @@ export default defineComponent({
   },
   setup() {
     const store = useStore();
+    const productIdentificationStore = useProductIdentificationStore();
+    let productIdentificationPref = computed(() => productIdentificationStore.getProductIdentificationPref)
+
     return {
+      getProductIdentificationValue,
+      productIdentificationPref,
       store
     }
   }

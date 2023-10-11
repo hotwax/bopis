@@ -14,7 +14,7 @@ import {
   resetPermissions,
   setPermissions
 } from '@/authorization'
-import { useAuthStore } from '@hotwax/dxp-components'
+import { useAuthStore, useProductIdentificationStore } from '@hotwax/dxp-components'
 import {
   getNotificationEnumIds,
   getNotificationUserPrefTypeIds,
@@ -78,6 +78,10 @@ const actions: ActionTree<UserState, RootState> = {
       const currentFacility = userProfile.facilities.length > 0 ? userProfile.facilities[0] : {};
       const currentEComStore = await UserService.getCurrentEComStore(token, currentFacility?.facilityId);
       const userPreference = await UserService.getUserPreference(token)
+
+      // Get product identification from api using dxp-component
+      await useProductIdentificationStore().getIdentificationPref(currentEComStore?.productStoreId)
+        .catch((error) => console.error(error));
 
       /*  ---- Guard clauses ends here --- */
 
