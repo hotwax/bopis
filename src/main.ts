@@ -41,8 +41,8 @@ import {
 } from '@/utils/firebase';
 import { getConfig, initialise } from '@hotwax/oms-api';
 
-console.log("Firease Config: " + process.env.VUE_APP_FIREBASE_CONFIG);
-console.log("Firebase VAPID key: " + process.env.VUE_APP_FIREBASE_VAPID_KEY);
+// console.log("Firease Config: " + process.env.VUE_APP_FIREBASE_CONFIG);
+// console.log("Firebase VAPID key: " + process.env.VUE_APP_FIREBASE_VAPID_KEY);
 const app = createApp(App)
   .use(IonicVue, {
     mode: 'md'

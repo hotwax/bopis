@@ -296,7 +296,7 @@ export default defineComponent({
 
       } catch(err) {
         showToast(translate("Failed to load packing slip"))
-        console.error(err)
+        // console.error(err)
       }
 
 

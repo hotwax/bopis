@@ -215,8 +215,8 @@ export default defineComponent({
           })
         }
       } catch (error) {
-        console.error(error)
-        showToast(translate("Something went wrong"));
+        // console.error(error)
+        showToast(translate(error));
       }
     },
     async getOtherStoresInventoryDetails() {

@@ -37,7 +37,7 @@ const actions: ActionTree<ProductState, RootState> = {
       // Handled empty response in case of failed query
       if (resp.data) commit(types.PRODUCT_ADD_TO_CACHED_MULTIPLE, { products });
     } else {
-      console.error('Something went wrong')
+      console.log('Something went wrong')
     }
     // TODO Handle specific error
     return resp;
