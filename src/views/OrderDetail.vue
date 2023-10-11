@@ -8,7 +8,7 @@
           <ion-button :disabled="order?.rejected" @click="openOrderItemRejHistoryModal()">
             <ion-icon slot="icon-only" :icon="timeOutline" />
           </ion-button>
-          <ion-button class="ion-hide-md-up" :disabled="!hasPermission(Actions.APP_ORDER_UPDATE) || order?.readyToHandover || order?.rejected" @click="updateOrder(order)">
+          <ion-button class="ion-hide-md-up" :disabled="!hasPermission(Actions.APP_ORDER_UPDATE) || order?.readyToHandover || order?.rejected" @click="rejectOrder(order)">
             <ion-icon slot="icon-only" color="danger" :icon="bagRemoveOutline" />
           </ion-button>
         </ion-buttons>
@@ -47,7 +47,7 @@
             <ion-button :disabled="!hasPermission(Actions.APP_ORDER_UPDATE) || order?.readyToHandover || order?.rejected" expand="block" @click.stop="readyForPickup(order, order.part)">
               {{ order?.part?.shipmentMethodEnum?.shipmentMethodEnumId === 'STOREPICKUP' ? $t("Ready for pickup") : $t("Ready to ship") }}
             </ion-button>
-            <ion-button :disabled="!hasPermission(Actions.APP_ORDER_UPDATE) || order?.readyToHandover || order?.rejected" expand="block" color="danger" fill="outline" @click="updateOrder(order)">
+            <ion-button :disabled="!hasPermission(Actions.APP_ORDER_UPDATE) || order?.readyToHandover || order?.rejected" expand="block" color="danger" fill="outline" @click="rejectOrder(order)">
               {{ $t("Reject Order") }}
             </ion-button>
           </div>
@@ -117,6 +117,7 @@ import { DateTime } from "luxon";
 import { hasError } from '@/adapter';
 import ShipToCustomerModal from "@/components/ShipToCustomerModal.vue";
 import { OrderService } from "@/services/OrderService";
+import RejectOrderModal from "@/components/RejectOrderModal.vue";
 
 export default defineComponent({
   name: "OrderDetail",
@@ -181,27 +182,11 @@ export default defineComponent({
       }
       await this.store.dispatch("order/getOrderDetail", payload)
     },
-    async updateOrder(order: any) {
-      const alert = await alertController
-        .create({
-          header: this.$t('Reject Order'),
-          message: this.$t(`This order will be removed from your dashboard. This action cannot be undone.`, { space: '<br /><br />' }),
-          buttons: [{
-            text: this.$t('Cancel'),
-            role: 'cancel'
-          }, {
-            text: this.$t('Reject'),
-            handler: () => {
-              this.store.dispatch('order/setUnfillableOrderOrItem', { orderId: order.orderId, part: order.part }).then((resp) => {
-                if (resp) {
-                  // Mark current order as rejected
-                  this.store.dispatch('order/updateCurrent', { order: { ...order, rejected: true } })
-                }
-              })
-            },
-          }]
-        });
-      return alert.present();
+    async rejectOrder(order: any) {
+      const rejectOrderModal = await modalController.create({
+        component: RejectOrderModal
+      });
+      return rejectOrderModal.present();
     },
     async readyForPickup(order: any, part: any) {
       if (this.configurePicker) return this.assignPicker(order, part, this.currentFacility.facilityId);

@@ -79,6 +79,7 @@
   "OMS": "OMS",
   "OMS instance": "Instancia de OMS",
   "On rejecting this item, will be sent an email with alternate fulfillment options and this order item will be removed from your dashboard.": "On rejecting this item, { customerName } will be sent an email with alternate fulfillment options and this order item will be removed from your dashboard.",
+  "On rejecting this order, will be sent an email with alternate fulfilment options and this order will be removed from your dashboard.": "On rejecting this order, { customerName } will be sent an email with alternate fulfilment options and this order will be removed from your dashboard.",
   "Other stores inventory": "Inventario de otras tiendas",
   "Order": "Orden",
   "Order delivered to": "Orden entregada a {customerName}",
