@@ -5,21 +5,27 @@ import store from '@/store';
 import UserState from './UserState'
 import * as types from './mutation-types'
 import { showToast } from '@/utils'
-import i18n, { translate } from '@/i18n'
+import {
+  getUserPreference,
+  getNotificationEnumIds,
+  getNotificationUserPrefTypeIds,
+  getUserFacilities,
+  hasError,
+  logout,
+  resetConfig,
+  setUserPreference,
+  storeClientRegistrationToken,
+  updateInstanceUrl,
+  updateToken
+} from '@/adapter'
 import { DateTime, Settings } from 'luxon';
-import { hasError, logout, updateInstanceUrl, updateToken, resetConfig, getUserFacilities } from '@/adapter'
 import {
   getServerPermissionsFromRules,
   prepareAppPermissions,
   resetPermissions,
   setPermissions
 } from '@/authorization'
-import { useAuthStore } from '@hotwax/dxp-components'
-import {
-  getNotificationEnumIds,
-  getNotificationUserPrefTypeIds,
-  storeClientRegistrationToken
-} from '@/adapter';
+import { translate, useAuthStore, useUserStore } from '@hotwax/dxp-components'
 import { generateDeviceId, generateTopicName } from '@/utils/firebase'
 import emitter from '@/event-bus'
 
@@ -28,7 +34,7 @@ const actions: ActionTree<UserState, RootState> = {
   /**
  * Login user and return token
  */
-  async login ({ commit, dispatch }, payload) {
+  async login ({ commit, dispatch, getters }, payload) {
     try {
       const {token, oms} = payload;
       dispatch("setUserInstanceUrl", oms);
@@ -77,7 +83,7 @@ const actions: ActionTree<UserState, RootState> = {
       // TODO Use a separate API for getting facilities, this should handle user like admin accessing the app
       const currentFacility = userProfile.facilities.length > 0 ? userProfile.facilities[0] : {};
       const currentEComStore = await UserService.getCurrentEComStore(token, currentFacility?.facilityId);
-      const userPreference = await UserService.getUserPreference(token)
+      const userPreference = await getUserPreference(token, getters['getBaseUrl'], 'BOPIS_PREFERENCE')
 
       /*  ---- Guard clauses ends here --- */
 
@@ -137,6 +143,7 @@ const actions: ActionTree<UserState, RootState> = {
     }
     
     const authStore = useAuthStore()
+    const userStore = useUserStore()
     // TODO add any other tasks if need
     dispatch("product/clearProducts", null, { root: true })
     dispatch('clearNotificationState')
@@ -147,6 +154,7 @@ const actions: ActionTree<UserState, RootState> = {
 
     // reset plugin state on logout
     authStore.$reset()
+    userStore.$reset()
 
     // If we get any url in logout api resp then we will redirect the user to the url
     if(redirectionUrl) {
@@ -254,15 +262,10 @@ const actions: ActionTree<UserState, RootState> = {
 
   setUserPreference( {state, commit }, payload){
     commit(types.USER_PREFERENCE_UPDATED, payload)
-    UserService.setUserPreference({
+    setUserPreference({
       'userPrefTypeId': 'BOPIS_PREFERENCE',
       'userPrefValue': JSON.stringify(state.preference)
     });
-  },
-
-  setLocale({ commit }, payload) {
-    i18n.global.locale = payload
-    commit(types.USER_LOCALE_UPDATED, payload)
   },
 
   addNotification({ state, commit }, payload) {

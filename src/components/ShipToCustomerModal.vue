@@ -6,38 +6,38 @@
           <ion-icon :icon="closeOutline" slot="icon-only" />
         </ion-button>
       </ion-buttons>
-      <ion-title>{{ $t("Ship to customer") }}</ion-title>
+      <ion-title>{{ translate("Ship to customer") }}</ion-title>
     </ion-toolbar>
   </ion-header>
 
   <ion-content>
     <main>  
       <ion-item>
-        <ion-label position="fixed">{{ $t("First name") }}</ion-label>
+        <ion-label position="fixed">{{ translate("First name") }}</ion-label>
         <ion-input />
       </ion-item>
       <ion-item>
-        <ion-label position="fixed">{{ $t("Last name") }}</ion-label>
+        <ion-label position="fixed">{{ translate("Last name") }}</ion-label>
         <ion-input />
       </ion-item>
       <ion-item>
-        <ion-label position="fixed">{{ $t("Street") }}</ion-label>
+        <ion-label position="fixed">{{ translate("Street") }}</ion-label>
         <ion-input />
       </ion-item>
       <ion-item>
-        <ion-label position="fixed">{{ $t("City") }}</ion-label>
+        <ion-label position="fixed">{{ translate("City") }}</ion-label>
         <ion-input />
       </ion-item>
       <ion-item>
-        <ion-label position="fixed">{{ $t("State") }}</ion-label>
+        <ion-label position="fixed">{{ translate("State") }}</ion-label>
         <ion-input />
       </ion-item>
       <ion-item>
-        <ion-label position="fixed">{{ $t("Zipcode") }}</ion-label>
+        <ion-label position="fixed">{{ translate("Zipcode") }}</ion-label>
         <ion-input />
       </ion-item>
       <ion-item>
-        <ion-label>{{ $t("Shipping method") }}</ion-label>
+        <ion-label>{{ translate("Shipping method") }}</ion-label>
         <ion-select value="next-day">
           <ion-select-option value="same-day">Same day</ion-select-option>
           <ion-select-option value="next-day">Next day</ion-select-option>
@@ -46,7 +46,7 @@
       </ion-item>
 
       <div class="ion-padding ion-text-center">
-        <ion-button @click="shipToCustomer" size="small">{{ $t("Ship to this address") }}</ion-button>
+        <ion-button @click="shipToCustomer" size="small">{{ translate("Ship to this address") }}</ion-button>
       </div>
     </main>
   </ion-content> 
@@ -75,6 +75,7 @@ import {
   closeOutline,
   storefrontOutline,
 } from 'ionicons/icons';
+import { translate } from "@hotwax/dxp-components";
 
 export default defineComponent({
   name: 'ShipToCustomerModal',
@@ -99,9 +100,9 @@ export default defineComponent({
     async shipToCustomer() {
       const alert = await alertController
         .create({
-          header: this.$t('Ship to customer'),
-          message: this.$t('This order will be rejected from this store with the selected reason and shipped to the address that has been inputed.Please make sure the address you have entered is correct.', {space: '<br /><br />'}),
-          buttons: [this.$t('Cancel'), this.$t('Ship')],
+          header: translate('Ship to customer'),
+          message: translate('This order will be rejected from this store with the selected reason and shipped to the address that has been inputed.Please make sure the address you have entered is correct.', {space: '<br /><br />'}),
+          buttons: [translate('Cancel'), translate('Ship')],
         });
       return alert.present();
     },
@@ -111,6 +112,7 @@ export default defineComponent({
       businessOutline,
       closeOutline,
       storefrontOutline,
+      translate
     };
   },
 });

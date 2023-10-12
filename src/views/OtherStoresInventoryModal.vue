@@ -6,7 +6,7 @@
           <ion-icon :icon="close" />
         </ion-button>
       </ion-buttons>
-      <ion-title>{{ $t("Other stores inventory") }}</ion-title>
+      <ion-title>{{ translate("Other stores inventory") }}</ion-title>
     </ion-toolbar>
   </ion-header>
   <ion-content class="ion-padding">
@@ -17,7 +17,7 @@
       </ion-item>
     </ion-list>
     <div v-else class="ion-text-center">
-      <p>{{ $t("No inventory details found")}}</p>
+      <p>{{ translate("No inventory details found")}}</p>
     </div>
   </ion-content>
 </template>
@@ -39,6 +39,7 @@ import {
 import { defineComponent } from "vue";
 import { close } from "ionicons/icons";
 import { useStore } from "@/store";
+import { translate } from "@hotwax/dxp-components";
 
 export default defineComponent({
   name: "OtherStoresInventoryModal",
@@ -65,7 +66,8 @@ export default defineComponent({
     const store = useStore();
     return {
       close,
-      store
+      store,
+      translate
     };
   }
 });

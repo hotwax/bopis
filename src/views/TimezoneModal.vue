@@ -6,17 +6,17 @@
           <ion-icon :icon="close" />
         </ion-button>
       </ion-buttons>
-      <ion-title>{{ $t("Select time zone") }}</ion-title>
+      <ion-title>{{ translate("Select time zone") }}</ion-title>
     </ion-toolbar>
     <ion-toolbar>
-      <ion-searchbar @ionFocus="selectSearchBarText($event)" :placeholder="$t('Search time zones')"  v-model="queryString" @keyup.enter="queryString = $event.target.value; findTimeZone()" @keydown="preventSpecialCharacters($event)" />
+      <ion-searchbar @ionFocus="selectSearchBarText($event)" :placeholder="translate('Search time zones')"  v-model="queryString" @keyup.enter="queryString = $event.target.value; findTimeZone()" @keydown="preventSpecialCharacters($event)" />
     </ion-toolbar>
   </ion-header>
 
   <ion-content class="ion-padding">
     <!-- Empty state -->
     <div class="empty-state" v-if="filteredTimeZones.length === 0">
-      <p>{{ $t("No time zone found")}}</p>
+      <p>{{ translate("No time zone found")}}</p>
     </div>
 
     <!-- Timezones -->
@@ -64,6 +64,7 @@ import { useStore } from "@/store";
 import { UserService } from "@/services/UserService";
 import { hasError } from '@/adapter'
 import { DateTime } from 'luxon';
+import { translate } from "@hotwax/dxp-components";
 
 export default defineComponent({
   name: "TimeZoneModal",
@@ -97,16 +98,16 @@ export default defineComponent({
       modalController.dismiss({ dismissed: true });
     },
     async saveAlert() {
-      const message = this.$t("Are you sure you want to change the time zone to?", { timeZoneId: this.timeZoneId });
+      const message = translate("Are you sure you want to change the time zone to?", { timeZoneId: this.timeZoneId });
       const alert = await alertController.create({
-        header: this.$t("Update time zone"),
+        header: translate("Update time zone"),
         message,
         buttons: [
           {
-            text: this.$t("Cancel"),
+            text: translate("Cancel"),
           },
           {
-            text: this.$t("Confirm"),
+            text: translate("Confirm"),
             handler: () => {
               this.setUserTimeZone();
             }
@@ -154,7 +155,8 @@ export default defineComponent({
     return {
       close,
       save,
-      store
+      store,
+      translate
     };
   }
 });

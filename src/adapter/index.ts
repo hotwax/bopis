@@ -10,11 +10,14 @@ import {
   logout,
   resetConfig,
   removeClientRegistrationToken,
+  setUserLocale,
   storeClientRegistrationToken,
   subscribeTopic,
   unsubscribeTopic,
   updateInstanceUrl,
-  updateToken
+  updateToken,
+  getUserPreference, 
+  setUserPreference
 } from '@hotwax/oms-api'
 
 export {
@@ -29,9 +32,12 @@ export {
   logout,
   resetConfig,
   removeClientRegistrationToken,
+  setUserLocale,
   storeClientRegistrationToken,
   subscribeTopic,
   unsubscribeTopic,
   updateInstanceUrl,
-  updateToken
+  updateToken,
+  getUserPreference,
+  setUserPreference
 }

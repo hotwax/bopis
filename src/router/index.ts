@@ -10,7 +10,7 @@ import Shopify from '@/views/Shopify.vue'
 
 import { hasPermission } from '@/authorization';
 import { showToast } from '@/utils'
-import { translate } from '@/i18n'
+import { translate } from '@hotwax/dxp-components'
 
 import 'vue-router'
 import { Login, useAuthStore } from '@hotwax/dxp-components';

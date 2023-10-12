@@ -5,16 +5,16 @@
       <ion-tab-bar slot="bottom">
         <ion-tab-button tab="catalog" href="/tabs/catalog">
           <ion-icon :icon="shirtOutline" />
-          <ion-label>{{ $t("Catalog") }}</ion-label>
+          <ion-label>{{ translate("Catalog") }}</ion-label>
         </ion-tab-button>
         <ion-tab-button tab="orders" href="/tabs/orders">
           <ion-icon :icon="infiniteOutline" />
-          <ion-label>{{ $t("Orders") }}</ion-label>
+          <ion-label>{{ translate("Orders") }}</ion-label>
         </ion-tab-button>
 
         <ion-tab-button tab="more" href="/tabs/settings">
           <ion-icon :icon="settings" />
-          <ion-label>{{ $t("Settings") }}</ion-label>
+          <ion-label>{{ translate("Settings") }}</ion-label>
         </ion-tab-button>
       </ion-tab-bar>
     </ion-tabs>
@@ -28,6 +28,7 @@ import {
   settings,
   shirtOutline,
 } from "ionicons/icons";
+import { translate } from "@hotwax/dxp-components";
 
 export default {
   name: "Tabs",
@@ -36,7 +37,8 @@ export default {
     return {
       infiniteOutline,
       settings,
-      shirtOutline
+      shirtOutline,
+      translate
     };
   }
 };
