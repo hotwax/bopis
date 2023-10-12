@@ -470,9 +470,8 @@ export default defineComponent({
     },
     async updateNotificationPref(enumId: string, event: any) {
       try {
-        const ofbizInstanceName = this.userProfile.ofbizInstanceName
         const facilityId = (this.currentFacility as any).facilityId
-        const topicName = generateTopicName(ofbizInstanceName, facilityId, enumId)
+        const topicName = generateTopicName(facilityId, enumId)
         // event.target.checked returns the initial value (the value that was there before clicking
         // and updating the toggle). But it returns the updated value on further references (if passed
         // as a parameter in other function, here in our case, passed from confirmNotificationPrefUpdate)

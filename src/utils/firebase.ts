@@ -9,7 +9,10 @@ const addNotification = async (notification: any) => store.dispatch('user/addNot
 const generateDeviceId = () => (DateTime.now().toFormat('ddMMyy') + String(DateTime.now().toMillis()).slice(-6))
 
 // topic name: oms-facilityId-enumId(enumCode)
-const generateTopicName = (ofbizInstanceName: string, facilityId: string, enumId: string) => `${ofbizInstanceName}-${facilityId}-${enumId}`
+const generateTopicName = (facilityId: string, enumId: string) => {
+  const userProfile = store.getters['user/getUserProfile'];
+  return `${userProfile.omsInstanceName}-${facilityId}-${enumId}`;
+};
 
 export {
   addNotification,
