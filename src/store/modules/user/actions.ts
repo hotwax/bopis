@@ -7,15 +7,16 @@ import * as types from './mutation-types'
 import { showToast } from '@/utils'
 import {
   getUserPreference,
-  hasError,
-  resetConfig,
-  setUserPreference,
-  updateInstanceUrl,
-  updateToken,
   getNotificationEnumIds,
   getNotificationUserPrefTypeIds,
+  getUserFacilities,
+  hasError,
+  logout,
+  resetConfig,
+  setUserPreference,
   storeClientRegistrationToken,
-  getUserFacilities
+  updateInstanceUrl,
+  updateToken
 } from '@/adapter'
 import { DateTime, Settings } from 'luxon';
 import {
@@ -26,6 +27,7 @@ import {
 } from '@/authorization'
 import { useAuthStore, translate } from '@hotwax/dxp-components'
 import { generateDeviceId, generateTopicName } from '@/utils/firebase'
+import emitter from '@/event-bus'
 
 const actions: ActionTree<UserState, RootState> = {
 
@@ -114,7 +116,32 @@ const actions: ActionTree<UserState, RootState> = {
   /**
    * Logout user
    */
-  async logout ({ commit, dispatch }) {
+  async logout ({ commit, dispatch }, payload) {
+    // store the url on which we need to redirect the user after logout api completes in case of SSO enabled
+    let redirectionUrl = ''
+
+    emitter.emit('presentLoader', { message: 'Logging out', backdropDismiss: false })
+
+    // Calling the logout api to flag the user as logged out, only when user is authorised
+    // if the user is already unauthorised then not calling the logout api as it returns 401 again that results in a loop, thus there is no need to call logout api if the user is unauthorised
+    if(!payload?.isUserUnauthorised) {
+      let resp;
+
+      // wrapping the parsing logic in try catch as in some case the logout api makes redirection, and then we are unable to parse the resp and thus the logout process halts
+      try {
+        resp = await logout();
+
+        // Added logic to remove the `//` from the resp as in case of get request we are having the extra characters and in case of post we are having 403
+        resp = JSON.parse(resp.startsWith('//') ? resp.replace('//', '') : resp)
+      } catch(err) {
+        console.error('Error parsing data', err)
+      }
+
+      if(resp?.logoutAuthType == 'SAML2SSO') {
+        redirectionUrl = resp.logoutUrl
+      }
+    }
+    
     const authStore = useAuthStore()
     // TODO add any other tasks if need
     dispatch("product/clearProducts", null, { root: true })
@@ -126,6 +153,14 @@ const actions: ActionTree<UserState, RootState> = {
 
     // reset plugin state on logout
     authStore.$reset()
+
+    // If we get any url in logout api resp then we will redirect the user to the url
+    if(redirectionUrl) {
+      window.location.href = redirectionUrl
+    }
+
+    emitter.emit('dismissLoader')
+    return redirectionUrl;
   },
 
   /**
