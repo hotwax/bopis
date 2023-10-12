@@ -25,7 +25,7 @@ import {
   resetPermissions,
   setPermissions
 } from '@/authorization'
-import { useAuthStore, translate } from '@hotwax/dxp-components'
+import { translate, useAuthStore, useUserStore } from '@hotwax/dxp-components'
 import { generateDeviceId, generateTopicName } from '@/utils/firebase'
 import emitter from '@/event-bus'
 
@@ -143,6 +143,7 @@ const actions: ActionTree<UserState, RootState> = {
     }
     
     const authStore = useAuthStore()
+    const userStore = useUserStore()
     // TODO add any other tasks if need
     dispatch("product/clearProducts", null, { root: true })
     dispatch('clearNotificationState')
@@ -153,6 +154,7 @@ const actions: ActionTree<UserState, RootState> = {
 
     // reset plugin state on logout
     authStore.$reset()
+    userStore.$reset()
 
     // If we get any url in logout api resp then we will redirect the user to the url
     if(redirectionUrl) {
