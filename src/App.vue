@@ -12,6 +12,7 @@ import emitter from "@/event-bus"
 import { mapGetters, useStore } from 'vuex';
 import { initialise, resetConfig } from '@/adapter'
 import { useRouter } from 'vue-router';
+import { translate } from "@hotwax/dxp-components";
 
 export default defineComponent({
   name: 'App',
@@ -26,14 +27,17 @@ export default defineComponent({
     }
   },
   methods: {
-    async presentLoader() {
+    async presentLoader(options = { message: '', backdropDismiss: true }) {
+      // When having a custom message remove already existing loader
+      if(options.message && this.loader) this.dismissLoader();
+
       // if currently loader is not present then creating a new loader
       if (!this.loader) {
         this.loader = await loadingController
           .create({
-            message: this.$t("Click the backdrop to dismiss."),
+            message: options.message ? translate(options.message) : translate("Click the backdrop to dismiss."),
             translucent: true,
-            backdropDismiss: true
+            backdropDismiss: options.backdropDismiss
           });
       }
       this.loader.present();
@@ -46,14 +50,14 @@ export default defineComponent({
       }
     },
     async unauthorised() {
-      this.store.dispatch("user/logout");
+      // Mark the user as unauthorised, this will help in not making the logout api call in actions
+      this.store.dispatch("user/logout", { isUserUnauthorised: true });
       const redirectUrl = window.location.origin + '/login'
       window.location.href = `${process.env.VUE_APP_LOGIN_URL}?redirectUrl=${redirectUrl}`
     }
   }, 
   computed: {
     ...mapGetters({
-      locale: 'user/getLocale',
       userToken: 'user/getUserToken',
       instanceUrl: 'user/getInstanceUrl'
     })
@@ -78,13 +82,12 @@ export default defineComponent({
     // creating the loader on mounted as loadingController is taking too much time to create initially
     this.loader = await loadingController
       .create({
-        message: this.$t("Click the backdrop to dismiss."),
+        message: translate("Click the backdrop to dismiss."),
         translucent: true,
         backdropDismiss: true
       });
     emitter.on('presentLoader', this.presentLoader);
     emitter.on('dismissLoader', this.dismissLoader);
-    this.$i18n.locale = this.locale;
   },
   unmounted() {
     emitter.off('presentLoader', this.presentLoader);
@@ -96,7 +99,8 @@ export default defineComponent({
     const router = useRouter();
     return {
       router,
-      store
+      store,
+      translate
     }
   }
 });

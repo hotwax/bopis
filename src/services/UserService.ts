@@ -47,37 +47,6 @@ const setUserTimeZone = async (payload: any): Promise <any>  => {
   });
 }
 
-const getUserPreference = async (token: any): Promise<any> => {
-  const baseURL = store.getters['user/getBaseUrl'];
-  try {
-    const resp = await client({
-      url: "service/getUserPreference",
-      method: "post",
-      data: {
-        'userPrefTypeId': 'BOPIS_PREFERENCE'
-      },
-      baseURL,
-      headers: {
-        Authorization:  'Bearer ' + token,
-        'Content-Type': 'application/json'
-      }
-    });
-    if (hasError(resp)) {
-      return Promise.reject(resp.data);
-    }
-    return Promise.resolve(resp.data.userPrefValue ? JSON.parse(resp.data.userPrefValue) : {});
-  } catch(error: any) {
-    return Promise.reject(error)
-  }
-}
-const setUserPreference = async (payload: any): Promise<any> => {
-  return api({
-    url: "service/setUserPreference",
-    method: "post",
-    data: payload
-  });
-}
-
 const getCurrentEComStore = async (token: any, facilityId: any): Promise<any> => {
 
   // If the facilityId is not provided, it may be case of user not associated with any facility or the logout
@@ -131,7 +100,29 @@ const updateRerouteFulfillmentConfig = async (payload: any): Promise<any> => {
   });
 }
 
+const getPartialOrderRejectionConfig = async (payload: any): Promise<any> => {
+  return api({
+    url: "performFind",
+    method: "get",
+    params: payload,
+  });
+}
 
+const createPartialOrderRejectionConfig = async (payload: any): Promise<any> => {
+  return api({
+    url: "service/createProductStoreSetting",
+    method: "post",
+    data: payload
+  });
+}
+
+const updatePartialOrderRejectionConfig = async (payload: any): Promise<any> => {
+  return api({
+    url: "service/updateProductStoreSetting",
+    method: "post",
+    data: payload
+  });
+}
 
 const getUserPermissions = async (payload: any, token: any): Promise<any> => {
   const baseURL = store.getters['user/getBaseUrl'];
@@ -228,9 +219,10 @@ export const UserService = {
     getCurrentEComStore,
     getRerouteFulfillmentConfig,
     setUserTimeZone,
-    getUserPreference,
-    setUserPreference,
     getUserPermissions,
     getUserProfile,
-    updateRerouteFulfillmentConfig
+    updateRerouteFulfillmentConfig,
+    getPartialOrderRejectionConfig,
+    createPartialOrderRejectionConfig,
+    updatePartialOrderRejectionConfig
 }

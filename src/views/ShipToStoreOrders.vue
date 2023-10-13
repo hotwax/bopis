@@ -3,19 +3,19 @@
     <ion-header :translucent="true">
       <ion-toolbar>
         <ion-back-button default-href="/" slot="start" />
-        <ion-title>{{ $t("Shipping to store") }}</ion-title>
+        <ion-title>{{ translate("Shipping to store") }}</ion-title>
       </ion-toolbar>
       <div>
-        <ion-searchbar @ionFocus="selectSearchBarText($event)" v-model="queryString" @keyup.enter="queryString = $event.target.value; searchOrders()" :placeholder= "$t('Search')" />
+        <ion-searchbar @ionFocus="selectSearchBarText($event)" v-model="queryString" @keyup.enter="queryString = $event.target.value; searchOrders()" :placeholder= "translate('Search')" />
         <ion-segment v-model="segmentSelected" @ionChange="segmentChanged">
           <ion-segment-button value="incoming">
-            <ion-label>{{ $t("Incoming") }}</ion-label>
+            <ion-label>{{ translate("Incoming") }}</ion-label>
           </ion-segment-button>
           <ion-segment-button value="readyForPickup">
-            <ion-label>{{ $t("Ready for pickup") }}</ion-label>
+            <ion-label>{{ translate("Ready for pickup") }}</ion-label>
           </ion-segment-button>
           <ion-segment-button value="completed">
-            <ion-label>{{ $t("Completed") }}</ion-label>
+            <ion-label>{{ translate("Completed") }}</ion-label>
           </ion-segment-button>
         </ion-segment>
       </div>    
@@ -38,7 +38,7 @@
 
             <div class="border-top">
               <ion-button :disabled="!hasPermission(Actions.APP_ORDER_UPDATE)" fill="clear" @click.stop="confirmScheduleOrderForPickup(order)">
-                {{ $t("Arrived") }}
+                {{ translate("Arrived") }}
               </ion-button>
             </div>
           </ion-card>
@@ -61,7 +61,7 @@
 
             <div class="border-top">
               <ion-button :disabled="!hasPermission(Actions.APP_ORDER_UPDATE)" fill="clear" @click.stop="confirmHandoverOrder(order.shipmentId)">
-                {{ $t("Handover") }}
+                {{ translate("Handover") }}
               </ion-button>
               <ion-button fill="clear" slot="end" @click="sendReadyForPickupEmail(order)">
                 <ion-icon slot="icon-only" :icon="mailOutline" />
@@ -91,7 +91,7 @@
         <ion-refresher-content pullingIcon="crescent" refreshingSpinner="crescent" />
       </ion-refresher>
       <ion-infinite-scroll @ionInfinite="loadMoreOrders($event)" threshold="100px" :disabled="segmentSelected === 'incoming' ? !isIncomingOrdersScrollable : segmentSelected === 'readyForPickup' ? !isReadyForPickupOrdersScrollable : !isCompletedOrdersScrollable">
-        <ion-infinite-scroll-content loading-spinner="crescent" :loading-text="$t('Loading')" />
+        <ion-infinite-scroll-content loading-spinner="crescent" :loading-text="translate('Loading')" />
       </ion-infinite-scroll>
     </ion-content>
   </ion-page>
@@ -131,7 +131,7 @@ import { DateTime } from 'luxon';
 import emitter from "@/event-bus"
 import { Actions, hasPermission } from '@/authorization'
 import { OrderService } from "@/services/OrderService";
-import { translate } from "@/i18n";
+import { translate } from "@hotwax/dxp-components";
 
 export default defineComponent({
   name: 'ShipToStoreOrders',
@@ -263,18 +263,18 @@ export default defineComponent({
       })
     },
     async confirmScheduleOrderForPickup(order: any) {
-      const header = this.$t('Ready for pickup')
-      const message = this.$t('Order will be marked as ready for pickup and an email notification will be sent to . This action is irreversible.', { customerName: `${order.firstName} ${order.lastName}` });
+      const header = translate('Ready for pickup')
+      const message = translate('Order will be marked as ready for pickup and an email notification will be sent to . This action is irreversible.', { customerName: `${order.firstName} ${order.lastName}` });
 
       const alert = await alertController
         .create({
           header: header,
           message: message,
           buttons: [{
-            text: this.$t('Cancel'),
+            text: translate('Cancel'),
             role: 'cancel'
           },{
-            text: this.$t('Ready for pickup'),
+            text: translate('Ready for pickup'),
             handler: async () => {
               await this.scheduleOrderForPickup(order.shipmentId)
             }
@@ -310,18 +310,18 @@ export default defineComponent({
       return resp;
     },
     async confirmHandoverOrder(shipmentId: string) {
-      const header = this.$t('Complete order')
-      const message = this.$t('Order will be marked as completed. This action is irreversible.');
+      const header = translate('Complete order')
+      const message = translate('Order will be marked as completed. This action is irreversible.');
 
       const alert = await alertController
         .create({
           header: header,
           message: message,
           buttons: [{
-            text: this.$t('Cancel'),
+            text: translate('Cancel'),
             role: 'cancel'
           },{
-            text: this.$t('Complete'),
+            text: translate('Complete'),
             handler: async () => {
               await this.handoverOrder(shipmentId)
             }
@@ -357,18 +357,18 @@ export default defineComponent({
     },
 
     async sendReadyForPickupEmail(order: any) {
-      const header = this.$t('Resend ready for pickup email')
-      const message = this.$t('An email notification will be sent to that their order is ready for pickup.', { customerName: `${order.firstName} ${order.lastName}` })
+      const header = translate('Resend ready for pickup email')
+      const message = translate('An email notification will be sent to that their order is ready for pickup.', { customerName: `${order.firstName} ${order.lastName}` })
 
       const alert = await alertController
         .create({
           header: header,
           message: message,
           buttons: [{
-            text: this.$t('Cancel'),
+            text: translate('Cancel'),
             role: 'cancel'
           }, {
-            text: this.$t('Send'),
+            text: translate('Send'),
             handler: async () => {
               try {
                 const resp = await OrderService.sendPickupScheduledNotification({ shipmentId: order.shipmentId });
@@ -409,7 +409,8 @@ export default defineComponent({
       mailOutline,
       router,
       segmentSelected,
-      store
+      store,
+      translate
     };
   },
 });

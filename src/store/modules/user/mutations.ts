@@ -24,14 +24,14 @@ const mutations: MutationTree <UserState> = {
     [types.USER_PREFERENCE_UPDATED] (state, payload) {
         state.preference = {...state.preference, ...payload};
     },
-    [types.USER_LOCALE_UPDATED] (state, payload) {
-        state.locale = payload;
-    },
     [types.USER_CURRENT_ECOM_STORE_UPDATED] (state, payload) {
         state.currentEComStore = payload
     },
     [types.USER_PERMISSIONS_UPDATED] (state, payload) {
         state.permissions = payload
+    },
+    [types.USER_PARTIAL_ORDER_REJECTION_CONFIG_UPDATED] (state, payload) {
+        state.partialOrderRejectionConfig = payload
     },
     [types.USER_NOTIFICATIONS_UPDATED] (state, payload) {
         state.notifications = payload
@@ -41,6 +41,10 @@ const mutations: MutationTree <UserState> = {
     },
     [types.USER_FIREBASE_DEVICEID_UPDATED] (state, payload) {
         state.firebaseDeviceId = payload
+    },
+    [types.USER_UNREAD_NOTIFICATIONS_STATUS_UPDATED] (state, payload) {
+        state.hasUnreadNotifications = payload
     }
+    
 }
 export default mutations;

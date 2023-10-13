@@ -4,10 +4,11 @@ export default interface UserState {
     currentFacility: object;
     instanceUrl: string;
     preference: any;
-    locale: string;
     permissions: any;
     currentEComStore: any;
+    partialOrderRejectionConfig: any
     notifications: any;
     notificationPrefs: any;
     firebaseDeviceId: string;
+    hasUnreadNotifications: boolean
 }

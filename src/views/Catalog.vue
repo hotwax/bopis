@@ -2,7 +2,7 @@
   <ion-page>
     <ion-header :translucent="true">
       <ion-toolbar>
-        <ion-title>{{ $t("Catalog") }}</ion-title>
+        <ion-title>{{ translate("Catalog") }}</ion-title>
       </ion-toolbar>
     </ion-header>
     <ion-content>
@@ -19,7 +19,7 @@
         </ion-card>
       </main>
       <div v-else class="ion-text-center">
-        <p>{{ $t("No products found") }}</p>
+        <p>{{ translate("No products found") }}</p>
       </div>
       <ion-infinite-scroll
         @ionInfinite="loadMoreProducts($event)"
@@ -28,7 +28,7 @@
       >
         <ion-infinite-scroll-content
           loading-spinner="crescent"
-          :loading-text="$t('Loading')"
+          :loading-text="translate('Loading')"
         />
       </ion-infinite-scroll>
     </ion-content>
@@ -52,7 +52,7 @@ import {
 import { defineComponent } from 'vue';
 import { mapGetters, useStore } from 'vuex';
 import { useRouter } from "vue-router";
-import { ShopifyImg } from '@hotwax/dxp-components'
+import { ShopifyImg, translate } from '@hotwax/dxp-components'
 
 export default defineComponent({
   name: 'Catalog',
@@ -123,7 +123,8 @@ export default defineComponent({
     const router = useRouter();
     return {
       store,
-      router
+      router,
+      translate
     };
   },
 });

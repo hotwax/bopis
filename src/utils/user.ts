@@ -1,10 +1,10 @@
-import { translate } from '@/i18n'
+import { translate } from '@hotwax/dxp-components';
 import store from '@/store'
 import { loadingController } from '@ionic/vue'
 
 const login = async (payload: any) => store.dispatch('user/login', payload);
 
-const logout = async () => store.dispatch('user/logout');
+const logout = async (payload: any) => store.dispatch('user/logout', payload);
 
 const loader = {
   value: null as any,

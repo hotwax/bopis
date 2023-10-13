@@ -1,33 +1,43 @@
 import {
   api,
   client,
+  getConfig,
   hasError,
   getUserFacilities,
   getNotificationEnumIds,
   getNotificationUserPrefTypeIds,
   initialise,
+  logout,
   resetConfig,
   removeClientRegistrationToken,
+  setUserLocale,
   storeClientRegistrationToken,
   subscribeTopic,
   unsubscribeTopic,
   updateInstanceUrl,
-  updateToken
+  updateToken,
+  getUserPreference, 
+  setUserPreference
 } from '@hotwax/oms-api'
 
 export {
   api,
   client,
+  getConfig,
   hasError,
   getUserFacilities,
   getNotificationEnumIds,
   getNotificationUserPrefTypeIds,
   initialise,
+  logout,
   resetConfig,
   removeClientRegistrationToken,
+  setUserLocale,
   storeClientRegistrationToken,
   subscribeTopic,
   unsubscribeTopic,
   updateInstanceUrl,
-  updateToken
+  updateToken,
+  getUserPreference,
+  setUserPreference
 }
