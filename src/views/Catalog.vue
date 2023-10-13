@@ -6,7 +6,7 @@
       </ion-toolbar>
     </ion-header>
     <ion-content>
-      <ion-searchbar @ionFocus="selectSearchBarText($event)" v-model="queryString" @keypress.enter="queryString = $event.target.value; getProducts()" />
+      <ion-searchbar @ionFocus="selectSearchBarText($event)" v-model="queryString" @keypress.enter="queryString = $event.target.value; getProducts()" @ionClear="queryString='' ;getProducts()"/>
       <main v-if="products.list.length">
         <ion-card button v-for="product in products.list" :key="product.productId"  @click="viewProduct(product)">
           <ShopifyImg :src="product.mainImageUrl" size="large"/>
