@@ -179,8 +179,7 @@
           </ion-item>
         </ion-card>
 
-        <!-- TODO uncomment after testing again -->
-        <!-- <ion-card v-if="notificationPrefs.length">
+        <ion-card v-if="notificationPrefs.length">
           <ion-card-header>
             <ion-card-title>
               {{ translate("Notification Preference") }}
@@ -195,7 +194,7 @@
               <ion-toggle @click="confirmNotificationPrefUpdate(pref.enumId, $event)" :checked="pref.isEnabled" slot="end" />
             </ion-item>
           </ion-list>
-        </ion-card> -->
+        </ion-card>
       </section>
     </ion-content>
   </ion-page>
