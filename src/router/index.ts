@@ -5,7 +5,7 @@ import Tabs from '@/views/Tabs.vue'
 import OrderDetail from '@/views/OrderDetail.vue'
 import ProductDetail from '@/views/ProductDetail.vue'
 import ShipToStoreOrders from '@/views/ShipToStoreOrders.vue'
-// import Notifications from '@/views/Notifications.vue'
+import Notifications from '@/views/Notifications.vue'
 import Shopify from '@/views/Shopify.vue'
 
 import { hasPermission } from '@/authorization';
@@ -111,12 +111,12 @@ const routes: Array<RouteRecordRaw> = [
     component: ShipToStoreOrders,
     beforeEnter: authGuard,
   },
-  // {
-  //   path: '/notifications',
-  //   name: "Notifications",
-  //   component: Notifications,
-  //   beforeEnter: authGuard,
-  // },
+  {
+    path: '/notifications',
+    name: "Notifications",
+    component: Notifications,
+    beforeEnter: authGuard,
+  },
   {
     path: '/shopify',
     name: 'Shopify',
