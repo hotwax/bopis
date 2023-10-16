@@ -39,7 +39,7 @@ import {
   addNotification,
   storeClientRegistrationToken
 } from '@/utils/firebase';
-import { getConfig, getProductIdentificationPref, initialise, setProductIdentificationPref } from '@hotwax/oms-api';
+import { getConfig, getProductIdentificationPref, initialise, setProductIdentificationPref } from './adapter';
 
 console.log("Firease Config: " + process.env.VUE_APP_FIREBASE_CONFIG);
 console.log("Firebase VAPID key: " + process.env.VUE_APP_FIREBASE_VAPID_KEY);
