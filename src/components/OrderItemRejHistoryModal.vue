@@ -22,8 +22,8 @@
           <p v-if="$filters.getFeature(getProduct(history.productId).featureHierarchy, '1/SIZE/')">{{ translate("Size") }}: {{ $filters.getFeature(getProduct(history.productId).featureHierarchy, '1/SIZE/') }}</p>
         </ion-label>
         <ion-label slot="end" class="ion-text-right">
-          <h2>{{ getRejectReasonDescription(history?.changeReasonEnumId) }}</h2>
-          <p>{{ history?.changeUserLogin }}</p>
+          <h2>{{ getRejectReasonDescription(history.changeReasonEnumId) }}</h2>
+          <p>{{ history.changeUserLogin }}</p>
           <p>{{ getTime(history.changeDatetime) }}</p>
         </ion-label>
       </ion-item>
@@ -97,7 +97,7 @@ export default defineComponent({
       return this.rejectReasons.find((reason: any) => reason.enumId === rejectReasonEnumId)?.description;
     },
     getTime(time: number) {
-      return DateTime.fromMillis(time).toLocaleString(DateTime.DATETIME_MED)
+      return time ? DateTime.fromMillis(time).toLocaleString(DateTime.DATETIME_MED) : ''
     }
   },
   setup() {

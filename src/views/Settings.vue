@@ -491,13 +491,13 @@ export default defineComponent({
       }
     },
     async confirmNotificationPrefUpdate(enumId: string, event: any) {
-      const message = this.translate("Are you sure you want to update the notification preferences?");
+      const message = translate("Are you sure you want to update the notification preferences?");
       const alert = await alertController.create({
-        header: this.translate("Update notification preferences"),
+        header: translate("Update notification preferences"),
         message,
         buttons: [
           {
-            text: this.translate("Cancel"),
+            text: translate("Cancel"),
             handler: () => {
               // reverting the value of toggle as event.target.checked is 
               // updated on click event and revert is needed on "Cancel"
@@ -505,7 +505,7 @@ export default defineComponent({
             }
           },
           {
-            text: this.translate("Confirm"),
+            text: translate("Confirm"),
             handler: async () => {
               // passing event reference for updation in case the API fails
               await this.updateNotificationPref(enumId, event)

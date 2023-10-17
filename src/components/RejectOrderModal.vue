@@ -93,13 +93,13 @@ export default defineComponent({
     async confirmSave() {
       const alert = await alertController
         .create({
-          header: this.translate('Reject Order'),
-          message: this.translate(`This order will be removed from your dashboard. This action cannot be undone.`, { space: '<br /><br />' }),
+          header: translate('Reject Order'),
+          message: translate(`This order will be removed from your dashboard. This action cannot be undone.`, { space: '<br /><br />' }),
           buttons: [{
-            text: this.translate('Cancel'),
+            text: translate('Cancel'),
             role: 'cancel'
           }, {
-            text: this.translate('Reject'),
+            text: translate('Reject'),
             handler: () => {
               const part = { ...this.order.part, items: this.order.part.items.map((item: any) => ({ ...item, reason: this.rejectReasonId })) };
               this.store.dispatch('order/setUnfillableOrderOrItem', { orderId: this.order.orderId, part }).then((resp) => {

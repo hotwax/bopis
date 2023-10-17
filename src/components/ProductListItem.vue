@@ -13,7 +13,7 @@
     </ion-label>
     <!-- Only show stock if its not a ship to store order -->
     <div v-if="!isShipToStoreOrder">
-      <ion-note v-if="getProductStock(item.productId).quantityOnHandTotal >= 0 " :color="updateColor(getProductStock(item.productId).quantityOnHandTotal)">
+      <ion-note v-if="getProductStock(item.productId).quantityOnHandTotal >= 0" :color="updateColor(getProductStock(item.productId).quantityOnHandTotal)">
         {{ getProductStock(item.productId).quantityOnHandTotal }} {{ translate('pieces in stock') }}
       </ion-note>
       <ion-spinner v-else-if="isFetchingStock" color="medium" name="crescent" />

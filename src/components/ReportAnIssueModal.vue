@@ -95,14 +95,14 @@ export default defineComponent({
     async confirmSave () {
       const alert = await alertController
         .create({
-          header: this.translate('Reject Order Item'),
+          header: translate('Reject Order Item'),
           // TODO: Show primary identifier in message instead of productName when product identifier functionality implemented in the app.
-          message: this.translate('will be removed from your dashboard. This action cannot be undone.', { productName: this.getProduct(this.item.productId)?.productName, space: '<br /><br />' }),
+          message: translate('will be removed from your dashboard. This action cannot be undone.', { productName: this.getProduct(this.item.productId)?.productName, space: '<br /><br />' }),
           buttons: [{
-            text: this.translate('Cancel'),
+            text: translate('Cancel'),
             role: 'cancel'
           }, {
-            text: this.translate('Reject'),
+            text: translate('Reject'),
             handler: () => {
               OrderService.rejectItem({ orderId: this.order.orderId, shipmentMethodEnumId: this.order.part.shipmentMethodEnum.shipmentMethodEnumId, item: { ...this.item, reason: this.rejectReasonId } }).then((resp) => {
                 if (resp) {

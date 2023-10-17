@@ -162,16 +162,16 @@ export default defineComponent({
       )
     },
     async confirmSave() {
-      const message = this.translate("Are you sure you want to update the notification preferences?");
+      const message = translate("Are you sure you want to update the notification preferences?");
       const alert = await alertController.create({
-        header: this.translate("Update notification preferences"),
+        header: translate("Update notification preferences"),
         message,
         buttons: [
           {
-            text: this.translate("Cancel"),
+            text: translate("Cancel"),
           },
           {
-            text: this.translate("Confirm"),
+            text: translate("Confirm"),
             handler: async () => {
               await this.updateNotificationPref();
               modalController.dismiss({ dismissed: true });
