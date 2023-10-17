@@ -38,8 +38,6 @@ import { login, logout, loader } from '@/utils/user';
 import { addNotification, storeClientRegistrationToken } from '@/utils/firebase';
 import { getConfig, initialise, setUserLocale } from '@/adapter';
 
-console.log("Firease Config: " + process.env.VUE_APP_FIREBASE_CONFIG);
-console.log("Firebase VAPID key: " + process.env.VUE_APP_FIREBASE_VAPID_KEY);
 const app = createApp(App)
   .use(IonicVue, {
     mode: 'md'
