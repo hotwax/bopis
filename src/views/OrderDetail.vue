@@ -5,7 +5,7 @@
         <ion-back-button default-href="/" slot="start" />
         <ion-title>{{ translate("Order details") }}</ion-title>
         <ion-buttons slot="end">
-          <ion-button :disabled="order?.rejected" @click="openOrderItemRejHistoryModal()">
+          <ion-button :disabled="!order?.orderId || order?.rejected" @click="openOrderItemRejHistoryModal()">
             <ion-icon slot="icon-only" :icon="timeOutline" />
           </ion-button>
           <ion-button class="ion-hide-md-up" :disabled="!hasPermission(Actions.APP_ORDER_UPDATE) || order?.readyToHandover || order?.rejected" @click="rejectOrder(order)">
@@ -16,7 +16,11 @@
     </ion-header>
 
     <ion-content>
-      <main>
+      <!-- Empty state -->
+      <div class="empty-state" v-if="!order?.orderId">
+        <p>{{ translate("Order not found")}}</p>
+      </div>
+      <main v-else>
         <aside>
           <ion-item v-if="order?.readyToHandover || order?.rejected" color="light" lines="none">
             <ion-icon :icon="order.readyToHandover ? checkmarkCircleOutline : closeCircleOutline" :color="order.readyToHandover ? 'success' : 'danger'" slot="start" />
@@ -65,7 +69,7 @@
         </section>
       </main>
 
-      <ion-fab class="ion-hide-md-up" vertical="bottom" horizontal="end" slot="fixed" @click="readyForPickup(order, order.part)">
+      <ion-fab v-if="order?.orderId" class="ion-hide-md-up" vertical="bottom" horizontal="end" slot="fixed" @click="readyForPickup(order, order.part)">
         <ion-fab-button :disabled="!hasPermission(Actions.APP_ORDER_UPDATE) || order?.readyToHandover || order?.rejected">
           <ion-icon :icon="bagHandleOutline" />
         </ion-fab-button>
@@ -238,8 +242,12 @@ export default defineComponent({
   },
   async mounted() {
     await this.getOrderDetail(this.$route.params.orderId, this.$route.params.orderPartSeqId);
-    await this.getCustomerContactDetails()
-    await this.fetchRejectReasons();
+
+    // fetch customer details and rejection reasons only when we get the orders information
+    if(this.order.orderId) {
+      await this.getCustomerContactDetails()
+      await this.fetchRejectReasons();
+    }
   },
   setup() {
     const store = useStore();

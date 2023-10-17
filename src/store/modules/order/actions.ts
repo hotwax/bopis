@@ -123,6 +123,7 @@ const actions: ActionTree<OrderState , RootState> ={
     })
     
     let resp;
+    let currentOrder = {};
     try {
       resp = await OrderService.getOrderDetails(orderQueryPayload)
       if (resp.status === 200 && !hasError(resp) && resp.data.grouped?.orderId?.ngroups > 0) {
@@ -169,14 +170,15 @@ const actions: ActionTree<OrderState , RootState> ={
         })
 
         this.dispatch('product/getProductInformation', { orders })
-        dispatch('updateCurrent', { order: orders[0] })
+        currentOrder = orders[0]
       } else {
-        showToast(translate("Order not found"))
+        throw resp.data;
       }
     } catch (err) {
       console.error(err)
-      showToast(translate("Something went wrong"))
     }
+
+    dispatch('updateCurrent', { order: currentOrder })
   },
 
   updateCurrent ({ commit }, payload) {
