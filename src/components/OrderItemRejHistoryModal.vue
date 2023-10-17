@@ -6,7 +6,7 @@
           <ion-icon slot="icon-only" :icon="closeOutline" />
         </ion-button>
       </ion-buttons>
-      <ion-title>{{ $t("Order item rejection history") }}</ion-title>
+      <ion-title>{{ translate("Order item rejection history") }}</ion-title>
     </ion-toolbar>
   </ion-header>
   <ion-content>
@@ -18,8 +18,8 @@
         <ion-label>
           <h5>{{ getProduct(history.productId).brandName }}</h5>
           <h2>{{ getProduct(history.productId).productName }}</h2>
-          <p v-if="$filters.getFeature(getProduct(history.productId).featureHierarchy, '1/COLOR/')">{{ $t("Color") }}: {{ $filters.getFeature(getProduct(history.productId).featureHierarchy, '1/COLOR/') }}</p>
-          <p v-if="$filters.getFeature(getProduct(history.productId).featureHierarchy, '1/SIZE/')">{{ $t("Size") }}: {{ $filters.getFeature(getProduct(history.productId).featureHierarchy, '1/SIZE/') }}</p>
+          <p v-if="$filters.getFeature(getProduct(history.productId).featureHierarchy, '1/COLOR/')">{{ translate("Color") }}: {{ $filters.getFeature(getProduct(history.productId).featureHierarchy, '1/COLOR/') }}</p>
+          <p v-if="$filters.getFeature(getProduct(history.productId).featureHierarchy, '1/SIZE/')">{{ translate("Size") }}: {{ $filters.getFeature(getProduct(history.productId).featureHierarchy, '1/SIZE/') }}</p>
         </ion-label>
         <ion-label slot="end" class="ion-text-right">
           <h2>{{ getRejectReasonDescription(history?.changeReasonEnumId) }}</h2>
@@ -31,7 +31,7 @@
 
     <!-- Empty state -->
     <div v-if="!rejectionHistory.length && !isLoading" class="empty-state">
-      <p>{{ $t('No records found.') }}</p>
+      <p>{{ translate('No records found.') }}</p>
     </div>
   </ion-content>
 </template>
@@ -55,6 +55,7 @@ import { defineComponent } from 'vue';
 import { closeOutline } from 'ionicons/icons';
 import { mapGetters, useStore } from "vuex";
 import { DateTime } from 'luxon';
+import { translate } from '@hotwax/dxp-components';
 
 export default defineComponent({
   name: "OrderItemRejHistoryModal",
@@ -104,7 +105,8 @@ export default defineComponent({
 
     return {
       closeOutline,
-      store
+      store,
+      translate
     };
   },
 });

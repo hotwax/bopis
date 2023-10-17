@@ -39,9 +39,6 @@ const getters: GetterTree <UserState, RootState> = {
     showPackingSlip (state) {
         return state.preference.showPackingSlip;
     },
-    getLocale (state) {
-        return state.locale;
-    },
     getCurrency (state) {
         return state.currentEComStore.defaultCurrencyUomId ? state.currentEComStore.defaultCurrencyUomId : 'USD';
     },

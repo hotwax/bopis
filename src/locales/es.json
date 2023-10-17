@@ -146,6 +146,7 @@
   "Something went wrong while sending the email.": "Algo salió mal al enviar el correo electrónico.",
   "Something went wrong while login. Please contact administrator": "Algo salió mal al iniciar sesión. Por favor, contacta al administrador.",
   "Sorry, your username or password is incorrect. Please try again.": "Lo siento, tu nombre de usuario o contraseña es incorrecto. Por favor, inténtalo de nuevo.",
+  "Specify which facility you want to operate from. Order, inventory and other configuration data will be specific to the facility you select.": "Especifique desde qué instalación desea operar. El pedido, el inventario y otros datos de configuración serán específicos de la instalación que seleccione.",
   "Specify whether you reject a BOPIS order partially when any order item inventory is insufficient at the store.": "Specify whether you reject a BOPIS order partially when any order item inventory is insufficient at the store.",
   "Specify which facility you want to operate from. Order, inventory, and other configuration data will be specific to the facility you select.": "Especifique desde qué instalación desea operar. El pedido, el inventario y otros datos de configuración serán específicos de la instalación que seleccione.",
   "Specify whether you reject partial BOPIS order when any order item’s inventory is insufficient at the store.": "Specify whether you reject partial BOPIS order when any order item’s inventory is insufficient at the store.",

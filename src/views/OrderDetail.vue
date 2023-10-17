@@ -3,7 +3,7 @@
     <ion-header>
       <ion-toolbar>
         <ion-back-button default-href="/" slot="start" />
-        <ion-title>{{ $t("Order details") }}</ion-title>
+        <ion-title>{{ translate("Order details") }}</ion-title>
         <ion-buttons slot="end">
           <ion-button :disabled="order?.rejected" @click="openOrderItemRejHistoryModal()">
             <ion-icon slot="icon-only" :icon="timeOutline" />
@@ -20,7 +20,7 @@
         <aside>
           <ion-item v-if="order?.readyToHandover || order?.rejected" color="light" lines="none">
             <ion-icon :icon="order.readyToHandover ? checkmarkCircleOutline : closeCircleOutline" :color="order.readyToHandover ? 'success' : 'danger'" slot="start" />
-            <ion-label class="ion-text-wrap">{{ order.readyToHandover ? $t("Order is now ready to handover.") : $t("Order has been rejected.") }}</ion-label>
+            <ion-label class="ion-text-wrap">{{ order.readyToHandover ? translate("Order is now ready to handover.") : translate("Order has been rejected.") }}</ion-label>
           </ion-item>
           <ion-list>
             <ion-item lines="none">
@@ -38,17 +38,17 @@
           </ion-item>
           <ion-item v-if="order?.shippingInstructions" color="light" lines="none">
             <ion-label class="ion-text-wrap">
-              <p class="overline">{{ $t("Handling Instructions") }}</p>
+              <p class="overline">{{ translate("Handling Instructions") }}</p>
               <p>{{ order.shippingInstructions }}</p>
             </ion-label>
           </ion-item>
           <div class="ion-margin-top ion-hide-md-down">
             <!-- TODO: implement functionality to change shipping address -->
             <ion-button :disabled="!hasPermission(Actions.APP_ORDER_UPDATE) || order?.readyToHandover || order?.rejected" expand="block" @click.stop="readyForPickup(order, order.part)">
-              {{ order?.part?.shipmentMethodEnum?.shipmentMethodEnumId === 'STOREPICKUP' ? $t("Ready for pickup") : $t("Ready to ship") }}
+              {{ order?.part?.shipmentMethodEnum?.shipmentMethodEnumId === 'STOREPICKUP' ? translate("Ready for pickup") : translate("Ready to ship") }}
             </ion-button>
             <ion-button :disabled="!hasPermission(Actions.APP_ORDER_UPDATE) || order?.readyToHandover || order?.rejected" expand="block" color="danger" fill="outline" @click="rejectOrder(order)">
-              {{ $t("Reject Order") }}
+              {{ translate("Reject Order") }}
             </ion-button>
           </div>
         </aside>
@@ -57,7 +57,7 @@
             <ProductListItem :item="item" />
             <div v-if="partialOrderRejection" class="border-top">
               <ion-button fill="clear" @click="openReportAnIssueModal(item)">
-                {{ $t("Report an issue") }}
+                {{ translate("Report an issue") }}
               </ion-button>
             </div>
           </ion-card>
@@ -118,6 +118,7 @@ import { hasError } from '@/adapter';
 import ShipToCustomerModal from "@/components/ShipToCustomerModal.vue";
 import { OrderService } from "@/services/OrderService";
 import RejectOrderModal from "@/components/RejectOrderModal.vue";
+import { translate } from "@hotwax/dxp-components";
 
 export default defineComponent({
   name: "OrderDetail",
@@ -191,15 +192,15 @@ export default defineComponent({
     async readyForPickup(order: any, part: any) {
       if (this.configurePicker) return this.assignPicker(order, part, this.currentFacility.facilityId);
       const pickup = part?.shipmentMethodEnum?.shipmentMethodEnumId === 'STOREPICKUP';
-      const header = pickup ? this.$t('Ready for pickup') : this.$t('Ready to ship');
-      const message = pickup ? this.$t('An email notification will be sent to that their order is ready for pickup. This order will also be moved to the packed orders tab.', { customerName: order.customer.name, space: '<br/><br/>' }) : '';
+      const header = pickup ? translate('Ready for pickup') : translate('Ready to ship');
+      const message = pickup ? translate('An email notification will be sent to that their order is ready for pickup. This order will also be moved to the packed orders tab.', { customerName: order.customer.name, space: '<br/><br/>' }) : '';
 
       const alert = await alertController
         .create({
           header: header,
           message: message,
           buttons: [{
-            text: this.$t('Cancel'),
+            text: translate('Cancel'),
             role: 'cancel'
           }, {
             text: header,
@@ -256,7 +257,8 @@ export default defineComponent({
       store,
       timeOutline,
       mailOutline,
-      sendOutline
+      sendOutline,
+      translate
     };
   }
 });

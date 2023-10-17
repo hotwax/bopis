@@ -8,13 +8,13 @@
       <h2>{{ getProduct(item.productId).productName }}</h2>
       <p class="ion-text-wrap">{{ getProduct(item.productId).internalName }}</p>
       <p class="overline">{{ $filters.getIdentificationId(getProduct(item.productId).goodIdentifications, goodIdentificationTypeId) }}</p>
-      <p v-if="$filters.getFeature(getProduct(item.productId).featureHierarchy, '1/COLOR/')">{{ $t("Color") }}: {{ $filters.getFeature(getProduct(item.productId).featureHierarchy, '1/COLOR/') }}</p>
-      <p v-if="$filters.getFeature(getProduct(item.productId).featureHierarchy, '1/SIZE/')">{{ $t("Size") }}: {{ $filters.getFeature(getProduct(item.productId).featureHierarchy, '1/SIZE/') }}</p>
+      <p v-if="$filters.getFeature(getProduct(item.productId).featureHierarchy, '1/COLOR/')">{{ translate("Color") }}: {{ $filters.getFeature(getProduct(item.productId).featureHierarchy, '1/COLOR/') }}</p>
+      <p v-if="$filters.getFeature(getProduct(item.productId).featureHierarchy, '1/SIZE/')">{{ translate("Size") }}: {{ $filters.getFeature(getProduct(item.productId).featureHierarchy, '1/SIZE/') }}</p>
     </ion-label>
     <!-- Only show stock if its not a ship to store order -->
     <div v-if="!isShipToStoreOrder">
       <ion-note v-if="getProductStock(item.productId).quantityOnHandTotal >= 0 " :color="updateColor(getProductStock(item.productId).quantityOnHandTotal)">
-        {{ getProductStock(item.productId).quantityOnHandTotal }} {{ $t('pieces in stock') }}
+        {{ getProductStock(item.productId).quantityOnHandTotal }} {{ translate('pieces in stock') }}
       </ion-note>
       <ion-spinner v-else-if="isFetchingStock" color="medium" name="crescent" />
       <ion-button v-else fill="clear" @click.stop="fetchProductStock(item.productId)">
@@ -28,7 +28,7 @@
 import { defineComponent } from "vue";
 import { IonButton, IonIcon, IonItem, IonLabel, IonNote, IonSpinner, IonThumbnail } from "@ionic/vue";
 import { mapGetters, useStore } from 'vuex';
-import { ShopifyImg } from '@hotwax/dxp-components'
+import { ShopifyImg, translate } from '@hotwax/dxp-components'
 import { cubeOutline } from 'ionicons/icons'
 
 export default defineComponent({
@@ -75,8 +75,9 @@ export default defineComponent({
   setup() {
     const store = useStore();
     return {
-      cubeOutline,  
-      store
+      cubeOutline,
+      store,
+      translate
     }
   }
 })

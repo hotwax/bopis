@@ -12,6 +12,7 @@ import emitter from "@/event-bus"
 import { mapGetters, useStore } from 'vuex';
 import { initialise, resetConfig } from '@/adapter'
 import { useRouter } from 'vue-router';
+import { translate } from "@hotwax/dxp-components";
 
 export default defineComponent({
   name: 'App',
@@ -34,7 +35,7 @@ export default defineComponent({
       if (!this.loader) {
         this.loader = await loadingController
           .create({
-            message: options.message ? this.$t(options.message) : this.$t("Click the backdrop to dismiss."),
+            message: options.message ? translate(options.message) : translate("Click the backdrop to dismiss."),
             translucent: true,
             backdropDismiss: options.backdropDismiss
           });
@@ -57,7 +58,6 @@ export default defineComponent({
   }, 
   computed: {
     ...mapGetters({
-      locale: 'user/getLocale',
       userToken: 'user/getUserToken',
       instanceUrl: 'user/getInstanceUrl'
     })
@@ -82,13 +82,12 @@ export default defineComponent({
     // creating the loader on mounted as loadingController is taking too much time to create initially
     this.loader = await loadingController
       .create({
-        message: this.$t("Click the backdrop to dismiss."),
+        message: translate("Click the backdrop to dismiss."),
         translucent: true,
         backdropDismiss: true
       });
     emitter.on('presentLoader', this.presentLoader);
     emitter.on('dismissLoader', this.dismissLoader);
-    this.$i18n.locale = this.locale;
   },
   unmounted() {
     emitter.off('presentLoader', this.presentLoader);
@@ -100,7 +99,8 @@ export default defineComponent({
     const router = useRouter();
     return {
       router,
-      store
+      store,
+      translate
     }
   }
 });

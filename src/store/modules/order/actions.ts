@@ -5,7 +5,7 @@ import OrderState from './OrderState'
 import * as types from './mutation-types'
 import { showToast } from "@/utils";
 import { hasError } from '@/adapter'
-import { translate } from "@/i18n";
+import { translate } from "@hotwax/dxp-components";
 import emitter from '@/event-bus'
 import store from "@/store";
 import { prepareOrderQuery } from "@/utils/solrHelper";

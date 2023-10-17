@@ -6,19 +6,19 @@
           <ion-icon slot="icon-only" :icon="closeOutline" />
         </ion-button>
       </ion-buttons>
-      <ion-title>{{ $t("Reject Order") }}</ion-title>
+      <ion-title>{{ translate("Reject Order") }}</ion-title>
     </ion-toolbar>
   </ion-header>
   <ion-content>
     <ion-item lines="none">
-      <p>{{ $t('On rejecting this order, will be sent an email with alternate fulfilment options and this order will be removed from your dashboard.', { customerName: order?.customer?.name }) }}</p>
+      <p>{{ translate('On rejecting this order, will be sent an email with alternate fulfilment options and this order will be removed from your dashboard.', { customerName: order?.customer?.name }) }}</p>
     </ion-item>
     <ion-list>
-      <ion-list-header>{{ $t("Select reason") }}</ion-list-header>
+      <ion-list-header>{{ translate("Select reason") }}</ion-list-header>
       <ion-radio-group v-model="rejectReasonId">
         <ion-item v-for="reason in unfillableReasons" :key="reason.id">
           <ion-radio slot="start" :value="reason.id" />
-          <ion-label>{{ $t(reason.label) }}</ion-label>
+          <ion-label>{{ translate(reason.label) }}</ion-label>
         </ion-item>
       </ion-radio-group>
     </ion-list>
@@ -53,6 +53,7 @@ import {
 import { defineComponent } from 'vue';
 import { closeOutline, saveOutline } from 'ionicons/icons';
 import { mapGetters, useStore } from 'vuex'
+import { translate } from '@hotwax/dxp-components';
 
 export default defineComponent({
   name: "RejectOrderModal",
@@ -92,13 +93,13 @@ export default defineComponent({
     async confirmSave() {
       const alert = await alertController
         .create({
-          header: this.$t('Reject Order'),
-          message: this.$t(`This order will be removed from your dashboard. This action cannot be undone.`, { space: '<br /><br />' }),
+          header: this.translate('Reject Order'),
+          message: this.translate(`This order will be removed from your dashboard. This action cannot be undone.`, { space: '<br /><br />' }),
           buttons: [{
-            text: this.$t('Cancel'),
+            text: this.translate('Cancel'),
             role: 'cancel'
           }, {
-            text: this.$t('Reject'),
+            text: this.translate('Reject'),
             handler: () => {
               const part = { ...this.order.part, items: this.order.part.items.map((item: any) => ({ ...item, reason: this.rejectReasonId })) };
               this.store.dispatch('order/setUnfillableOrderOrItem', { orderId: this.order.orderId, part }).then((resp) => {
@@ -120,7 +121,8 @@ export default defineComponent({
     return {
       closeOutline,
       saveOutline,
-      store
+      store,
+      translate
     };
   }
 });

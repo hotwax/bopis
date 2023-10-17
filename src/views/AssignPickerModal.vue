@@ -6,18 +6,18 @@
           <ion-icon slot="icon-only" :icon="closeOutline" />
         </ion-button>
       </ion-buttons>
-      <ion-title>{{ $t("Assign Pickers") }}</ion-title>
-      <ion-button fill="clear" slot="end" @click="readyForPickup()">{{ part.shipmentMethodEnum?.shipmentMethodEnumId === 'STOREPICKUP' ? $t("Ready for pickup") : $t("Ready to ship") }}</ion-button>
+      <ion-title>{{ translate("Assign Pickers") }}</ion-title>
+      <ion-button fill="clear" slot="end" @click="readyForPickup()">{{ part.shipmentMethodEnum?.shipmentMethodEnumId === 'STOREPICKUP' ? translate("Ready for pickup") : translate("Ready to ship") }}</ion-button>
     </ion-toolbar>
   </ion-header>
 
   <ion-content>
     <ion-searchbar v-model="queryString" @keyup.enter="queryString = $event.target.value; searchPicker()"/>
 
-    <div class="ion-text-center ion-margin-top" v-if="!availablePickers.length">{{ $t('No picker found') }}</div>
+    <div class="ion-text-center ion-margin-top" v-if="!availablePickers.length">{{ translate('No picker found') }}</div>
 
     <ion-list v-else>
-      <ion-list-header>{{ $t("Staff") }}</ion-list-header>
+      <ion-list-header>{{ translate("Staff") }}</ion-list-header>
       <div>
         <ion-radio-group v-model="selectedPicker">
           <ion-item v-for="(picker, index) in availablePickers" :key="index">
@@ -34,7 +34,7 @@
     >
       <ion-infinite-scroll-content
         loading-spinner="crescent"
-        :loading-text="$t('Loading')"
+        :loading-text="translate('Loading')"
       />
     </ion-infinite-scroll>
   </ion-content>
@@ -64,7 +64,7 @@ import { closeOutline } from "ionicons/icons";
 import { useStore } from "vuex";
 import { showToast } from "@/utils";
 import { hasError } from '@/adapter'
-import { translate } from "@/i18n";
+import { translate } from "@hotwax/dxp-components";
 import { PicklistService } from '@/services/PicklistService'
 
 export default defineComponent({
@@ -191,7 +191,8 @@ export default defineComponent({
 
     return {
       closeOutline,
-      store
+      store,
+      translate
     };
   },
 });

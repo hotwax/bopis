@@ -6,19 +6,19 @@
           <ion-icon slot="icon-only" :icon="closeOutline" />
         </ion-button>
       </ion-buttons>
-      <ion-title>{{ $t("Report an issue") }}</ion-title>
+      <ion-title>{{ translate("Report an issue") }}</ion-title>
     </ion-toolbar>
   </ion-header>
   <ion-content>
     <ion-item lines="none">
-      <p>{{ $t('On rejecting this item, will be sent an email with alternate fulfillment options and this order item will be removed from your dashboard.', { customerName: order?.customer?.name }) }}</p>
+      <p>{{ translate('On rejecting this item, will be sent an email with alternate fulfillment options and this order item will be removed from your dashboard.', { customerName: order?.customer?.name }) }}</p>
     </ion-item>
     <ion-list>
-      <ion-list-header>{{ $t("Select reason") }}</ion-list-header>
+      <ion-list-header>{{ translate("Select reason") }}</ion-list-header>
       <ion-radio-group v-model="rejectReasonId">
         <ion-item v-for="reason in unfillableReasons" :key="reason.id">
           <ion-radio slot="start" :value="reason.id"/>
-          <ion-label>{{ $t(reason.label) }}</ion-label>
+          <ion-label>{{ translate(reason.label) }}</ion-label>
         </ion-item>
       </ion-radio-group>
     </ion-list>
@@ -54,6 +54,7 @@ import { defineComponent } from 'vue';
 import { closeOutline, saveOutline } from 'ionicons/icons';
 import { mapGetters, useStore } from 'vuex'
 import { OrderService } from "@/services/OrderService";
+import { translate } from '@hotwax/dxp-components';
 
 export default defineComponent({
   name: "ReportAnIssueModal",
@@ -94,14 +95,14 @@ export default defineComponent({
     async confirmSave () {
       const alert = await alertController
         .create({
-          header: this.$t('Reject Order Item'),
+          header: this.translate('Reject Order Item'),
           // TODO: Show primary identifier in message instead of productName when product identifier functionality implemented in the app.
-          message: this.$t('will be removed from your dashboard. This action cannot be undone.', { productName: this.getProduct(this.item.productId)?.productName, space: '<br /><br />' }),
+          message: this.translate('will be removed from your dashboard. This action cannot be undone.', { productName: this.getProduct(this.item.productId)?.productName, space: '<br /><br />' }),
           buttons: [{
-            text: this.$t('Cancel'),
+            text: this.translate('Cancel'),
             role: 'cancel'
           }, {
-            text: this.$t('Reject'),
+            text: this.translate('Reject'),
             handler: () => {
               OrderService.rejectItem({ orderId: this.order.orderId, shipmentMethodEnumId: this.order.part.shipmentMethodEnum.shipmentMethodEnumId, item: { ...this.item, reason: this.rejectReasonId } }).then((resp) => {
                 if (resp) {
@@ -127,7 +128,8 @@ export default defineComponent({
     return {
       closeOutline,
       saveOutline,
-      store
+      store,
+      translate
     };
   }
 });
