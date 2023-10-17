@@ -1,6 +1,6 @@
 import { api, client, hasError } from '@/adapter';
 import emitter from '@/event-bus';
-import { translate } from '@/i18n';
+import { translate } from '@hotwax/dxp-components';
 import store from '@/store';
 import { showToast } from '@/utils';
 
