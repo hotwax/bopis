@@ -309,6 +309,10 @@ export default defineComponent({
       this.getAvailableShipmentMethods();
       this.getRerouteFulfillmentConfiguration();
     }
+
+    // fetching partial order rejection when entering setting page to have latest information
+    await this.store.dispatch('user/getPartialOrderRejectionConfig')
+
     // as notification prefs can also be updated from the notification pref modal,
     // latest state is fetched each time we open the settings page
     await this.store.dispatch('user/fetchNotificationPreferences')
