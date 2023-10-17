@@ -207,7 +207,7 @@ const actions: ActionTree<UserState, RootState> = {
     const params = {
       "inputFields": {
         "productStoreId": this.state.user.currentEComStore.productStoreId,
-        settingTypeEnumId: "BOPIS_PART_ODR_REJ"
+        "settingTypeEnumId": "BOPIS_PART_ODR_REJ"
       },
       "filterByDate": 'Y',
       "entityName": "ProductStoreSetting",

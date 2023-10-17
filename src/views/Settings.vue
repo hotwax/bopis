@@ -179,21 +179,6 @@
           </ion-item>
         </ion-card>
 
-        <ion-card>
-          <ion-card-header>
-            <ion-card-title>
-              {{ translate("Partial Order rejection") }}
-            </ion-card-title>
-          </ion-card-header>
-          <ion-card-content>
-            {{ translate('Specify whether you reject partial BOPIS order when any order item’s inventory is insufficient at the store.') }}
-          </ion-card-content>
-          <ion-item lines="none">
-            <ion-label>{{ translate("Allow partial rejection") }}</ion-label>
-            <ion-toggle :checked="partialOrderRejection" @ionChange="setPartialOrderRejectionPreference($event)" slot="end" />
-          </ion-item>
-        </ion-card>
-
         <ion-card v-if="notificationPrefs.length">
           <ion-card-header>
             <ion-card-title>
@@ -308,7 +293,6 @@ export default defineComponent({
       currentFacility: 'user/getCurrentFacility',
       currentEComStore: 'user/getCurrentEComStore',
       configurePicker: "user/configurePicker",
-      partialOrderRejection: 'user/partialOrderRejection',
       showShippingOrders: 'user/showShippingOrders',
       showPackingSlip: 'user/showPackingSlip',
       partialOrderRejectionConfig: 'user/getPartialOrderRejectionConfig',
@@ -366,9 +350,6 @@ export default defineComponent({
     },
     goToLaunchpad() {
       window.location.href = `${process.env.VUE_APP_LOGIN_URL}`
-    },
-    setPartialOrderRejectionPreference (ev: any) {
-      this.store.dispatch('user/setUserPreference', { partialOrderRejection: ev.detail.checked })
     },
     setShowShippingOrdersPreference (ev: any) {
       this.store.dispatch('user/setUserPreference', { showShippingOrders: ev.detail.checked })

@@ -55,7 +55,8 @@
         <section>
           <ion-card v-for="(item, index) in order.part?.items" :key="index">
             <ProductListItem :item="item" />
-            <div v-if="partialOrderRejection" class="border-top">
+            <!-- Checking for true as a string as the settingValue contains a string and not boolean-->
+            <div v-if="partialOrderRejectionConfig?.settingValue == 'true'" class="border-top">
               <ion-button fill="clear" @click="openReportAnIssueModal(item)">
                 {{ translate("Report an issue") }}
               </ion-button>
@@ -151,7 +152,7 @@ export default defineComponent({
       order: "order/getCurrent",
       currentFacility: 'user/getCurrentFacility',
       configurePicker: "user/configurePicker",
-      partialOrderRejection: 'user/partialOrderRejection'
+      partialOrderRejectionConfig: 'user/getPartialOrderRejectionConfig'
     })
   },
   methods: {
