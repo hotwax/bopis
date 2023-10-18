@@ -61,8 +61,9 @@ const quickShipEntireShipGroup = async (payload: any): Promise <any> => {
 }
 
 const rejectItem = async (payload: any): Promise<any> => {
+  emitter.emit("presentLoader");
+  let resp = '' as any;
   try {
-    emitter.emit("presentLoader");
     const params = {
       'orderId': payload.orderId,
       'rejectReason': payload.item.reason,
@@ -73,7 +74,7 @@ const rejectItem = async (payload: any): Promise<any> => {
       ...(payload.shipmentMethodEnumId === "STOREPICKUP" && ({ "naFacilityId": "PICKUP_REJECTED" })),
     }
 
-    const resp = await api({
+    resp = await api({
       url: "rejectOrderItem",
       method: "post",
       data: { 'payload': params }
@@ -84,12 +85,11 @@ const rejectItem = async (payload: any): Promise<any> => {
     } else {
       showToast(translate('Something went wrong'));
     }
-    return resp;
   } catch (error) {
     console.error(error);
-  } finally {
-    emitter.emit("dismissLoader");
   }
+  emitter.emit("dismissLoader");
+  return resp;
 }
 
 const rejectOrderItem = async (payload: any): Promise <any> => {
