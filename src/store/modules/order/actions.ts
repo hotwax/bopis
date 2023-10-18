@@ -769,7 +769,7 @@ const actions: ActionTree<OrderState , RootState> ={
     return resp;
   },
 
-  async getOrderItemRejHistory({ commit }, payload) {
+  async getOrderItemRejectionHistory({ commit }, payload) {
     emitter.emit("presentLoader");
     let rejectionHistory = [] as any;
 
@@ -785,7 +785,7 @@ const actions: ActionTree<OrderState , RootState> ={
         orderBy: 'changeDatetime DESC',
         viewSize: 20,
       }
-      const resp = await OrderService.getOrderItemRejHistory(params);
+      const resp = await OrderService.getOrderItemRejectionHistory(params);
 
       if (!hasError(resp) && resp.data.count > 0) {
         rejectionHistory = resp.data.docs;

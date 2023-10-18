@@ -148,6 +148,7 @@ const actions: ActionTree<UserState, RootState> = {
     dispatch("product/clearProducts", null, { root: true })
     dispatch('clearNotificationState')
     dispatch('clearPartialOrderRejectionConfig');
+    this.dispatch('util/updateRejectReasons', [])
     commit(types.USER_END_SESSION)
     resetPermissions();
     resetConfig();

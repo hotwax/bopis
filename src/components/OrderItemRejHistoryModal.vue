@@ -86,7 +86,7 @@ export default defineComponent({
     })
   },
   async mounted() {
-    await this.store.dispatch('order/getOrderItemRejHistory', { orderId: this.order.orderId, rejectReasonEnumIds: this.rejectReasons.reduce((enumIds: [], reason: any) => [...enumIds, reason.enumId], []) });
+    await this.store.dispatch('order/getOrderItemRejectionHistory', { orderId: this.order.orderId, rejectReasonEnumIds: this.rejectReasons.reduce((enumIds: [], reason: any) => [...enumIds, reason.enumId], []) });
     this.isLoading = false;
   },
   methods: {

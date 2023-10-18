@@ -7,7 +7,7 @@ import { hasError } from '@/adapter'
 
 const actions: ActionTree<UtilState, RootState> = {
   async fetchRejectReasons({ commit }) {
-    let rejectReasons  = [];
+    let rejectReasons = [];
     try {
       const payload = {
         "inputFields": {
@@ -32,6 +32,10 @@ const actions: ActionTree<UtilState, RootState> = {
     }
 
     commit(types.UTIL_REJECT_REASONS_UPDATED, rejectReasons)
+  },
+
+  async updateRejectReasons({ commit }, payload) {
+    commit(types.UTIL_REJECT_REASONS_UPDATED, payload)
   }
 }
 
