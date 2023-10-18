@@ -11,26 +11,26 @@
   </ion-header>
   <ion-content>
     <ion-list>
-      <ion-item v-for="(history, index) in rejectionHistory" :key="index">
+      <ion-item v-for="(item, index) in orderRejectionHistory" :key="index">
         <ion-thumbnail slot="start">
-          <ShopifyImg :src="getProduct(history.productId).mainImageUrl" size="small" />
+          <ShopifyImg :src="getProduct(item.productId).mainImageUrl" size="small" />
         </ion-thumbnail>
         <ion-label>
-          <h5>{{ getProduct(history.productId).brandName }}</h5>
-          <h2>{{ getProduct(history.productId).productName }}</h2>
-          <p v-if="$filters.getFeature(getProduct(history.productId).featureHierarchy, '1/COLOR/')">{{ translate("Color") }}: {{ $filters.getFeature(getProduct(history.productId).featureHierarchy, '1/COLOR/') }}</p>
-          <p v-if="$filters.getFeature(getProduct(history.productId).featureHierarchy, '1/SIZE/')">{{ translate("Size") }}: {{ $filters.getFeature(getProduct(history.productId).featureHierarchy, '1/SIZE/') }}</p>
+          <h5>{{ getProduct(item.productId).brandName }}</h5>
+          <h2>{{ getProduct(item.productId).productName }}</h2>
+          <p v-if="$filters.getFeature(getProduct(item.productId).featureHierarchy, '1/COLOR/')">{{ translate("Color") }}: {{ $filters.getFeature(getProduct(item.productId).featureHierarchy, '1/COLOR/') }}</p>
+          <p v-if="$filters.getFeature(getProduct(item.productId).featureHierarchy, '1/SIZE/')">{{ translate("Size") }}: {{ $filters.getFeature(getProduct(item.productId).featureHierarchy, '1/SIZE/') }}</p>
         </ion-label>
         <ion-label slot="end" class="ion-text-right">
-          <h2>{{ getRejectReasonDescription(history.changeReasonEnumId) }}</h2>
-          <p>{{ history.changeUserLogin }}</p>
-          <p>{{ getTime(history.changeDatetime) }}</p>
+          <h2>{{ getRejectReasonDescription(item.changeReasonEnumId) }}</h2>
+          <p>{{ item.changeUserLogin }}</p>
+          <p>{{ getTime(item.changeDatetime) }}</p>
         </ion-label>
       </ion-item>
     </ion-list>
 
     <!-- Empty state -->
-    <div v-if="!rejectionHistory.length && !isLoading" class="empty-state">
+    <div v-if="!orderRejectionHistory.length && !isLoading" class="empty-state">
       <p>{{ translate('No records found.') }}</p>
     </div>
   </ion-content>
@@ -82,7 +82,7 @@ export default defineComponent({
       getProduct: 'product/getProduct',
       order: "order/getCurrent",
       rejectReasons: 'util/getRejectReasons',
-      rejectionHistory: 'order/getOrderItemRejectionHistory'
+      orderRejectionHistory: 'order/getOrderItemRejectionHistory'
     })
   },
   async mounted() {
