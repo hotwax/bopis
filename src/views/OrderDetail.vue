@@ -38,7 +38,9 @@
           <ion-item v-if="customerEmail" lines="none">
             <ion-icon :icon="mailOutline" slot="start" />
             <ion-label>{{ customerEmail }}</ion-label>
-            <ion-icon :icon="copyOutline" slot="end" @click="copyToClipboard(customerEmail)" />
+            <ion-button fill="clear" @click="copyToClipboard(customerEmail)">
+              <ion-icon color="medium" :icon="copyOutline"/>
+            </ion-button>
           </ion-item>
           <ion-item v-if="order?.shippingInstructions" color="light" lines="none">
             <ion-label class="ion-text-wrap">
