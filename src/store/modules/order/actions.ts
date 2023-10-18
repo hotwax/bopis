@@ -100,7 +100,8 @@ const actions: ActionTree<OrderState , RootState> ={
   async getOrderDetail( { dispatch, state }, payload ) {
     const current = state.current as any
     const orders = JSON.parse(JSON.stringify(state.open.list)) as any
-    if(current.orderId === payload.orderId) { 
+    // As one order can have multiple parts thus checking orderId and partSeq as well before making any api call
+    if(current.orderId === payload.orderId && current.part?.orderPartSeqId === payload.orderPartSeqId) {
       this.dispatch('product/getProductInformation', { orders: [ current ] })
       return current 
     }
@@ -127,7 +128,7 @@ const actions: ActionTree<OrderState , RootState> ={
     try {
       resp = await OrderService.getOrderDetails(orderQueryPayload)
       if (resp.status === 200 && !hasError(resp) && resp.data.grouped?.orderId?.ngroups > 0) {
-        const orders = resp.data.grouped?.orderId?.groups.map((order: any) => {
+        let orders = resp.data.grouped?.orderId?.groups.map((order: any) => {
           const orderItem = order.doclist.docs[0]
           return {
             orderId: orderItem.orderId,
@@ -168,6 +169,9 @@ const actions: ActionTree<OrderState , RootState> ={
             shippingInstructions: orderItem.shippingInstructions
           }
         })
+
+        // creating order part to render the items correctly on UI
+        orders = Object.keys(orders).length ? orders.flatMap((order: any) => order.parts.map((part: any) => ({ ...order, part }))) : [];
 
         this.dispatch('product/getProductInformation', { orders })
         currentOrder = orders[0]
