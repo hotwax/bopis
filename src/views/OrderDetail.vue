@@ -52,7 +52,7 @@
           <ion-icon :icon="sendOutline" slot="end" />
         </ion-button> -->
 
-        <ion-button :disabled="!hasPermission(Actions.APP_ORDER_UPDATE)" expand="block" color="danger" fill="outline" @click="updateOrder(order)">
+        <ion-button :disabled="!hasPermission(Actions.APP_REJECT_ORDER)" expand="block" color="danger" fill="outline" @click="updateOrder(order)">
           {{ translate("Reject Order") }}
         </ion-button>
       </main>  
