@@ -442,7 +442,7 @@ const actions: ActionTree<OrderState , RootState> ={
           await dispatch('packDeliveryItems', shipmentId).then((data) => {
             if (!hasError(data) && !data.data._EVENT_MESSAGE_) {
               showToast(translate("Something went wrong"))
-            } else {
+            } else if(state.open.list.length) {
               // Remove order from the list if action is successful
               const orderIndex = state.open.list.findIndex((order: any) => {
                 return order.orderId === payload.order.orderId && order.parts.some((part: any) => {
