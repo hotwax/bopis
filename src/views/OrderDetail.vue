@@ -8,7 +8,7 @@
           <ion-button :disabled="!order?.orderId || order?.rejected" @click="openOrderItemRejHistoryModal()">
             <ion-icon slot="icon-only" :icon="timeOutline" />
           </ion-button>
-          <ion-button class="ion-hide-md-up" :disabled="!hasPermission(Actions.APP_ORDER_UPDATE) || order?.readyToHandover || order?.rejected" @click="rejectOrder(order)">
+          <ion-button class="ion-hide-md-up" :disabled="!hasPermission(Actions.APP_ORDER_UPDATE) || order?.readyToHandover || order?.rejected" @click="rejectOrder()">
             <ion-icon slot="icon-only" color="danger" :icon="bagRemoveOutline" />
           </ion-button>
         </ion-buttons>
@@ -53,7 +53,7 @@
             <ion-button :disabled="!hasPermission(Actions.APP_ORDER_UPDATE) || order?.readyToHandover || order?.rejected" expand="block" @click.stop="readyForPickup(order, order.part)">
               {{ order?.part?.shipmentMethodEnum?.shipmentMethodEnumId === 'STOREPICKUP' ? translate("Ready for pickup") : translate("Ready to ship") }}
             </ion-button>
-            <ion-button :disabled="!hasPermission(Actions.APP_ORDER_UPDATE) || order?.readyToHandover || order?.rejected" expand="block" color="danger" fill="outline" @click="rejectOrder(order)">
+            <ion-button :disabled="!hasPermission(Actions.APP_ORDER_UPDATE) || order?.readyToHandover || order?.rejected" expand="block" color="danger" fill="outline" @click="rejectOrder()">
               {{ translate("Reject Order") }}
             </ion-button>
           </div>
@@ -190,7 +190,7 @@ export default defineComponent({
       }
       await this.store.dispatch("order/getOrderDetail", payload)
     },
-    async rejectOrder(order: any) {
+    async rejectOrder() {
       const rejectOrderModal = await modalController.create({
         component: RejectOrderModal
       });
