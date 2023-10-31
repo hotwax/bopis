@@ -50,10 +50,13 @@
           </ion-item>
           <div class="ion-margin-top ion-hide-md-down">
             <!-- TODO: implement functionality to change shipping address -->
-            <ion-button :disabled="!hasPermission(Actions.APP_ORDER_UPDATE) || order?.readyToHandover || order?.rejected" expand="block" @click.stop="readyForPickup(order, order.part)">
+            <ion-button v-if="orderType === 'open'" :disabled="!hasPermission(Actions.APP_ORDER_UPDATE) || order?.readyToHandover || order?.rejected" expand="block" @click.stop="readyForPickup(order, order.part)">
               {{ order?.part?.shipmentMethodEnum?.shipmentMethodEnumId === 'STOREPICKUP' ? translate("Ready for pickup") : translate("Ready to ship") }}
             </ion-button>
-            <ion-button :disabled="!hasPermission(Actions.APP_ORDER_UPDATE) || order?.readyToHandover || order?.rejected" expand="block" color="danger" fill="outline" @click="rejectOrder()">
+            <ion-button v-else-if="orderType === 'packed'" :disabled="!hasPermission(Actions.APP_ORDER_UPDATE)" expand="block" @click.stop="deliverShipment(order)">
+              {{ order.part.shipmentMethodEnum.shipmentMethodEnumId === 'STOREPICKUP' ? translate("Handover") : translate("Ship") }}
+            </ion-button>
+            <ion-button :disabled="!hasPermission(Actions.APP_ORDER_UPDATE) || order?.readyToHandover || order?.rejected" v-if="orderType === 'open'" expand="block" color="danger" fill="outline" @click="rejectOrder()">
               {{ translate("Reject Order") }}
             </ion-button>
           </div>
@@ -62,7 +65,7 @@
           <ion-card v-for="(item, index) in order.part?.items" :key="index">
             <ProductListItem :item="item" />
             <!-- Checking for true as a string as the settingValue contains a string and not boolean-->
-            <div v-if="partialOrderRejectionConfig?.settingValue == 'true'" class="border-top">
+            <div v-if="partialOrderRejectionConfig?.settingValue == 'true' && orderType === 'open'" class="border-top">
               <ion-button fill="clear" @click="openReportAnIssueModal(item)">
                 {{ translate("Report an issue") }}
               </ion-button>
@@ -150,7 +153,8 @@ export default defineComponent({
   },
   data() {
     return {
-      customerEmail: ''
+      customerEmail: '',
+      orderType: this.$route.params.orderType
     }
   },
   computed: {
@@ -169,6 +173,11 @@ export default defineComponent({
       });
       return assignPickerModal.present();
     },
+    async deliverShipment(order: any) {
+      await this.store.dispatch('order/deliverShipment', order).then(() => {
+        this.$router.push({ path: '/tabs/orders' })
+      })
+    },
     async openOrderItemRejHistoryModal() {
       const orderItemRejHistoryModal = await modalController.create({
         component: OrderItemRejHistoryModal,
@@ -182,13 +191,18 @@ export default defineComponent({
       });
       return reportAnIssueModal.present();
     },
-    async getOrderDetail(orderId: any, orderPartSeqId: any) {
+    async getOrderDetail(orderId: any, orderPartSeqId: any, orderType: any) {
+      if(orderType !== 'open' && orderType !== 'packed') {
+        this.store.dispatch('order/updateCurrent', { order: {} })
+        return;
+      }
+
       const payload = {
         facilityId: this.currentFacility.facilityId,
         orderId,
         orderPartSeqId
       }
-      await this.store.dispatch("order/getOrderDetail", payload)
+      await this.store.dispatch("order/getOrderDetail", { payload, orderType })
     },
     async rejectOrder() {
       const rejectOrderModal = await modalController.create({
@@ -243,7 +257,7 @@ export default defineComponent({
     }
   },
   async mounted() {
-    await this.getOrderDetail(this.$route.params.orderId, this.$route.params.orderPartSeqId);
+    await this.getOrderDetail(this.$route.params.orderId, this.$route.params.orderPartSeqId, this.$route.params.orderType);
 
     // fetch customer details and rejection reasons only when we get the orders information
     if(this.order.orderId) {

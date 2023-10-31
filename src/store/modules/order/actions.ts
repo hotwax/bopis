@@ -97,11 +97,11 @@ const actions: ActionTree<OrderState , RootState> ={
     return resp;
   },
 
-  async getOrderDetail( { dispatch, state }, payload ) {
+  async getOrderDetail( { dispatch, state }, { payload, orderType } ) {
     const current = state.current as any
     const orders = JSON.parse(JSON.stringify(state.open.list)) as any
     // As one order can have multiple parts thus checking orderId and partSeq as well before making any api call
-    if(current.orderId === payload.orderId && current.part?.orderPartSeqId === payload.orderPartSeqId) {
+    if(current.orderId === payload.orderId && current.orderType === orderType && current.part?.orderPartSeqId === payload.orderPartSeqId) {
       this.dispatch('product/getProductInformation', { orders: [ current ] })
       return current 
     }
@@ -114,12 +114,18 @@ const actions: ActionTree<OrderState , RootState> ={
         return order;
       }
     }
+
+    if(orderType === 'open') {
+      payload['orderStatusId']= "ORDER_APPROVED"
+      payload['-shipmentStatusId']= "*"
+    } else if(orderType === 'packed') {
+      payload['shipmentStatusId']= "SHIPMENT_PACKED"
+    }
+
     const orderQueryPayload = prepareOrderQuery({
       ...payload,
       shipmentMethodTypeId: !store.state.user.preference.showShippingOrders ? 'STOREPICKUP' : '',
-      '-shipmentStatusId': '*',
       '-fulfillmentStatus': '(Cancelled OR Rejected)',
-      orderStatusId: 'ORDER_APPROVED',
       orderTypeId: 'SALES_ORDER'
     })
     
@@ -166,7 +172,8 @@ const actions: ActionTree<OrderState , RootState> ={
               return arr
             }, []),
             placedDate: orderItem.orderDate,
-            shippingInstructions: orderItem.shippingInstructions
+            shippingInstructions: orderItem.shippingInstructions,
+            orderType: orderType
           }
         })
 
