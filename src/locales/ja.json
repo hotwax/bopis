@@ -36,6 +36,7 @@
   "Facility": "拠点",
   "Failed to load packing slip": "納品書の読み込みに失敗しました",
   "Failed to update configuration": "設定の更新に失敗しました",
+  "Failed to print shipping label and packing slip": "Failed to print shipping label and packing slip",
   "First name": "名",
   "Generate packing slips": "内容明細票の作成",
   "Generate shipping documents": "Generate shipping documents",

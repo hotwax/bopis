@@ -14,7 +14,7 @@
           <ion-button v-if="orderType === 'open'" class="ion-hide-md-up" :disabled="!hasPermission(Actions.APP_ORDER_UPDATE) || order.readyToHandover || order.rejected" @click="rejectOrder()">
             <ion-icon slot="icon-only" color="danger" :icon="bagRemoveOutline" />
           </ion-button>
-          <ion-button v-if="orderType === 'packed' && order.part.shipmentMethodEnum.shipmentMethodEnumId === 'STOREPICKUP' && showPackingSlip" :class="order.part.shipmentMethodEnum.shipmentMethodEnumId !== 'STOREPICKUP' ? 'ion-hide-md-up' : ''" :disabled="!hasPermission(Actions.APP_ORDER_UPDATE) || order.handovered || order.shipped" @click="printPackingSlip(order)">
+          <ion-button v-if="orderType === 'packed' && showPackingSlip" :class="order.part.shipmentMethodEnum.shipmentMethodEnumId !== 'STOREPICKUP' ? 'ion-hide-md-up' : ''" :disabled="!hasPermission(Actions.APP_ORDER_UPDATE) || order.handovered || order.shipped" @click="order.part.shipmentMethodEnum.shipmentMethodEnumId === 'STOREPICKUP' ? printPackingSlip(order) : printShippingLabelAndPackingSlip(order)">
             <ion-icon slot="icon-only" :icon="printOutline" />
           </ion-button>
         </ion-buttons>
@@ -82,7 +82,7 @@
           </div>
 
           <div v-else-if="orderType === 'packed'" class="ion-margin-top ion-hide-md-down">
-            <ion-button :disabled="!hasPermission(Actions.APP_ORDER_UPDATE) || order.handovered || order.shipped" expand="block" fill="outline" @click="order?.part?.shipmentMethodEnum?.shipmentMethodEnumId === 'STOREPICKUP' ? sendReadyForPickupEmail(order) : ''">
+            <ion-button :disabled="!hasPermission(Actions.APP_ORDER_UPDATE) || order.handovered || order.shipped" expand="block" fill="outline" @click="order?.part?.shipmentMethodEnum?.shipmentMethodEnumId === 'STOREPICKUP' ? sendReadyForPickupEmail(order) : printShippingLabelAndPackingSlip(order)">
               {{ order?.part?.shipmentMethodEnum?.shipmentMethodEnumId === 'STOREPICKUP' ? translate("Resend customer email") : translate("Generate shipping documents") }}
             </ion-button>
             <ion-button :disabled="!hasPermission(Actions.APP_ORDER_UPDATE) || order.handovered || order.shipped" expand="block" @click="deliverShipment(order)">
@@ -355,6 +355,9 @@ export default defineComponent({
         });
       return alert.present();
     },
+    async printShippingLabelAndPackingSlip(order: any) {
+      await OrderService.printShippingLabelAndPackingSlip(order.shipmentId)
+    }
   },
   async mounted() {
     await this.getOrderDetail(this.orderId, this.orderPartSeqId, this.orderType);

@@ -179,6 +179,38 @@ const fetchOrderPaymentPreferences = async (params: any): Promise<any> => {
   });
 }
 
+const printShippingLabelAndPackingSlip = async (shipmentIds: Array<string>): Promise<any> => {
+  try {
+    // Get packing slip from the server
+    const resp: any = await api({
+      method: 'get',
+      url: 'LabelAndPackingSlip.pdf',
+      params: {
+        shipmentIds
+      },
+      responseType: "blob"
+    })
+
+    if (!resp || resp.status !== 200 || hasError(resp)) {
+      throw resp.data;
+    }
+
+    // Generate local file URL for the blob received
+    const pdfUrl = window.URL.createObjectURL(resp.data);
+    // Open the file in new tab
+    try {
+      (window as any).open(pdfUrl, "_blank").focus();
+    }
+    catch {
+      showToast(translate('Unable to open as browser is blocking pop-ups.', {documentName: 'shipping label and packing slip'}));
+    }
+
+  } catch (err) {
+    showToast(translate('Failed to print shipping label and packing slip'))
+    console.error("Failed to load shipping label and packing slip", err)
+  }
+}
+
 export const OrderService = {
   fetchOrderPaymentPreferences,
   getOpenOrders,
@@ -194,5 +226,6 @@ export const OrderService = {
   sendPickupScheduledNotification,
   getShipToStoreOrders,
   getShipmentItems,
-  getCustomerContactDetails
+  getCustomerContactDetails,
+  printShippingLabelAndPackingSlip
 }

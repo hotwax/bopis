@@ -36,6 +36,7 @@
   "Facility": "Instalación",
   "Failed to load packing slip": "Error al cargar el documento de embalaje",
   "Failed to update configuration": "No se pudo actualizar la configuración",
+  "Failed to print shipping label and packing slip": "Failed to print shipping label and packing slip",
   "First name": "Nombre",
   "Generate packing slips": "Generar documentos de embalaje",
   "Generate shipping documents": "Generate shipping documents",
