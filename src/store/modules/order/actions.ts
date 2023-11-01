@@ -813,6 +813,7 @@ const actions: ActionTree<OrderState , RootState> ={
     commit(types.ORDER_OPEN_UPDATED, {orders: {} , total: 0})
     commit(types.ORDER_PACKED_UPDATED, {orders: {} , total: 0})
     commit(types.ORDER_COMPLETED_UPDATED, {orders: {} , total: 0})
+    commit(types.ORDER_CURRENT_UPDATED, { order: {} });
   },
 
   async fetchPaymentDetail({ commit, state }) {

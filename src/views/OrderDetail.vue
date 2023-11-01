@@ -5,7 +5,7 @@
         <ion-back-button default-href="/" slot="start" />
         <ion-title>{{ translate("Order details") }}</ion-title>
         <ion-buttons slot="end">
-          <ion-button :disabled="!order?.orderId || order?.rejected" @click="openOrderItemRejHistoryModal()">
+          <ion-button :disabled="!order?.orderId" @click="openOrderItemRejHistoryModal()">
             <ion-icon slot="icon-only" :icon="timeOutline" />
           </ion-button>
           <ion-button class="ion-hide-md-up" :disabled="!hasPermission(Actions.APP_ORDER_UPDATE) || order?.readyToHandover || order?.rejected" @click="rejectOrder()">
@@ -71,7 +71,7 @@
             <ProductListItem :item="item" />
             <!-- Checking for true as a string as the settingValue contains a string and not boolean-->
             <div v-if="partialOrderRejectionConfig?.settingValue == 'true'" class="border-top">
-              <ion-button fill="clear" @click="openReportAnIssueModal(item)">
+              <ion-button :disabled="order?.readyToHandover || order?.rejected" fill="clear" @click="openReportAnIssueModal(item)">
                 {{ translate("Report an issue") }}
               </ion-button>
             </div>
@@ -97,6 +97,7 @@ import {
   IonButton,
   IonButtons,
   IonCard,
+  IonChip,
   IonContent,
   IonHeader,
   IonIcon,
@@ -145,6 +146,7 @@ export default defineComponent({
     IonButton,
     IonButtons,
     IonCard,
+    IonChip,
     IonContent,
     IonHeader,
     IonIcon,
