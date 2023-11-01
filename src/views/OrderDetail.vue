@@ -14,7 +14,7 @@
           <ion-button v-if="orderType === 'open'" class="ion-hide-md-up" :disabled="!hasPermission(Actions.APP_ORDER_UPDATE) || order.readyToHandover || order.rejected" @click="rejectOrder()">
             <ion-icon slot="icon-only" color="danger" :icon="bagRemoveOutline" />
           </ion-button>
-          <ion-button v-if="orderType === 'packed' && showPackingSlip" :class="order.part.shipmentMethodEnum.shipmentMethodEnumId !== 'STOREPICKUP' ? 'ion-hide-md-up' : ''" :disabled="!hasPermission(Actions.APP_ORDER_UPDATE) || order.handovered || order.shipped" @click="order.part.shipmentMethodEnum.shipmentMethodEnumId === 'STOREPICKUP' ? printPackingSlip(order) : printShippingLabelAndPackingSlip(order)">
+          <ion-button v-else-if="orderType === 'packed' && showPackingSlip" :class="order.part.shipmentMethodEnum.shipmentMethodEnumId !== 'STOREPICKUP' ? 'ion-hide-md-up' : ''" :disabled="!hasPermission(Actions.APP_ORDER_UPDATE) || order.handovered || order.shipped" @click="order.part.shipmentMethodEnum.shipmentMethodEnumId === 'STOREPICKUP' ? printPackingSlip(order) : printShippingLabelAndPackingSlip(order)">
             <ion-icon slot="icon-only" :icon="printOutline" />
           </ion-button>
         </ion-buttons>
@@ -66,7 +66,7 @@
               <p>{{ order.shippingInstructions }}</p>
             </ion-label>
           </ion-item>
-          <ion-item v-if="orderType === 'packed'" lines="none">
+          <ion-item v-if="orderType === 'packed' && order.pickers" lines="none">
             <ion-label class="ion-text-wrap">
               {{ translate("Picked by", { pickers: order.pickers }) }}
             </ion-label>
