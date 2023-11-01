@@ -14,7 +14,7 @@
           <ion-button v-if="orderType === 'open'" class="ion-hide-md-up" :disabled="!hasPermission(Actions.APP_ORDER_UPDATE) || order.readyToHandover || order.rejected" @click="rejectOrder()">
             <ion-icon slot="icon-only" color="danger" :icon="bagRemoveOutline" />
           </ion-button>
-          <ion-button v-if="orderType === 'packed' && showPackingSlip" class="ion-hide-md-up" :disabled="!hasPermission(Actions.APP_ORDER_UPDATE) || order?.handovered || order?.shipped" @click="printPackingSlip(order)">
+          <ion-button v-if="orderType === 'packed' && showPackingSlip" class="ion-hide-md-up" :disabled="!hasPermission(Actions.APP_ORDER_UPDATE) || order.handovered || order.shipped" @click="printPackingSlip(order)">
             <ion-icon slot="icon-only" :icon="printOutline" />
           </ion-button>
         </ion-buttons>
@@ -72,7 +72,8 @@
             </ion-label>
           </ion-item>
           <div v-if="orderType === 'open'" class="ion-margin-top ion-hide-md-down">
-            <ion-button :disabled="!hasPermission(Actions.APP_ORDER_UPDATE) || order.readyToHandover || order.rejected" expand="block" @click.stop="readyForPickup(order, order.part)">
+            <!-- TODO: implement functionality to change shipping address -->
+            <ion-button :disabled="!hasPermission(Actions.APP_ORDER_UPDATE) || order.readyToHandover || order.rejected" expand="block" @click="readyForPickup(order, order.part)">
               {{ order?.part?.shipmentMethodEnum?.shipmentMethodEnumId === 'STOREPICKUP' ? translate("Ready for pickup") : translate("Ready to ship") }}
             </ion-button>
             <ion-button :disabled="!hasPermission(Actions.APP_ORDER_UPDATE) || order.readyToHandover || order.rejected" expand="block" color="danger" fill="outline" @click="rejectOrder()">
@@ -80,12 +81,11 @@
             </ion-button>
           </div>
 
-          <div v-if="orderType === 'packed'" class="ion-margin-top ion-hide-md-down">
-            <!-- TODO: implement functionality to change shipping address -->
-            <ion-button :disabled="!hasPermission(Actions.APP_ORDER_UPDATE) || order.handovered || order.shipped" expand="block" fill="outline" @click.stop="order?.part?.shipmentMethodEnum?.shipmentMethodEnumId === 'STOREPICKUP' ? sendReadyForPickupEmail(order) : ''">
+          <div v-else-if="orderType === 'packed'" class="ion-margin-top ion-hide-md-down">
+            <ion-button :disabled="!hasPermission(Actions.APP_ORDER_UPDATE) || order.handovered || order.shipped" expand="block" fill="outline" @click="order?.part?.shipmentMethodEnum?.shipmentMethodEnumId === 'STOREPICKUP' ? sendReadyForPickupEmail(order) : ''">
               {{ order?.part?.shipmentMethodEnum?.shipmentMethodEnumId === 'STOREPICKUP' ? translate("Resend customer email") : translate("Generate shipping documents") }}
             </ion-button>
-            <ion-button :disabled="!hasPermission(Actions.APP_ORDER_UPDATE) || order.handovered || order.shipped" expand="block" @click.stop="deliverShipment(order)">
+            <ion-button :disabled="!hasPermission(Actions.APP_ORDER_UPDATE) || order.handovered || order.shipped" expand="block" @click="deliverShipment(order)">
               {{ order.part.shipmentMethodEnum.shipmentMethodEnumId === 'STOREPICKUP' ? translate("Handover") : translate("Ship") }}
             </ion-button>
           </div>
@@ -94,7 +94,7 @@
           <ion-card v-for="(item, index) in order.part?.items" :key="index">
             <ProductListItem :item="item" />
             <!-- Checking for true as a string as the settingValue contains a string and not boolean-->
-            <div v-if="partialOrderRejectionConfig?.settingValue == 'true' && orderType === 'open'" class="border-top">
+            <div v-if="orderType === 'open' && partialOrderRejectionConfig?.settingValue == 'true'" class="border-top">
               <ion-button :disabled="order?.readyToHandover || order?.rejected" fill="clear" @click="openReportAnIssueModal(item)">
                 {{ translate("Report an issue") }}
               </ion-button>
@@ -104,12 +104,12 @@
         </section>
       </main>
 
-      <ion-fab v-if="order?.orderId && orderType === 'open'" class="ion-hide-md-up" vertical="bottom" horizontal="end" slot="fixed" @click="readyForPickup(order, order.part)">
+      <ion-fab v-if="orderType === 'open' && order?.orderId" class="ion-hide-md-up" vertical="bottom" horizontal="end" slot="fixed" @click="readyForPickup(order, order.part)">
         <ion-fab-button :disabled="!hasPermission(Actions.APP_ORDER_UPDATE) || order.readyToHandover || order.rejected">
           <ion-icon :icon="bagHandleOutline" />
         </ion-fab-button>
       </ion-fab>
-      <ion-fab v-else-if="order?.orderId && orderType === 'packed'" class="ion-hide-md-up" vertical="bottom" horizontal="end" slot="fixed" @click="deliverShipment(order)">
+      <ion-fab v-else-if="orderType === 'packed' && order?.orderId" class="ion-hide-md-up" vertical="bottom" horizontal="end" slot="fixed" @click="deliverShipment(order)">
         <ion-fab-button :disabled="!hasPermission(Actions.APP_ORDER_UPDATE) || order.handovered || order.shipped">
           <ion-icon :icon="order.part.shipmentMethodEnum.shipmentMethodEnumId === 'STOREPICKUP' ? accessibilityOutline : checkmarkOutline" />
         </ion-fab-button>
