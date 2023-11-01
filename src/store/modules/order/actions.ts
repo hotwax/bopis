@@ -98,6 +98,16 @@ const actions: ActionTree<OrderState , RootState> ={
   },
 
   async getOrderDetail( { dispatch, state }, { payload, orderType } ) {
+    if(orderType === 'open') {
+      payload['orderStatusId']= "ORDER_APPROVED"
+      payload['-shipmentStatusId']= "*"
+    } else if(orderType === 'packed') {
+      payload['shipmentStatusId']= "SHIPMENT_PACKED"
+    } else {
+      dispatch('order/updateCurrent', { order: {} })
+      return;
+    }
+
     const current = state.current as any
     const orders = JSON.parse(JSON.stringify(state.open.list)) as any
     // As one order can have multiple parts thus checking orderId and partSeq as well before making any api call
@@ -115,12 +125,6 @@ const actions: ActionTree<OrderState , RootState> ={
       }
     }
 
-    if(orderType === 'open') {
-      payload['orderStatusId']= "ORDER_APPROVED"
-      payload['-shipmentStatusId']= "*"
-    } else if(orderType === 'packed') {
-      payload['shipmentStatusId']= "SHIPMENT_PACKED"
-    }
 
     const orderQueryPayload = prepareOrderQuery({
       ...payload,

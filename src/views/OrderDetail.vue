@@ -226,11 +226,6 @@ export default defineComponent({
       return reportAnIssueModal.present();
     },
     async getOrderDetail(orderId: any, orderPartSeqId: any, orderType: any) {
-      if(orderType !== 'open' && orderType !== 'packed') {
-        this.store.dispatch('order/updateCurrent', { order: {} })
-        return;
-      }
-
       const payload = {
         facilityId: this.currentFacility.facilityId,
         orderId,
