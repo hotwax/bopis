@@ -171,7 +171,16 @@ const getOrderItemRejectionHistory = async (payload: any): Promise<any> => {
   })
 }
 
+const fetchOrderPaymentPreferences = async (params: any): Promise<any> => {
+  return await api({
+    url: "performFind",
+    method: "get",
+    params
+  });
+}
+
 export const OrderService = {
+  fetchOrderPaymentPreferences,
   getOpenOrders,
   getOrderDetails,
   getCompletedOrders,

@@ -26,11 +26,19 @@
             <ion-icon :icon="order.readyToHandover ? checkmarkCircleOutline : closeCircleOutline" :color="order.readyToHandover ? 'success' : 'danger'" slot="start" />
             <ion-label class="ion-text-wrap">{{ order.readyToHandover ? translate("Order is now ready to handover.") : translate("Order has been rejected.") }}</ion-label>
           </ion-item>
+          <ion-item lines="none">
+            <ion-label class="ion-text-wrap">
+              <h2>{{ order?.orderName ? order?.orderName : order?.orderId }}</h2>
+            </ion-label>
+            <ion-chip outline v-if="order?.orderPaymentPreferences" slot="end">
+              <ion-icon :icon="cashOutline"/>
+              <ion-label>{{ getPaymentMethodDesc(order?.orderPaymentPreferences[0]?.paymentMethodTypeId)}} : {{ getStatusDesc(order?.orderPaymentPreferences[0]?.statusId) }}</ion-label>
+            </ion-chip>
+          </ion-item>
           <ion-list>
             <ion-item lines="none">
               <ion-label class="ion-text-wrap">
                 <h2>{{ order?.customer?.name }}</h2>
-                <p>{{ order?.orderName ? order?.orderName : order?.orderId }}</p>
               </ion-label>
               <ion-badge v-if="order?.placedDate" slot="end">{{ timeFromNow(order.placedDate) }}</ion-badge>
             </ion-item>
@@ -68,7 +76,7 @@
               </ion-button>
             </div>
           </ion-card>
-          <p class="empty-state">{{ translate('No items found') }}</p>
+          <p v-if="!order.part?.items?.length" class="empty-state">{{ translate('No items found') }}</p>
         </section>
       </main>
 
@@ -105,6 +113,7 @@ import {
 import { defineComponent } from "vue";
 import { mapGetters, useStore } from "vuex";
 import {
+  cashOutline,
   copyOutline,
   closeCircleOutline,
   checkmarkCircleOutline,
@@ -159,7 +168,9 @@ export default defineComponent({
       order: "order/getCurrent",
       currentFacility: 'user/getCurrentFacility',
       configurePicker: "user/configurePicker",
-      partialOrderRejectionConfig: 'user/getPartialOrderRejectionConfig'
+      partialOrderRejectionConfig: 'user/getPartialOrderRejectionConfig',
+      getPaymentMethodDesc: 'util/getPaymentMethodDesc',
+      getStatusDesc: 'util/getStatusDesc'
     })
   },
   methods: {
@@ -190,6 +201,7 @@ export default defineComponent({
         orderPartSeqId
       }
       await this.store.dispatch("order/getOrderDetail", payload)
+      await this.store.dispatch("order/fetchPaymentDetail")
     },
     async rejectOrder() {
       const rejectOrderModal = await modalController.create({
@@ -260,6 +272,7 @@ export default defineComponent({
       Actions,
       bagHandleOutline,
       bagRemoveOutline,
+      cashOutline,
       copyOutline,
       copyToClipboard,
       closeCircleOutline,
