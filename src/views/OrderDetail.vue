@@ -106,7 +106,7 @@
 
       <ion-fab v-if="orderType === 'open' && order?.orderId" class="ion-hide-md-up" vertical="bottom" horizontal="end" slot="fixed" @click="readyForPickup(order, order.part)">
         <ion-fab-button :disabled="!hasPermission(Actions.APP_ORDER_UPDATE) || order.readyToHandover || order.rejected">
-          <ion-icon :icon="bagHandleOutline" />
+          <ion-icon :icon="order.part.shipmentMethodEnum.shipmentMethodEnumId === 'STOREPICKUP' ? bagHandleOutline : giftOutline" />
         </ion-fab-button>
       </ion-fab>
       <ion-fab v-else-if="orderType === 'packed' && order?.orderId" class="ion-hide-md-up" vertical="bottom" horizontal="end" slot="fixed" @click="deliverShipment(order)">
@@ -149,6 +149,7 @@ import {
   closeCircleOutline,
   checkmarkCircleOutline,
   checkmarkOutline,
+  giftOutline,
   mailOutline,
   printOutline,
   sendOutline,
@@ -383,6 +384,7 @@ export default defineComponent({
       closeCircleOutline,
       checkmarkCircleOutline,
       checkmarkOutline,
+      giftOutline,
       hasPermission,
       printOutline,
       router,
