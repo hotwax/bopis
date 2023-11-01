@@ -114,10 +114,10 @@
               <ion-button :disabled="!hasPermission(Actions.APP_ORDER_UPDATE)" fill="clear" @click.stop="deliverShipment(order)">
                 {{ order.part.shipmentMethodEnum.shipmentMethodEnumId === 'STOREPICKUP' ? translate("Handover") : translate("Ship") }}
               </ion-button>
-              <ion-button v-if="showPackingSlip" fill="clear" slot="end" @click="printPackingSlip(order)">
+              <ion-button v-if="showPackingSlip" fill="clear" slot="end" @click.stop="printPackingSlip(order)">
                 <ion-icon slot="icon-only" :icon="printOutline" />
               </ion-button>
-              <ion-button v-if="order.part.shipmentMethodEnum.shipmentMethodEnumId === 'STOREPICKUP'" fill="clear" slot="end" @click="sendReadyForPickupEmail(order)">
+              <ion-button v-if="order.part.shipmentMethodEnum.shipmentMethodEnumId === 'STOREPICKUP'" fill="clear" slot="end" @click.stop="sendReadyForPickupEmail(order)">
                 <ion-icon slot="icon-only" :icon="mailOutline" />
               </ion-button>
             </div>

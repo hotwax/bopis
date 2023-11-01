@@ -8,7 +8,7 @@
           <ion-button :disabled="!order?.orderId || order?.rejected" @click="openOrderItemRejHistoryModal()">
             <ion-icon slot="icon-only" :icon="timeOutline" />
           </ion-button>
-          <ion-button class="ion-hide-md-up" :disabled="!hasPermission(Actions.APP_ORDER_UPDATE) || order?.readyToHandover || order?.rejected" @click="rejectOrder()">
+          <ion-button v-if="orderType === 'open'" class="ion-hide-md-up" :disabled="!hasPermission(Actions.APP_ORDER_UPDATE) || order?.readyToHandover || order?.rejected" @click="rejectOrder()">
             <ion-icon slot="icon-only" color="danger" :icon="bagRemoveOutline" />
           </ion-button>
         </ion-buttons>
@@ -25,6 +25,10 @@
           <ion-item v-if="order?.readyToHandover || order?.rejected" color="light" lines="none">
             <ion-icon :icon="order.readyToHandover ? checkmarkCircleOutline : closeCircleOutline" :color="order.readyToHandover ? 'success' : 'danger'" slot="start" />
             <ion-label class="ion-text-wrap">{{ order.readyToHandover ? translate("Order is now ready to handover.") : translate("Order has been rejected.") }}</ion-label>
+          </ion-item>
+          <ion-item v-if="order?.handovered || order?.shipped" color="light" lines="none">
+            <ion-icon :icon="checkmarkCircleOutline" color="success" slot="start" />
+            <ion-label class="ion-text-wrap">{{ order.handovered ? translate("Order is successfully handed over to customer.") : translate("Order is successfully shipped.") }}</ion-label>
           </ion-item>
           <ion-list>
             <ion-item lines="none">
@@ -48,16 +52,27 @@
               <p>{{ order.shippingInstructions }}</p>
             </ion-label>
           </ion-item>
-          <div class="ion-margin-top ion-hide-md-down">
-            <!-- TODO: implement functionality to change shipping address -->
-            <ion-button v-if="orderType === 'open'" :disabled="!hasPermission(Actions.APP_ORDER_UPDATE) || order?.readyToHandover || order?.rejected" expand="block" @click.stop="readyForPickup(order, order.part)">
+          <ion-item v-if="orderType === 'packed'" lines="none">
+            <ion-label class="ion-text-wrap">
+              {{ translate("Picked by", { pickers: order.pickers }) }}
+            </ion-label>
+          </ion-item>
+          <div v-if="orderType === 'open'" class="ion-margin-top ion-hide-md-down">
+            <ion-button :disabled="!hasPermission(Actions.APP_ORDER_UPDATE) || order?.readyToHandover || order?.rejected" expand="block" @click.stop="readyForPickup(order, order.part)">
               {{ order?.part?.shipmentMethodEnum?.shipmentMethodEnumId === 'STOREPICKUP' ? translate("Ready for pickup") : translate("Ready to ship") }}
             </ion-button>
-            <ion-button v-else-if="orderType === 'packed'" :disabled="!hasPermission(Actions.APP_ORDER_UPDATE)" expand="block" @click.stop="deliverShipment(order)">
-              {{ order.part.shipmentMethodEnum.shipmentMethodEnumId === 'STOREPICKUP' ? translate("Handover") : translate("Ship") }}
-            </ion-button>
-            <ion-button :disabled="!hasPermission(Actions.APP_ORDER_UPDATE) || order?.readyToHandover || order?.rejected" v-if="orderType === 'open'" expand="block" color="danger" fill="outline" @click="rejectOrder()">
+            <ion-button :disabled="!hasPermission(Actions.APP_ORDER_UPDATE) || order?.readyToHandover || order?.rejected" expand="block" color="danger" fill="outline" @click="rejectOrder()">
               {{ translate("Reject Order") }}
+            </ion-button>
+          </div>
+
+          <div v-if="orderType === 'packed'" class="ion-margin-top ion-hide-md-down">
+            <!-- TODO: implement functionality to change shipping address -->
+            <ion-button :disabled="!hasPermission(Actions.APP_ORDER_UPDATE)" expand="block" fill="outline" @click.stop="order?.part?.shipmentMethodEnum?.shipmentMethodEnumId === 'STOREPICKUP' ? sendReadyForPickupEmail(order) : ''">
+              {{ order?.part?.shipmentMethodEnum?.shipmentMethodEnumId === 'STOREPICKUP' ? translate("Resend customer email") : translate("Generate shipping documents") }}
+            </ion-button>
+            <ion-button :disabled="!hasPermission(Actions.APP_ORDER_UPDATE) || order?.handovered || order?.shipped" expand="block" @click.stop="deliverShipment(order)">
+              {{ order.part.shipmentMethodEnum.shipmentMethodEnumId === 'STOREPICKUP' ? translate("Handover") : translate("Ship") }}
             </ion-button>
           </div>
         </aside>
@@ -74,9 +89,14 @@
         </section>
       </main>
 
-      <ion-fab v-if="order?.orderId" class="ion-hide-md-up" vertical="bottom" horizontal="end" slot="fixed" @click="readyForPickup(order, order.part)">
+      <ion-fab v-if="order?.orderId && orderType === 'open'" class="ion-hide-md-up" vertical="bottom" horizontal="end" slot="fixed" @click="readyForPickup(order, order.part)">
         <ion-fab-button :disabled="!hasPermission(Actions.APP_ORDER_UPDATE) || order?.readyToHandover || order?.rejected">
           <ion-icon :icon="bagHandleOutline" />
+        </ion-fab-button>
+      </ion-fab>
+      <ion-fab v-else-if="order?.orderId && orderType === 'packed'" class="ion-hide-md-up" vertical="bottom" horizontal="end" slot="fixed" @click="deliverShipment(order)">
+        <ion-fab-button :disabled="!hasPermission(Actions.APP_ORDER_UPDATE) || order?.handovered || order?.shipped">
+          <ion-icon :icon="order.part.shipmentMethodEnum.shipmentMethodEnumId === 'STOREPICKUP' ? accessibilityOutline : checkmarkOutline" />
         </ion-fab-button>
       </ion-fab>
     </ion-content>
@@ -107,9 +127,11 @@ import {
 import { defineComponent } from "vue";
 import { mapGetters, useStore } from "vuex";
 import {
+  accessibilityOutline,
   copyOutline,
   closeCircleOutline,
   checkmarkCircleOutline,
+  checkmarkOutline,
   mailOutline,
   sendOutline,
   bagHandleOutline,
@@ -122,7 +144,7 @@ import { Actions, hasPermission } from '@/authorization'
 import OrderItemRejHistoryModal from '@/components/OrderItemRejHistoryModal.vue';
 import ReportAnIssueModal from '@/components/ReportAnIssueModal.vue';
 import AssignPickerModal from "@/views/AssignPickerModal.vue";
-import { copyToClipboard } from '@/utils'
+import { copyToClipboard, showToast } from '@/utils'
 import { DateTime } from "luxon";
 import { hasError } from '@/adapter';
 import ShipToCustomerModal from "@/components/ShipToCustomerModal.vue";
@@ -174,9 +196,7 @@ export default defineComponent({
       return assignPickerModal.present();
     },
     async deliverShipment(order: any) {
-      await this.store.dispatch('order/deliverShipment', order).then(() => {
-        this.$router.push({ path: '/tabs/orders' })
-      })
+      await this.store.dispatch('order/deliverShipment', order)
     },
     async openOrderItemRejHistoryModal() {
       const orderItemRejHistoryModal = await modalController.create({
@@ -254,7 +274,37 @@ export default defineComponent({
       } catch (error) {
         console.error(error)
       }
-    }
+    },
+    async sendReadyForPickupEmail(order: any) {
+      const header = translate('Resend ready for pickup email')
+      const message = translate('An email notification will be sent to that their order is ready for pickup.', { customerName: order.customer.name });
+
+      const alert = await alertController
+        .create({
+          header: header,
+          message: message,
+          buttons: [{
+            text: translate('Cancel'),
+            role: 'cancel'
+          },{
+            text: translate('Send'),
+            handler: async () => {
+              try {
+                const resp = await OrderService.sendPickupScheduledNotification({ shipmentId: order.shipmentId });
+                if (!hasError(resp)) {
+                  showToast(translate("Email sent successfully"))
+                } else {
+                  showToast(translate("Something went wrong while sending the email."))
+                }
+              } catch (error) {
+                showToast(translate("Something went wrong while sending the email."))
+                console.error(error)
+              }
+            }
+          }]
+        });
+      return alert.present();
+    },
   },
   async mounted() {
     await this.getOrderDetail(this.$route.params.orderId, this.$route.params.orderPartSeqId, this.$route.params.orderType);
@@ -271,12 +321,14 @@ export default defineComponent({
 
     return {
       Actions,
+      accessibilityOutline,
       bagHandleOutline,
       bagRemoveOutline,
       copyOutline,
       copyToClipboard,
       closeCircleOutline,
       checkmarkCircleOutline,
+      checkmarkOutline,
       hasPermission,
       router,
       store,

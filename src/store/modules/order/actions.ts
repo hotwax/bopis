@@ -345,7 +345,7 @@ const actions: ActionTree<OrderState , RootState> ={
     return resp;
   },
 
-  async deliverShipment ({ state, commit }, order) {
+  async deliverShipment ({ state, dispatch, commit }, order) {
     emitter.emit("presentLoader");
     const params = {
       shipmentId: order.shipmentId,
@@ -369,6 +369,14 @@ const actions: ActionTree<OrderState , RootState> ={
           state.packed.list.splice(orderIndex, 1);
           commit(types.ORDER_PACKED_UPDATED, { orders: state.packed.list, total: state.packed.total -1 })
         }
+
+        if(order.part.shipmentMethodEnum.shipmentMethodEnumId === 'STOREPICKUP'){
+          order = { ...order, handovered: true }
+        }else {
+          order = { ...order, shipped: true }
+        }
+
+        dispatch('updateCurrent', { order })
         showToast(translate('Order delivered to', {customerName: order.customer.name}))
       } else {
         showToast(translate("Something went wrong"))
