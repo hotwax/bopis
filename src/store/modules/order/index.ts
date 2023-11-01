@@ -10,6 +10,7 @@ const orderModule: Module<OrderState, RootState> = {
   namespaced: true,
   state: {
     current: {},
+    orderItemRejectionHistory: [],
     open: {
       list: {},
       total: 0

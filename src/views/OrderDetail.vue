@@ -4,124 +4,164 @@
       <ion-toolbar>
         <ion-back-button default-href="/" slot="start" />
         <ion-title>{{ translate("Order details") }}</ion-title>
+        <ion-buttons slot="end">
+          <ion-button :disabled="!order?.orderId" @click="openOrderItemRejHistoryModal()">
+            <ion-icon slot="icon-only" :icon="timeOutline" />
+          </ion-button>
+          <ion-button class="ion-hide-md-up" :disabled="!hasPermission(Actions.APP_ORDER_UPDATE) || order?.readyToHandover || order?.rejected" @click="rejectOrder()">
+            <ion-icon slot="icon-only" color="danger" :icon="bagRemoveOutline" />
+          </ion-button>
+        </ion-buttons>
       </ion-toolbar>
     </ion-header>
+
     <ion-content>
-      <main>
-        <ion-list>
+      <!-- Empty state -->
+      <div class="empty-state" v-if="!order?.orderId">
+        <p>{{ translate("Order not found")}}</p>
+      </div>
+      <main v-else>
+        <aside>
+          <ion-item v-if="order?.readyToHandover || order?.rejected" color="light" lines="none">
+            <ion-icon :icon="order.readyToHandover ? checkmarkCircleOutline : closeCircleOutline" :color="order.readyToHandover ? 'success' : 'danger'" slot="start" />
+            <ion-label class="ion-text-wrap">{{ order.readyToHandover ? translate("Order is now ready to handover.") : translate("Order has been rejected.") }}</ion-label>
+          </ion-item>
           <ion-item lines="none">
             <ion-label class="ion-text-wrap">
-              <h2>{{ order.customer?.name }}</h2>
-              <p>{{ order.orderName ? order.orderName : order.orderId }}</p>
+              <h2>{{ order?.orderName ? order?.orderName : order?.orderId }}</h2>
             </ion-label>
-            <ion-badge v-if="order.placedDate" color="dark" slot="end">{{ timeFromNow(order.placedDate) }}</ion-badge>
+            <ion-chip outline v-if="order?.orderPaymentPreferences" slot="end">
+              <ion-icon :icon="cashOutline"/>
+              <ion-label>{{ getPaymentMethodDesc(order?.orderPaymentPreferences[0]?.paymentMethodTypeId)}} : {{ getStatusDesc(order?.orderPaymentPreferences[0]?.statusId) }}</ion-label>
+            </ion-chip>
           </ion-item>
-        </ion-list>
-        <ion-item v-if="order.shippingInstructions" color="light" lines="none">
-          <ion-label class="ion-text-wrap">
-            <p class="overline">{{ translate("Handling Instructions") }}</p>
-            <p>{{ order.shippingInstructions }}</p>
-          </ion-label>
-        </ion-item>
-        <ion-item v-if="customerEmail" lines="none">
-          <ion-icon :icon="mailOutline" slot="start" />
-          <ion-label>{{ customerEmail }}</ion-label>
-          <ion-button
-            fill="outline"
-            slot="end"
-            color="medium"
-            @click="copyToClipboard(customerEmail)"
-          >
-            {{ translate("Copy") }}
-          </ion-button>
-        </ion-item>
-
-        <ion-card v-for="(item, index) in getCurrentOrderPart()?.items" :key="index">
-          <ProductListItem :item="item" />
-          <ion-item lines="none" class="border-top">
-            <ion-label>{{ translate("Reason") }}</ion-label>
-            <ion-select multiple="false" v-model="item.reason">
-              <ion-select-option v-for="reason in unfillableReason" :value="reason.id" :key="reason.id">{{ translate(reason.label) }}</ion-select-option>
-            </ion-select>
+          <ion-list>
+            <ion-item lines="none">
+              <ion-label class="ion-text-wrap">
+                <h2>{{ order?.customer?.name }}</h2>
+              </ion-label>
+              <ion-badge v-if="order?.placedDate" slot="end">{{ timeFromNow(order.placedDate) }}</ion-badge>
+            </ion-item>
+          </ion-list>
+          <ion-item v-if="customerEmail" lines="none">
+            <ion-icon :icon="mailOutline" slot="start" />
+            <ion-label>{{ customerEmail }}</ion-label>
+            <ion-button fill="clear" @click="copyToClipboard(customerEmail)">
+              <ion-icon color="medium" :icon="copyOutline"/>
+            </ion-button>
           </ion-item>
-        </ion-card>
+          <ion-item v-if="order?.shippingInstructions" color="light" lines="none">
+            <ion-label class="ion-text-wrap">
+              <p class="overline">{{ translate("Handling Instructions") }}</p>
+              <p>{{ order.shippingInstructions }}</p>
+            </ion-label>
+          </ion-item>
+          <div class="ion-margin-top ion-hide-md-down">
+            <!-- TODO: implement functionality to change shipping address -->
+            <ion-button :disabled="!hasPermission(Actions.APP_ORDER_UPDATE) || order?.readyToHandover || order?.rejected" expand="block" @click.stop="readyForPickup(order, order.part)">
+              {{ order?.part?.shipmentMethodEnum?.shipmentMethodEnumId === 'STOREPICKUP' ? translate("Ready for pickup") : translate("Ready to ship") }}
+            </ion-button>
+            <ion-button :disabled="!hasPermission(Actions.APP_ORDER_UPDATE) || order?.readyToHandover || order?.rejected" expand="block" color="danger" fill="outline" @click="rejectOrder()">
+              {{ translate("Reject Order") }}
+            </ion-button>
+          </div>
+        </aside>
+        <section>
+          <ion-card v-for="(item, index) in order.part?.items" :key="index">
+            <ProductListItem :item="item" />
+            <!-- Checking for true as a string as the settingValue contains a string and not boolean-->
+            <div v-if="partialOrderRejectionConfig?.settingValue == 'true'" class="border-top">
+              <ion-button :disabled="order?.readyToHandover || order?.rejected" fill="clear" @click="openReportAnIssueModal(item)">
+                {{ translate("Report an issue") }}
+              </ion-button>
+            </div>
+          </ion-card>
+          <p v-if="!order.part?.items?.length" class="empty-state">{{ translate('No items found') }}</p>
+        </section>
+      </main>
 
-        <!-- TODO: implement functionality to change shipping address -->
-        <!-- <ion-button expand="block" fill="outline" @click="shipToCustomer()">
-          {{ translate("Ship to customer") }}
-          <ion-icon :icon="sendOutline" slot="end" />
-        </ion-button> -->
-
-        <ion-button :disabled="!hasPermission(Actions.APP_REJECT_ORDER)" expand="block" color="danger" fill="outline" @click="updateOrder(order)">
-          {{ translate("Reject Order") }}
-        </ion-button>
-      </main>  
+      <ion-fab v-if="order?.orderId" class="ion-hide-md-up" vertical="bottom" horizontal="end" slot="fixed" @click="readyForPickup(order, order.part)">
+        <ion-fab-button :disabled="!hasPermission(Actions.APP_ORDER_UPDATE) || order?.readyToHandover || order?.rejected">
+          <ion-icon :icon="bagHandleOutline" />
+        </ion-fab-button>
+      </ion-fab>
     </ion-content>
   </ion-page>
 </template>
 
-<script>
+<script lang="ts">
 import {
   alertController,
   IonBackButton,
   IonBadge,
   IonButton,
+  IonButtons,
   IonCard,
+  IonChip,
   IonContent,
   IonHeader,
   IonIcon,
   IonItem,
-  IonLabel,
   IonList,
   IonPage,
-  IonSelect,
-  IonSelectOption,
+  IonLabel,
   IonTitle,
   IonToolbar,
-  modalController
+  IonFab,
+  IonFabButton,
+  modalController,
 } from "@ionic/vue";
 import { defineComponent } from "vue";
 import { mapGetters, useStore } from "vuex";
 import {
-  sendOutline,
-  swapVerticalOutline,
-  callOutline,
+  cashOutline,
+  copyOutline,
+  closeCircleOutline,
+  checkmarkCircleOutline,
   mailOutline,
+  sendOutline,
+  bagHandleOutline,
+  bagRemoveOutline,
+  timeOutline
 } from "ionicons/icons";
 import ProductListItem from '@/components/ProductListItem.vue'
-import { copyToClipboard } from '@/utils'
-import { hasError } from '@/adapter';
 import { useRouter } from 'vue-router'
-import { DateTime } from 'luxon';
-import ShipToCustomerModal from "@/components/ShipToCustomerModal.vue";
 import { Actions, hasPermission } from '@/authorization'
+import OrderItemRejHistoryModal from '@/components/OrderItemRejHistoryModal.vue';
+import ReportAnIssueModal from '@/components/ReportAnIssueModal.vue';
+import AssignPickerModal from "@/views/AssignPickerModal.vue";
+import { copyToClipboard } from '@/utils'
+import { DateTime } from "luxon";
+import { hasError } from '@/adapter';
+import ShipToCustomerModal from "@/components/ShipToCustomerModal.vue";
 import { OrderService } from "@/services/OrderService";
+import RejectOrderModal from "@/components/RejectOrderModal.vue";
 import { translate } from "@hotwax/dxp-components";
 
 export default defineComponent({
   name: "OrderDetail",
-  props: ['orderId'],
   components: {
     IonBackButton,
     IonBadge,
     IonButton,
+    IonButtons,
     IonCard,
+    IonChip,
     IonContent,
     IonHeader,
     IonIcon,
     IonItem,
-    IonLabel,
     IonList,
     IonPage,
-    IonSelect,
-    IonSelectOption,
+    IonLabel,
     IonTitle,
     IonToolbar,
-    ProductListItem
+    ProductListItem,
+    IonFab,
+    IonFabButton,
   },
-  data () {
+  data() {
     return {
-      unfillableReason: JSON.parse(process.env.VUE_APP_UNFILLABLE_REASONS),
       customerEmail: ''
     }
   },
@@ -129,13 +169,74 @@ export default defineComponent({
     ...mapGetters({
       order: "order/getCurrent",
       currentFacility: 'user/getCurrentFacility',
+      configurePicker: "user/configurePicker",
+      partialOrderRejectionConfig: 'user/getPartialOrderRejectionConfig',
+      getPaymentMethodDesc: 'util/getPaymentMethodDesc',
+      getStatusDesc: 'util/getStatusDesc'
     })
   },
-  ionViewDidEnter() {
-    if(this.order.items) this.order.items.map((item) => item['reason'] = this.unfillableReason[0].id);
-  },
   methods: {
-    timeFromNow (time) {
+    async assignPicker(order: any, part: any, facilityId: any) {
+      const assignPickerModal = await modalController.create({
+        component: AssignPickerModal,
+        componentProps: { order, part, facilityId }
+      });
+      return assignPickerModal.present();
+    },
+    async openOrderItemRejHistoryModal() {
+      const orderItemRejHistoryModal = await modalController.create({
+        component: OrderItemRejHistoryModal,
+      });
+      return orderItemRejHistoryModal.present();
+    },
+    async openReportAnIssueModal(item: any) {
+      const reportAnIssueModal = await modalController.create({
+        component: ReportAnIssueModal,
+        componentProps: { item }
+      });
+      return reportAnIssueModal.present();
+    },
+    async getOrderDetail(orderId: any, orderPartSeqId: any) {
+      const payload = {
+        facilityId: this.currentFacility.facilityId,
+        orderId,
+        orderPartSeqId
+      }
+      await this.store.dispatch("order/getOrderDetail", payload)
+      await this.store.dispatch("order/fetchPaymentDetail")
+    },
+    async rejectOrder() {
+      const rejectOrderModal = await modalController.create({
+        component: RejectOrderModal
+      });
+      return rejectOrderModal.present();
+    },
+    async readyForPickup(order: any, part: any) {
+      if (this.configurePicker) return this.assignPicker(order, part, this.currentFacility.facilityId);
+      const pickup = part?.shipmentMethodEnum?.shipmentMethodEnumId === 'STOREPICKUP';
+      const header = pickup ? translate('Ready for pickup') : translate('Ready to ship');
+      const message = pickup ? translate('An email notification will be sent to that their order is ready for pickup. This order will also be moved to the packed orders tab.', { customerName: order.customer.name, space: '<br/><br/>' }) : '';
+
+      const alert = await alertController
+        .create({
+          header: header,
+          message: message,
+          buttons: [{
+            text: translate('Cancel'),
+            role: 'cancel'
+          }, {
+            text: header,
+            handler: async () => {
+              await this.store.dispatch('order/packShipGroupItems', { order: order, part: part, facilityId: this.currentFacility.facilityId })
+            }
+          }]
+        });
+      return alert.present();
+    },
+    async fetchRejectReasons() {
+      await this.store.dispatch('util/fetchRejectReasons');
+    },
+    timeFromNow(time: any) {
       const timeDiff = DateTime.fromISO(time).diff(DateTime.local());
       return DateTime.local().plus(timeDiff).toRelative();
     },
@@ -144,39 +245,6 @@ export default defineComponent({
         component: ShipToCustomerModal,
       });
       return shipmodal.present();
-    },
-    async updateOrder (order) {
-      const alert = await alertController
-        .create({
-          header: translate('Update Order'),
-          message: translate(`This order will be removed from your dashboard. This action cannot be undone.`, { space: '<br /><br />' }),
-          buttons: [{
-            text: translate('Cancel'),
-            role: 'cancel'
-          },{
-            text: translate('Reject Order'),
-            handler: () => {
-              this.store.dispatch('order/setUnfillableOrderOrItem', { orderId: order.orderId, part: this.getCurrentOrderPart() }).then((resp) => {
-                if (resp) this.router.push('/tabs/orders')
-              })
-            },
-          }]
-        });
-      return alert.present();
-    },
-    async getOrderDetail(orderId, orderPartSeqId) {
-      const payload = {
-        facilityId: this.currentFacility.facilityId,
-        orderId,
-        orderPartSeqId
-      }
-      await this.store.dispatch("order/getOrderDetail", payload)
-    },
-    getCurrentOrderPart() {
-      if (this.order.parts) {
-        return this.order.parts.find((part) => part.orderPartSeqId === this.$route.params.orderPartSeqId)
-      }
-      return {}
     },
     async getCustomerContactDetails() {
       try {
@@ -188,24 +256,34 @@ export default defineComponent({
         console.error(error)
       }
     }
-   },
+  },
   async mounted() {
     await this.getOrderDetail(this.$route.params.orderId, this.$route.params.orderPartSeqId);
-    await this.getCustomerContactDetails()
+
+    // fetch customer details and rejection reasons only when we get the orders information
+    if(this.order.orderId) {
+      await this.getCustomerContactDetails()
+      await this.fetchRejectReasons();
+    }
   },
-  setup () {
+  setup() {
     const store = useStore();
     const router = useRouter();
 
     return {
       Actions,
-      callOutline,
+      bagHandleOutline,
+      bagRemoveOutline,
+      cashOutline,
+      copyOutline,
       copyToClipboard,
+      closeCircleOutline,
+      checkmarkCircleOutline,
       hasPermission,
-      mailOutline,
       router,
       store,
-      swapVerticalOutline,
+      timeOutline,
+      mailOutline,
       sendOutline,
       translate
     };
@@ -214,12 +292,20 @@ export default defineComponent({
 </script>
 
 <style scoped>
-main {
-  max-width: 445px;
-  margin: var(--spacer-base) auto 0; 
-}
-
 .border-top {
   border-top: 1px solid #ccc;
+}
+
+@media (min-width: 768px) {
+  main {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--spacer-base);
+  }
+
+  aside {
+    grid-column: 2;
+    grid-row: 1;
+  }
 }
 </style>

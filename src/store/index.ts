@@ -5,6 +5,7 @@ import actions from './actions'
 import RootState from './RootState'
 import createPersistedState from "vuex-persistedstate";
 import userModule from './modules/user';
+import utilModule from "./modules/util"
 import orderModule from './modules/order';
 import stockModule from "./modules/stock"
 import productModule from "./modules/product"
@@ -20,7 +21,7 @@ const state: any = {
 }
 
 const persistState = createPersistedState({
-    paths: ['user'],
+    paths: ['user', 'order.current'],
     fetchBeforeUse: true
 })
 
@@ -35,7 +36,8 @@ const store = createStore<RootState>({
         'user': userModule,
         'order': orderModule,
         'stock': stockModule,
-        'product': productModule
+        'product': productModule,
+        'util': utilModule
     },
 })
 

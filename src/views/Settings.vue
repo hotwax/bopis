@@ -215,6 +215,7 @@ import {
   IonIcon,
   IonItem,
   IonLabel,
+  IonList,
   IonPage,
   IonSelect,
   IonSelectOption,
@@ -259,7 +260,8 @@ export default defineComponent({
     IonHeader, 
     IonIcon,
     IonItem, 
-    IonLabel,
+    IonLabel, 
+    IonList,
     IonPage, 
     IonSelect, 
     IonSelectOption,
@@ -307,6 +309,10 @@ export default defineComponent({
       this.getAvailableShipmentMethods();
       this.getRerouteFulfillmentConfiguration();
     }
+
+    // fetching partial order rejection when entering setting page to have latest information
+    await this.store.dispatch('user/getPartialOrderRejectionConfig')
+
     // as notification prefs can also be updated from the notification pref modal,
     // latest state is fetched each time we open the settings page
     await this.store.dispatch('user/fetchNotificationPreferences')
@@ -470,13 +476,13 @@ export default defineComponent({
       }
     },
     async confirmNotificationPrefUpdate(enumId: string, event: any) {
-      const message = this.translate("Are you sure you want to update the notification preferences?");
+      const message = translate("Are you sure you want to update the notification preferences?");
       const alert = await alertController.create({
-        header: this.translate("Update notification preferences"),
+        header: translate("Update notification preferences"),
         message,
         buttons: [
           {
-            text: this.translate("Cancel"),
+            text: translate("Cancel"),
             handler: () => {
               // reverting the value of toggle as event.target.checked is 
               // updated on click event and revert is needed on "Cancel"
@@ -484,7 +490,7 @@ export default defineComponent({
             }
           },
           {
-            text: this.translate("Confirm"),
+            text: translate("Confirm"),
             handler: async () => {
               // passing event reference for updation in case the API fails
               await this.updateNotificationPref(enumId, event)

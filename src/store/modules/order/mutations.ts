@@ -29,6 +29,9 @@ const mutations: MutationTree <ProductState> = {
   [types.ORDER_SHIP_TO_STORE_COMPLETED_UPDATED] (state, payload) {
     state.shipToStore.completed.list = payload.orders
     state.shipToStore.completed.total = payload.total
+  },
+  [types.ORDER_ITEM_REJECTION_HISTORY_UPDATED] (state, payload) {
+    state.orderItemRejectionHistory = payload
   }
 }
 

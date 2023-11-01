@@ -1,5 +1,8 @@
 import { api, client, hasError } from '@/adapter';
+import emitter from '@/event-bus';
+import { translate } from '@hotwax/dxp-components';
 import store from '@/store';
+import { showToast } from '@/utils';
 
 const getOpenOrders = async (payload: any): Promise <any> => {
   return api({
@@ -55,6 +58,38 @@ const quickShipEntireShipGroup = async (payload: any): Promise <any> => {
     method: "post",
     data: payload
   });
+}
+
+const rejectItem = async (payload: any): Promise<any> => {
+  emitter.emit("presentLoader");
+  let resp = '' as any;
+  try {
+    const params = {
+      'orderId': payload.orderId,
+      'rejectReason': payload.item.reason,
+      'facilityId': payload.item.facilityId,
+      'orderItemSeqId': payload.item.orderItemSeqId,
+      'shipmentMethodTypeId': payload.shipmentMethodEnumId,
+      'quantity': parseInt(payload.item.quantity),
+      ...(payload.shipmentMethodEnumId === "STOREPICKUP" && ({ "naFacilityId": "PICKUP_REJECTED" })),
+    }
+
+    resp = await api({
+      url: "rejectOrderItem",
+      method: "post",
+      data: { 'payload': params }
+    });
+
+    if (!hasError(resp)) {
+      showToast(translate('Item has been rejected successfully.'));
+    } else {
+      showToast(translate('Something went wrong'));
+    }
+  } catch (error) {
+    console.error(error);
+  }
+  emitter.emit("dismissLoader");
+  return resp;
 }
 
 const rejectOrderItem = async (payload: any): Promise <any> => {
@@ -128,12 +163,31 @@ const getShipmentItems = async (shipmentIds: any): Promise<any> => {
   }, [])
 }
 
+const getOrderItemRejectionHistory = async (payload: any): Promise<any> => {
+  return api({
+    url: 'performFind',
+    method: 'POST',
+    data: payload
+  })
+}
+
+const fetchOrderPaymentPreferences = async (params: any): Promise<any> => {
+  return await api({
+    url: "performFind",
+    method: "get",
+    params
+  });
+}
+
 export const OrderService = {
+  fetchOrderPaymentPreferences,
   getOpenOrders,
   getOrderDetails,
   getCompletedOrders,
   getPackedOrders,
+  getOrderItemRejectionHistory,
   quickShipEntireShipGroup,
+  rejectItem,
   rejectOrderItem,
   updateShipment,
   createPicklist,

@@ -100,19 +100,20 @@ const actions: ActionTree<OrderState , RootState> ={
   async getOrderDetail( { dispatch, state }, payload ) {
     const current = state.current as any
     const orders = JSON.parse(JSON.stringify(state.open.list)) as any
-
-    if(current.orderId === payload.orderId) { return current }
-
+    // As one order can have multiple parts thus checking orderId and partSeq as well before making any api call
+    if(current.orderId === payload.orderId && current.part?.orderPartSeqId === payload.orderPartSeqId) {
+      this.dispatch('product/getProductInformation', { orders: [ current ] })
+      return current 
+    }
     if(orders.length) {
       const order = orders.find((order: any) => {
         return order.orderId === payload.orderId;
       })
       if(order) {
-        dispatch('updateCurrent', { order })
+        await dispatch('updateCurrent', { order })
         return order;
       }
     }
-
     const orderQueryPayload = prepareOrderQuery({
       ...payload,
       shipmentMethodTypeId: !store.state.user.preference.showShippingOrders ? 'STOREPICKUP' : '',
@@ -123,10 +124,11 @@ const actions: ActionTree<OrderState , RootState> ={
     })
     
     let resp;
+    let currentOrder = {};
     try {
       resp = await OrderService.getOrderDetails(orderQueryPayload)
       if (resp.status === 200 && !hasError(resp) && resp.data.grouped?.orderId?.ngroups > 0) {
-        const orders = resp.data.grouped?.orderId?.groups.map((order: any) => {
+        let orders = resp.data.grouped?.orderId?.groups.map((order: any) => {
           const orderItem = order.doclist.docs[0]
           return {
             orderId: orderItem.orderId,
@@ -168,15 +170,19 @@ const actions: ActionTree<OrderState , RootState> ={
           }
         })
 
+        // creating order part to render the items correctly on UI
+        orders = Object.keys(orders).length ? orders.flatMap((order: any) => order.parts.map((part: any) => ({ ...order, part }))) : [];
+
         this.dispatch('product/getProductInformation', { orders })
-        dispatch('updateCurrent', { order: orders[0] })
+        currentOrder = orders[0]
       } else {
-        showToast(translate("Order not found"))
+        throw resp.data;
       }
     } catch (err) {
       console.error(err)
-      showToast(translate("Something went wrong"))
     }
+
+    await dispatch('updateCurrent', { order: currentOrder })
   },
 
   updateCurrent ({ commit }, payload) {
@@ -436,7 +442,7 @@ const actions: ActionTree<OrderState , RootState> ={
           await dispatch('packDeliveryItems', shipmentId).then((data) => {
             if (!hasError(data) && !data.data._EVENT_MESSAGE_) {
               showToast(translate("Something went wrong"))
-            } else {
+            } else if(state.open.list.length) {
               // Remove order from the list if action is successful
               const orderIndex = state.open.list.findIndex((order: any) => {
                 return order.orderId === payload.order.orderId && order.parts.some((part: any) => {
@@ -450,6 +456,9 @@ const actions: ActionTree<OrderState , RootState> ={
             }
           })
         }
+        // Added ready to handover because we need to show the user that the order has moved to the packed tab (ready to handover)
+        await dispatch('updateCurrent', { order : { ...payload.order, readyToHandover: true } })
+
         showToast(translate("Order packed and ready for delivery"))
       } else {
         showToast(translate("Something went wrong"))
@@ -470,7 +479,7 @@ const actions: ActionTree<OrderState , RootState> ={
     return await dispatch("rejectOrderItems", payload).then((resp) => {
       const refreshPickupOrders = resp.find((response: any) => !(response.data._ERROR_MESSAGE_ || response.data._ERROR_MESSAGE_LIST_))
       if (refreshPickupOrders) {
-        showToast(translate('All items were canceled from the order') + ' ' + payload.orderId);
+        showToast(translate('All items were rejected from the order') + ' ' + payload.orderId);
       } else {
         showToast(translate('Something went wrong'));
       }
@@ -764,11 +773,92 @@ const actions: ActionTree<OrderState , RootState> ={
     return resp;
   },
 
+  async getOrderItemRejectionHistory({ commit }, payload) {
+    emitter.emit("presentLoader");
+    let rejectionHistory = [] as any;
+
+    try {
+      const params = {
+        inputFields: {
+          orderId: payload.orderId,
+          changeReasonEnumId: payload.rejectReasonEnumIds,
+          changeReasonEnumId_op: "in",
+        },
+        fieldList: ['changeDatetime', 'changeUserLogin', 'productId', 'changeReasonEnumId'],
+        entityName: 'OrderFacilityChangeAndOrderItem',
+        orderBy: 'changeDatetime DESC',
+        viewSize: 20,
+      }
+      const resp = await OrderService.getOrderItemRejectionHistory(params);
+
+      if (!hasError(resp) && resp.data.count > 0) {
+        rejectionHistory = resp.data.docs;
+        const productIds = [ ...(resp.data.docs.reduce((productIds: any, history: any) => productIds.add(history.productId), new Set())) ];
+
+        // Get products that exist in order item rejection history
+        await this.dispatch('product/fetchProducts', { productIds })
+      } else {
+        throw resp.data
+      }
+    } catch (err) {
+      console.error('Failed to fetch order item rejection history', err)
+    }
+
+    commit(types.ORDER_ITEM_REJECTION_HISTORY_UPDATED, rejectionHistory)
+    emitter.emit("dismissLoader");
+  },
+
   // clearning the orders state when logout, or user store is changed
   clearOrders ({ commit }) {
     commit(types.ORDER_OPEN_UPDATED, {orders: {} , total: 0})
     commit(types.ORDER_PACKED_UPDATED, {orders: {} , total: 0})
     commit(types.ORDER_COMPLETED_UPDATED, {orders: {} , total: 0})
+    commit(types.ORDER_CURRENT_UPDATED, { order: {} });
+  },
+
+  async fetchPaymentDetail({ commit, state }) {
+    const order = JSON.parse(JSON.stringify(state.current));
+
+    // if order already contains payment status don't fetch the information again
+    if(order.paymentStatus) {
+      return;
+    }
+
+    try {
+      const params = {
+        "entityName": "OrderPaymentPreference",
+        "inputFields": {
+          "orderId": order.orderId,
+        },
+        "fieldList": ["orderId", "paymentMethodTypeId", "statusId"],
+        "distinct": "Y"
+      }
+
+      const resp = await OrderService.fetchOrderPaymentPreferences(params);
+  
+      if (!hasError(resp)) {
+        const orderPaymentPreferences = resp?.data?.docs;
+  
+        if (orderPaymentPreferences.length > 0) {
+          const paymentMethodTypeIds = orderPaymentPreferences.map((orderPaymentPreference: any) => orderPaymentPreference.paymentMethodTypeId);
+          if (paymentMethodTypeIds.length > 0) {
+            this.dispatch('util/fetchPaymentMethodTypeDesc', paymentMethodTypeIds);
+          }
+  
+          const statusIds = orderPaymentPreferences.map((orderPaymentPreference: any) => orderPaymentPreference.statusId);
+          if (statusIds.length > 0) {
+            this.dispatch('util/fetchStatusDesc', statusIds);
+          }
+  
+          order.orderPaymentPreferences = orderPaymentPreferences;
+          commit(types.ORDER_CURRENT_UPDATED, { order });
+        }
+      } else {
+        throw resp.data
+      }
+    } catch (err) {
+      console.error("Error in fetching payment detail.", err);
+    }
   }
 }
 

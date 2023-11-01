@@ -148,6 +148,8 @@ const actions: ActionTree<UserState, RootState> = {
     dispatch("product/clearProducts", null, { root: true })
     dispatch('clearNotificationState')
     dispatch('clearPartialOrderRejectionConfig');
+    this.dispatch('util/updateRejectReasons', [])
+    this.dispatch('order/clearOrders')
     commit(types.USER_END_SESSION)
     resetPermissions();
     resetConfig();
@@ -207,7 +209,7 @@ const actions: ActionTree<UserState, RootState> = {
     const params = {
       "inputFields": {
         "productStoreId": this.state.user.currentEComStore.productStoreId,
-        settingTypeEnumId: "BOPIS_PART_ODR_REJ"
+        "settingTypeEnumId": "BOPIS_PART_ODR_REJ"
       },
       "filterByDate": 'Y',
       "entityName": "ProductStoreSetting",

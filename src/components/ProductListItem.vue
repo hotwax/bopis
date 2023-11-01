@@ -13,7 +13,7 @@
     </ion-label>
     <!-- Only show stock if its not a ship to store order -->
     <div v-if="!isShipToStoreOrder">
-      <ion-note v-if="getProductStock(item.productId).quantityOnHandTotal >= 0">
+      <ion-note v-if="getProductStock(item.productId).quantityOnHandTotal >= 0" :color="updateColor(getProductStock(item.productId).quantityOnHandTotal)">
         {{ getProductStock(item.productId).quantityOnHandTotal }} {{ translate('pieces in stock') }}
       </ion-note>
       <ion-spinner v-else-if="isFetchingStock" color="medium" name="crescent" />
@@ -26,15 +26,7 @@
 
 <script lang="ts">
 import { defineComponent } from "vue";
-import {
-  IonButton,
-  IonIcon,
-  IonItem,
-  IonLabel,
-  IonNote,
-  IonSpinner,
-  IonThumbnail
-} from "@ionic/vue";
+import { IonButton, IonIcon, IonItem, IonLabel, IonNote, IonSpinner, IonThumbnail } from "@ionic/vue";
 import { mapGetters, useStore } from 'vuex';
 import { ShopifyImg, translate } from '@hotwax/dxp-components'
 import { cubeOutline } from 'ionicons/icons'
@@ -75,6 +67,9 @@ export default defineComponent({
       this.isFetchingStock = true
       await this.store.dispatch('stock/fetchStock', { productId })
       this.isFetchingStock = false
+    },
+    updateColor(stock: number) {
+      return stock ? stock < 10 ? 'warning' : 'success' : 'danger';
     }
   },
   setup() {
