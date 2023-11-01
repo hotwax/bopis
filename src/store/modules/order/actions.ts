@@ -377,7 +377,6 @@ const actions: ActionTree<OrderState , RootState> ={
         }
 
         dispatch('updateCurrent', { order })
-        showToast(translate('Order delivered to', {customerName: order.customer.name}))
       } else {
         showToast(translate("Something went wrong"))
       }

@@ -68,7 +68,7 @@
 
           <div v-if="orderType === 'packed'" class="ion-margin-top ion-hide-md-down">
             <!-- TODO: implement functionality to change shipping address -->
-            <ion-button :disabled="!hasPermission(Actions.APP_ORDER_UPDATE)" expand="block" fill="outline" @click.stop="order?.part?.shipmentMethodEnum?.shipmentMethodEnumId === 'STOREPICKUP' ? sendReadyForPickupEmail(order) : ''">
+            <ion-button :disabled="!hasPermission(Actions.APP_ORDER_UPDATE) || order?.handovered || order?.shipped" expand="block" fill="outline" @click.stop="order?.part?.shipmentMethodEnum?.shipmentMethodEnumId === 'STOREPICKUP' ? sendReadyForPickupEmail(order) : ''">
               {{ order?.part?.shipmentMethodEnum?.shipmentMethodEnumId === 'STOREPICKUP' ? translate("Resend customer email") : translate("Generate shipping documents") }}
             </ion-button>
             <ion-button :disabled="!hasPermission(Actions.APP_ORDER_UPDATE) || order?.handovered || order?.shipped" expand="block" @click.stop="deliverShipment(order)">

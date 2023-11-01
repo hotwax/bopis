@@ -384,6 +384,11 @@ export default defineComponent({
     },
     async deliverShipment (order: any) {
       await this.store.dispatch('order/deliverShipment', order)
+      .then((resp) => {
+        if(!hasError(resp)){
+          showToast(translate('Order delivered to', {customerName: order.customer.name}))
+        }
+      })
     },
     segmentChanged (e: CustomEvent) {
       this.queryString = ''
