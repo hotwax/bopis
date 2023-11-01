@@ -9,6 +9,24 @@ const fetchRejectReasons = async (query: any): Promise<any> => {
   })
 }
 
+const fetchPaymentMethodTypeDesc = async (query: any): Promise <any>  => {
+  return api({
+    url: "performFind",
+    method: "get",
+    params: query
+  });
+}
+
+const fetchStatusDesc = async (query: any): Promise <any>  => {
+  return api({
+    url: "performFind",
+    method: "get",
+    params: query
+  });
+}
+
 export const UtilService = {
-  fetchRejectReasons
+  fetchPaymentMethodTypeDesc,
+  fetchRejectReasons,
+  fetchStatusDesc
 }

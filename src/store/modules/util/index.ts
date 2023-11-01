@@ -8,7 +8,9 @@ import UtilState from './UtilState'
 const utilModule: Module<UtilState, RootState> = {
   namespaced: true,
   state: {
-    rejectReasons: []
+    rejectReasons: [],
+    paymentMethodTypeDesc: {},
+    statusDesc: {}
   },
   getters,
   actions,

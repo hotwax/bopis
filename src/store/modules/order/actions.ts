@@ -110,7 +110,7 @@ const actions: ActionTree<OrderState , RootState> ={
         return order.orderId === payload.orderId;
       })
       if(order) {
-        dispatch('updateCurrent', { order })
+        await dispatch('updateCurrent', { order })
         return order;
       }
     }
@@ -189,7 +189,7 @@ const actions: ActionTree<OrderState , RootState> ={
       console.error(err)
     }
 
-    dispatch('updateCurrent', { order: currentOrder })
+    await dispatch('updateCurrent', { order: currentOrder })
   },
 
   updateCurrent ({ commit }, payload) {
@@ -471,7 +471,7 @@ const actions: ActionTree<OrderState , RootState> ={
           })
         }
         // Added ready to handover because we need to show the user that the order has moved to the packed tab (ready to handover)
-        dispatch('updateCurrent', { order : { ...payload.order, readyToHandover: true } })
+        await dispatch('updateCurrent', { order : { ...payload.order, readyToHandover: true } })
 
         showToast(translate("Order packed and ready for delivery"))
       } else {
@@ -827,6 +827,52 @@ const actions: ActionTree<OrderState , RootState> ={
     commit(types.ORDER_OPEN_UPDATED, {orders: {} , total: 0})
     commit(types.ORDER_PACKED_UPDATED, {orders: {} , total: 0})
     commit(types.ORDER_COMPLETED_UPDATED, {orders: {} , total: 0})
+    commit(types.ORDER_CURRENT_UPDATED, { order: {} });
+  },
+
+  async fetchPaymentDetail({ commit, state }) {
+    const order = JSON.parse(JSON.stringify(state.current));
+
+    // if order already contains payment status don't fetch the information again
+    if(order.paymentStatus) {
+      return;
+    }
+
+    try {
+      const params = {
+        "entityName": "OrderPaymentPreference",
+        "inputFields": {
+          "orderId": order.orderId,
+        },
+        "fieldList": ["orderId", "paymentMethodTypeId", "statusId"],
+        "distinct": "Y"
+      }
+
+      const resp = await OrderService.fetchOrderPaymentPreferences(params);
+  
+      if (!hasError(resp)) {
+        const orderPaymentPreferences = resp?.data?.docs;
+  
+        if (orderPaymentPreferences.length > 0) {
+          const paymentMethodTypeIds = orderPaymentPreferences.map((orderPaymentPreference: any) => orderPaymentPreference.paymentMethodTypeId);
+          if (paymentMethodTypeIds.length > 0) {
+            this.dispatch('util/fetchPaymentMethodTypeDesc', paymentMethodTypeIds);
+          }
+  
+          const statusIds = orderPaymentPreferences.map((orderPaymentPreference: any) => orderPaymentPreference.statusId);
+          if (statusIds.length > 0) {
+            this.dispatch('util/fetchStatusDesc', statusIds);
+          }
+  
+          order.orderPaymentPreferences = orderPaymentPreferences;
+          commit(types.ORDER_CURRENT_UPDATED, { order });
+        }
+      } else {
+        throw resp.data
+      }
+    } catch (err) {
+      console.error("Error in fetching payment detail.", err);
+    }
   }
 }
 

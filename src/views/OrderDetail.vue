@@ -5,7 +5,7 @@
         <ion-back-button default-href="/" slot="start" />
         <ion-title>{{ translate("Order details") }}</ion-title>
         <ion-buttons slot="end">
-          <ion-button :disabled="!order?.orderId || order?.rejected" @click="openOrderItemRejHistoryModal()">
+          <ion-button :disabled="!order?.orderId" @click="openOrderItemRejHistoryModal()">
             <ion-icon slot="icon-only" :icon="timeOutline" />
           </ion-button>
           <ion-button v-if="orderType === 'open'" class="ion-hide-md-up" :disabled="!hasPermission(Actions.APP_ORDER_UPDATE) || order?.readyToHandover || order?.rejected" @click="rejectOrder()">
@@ -30,11 +30,19 @@
             <ion-icon :icon="checkmarkCircleOutline" color="success" slot="start" />
             <ion-label class="ion-text-wrap">{{ order.handovered ? translate("Order is successfully handed over to customer.") : translate("Order is successfully shipped.") }}</ion-label>
           </ion-item>
+          <ion-item lines="none">
+            <ion-label class="ion-text-wrap">
+              <h2>{{ order?.orderName ? order?.orderName : order?.orderId }}</h2>
+            </ion-label>
+            <ion-chip outline v-if="order?.orderPaymentPreferences" slot="end">
+              <ion-icon :icon="cashOutline"/>
+              <ion-label>{{ getPaymentMethodDesc(order?.orderPaymentPreferences[0]?.paymentMethodTypeId)}} : {{ getStatusDesc(order?.orderPaymentPreferences[0]?.statusId) }}</ion-label>
+            </ion-chip>
+          </ion-item>
           <ion-list>
             <ion-item lines="none">
               <ion-label class="ion-text-wrap">
                 <h2>{{ order?.customer?.name }}</h2>
-                <p>{{ order?.orderName ? order?.orderName : order?.orderId }}</p>
               </ion-label>
               <ion-badge v-if="order?.placedDate" slot="end">{{ timeFromNow(order.placedDate) }}</ion-badge>
             </ion-item>
@@ -81,11 +89,12 @@
             <ProductListItem :item="item" />
             <!-- Checking for true as a string as the settingValue contains a string and not boolean-->
             <div v-if="partialOrderRejectionConfig?.settingValue == 'true' && orderType === 'open'" class="border-top">
-              <ion-button fill="clear" @click="openReportAnIssueModal(item)">
+              <ion-button :disabled="order?.readyToHandover || order?.rejected" fill="clear" @click="openReportAnIssueModal(item)">
                 {{ translate("Report an issue") }}
               </ion-button>
             </div>
           </ion-card>
+          <p v-if="!order.part?.items?.length" class="empty-state">{{ translate('No items found') }}</p>
         </section>
       </main>
 
@@ -111,6 +120,7 @@ import {
   IonButton,
   IonButtons,
   IonCard,
+  IonChip,
   IonContent,
   IonHeader,
   IonIcon,
@@ -128,6 +138,7 @@ import { defineComponent } from "vue";
 import { mapGetters, useStore } from "vuex";
 import {
   accessibilityOutline,
+  cashOutline,
   copyOutline,
   closeCircleOutline,
   checkmarkCircleOutline,
@@ -160,6 +171,7 @@ export default defineComponent({
     IonButton,
     IonButtons,
     IonCard,
+    IonChip,
     IonContent,
     IonHeader,
     IonIcon,
@@ -184,7 +196,9 @@ export default defineComponent({
       order: "order/getCurrent",
       currentFacility: 'user/getCurrentFacility',
       configurePicker: "user/configurePicker",
-      partialOrderRejectionConfig: 'user/getPartialOrderRejectionConfig'
+      partialOrderRejectionConfig: 'user/getPartialOrderRejectionConfig',
+      getPaymentMethodDesc: 'util/getPaymentMethodDesc',
+      getStatusDesc: 'util/getStatusDesc'
     })
   },
   methods: {
@@ -223,6 +237,7 @@ export default defineComponent({
         orderPartSeqId
       }
       await this.store.dispatch("order/getOrderDetail", { payload, orderType })
+      await this.store.dispatch("order/fetchPaymentDetail")
     },
     async rejectOrder() {
       const rejectOrderModal = await modalController.create({
@@ -324,6 +339,7 @@ export default defineComponent({
       accessibilityOutline,
       bagHandleOutline,
       bagRemoveOutline,
+      cashOutline,
       copyOutline,
       copyToClipboard,
       closeCircleOutline,
