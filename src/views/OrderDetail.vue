@@ -68,6 +68,7 @@
               </ion-button>
             </div>
           </ion-card>
+          <p class="empty-state">{{ translate('No items found') }}</p>
         </section>
       </main>
 
