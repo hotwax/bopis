@@ -5,11 +5,17 @@
         <ion-back-button default-href="/" slot="start" />
         <ion-title>{{ translate("Order details") }}</ion-title>
         <ion-buttons slot="end">
+          <ion-button v-if="orderType === 'packed' && order.part.shipmentMethodEnum.shipmentMethodEnumId === 'STOREPICKUP'" class="ion-hide-md-up" :disabled="!hasPermission(Actions.APP_ORDER_UPDATE) || order.handovered || order.shipped" @click="sendReadyForPickupEmail(order)">
+            <ion-icon slot="icon-only" :icon="mailOutline" />
+          </ion-button>
           <ion-button :disabled="!order?.orderId" @click="openOrderItemRejHistoryModal()">
             <ion-icon slot="icon-only" :icon="timeOutline" />
           </ion-button>
-          <ion-button v-if="orderType === 'open'" class="ion-hide-md-up" :disabled="!hasPermission(Actions.APP_ORDER_UPDATE) || order?.readyToHandover || order?.rejected" @click="rejectOrder()">
+          <ion-button v-if="orderType === 'open'" class="ion-hide-md-up" :disabled="!hasPermission(Actions.APP_ORDER_UPDATE) || order.readyToHandover || order.rejected" @click="rejectOrder()">
             <ion-icon slot="icon-only" color="danger" :icon="bagRemoveOutline" />
+          </ion-button>
+          <ion-button v-if="orderType === 'packed' && showPackingSlip" class="ion-hide-md-up" :disabled="!hasPermission(Actions.APP_ORDER_UPDATE) || order?.handovered || order?.shipped" @click="printPackingSlip(order)">
+            <ion-icon slot="icon-only" :icon="printOutline" />
           </ion-button>
         </ion-buttons>
       </ion-toolbar>
@@ -22,11 +28,11 @@
       </div>
       <main v-else>
         <aside>
-          <ion-item v-if="order?.readyToHandover || order?.rejected" color="light" lines="none">
+          <ion-item v-if="order.readyToHandover || order.rejected" color="light" lines="none">
             <ion-icon :icon="order.readyToHandover ? checkmarkCircleOutline : closeCircleOutline" :color="order.readyToHandover ? 'success' : 'danger'" slot="start" />
             <ion-label class="ion-text-wrap">{{ order.readyToHandover ? translate("Order is now ready to handover.") : translate("Order has been rejected.") }}</ion-label>
           </ion-item>
-          <ion-item v-if="order?.handovered || order?.shipped" color="light" lines="none">
+          <ion-item v-if="order.handovered || order.shipped" color="light" lines="none">
             <ion-icon :icon="checkmarkCircleOutline" color="success" slot="start" />
             <ion-label class="ion-text-wrap">{{ order.handovered ? translate("Order is successfully handed over to customer.") : translate("Order is successfully shipped.") }}</ion-label>
           </ion-item>
@@ -66,20 +72,20 @@
             </ion-label>
           </ion-item>
           <div v-if="orderType === 'open'" class="ion-margin-top ion-hide-md-down">
-            <ion-button :disabled="!hasPermission(Actions.APP_ORDER_UPDATE) || order?.readyToHandover || order?.rejected" expand="block" @click.stop="readyForPickup(order, order.part)">
+            <ion-button :disabled="!hasPermission(Actions.APP_ORDER_UPDATE) || order.readyToHandover || order.rejected" expand="block" @click.stop="readyForPickup(order, order.part)">
               {{ order?.part?.shipmentMethodEnum?.shipmentMethodEnumId === 'STOREPICKUP' ? translate("Ready for pickup") : translate("Ready to ship") }}
             </ion-button>
-            <ion-button :disabled="!hasPermission(Actions.APP_ORDER_UPDATE) || order?.readyToHandover || order?.rejected" expand="block" color="danger" fill="outline" @click="rejectOrder()">
+            <ion-button :disabled="!hasPermission(Actions.APP_ORDER_UPDATE) || order.readyToHandover || order.rejected" expand="block" color="danger" fill="outline" @click="rejectOrder()">
               {{ translate("Reject Order") }}
             </ion-button>
           </div>
 
           <div v-if="orderType === 'packed'" class="ion-margin-top ion-hide-md-down">
             <!-- TODO: implement functionality to change shipping address -->
-            <ion-button :disabled="!hasPermission(Actions.APP_ORDER_UPDATE) || order?.handovered || order?.shipped" expand="block" fill="outline" @click.stop="order?.part?.shipmentMethodEnum?.shipmentMethodEnumId === 'STOREPICKUP' ? sendReadyForPickupEmail(order) : ''">
+            <ion-button :disabled="!hasPermission(Actions.APP_ORDER_UPDATE) || order.handovered || order.shipped" expand="block" fill="outline" @click.stop="order?.part?.shipmentMethodEnum?.shipmentMethodEnumId === 'STOREPICKUP' ? sendReadyForPickupEmail(order) : ''">
               {{ order?.part?.shipmentMethodEnum?.shipmentMethodEnumId === 'STOREPICKUP' ? translate("Resend customer email") : translate("Generate shipping documents") }}
             </ion-button>
-            <ion-button :disabled="!hasPermission(Actions.APP_ORDER_UPDATE) || order?.handovered || order?.shipped" expand="block" @click.stop="deliverShipment(order)">
+            <ion-button :disabled="!hasPermission(Actions.APP_ORDER_UPDATE) || order.handovered || order.shipped" expand="block" @click.stop="deliverShipment(order)">
               {{ order.part.shipmentMethodEnum.shipmentMethodEnumId === 'STOREPICKUP' ? translate("Handover") : translate("Ship") }}
             </ion-button>
           </div>
@@ -99,12 +105,12 @@
       </main>
 
       <ion-fab v-if="order?.orderId && orderType === 'open'" class="ion-hide-md-up" vertical="bottom" horizontal="end" slot="fixed" @click="readyForPickup(order, order.part)">
-        <ion-fab-button :disabled="!hasPermission(Actions.APP_ORDER_UPDATE) || order?.readyToHandover || order?.rejected">
+        <ion-fab-button :disabled="!hasPermission(Actions.APP_ORDER_UPDATE) || order.readyToHandover || order.rejected">
           <ion-icon :icon="bagHandleOutline" />
         </ion-fab-button>
       </ion-fab>
       <ion-fab v-else-if="order?.orderId && orderType === 'packed'" class="ion-hide-md-up" vertical="bottom" horizontal="end" slot="fixed" @click="deliverShipment(order)">
-        <ion-fab-button :disabled="!hasPermission(Actions.APP_ORDER_UPDATE) || order?.handovered || order?.shipped">
+        <ion-fab-button :disabled="!hasPermission(Actions.APP_ORDER_UPDATE) || order.handovered || order.shipped">
           <ion-icon :icon="order.part.shipmentMethodEnum.shipmentMethodEnumId === 'STOREPICKUP' ? accessibilityOutline : checkmarkOutline" />
         </ion-fab-button>
       </ion-fab>
@@ -144,6 +150,7 @@ import {
   checkmarkCircleOutline,
   checkmarkOutline,
   mailOutline,
+  printOutline,
   sendOutline,
   bagHandleOutline,
   bagRemoveOutline,
@@ -157,7 +164,7 @@ import ReportAnIssueModal from '@/components/ReportAnIssueModal.vue';
 import AssignPickerModal from "@/views/AssignPickerModal.vue";
 import { copyToClipboard, showToast } from '@/utils'
 import { DateTime } from "luxon";
-import { hasError } from '@/adapter';
+import { api, hasError } from '@/adapter';
 import ShipToCustomerModal from "@/components/ShipToCustomerModal.vue";
 import { OrderService } from "@/services/OrderService";
 import RejectOrderModal from "@/components/RejectOrderModal.vue";
@@ -198,7 +205,8 @@ export default defineComponent({
       configurePicker: "user/configurePicker",
       partialOrderRejectionConfig: 'user/getPartialOrderRejectionConfig',
       getPaymentMethodDesc: 'util/getPaymentMethodDesc',
-      getStatusDesc: 'util/getStatusDesc'
+      getStatusDesc: 'util/getStatusDesc',
+      showPackingSlip: 'user/showPackingSlip',
     })
   },
   methods: {
@@ -268,6 +276,33 @@ export default defineComponent({
     timeFromNow(time: any) {
       const timeDiff = DateTime.fromISO(time).diff(DateTime.local());
       return DateTime.local().plus(timeDiff).toRelative();
+    },
+    async printPackingSlip(order: any) {
+      try {
+        // Get packing slip from the server
+        const response: any = await api({
+          method: 'get',
+          url: 'PackingSlip.pdf',
+          params: {
+            shipmentId: order.shipmentId
+          },
+          responseType: "blob"
+        })
+
+        if (!response || response.status !== 200 || hasError(response)) {
+          showToast(translate("Failed to load packing slip"))
+          return;
+        }
+
+        // Generate local file URL for the blob received
+        const pdfUrl = window.URL.createObjectURL(response.data);
+        // Open the file in new tab
+        (window as any).open(pdfUrl, "_blank").focus();
+
+      } catch(err) {
+        showToast(translate("Failed to load packing slip"))
+        console.error(err)
+      }
     },
     async shipToCustomer() {
       const shipmodal = await modalController.create({
@@ -341,6 +376,7 @@ export default defineComponent({
       checkmarkCircleOutline,
       checkmarkOutline,
       hasPermission,
+      printOutline,
       router,
       store,
       timeOutline,
