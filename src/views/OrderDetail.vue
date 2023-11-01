@@ -14,7 +14,7 @@
           <ion-button v-if="orderType === 'open'" class="ion-hide-md-up" :disabled="!hasPermission(Actions.APP_ORDER_UPDATE) || order.readyToHandover || order.rejected" @click="rejectOrder()">
             <ion-icon slot="icon-only" color="danger" :icon="bagRemoveOutline" />
           </ion-button>
-          <ion-button v-if="orderType === 'packed' && showPackingSlip" class="ion-hide-md-up" :disabled="!hasPermission(Actions.APP_ORDER_UPDATE) || order.handovered || order.shipped" @click="printPackingSlip(order)">
+          <ion-button v-if="orderType === 'packed' && order.part.shipmentMethodEnum.shipmentMethodEnumId === 'STOREPICKUP' && showPackingSlip" :class="order.part.shipmentMethodEnum.shipmentMethodEnumId !== 'STOREPICKUP' ? 'ion-hide-md-up' : ''" :disabled="!hasPermission(Actions.APP_ORDER_UPDATE) || order.handovered || order.shipped" @click="printPackingSlip(order)">
             <ion-icon slot="icon-only" :icon="printOutline" />
           </ion-button>
         </ion-buttons>
@@ -194,8 +194,7 @@ export default defineComponent({
   },
   data() {
     return {
-      customerEmail: '',
-      orderType: this.$route.params.orderType
+      customerEmail: ''
     }
   },
   computed: {
@@ -209,6 +208,7 @@ export default defineComponent({
       showPackingSlip: 'user/showPackingSlip',
     })
   },
+  props: ['orderType', 'orderId', 'orderPartSeqId'],
   methods: {
     async assignPicker(order: any, part: any, facilityId: any) {
       const assignPickerModal = await modalController.create({
@@ -297,7 +297,12 @@ export default defineComponent({
         // Generate local file URL for the blob received
         const pdfUrl = window.URL.createObjectURL(response.data);
         // Open the file in new tab
-        (window as any).open(pdfUrl, "_blank").focus();
+        try {
+          (window as any).open(pdfUrl, "_blank").focus();
+        }
+        catch {
+          showToast(translate('Unable to open as browser is blocking pop-ups.', {documentName: 'packing slip'}));
+        }
 
       } catch(err) {
         showToast(translate("Failed to load packing slip"))
@@ -352,7 +357,7 @@ export default defineComponent({
     },
   },
   async mounted() {
-    await this.getOrderDetail(this.$route.params.orderId, this.$route.params.orderPartSeqId, this.$route.params.orderType);
+    await this.getOrderDetail(this.orderId, this.orderPartSeqId, this.orderType);
 
     // fetch customer details and rejection reasons only when we get the orders information
     if(this.order.orderId) {

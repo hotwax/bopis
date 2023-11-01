@@ -167,6 +167,7 @@
   "This order will be rejected from this store with the selected reason and shipped to the address that has been inputed.Please make sure the address you have entered is correct.": "This order will be rejected from this store with the selected reason and shipped to the address that has been inputed. { space } Please make sure the address you have entered is correct.",
   "Track Pickers": "Track Pickers",
   "Track who picked orders by entering picker IDs when packing an order.": "Track who picked orders by entering picker IDs when packing an order.",
+  "Unable to open as browser is blocking pop-ups.": "Unable to open { documentName } as browser is blocking pop-ups.",
   "Unfillable Items": "Unfillable Items",
   "Update time zone": "Update time zone",
   "Username": "Username",
