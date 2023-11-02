@@ -70,7 +70,7 @@
             <ion-label>
               {{ order.pickers ? translate("Picked by", { pickers: order.pickers }) : translate("No picker assigned.") }}
             </ion-label>
-            <ion-button :disabled="!hasPermission(Actions.APP_ORDER_UPDATE)" fill="outline" @click="editPicker(order, order.part, currentFacility.facilityId)">
+            <ion-button :disabled="!hasPermission(Actions.APP_ORDER_UPDATE)" fill="outline" @click="editPicker(order)">
               {{ translate("Change") }}
             </ion-button>
           </ion-item>
@@ -222,13 +222,22 @@ export default defineComponent({
       });
       return assignPickerModal.present();
     },
-    async editPicker(order: any, part: any, facilityId: any) {
+    async editPicker(order: any) {
       const editPickerModal = await modalController.create({
         component: EditPickerModal,
-        componentProps: { order, part, facilityId }
+        componentProps: { order }
       });
-      return editPickerModal.present();
 
+      editPickerModal.onDidDismiss().then((result) => {
+        if(result.data?.selectedPicker){
+          const selectedPicker = result.data.selectedPicker
+          this.order.pickers = selectedPicker.name
+          this.order.pickerIds = [selectedPicker.id]
+          this.store.dispatch('order/updateCurrent', { order: this.order })
+        }
+      })
+
+      return editPickerModal.present();
     },
     async deliverShipment(order: any) {
       await this.store.dispatch('order/deliverShipment', order)

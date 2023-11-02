@@ -9,15 +9,9 @@
       <ion-title>{{ translate("Edit pickers") }}</ion-title>
     </ion-toolbar>
   </ion-header>
-  
+
   <ion-content class="ion-padding">
     <ion-searchbar v-model="queryString" @keyup.enter="queryString = $event.target.value; findPickers()" />
-    <ion-row>
-      <ion-chip v-for="picker in selectedPickers" :key="picker.id">
-        <ion-label>{{ picker.name }}</ion-label>
-        <ion-icon :icon="closeCircle" @click="updateSelectedPickers(picker.id)" />
-      </ion-chip>
-    </ion-row>
 
     <ion-list>
       <ion-list-header>{{ translate("Staff") }}</ion-list-header>
@@ -25,17 +19,19 @@
         {{ 'No picker found' }}
       </div>
       <div v-else>
-        <ion-item v-for="(picker, index) in pickers" :key="index" @click="updateSelectedPickers(picker.id)">
-          <ion-label>
-            {{ picker.name }}
-            <p>{{ picker.externalId ? picker.externalId : picker.id }}</p>
-          </ion-label>
-          <ion-checkbox :checked="isPickerSelected(picker.id)"/>
-        </ion-item>
+        <ion-radio-group :value="selectedPicker.id">
+          <ion-item v-for="(picker, index) in pickers" :key="index" @click="updateSelectedPickers(picker.id)">
+            <ion-label>
+              {{ picker.name }}
+              <p>{{ picker.externalId ? picker.externalId : picker.id }}</p>
+            </ion-label>
+            <ion-radio slot="end" :value="picker.id" ></ion-radio>
+          </ion-item>
+        </ion-radio-group>
       </div>
     </ion-list>
     <ion-fab vertical="bottom" horizontal="end" slot="fixed">
-      <ion-fab-button :disabled="arePickersNotSelected()" @click="confirmSave()">
+      <ion-fab-button :disabled="isPickerChanged()" @click="confirmSave()">
         <ion-icon :icon="saveOutline" />
       </ion-fab-button>
     </ion-fab>
@@ -46,8 +42,6 @@
 import { 
   IonButtons,
   IonButton,
-  IonCheckbox,
-  IonChip,
   IonContent,
   IonHeader,
   IonIcon,
@@ -59,7 +53,8 @@ import {
   IonItem,
   IonList,
   IonListHeader,
-  IonRow,
+  IonRadio,
+  IonRadioGroup,
   IonSearchbar,
   modalController,
   alertController
@@ -78,8 +73,6 @@ export default defineComponent({
   components: { 
     IonButtons,
     IonButton,
-    IonCheckbox,
-    IonChip,
     IonContent,
     IonHeader,
     IonIcon,
@@ -91,35 +84,27 @@ export default defineComponent({
     IonItem,
     IonList,
     IonListHeader,
-    IonRow,
+    IonRadio,
+    IonRadioGroup,
     IonSearchbar,
   },
   data () {
     return {
-      selectedPickers: [] as any,
+      selectedPicker: {} as any,
       queryString: '',
       pickers: [] as any,
       editedPicklist: {} as any,
-      selectedPickerIds: this.order.pickerIds
+      selectedPickerId: this.order.pickerIds[0]
     }
   },
   async mounted() {
     await this.findPickers()
-    this.selectAlreadyAssociatedPickers()
+    this.getAlreadyAssignedPicker()
   },
-  props: ['order', 'part', 'facilityId' ],
+  props: ['order'],
   methods: {
-    isPickerSelected(id: string) {
-      return this.selectedPickers.some((picker: any) => picker.id == id)
-    },
     updateSelectedPickers(id: string) {
-      const picker = this.isPickerSelected(id)
-      if (picker) {
-        // if picker is already selected then removing that picker from the list on click
-        this.selectedPickers = this.selectedPickers.filter((picker: any) => picker.id != id)
-      } else {
-        this.selectedPickers.push(this.pickers.find((picker: any) => picker.id == id))
-      }
+      this.selectedPicker = this.pickers.find((picker: any) => picker.id == id)
     },
     async findPickers(pickerIds?: Array<any>) {
       let inputFields = {}
@@ -197,34 +182,16 @@ export default defineComponent({
       return alert.present();
     },
     async resetPicker() {
-      console.log(this.order);
-      
-      // remove the 'System Generated' entry through filtering based on ID
-      let pickersNameArray = [] as any;
-      const pickerIds = this.selectedPickers.map((picker: any) => {
-        if (picker.id) {
-          pickersNameArray.push(picker.name.split(' ')[0])
-        }
-        return picker.id
-      }).filter((id: any) => id)
-      console.log(this.order.picklistId);
-      
+      const pickerIds = this.selectedPicker.id
+      // Api call to remove already selected picker and assign new picker
       try {
         const resp = await UtilService.resetPicker({
           pickerIds,
           picklistId: this.order.picklistId
         });
-        console.log( 'resp', resp);
-        
+
         if (resp.status === 200 && !hasError(resp)) {
           showToast(translate("Pickers successfully replaced in the picklist with the new selections."))
-          // editedPicklist will be passed through modal to in-progress page for manually
-          // upading the UI due to solr issue
-          // this.editedPicklist = {
-          //   ...this.selectedPicklist,
-          //   pickerIds,
-          //   pickersName: pickersNameArray.join(', ')
-          // }
         } else {
           throw resp.data
         }
@@ -233,22 +200,14 @@ export default defineComponent({
         console.error('Something went wrong, could not edit picker(s)')
       }
     },
-    arePickersNotSelected() {
-      // disable the save button if only 'System Generated' entry is there
-      // or if no pickers are selected
-      return (this.selectedPickers.length === 1
-        && !this.selectedPickers[0].id)
-        || (!this.selectedPickers.length)
-    },
     closeModal() {
-      modalController.dismiss({
-        dismissed: true,
-        editedPicklist: this.editedPicklist
-      });
+      modalController.dismiss({ selectedPicker: this.selectedPicker });
     },
-    selectAlreadyAssociatedPickers() {
-      // for default selection of pickers already associated with the picklist
-      this.selectedPickers = this.pickers.filter((picker: any) => this.selectedPickerIds.includes(picker.id))
+    getAlreadyAssignedPicker() {
+      this.selectedPicker = this.pickers.find((picker: any) => this.selectedPickerId === picker.id)
+    },
+    isPickerChanged() {
+      return this.selectedPicker.id === this.selectedPickerId
     }
   },
   setup() {
