@@ -15,12 +15,12 @@
 
     <ion-list>
       <ion-list-header>{{ translate("Staff") }}</ion-list-header>
-      <div class="ion-padding" v-if="!pickers.length">
-        {{ 'No picker found' }}
+      <div class="ion-padding" v-if="!availablePickers.length">
+        {{ translate("No picker found") }}
       </div>
       <div v-else>
         <ion-radio-group :value="selectedPicker.id">
-          <ion-item v-for="(picker, index) in pickers" :key="index" @click="updateSelectedPickers(picker.id)">
+          <ion-item v-for="(picker, index) in availablePickers" :key="index" @click="updateSelectedPicker(picker.id)">
             <ion-label>
               {{ picker.name }}
               <p>{{ picker.externalId ? picker.externalId : picker.id }}</p>
@@ -60,12 +60,12 @@ import {
   alertController
 } from "@ionic/vue";
 import { defineComponent } from "vue";
-import { close, closeCircle, saveOutline } from "ionicons/icons";
+import { close, saveOutline } from "ionicons/icons";
 import { useStore } from "vuex";
 import { showToast } from '@/utils';
 import { hasError } from '@/adapter'
-import { UtilService } from "@/services/UtilService";
 import { translate } from '@hotwax/dxp-components'
+import { UtilService } from "@/services/UtilService";
 import { PicklistService } from "@/services/PicklistService";
 
 export default defineComponent({
@@ -92,8 +92,7 @@ export default defineComponent({
     return {
       selectedPicker: {} as any,
       queryString: '',
-      pickers: [] as any,
-      editedPicklist: {} as any,
+      availablePickers: [] as any,
       selectedPickerId: this.order.pickerIds[0]
     }
   },
@@ -103,12 +102,12 @@ export default defineComponent({
   },
   props: ['order'],
   methods: {
-    updateSelectedPickers(id: string) {
-      this.selectedPicker = this.pickers.find((picker: any) => picker.id == id)
+    updateSelectedPicker(id: string) {
+      this.selectedPicker = this.availablePickers.find((picker: any) => picker.id == id)
     },
     async findPickers(pickerIds?: Array<any>) {
       let inputFields = {}
-      this.pickers = []
+      this.availablePickers = []
 
       if (this.queryString.length > 0) {
         inputFields = {
@@ -148,7 +147,7 @@ export default defineComponent({
       try {
         const resp = await PicklistService.getAvailablePickers(payload);
         if (resp.status === 200 && !hasError(resp)) {
-          this.pickers = resp.data.docs.map((picker: any) => ({
+          this.availablePickers = resp.data.docs.map((picker: any) => ({
             name: picker.firstName + ' ' + picker.lastName,
             id: picker.partyId,
             externalId: picker.externalId
@@ -204,7 +203,7 @@ export default defineComponent({
       modalController.dismiss({ selectedPicker: this.selectedPicker });
     },
     getAlreadyAssignedPicker() {
-      this.selectedPicker = this.pickers.find((picker: any) => this.selectedPickerId === picker.id)
+      this.selectedPicker = this.availablePickers.find((picker: any) => this.selectedPickerId === picker.id)
     },
     isPickerChanged() {
       return this.selectedPicker.id === this.selectedPickerId
@@ -215,7 +214,6 @@ export default defineComponent({
     return {
       close,
       saveOutline,
-      closeCircle,
       store,
       translate
     };
