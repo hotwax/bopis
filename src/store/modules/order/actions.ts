@@ -97,11 +97,21 @@ const actions: ActionTree<OrderState , RootState> ={
     return resp;
   },
 
-  async getOrderDetail( { dispatch, state }, payload ) {
+  async getOrderDetail( { dispatch, state }, { payload, orderType } ) {
+    if(orderType === 'open') {
+      payload['orderStatusId']= "ORDER_APPROVED"
+      payload['-shipmentStatusId']= "*"
+    } else if(orderType === 'packed') {
+      payload['shipmentStatusId']= "SHIPMENT_PACKED"
+    } else {
+      dispatch('updateCurrent', { order: {} })
+      return;
+    }
+
     const current = state.current as any
     const orders = JSON.parse(JSON.stringify(state.open.list)) as any
     // As one order can have multiple parts thus checking orderId and partSeq as well before making any api call
-    if(current.orderId === payload.orderId && current.part?.orderPartSeqId === payload.orderPartSeqId) {
+    if(current.orderId === payload.orderId && current.orderType === orderType && current.part?.orderPartSeqId === payload.orderPartSeqId) {
       this.dispatch('product/getProductInformation', { orders: [ current ] })
       return current 
     }
@@ -114,12 +124,12 @@ const actions: ActionTree<OrderState , RootState> ={
         return order;
       }
     }
+
+
     const orderQueryPayload = prepareOrderQuery({
       ...payload,
       shipmentMethodTypeId: !store.state.user.preference.showShippingOrders ? 'STOREPICKUP' : '',
-      '-shipmentStatusId': '*',
       '-fulfillmentStatus': '(Cancelled OR Rejected)',
-      orderStatusId: 'ORDER_APPROVED',
       orderTypeId: 'SALES_ORDER'
     })
     
@@ -166,7 +176,12 @@ const actions: ActionTree<OrderState , RootState> ={
               return arr
             }, []),
             placedDate: orderItem.orderDate,
-            shippingInstructions: orderItem.shippingInstructions
+            shippingInstructions: orderItem.shippingInstructions,
+            orderType: orderType,
+            pickers: orderItem.pickers ? (orderItem.pickers.reduce((names: any, picker: string) => {
+              names.push(picker.split('/')[1]);
+              return names;
+            }, [])).join(', ') : ""
           }
         })
 
@@ -338,7 +353,7 @@ const actions: ActionTree<OrderState , RootState> ={
     return resp;
   },
 
-  async deliverShipment ({ state, commit }, order) {
+  async deliverShipment ({ state, dispatch, commit }, order) {
     emitter.emit("presentLoader");
     const params = {
       shipmentId: order.shipmentId,
@@ -362,7 +377,14 @@ const actions: ActionTree<OrderState , RootState> ={
           state.packed.list.splice(orderIndex, 1);
           commit(types.ORDER_PACKED_UPDATED, { orders: state.packed.list, total: state.packed.total -1 })
         }
-        showToast(translate('Order delivered to', {customerName: order.customer.name}))
+
+        if(order.part.shipmentMethodEnum.shipmentMethodEnumId === 'STOREPICKUP'){
+          order = { ...order, handovered: true }
+        }else {
+          order = { ...order, shipped: true }
+        }
+
+        dispatch('updateCurrent', { order })
       } else {
         showToast(translate("Something went wrong"))
       }

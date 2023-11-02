@@ -31,7 +31,7 @@
     <ion-content>
       <div v-if="segmentSelected === 'open'">
         <div v-for="(order, index) in getOrdersByPart(orders)" :key="index" v-show="order.parts.length > 0">
-          <ion-card button @click.prevent="viewOrder(order, order.part)">
+          <ion-card button @click.prevent="viewOrder(order, order.part, 'open')">
             <ion-item lines="none">
               <ion-label class="ion-text-wrap">
                 <h1>{{ order.customer.name }}</h1>
@@ -77,7 +77,7 @@
       </div>      
       <div v-if="segmentSelected === 'packed'">
         <div v-for="(order, index) in getOrdersByPart(packedOrders)" :key="index" v-show="order.parts.length > 0">
-          <ion-card>
+          <ion-card button @click.prevent="viewOrder(order, order.part, 'packed')">
             <ion-item lines="none">
               <ion-label class="ion-text-wrap">
                 <h1>{{ order.customer.name }}</h1>
@@ -114,10 +114,10 @@
               <ion-button :disabled="!hasPermission(Actions.APP_ORDER_UPDATE)" fill="clear" @click.stop="deliverShipment(order)">
                 {{ order.part.shipmentMethodEnum.shipmentMethodEnumId === 'STOREPICKUP' ? translate("Handover") : translate("Ship") }}
               </ion-button>
-              <ion-button v-if="showPackingSlip" fill="clear" slot="end" @click="printPackingSlip(order)">
+              <ion-button v-if="showPackingSlip" fill="clear" slot="end" @click.stop="printPackingSlip(order)">
                 <ion-icon slot="icon-only" :icon="printOutline" />
               </ion-button>
-              <ion-button v-if="order.part.shipmentMethodEnum.shipmentMethodEnumId === 'STOREPICKUP'" fill="clear" slot="end" @click="sendReadyForPickupEmail(order)">
+              <ion-button v-if="order.part.shipmentMethodEnum.shipmentMethodEnumId === 'STOREPICKUP'" fill="clear" slot="end" @click.stop="sendReadyForPickupEmail(order)">
                 <ion-icon slot="icon-only" :icon="mailOutline" />
               </ion-button>
             </div>
@@ -310,11 +310,12 @@ export default defineComponent({
         this.getCompletedOrders().then(() => { event.target.complete() });
       }
     },
-    async viewOrder (order: any, part: any) {
+    async viewOrder(order: any, part: any, orderType: any) {
       // TODO: find a better approach to handle the case that when in open segment we can click on
       // order card to route on the order details page but not in the packed segment
+      order['orderType'] = orderType
       await this.store.dispatch('order/updateCurrent', { order }).then(() => {
-        this.$router.push({ path: `/orderdetail/${order.orderId}/${part.orderPartSeqId}` })
+        this.$router.push({ path: `/orderdetail/${orderType}/${order.orderId}/${part.orderPartSeqId}` })
       })
     },
     async getPickupOrders (vSize?: any, vIndex?: any) {
@@ -383,6 +384,11 @@ export default defineComponent({
     },
     async deliverShipment (order: any) {
       await this.store.dispatch('order/deliverShipment', order)
+      .then((resp) => {
+        if(!hasError(resp)){
+          showToast(translate('Order delivered to', {customerName: order.customer.name}))
+        }
+      })
     },
     segmentChanged (e: CustomEvent) {
       this.queryString = ''
