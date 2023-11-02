@@ -23,7 +23,7 @@
           <ion-item v-for="(picker, index) in availablePickers" :key="index" @click="updateSelectedPicker(picker.id)">
             <ion-label>
               {{ picker.name }}
-              <p>{{ picker.externalId ? picker.externalId : picker.id }}</p>
+              <p>{{ picker.id }}</p>
             </ion-label>
             <ion-radio slot="end" :value="picker.id" ></ion-radio>
           </ion-item>
@@ -115,18 +115,14 @@ export default defineComponent({
           firstName_op: 'contains',
           firstName_ic: 'Y',
           firstName_grp: '1',
-          externalId_value: this.queryString,
-          externalId_op: 'contains',
-          externalId_ic: 'Y',
-          externalId_grp: '2',
           lastName_value: this.queryString,
           lastName_op: 'contains',
           lastName_ic: 'Y',
-          lastName_grp: '3',
+          lastName_grp: '2',
           partyId_value: this.queryString,
           partyId_op: 'contains',
           partyId_ic: 'Y',
-          partyId_grp: '4',
+          partyId_grp: '3',
         }
       }
 
@@ -141,7 +137,7 @@ export default defineComponent({
         orderBy: "firstName ASC",
         filterByDate: "Y",
         distinct: "Y",
-        fieldList: ["firstName", "lastName", "partyId", "externalId"]
+        fieldList: ["firstName", "lastName", "partyId"]
       }
       
       try {
@@ -149,8 +145,7 @@ export default defineComponent({
         if (resp.status === 200 && !hasError(resp)) {
           this.availablePickers = resp.data.docs.map((picker: any) => ({
             name: picker.firstName + ' ' + picker.lastName,
-            id: picker.partyId,
-            externalId: picker.externalId
+            id: picker.partyId
           }))
         } else {
           throw resp.data
