@@ -4,12 +4,13 @@ import * as types from './mutation-types'
 
 const mutations: MutationTree <StockState> = {
   [types.STOCK_ADD_PRODUCT] (state, payload) {
-    state.products[payload.productId] = payload.stock
-  },
-  [types.STOCK_ADD_PRODUCTS] (state, payload) {
-    payload.products.forEach((product: any) => {
-      state.products[product.productId] = product.atp
-    });
+    if(state.products[payload.productId]) {
+      state.products[payload.productId][payload.facilityId] = payload.stock
+    } else {
+      state.products[payload.productId] = {
+        [payload.facilityId]: payload.stock
+      }
+    }
   }
 }
 export default mutations;

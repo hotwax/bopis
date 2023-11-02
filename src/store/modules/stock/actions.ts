@@ -17,7 +17,7 @@ const actions: ActionTree<StockState, RootState> = {
 
       const resp: any = await StockService.getInventoryAvailableByFacility(payload);
       if (!hasError(resp)) {
-        commit(types.STOCK_ADD_PRODUCT, { productId: payload.productId, stock: resp.data })
+        commit(types.STOCK_ADD_PRODUCT, { productId: payload.productId, facilityId: this.state.user.currentFacility.facilityId, stock: resp.data })
       } else {
         throw resp.data;
       }
