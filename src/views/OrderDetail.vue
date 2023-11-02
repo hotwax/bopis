@@ -174,6 +174,7 @@ import { OrderService } from "@/services/OrderService";
 import RejectOrderModal from "@/components/RejectOrderModal.vue";
 import { translate } from "@hotwax/dxp-components";
 import EditPickerModal from "@/components/EditPickerModal.vue";
+import emitter from '@/event-bus'
 
 export default defineComponent({
   name: "OrderDetail",
@@ -382,6 +383,7 @@ export default defineComponent({
     }
   },
   async mounted() {
+    emitter.emit("presentLoader")
     await this.getOrderDetail(this.orderId, this.orderPartSeqId, this.orderType);
 
     // fetch customer details and rejection reasons only when we get the orders information
@@ -389,6 +391,7 @@ export default defineComponent({
       await this.getCustomerContactDetails()
       await this.fetchRejectReasons();
     }
+    emitter.emit("dismissLoader")
   },
   setup() {
     const store = useStore();
