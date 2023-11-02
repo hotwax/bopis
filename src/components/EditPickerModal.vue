@@ -71,28 +71,28 @@ import { PicklistService } from "@/services/PicklistService";
 export default defineComponent({
   name: "EditPickersModal",
   components: { 
-    IonButtons,
     IonButton,
+    IonButtons,
     IonContent,
     IonHeader,
     IonIcon,
+    IonItem,
     IonFab,
     IonFabButton,
-    IonTitle,
-    IonToolbar,
     IonLabel,
-    IonItem,
     IonList,
     IonListHeader,
+    IonTitle,
+    IonToolbar,
     IonRadio,
     IonRadioGroup,
-    IonSearchbar,
+    IonSearchbar
   },
   data () {
     return {
-      selectedPicker: {} as any,
-      queryString: '',
       availablePickers: [] as any,
+      queryString: '',
+      selectedPicker: {} as any,
       selectedPickerId: this.order.pickerIds[0]
     }
   },
@@ -190,8 +190,8 @@ export default defineComponent({
           throw resp.data
         }
       } catch (err) {
-        showToast(translate('Something went wrong, could not edit picker(s)'))
-        console.error('Something went wrong, could not edit picker(s)')
+        showToast(translate('Something went wrong, could not edit picker.'))
+        console.error('Something went wrong, could not edit picker')
       }
     },
     closeModal() {
