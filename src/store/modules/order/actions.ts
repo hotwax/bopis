@@ -104,7 +104,7 @@ const actions: ActionTree<OrderState , RootState> ={
     } else if(orderType === 'packed') {
       payload['shipmentStatusId']= "SHIPMENT_PACKED"
     } else {
-      dispatch('order/updateCurrent', { order: {} })
+      dispatch('updateCurrent', { order: {} })
       return;
     }
 
@@ -177,7 +177,11 @@ const actions: ActionTree<OrderState , RootState> ={
             }, []),
             placedDate: orderItem.orderDate,
             shippingInstructions: orderItem.shippingInstructions,
-            orderType: orderType
+            orderType: orderType,
+            pickers: orderItem.pickers ? (orderItem.pickers.reduce((names: any, picker: string) => {
+              names.push(picker.split('/')[1]);
+              return names;
+            }, [])).join(', ') : ""
           }
         })
 
