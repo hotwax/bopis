@@ -66,10 +66,13 @@
               <p>{{ order.shippingInstructions }}</p>
             </ion-label>
           </ion-item>
-          <ion-item v-if="orderType === 'packed' && order.pickers" lines="none">
-            <ion-label v-if="configurePicker">
+          <ion-item v-if="orderType === 'packed' && configurePicker && order.pickers" lines="none">
+            <ion-label>
               {{ order.pickers ? translate("Picked by", { pickers: order.pickers }) : translate("No picker assigned.") }}
             </ion-label>
+            <ion-button :disabled="!hasPermission(Actions.APP_ORDER_UPDATE)" fill="outline" @click="editPicker(order, order.part, currentFacility.facilityId)">
+              {{ translate("Change") }}
+            </ion-button>
           </ion-item>
           <div v-if="orderType === 'open'" class="ion-margin-top ion-hide-md-down">
             <!-- TODO: implement functionality to change shipping address -->
@@ -170,6 +173,7 @@ import ShipToCustomerModal from "@/components/ShipToCustomerModal.vue";
 import { OrderService } from "@/services/OrderService";
 import RejectOrderModal from "@/components/RejectOrderModal.vue";
 import { translate } from "@hotwax/dxp-components";
+import EditPickerModal from "@/components/EditPickerModal.vue";
 
 export default defineComponent({
   name: "OrderDetail",
@@ -217,6 +221,14 @@ export default defineComponent({
         componentProps: { order, part, facilityId }
       });
       return assignPickerModal.present();
+    },
+    async editPicker(order: any, part: any, facilityId: any) {
+      const editPickerModal = await modalController.create({
+        component: EditPickerModal,
+        componentProps: { order, part, facilityId }
+      });
+      return editPickerModal.present();
+
     },
     async deliverShipment(order: any) {
       await this.store.dispatch('order/deliverShipment', order)
