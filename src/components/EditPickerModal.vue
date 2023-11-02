@@ -31,7 +31,7 @@
       </div>
     </ion-list>
     <ion-fab vertical="bottom" horizontal="end" slot="fixed">
-      <ion-fab-button :disabled="isPickerChanged()" @click="confirmSave()">
+      <ion-fab-button :disabled="isPickerAlreadySelected()" @click="confirmSave()">
         <ion-icon :icon="saveOutline" />
       </ion-fab-button>
     </ion-fab>
@@ -56,8 +56,8 @@ import {
   IonRadio,
   IonRadioGroup,
   IonSearchbar,
-  modalController,
-  alertController
+  alertController,
+  modalController
 } from "@ionic/vue";
 import { defineComponent } from "vue";
 import { close, saveOutline } from "ionicons/icons";
@@ -105,7 +105,7 @@ export default defineComponent({
     updateSelectedPicker(id: string) {
       this.selectedPicker = this.availablePickers.find((picker: any) => picker.id == id)
     },
-    async findPickers(pickerIds?: Array<any>) {
+    async findPickers() {
       let inputFields = {}
       this.availablePickers = []
 
@@ -200,7 +200,7 @@ export default defineComponent({
     getAlreadyAssignedPicker() {
       this.selectedPicker = this.availablePickers.find((picker: any) => this.selectedPickerId === picker.id)
     },
-    isPickerChanged() {
+    isPickerAlreadySelected() {
       return this.selectedPicker.id === this.selectedPickerId
     }
   },
