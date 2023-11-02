@@ -90,7 +90,7 @@ export default defineComponent({
   props: ['order', 'part', 'facilityId'],
   data () {
     return {
-      selectedPicker: this.order.pickers,
+      selectedPicker: '',
       queryString: '',
       availablePickers: [],
       isScrollable: true
