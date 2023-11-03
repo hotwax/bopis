@@ -176,6 +176,7 @@
   "Warehouse": "倉庫",
   "will be removed from your dashboard. This action cannot be undone.": "{ productName } will be removed from your dashboard.{ space } This action cannot be undone.",
   "Worn Display": "すり切れたディスプレイ",
+  "This order will be removed from your dashboard. This action cannot be undone.": "この注文はダッシュボードから削除されます。{ space } この操作は元に戻せません。",
   "Update notification preferences": "Update notification preferences",
   "View shipping orders along with pickup orders.": "店舗受取の注文と一緒に配送注文を表示します",
   "You do not have permission to access this page": "このページにアクセスする権限がありません",

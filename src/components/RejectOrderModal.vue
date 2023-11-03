@@ -91,13 +91,28 @@ export default defineComponent({
       modalController.dismiss({ dismissed: true });
     },
     async confirmSave() {
-      const part = { ...this.order.part, items: this.order.part.items.map((item: any) => ({ ...item, reason: this.rejectReasonId })) };
-      this.store.dispatch('order/setUnfillableOrderOrItem', { orderId: this.order.orderId, part }).then((resp) => {
-        if (resp) {
-          // Mark current order as rejected
-          this.store.dispatch('order/updateCurrent', { order: { ...this.order, rejected: true } })
-        }
-      })
+      const alert = await alertController
+        .create({
+          header: translate('Reject Order'),
+          message: translate(`This order will be removed from your dashboard. This action cannot be undone.`, { space: '<br /><br />' }),
+          buttons: [{
+            text: translate('Cancel'),
+            role: 'cancel'
+          }, {
+            text: translate('Reject'),
+            handler: () => {
+              const part = { ...this.order.part, items: this.order.part.items.map((item: any) => ({ ...item, reason: this.rejectReasonId })) };
+              this.store.dispatch('order/setUnfillableOrderOrItem', { orderId: this.order.orderId, part }).then((resp) => {
+                if (resp) {
+                  // Mark current order as rejected
+                  this.store.dispatch('order/updateCurrent', { order: { ...this.order, rejected: true } })
+                }
+                this.closeModal();
+              })
+            },
+          }]
+        });
+      return alert.present();
     }
   },
   setup() {

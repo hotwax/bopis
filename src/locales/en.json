@@ -177,6 +177,7 @@
   "Warehouse": "Warehouse",
   "will be removed from your dashboard. This action cannot be undone.": "{ productName } will be removed from your dashboard.{ space } This action cannot be undone.",
   "Worn Display": "Worn Display",
+  "This order will be removed from your dashboard. This action cannot be undone.": "This order will be removed from your dashboard.{ space } This action cannot be undone.",
   "Update notification preferences": "Update notification preferences",
   "View shipping orders along with pickup orders.": "View shipping orders along with pickup orders.",
   "You do not have permission to access this page": "You do not have permission to access this page",

@@ -177,6 +177,7 @@
   "Warehouse": "Almacén",
   "will be removed from your dashboard. This action cannot be undone.": "{ productName } will be removed from your dashboard.{ space } This action cannot be undone.",
   "Worn Display": "Pantalla desgastada",
+  "This order will be removed from your dashboard. This action cannot be undone.": "Este pedido será eliminado de tu panel de control.{ space } Esta acción no se puede deshacer.",
   "Update notification preferences": "Update notification preferences",
   "View shipping orders along with pickup orders.": "Ver órdenes de envío junto con órdenes de recogida.",
   "You do not have permission to access this page": "No tienes permiso para acceder a esta página",
