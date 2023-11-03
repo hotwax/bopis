@@ -7,7 +7,6 @@
         </ion-button>
       </ion-buttons>
       <ion-title>{{ translate("Assign Pickers") }}</ion-title>
-      <ion-button fill="clear" slot="end" @click="readyForPickup()">{{ part.shipmentMethodEnum?.shipmentMethodEnumId === 'STOREPICKUP' ? translate("Ready for pickup") : translate("Ready to ship") }}</ion-button>
     </ion-toolbar>
   </ion-header>
 
@@ -38,6 +37,12 @@
       />
     </ion-infinite-scroll>
   </ion-content>
+
+  <ion-fab vertical="bottom" horizontal="end" slot="fixed">
+    <ion-fab-button @click="readyForPickup()">
+      <ion-icon :icon="saveOutline" />
+    </ion-fab-button>
+  </ion-fab>
 </template>
 
 <script>
@@ -45,6 +50,8 @@ import {
   IonButtons,
   IonButton,
   IonContent,
+  IonFab,
+  IonFabButton,
   IonHeader,
   IonIcon,
   IonItem,
@@ -60,7 +67,7 @@ import {
   IonInfiniteScrollContent,
   modalController } from "@ionic/vue";
 import { defineComponent } from "vue";
-import { closeOutline } from "ionicons/icons";
+import { closeOutline, saveOutline } from "ionicons/icons";
 import { useStore } from "vuex";
 import { showToast } from "@/utils";
 import { hasError } from '@/adapter'
@@ -73,6 +80,8 @@ export default defineComponent({
     IonButtons,
     IonButton,
     IonContent,
+    IonFab,
+    IonFabButton,
     IonHeader,
     IonIcon,
     IonItem,
@@ -191,6 +200,7 @@ export default defineComponent({
 
     return {
       closeOutline,
+      saveOutline,
       store,
       translate
     };
