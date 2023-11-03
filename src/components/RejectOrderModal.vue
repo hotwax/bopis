@@ -105,7 +105,9 @@ export default defineComponent({
               this.store.dispatch('order/setUnfillableOrderOrItem', { orderId: this.order.orderId, part }).then((resp) => {
                 if (resp) {
                   // Mark current order as rejected
-                  this.store.dispatch('order/updateCurrent', { order: { ...this.order, rejected: true } })
+                  const order = { ...this.order, part: { ...this.order.part, items: [] }, rejected: true };
+
+                  this.store.dispatch('order/updateCurrent', { order })
                 }
                 this.closeModal();
               })
