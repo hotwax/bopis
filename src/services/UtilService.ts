@@ -25,8 +25,17 @@ const fetchStatusDesc = async (query: any): Promise <any>  => {
   });
 }
 
+const resetPicker = async (payload: any): Promise<any> => {
+  return api({
+    url: "/service/resetPicker",
+    method: "post",
+    data: payload
+  })
+}
+
 export const UtilService = {
   fetchPaymentMethodTypeDesc,
   fetchRejectReasons,
-  fetchStatusDesc
+  fetchStatusDesc,
+  resetPicker
 }

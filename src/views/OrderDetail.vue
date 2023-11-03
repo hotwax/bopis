@@ -71,10 +71,13 @@
               <p>{{ order.shippingInstructions }}</p>
             </ion-label>
           </ion-item>
-          <ion-item v-if="orderType === 'packed' && order.pickers" lines="none">
-            <ion-label v-if="configurePicker">
+          <ion-item v-if="orderType === 'packed' && configurePicker && order.pickers" lines="none">
+            <ion-label>
               {{ order.pickers ? translate("Picked by", { pickers: order.pickers }) : translate("No picker assigned.") }}
             </ion-label>
+            <ion-button :disabled="!hasPermission(Actions.APP_ORDER_UPDATE)" fill="outline" @click="editPicker(order)">
+              {{ translate("Change") }}
+            </ion-button>
           </ion-item>
           <div v-if="orderType === 'open'" class="ion-margin-top ion-hide-md-down">
             <!-- TODO: implement functionality to change shipping address -->
@@ -175,6 +178,8 @@ import ShipToCustomerModal from "@/components/ShipToCustomerModal.vue";
 import { OrderService } from "@/services/OrderService";
 import RejectOrderModal from "@/components/RejectOrderModal.vue";
 import { translate } from "@hotwax/dxp-components";
+import EditPickerModal from "@/components/EditPickerModal.vue";
+import emitter from '@/event-bus'
 
 export default defineComponent({
   name: "OrderDetail",
@@ -222,6 +227,23 @@ export default defineComponent({
         componentProps: { order, part, facilityId }
       });
       return assignPickerModal.present();
+    },
+    async editPicker(order: any) {
+      const editPickerModal = await modalController.create({
+        component: EditPickerModal,
+        componentProps: { order }
+      });
+
+      editPickerModal.onDidDismiss().then((result) => {
+        if(result.data?.selectedPicker){
+          const selectedPicker = result.data.selectedPicker
+          this.order.pickers = selectedPicker.name
+          this.order.pickerIds = [selectedPicker.id]
+          this.store.dispatch('order/updateCurrent', { order: this.order })
+        }
+      })
+
+      return editPickerModal.present();
     },
     async deliverShipment(order: any) {
       await this.store.dispatch('order/deliverShipment', order)
@@ -366,6 +388,7 @@ export default defineComponent({
     }
   },
   async mounted() {
+    emitter.emit("presentLoader")
     await this.getOrderDetail(this.orderId, this.orderPartSeqId, this.orderType);
 
     // fetch customer details and rejection reasons only when we get the orders information
@@ -373,6 +396,7 @@ export default defineComponent({
       await this.getCustomerContactDetails()
       await this.fetchRejectReasons();
     }
+    emitter.emit("dismissLoader")
   },
   setup() {
     const store = useStore();
