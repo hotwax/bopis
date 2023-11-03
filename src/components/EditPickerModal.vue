@@ -176,11 +176,11 @@ export default defineComponent({
       return alert.present();
     },
     async resetPicker() {
-      const pickerIds = this.selectedPicker.id
+      const pickerId = this.selectedPicker.id
       // Api call to remove already selected picker and assign new picker
       try {
         const resp = await UtilService.resetPicker({
-          pickerIds,
+          pickerIds: pickerId,
           picklistId: this.order.picklistId
         });
 

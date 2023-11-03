@@ -182,9 +182,9 @@ const actions: ActionTree<OrderState , RootState> ={
               names.push(picker.split('/')[1]);
               return names;
             }, [])).join(', ') : "",
-            pickerIds: orderItem.pickers ? (orderItem.pickers.reduce((names: any, picker: string) => {
-              names.push(picker.split('/')[0]);
-              return names;
+            pickerIds: orderItem.pickers ? (orderItem.pickers.reduce((ids: any, picker: string) => {
+              ids.push(picker.split('/')[0]);
+              return ids;
             }, [])) : "",
             picklistId: orderItem.picklistId
           }
@@ -267,9 +267,9 @@ const actions: ActionTree<OrderState , RootState> ={
               names.push(picker.split('/')[1]);
               return names;
             }, [])).join(', ') : "",
-            pickerIds: orderItem.pickers ? (orderItem.pickers.reduce((names: any, picker: string) => {
-              names.push(picker.split('/')[0]);
-              return names;
+            pickerIds: orderItem.pickers ? (orderItem.pickers.reduce((ids: any, picker: string) => {
+              ids.push(picker.split('/')[0]);
+              return ids;
             }, [])) : "",
             picklistId: orderItem.picklistId 
           }
