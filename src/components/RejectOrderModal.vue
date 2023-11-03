@@ -97,7 +97,6 @@ export default defineComponent({
           // Mark current order as rejected
           this.store.dispatch('order/updateCurrent', { order: { ...this.order, rejected: true } })
         }
-        this.closeModal();
       })
     }
   },
