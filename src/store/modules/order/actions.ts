@@ -478,10 +478,13 @@ const actions: ActionTree<OrderState , RootState> ={
             }
           })
         }
-        // Added ready to handover because we need to show the user that the order has moved to the packed tab (ready to handover)
-        await dispatch('updateCurrent', { order : { ...payload.order, readyToHandover: true } })
-
-        showToast(translate("Order packed and ready for delivery"))
+        // Adding readyToHandover or readyToShip because we need to show the user that the order has moved to the packed tab
+        if(payload.order.part.shipmentMethodEnum.shipmentMethodEnumId === 'STOREPICKUP'){
+          payload.order = { ...payload.order, readyToHandover: true }
+        }else {
+          payload.order = { ...payload.order, readyToShip: true }
+        }
+        await dispatch('updateCurrent', { order : payload.order })
       } else {
         showToast(translate("Something went wrong"))
       }

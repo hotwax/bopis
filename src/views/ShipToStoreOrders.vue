@@ -357,7 +357,7 @@ export default defineComponent({
     },
 
     async sendReadyForPickupEmail(order: any) {
-      const header = translate('Resend ready for pickup email')
+      const header = translate('Resend email')
       const message = translate('An email notification will be sent to that their order is ready for pickup.', { customerName: `${order.firstName} ${order.lastName}` })
 
       const alert = await alertController

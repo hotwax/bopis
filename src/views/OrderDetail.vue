@@ -11,7 +11,7 @@
           <ion-button :disabled="!order?.orderId" @click="openOrderItemRejHistoryModal()">
             <ion-icon slot="icon-only" :icon="timeOutline" />
           </ion-button>
-          <ion-button v-if="orderType === 'open'" class="ion-hide-md-up" :disabled="!order?.orderId || !hasPermission(Actions.APP_ORDER_UPDATE) || order.readyToHandover || order.rejected" @click="rejectOrder()">
+          <ion-button v-if="orderType === 'open'" class="ion-hide-md-up" :disabled="!order?.orderId || !hasPermission(Actions.APP_ORDER_UPDATE) || order.readyToHandover || order.readyToShip || order.rejected" @click="rejectOrder()">
             <ion-icon slot="icon-only" color="danger" :icon="bagRemoveOutline" />
           </ion-button>
           <ion-button v-else-if="orderType === 'packed' && showPackingSlip" :class="order.part?.shipmentMethodEnum?.shipmentMethodEnumId !== 'STOREPICKUP' ? 'ion-hide-md-up' : ''" :disabled="!order?.orderId || !hasPermission(Actions.APP_ORDER_UPDATE) || order.handovered || order.shipped" @click="order.part?.shipmentMethodEnum?.shipmentMethodEnumId === 'STOREPICKUP' ? printPackingSlip(order) : printShippingLabelAndPackingSlip(order)">
@@ -28,10 +28,15 @@
       </div>
       <main v-else>
         <aside>
-          <ion-item v-if="order.readyToHandover || order.rejected" color="light" lines="none">
-            <ion-icon :icon="order.readyToHandover ? checkmarkCircleOutline : closeCircleOutline" :color="order.readyToHandover ? 'success' : 'danger'" slot="start" />
-            <ion-label class="ion-text-wrap">{{ order.readyToHandover ? translate("Order is now ready to handover.") : translate("Order has been rejected.") }}</ion-label>
+          <ion-item v-if="order.readyToHandover || order.readyToShip" color="light" lines="none">
+            <ion-icon :icon="checkmarkCircleOutline" color="success" slot="start" />
+            <ion-label class="ion-text-wrap">{{ order.readyToHandover ? translate("Order is now ready to handover.") : translate("Order is now ready to be shipped.") }}</ion-label>
           </ion-item>
+          <ion-item v-else-if="order.rejected" color="light" lines="none">
+            <ion-icon :icon="closeCircleOutline" color="danger" slot="start" />
+            <ion-label class="ion-text-wrap">{{ translate("Order has been rejected.") }}</ion-label>
+          </ion-item>
+
           <ion-item v-if="order.handovered || order.shipped" color="light" lines="none">
             <ion-icon :icon="checkmarkCircleOutline" color="success" slot="start" />
             <ion-label class="ion-text-wrap">{{ order.handovered ? translate("Order is successfully handed over to customer.") : translate("Order is successfully shipped.") }}</ion-label>
@@ -56,7 +61,7 @@
           <ion-item v-if="customerEmail" lines="none">
             <ion-icon :icon="mailOutline" slot="start" />
             <ion-label>{{ customerEmail }}</ion-label>
-            <ion-button fill="clear" @click="copyToClipboard(customerEmail)">
+            <ion-button fill="clear" @click="copyToClipboard(customerEmail, false)">
               <ion-icon color="medium" :icon="copyOutline"/>
             </ion-button>
           </ion-item>
@@ -73,10 +78,10 @@
           </ion-item>
           <div v-if="orderType === 'open'" class="ion-margin-top ion-hide-md-down">
             <!-- TODO: implement functionality to change shipping address -->
-            <ion-button :disabled="!hasPermission(Actions.APP_ORDER_UPDATE) || order.readyToHandover || order.rejected" expand="block" @click="readyForPickup(order, order.part)">
+            <ion-button :disabled="!hasPermission(Actions.APP_ORDER_UPDATE) || order.readyToHandover || order.readyToShip || order.rejected" expand="block" @click="readyForPickup(order, order.part)">
               {{ order?.part?.shipmentMethodEnum?.shipmentMethodEnumId === 'STOREPICKUP' ? translate("Ready for pickup") : translate("Ready to ship") }}
             </ion-button>
-            <ion-button :disabled="!hasPermission(Actions.APP_ORDER_UPDATE) || order.readyToHandover || order.rejected" expand="block" color="danger" fill="outline" @click="rejectOrder()">
+            <ion-button :disabled="!hasPermission(Actions.APP_ORDER_UPDATE) || order.readyToHandover || order.readyToShip || order.rejected" expand="block" color="danger" fill="outline" @click="rejectOrder()">
               {{ translate("Reject Order") }}
             </ion-button>
           </div>
@@ -95,7 +100,7 @@
             <ProductListItem :item="item" />
             <!-- Checking for true as a string as the settingValue contains a string and not boolean-->
             <div v-if="orderType === 'open' && partialOrderRejectionConfig?.settingValue == 'true'" class="border-top">
-              <ion-button :disabled="order?.readyToHandover || order?.rejected" fill="clear" @click="openReportAnIssueModal(item)">
+              <ion-button :disabled="order?.readyToHandover || order.readyToShip || order?.rejected" fill="clear" @click="openReportAnIssueModal(item)">
                 {{ translate("Report an issue") }}
               </ion-button>
             </div>
@@ -105,7 +110,7 @@
       </main>
 
       <ion-fab v-if="orderType === 'open' && order?.orderId" class="ion-hide-md-up" vertical="bottom" horizontal="end" slot="fixed" @click="readyForPickup(order, order.part)">
-        <ion-fab-button :disabled="!hasPermission(Actions.APP_ORDER_UPDATE) || order.readyToHandover || order.rejected">
+        <ion-fab-button :disabled="!hasPermission(Actions.APP_ORDER_UPDATE) || order.readyToHandover || order.readyToShip || order.rejected">
           <ion-icon :icon="order.part?.shipmentMethodEnum?.shipmentMethodEnumId === 'STOREPICKUP' ? bagHandleOutline : giftOutline" />
         </ion-fab-button>
       </ion-fab>
@@ -327,7 +332,7 @@ export default defineComponent({
       }
     },
     async sendReadyForPickupEmail(order: any) {
-      const header = translate('Resend ready for pickup email')
+      const header = translate('Resend email')
       const message = translate('An email notification will be sent to that their order is ready for pickup.', { customerName: order.customer.name });
 
       const alert = await alertController

@@ -15,13 +15,17 @@ const showToast = async (message: string) => {
   return toast.present();
 }
 
-const copyToClipboard = async (text: any) => {
+const copyToClipboard = async (text: any, showCopiedValue?: boolean) => {
   const { Clipboard } = Plugins;
 
   await Clipboard.write({
     string: text,
   }).then(() => {
-    showToast(translate("Copied", { text }));
+    if(showCopiedValue) {
+      showToast(translate("Copied", { text }));
+    } else {
+      showToast(translate("Copied to clipboard"));
+    }
   });
 }
 
