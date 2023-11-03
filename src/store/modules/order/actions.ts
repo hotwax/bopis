@@ -485,6 +485,7 @@ const actions: ActionTree<OrderState , RootState> ={
           payload.order = { ...payload.order, readyToShip: true }
         }
         await dispatch('updateCurrent', { order : payload.order })
+        showToast(translate("Order packed and ready for delivery"))
       } else {
         showToast(translate("Something went wrong"))
       }
