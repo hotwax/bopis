@@ -100,7 +100,7 @@
               </ion-button>
             </div>
           </ion-card>
-          <p v-if="!order.part?.items?.length" class="empty-state">{{ translate('No items found') }}</p>
+          <p v-if="!order.part?.items?.length" class="empty-state">{{ translate('All order items are rejected') }}</p>
         </section>
       </main>
 
