@@ -28,6 +28,7 @@
       </div>
       <main v-else>
         <aside>
+          <!-- Order Status -->
           <ion-item v-if="order.readyToHandover || order.readyToShip" color="light" lines="none">
             <ion-icon :icon="checkmarkCircleOutline" color="success" slot="start" />
             <ion-label class="ion-text-wrap">{{ order.readyToHandover ? translate("Order is now ready to handover.") : translate("Order is now ready to be shipped.") }}</ion-label>
@@ -41,30 +42,31 @@
             <ion-icon :icon="checkmarkCircleOutline" color="success" slot="start" />
             <ion-label class="ion-text-wrap">{{ order.handovered ? translate("Order is successfully handed over to customer.") : translate("Order is successfully shipped.") }}</ion-label>
           </ion-item>
-          <ion-item lines="none">
-            <ion-label class="ion-text-wrap">
-              <h2>{{ order?.orderName ? order?.orderName : order?.orderId }}</h2>
-            </ion-label>
+
+          <!-- Order Details -->
+          <ion-row class="order-header ion-justify-content-between ion-wrap">
+            <h1>{{ order?.orderName ? order?.orderName : order?.orderId }}</h1>
             <ion-chip outline v-if="order?.orderPaymentPreferences" slot="end">
               <ion-icon :icon="cashOutline"/>
               <ion-label>{{ getPaymentMethodDesc(order?.orderPaymentPreferences[0]?.paymentMethodTypeId)}} : {{ getStatusDesc(order?.orderPaymentPreferences[0]?.statusId) }}</ion-label>
             </ion-chip>
-          </ion-item>
+          </ion-row>
           <ion-list>
             <ion-item lines="none">
-              <ion-label class="ion-text-wrap">
-                <h2>{{ order?.customer?.name }}</h2>
+              <ion-label>
+                {{ order?.customer?.name }}
               </ion-label>
-              <ion-badge v-if="order?.placedDate" slot="end">{{ timeFromNow(order.placedDate) }}</ion-badge>
+              <ion-badge slot="end" v-if="order?.placedDate" slot="end">{{ timeFromNow(order.placedDate) }}</ion-badge>
             </ion-item>
           </ion-list>
           <ion-item v-if="customerEmail" lines="none">
             <ion-icon :icon="mailOutline" slot="start" />
             <ion-label>{{ customerEmail }}</ion-label>
-            <ion-button fill="clear" @click="copyToClipboard(customerEmail, false)">
+            <ion-button slot="end" fill="clear" @click="copyToClipboard(customerEmail, false)">
               <ion-icon color="medium" :icon="copyOutline"/>
             </ion-button>
           </ion-item>
+          <!-- to-do is add customer phone number -->
           <ion-item v-if="order?.shippingInstructions" color="light" lines="none">
             <ion-label class="ion-text-wrap">
               <p class="overline">{{ translate("Handling Instructions") }}</p>
@@ -76,7 +78,7 @@
               {{ order.pickers ? translate("Picked by", { pickers: order.pickers }) : translate("No picker assigned.") }}
             </ion-label>
             <ion-button :disabled="!hasPermission(Actions.APP_ORDER_UPDATE)" fill="outline" @click="editPicker(order)">
-              {{ translate("Change") }}
+              {{ translate("Edit") }}
             </ion-button>
           </ion-item>
           <div v-if="orderType === 'open'" class="ion-margin-top ion-hide-md-down">
@@ -90,12 +92,15 @@
           </div>
 
           <div v-else-if="orderType === 'packed'" class="ion-margin-top ion-hide-md-down">
-            <ion-button :disabled="!hasPermission(Actions.APP_ORDER_UPDATE) || order.handovered || order.shipped" expand="block" fill="outline" @click="order?.part?.shipmentMethodEnum?.shipmentMethodEnumId === 'STOREPICKUP' ? sendReadyForPickupEmail(order) : printShippingLabelAndPackingSlip(order)">
+            <ion-button :disabled="!hasPermission(Actions.APP_ORDER_UPDATE) || order.handovered || order.shipped" size="large" expand="block" fill="outline" @click="order?.part?.shipmentMethodEnum?.shipmentMethodEnumId === 'STOREPICKUP' ? sendReadyForPickupEmail(order) : printShippingLabelAndPackingSlip(order)">
               {{ order?.part?.shipmentMethodEnum?.shipmentMethodEnumId === 'STOREPICKUP' ? translate("Resend customer email") : translate("Generate shipping documents") }}
             </ion-button>
-            <ion-button :disabled="!hasPermission(Actions.APP_ORDER_UPDATE) || order.handovered || order.shipped" expand="block" @click="deliverShipment(order)">
+            <ion-button class="ion-margin-top" :disabled="!hasPermission(Actions.APP_ORDER_UPDATE) || order.handovered || order.shipped" expand="block" @click="deliverShipment(order)">
               {{ order.part?.shipmentMethodEnum?.shipmentMethodEnumId === 'STOREPICKUP' ? translate("Handover") : translate("Ship") }}
             </ion-button>
+            <ion-label>
+              If you cannot fulfill this order, the *customer* will be sent an email with alternate fulfillment options and this order will be removed from your dashboard.
+            </ion-label>
           </div>
         </aside>
         <section>
@@ -437,6 +442,9 @@ export default defineComponent({
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: var(--spacer-base);
+    max-width: 1200px;
+    margin-inline: auto;
+    margin-top: var(--spacer-xl);
   }
 
   aside {
