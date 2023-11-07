@@ -12,7 +12,7 @@ import emitter from "@/event-bus"
 import { mapGetters, useStore } from 'vuex';
 import { initialise, resetConfig } from '@/adapter'
 import { useRouter } from 'vue-router';
-import { translate } from "@hotwax/dxp-components";
+import { translate, useProductIdentificationStore } from "@hotwax/dxp-components";
 
 export default defineComponent({
   name: 'App',
@@ -59,7 +59,8 @@ export default defineComponent({
   computed: {
     ...mapGetters({
       userToken: 'user/getUserToken',
-      instanceUrl: 'user/getInstanceUrl'
+      instanceUrl: 'user/getInstanceUrl',
+      currentEComStore: 'user/getCurrentEComStore'
     })
   },
   created() {
@@ -88,6 +89,8 @@ export default defineComponent({
       });
     emitter.on('presentLoader', this.presentLoader);
     emitter.on('dismissLoader', this.dismissLoader);
+
+    await useProductIdentificationStore().getIdentificationPref(this.currentEComStore?.productStoreId)
   },
   unmounted() {
     emitter.off('presentLoader', this.presentLoader);

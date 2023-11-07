@@ -16,10 +16,8 @@
           <ShopifyImg :src="getProduct(item.productId).mainImageUrl" size="small" />
         </ion-thumbnail>
         <ion-label>
-          <h5>{{ getProduct(item.productId).brandName }}</h5>
-          <h2>{{ getProduct(item.productId).productName }}</h2>
-          <p v-if="$filters.getFeature(getProduct(item.productId).featureHierarchy, '1/COLOR/')">{{ translate("Color") }}: {{ $filters.getFeature(getProduct(item.productId).featureHierarchy, '1/COLOR/') }}</p>
-          <p v-if="$filters.getFeature(getProduct(item.productId).featureHierarchy, '1/SIZE/')">{{ translate("Size") }}: {{ $filters.getFeature(getProduct(item.productId).featureHierarchy, '1/SIZE/') }}</p>
+          <h2>{{ getProductIdentificationValue(productIdentificationPref.primaryId, getProduct(item.productId)) }}</h2>
+          <h5>{{ getProductIdentificationValue(productIdentificationPref.secondaryId, getProduct(item.productId)) }}</h5>
         </ion-label>
         <ion-label slot="end" class="ion-text-right">
           <h2>{{ getRejectReasonDescription(item.changeReasonEnumId) }}</h2>
@@ -51,11 +49,11 @@ import {
   IonToolbar,
   modalController
 } from '@ionic/vue';
-import { defineComponent } from 'vue';
+import { computed, defineComponent } from 'vue';
 import { closeOutline } from 'ionicons/icons';
 import { mapGetters, useStore } from "vuex";
 import { DateTime } from 'luxon';
-import { translate } from '@hotwax/dxp-components';
+import { getProductIdentificationValue, translate, useProductIdentificationStore } from '@hotwax/dxp-components';
 
 export default defineComponent({
   name: "OrderItemRejHistoryModal",
@@ -103,8 +101,13 @@ export default defineComponent({
   setup() {
     const store = useStore();
 
+    const productIdentificationStore = useProductIdentificationStore();
+    let productIdentificationPref = computed(() => productIdentificationStore.getProductIdentificationPref)
+
     return {
       closeOutline,
+      getProductIdentificationValue,
+      productIdentificationPref,
       store,
       translate
     };

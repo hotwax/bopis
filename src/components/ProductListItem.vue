@@ -4,12 +4,8 @@
       <ShopifyImg :src="getProduct(item.productId).mainImageUrl" size="small" />
     </ion-thumbnail>
     <ion-label class="ion-text-wrap">
-      <h5>{{ getProduct(item.productId).brandName }}</h5>
-      <h2>{{ getProduct(item.productId).productName }}</h2>
-      <p class="ion-text-wrap">{{ getProduct(item.productId).internalName }}</p>
-      <p class="overline">{{ $filters.getIdentificationId(getProduct(item.productId).goodIdentifications, goodIdentificationTypeId) }}</p>
-      <p v-if="$filters.getFeature(getProduct(item.productId).featureHierarchy, '1/COLOR/')">{{ translate("Color") }}: {{ $filters.getFeature(getProduct(item.productId).featureHierarchy, '1/COLOR/') }}</p>
-      <p v-if="$filters.getFeature(getProduct(item.productId).featureHierarchy, '1/SIZE/')">{{ translate("Size") }}: {{ $filters.getFeature(getProduct(item.productId).featureHierarchy, '1/SIZE/') }}</p>
+      <h2>{{ getProductIdentificationValue(productIdentificationPref.primaryId, getProduct(item.productId)) }}</h2>
+      <p class="ion-text-wrap">{{ getProductIdentificationValue(productIdentificationPref.secondaryId, getProduct(item.productId)) }}</p>
     </ion-label>
     <!-- Only show stock if its not a ship to store order -->
     <div v-if="!isShipToStoreOrder">
@@ -25,10 +21,10 @@
 </template>
 
 <script lang="ts">
-import { defineComponent } from "vue";
+import { computed, defineComponent } from "vue";
 import { IonButton, IonIcon, IonItem, IonLabel, IonNote, IonSpinner, IonThumbnail } from "@ionic/vue";
 import { mapGetters, useStore } from 'vuex';
-import { ShopifyImg, translate } from '@hotwax/dxp-components'
+import { getProductIdentificationValue, ShopifyImg, translate, useProductIdentificationStore } from '@hotwax/dxp-components'
 import { cubeOutline } from 'ionicons/icons'
 
 export default defineComponent({
@@ -74,7 +70,11 @@ export default defineComponent({
   },
   setup() {
     const store = useStore();
+    const productIdentificationStore = useProductIdentificationStore();
+    let productIdentificationPref = computed(() => productIdentificationStore.getProductIdentificationPref)
     return {
+      getProductIdentificationValue,
+      productIdentificationPref,
       cubeOutline,
       store,
       translate

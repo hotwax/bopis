@@ -25,7 +25,7 @@ import {
   resetPermissions,
   setPermissions
 } from '@/authorization'
-import { translate, useAuthStore, useUserStore } from '@hotwax/dxp-components'
+import { translate, useAuthStore, useProductIdentificationStore, useUserStore } from '@hotwax/dxp-components'
 import { generateDeviceId, generateTopicName } from '@/utils/firebase'
 import emitter from '@/event-bus'
 
@@ -84,6 +84,9 @@ const actions: ActionTree<UserState, RootState> = {
       const currentFacility = userProfile.facilities.length > 0 ? userProfile.facilities[0] : {};
       const currentEComStore = await UserService.getCurrentEComStore(token, currentFacility?.facilityId);
       const userPreference = await getUserPreference(token, getters['getBaseUrl'], 'BOPIS_PREFERENCE')
+
+      // Get product identification from api using dxp-component
+      await useProductIdentificationStore().getIdentificationPref(currentEComStore?.productStoreId)
 
       /*  ---- Guard clauses ends here --- */
 
@@ -144,6 +147,7 @@ const actions: ActionTree<UserState, RootState> = {
     
     const authStore = useAuthStore()
     const userStore = useUserStore()
+    const productIdentificationStore = useProductIdentificationStore();
     // TODO add any other tasks if need
     dispatch("product/clearProducts", null, { root: true })
     dispatch('clearNotificationState')
@@ -157,6 +161,7 @@ const actions: ActionTree<UserState, RootState> = {
     // reset plugin state on logout
     authStore.$reset()
     userStore.$reset()
+    productIdentificationStore.$reset()
 
     // If we get any url in logout api resp then we will redirect the user to the url
     if(redirectionUrl) {
@@ -181,6 +186,8 @@ const actions: ActionTree<UserState, RootState> = {
     commit(types.USER_CURRENT_FACILITY_UPDATED, facility);
     const eComStore = await UserService.getCurrentEComStore(undefined, facility?.facilityId);
     commit(types.USER_CURRENT_ECOM_STORE_UPDATED, eComStore)
+
+    await useProductIdentificationStore().getIdentificationPref(eComStore?.productStoreId)
   },
   /**
    * Set User Instance Url

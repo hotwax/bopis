@@ -36,7 +36,7 @@ import { dxpComponents } from '@hotwax/dxp-components'
 import localeMessages from './locales';
 import { login, logout, loader } from '@/utils/user';
 import { addNotification, storeClientRegistrationToken } from '@/utils/firebase';
-import { getConfig, initialise, setUserLocale } from '@/adapter';
+import { getConfig, getProductIdentificationPref, initialise, setProductIdentificationPref, setUserLocale } from '@/adapter';
 
 const app = createApp(App)
   .use(IonicVue, {
@@ -55,11 +55,13 @@ const app = createApp(App)
     appFirebaseVapidKey: process.env.VUE_APP_FIREBASE_VAPID_KEY,
     defaultImgUrl: require("@/assets/images/defaultImage.png"),
     getConfig,
+    getProductIdentificationPref,
     initialise,
     loader,
     login,
     logout,
     localeMessages,
+    setProductIdentificationPref,
     setUserLocale,
     storeClientRegistrationToken,
   });
