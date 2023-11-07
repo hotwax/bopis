@@ -47,6 +47,7 @@
   "Go to Launchpad": "Go to Launchpad",
   "Handover": "Handover",
   "Handling Instructions": "Handling Instructions",
+  "If you cannot fulfill this order, will be sent an email with alternate fulfillment options and this order will be removed from your dashboard.": "If you cannot fulfill this order, {customerName} will be sent an email with alternate fulfillment options and this order will be removed from your dashboard.",
   "Inactive store": "Inactive store",
   "in stock": "in stock",
   "Incoming": "Incoming",

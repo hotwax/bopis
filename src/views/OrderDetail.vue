@@ -90,7 +90,7 @@
               {{ translate("Reject Order") }}
             </ion-button>
             <ion-label>
-              If you cannot fulfill this order, the *customer* will be sent an email with alternate fulfillment options and this order will be removed from your dashboard.
+              {{ translate("If you cannot fulfill this order, will be sent an email with alternate fulfillment options and this order will be removed from your dashboard.", { customerName: order?.customer?.name }) }}
             </ion-label>
           </div>
 
