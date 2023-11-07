@@ -4,11 +4,8 @@
       <ShopifyImg :src="getProduct(item.productId).mainImageUrl" size="small" />
     </ion-thumbnail>
     <ion-label class="ion-text-wrap">
-      <h5>{{ getProduct(item.productId).brandName }}</h5>
       <h2>{{ getProductIdentificationValue(productIdentificationPref.primaryId, getProduct(item.productId)) }}</h2>
       <p class="ion-text-wrap">{{ getProductIdentificationValue(productIdentificationPref.secondaryId, getProduct(item.productId)) }}</p>
-      <p v-if="$filters.getFeature(getProduct(item.productId).featureHierarchy, '1/COLOR/')">{{ translate("Color") }}: {{ $filters.getFeature(getProduct(item.productId).featureHierarchy, '1/COLOR/') }}</p>
-      <p v-if="$filters.getFeature(getProduct(item.productId).featureHierarchy, '1/SIZE/')">{{ translate("Size") }}: {{ $filters.getFeature(getProduct(item.productId).featureHierarchy, '1/SIZE/') }}</p>
     </ion-label>
     <!-- Only show stock if its not a ship to store order -->
     <div v-if="!isShipToStoreOrder">

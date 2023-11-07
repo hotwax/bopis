@@ -12,8 +12,8 @@
           <ShopifyImg :src="product.mainImageUrl" size="large"/>
           <ion-item lines="none">
             <ion-label>
-              <p>{{ getProductIdentificationValue(productIdentificationPref.secondaryId, product) }}</p>
-              {{ getProductIdentificationValue(productIdentificationPref.primaryId, product) }}
+              <p>{{ getProductIdentificationValue(productIdentificationPref.primaryId, product) }}</p>
+              {{ getProductIdentificationValue(productIdentificationPref.secondaryId, product) }}
             </ion-label>
           </ion-item>
         </ion-card>
