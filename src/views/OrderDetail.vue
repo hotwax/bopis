@@ -44,9 +44,9 @@
           </ion-item>
 
           <!-- Order Details -->
-          <ion-row class="order-header ion-justify-content-between ion-wrap">
+          <ion-row class="order-header ion-justify-content-between ion-wrap ion-align-items-center">
             <h1>{{ order?.orderName ? order?.orderName : order?.orderId }}</h1>
-            <ion-chip outline v-if="order?.orderPaymentPreferences" slot="end">
+            <ion-chip outline v-if="order?.orderPaymentPreferences">
               <ion-icon :icon="cashOutline"/>
               <ion-label>{{ getPaymentMethodDesc(order?.orderPaymentPreferences[0]?.paymentMethodTypeId)}} : {{ getStatusDesc(order?.orderPaymentPreferences[0]?.statusId) }}</ion-label>
             </ion-chip>
