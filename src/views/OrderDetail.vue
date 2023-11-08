@@ -86,12 +86,12 @@
             <ion-button :disabled="!hasPermission(Actions.APP_ORDER_UPDATE) || order.readyToHandover || order.readyToShip || order.rejected" expand="block" @click="readyForPickup(order, order.part)">
               {{ order?.part?.shipmentMethodEnum?.shipmentMethodEnumId === 'STOREPICKUP' ? translate("Ready for pickup") : translate("Ready to ship") }}
             </ion-button>
-            <ion-button :disabled="!hasPermission(Actions.APP_ORDER_UPDATE) || order.readyToHandover || order.readyToShip || order.rejected" expand="block" color="danger" fill="outline" @click="rejectOrder()">
+            <ion-button class="ion-margin-top" :disabled="!hasPermission(Actions.APP_ORDER_UPDATE) || order.readyToHandover || order.readyToShip || order.rejected" expand="block" color="danger" fill="outline" @click="rejectOrder()">
               {{ translate("Reject Order") }}
             </ion-button>
-            <ion-label>
+            <p>
               {{ translate("If you cannot fulfill this order, will be sent an email with alternate fulfillment options and this order will be removed from your dashboard.", { customerName: order?.customer?.name }) }}
-            </ion-label>
+            </p>
           </div>
 
           <div v-else-if="orderType === 'packed'" class="ion-margin-top ion-hide-md-down">
