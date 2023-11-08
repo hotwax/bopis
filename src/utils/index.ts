@@ -47,4 +47,14 @@ const getFeature = (featureHierarchy: any, featureKey: string) => {
   return featureValue;
 }
 
-export { copyToClipboard, showToast, handleDateTimeInput, getFeature }
+const formatPhoneNumber = (countryCode: string | null, areaCode: string | null, contactNumber: string | null)  => {
+  if (countryCode && areaCode) {
+    return `+${countryCode}-${areaCode}-${contactNumber}`;
+  } else if (countryCode) {
+    return `+${countryCode}-${contactNumber}`;
+  } else {
+    return contactNumber;
+  }
+}
+
+export { copyToClipboard, showToast, handleDateTimeInput, getFeature, formatPhoneNumber }
