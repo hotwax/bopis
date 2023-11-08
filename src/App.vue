@@ -89,8 +89,6 @@ export default defineComponent({
       });
     emitter.on('presentLoader', this.presentLoader);
     emitter.on('dismissLoader', this.dismissLoader);
-
-    await useProductIdentificationStore().getIdentificationPref(this.currentEComStore?.productStoreId)
   },
   unmounted() {
     emitter.off('presentLoader', this.presentLoader);
