@@ -85,9 +85,6 @@ const actions: ActionTree<UserState, RootState> = {
       const currentEComStore = await UserService.getCurrentEComStore(token, currentFacility?.facilityId);
       const userPreference = await getUserPreference(token, getters['getBaseUrl'], 'BOPIS_PREFERENCE')
 
-      // Get product identification from api using dxp-component
-      await useProductIdentificationStore().getIdentificationPref(currentEComStore?.productStoreId)
-
       /*  ---- Guard clauses ends here --- */
 
       setPermissions(appPermissions);
@@ -103,6 +100,9 @@ const actions: ActionTree<UserState, RootState> = {
       commit(types.USER_PREFERENCE_UPDATED, userPreference)
       commit(types.USER_PERMISSIONS_UPDATED, appPermissions);
       commit(types.USER_TOKEN_CHANGED, { newToken: token })
+
+      // Get product identification from api using dxp-component
+      await useProductIdentificationStore().getIdentificationPref(currentEComStore?.productStoreId)
 
       //fetching partial order rejection config for BOPIS orders
       await dispatch("getPartialOrderRejectionConfig");
