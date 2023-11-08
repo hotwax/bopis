@@ -46,7 +46,7 @@
           <!-- Order Details -->
           <ion-row class="order-header ion-justify-content-between ion-wrap ion-align-items-center">
             <h1>{{ order?.orderName ? order?.orderName : order?.orderId }}</h1>
-            <ion-chip outline v-if="order?.orderPaymentPreferences">
+            <ion-chip outline v-if="order?.orderPaymentPreferences" :color="statusColor[order?.orderPaymentPreferences[0]?.statusId]">
               <ion-icon :icon="cashOutline"/>
               <ion-label>{{ getPaymentMethodDesc(order?.orderPaymentPreferences[0]?.paymentMethodTypeId)}} : {{ getStatusDesc(order?.orderPaymentPreferences[0]?.statusId) }}</ion-label>
             </ion-chip>
@@ -66,7 +66,13 @@
               <ion-icon color="medium" :icon="copyOutline"/>
             </ion-button>
           </ion-item>
-          <!-- to-do is add customer phone number -->
+          <ion-item v-if="order?.contactNumber" lines="none">
+            <ion-icon :icon="callOutline" slot="start" />
+            <ion-label>{{ order?.contactNumber }}</ion-label>
+            <ion-button slot="end" fill="clear" @click="copyToClipboard(order?.contactNumber, false)">
+              <ion-icon color="medium" :icon="copyOutline"/>
+            </ion-button>
+          </ion-item>
           <ion-item v-if="order?.shippingInstructions" color="light" lines="none">
             <ion-label class="ion-text-wrap">
               <p class="overline">{{ translate("Handling Instructions") }}</p>
@@ -158,6 +164,7 @@ import { defineComponent } from "vue";
 import { mapGetters, useStore } from "vuex";
 import {
   accessibilityOutline,
+  callOutline,
   cashOutline,
   copyOutline,
   closeCircleOutline,
@@ -212,7 +219,17 @@ export default defineComponent({
   },
   data() {
     return {
-      customerEmail: ''
+      customerEmail: '',
+      statusColor: {
+        'PAYMENT_AUTHORIZED': '',
+        'PAYMENT_CANCELLED': 'warning',
+        'PAYMENT_DECLINED': 'warning',
+        'PAYMENT_NOT_AUTH': 'warning',
+        'PAYMENT_NOT_RECEIVED': 'warning',
+        'PAYMENT_RECEIVED': '',
+        'PAYMENT_REFUNDED': 'warning',
+        'PAYMENT_SETTLED': ''
+      } as any
     }
   },
   computed: {
@@ -276,6 +293,7 @@ export default defineComponent({
       }
       await this.store.dispatch("order/getOrderDetail", { payload, orderType })
       await this.store.dispatch("order/fetchPaymentDetail")
+      await this.store.dispatch("order/getShippingPhoneNumber")
     },
     async rejectOrder() {
       const rejectOrderModal = await modalController.create({
@@ -414,6 +432,7 @@ export default defineComponent({
       accessibilityOutline,
       bagHandleOutline,
       bagRemoveOutline,
+      callOutline,
       cashOutline,
       copyOutline,
       copyToClipboard,

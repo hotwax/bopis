@@ -895,7 +895,22 @@ const actions: ActionTree<OrderState , RootState> ={
     } catch (err) {
       console.error("Error in fetching payment detail.", err);
     }
-  }
+  },
+
+  async getShippingPhoneNumber({ commit, state }) {
+    let order = JSON.parse(JSON.stringify(state.current))
+
+    try {
+      const contactNumber = await OrderService.getShippingPhoneNumber(order.orderId);
+      order = {
+        ...order,
+        contactNumber
+      }
+    } catch (err) {
+      console.error("Error in fetching customer phone number for current order", err);
+    }
+    commit(types.ORDER_CURRENT_UPDATED, { order });
+  },
 }
 
 export default actions;

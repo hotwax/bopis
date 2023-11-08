@@ -2,7 +2,7 @@ import { api, client, hasError } from '@/adapter';
 import emitter from '@/event-bus';
 import { translate } from '@hotwax/dxp-components';
 import store from '@/store';
-import { showToast } from '@/utils';
+import { formatPhoneNumber, showToast } from '@/utils';
 
 const getOpenOrders = async (payload: any): Promise <any> => {
   return api({
@@ -211,6 +211,53 @@ const printShippingLabelAndPackingSlip = async (shipmentIds: Array<string>): Pro
   }
 }
 
+const getShippingPhoneNumber = async (orderId: string): Promise<any> => {
+  let phoneNumber = '' as any
+  try {
+    let resp: any = await api({
+      url: "performFind",
+      method: "get",
+      params: {
+        "entityName": "OrderContactMech",
+        "inputFields": {
+          orderId,
+          "contactMechPurposeTypeId": "PHONE_SHIPPING"
+        },
+        "fieldList": ["orderId", "contactMechPurposeTypeId", "contactMechId"],
+        "viewSize": 1
+      }
+    })
+
+    if (!hasError(resp)) {
+      const contactMechId = resp.data.docs[0].contactMechId
+      resp = await api({
+        url: "performFind",
+        method: "get",
+        params: {
+          "entityName": "TelecomNumber",
+          "inputFields": {
+            contactMechId,
+          },
+          "fieldList": ["contactNumber", "countryCode", "areaCode", "contactMechId"],
+          "viewSize": 1
+        }
+      })
+
+      if (!hasError(resp)) {
+        const { contactNumber, countryCode, areaCode } =  resp.data.docs[0]
+        phoneNumber = formatPhoneNumber(countryCode, areaCode, contactNumber)
+      } else {
+        throw resp.data
+      }
+    } else {
+      throw resp.data
+    }
+  } catch (err) {
+    console.error('Failed to fetch customer phone number', err)
+  }
+  return phoneNumber
+}
+
 export const OrderService = {
   fetchOrderPaymentPreferences,
   getOpenOrders,
@@ -227,5 +274,6 @@ export const OrderService = {
   getShipToStoreOrders,
   getShipmentItems,
   getCustomerContactDetails,
+  getShippingPhoneNumber,
   printShippingLabelAndPackingSlip
 }
