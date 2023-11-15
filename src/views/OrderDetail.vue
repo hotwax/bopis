@@ -123,13 +123,13 @@
         </section>
       </main>
 
-      <ion-fab v-if="orderType === 'open' && order?.orderId" class="ion-hide-md-up" vertical="bottom" horizontal="end" slot="fixed" @click="readyForPickup(order, order.part)">
-        <ion-fab-button :disabled="!hasPermission(Actions.APP_ORDER_UPDATE) || order.readyToHandover || order.readyToShip || order.rejected">
+      <ion-fab v-if="orderType === 'open' && order?.orderId" class="ion-hide-md-up" vertical="bottom" horizontal="end" slot="fixed" >
+        <ion-fab-button :disabled="!hasPermission(Actions.APP_ORDER_UPDATE) || order.readyToHandover || order.readyToShip || order.rejected" @click="readyForPickup(order, order.part)">
           <ion-icon :icon="order.part?.shipmentMethodEnum?.shipmentMethodEnumId === 'STOREPICKUP' ? bagHandleOutline : giftOutline" />
         </ion-fab-button>
       </ion-fab>
-      <ion-fab v-else-if="orderType === 'packed' && order?.orderId" class="ion-hide-md-up" vertical="bottom" horizontal="end" slot="fixed" @click="deliverShipment(order)">
-        <ion-fab-button :disabled="!hasPermission(Actions.APP_ORDER_UPDATE) || order.handovered || order.shipped">
+      <ion-fab v-else-if="orderType === 'packed' && order?.orderId" class="ion-hide-md-up" vertical="bottom" horizontal="end" slot="fixed" >
+        <ion-fab-button :disabled="!hasPermission(Actions.APP_ORDER_UPDATE) || order.handovered || order.shipped" @click="deliverShipment(order)">
           <ion-icon :icon="order.part?.shipmentMethodEnum?.shipmentMethodEnumId === 'STOREPICKUP' ? accessibilityOutline : checkmarkOutline" />
         </ion-fab-button>
       </ion-fab>
