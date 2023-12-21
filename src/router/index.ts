@@ -13,7 +13,7 @@ import { showToast } from '@/utils'
 import { translate } from '@hotwax/dxp-components'
 
 import 'vue-router'
-import { Login, useAuthStore } from '@hotwax/dxp-components';
+import { DxpLogin, useAuthStore } from '@hotwax/dxp-components';
 import { loader } from '@/utils/user';
 
 // Defining types for the meta values
@@ -82,8 +82,8 @@ const routes: Array<RouteRecordRaw> = [
   },
   {
     path: '/login',
-    name: 'Login',
-    component: Login,
+    name: 'DxpLogin',
+    component: DxpLogin,
     beforeEnter: loginGuard
   },
   {
