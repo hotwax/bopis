@@ -307,10 +307,7 @@ export default defineComponent({
       } else if (this.segmentSelected === 'packed') {
         this.getPackedOrders().then(() => { event.target.complete() });
       } else {
-        console.log('refresh the orders')
-        this.getCompletedOrders().then(() => {
-          console.log('refresh the orders2')
-          event.target.complete() });
+        this.getCompletedOrders().then(() => { event.target.complete() });
       }
     },
     async viewOrder(order: any, part: any, orderType: any) {
