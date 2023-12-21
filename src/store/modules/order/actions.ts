@@ -104,8 +104,7 @@ const actions: ActionTree<OrderState , RootState> ={
     } else if(orderType === 'packed') {
       payload['shipmentStatusId']= "SHIPMENT_PACKED"
     } else {
-      dispatch('updateCurrent', { order: {} })
-      return;
+      payload['shipmentStatusId']= "ITEM_COMPLETED"
     }
 
     const current = state.current as any

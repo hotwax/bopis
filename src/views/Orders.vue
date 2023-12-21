@@ -126,7 +126,7 @@
       </div>
       <div v-if="segmentSelected === 'completed'">
         <div v-for="(order, index) in getOrdersByPart(completedOrders)" :key="index" v-show="order.parts.length > 0">
-          <ion-card>
+          <ion-card @click.prevent="viewOrder(order, order.part, 'completed')">
             <ion-item lines="none">
               <ion-label class="ion-text-wrap">
                 <h1>{{ order.customer.name }}</h1>
@@ -307,7 +307,10 @@ export default defineComponent({
       } else if (this.segmentSelected === 'packed') {
         this.getPackedOrders().then(() => { event.target.complete() });
       } else {
-        this.getCompletedOrders().then(() => { event.target.complete() });
+        console.log('refresh the orders')
+        this.getCompletedOrders().then(() => {
+          console.log('refresh the orders2')
+          event.target.complete() });
       }
     },
     async viewOrder(order: any, part: any, orderType: any) {
