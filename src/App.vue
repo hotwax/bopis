@@ -89,10 +89,6 @@ export default defineComponent({
       });
     emitter.on('presentLoader', this.presentLoader);
     emitter.on('dismissLoader', this.dismissLoader);
-
-    // Get product identification from api using dxp-component
-    await useProductIdentificationStore().getIdentificationPref(this.currentEComStore?.productStoreId)
-      .catch((error) => console.error(error));
   },
   unmounted() {
     emitter.off('presentLoader', this.presentLoader);
