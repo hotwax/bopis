@@ -66,21 +66,17 @@
             {{ translate('Control what your customers are allowed to edit on their order when they are editing their order on Re-route Fulfillment.') }}
           </ion-card-content>
           <ion-item lines="none">
-            <ion-label>{{ translate("Delivery method") }}</ion-label>
-            <ion-toggle :disabled="!hasPermission(Actions.APP_RF_CONFIG_UPDATE) || Object.keys(rerouteFulfillmentConfig.allowDeliveryMethodUpdate).length == 0" :checked="rerouteFulfillmentConfig.allowDeliveryMethodUpdate.settingValue" @ionChange="updateRerouteFulfillmentConfiguration(rerouteFulfillmentConfig.allowDeliveryMethodUpdate, $event.detail.checked)" slot="end" />
+            <ion-toggle label-placement="start" :disabled="!hasPermission(Actions.APP_RF_CONFIG_UPDATE) || Object.keys(rerouteFulfillmentConfig.allowDeliveryMethodUpdate).length == 0" :checked="rerouteFulfillmentConfig.allowDeliveryMethodUpdate.settingValue" @ionChange="updateRerouteFulfillmentConfiguration(rerouteFulfillmentConfig.allowDeliveryMethodUpdate, $event.detail.checked)">{{ translate("Delivery method") }}</ion-toggle>
           </ion-item>
           <ion-item lines="none">
-            <ion-label>{{ translate("Delivery address") }}</ion-label>
-            <ion-toggle :disabled="!hasPermission(Actions.APP_RF_CONFIG_UPDATE) || Object.keys(rerouteFulfillmentConfig.allowDeliveryAddressUpdate).length == 0" :checked="rerouteFulfillmentConfig.allowDeliveryAddressUpdate.settingValue" @ionChange="updateRerouteFulfillmentConfiguration(rerouteFulfillmentConfig.allowDeliveryAddressUpdate, $event.detail.checked)" slot="end" />
+            <ion-toggle label-placement="start" :disabled="!hasPermission(Actions.APP_RF_CONFIG_UPDATE) || Object.keys(rerouteFulfillmentConfig.allowDeliveryAddressUpdate).length == 0" :checked="rerouteFulfillmentConfig.allowDeliveryAddressUpdate.settingValue" @ionChange="updateRerouteFulfillmentConfiguration(rerouteFulfillmentConfig.allowDeliveryAddressUpdate, $event.detail.checked)">{{ translate("Delivery address") }}</ion-toggle>
           </ion-item>
           <ion-item lines="none">
-            <ion-label>{{ translate("Pick up location") }}</ion-label>
-            <ion-toggle :disabled="!hasPermission(Actions.APP_RF_CONFIG_UPDATE) || Object.keys(rerouteFulfillmentConfig.allowPickupUpdate).length == 0" :checked="rerouteFulfillmentConfig.allowPickupUpdate.settingValue" @ionChange="updateRerouteFulfillmentConfiguration(rerouteFulfillmentConfig.allowPickupUpdate, $event.detail.checked)" slot="end" />
+            <ion-toggle label-placement="start" :disabled="!hasPermission(Actions.APP_RF_CONFIG_UPDATE) || Object.keys(rerouteFulfillmentConfig.allowPickupUpdate).length == 0" :checked="rerouteFulfillmentConfig.allowPickupUpdate.settingValue" @ionChange="updateRerouteFulfillmentConfiguration(rerouteFulfillmentConfig.allowPickupUpdate, $event.detail.checked)">{{ translate("Pick up location") }}</ion-toggle>
           </ion-item>
           <ion-item lines="none">
-            <ion-label>{{ translate("Cancel order before fulfillment") }}</ion-label>
             <!-- <p>Uploading order cancelations to Shopify is currently disabled. Order cancelations in HotWax will not be synced to Shopify.</p> -->
-            <ion-toggle :disabled="!hasPermission(Actions.APP_RF_CONFIG_UPDATE) || Object.keys(rerouteFulfillmentConfig.allowCancel).length == 0" :checked="rerouteFulfillmentConfig.allowCancel.settingValue" @ionChange="updateRerouteFulfillmentConfiguration(rerouteFulfillmentConfig.allowCancel, $event.detail.checked)" slot="end" />
+            <ion-toggle label-placement="start" :disabled="!hasPermission(Actions.APP_RF_CONFIG_UPDATE) || Object.keys(rerouteFulfillmentConfig.allowCancel).length == 0" :checked="rerouteFulfillmentConfig.allowCancel.settingValue" @ionChange="updateRerouteFulfillmentConfiguration(rerouteFulfillmentConfig.allowCancel, $event.detail.checked)">{{ translate("Cancel order before fulfillment") }}</ion-toggle>
           </ion-item>
           <ion-item lines="none">
             <ion-label>{{ translate("Shipment method") }}</ion-label>
@@ -100,8 +96,7 @@
             {{ translate('Specify whether you reject a BOPIS order partially when any order item inventory is insufficient at the store.') }}
           </ion-card-content>
           <ion-item lines="none">
-            <ion-label>{{ translate("Allow partial rejection") }}</ion-label>
-            <ion-toggle :disabled="!hasPermission(Actions.APP_PARTIAL_ORDER_REJECTION_CONFIG_UPDATE)" :checked="partialOrderRejectionConfig.settingValue" @ionChange="updatePartialOrderRejectionConfig(partialOrderRejectionConfig, $event.detail.checked)" slot="end" />
+            <ion-toggle label-placement="start" :disabled="!hasPermission(Actions.APP_PARTIAL_ORDER_REJECTION_CONFIG_UPDATE)" :checked="partialOrderRejectionConfig.settingValue" @ionChange="updatePartialOrderRejectionConfig(partialOrderRejectionConfig, $event.detail.checked)">{{ translate("Allow partial rejection") }}</ion-toggle>
           </ion-item>
         </ion-card>
         
@@ -146,8 +141,7 @@
             {{ translate('View shipping orders along with pickup orders.') }}
           </ion-card-content>
           <ion-item lines="none">
-            <ion-label>{{ translate("Show shipping orders") }}</ion-label>
-            <ion-toggle :checked="showShippingOrders" @ionChange="setShowShippingOrdersPreference($event)" slot="end" />
+            <ion-toggle label-placement="start" :checked="showShippingOrders" @ionChange="setShowShippingOrdersPreference($event)">{{ translate("Show shipping orders") }}</ion-toggle>
           </ion-item>
         </ion-card>
 
@@ -161,8 +155,7 @@
             {{ translate('Packing slips help customer reconcile their order against the delivered items.') }}
           </ion-card-content>
           <ion-item lines="none">
-            <ion-label>{{ translate("Generate packing slips") }}</ion-label>
-            <ion-toggle :checked="showPackingSlip" @ionChange="setShowPackingSlipPreference($event)" slot="end" />
+            <ion-toggle label-placement="start" :checked="showPackingSlip" @ionChange="setShowPackingSlipPreference($event)">{{ translate("Generate packing slips") }}</ion-toggle>
           </ion-item>
         </ion-card>
 
@@ -176,8 +169,7 @@
             {{ translate('Track who picked orders by entering picker IDs when packing an order.') }}
           </ion-card-content>
           <ion-item lines="none">
-            <ion-label>{{ translate("Enable tracking") }}</ion-label>
-            <ion-toggle :checked="configurePicker" @ionChange="setConfigurePickerPreference($event)" slot="end" />
+            <ion-toggle label-placement="start" :checked="configurePicker" @ionChange="setConfigurePickerPreference($event)">{{ translate("Enable tracking") }}</ion-toggle>
           </ion-item>
         </ion-card>
 
@@ -192,8 +184,7 @@
           </ion-card-content>
           <ion-list>
             <ion-item :key="pref.enumId" v-for="pref in notificationPrefs" lines="none">
-              <ion-label class="ion-text-wrap">{{ pref.description }}</ion-label>
-              <ion-toggle @click="confirmNotificationPrefUpdate(pref.enumId, $event)" :checked="pref.isEnabled" slot="end" />
+              <ion-toggle label-placement="start" @click="confirmNotificationPrefUpdate(pref.enumId, $event)" :checked="pref.isEnabled">{{ pref.description }}</ion-toggle>
             </ion-item>
           </ion-list>
         </ion-card>
