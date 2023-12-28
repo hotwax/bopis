@@ -37,8 +37,7 @@
         <ion-input />
       </ion-item>
       <ion-item>
-        <ion-label>{{ translate("Shipping method") }}</ion-label>
-        <ion-select value="next-day">
+        <ion-select :label="translate('Shipping method')" value="next-day">
           <ion-select-option value="same-day">Same day</ion-select-option>
           <ion-select-option value="next-day">Next day</ion-select-option>
           <ion-select-option value="second-day">After 2 days</ion-select-option>
