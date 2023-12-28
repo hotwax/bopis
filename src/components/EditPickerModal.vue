@@ -1,4 +1,4 @@
-<template>
+  <template>
   <ion-header>
     <ion-toolbar>
       <ion-buttons slot="start">
@@ -22,8 +22,10 @@
         <ion-radio-group :value="selectedPicker.id">
           <ion-item v-for="(picker, index) in availablePickers" :key="index" @click="updateSelectedPicker(picker.id)">
             <ion-radio :value="picker.id">
-              {{ picker.name }}
-              <p>{{ picker.id }}</p>
+              <ion-label>
+                {{ picker.name }}
+                <p>{{ picker.id }}</p>
+              </ion-label>
             </ion-radio>
           </ion-item>
         </ion-radio-group>
@@ -46,6 +48,7 @@ import {
   IonIcon,
   IonFab,
   IonFabButton,
+  IonLabel,
   IonTitle,
   IonToolbar,
   IonItem,
@@ -77,6 +80,7 @@ export default defineComponent({
     IonItem,
     IonFab,
     IonFabButton,
+    IonLabel,
     IonList,
     IonListHeader,
     IonTitle,
