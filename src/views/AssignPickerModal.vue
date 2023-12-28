@@ -20,8 +20,7 @@
       <div>
         <ion-radio-group v-model="selectedPicker">
           <ion-item v-for="(picker, index) in availablePickers" :key="index">
-            <ion-label>{{ picker.name }}</ion-label>
-            <ion-radio slot="end" :value="picker.id" ></ion-radio>
+            <ion-radio :value="picker.id">{{ picker.name }}</ion-radio>
           </ion-item>
         </ion-radio-group>
       </div>
@@ -55,7 +54,6 @@ import {
   IonHeader,
   IonIcon,
   IonItem,
-  IonLabel,
   IonList,
   IonListHeader,
   IonRadio,
@@ -85,7 +83,6 @@ export default defineComponent({
     IonHeader,
     IonIcon,
     IonItem,
-    IonLabel,
     IonList,
     IonListHeader,
     IonRadio,
