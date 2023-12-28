@@ -11,30 +11,24 @@
   </ion-header>
 
   <ion-content>
-    <main>  
+    <main>
       <ion-item>
-        <ion-label position="fixed">{{ translate("First name") }}</ion-label>
-        <ion-input />
+        <ion-input :label="translate('First name')" label-placement="fixed" />
       </ion-item>
       <ion-item>
-        <ion-label position="fixed">{{ translate("Last name") }}</ion-label>
-        <ion-input />
+        <ion-input :label="translate('Last name')" label-placement="fixed" />
       </ion-item>
       <ion-item>
-        <ion-label position="fixed">{{ translate("Street") }}</ion-label>
-        <ion-input />
+        <ion-input :label="translate('Street')" label-placement="fixed" />
       </ion-item>
       <ion-item>
-        <ion-label position="fixed">{{ translate("City") }}</ion-label>
-        <ion-input />
+        <ion-input :label="translate('City')" label-placement="fixed" />
       </ion-item>
       <ion-item>
-        <ion-label position="fixed">{{ translate("State") }}</ion-label>
-        <ion-input />
+        <ion-input :label="translate('State')" label-placement="fixed" />
       </ion-item>
       <ion-item>
-        <ion-label position="fixed">{{ translate("Zipcode") }}</ion-label>
-        <ion-input />
+        <ion-input :label="translate('Zipcode')" label-placement="fixed" />
       </ion-item>
       <ion-item>
         <ion-select :label="translate('Shipping method')" value="next-day">
@@ -60,7 +54,6 @@ import {
   IonIcon,
   IonInput,
   IonItem,
-  IonLabel,
   IonSelect,
   IonSelectOption,
   IonTitle,
@@ -86,7 +79,6 @@ export default defineComponent({
     IonIcon,
     IonInput,
     IonItem,
-    IonLabel,
     IonSelect,
     IonSelectOption,
     IonTitle,
