@@ -240,7 +240,16 @@ const actions: ActionTree<UserState, RootState> = {
   async updatePartialOrderRejectionConfig ({ dispatch }, payload) {  
     let resp = {};
     try {
-      
+      if(!await UserService.isEnumExists("BOPIS_PART_ODR_REJ")) {
+        resp = await UserService.createEnumeration({
+          "enumId": "BOPIS_PART_ODR_REJ",
+          "enumTypeId": "PROD_STR_STNG",
+          "description": "BOPIS Partial Order Rejection",
+          "enumName": "BOPIS Partial Order Rejection",
+          "enumCode": "BOPIS_PART_ODR_REJ"
+        })
+      }
+
       if (!payload.fromDate) {
         //Create Product Store Setting
         payload = {
