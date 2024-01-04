@@ -74,7 +74,8 @@ const actions: ActionTree<OrderState , RootState> ={
               return arr
             }, []),
             placedDate: orderItem.orderDate,
-            shippingInstructions: orderItem.shippingInstructions
+            shippingInstructions: orderItem.shippingInstructions,
+            shipGroupSeqId: orderItem.shipGroupSeqId
           }
         })
 
@@ -274,7 +275,8 @@ const actions: ActionTree<OrderState , RootState> ={
               ids.push(picker.split('/')[0]);
               return ids;
             }, [])) : "",
-            picklistId: orderItem.picklistId 
+            picklistId: orderItem.picklistId,
+            shipGroupSeqId: orderItem.shipGroupSeqId
           }
         })
         this.dispatch('product/getProductInformation', { orders });
@@ -978,7 +980,7 @@ const actions: ActionTree<OrderState , RootState> ={
       }
     })
 
-    // this.dispatch('util/fetchFacilityTypeInformation', facilityTypeIds)
+    this.dispatch('util/fetchFacilityTypeInformation', facilityTypeIds)
 
     // fetching reservation information for shipGroup from OISGIR doc
     await dispatch('fetchAdditionalShipGroupForOrder', { shipGroups });
@@ -1003,10 +1005,6 @@ const actions: ActionTree<OrderState , RootState> ={
     }
 
     const orderQueryPayload = prepareOrderQuery(params)
-    console.log(params);
-    console.log(orderQueryPayload);
-    
-    
 
     let resp, total, shipGroups: any = [];
 
@@ -1063,8 +1061,6 @@ const actions: ActionTree<OrderState , RootState> ={
     }
 
     order['shipGroups'] = shipGroups
-    console.log('final', shipGroups);
-    
 
     commit(types.ORDER_CURRENT_UPDATED, {order})
     return shipGroups;

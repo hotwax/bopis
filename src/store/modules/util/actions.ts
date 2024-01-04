@@ -120,7 +120,45 @@ const actions: ActionTree<UtilState, RootState> = {
     }
 
     return statusDesc;
-  }
+  },
+
+  async fetchFacilityTypeInformation({ commit, state }, facilityTypeIds) {
+    const facilityTypeDesc = JSON.parse(JSON.stringify(state.facilityTypeDesc))
+
+    const cachedFacilityTypeIds = Object.keys(facilityTypeDesc);
+    const facilityTypeIdFilter = [...new Set(facilityTypeIds.filter((facilityTypeId: any) => !cachedFacilityTypeIds.includes(facilityTypeId)))]
+
+    // If there are no facility types to fetch skip the API call
+    if (!facilityTypeIdFilter.length) return;
+
+    const payload = {
+      inputFields: {
+        facilityTypeId: facilityTypeIds,
+        facilityTypeId_op: 'in'
+      },
+      viewSize: facilityTypeIds.length,
+      entityName: 'FacilityType',
+      noConditionFind: 'Y',
+      distinct: "Y",
+      fieldList: ["facilityTypeId", "description"]
+    }
+
+    try {
+      const resp = await UtilService.fetchFacilityTypeInformation(payload);
+
+      if (!hasError(resp) && resp.data?.docs.length > 0) {
+        resp.data.docs.map((facilityType: any) => {
+          facilityTypeDesc[facilityType.facilityTypeId] = facilityType['description']
+        })
+
+        commit(types.UTIL_FACILITY_TYPE_UPDATED, facilityTypeDesc)
+      } else {
+        throw resp.data;
+      }
+    } catch (err) {
+      console.error('Failed to fetch description for facility types', err)
+    }
+  },
 }
 
 export default actions;

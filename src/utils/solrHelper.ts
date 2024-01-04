@@ -65,6 +65,10 @@ const prepareOrderQuery = (params: any) => {
     payload.json.filter.push(`shipGroupSeqId: ${params.shipGroupSeqId}`)
   }
 
+  if (params['-shipGroupSeqId']) {
+    payload.json.filter.push(`-shipGroupSeqId: ${params['-shipGroupSeqId']}`)
+  }
+
   if(params.orderItemStatusId) {
     payload.json.filter.push(`orderItemStatusId: ${params.orderItemStatusId}`)
   }
