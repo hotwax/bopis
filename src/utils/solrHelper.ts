@@ -8,7 +8,7 @@ const prepareOrderQuery = (params: any) => {
         "rows": viewSize,
         "sort": "orderDate desc",
         "group": true,
-        "group.field": "orderId",
+        "group.field": params.groupBy ? params.groupBy : "orderId",
         "group.limit": 1000,
         "group.ngroups": true,
         "q.op": "AND",
@@ -59,6 +59,10 @@ const prepareOrderQuery = (params: any) => {
 
   if (params.orderId) {
     payload.json.filter.push(`orderId: ${params.orderId}`)
+  }
+
+  if (params.shipGroupSeqId) {
+    payload.json.filter.push(`shipGroupSeqId: ${params.shipGroupSeqId}`)
   }
 
   if(params.orderItemStatusId) {
