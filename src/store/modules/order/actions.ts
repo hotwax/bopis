@@ -115,6 +115,7 @@ const actions: ActionTree<OrderState , RootState> ={
     // As one order can have multiple parts thus checking orderId and partSeq as well before making any api call
     if(current.orderId === payload.orderId && current.orderType === orderType && current.part?.orderPartSeqId === payload.orderPartSeqId) {
       this.dispatch('product/getProductInformation', { orders: [ current ] })
+      await dispatch('fetchShipGroupForOrder');
       return current 
     }
     if(orders.length) {
