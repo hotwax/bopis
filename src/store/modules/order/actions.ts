@@ -999,8 +999,8 @@ const actions: ActionTree<OrderState , RootState> ={
 
     const params = {
       groupBy: 'shipGroupSeqId',
-      'shipGroupSeqId': shipGroupSeqIds,
-      '-fulfillmentStatus': 'Rejected OR Cancelled',
+      'shipGroupSeqId': `(${shipGroupSeqIds.join(' OR ')})`,
+      '-fulfillmentStatus': '(Rejected OR Cancelled)',
       orderId: orderId
     }
 
@@ -1048,7 +1048,7 @@ const actions: ActionTree<OrderState , RootState> ={
     }
 
     try {
-      // this.dispatch('util/fetchPartyInformation', carrierPartyIds)
+      this.dispatch('util/fetchPartyInformation', carrierPartyIds)
       const shipmentTrackingCodes = await OrderService.fetchTrackingCodes(shipmentIds)
 
       shipGroups.find((shipGroup: any) => {

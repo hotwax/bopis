@@ -139,8 +139,7 @@
                   </ion-card-header>
         
                   <ion-item v-if="shipGroup.carrierPartyId">
-                    <!-- {{ getPartyName(shipGroup.carrierPartyId) }} -->
-                    {{ shipGroup.carrierPartyId }}
+                    {{ getPartyName(shipGroup.carrierPartyId) }}
                     <ion-label slot="end">{{ shipGroup.trackingCode }}</ion-label>
                     <ion-icon slot="end" :icon="locateOutline" />
                   </ion-item>
@@ -310,6 +309,7 @@ export default defineComponent({
       getProduct: 'product/getProduct',
       getProductStock: 'stock/getProductStock',
       getfacilityTypeDesc: 'util/getFacilityTypeDesc',
+      getPartyName: 'util/getPartyName',
     })
   },
   props: ['orderType', 'orderId', 'orderPartSeqId'],

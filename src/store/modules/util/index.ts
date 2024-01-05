@@ -12,6 +12,7 @@ const utilModule: Module<UtilState, RootState> = {
     paymentMethodTypeDesc: {},
     statusDesc: {},
     facilityTypeDesc: {},
+    partyNames: {},
   },
   getters,
   actions,

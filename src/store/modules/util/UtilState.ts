@@ -3,4 +3,5 @@ export default interface UtilState {
   paymentMethodTypeDesc: any;
   statusDesc: any;
   facilityTypeDesc: any;
+  partyNames: any;
 }
