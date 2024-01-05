@@ -300,9 +300,10 @@ const fetchTrackingCodes = async (shipmentIds: Array<string>): Promise<any> => {
   return shipmentTrackingCodes;
 }
 
-
 export const OrderService = {
   fetchOrderPaymentPreferences,
+  fetchTrackingCodes,
+  findOrderShipGroup,
   getOpenOrders,
   getOrderDetails,
   getCompletedOrders,
@@ -318,7 +319,5 @@ export const OrderService = {
   getShipmentItems,
   getCustomerContactDetails,
   getShippingPhoneNumber,
-  printShippingLabelAndPackingSlip,
-  findOrderShipGroup,
-  fetchTrackingCodes
+  printShippingLabelAndPackingSlip
 }

@@ -228,7 +228,6 @@ const actions: ActionTree<OrderState , RootState> ={
     try {
       resp = await OrderService.getPackedOrders(orderQueryPayload)
       if (resp.status === 200 && resp.data.grouped?.orderId?.ngroups > 0 && !hasError(resp)) {
-        
         let orders = resp?.data?.grouped?.orderId?.groups.map((order: any) => {
           const orderItem = order.doclist.docs[0]
           return {
@@ -945,7 +944,6 @@ const actions: ActionTree<OrderState , RootState> ={
       if (resp.status === 200 && !hasError(resp) && resp.data.grouped?.shipGroupSeqId.matches > 0) {
         total = resp.data.grouped.shipGroupSeqId.ngroups
         shipGroups = resp.data.grouped.shipGroupSeqId.groups
-
       } else {
         throw resp.data
       }
@@ -1039,7 +1037,7 @@ const actions: ActionTree<OrderState , RootState> ={
 
     const carrierPartyIds: Array<string> = [];
     const shipmentIds: Array<string> = [];
-    
+
 
     if (total) {
       shipGroups.map((shipGroup: any) => {
@@ -1061,8 +1059,6 @@ const actions: ActionTree<OrderState , RootState> ={
       console.error('Failed to fetch information for ship groups', err)
     }
 
-
-    // creating the key as orders as the product information action accept only the orders as a param
     this.dispatch('product/getProductInformation', { orders: [{ parts: shipGroups }] })
 
     order['shipGroups'] = shipGroups
