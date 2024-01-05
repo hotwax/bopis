@@ -157,6 +157,8 @@
                     <ion-label>
                       <p class="overline">{{ getProductIdentificationValue(productIdentificationPref.secondaryId, getProduct(item.productId)) }}</p>
                       {{ getProductIdentificationValue(productIdentificationPref.primaryId, getProduct(item.productId)) ? getProductIdentificationValue(productIdentificationPref.primaryId, getProduct(item.productId)) : getProduct(item.productId).productName }}
+                      <p>{{ translate("Color:", { color: getFeature(getProduct(item.productId).featureHierarchy, '1/COLOR') }) }}</p>
+                      <p>{{ translate("Size:", { size: getFeature(getProduct(item.productId).featureHierarchy, '1/SIZE') }) }}</p>
                     </ion-label>
                     <!-- TODO: add a spinner if the api takes too long to fetch the stock -->
                     <ion-note slot="end" v-if="getProductStock(item.productId, item.facilityId).quantityOnHandTotal >= 0">{{ getProductStock(item.productId, item.facilityId).quantityOnHandTotal }} {{ translate('pieces in stock') }}</ion-note>
@@ -241,7 +243,7 @@ import { Actions, hasPermission } from '@/authorization'
 import OrderItemRejHistoryModal from '@/components/OrderItemRejHistoryModal.vue';
 import ReportAnIssueModal from '@/components/ReportAnIssueModal.vue';
 import AssignPickerModal from "@/views/AssignPickerModal.vue";
-import { copyToClipboard, showToast } from '@/utils'
+import { copyToClipboard, getFeature, showToast } from '@/utils'
 import { DateTime } from "luxon";
 import { api, hasError } from '@/adapter';
 import ShipToCustomerModal from "@/components/ShipToCustomerModal.vue";
@@ -515,6 +517,7 @@ export default defineComponent({
       cubeOutline,
       getProductIdentificationValue,
       giftOutline,
+      getFeature,
       hasPermission,
       locateOutline,
       printOutline,
