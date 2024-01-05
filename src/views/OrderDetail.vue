@@ -121,7 +121,7 @@
           </ion-card>
           <p v-if="!order.part?.items?.length" class="empty-state">{{ translate('All order items are rejected') }}</p>
 
-          <ion-accordion-group>
+          <ion-accordion-group v-if="order.shipGroups?.length">
             <ion-accordion>
               <ion-item slot="header">
                 <ion-label>{{ translate("Other shipments in this order") }}</ion-label>
@@ -160,7 +160,7 @@
                       {{ getProductIdentificationValue(productIdentificationPref.primaryId, getProduct(item.productId)) ? getProductIdentificationValue(productIdentificationPref.primaryId, getProduct(item.productId)) : getProduct(item.productId).productName }}
                     </ion-label>
                     <!-- TODO: add a spinner if the api takes too long to fetch the stock -->
-                    <ion-note slot="end" v-if="getProductStock(item.productId, item.facilityId).quantityOnHandTotal">{{ getProductStock(item.productId, item.facilityId).quantityOnHandTotal }} {{ translate('pieces in stock') }}</ion-note>
+                    <ion-note slot="end" v-if="getProductStock(item.productId, item.facilityId).quantityOnHandTotal >= 0">{{ getProductStock(item.productId, item.facilityId).quantityOnHandTotal }} {{ translate('pieces in stock') }}</ion-note>
                     <ion-button slot="end" fill="clear" v-else size="small" @click.stop="fetchProductStock(item.productId)">
                       <ion-icon color="medium" slot="icon-only" :icon="cubeOutline"/>
                     </ion-button>
