@@ -986,7 +986,8 @@ const actions: ActionTree<OrderState , RootState> ={
 
   async fetchAdditionalShipGroupForOrder({ commit, state }, payload) {
     const order = JSON.parse(JSON.stringify(state.current))
-
+    
+    
     // return if orderId is not found on order
     if (!order?.orderId) {
       return;
@@ -994,18 +995,18 @@ const actions: ActionTree<OrderState , RootState> ={
 
     const shipGroupSeqIds = payload.shipGroups.map((shipGroup: any) => shipGroup.shipGroupSeqId)
     const orderId = order.orderId
-
+    
     const params = {
       groupBy: 'shipGroupSeqId',
       'shipGroupSeqId': `(${shipGroupSeqIds.join(' OR ')})`,
       '-fulfillmentStatus': '(Rejected OR Cancelled)',
       orderId: orderId
     }
-
+    
     const orderQueryPayload = prepareOrderQuery(params)
-
+    
     let resp, total, shipGroups: any = [];
-
+    
     try {
       resp = await OrderService.findOrderShipGroup(orderQueryPayload);
       if (resp.status === 200 && !hasError(resp) && resp.data.grouped?.shipGroupSeqId.matches > 0) {

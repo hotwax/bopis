@@ -59,6 +59,12 @@ const handleParameterMatching = (orderVal: any, parameterVal: any, operation?: s
   } else if (operation === 'AND') {
     return parameterVal.every((param: any) => orderVal === param)
   } else if (operation === 'NOT') {
+    if(parameterVal === '*') {
+      if(!orderVal) {
+        return true;
+      }
+      return false;
+    }
     return orderVal !== parameterVal
   } else if (!operation) {
     return orderVal === parameterVal
@@ -74,9 +80,7 @@ const getOrderCategory = (order: any) => {
     const paramKeys = Object.keys(parameters)
     // used every as to check against each filtering property
     
-    const isMatched = paramKeys.every((key: string) => {
-      return Object.prototype.hasOwnProperty.call(order, key) && handleParameterMatching(order[key], parameters[key].value, parameters[key]['OP'])
-    })
+    const isMatched = paramKeys.every((key: string) => Object.prototype.hasOwnProperty.call(order, key) && handleParameterMatching(order[key], parameters[key].value, parameters[key]['OP']))
 
     // return the value when all params matched for an order
     if (isMatched) {
