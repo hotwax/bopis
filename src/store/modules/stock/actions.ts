@@ -6,6 +6,7 @@ import * as types from './mutation-types'
 import { hasError } from '@/adapter'
 import { showToast } from '@/utils'
 import { translate } from "@hotwax/dxp-components";
+import logger from '@/logger'
 
 const actions: ActionTree<StockState, RootState> = {
   async fetchStock({ commit }, { productId }) {
@@ -22,7 +23,7 @@ const actions: ActionTree<StockState, RootState> = {
         throw resp.data;
       }
     } catch (err) {
-      console.error(err)
+      logger.error(err)
       showToast(translate('No data available!'))
     }
   }

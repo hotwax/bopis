@@ -9,6 +9,7 @@ import { translate } from "@hotwax/dxp-components";
 import emitter from '@/event-bus'
 import store from "@/store";
 import { prepareOrderQuery } from "@/utils/solrHelper";
+import logger from "@/logger";
 
 const actions: ActionTree<OrderState , RootState> ={
   async getOpenOrders({ commit, state }, payload) {
@@ -90,7 +91,7 @@ const actions: ActionTree<OrderState , RootState> ={
       }
       emitter.emit("dismissLoader");
     } catch(err) {
-      console.error(err)
+      logger.error(err)
       showToast(translate("Something went wrong"))
     }
 
@@ -199,7 +200,7 @@ const actions: ActionTree<OrderState , RootState> ={
         throw resp.data;
       }
     } catch (err) {
-      console.error(err)
+      logger.error(err)
     }
 
     await dispatch('updateCurrent', { order: currentOrder })
@@ -287,7 +288,7 @@ const actions: ActionTree<OrderState , RootState> ={
       }
       emitter.emit("dismissLoader");
     } catch(err) {
-      console.error(err)
+      logger.error(err)
       showToast(translate("Something went wrong"))
     }
 
@@ -356,7 +357,7 @@ const actions: ActionTree<OrderState , RootState> ={
       }
       emitter.emit("dismissLoader");
     } catch(err) {
-      console.error(err)
+      logger.error(err)
       showToast(translate("Something went wrong"))
     }
 
@@ -400,7 +401,7 @@ const actions: ActionTree<OrderState , RootState> ={
       }
       emitter.emit("dismissLoader")
     } catch(err) {
-      console.error(err)
+      logger.error(err)
       showToast(translate("Something went wrong"))
     }
 
@@ -501,7 +502,7 @@ const actions: ActionTree<OrderState , RootState> ={
       }
       emitter.emit("dismissLoader")
     } catch(err) {
-      console.error(err)
+      logger.error(err)
       showToast(translate("Something went wrong"))
     }
 
@@ -627,7 +628,7 @@ const actions: ActionTree<OrderState , RootState> ={
         showToast(translate("Orders Not Found"))
       }
     } catch (err) {
-      console.error(err)
+      logger.error(err)
       showToast(translate("Something went wrong"))
     } finally {
       emitter.emit("dismissLoader")
@@ -712,7 +713,7 @@ const actions: ActionTree<OrderState , RootState> ={
         showToast(translate("Orders Not Found"))
       }
     } catch (err) {
-      console.error(err)
+      logger.error(err)
       showToast(translate("Something went wrong"))
     } finally {
       emitter.emit("dismissLoader")
@@ -799,7 +800,7 @@ const actions: ActionTree<OrderState , RootState> ={
         showToast(translate("Orders Not Found"))
       }
     } catch(err) {
-      console.error(err)
+      logger.error(err)
       showToast(translate("Something went wrong"))
     } finally {
       emitter.emit("dismissLoader")
@@ -837,7 +838,7 @@ const actions: ActionTree<OrderState , RootState> ={
         throw resp.data
       }
     } catch (err) {
-      console.error('Failed to fetch order item rejection history', err)
+      logger.error('Failed to fetch order item rejection history', err)
     }
 
     commit(types.ORDER_ITEM_REJECTION_HISTORY_UPDATED, rejectionHistory)
@@ -893,7 +894,7 @@ const actions: ActionTree<OrderState , RootState> ={
         throw resp.data
       }
     } catch (err) {
-      console.error("Error in fetching payment detail.", err);
+      logger.error("Error in fetching payment detail.", err);
     }
   },
 
@@ -907,7 +908,7 @@ const actions: ActionTree<OrderState , RootState> ={
         contactNumber
       }
     } catch (err) {
-      console.error("Error in fetching customer phone number for current order", err);
+      logger.error("Error in fetching customer phone number for current order", err);
     }
     commit(types.ORDER_CURRENT_UPDATED, { order });
   },

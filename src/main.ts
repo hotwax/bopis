@@ -37,10 +37,14 @@ import localeMessages from './locales';
 import { login, logout, loader } from '@/utils/user';
 import { addNotification, storeClientRegistrationToken } from '@/utils/firebase';
 import { getConfig, getProductIdentificationPref, initialise, setProductIdentificationPref, setUserLocale } from '@/adapter';
+import logger from './logger';
 
 const app = createApp(App)
   .use(IonicVue, {
     mode: 'md'
+  })
+  .use(logger, {
+    level: process.env.VUE_APP_DEFAULT_LOG_LEVEL
   })
   .use(router)
   .use(store)

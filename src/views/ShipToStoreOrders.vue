@@ -132,6 +132,7 @@ import emitter from "@/event-bus"
 import { Actions, hasPermission } from '@/authorization'
 import { OrderService } from "@/services/OrderService";
 import { translate } from "@hotwax/dxp-components";
+import logger from "@/logger";
 
 export default defineComponent({
   name: 'ShipToStoreOrders',
@@ -302,7 +303,7 @@ export default defineComponent({
         }
         emitter.emit("dismissLoader")
       } catch (err) {
-        console.error(err)
+        logger.error(err)
         showToast(translate("Something went wrong"))
       }
 
@@ -348,7 +349,7 @@ export default defineComponent({
         }
         emitter.emit("dismissLoader")
       } catch (err) {
-        console.error(err)
+        logger.error(err)
         showToast(translate("Something went wrong"))
       }
 
@@ -379,7 +380,7 @@ export default defineComponent({
                 }
               } catch (error) {
                 showToast(translate("Something went wrong while sending the email."))
-                console.error(error)
+                logger.error(error)
               }
             }
           }]
