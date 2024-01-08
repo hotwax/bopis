@@ -260,7 +260,6 @@ const getShippingPhoneNumber = async (orderId: string): Promise<any> => {
 
 const findOrderShipGroup = async (query: any): Promise<any> => {
   return api({
-    // TODO: We can replace this with any API
     url: "solr-query",
     method: "post",
     data: query

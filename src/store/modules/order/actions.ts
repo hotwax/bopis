@@ -927,7 +927,7 @@ const actions: ActionTree<OrderState , RootState> ={
 
     const params = {
       groupBy: 'shipGroupSeqId',
-      'shipGroupSeqId': '[* TO *]',  // check to ignore all those records for which shipGroupSeqId is not present, as in case of kit comp we does not get shipGroupSeqId on some items
+      'shipGroupSeqId': '[* TO *]',  // check to ignore all those records for which shipGroupSeqId is not present
       '-shipGroupSeqId': order.shipGroupSeqId,
       orderId: order.orderId,
       docType: 'ORDER'
@@ -942,7 +942,6 @@ const actions: ActionTree<OrderState , RootState> ={
       resp = await OrderService.findOrderShipGroup(orderQueryPayload);
 
       if (resp.status === 200 && !hasError(resp) && resp.data.grouped?.shipGroupSeqId.matches > 0) {
-        total = resp.data.grouped.shipGroupSeqId.ngroups
         shipGroups = resp.data.grouped.shipGroupSeqId.groups
       } else {
         throw resp.data
