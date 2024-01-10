@@ -126,7 +126,7 @@
       </div>
       <div v-if="segmentSelected === 'completed'">
         <div v-for="(order, index) in getOrdersByPart(completedOrders)" :key="index" v-show="order.parts.length > 0">
-          <ion-card>
+          <ion-card button @click.prevent="viewOrder(order, order.part, 'completed')">
             <ion-item lines="none">
               <ion-label class="ion-text-wrap">
                 <h1>{{ order.customer.name }}</h1>
