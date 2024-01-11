@@ -99,12 +99,17 @@ const actions: ActionTree<OrderState , RootState> ={
     return resp;
   },
 
-  async getOrderDetail( { dispatch, state }, { payload, orderType } ) {
+  async getOrderDetail({ dispatch, state }, { payload, orderType }) {
     if(orderType === 'open') {
-      payload['orderStatusId']= "ORDER_APPROVED"
-      payload['-shipmentStatusId']= "*"
+      payload['orderStatusId'] = "ORDER_APPROVED"
+      payload['-shipmentStatusId'] = "*"
+      payload['-fulfillmentStatus'] = '(Cancelled OR Rejected)'
     } else if(orderType === 'packed') {
-      payload['shipmentStatusId']= "SHIPMENT_PACKED"
+      payload['shipmentStatusId'] = "SHIPMENT_PACKED"
+      payload['-fulfillmentStatus'] = '(Cancelled OR Rejected)'
+    } else if(orderType === 'completed') {
+      payload['orderItemStatusId'] = "ITEM_COMPLETED"
+      payload['docType'] = "ORDER"
     } else {
       dispatch('updateCurrent', { order: {} })
       return;
@@ -132,7 +137,6 @@ const actions: ActionTree<OrderState , RootState> ={
     const orderQueryPayload = prepareOrderQuery({
       ...payload,
       shipmentMethodTypeId: !store.state.user.preference.showShippingOrders ? 'STOREPICKUP' : '',
-      '-fulfillmentStatus': '(Cancelled OR Rejected)',
       orderTypeId: 'SALES_ORDER'
     })
     
