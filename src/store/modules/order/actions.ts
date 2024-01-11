@@ -349,7 +349,8 @@ const actions: ActionTree<OrderState , RootState> ={
 
               return arr
             }, []),
-            placedDate: orderItem.orderDate
+            placedDate: orderItem.orderDate,
+            shipGroupSeqId: orderItem.shipGroupSeqId
           }
         })
         this.dispatch('product/getProductInformation', { orders });
