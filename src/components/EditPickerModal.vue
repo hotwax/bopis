@@ -67,6 +67,7 @@ import { hasError } from '@/adapter'
 import { translate } from '@hotwax/dxp-components'
 import { UtilService } from "@/services/UtilService";
 import { PicklistService } from "@/services/PicklistService";
+import logger from "@/logger";
 
 export default defineComponent({
   name: "EditPickersModal",
@@ -151,7 +152,7 @@ export default defineComponent({
           throw resp.data
         }
       } catch (err) {
-        console.error('Failed to fetch the pickers information or there are no pickers available', err)
+        logger.error('Failed to fetch the pickers information or there are no pickers available', err)
       }
     },
     async confirmSave() {
@@ -191,7 +192,7 @@ export default defineComponent({
         }
       } catch (err) {
         showToast(translate('Something went wrong, could not edit picker.'))
-        console.error('Something went wrong, could not edit picker')
+        logger.error('Something went wrong, could not edit picker')
       }
     },
     closeModal() {

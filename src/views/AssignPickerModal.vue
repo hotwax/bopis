@@ -73,6 +73,7 @@ import { showToast } from "@/utils";
 import { hasError } from '@/adapter'
 import { translate } from "@hotwax/dxp-components";
 import { PicklistService } from '@/services/PicklistService'
+import logger from '@/logger'
 
 export default defineComponent({
   name: "AssignPickerModal",
@@ -183,10 +184,10 @@ export default defineComponent({
           this.availablePickers = this.availablePickers.concat(pickers);
           total = resp.data.count;
         } else {
-          console.error(translate('Something went wrong'))
+          logger.error(translate('Something went wrong'))
         }
       } catch (err) {
-        console.error(translate('Something went wrong'))
+        logger.error(translate('Something went wrong'))
       }
       this.isScrollable = this.availablePickers.length < total;
     }

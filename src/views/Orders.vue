@@ -208,6 +208,7 @@ import { translate } from "@hotwax/dxp-components";
 import AssignPickerModal from "./AssignPickerModal.vue";
 import { OrderService } from "@/services/OrderService";
 import { Actions, hasPermission } from '@/authorization'
+import logger from "@/logger";
 
 export default defineComponent({
   name: 'Orders',
@@ -296,7 +297,7 @@ export default defineComponent({
 
       } catch(err) {
         showToast(translate("Failed to load packing slip"))
-        console.error(err)
+        logger.error(err)
       }
 
 
@@ -439,7 +440,7 @@ export default defineComponent({
                 }
               } catch (error) {
                 showToast(translate("Something went wrong while sending the email."))
-                console.error(error)
+                logger.error(error)
               }
             }
           }]
