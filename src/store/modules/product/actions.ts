@@ -7,6 +7,7 @@ import { showToast } from '@/utils'
 import { hasError } from '@/adapter'
 import { translate } from '@hotwax/dxp-components'
 import emitter from '@/event-bus'
+import logger from "@/logger";
 
 
 const actions: ActionTree<ProductState, RootState> = {
@@ -37,7 +38,7 @@ const actions: ActionTree<ProductState, RootState> = {
       // Handled empty response in case of failed query
       if (resp.data) commit(types.PRODUCT_ADD_TO_CACHED_MULTIPLE, { products });
     } else {
-      console.error('Something went wrong')
+      logger.error('Something went wrong')
     }
     // TODO Handle specific error
     return resp;
@@ -69,7 +70,7 @@ const actions: ActionTree<ProductState, RootState> = {
         showToast(translate("Products not found"));
       }
     } catch(error){
-      console.error(error)
+      logger.error(error)
       commit(types.PRODUCT_LIST_UPDATED, { products: [], total: 0, queryString: '' })
       showToast(translate("Something went wrong"));
     }
@@ -118,7 +119,7 @@ const actions: ActionTree<ProductState, RootState> = {
         showToast(translate("Product not found"));
       }
     } catch(error){
-      console.error(error)
+      logger.error(error)
       showToast(translate("Something went wrong"));
     }
     emitter.emit("dismissLoader");

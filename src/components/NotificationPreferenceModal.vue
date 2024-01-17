@@ -54,6 +54,7 @@ import { showToast } from "@/utils";
 import emitter from "@/event-bus"
 import { generateTopicName } from "@/utils/firebase";
 import { subscribeTopic, unsubscribeTopic } from '@/adapter'
+import logger from "@/logger";
 
 export default defineComponent({
   name: "NotificationPreferenceModal",
@@ -134,7 +135,7 @@ export default defineComponent({
       try {
         await this.handleTopicSubscription()
       } catch (error) {
-        console.error(error)
+        logger.error(error)
       } finally {
         emitter.emit("dismissLoader")
       }

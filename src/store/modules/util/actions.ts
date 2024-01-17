@@ -4,6 +4,7 @@ import UtilState from './UtilState'
 import * as types from './mutation-types'
 import { UtilService } from '@/services/UtilService'
 import { hasError } from '@/adapter'
+import logger from '@/logger'
 
 const actions: ActionTree<UtilState, RootState> = {
   async fetchRejectReasons({ commit }) {
@@ -28,7 +29,7 @@ const actions: ActionTree<UtilState, RootState> = {
         throw resp.data
       }
     } catch (err) {
-      console.error('Failed to fetch reject reasons', err)
+      logger.error('Failed to fetch reject reasons', err)
     }
 
     commit(types.UTIL_REJECT_REASONS_UPDATED, rejectReasons)
@@ -74,7 +75,7 @@ const actions: ActionTree<UtilState, RootState> = {
         throw resp.data
       }
     } catch(err) {
-      console.error('Error fetching payment method description', err)
+      logger.error('Error fetching payment method description', err)
     }
 
     return paymentMethodTypeDesc;
@@ -116,7 +117,7 @@ const actions: ActionTree<UtilState, RootState> = {
         throw resp.data
       }
     } catch(err) {
-      console.error('Error fetching status description', err)
+      logger.error('Error fetching status description', err)
     }
 
     return statusDesc;

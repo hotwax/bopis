@@ -252,6 +252,7 @@ import RejectOrderModal from "@/components/RejectOrderModal.vue";
 import { getProductIdentificationValue, translate, useProductIdentificationStore } from "@hotwax/dxp-components";
 import EditPickerModal from "@/components/EditPickerModal.vue";
 import emitter from '@/event-bus'
+import logger from "@/logger";
 
 export default defineComponent({
   name: "OrderDetail",
@@ -432,7 +433,7 @@ export default defineComponent({
 
       } catch(err) {
         showToast(translate("Failed to load packing slip"))
-        console.error(err)
+        logger.error(err)
       }
     },
     async shipToCustomer() {
@@ -448,7 +449,7 @@ export default defineComponent({
           this.customerEmail = resp.data.orderContacts.email.email
         }
       } catch (error) {
-        console.error(error)
+        logger.error(error)
       }
     },
     async sendReadyForPickupEmail(order: any) {
@@ -474,7 +475,7 @@ export default defineComponent({
                 }
               } catch (error) {
                 showToast(translate("Something went wrong while sending the email."))
-                console.error(error)
+                logger.error(error)
               }
             }
           }]

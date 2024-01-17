@@ -3,6 +3,7 @@ import emitter from '@/event-bus';
 import { translate } from '@hotwax/dxp-components';
 import store from '@/store';
 import { formatPhoneNumber, showToast } from '@/utils';
+import logger from '@/logger';
 
 const getOpenOrders = async (payload: any): Promise <any> => {
   return api({
@@ -86,7 +87,7 @@ const rejectItem = async (payload: any): Promise<any> => {
       showToast(translate('Something went wrong'));
     }
   } catch (error) {
-    console.error(error);
+    logger.error(error);
   }
   emitter.emit("dismissLoader");
   return resp;
@@ -207,7 +208,7 @@ const printShippingLabelAndPackingSlip = async (shipmentIds: Array<string>): Pro
 
   } catch (err) {
     showToast(translate('Failed to print shipping label and packing slip'))
-    console.error("Failed to load shipping label and packing slip", err)
+    logger.error("Failed to load shipping label and packing slip", err)
   }
 }
 
@@ -253,7 +254,7 @@ const getShippingPhoneNumber = async (orderId: string): Promise<any> => {
       throw resp.data
     }
   } catch (err) {
-    console.error('Failed to fetch customer phone number', err)
+    logger.error('Failed to fetch customer phone number', err)
   }
   return phoneNumber
 }
