@@ -65,6 +65,7 @@ const handleParameterMatching = (orderVal: any, parameterVal: any, operation?: s
       }
       return false;
     }
+    if(Array.isArray(parameterVal)) return !parameterVal.some((param: any) => param === orderVal)
     return orderVal !== parameterVal
   } else if (!operation) {
     return orderVal === parameterVal
