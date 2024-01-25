@@ -59,6 +59,7 @@ import {
   IonRadioGroup,
   IonRadio,
   IonSearchbar,
+  IonSpinner,
   IonTitle,
   IonToolbar,
   modalController,
@@ -87,6 +88,7 @@ export default defineComponent({
     IonRadioGroup,
     IonRadio,
     IonSearchbar,
+    IonSpinner,
     IonTitle,
     IonToolbar 
   },
