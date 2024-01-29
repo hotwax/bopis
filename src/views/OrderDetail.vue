@@ -187,7 +187,6 @@ import AssignPickerModal from "@/views/AssignPickerModal.vue";
 import { copyToClipboard, showToast } from '@/utils'
 import { DateTime } from "luxon";
 import { api, hasError } from '@/adapter';
-import ShipToCustomerModal from "@/components/ShipToCustomerModal.vue";
 import { OrderService } from "@/services/OrderService";
 import RejectOrderModal from "@/components/RejectOrderModal.vue";
 import { translate } from "@hotwax/dxp-components";
@@ -362,12 +361,6 @@ export default defineComponent({
         showToast(translate("Failed to load packing slip"))
         logger.error(err)
       }
-    },
-    async shipToCustomer() {
-      const shipmodal = await modalController.create({
-        component: ShipToCustomerModal,
-      });
-      return shipmodal.present();
     },
     async getCustomerContactDetails() {
       try {
