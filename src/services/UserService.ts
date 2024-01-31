@@ -76,7 +76,7 @@ const getCurrentEComStore = async (token: any, facilityId: any): Promise<any> =>
       }
     });
     if (hasError(resp)) {
-      return resp.data;
+      throw resp.data;
     }
     
     return Promise.resolve(resp.data.docs?.length ? resp.data.docs[0] : {});
