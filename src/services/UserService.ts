@@ -76,12 +76,12 @@ const getCurrentEComStore = async (token: any, facilityId: any): Promise<any> =>
       }
     });
     if (hasError(resp)) {
-      return Promise.reject(resp.data);
+      return resp.data;
     }
     
     return Promise.resolve(resp.data.docs?.length ? resp.data.docs[0] : {});
   } catch(error: any) {
-    return Promise.reject(error)
+    return Promise.resolve({})
   }
 }
 const getRerouteFulfillmentConfig = async (payload: any): Promise<any> => {
