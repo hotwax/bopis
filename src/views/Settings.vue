@@ -461,6 +461,7 @@ export default defineComponent({
     },
     async updateNotificationPref(enumId: string, event: any) {
       try {
+        emitter.emit('presentLoader',  { backdropDismiss: false })
         const facilityId = (this.currentFacility as any).facilityId
         const topicName = generateTopicName(facilityId, enumId)
         // event.target.checked returns the initial value (the value that was there before clicking
@@ -498,6 +499,7 @@ export default defineComponent({
             text: translate("Confirm"),
             handler: async () => {
               // passing event reference for updation in case the API fails
+              alertController.dismiss()
               await this.updateNotificationPref(enumId, event)
             }
           }
