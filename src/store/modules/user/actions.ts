@@ -308,7 +308,7 @@ const actions: ActionTree<UserState, RootState> = {
     try {
       resp = await getNotificationEnumIds(process.env.VUE_APP_NOTIF_ENUM_TYPE_ID)
       enumerationResp = resp.docs
-      resp = await getNotificationUserPrefTypeIds(process.env.VUE_APP_NOTIF_APP_ID)
+      resp = await getNotificationUserPrefTypeIds(process.env.VUE_APP_NOTIF_APP_ID, state.current.userLoginId)
       userPrefIds = resp.docs.map((userPref: any) => userPref.userPrefTypeId)
     } catch (error) {
       logger.error(error)
