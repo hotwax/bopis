@@ -341,6 +341,7 @@ export default defineComponent({
       return timeZoneModal.present();
     },
     async logout () {
+      emitter.emit('presentLoader', { message: 'Logging out', backdropDismiss: false })
       // remove firebase notification registration token -
       // OMS and auth is required hence, removing it before logout (clearing state)
       try {
@@ -356,6 +357,7 @@ export default defineComponent({
           window.location.href = `${process.env.VUE_APP_LOGIN_URL}?isLoggedOut=true&redirectUrl=${redirectUrl}`
         }
       })
+      emitter.emit('dismissLoader')
     },
     goToLaunchpad() {
       window.location.href = `${process.env.VUE_APP_LOGIN_URL}`

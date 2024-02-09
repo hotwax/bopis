@@ -7,7 +7,7 @@ importScripts('https://www.gstatic.com/firebasejs/8.10.1/firebase-messaging.js')
 // wrapping the logic inside function and calling it as an IIFE
 // to provide return statement support
 (function () {
-  const firebaseConfig = { apiKey: "", authDomain: "", databaseURL: "", projectId: "", storageBucket: "", messagingSenderId: "", appId: "" }
+  const firebaseConfig = { apiKey: "AIzaSyAq-jeG6dy8y2O6p_RYKk_MpkfTZ97GF_Q", authDomain: "http://hotwax-digital-commerce.firebaseapp.com/", databaseURL: "https://hotwax-digital-commerce.firebaseio.com/", projectId: "hotwax-digital-commerce", storageBucket: "http://hotwax-digital-commerce.appspot.com/", messagingSenderId: "211268342110", appId: "1:211268342110:web:6fa33f0d16129925c27fcf" }
 
   if (Object.values(firebaseConfig).some(value => !value)) {
     return
