@@ -236,6 +236,7 @@ import { translate } from "@hotwax/dxp-components";
 import { Actions, hasPermission } from '@/authorization'
 import { generateTopicName } from "@/utils/firebase";
 import emitter from "@/event-bus"
+import logger from '@/logger';
 
 export default defineComponent({
   name: 'Settings',
@@ -309,16 +310,13 @@ export default defineComponent({
     await this.store.dispatch('user/fetchNotificationPreferences')
   },
   methods: {
-    setFacility (event: any) {
-      // If the value is same, no need to update
-      // Handled case for programmatical changes
-      // https://github.com/ionic-team/ionic-framework/discussions/25532
-      // https://github.com/ionic-team/ionic-framework/issues/20106
-      // https://github.com/ionic-team/ionic-framework/pull/25858
+    async setFacility (event: any) {
       if (this.userProfile)
-        this.store.dispatch('user/setFacility', {
+        await this.store.dispatch('user/setFacility', {
           'facilityId': event.detail.value
         });
+        await this.store.dispatch('user/fetchNotificationPreferences')
+      }
     },
     async changeTimeZone() {
       const timeZoneModal = await modalController.create({
@@ -332,7 +330,7 @@ export default defineComponent({
       try {
         await removeClientRegistrationToken(this.firebaseDeviceId, process.env.VUE_APP_NOTIF_APP_ID)
       } catch (error) {
-        console.error(error)
+        logger.error(error)
       }
 
       this.store.dispatch('user/logout', { isUserUnauthorised: false }).then((redirectionUrl) => {
@@ -376,7 +374,7 @@ export default defineComponent({
           this.availableShipmentMethods = resp.data.docs;
         }
       } catch(err) {
-        console.error(err)
+        logger.error(err)
       }
     },
     async getRerouteFulfillmentConfiguration(settingTypeEnumId?: any) {
@@ -407,7 +405,7 @@ export default defineComponent({
           })
         }
       } catch(err) {
-        console.error(err)
+        logger.error(err)
       }
     },
     async updateRerouteFulfillmentConfiguration(config: any, value: any) {
@@ -433,7 +431,7 @@ export default defineComponent({
         }
       } catch(err) {
         showToast(translate('Failed to update configuration'))
-        console.error(err)
+        logger.error(err)
       }
       // Fetch the updated configuration
       await this.getRerouteFulfillmentConfiguration(config.settingTypeEnumId);
@@ -447,6 +445,7 @@ export default defineComponent({
     },
     async updateNotificationPref(enumId: string, event: any) {
       try {
+        emitter.emit('presentLoader',  { backdropDismiss: false })
         const facilityId = (this.currentFacility as any).facilityId
         const topicName = generateTopicName(facilityId, enumId)
         // event.target.checked returns the initial value (the value that was there before clicking
@@ -484,6 +483,7 @@ export default defineComponent({
             text: translate("Confirm"),
             handler: async () => {
               // passing event reference for updation in case the API fails
+              alertController.dismiss()
               await this.updateNotificationPref(enumId, event)
             }
           }

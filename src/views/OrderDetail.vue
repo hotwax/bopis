@@ -187,12 +187,12 @@ import AssignPickerModal from "@/views/AssignPickerModal.vue";
 import { copyToClipboard, showToast } from '@/utils'
 import { DateTime } from "luxon";
 import { api, hasError } from '@/adapter';
-import ShipToCustomerModal from "@/components/ShipToCustomerModal.vue";
 import { OrderService } from "@/services/OrderService";
 import RejectOrderModal from "@/components/RejectOrderModal.vue";
 import { translate } from "@hotwax/dxp-components";
 import EditPickerModal from "@/components/EditPickerModal.vue";
 import emitter from '@/event-bus'
+import logger from "@/logger";
 
 export default defineComponent({
   name: "OrderDetail",
@@ -359,14 +359,8 @@ export default defineComponent({
 
       } catch(err) {
         showToast(translate("Failed to load packing slip"))
-        console.error(err)
+        logger.error(err)
       }
-    },
-    async shipToCustomer() {
-      const shipmodal = await modalController.create({
-        component: ShipToCustomerModal,
-      });
-      return shipmodal.present();
     },
     async getCustomerContactDetails() {
       try {
@@ -375,7 +369,7 @@ export default defineComponent({
           this.customerEmail = resp.data.orderContacts.email.email
         }
       } catch (error) {
-        console.error(error)
+        logger.error(error)
       }
     },
     async sendReadyForPickupEmail(order: any) {
@@ -401,7 +395,7 @@ export default defineComponent({
                 }
               } catch (error) {
                 showToast(translate("Something went wrong while sending the email."))
-                console.error(error)
+                logger.error(error)
               }
             }
           }]

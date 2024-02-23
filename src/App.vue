@@ -13,6 +13,7 @@ import { mapGetters, useStore } from 'vuex';
 import { initialise, resetConfig } from '@/adapter'
 import { useRouter } from 'vue-router';
 import { translate, useProductIdentificationStore } from "@hotwax/dxp-components";
+import logger from '@/logger'
 
 export default defineComponent({
   name: 'App',
@@ -95,7 +96,7 @@ export default defineComponent({
     if(this.userToken) {
       // Get product identification from api using dxp-component
       await useProductIdentificationStore().getIdentificationPref(this.currentEComStore?.productStoreId)
-        .catch((error) => console.error(error));
+        .catch((error) => logger.error(error));
     }
   },
   unmounted() {

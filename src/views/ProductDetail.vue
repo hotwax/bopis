@@ -93,6 +93,7 @@ import { hasError } from '@/adapter'
 import { sortSizes } from '@/apparel-sorter';
 import OtherStoresInventoryModal from "./OtherStoresInventoryModal.vue";
 import { ShopifyImg, getProductIdentificationValue, translate, useProductIdentificationStore } from "@hotwax/dxp-components";
+import logger from "@/logger";
 
 export default defineComponent({
   name: "ProductDetail",
@@ -214,7 +215,7 @@ export default defineComponent({
           })
         }
       } catch (error) {
-        console.error(error)
+        logger.error(error)
         showToast(translate("Something went wrong"));
       }
     },

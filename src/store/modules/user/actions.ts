@@ -28,6 +28,7 @@ import {
 import { translate, useAuthStore, useProductIdentificationStore, useUserStore } from '@hotwax/dxp-components'
 import { generateDeviceId, generateTopicName } from '@/utils/firebase'
 import emitter from '@/event-bus'
+import logger from '@/logger';
 
 const actions: ActionTree<UserState, RootState> = {
 
@@ -56,12 +57,12 @@ const actions: ActionTree<UserState, RootState> = {
       if (permissionId) {
         // As the token is not yet set in the state passing token headers explicitly
         // TODO Abstract this out, how token is handled should be part of the method not the callee
-        const hasPermission = appPermissions.some((appPermissionId: any) => appPermissionId === permissionId );
+        const hasPermission = appPermissions.some((appPermission: any) => appPermission.action === permissionId );
         // If there are any errors or permission check fails do not allow user to login
-        if (hasPermission) {
+        if (!hasPermission) {
           const permissionError = 'You do not have permission to access the app.';
           showToast(translate(permissionError));
-          console.error("error", permissionError);
+          logger.error("error", permissionError);
           return Promise.reject(new Error(permissionError));
         }
       }
@@ -111,7 +112,7 @@ const actions: ActionTree<UserState, RootState> = {
       // If any of the API call in try block has status code other than 2xx it will be handled in common catch block.
       // TODO Check if handling of specific status codes is required.
       showToast(translate('Something went wrong while login. Please contact administrator'));
-      console.error("error", err);
+      logger.error("error", err);
       return Promise.reject(new Error(err))
     }
   },
@@ -137,7 +138,7 @@ const actions: ActionTree<UserState, RootState> = {
         // Added logic to remove the `//` from the resp as in case of get request we are having the extra characters and in case of post we are having 403
         resp = JSON.parse(resp.startsWith('//') ? resp.replace('//', '') : resp)
       } catch(err) {
-        console.error('Error parsing data', err)
+        logger.error('Error parsing data', err)
       }
 
       if(resp?.logoutAuthType == 'SAML2SSO') {
@@ -229,10 +230,10 @@ const actions: ActionTree<UserState, RootState> = {
       if (resp.status === 200 && !hasError(resp) && resp.data?.docs) {
         config = resp.data?.docs[0];
       } else {
-        console.error('Failed to fetch partial order rejection configuration');
+        logger.error('Failed to fetch partial order rejection configuration');
       }
     } catch (err) {
-      console.error(err);
+      logger.error(err);
     } 
     commit(types.USER_PARTIAL_ORDER_REJECTION_CONFIG_UPDATED, config);   
   },
@@ -275,7 +276,7 @@ const actions: ActionTree<UserState, RootState> = {
       }
     } catch(err) {
       showToast(translate('Failed to update configuration'))
-      console.error(err)
+      logger.error(err)
     }
 
     // Fetch the updated configuration
@@ -307,10 +308,10 @@ const actions: ActionTree<UserState, RootState> = {
     try {
       resp = await getNotificationEnumIds(process.env.VUE_APP_NOTIF_ENUM_TYPE_ID)
       enumerationResp = resp.docs
-      resp = await getNotificationUserPrefTypeIds(process.env.VUE_APP_NOTIF_APP_ID)
+      resp = await getNotificationUserPrefTypeIds(process.env.VUE_APP_NOTIF_APP_ID, state.current.userLoginId)
       userPrefIds = resp.docs.map((userPref: any) => userPref.userPrefTypeId)
     } catch (error) {
-      console.error(error)
+      logger.error(error)
     } finally {
       // checking enumerationResp as we want to show disbaled prefs if only getNotificationEnumIds returns
       // data and getNotificationUserPrefTypeIds fails or returns empty response (all disbaled)
@@ -332,7 +333,7 @@ const actions: ActionTree<UserState, RootState> = {
     try {
       await storeClientRegistrationToken(registrationToken, firebaseDeviceId, process.env.VUE_APP_NOTIF_APP_ID)
     } catch (error) {
-      console.error(error)
+      logger.error(error)
     }
   },
 
