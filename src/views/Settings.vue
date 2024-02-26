@@ -191,7 +191,7 @@
   </ion-page>
 </template>
 
-<script lang="ts">
+<script>
 import {
   alertController,
   IonAvatar,
@@ -265,7 +265,7 @@ export default defineComponent({
   data(){
     return {
       baseURL: process.env.VUE_APP_BASE_URL,
-      appInfo: (process.env.VUE_APP_VERSION_INFO ? JSON.parse(process.env.VUE_APP_VERSION_INFO) : {}) as any,
+      appInfo: (process.env.VUE_APP_VERSION_INFO ? JSON.parse(process.env.VUE_APP_VERSION_INFO) : {}),
       appVersion: "",
       rerouteFulfillmentConfig: {
         // TODO Remove fromDate and directly store values making it loosely coupled with OMS
@@ -274,9 +274,9 @@ export default defineComponent({
         allowPickupUpdate: {},
         allowCancel: {},
         shippingMethod: {}
-      } as any,
-      availableShipmentMethods: [] as any,
-      rerouteFulfillmentConfigMapping: (process.env.VUE_APP_RF_CNFG_MPNG? JSON.parse(process.env.VUE_APP_RF_CNFG_MPNG) : {}) as any
+      },
+      availableShipmentMethods: [],
+      rerouteFulfillmentConfigMapping: (process.env.VUE_APP_RF_CNFG_MPNG? JSON.parse(process.env.VUE_APP_RF_CNFG_MPNG) : {})
     }
   },
   computed: {
@@ -310,7 +310,7 @@ export default defineComponent({
     await this.store.dispatch('user/fetchNotificationPreferences')
   },
   methods: {
-    async setFacility (event: any) {
+    async setFacility (event) {
       if (this.userProfile)
         await this.store.dispatch('user/setFacility', {
           'facilityId': event.detail.value
@@ -344,16 +344,16 @@ export default defineComponent({
     goToLaunchpad() {
       window.location.href = `${process.env.VUE_APP_LOGIN_URL}`
     },
-    setShowShippingOrdersPreference (ev: any) {
+    setShowShippingOrdersPreference (ev) {
       this.store.dispatch('user/setUserPreference', { showShippingOrders: ev.detail.checked })
     },
-    setShowPackingSlipPreference (ev: any){
+    setShowPackingSlipPreference (ev){
       this.store.dispatch('user/setUserPreference', { showPackingSlip: ev.detail.checked })
     },
-    setConfigurePickerPreference (ev: any){
+    setConfigurePickerPreference (ev){
       this.store.dispatch('user/setUserPreference', { configurePicker: ev.detail.checked })
     },
-    getDateTime(time: any) {
+    getDateTime(time) {
       return DateTime.fromMillis(time).toLocaleString(DateTime.DATETIME_MED);
     },
     async getAvailableShipmentMethods () {
@@ -369,7 +369,7 @@ export default defineComponent({
           "entityName": "ProductStoreShipmentMethView",
           "fieldList": ["shipmentMethodTypeId", "description"],
           "viewSize": 10
-        }) as any;
+        });
         if (!hasError(resp) && resp.data?.docs) {
           this.availableShipmentMethods = resp.data.docs;
         }
@@ -377,7 +377,7 @@ export default defineComponent({
         logger.error(err)
       }
     },
-    async getRerouteFulfillmentConfiguration(settingTypeEnumId?: any) {
+    async getRerouteFulfillmentConfiguration(settingTypeEnumId) {
       try {
         const payload = {
           "inputFields": {
@@ -388,7 +388,7 @@ export default defineComponent({
           "entityName": "ProductStoreSetting",
           "fieldList": ["settingTypeEnumId", "settingValue", "fromDate"],
           "viewSize": 5
-        } as any
+        }
 
         // get all values
         if (!payload.inputFields.settingTypeEnumId) {
@@ -397,10 +397,10 @@ export default defineComponent({
 
         }
 
-        const resp = await UserService.getRerouteFulfillmentConfig(payload) as any
+        const resp = await UserService.getRerouteFulfillmentConfig(payload)
         if (!hasError(resp) && resp.data?.docs) {
-          const rerouteFulfillmentConfigMappingFlipped = Object.fromEntries(Object.entries(this.rerouteFulfillmentConfigMapping).map(([key, value]) => [value, key])) as any;
-          resp.data.docs.map((config: any) => {
+          const rerouteFulfillmentConfigMappingFlipped = Object.fromEntries(Object.entries(this.rerouteFulfillmentConfigMapping).map(([key, value]) => [value, key]));
+          resp.data.docs.map((config) => {
             this.rerouteFulfillmentConfig[rerouteFulfillmentConfigMappingFlipped[config.settingTypeEnumId]] = config;
           })
         }
@@ -408,7 +408,7 @@ export default defineComponent({
         logger.error(err)
       }
     },
-    async updateRerouteFulfillmentConfiguration(config: any, value: any) {
+    async updateRerouteFulfillmentConfiguration(config, value) {
       // Handled initial programmatical update
       // When storing boolean values, it is stored as string. Further comparison needs conversion
       if (config.settingValue === value || (typeof value === 'boolean' && (config.settingValue == 'true') === value)) {
@@ -423,7 +423,7 @@ export default defineComponent({
       }
 
       try {
-        const resp = await UserService.updateRerouteFulfillmentConfig(params) as any
+        const resp = await UserService.updateRerouteFulfillmentConfig(params)
         if(!hasError(resp)) {
           showToast(translate('Configuration updated'))
         } else {
@@ -436,17 +436,17 @@ export default defineComponent({
       // Fetch the updated configuration
       await this.getRerouteFulfillmentConfiguration(config.settingTypeEnumId);
     },
-    async updatePartialOrderRejectionConfig(config: any, value: any) {
+    async updatePartialOrderRejectionConfig(config, value) {
       const params = {
         ...config,
         "settingValue": value
       }
       await this.store.dispatch('user/updatePartialOrderRejectionConfig', params)
     },
-    async updateNotificationPref(enumId: string, event: any) {
+    async updateNotificationPref(enumId, event) {
       try {
         emitter.emit('presentLoader',  { backdropDismiss: false })
-        const facilityId = (this.currentFacility as any).facilityId
+        const facilityId = this.currentFacility.facilityId
         const topicName = generateTopicName(facilityId, enumId)
         // event.target.checked returns the initial value (the value that was there before clicking
         // and updating the toggle). But it returns the updated value on further references (if passed
@@ -465,7 +465,7 @@ export default defineComponent({
         emitter.emit("dismissLoader")
       }
     },
-    async confirmNotificationPrefUpdate(enumId: string, event: any) {
+    async confirmNotificationPrefUpdate(enumId, event) {
       const message = translate("Are you sure you want to update the notification preferences?");
       const alert = await alertController.create({
         header: translate("Update notification preferences"),
@@ -492,7 +492,7 @@ export default defineComponent({
       return alert.present();
     }
   },
-  setup () {
+  setup() {
     const store = useStore();
     const router = useRouter();
 
