@@ -46,8 +46,7 @@
             {{ translate('Specify which facility you want to operate from. Order, inventory and other configuration data will be specific to the facility you select.') }}
           </ion-card-content>
           <ion-item lines="none">
-            <ion-label>{{ translate("Select facility") }}</ion-label>
-            <ion-select interface="popover" :value="currentFacility?.facilityId" @ionChange="setFacility($event)">
+            <ion-select :label="translate('Select facility')" interface="popover" :value="currentFacility?.facilityId" @ionChange="setFacility($event)">
               <ion-select-option v-for="facility in (userProfile ? userProfile.facilities : [])" :key="facility.facilityId" :value="facility.facilityId" >{{ facility.facilityName }}</ion-select-option>
             </ion-select>
           </ion-item>
@@ -66,25 +65,20 @@
             {{ translate('Control what your customers are allowed to edit on their order when they are editing their order on Re-route Fulfillment.') }}
           </ion-card-content>
           <ion-item lines="none">
-            <ion-label>{{ translate("Delivery method") }}</ion-label>
-            <ion-toggle :disabled="!hasPermission(Actions.APP_RF_CONFIG_UPDATE) || Object.keys(rerouteFulfillmentConfig.allowDeliveryMethodUpdate).length == 0" :checked="rerouteFulfillmentConfig.allowDeliveryMethodUpdate.settingValue" @ionChange="updateRerouteFulfillmentConfiguration(rerouteFulfillmentConfig.allowDeliveryMethodUpdate, $event.detail.checked)" slot="end" />
+            <ion-toggle label-placement="start" :disabled="!hasPermission(Actions.APP_RF_CONFIG_UPDATE) || Object.keys(rerouteFulfillmentConfig.allowDeliveryMethodUpdate).length == 0" :checked="rerouteFulfillmentConfig.allowDeliveryMethodUpdate.settingValue" @ionChange="updateRerouteFulfillmentConfiguration(rerouteFulfillmentConfig.allowDeliveryMethodUpdate, $event.detail.checked)">{{ translate("Delivery method") }}</ion-toggle>
           </ion-item>
           <ion-item lines="none">
-            <ion-label>{{ translate("Delivery address") }}</ion-label>
-            <ion-toggle :disabled="!hasPermission(Actions.APP_RF_CONFIG_UPDATE) || Object.keys(rerouteFulfillmentConfig.allowDeliveryAddressUpdate).length == 0" :checked="rerouteFulfillmentConfig.allowDeliveryAddressUpdate.settingValue" @ionChange="updateRerouteFulfillmentConfiguration(rerouteFulfillmentConfig.allowDeliveryAddressUpdate, $event.detail.checked)" slot="end" />
+            <ion-toggle label-placement="start" :disabled="!hasPermission(Actions.APP_RF_CONFIG_UPDATE) || Object.keys(rerouteFulfillmentConfig.allowDeliveryAddressUpdate).length == 0" :checked="rerouteFulfillmentConfig.allowDeliveryAddressUpdate.settingValue" @ionChange="updateRerouteFulfillmentConfiguration(rerouteFulfillmentConfig.allowDeliveryAddressUpdate, $event.detail.checked)">{{ translate("Delivery address") }}</ion-toggle>
           </ion-item>
           <ion-item lines="none">
-            <ion-label>{{ translate("Pick up location") }}</ion-label>
-            <ion-toggle :disabled="!hasPermission(Actions.APP_RF_CONFIG_UPDATE) || Object.keys(rerouteFulfillmentConfig.allowPickupUpdate).length == 0" :checked="rerouteFulfillmentConfig.allowPickupUpdate.settingValue" @ionChange="updateRerouteFulfillmentConfiguration(rerouteFulfillmentConfig.allowPickupUpdate, $event.detail.checked)" slot="end" />
+            <ion-toggle label-placement="start" :disabled="!hasPermission(Actions.APP_RF_CONFIG_UPDATE) || Object.keys(rerouteFulfillmentConfig.allowPickupUpdate).length == 0" :checked="rerouteFulfillmentConfig.allowPickupUpdate.settingValue" @ionChange="updateRerouteFulfillmentConfiguration(rerouteFulfillmentConfig.allowPickupUpdate, $event.detail.checked)">{{ translate("Pick up location") }}</ion-toggle>
           </ion-item>
           <ion-item lines="none">
-            <ion-label>{{ translate("Cancel order before fulfillment") }}</ion-label>
             <!-- <p>Uploading order cancelations to Shopify is currently disabled. Order cancelations in HotWax will not be synced to Shopify.</p> -->
-            <ion-toggle :disabled="!hasPermission(Actions.APP_RF_CONFIG_UPDATE) || Object.keys(rerouteFulfillmentConfig.allowCancel).length == 0" :checked="rerouteFulfillmentConfig.allowCancel.settingValue" @ionChange="updateRerouteFulfillmentConfiguration(rerouteFulfillmentConfig.allowCancel, $event.detail.checked)" slot="end" />
+            <ion-toggle label-placement="start" :disabled="!hasPermission(Actions.APP_RF_CONFIG_UPDATE) || Object.keys(rerouteFulfillmentConfig.allowCancel).length == 0" :checked="rerouteFulfillmentConfig.allowCancel.settingValue" @ionChange="updateRerouteFulfillmentConfiguration(rerouteFulfillmentConfig.allowCancel, $event.detail.checked)">{{ translate("Cancel order before fulfillment") }}</ion-toggle>
           </ion-item>
           <ion-item lines="none">
-            <ion-label>{{ translate("Shipment method") }}</ion-label>
-            <ion-select :disabled="!hasPermission(Actions.APP_RF_CONFIG_UPDATE) || Object.keys(rerouteFulfillmentConfig.shippingMethod).length == 0" interface="popover" :value="rerouteFulfillmentConfig.shippingMethod.settingValue" @ionChange="updateRerouteFulfillmentConfiguration(rerouteFulfillmentConfig.shippingMethod, $event.detail.value)">
+            <ion-select :label="translate('Shipment method')" :disabled="!hasPermission(Actions.APP_RF_CONFIG_UPDATE) || Object.keys(rerouteFulfillmentConfig.shippingMethod).length == 0" interface="popover" :value="rerouteFulfillmentConfig.shippingMethod.settingValue" @ionChange="updateRerouteFulfillmentConfiguration(rerouteFulfillmentConfig.shippingMethod, $event.detail.value)">
               <ion-select-option v-for="shipmentMethod in availableShipmentMethods" :key="shipmentMethod.shipmentMethodTypeId" :value="shipmentMethod.shipmentMethodTypeId" >{{ shipmentMethod.description }}</ion-select-option>
             </ion-select>
           </ion-item>
@@ -100,8 +94,7 @@
             {{ translate('Specify whether you reject a BOPIS order partially when any order item inventory is insufficient at the store.') }}
           </ion-card-content>
           <ion-item lines="none">
-            <ion-label>{{ translate("Allow partial rejection") }}</ion-label>
-            <ion-toggle :disabled="!hasPermission(Actions.APP_PARTIAL_ORDER_REJECTION_CONFIG_UPDATE)" :checked="partialOrderRejectionConfig.settingValue" @ionChange="updatePartialOrderRejectionConfig(partialOrderRejectionConfig, $event.detail.checked)" slot="end" />
+            <ion-toggle label-placement="start" :disabled="!hasPermission(Actions.APP_PARTIAL_ORDER_REJECTION_CONFIG_UPDATE)" :checked="partialOrderRejectionConfig.settingValue" @ionChange="updatePartialOrderRejectionConfig(partialOrderRejectionConfig, $event.detail.checked)">{{ translate("Allow partial rejection") }}</ion-toggle>
           </ion-item>
         </ion-card>
         
@@ -146,8 +139,7 @@
             {{ translate('View shipping orders along with pickup orders.') }}
           </ion-card-content>
           <ion-item lines="none">
-            <ion-label>{{ translate("Show shipping orders") }}</ion-label>
-            <ion-toggle :checked="showShippingOrders" @ionChange="setShowShippingOrdersPreference($event)" slot="end" />
+            <ion-toggle label-placement="start" :checked="showShippingOrders" @ionChange="setShowShippingOrdersPreference($event)">{{ translate("Show shipping orders") }}</ion-toggle>
           </ion-item>
         </ion-card>
 
@@ -161,8 +153,7 @@
             {{ translate('Packing slips help customer reconcile their order against the delivered items.') }}
           </ion-card-content>
           <ion-item lines="none">
-            <ion-label>{{ translate("Generate packing slips") }}</ion-label>
-            <ion-toggle :checked="showPackingSlip" @ionChange="setShowPackingSlipPreference($event)" slot="end" />
+            <ion-toggle label-placement="start" :checked="showPackingSlip" @ionChange="setShowPackingSlipPreference($event)">{{ translate("Generate packing slips") }}</ion-toggle>
           </ion-item>
         </ion-card>
 
@@ -176,8 +167,7 @@
             {{ translate('Track who picked orders by entering picker IDs when packing an order.') }}
           </ion-card-content>
           <ion-item lines="none">
-            <ion-label>{{ translate("Enable tracking") }}</ion-label>
-            <ion-toggle :checked="configurePicker" @ionChange="setConfigurePickerPreference($event)" slot="end" />
+            <ion-toggle label-placement="start" :checked="configurePicker" @ionChange="setConfigurePickerPreference($event)">{{ translate("Enable tracking") }}</ion-toggle>
           </ion-item>
         </ion-card>
 
@@ -192,8 +182,7 @@
           </ion-card-content>
           <ion-list>
             <ion-item :key="pref.enumId" v-for="pref in notificationPrefs" lines="none">
-              <ion-label class="ion-text-wrap">{{ pref.description }}</ion-label>
-              <ion-toggle @click="confirmNotificationPrefUpdate(pref.enumId, $event)" :checked="pref.isEnabled" slot="end" />
+              <ion-toggle label-placement="start" @click="confirmNotificationPrefUpdate(pref.enumId, $event)" :checked="pref.isEnabled">{{ pref.description }}</ion-toggle>
             </ion-item>
           </ion-list>
         </ion-card>
@@ -202,7 +191,7 @@
   </ion-page>
 </template>
 
-<script lang="ts">
+<script>
 import {
   alertController,
   IonAvatar,
@@ -276,7 +265,7 @@ export default defineComponent({
   data(){
     return {
       baseURL: process.env.VUE_APP_BASE_URL,
-      appInfo: (process.env.VUE_APP_VERSION_INFO ? JSON.parse(process.env.VUE_APP_VERSION_INFO) : {}) as any,
+      appInfo: (process.env.VUE_APP_VERSION_INFO ? JSON.parse(process.env.VUE_APP_VERSION_INFO) : {}),
       appVersion: "",
       rerouteFulfillmentConfig: {
         // TODO Remove fromDate and directly store values making it loosely coupled with OMS
@@ -285,9 +274,9 @@ export default defineComponent({
         allowPickupUpdate: {},
         allowCancel: {},
         shippingMethod: {}
-      } as any,
-      availableShipmentMethods: [] as any,
-      rerouteFulfillmentConfigMapping: (process.env.VUE_APP_RF_CNFG_MPNG? JSON.parse(process.env.VUE_APP_RF_CNFG_MPNG) : {}) as any
+      },
+      availableShipmentMethods: [],
+      rerouteFulfillmentConfigMapping: (process.env.VUE_APP_RF_CNFG_MPNG? JSON.parse(process.env.VUE_APP_RF_CNFG_MPNG) : {})
     }
   },
   computed: {
@@ -321,13 +310,8 @@ export default defineComponent({
     await this.store.dispatch('user/fetchNotificationPreferences')
   },
   methods: {
-    async setFacility (event: any) {
-      // If the value is same, no need to update
-      // Handled case for programmatical changes
-      // https://github.com/ionic-team/ionic-framework/discussions/25532
-      // https://github.com/ionic-team/ionic-framework/issues/20106
-      // https://github.com/ionic-team/ionic-framework/pull/25858
-      if (this.userProfile && this.currentFacility?.facilityId !== event.detail.value) {
+    async setFacility (event) {
+      if (this.userProfile)
         await this.store.dispatch('user/setFacility', {
           'facilityId': event.detail.value
         });
@@ -360,16 +344,16 @@ export default defineComponent({
     goToLaunchpad() {
       window.location.href = `${process.env.VUE_APP_LOGIN_URL}`
     },
-    setShowShippingOrdersPreference (ev: any) {
+    setShowShippingOrdersPreference (ev) {
       this.store.dispatch('user/setUserPreference', { showShippingOrders: ev.detail.checked })
     },
-    setShowPackingSlipPreference (ev: any){
+    setShowPackingSlipPreference (ev){
       this.store.dispatch('user/setUserPreference', { showPackingSlip: ev.detail.checked })
     },
-    setConfigurePickerPreference (ev: any){
+    setConfigurePickerPreference (ev){
       this.store.dispatch('user/setUserPreference', { configurePicker: ev.detail.checked })
     },
-    getDateTime(time: any) {
+    getDateTime(time) {
       return DateTime.fromMillis(time).toLocaleString(DateTime.DATETIME_MED);
     },
     async getAvailableShipmentMethods () {
@@ -385,7 +369,7 @@ export default defineComponent({
           "entityName": "ProductStoreShipmentMethView",
           "fieldList": ["shipmentMethodTypeId", "description"],
           "viewSize": 10
-        }) as any;
+        });
         if (!hasError(resp) && resp.data?.docs) {
           this.availableShipmentMethods = resp.data.docs;
         }
@@ -393,7 +377,7 @@ export default defineComponent({
         logger.error(err)
       }
     },
-    async getRerouteFulfillmentConfiguration(settingTypeEnumId?: any) {
+    async getRerouteFulfillmentConfiguration(settingTypeEnumId) {
       try {
         const payload = {
           "inputFields": {
@@ -404,7 +388,7 @@ export default defineComponent({
           "entityName": "ProductStoreSetting",
           "fieldList": ["settingTypeEnumId", "settingValue", "fromDate"],
           "viewSize": 5
-        } as any
+        }
 
         // get all values
         if (!payload.inputFields.settingTypeEnumId) {
@@ -413,10 +397,10 @@ export default defineComponent({
 
         }
 
-        const resp = await UserService.getRerouteFulfillmentConfig(payload) as any
+        const resp = await UserService.getRerouteFulfillmentConfig(payload)
         if (!hasError(resp) && resp.data?.docs) {
-          const rerouteFulfillmentConfigMappingFlipped = Object.fromEntries(Object.entries(this.rerouteFulfillmentConfigMapping).map(([key, value]) => [value, key])) as any;
-          resp.data.docs.map((config: any) => {
+          const rerouteFulfillmentConfigMappingFlipped = Object.fromEntries(Object.entries(this.rerouteFulfillmentConfigMapping).map(([key, value]) => [value, key]));
+          resp.data.docs.map((config) => {
             this.rerouteFulfillmentConfig[rerouteFulfillmentConfigMappingFlipped[config.settingTypeEnumId]] = config;
           })
         }
@@ -424,7 +408,7 @@ export default defineComponent({
         logger.error(err)
       }
     },
-    async updateRerouteFulfillmentConfiguration(config: any, value: any) {
+    async updateRerouteFulfillmentConfiguration(config, value) {
       // Handled initial programmatical update
       // When storing boolean values, it is stored as string. Further comparison needs conversion
       if (config.settingValue === value || (typeof value === 'boolean' && (config.settingValue == 'true') === value)) {
@@ -439,7 +423,7 @@ export default defineComponent({
       }
 
       try {
-        const resp = await UserService.updateRerouteFulfillmentConfig(params) as any
+        const resp = await UserService.updateRerouteFulfillmentConfig(params)
         if(!hasError(resp)) {
           showToast(translate('Configuration updated'))
         } else {
@@ -452,17 +436,17 @@ export default defineComponent({
       // Fetch the updated configuration
       await this.getRerouteFulfillmentConfiguration(config.settingTypeEnumId);
     },
-    async updatePartialOrderRejectionConfig(config: any, value: any) {
+    async updatePartialOrderRejectionConfig(config, value) {
       const params = {
         ...config,
         "settingValue": value
       }
       await this.store.dispatch('user/updatePartialOrderRejectionConfig', params)
     },
-    async updateNotificationPref(enumId: string, event: any) {
+    async updateNotificationPref(enumId, event) {
       try {
         emitter.emit('presentLoader',  { backdropDismiss: false })
-        const facilityId = (this.currentFacility as any).facilityId
+        const facilityId = this.currentFacility.facilityId
         const topicName = generateTopicName(facilityId, enumId)
         // event.target.checked returns the initial value (the value that was there before clicking
         // and updating the toggle). But it returns the updated value on further references (if passed
@@ -481,7 +465,7 @@ export default defineComponent({
         emitter.emit("dismissLoader")
       }
     },
-    async confirmNotificationPrefUpdate(enumId: string, event: any) {
+    async confirmNotificationPrefUpdate(enumId, event) {
       const message = translate("Are you sure you want to update the notification preferences?");
       const alert = await alertController.create({
         header: translate("Update notification preferences"),
@@ -508,7 +492,7 @@ export default defineComponent({
       return alert.present();
     }
   },
-  setup () {
+  setup() {
     const store = useStore();
     const router = useRouter();
 
