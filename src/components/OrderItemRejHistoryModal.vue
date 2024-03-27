@@ -13,7 +13,7 @@
     <ion-list>
       <ion-item v-for="(item, index) in orderRejectionHistory" :key="index">
         <ion-thumbnail slot="start">
-          <ShopifyImg :src="getProduct(item.productId).mainImageUrl" size="small" />
+          <DxpShopifyImg :src="getProduct(item.productId).mainImageUrl" size="small" />
         </ion-thumbnail>
         <ion-label>
           <h2>{{ getProductIdentificationValue(productIdentificationPref.primaryId, getProduct(item.productId)) }}</h2>
@@ -53,7 +53,7 @@ import { computed, defineComponent } from 'vue';
 import { closeOutline } from 'ionicons/icons';
 import { mapGetters, useStore } from "vuex";
 import { DateTime } from 'luxon';
-import { getProductIdentificationValue, translate, useProductIdentificationStore } from '@hotwax/dxp-components';
+import { getProductIdentificationValue, translate, useProductIdentificationStore, DxpShopifyImg } from '@hotwax/dxp-components';
 
 export default defineComponent({
   name: "OrderItemRejHistoryModal",
@@ -69,6 +69,7 @@ export default defineComponent({
     IonList,
     IonTitle,
     IonToolbar,
+    DxpShopifyImg
   },
   data () {
     return {
