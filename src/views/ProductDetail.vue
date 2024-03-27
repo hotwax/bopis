@@ -10,7 +10,7 @@
     <ion-content>
       <main v-if="Object.keys(product).length > 0">
         <section class="product-image">
-          <ShopifyImg :src="currentVariant.mainImageUrl" />
+          <DxpShopifyImg :src="currentVariant.mainImageUrl" />
         </section>
 
         <section class="product-info">
@@ -92,7 +92,7 @@ import { getFeature, showToast } from "@/utils";
 import { hasError } from '@/adapter'
 import { sortSizes } from '@/apparel-sorter';
 import OtherStoresInventoryModal from "./OtherStoresInventoryModal.vue";
-import { ShopifyImg, getProductIdentificationValue, translate, useProductIdentificationStore } from "@hotwax/dxp-components";
+import { DxpShopifyImg, getProductIdentificationValue, translate, useProductIdentificationStore } from "@hotwax/dxp-components";
 import logger from "@/logger";
 
 export default defineComponent({
@@ -112,7 +112,7 @@ export default defineComponent({
     IonRow,
     IonTitle,
     IonToolbar,
-    ShopifyImg
+    DxpShopifyImg
   },
   data() {
     return {
