@@ -32,13 +32,6 @@ const getUserProfile = async (token: any): Promise<any> => {
   }
 }
 
-const getAvailableTimeZones = async (): Promise <any>  => {
-  return api({
-    url: "getAvailableTimeZones",
-    method: "get",
-    cache: true
-  });
-}
 const setUserTimeZone = async (payload: any): Promise <any>  => {
   return api({
     url: "setUserTimeZone",
@@ -249,7 +242,6 @@ const isEnumExists = async (enumId: string): Promise<any> => {
 export const UserService = {
     createEnumeration,
     login,
-    getAvailableTimeZones,
     getCurrentEComStore,
     getRerouteFulfillmentConfig,
     setUserTimeZone,

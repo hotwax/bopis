@@ -118,22 +118,7 @@
 
       <section>
         <ProductIdentifier />
-
-        <ion-card>
-          <ion-card-header>
-            <ion-card-title>
-              {{ translate('Timezone') }}
-            </ion-card-title>
-          </ion-card-header>
-          <ion-card-content>
-            {{ translate('The timezone you select is used to ensure automations you schedule are always accurate to the time you select.') }}
-          </ion-card-content>
-          <ion-item lines="none">
-            <ion-label> {{ userProfile && userProfile.userTimeZone ? userProfile.userTimeZone : '-' }} </ion-label>
-            <ion-button @click="changeTimeZone()" slot="end" fill="outline" color="dark">{{ translate("Change") }}</ion-button>
-          </ion-item>
-        </ion-card>
-
+        <DxpTimeZoneSwitcher @timeZoneUpdated="timeZoneUpdated" />
         <LanguageSwitcher />
 
         <ion-card>
@@ -334,11 +319,9 @@ export default defineComponent({
         await this.store.dispatch('user/fetchNotificationPreferences')
       }
     },
-    async changeTimeZone() {
-      const timeZoneModal = await modalController.create({
-        component: TimeZoneModal,
-      });
-      return timeZoneModal.present();
+   
+    async timeZoneUpdated(tzId: string) {
+      await this.store.dispatch("user/setUserTimeZone", tzId)
     },
     async logout () {
       // remove firebase notification registration token -
