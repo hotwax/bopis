@@ -236,7 +236,6 @@ export const UserService = {
     login,
     getCurrentEComStore,
     getRerouteFulfillmentConfig,
-    setUserTimeZone,
     getUserPermissions,
     getUserProfile,
     isEnumExists,
