@@ -21,7 +21,7 @@
       <div v-else>
         <ion-radio-group :value="selectedPicker.id">
           <ion-item v-for="(picker, index) in availablePickers" :key="index" @click="updateSelectedPicker(picker.id)">
-            <ion-radio slot="end" :value="picker.id">
+            <ion-radio :value="picker.id">
               <ion-label>
                 {{ picker.name }}
                 <p>{{ picker.id }}</p>

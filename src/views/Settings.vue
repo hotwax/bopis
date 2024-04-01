@@ -311,12 +311,7 @@ export default defineComponent({
   },
   methods: {
     async setFacility (event: any) {
-      // If the value is same, no need to update
-      // Handled case for programmatical changes
-      // https://github.com/ionic-team/ionic-framework/discussions/25532
-      // https://github.com/ionic-team/ionic-framework/issues/20106
-      // https://github.com/ionic-team/ionic-framework/pull/25858
-      if (this.userProfile && this.currentFacility?.facilityId !== event.detail.value) {
+      if (this.userProfile) {
         await this.store.dispatch('user/setFacility', {
           'facilityId': event.detail.value
         });
