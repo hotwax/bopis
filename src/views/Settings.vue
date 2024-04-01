@@ -201,15 +201,13 @@ import {
   IonHeader,
   IonIcon,
   IonItem,
-  IonLabel,
   IonList,
   IonPage,
   IonSelect,
   IonSelectOption,
   IonTitle,
   IonToggle,
-  IonToolbar,
-  modalController
+  IonToolbar
 } from '@ionic/vue';
 import { defineComponent } from 'vue';
 import {
@@ -222,7 +220,6 @@ import {
 } from 'ionicons/icons'
 import { mapGetters, useStore } from 'vuex';
 import { useRouter } from 'vue-router';
-import TimeZoneModal from './TimezoneModal.vue';
 import Image from '@/components/Image.vue';
 import { DateTime } from 'luxon';
 import { UserService } from '@/services/UserService'
@@ -248,7 +245,6 @@ export default defineComponent({
     IonHeader, 
     IonIcon,
     IonItem, 
-    IonLabel, 
     IonList,
     IonPage, 
     IonSelect, 
