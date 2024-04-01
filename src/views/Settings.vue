@@ -34,7 +34,7 @@
         <h1>{{ translate('OMS') }}</h1>
       </div>
       <section>
-        <OmsInstanceNavigator />
+        <DxpOmsInstanceNavigator />
 
         <ion-card>
           <ion-card-header>
@@ -117,9 +117,9 @@
       </div>
 
       <section>
-        <ProductIdentifier />
+        <DxpProductIdentifier />
         <DxpTimeZoneSwitcher @timeZoneUpdated="timeZoneUpdated" />
-        <LanguageSwitcher />
+        <DxpLanguageSwitcher />
 
         <ion-card>
           <ion-card-header>
@@ -201,6 +201,7 @@ import {
   IonHeader,
   IonIcon,
   IonItem,
+  IonLabel, 
   IonList,
   IonPage,
   IonSelect,
@@ -245,6 +246,7 @@ export default defineComponent({
     IonHeader, 
     IonIcon,
     IonItem, 
+    IonLabel,
     IonList,
     IonPage, 
     IonSelect, 
