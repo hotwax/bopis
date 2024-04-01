@@ -16,8 +16,7 @@
     </div>
     <ion-list v-else>
       <ion-item :key="pref.enumId" v-for="pref in notificationPrefs">
-        <ion-label class="ion-text-wrap">{{ pref.description }}</ion-label>
-        <ion-toggle @click="toggleNotificationPref(pref.enumId, $event)" :checked="pref.isEnabled" slot="end" />
+        <ion-toggle label-placement="start" @click="toggleNotificationPref(pref.enumId, $event)" :checked="pref.isEnabled" slot="end">{{ pref.description }}</ion-toggle>
       </ion-item>
     </ion-list>
     <ion-fab vertical="bottom" horizontal="end" slot="fixed">
@@ -38,7 +37,6 @@ import {
   IonHeader,
   IonIcon,
   IonItem,
-  IonLabel,
   IonList,
   IonTitle,
   IonToggle,
@@ -67,7 +65,6 @@ export default defineComponent({
     IonFabButton,
     IonIcon,
     IonItem,
-    IonLabel,
     IonList,
     IonTitle,
     IonToggle,
