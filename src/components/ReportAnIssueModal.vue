@@ -17,7 +17,7 @@
       <ion-list-header>{{ translate("Select reason") }}</ion-list-header>
       <ion-radio-group v-model="rejectReasonId">
         <ion-item v-for="reason in unfillableReasons" :key="reason.id">
-          <ion-radio slot="start" :value="reason.id">{{ translate(reason.label) }}</ion-radio>
+          <ion-radio label-placement="end" justify="start" :value="reason.id">{{ translate(reason.label) }}</ion-radio>
         </ion-item>
       </ion-radio-group>
     </ion-list>
