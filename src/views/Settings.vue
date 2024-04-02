@@ -409,12 +409,6 @@ export default defineComponent({
       }
     },
     async updateRerouteFulfillmentConfiguration(config: any, value: any) {
-      // Handled initial programmatical update
-      // When storing boolean values, it is stored as string. Further comparison needs conversion
-      if (config.settingValue === value || (typeof value === 'boolean' && (config.settingValue == 'true') === value)) {
-        return;
-      }
-      
       const params = {
         "fromDate": config.fromDate,
         "productStoreId": this.currentEComStore?.productStoreId,
