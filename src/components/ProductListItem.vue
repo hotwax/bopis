@@ -1,7 +1,7 @@
 <template>
   <ion-item lines="none">
     <ion-thumbnail slot="start">
-      <ShopifyImg :src="getProduct(item.productId).mainImageUrl" size="small" />
+      <DxpShopifyImg :src="getProduct(item.productId).mainImageUrl" size="small" />
     </ion-thumbnail>
     <ion-label class="ion-text-wrap">
       <h2>{{ getProductIdentificationValue(productIdentificationPref.primaryId, getProduct(item.productId)) }}</h2>
@@ -24,7 +24,7 @@
 import { computed, defineComponent } from "vue";
 import { IonButton, IonIcon, IonItem, IonLabel, IonNote, IonSpinner, IonThumbnail } from "@ionic/vue";
 import { mapGetters, useStore } from 'vuex';
-import { getProductIdentificationValue, ShopifyImg, translate, useProductIdentificationStore } from '@hotwax/dxp-components'
+import { getProductIdentificationValue, DxpShopifyImg, translate, useProductIdentificationStore } from '@hotwax/dxp-components'
 import { cubeOutline } from 'ionicons/icons'
 
 export default defineComponent({
@@ -37,7 +37,7 @@ export default defineComponent({
     IonNote,
     IonSpinner,
     IonThumbnail,
-    ShopifyImg
+    DxpShopifyImg
   },
   data () {
     return {
