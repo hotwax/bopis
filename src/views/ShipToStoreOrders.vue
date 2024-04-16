@@ -90,7 +90,9 @@
       <ion-refresher slot="fixed" @ionRefresh="refreshOrders($event)">
         <ion-refresher-content pullingIcon="crescent" refreshingSpinner="crescent" />
       </ion-refresher>
-      <ion-infinite-scroll @ionInfinite="loadMoreOrders($event)" threshold="100px" :disabled="segmentSelected === 'incoming' ? !isIncomingOrdersScrollable : segmentSelected === 'readyForPickup' ? !isReadyForPickupOrdersScrollable : !isCompletedOrdersScrollable">
+      <ion-infinite-scroll @ionInfinite="loadMoreOrders($event)" threshold="100px" 
+        :disabled="segmentSelected === 'incoming' ? !isIncomingOrdersScrollable : segmentSelected === 'readyForPickup' ? !isReadyForPickupOrdersScrollable : !isCompletedOrdersScrollable"
+        :key="queryString">
         <ion-infinite-scroll-content loading-spinner="crescent" :loading-text="translate('Loading')" />
       </ion-infinite-scroll>
     </ion-content>

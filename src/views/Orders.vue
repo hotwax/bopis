@@ -157,7 +157,9 @@
       <ion-refresher slot="fixed" @ionRefresh="refreshOrders($event)">
         <ion-refresher-content pullingIcon="crescent" refreshingSpinner="crescent" />
       </ion-refresher>
-      <ion-infinite-scroll @ionInfinite="loadMoreProducts($event)" threshold="100px" :disabled="segmentSelected === 'open' ? !isOpenOrdersScrollable : segmentSelected === 'packed' ? !isPackedOrdersScrollable : !isCompletedOrdersScrollable">
+      <ion-infinite-scroll @ionInfinite="loadMoreProducts($event)" threshold="100px" 
+        :disabled="segmentSelected === 'open' ? !isOpenOrdersScrollable : segmentSelected === 'packed' ? !isPackedOrdersScrollable : !isCompletedOrdersScrollable"
+        :key="queryString">
         <ion-infinite-scroll-content loading-spinner="crescent" :loading-text="translate('Loading')" />
       </ion-infinite-scroll>
     </ion-content>
@@ -404,6 +406,7 @@ export default defineComponent({
       }
     },
     async searchOrders() {
+      console.log('serach', this.queryString);
       if(this.segmentSelected === 'open') {
         this.getPickupOrders()
       } else if(this.segmentSelected === 'packed') {

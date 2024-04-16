@@ -29,6 +29,7 @@
       @ionInfinite="loadMorePickers($event)"
       threshold="100px"
       :disabled="!isScrollable"
+      :key="queryString"
     >
       <ion-infinite-scroll-content
         loading-spinner="crescent"
