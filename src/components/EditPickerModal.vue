@@ -21,11 +21,12 @@
       <div v-else>
         <ion-radio-group :value="selectedPicker.id">
           <ion-item v-for="(picker, index) in availablePickers" :key="index" @click="updateSelectedPicker(picker.id)">
-            <ion-label>
-              {{ picker.name }}
-              <p>{{ picker.id }}</p>
-            </ion-label>
-            <ion-radio slot="end" :value="picker.id" ></ion-radio>
+            <ion-radio :value="picker.id">
+              <ion-label>
+                {{ picker.name }}
+                <p>{{ picker.id }}</p>
+              </ion-label>
+            </ion-radio>
           </ion-item>
         </ion-radio-group>
       </div>
@@ -43,19 +44,19 @@ import {
   IonButtons,
   IonButton,
   IonContent,
-  IonHeader,
-  IonIcon,
   IonFab,
   IonFabButton,
-  IonTitle,
-  IonToolbar,
-  IonLabel,
+  IonHeader,
+  IonIcon,
   IonItem,
+  IonLabel,
   IonList,
   IonListHeader,
   IonRadio,
   IonRadioGroup,
   IonSearchbar,
+  IonTitle,
+  IonToolbar,
   alertController,
   modalController
 } from "@ionic/vue";
