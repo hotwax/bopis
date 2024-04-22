@@ -144,8 +144,8 @@ export default defineComponent({
     async loadMorePickers(event) {
       // Added this check here as if added on infinite-scroll component the Loading content does not gets displayed
       if(!(this.isScrollingEnabled && this.isScrollable)) {
-          await event.target.complete();
-        }
+        await event.target.complete();
+      }
       this.getPicker(
         undefined,
         Math.ceil(

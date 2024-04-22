@@ -355,7 +355,6 @@ export default defineComponent({
       // Added this check here as if added on infinite-scroll component the Loading content does not get displayed
       if (!(this.isScrollingEnabled && (this.segmentSelected === 'open' ? this.isOpenOrdersScrollable : this.segmentSelected === 'packed' ? this.isPackedOrdersScrollable : this.isCompletedOrdersScrollable))) {
         await event.target.complete();
-        return;
       }
       if (this.segmentSelected === 'open') {
         this.getPickupOrders(
