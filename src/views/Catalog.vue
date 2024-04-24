@@ -5,7 +5,7 @@
         <ion-title>{{ translate("Catalog") }}</ion-title>
       </ion-toolbar>
     </ion-header>
-    <ion-content>
+    <ion-content ref="contentRef" :scroll-events="true" @ionScroll="enableScrolling()">
       <ion-searchbar @ionFocus="selectSearchBarText($event)" v-model="queryString" @keypress.enter="queryString = $event.target.value; getProducts()" />
       <main v-if="products.list.length">
         <ion-card button v-for="product in products.list" :key="product.productId"  @click="viewProduct(product)">
@@ -24,7 +24,8 @@
       <ion-infinite-scroll
         @ionInfinite="loadMoreProducts($event)"
         threshold="100px"
-        :disabled="!isScrollable"
+        v-show="isScrollingEnabled && isScrollable"
+        ref="infiniteScrollRef"
       >
         <ion-infinite-scroll-content
           loading-spinner="crescent"
@@ -73,6 +74,7 @@ export default defineComponent({
   data() {
     return {
       queryString: "",
+      isScrollingEnabled: false
     };
   },
   computed: {
@@ -82,14 +84,25 @@ export default defineComponent({
     }),
   },
   methods: {
+    enableScrolling() {
+      const parentElement = (this as any).$refs.contentRef.$el
+      const scrollEl = parentElement.shadowRoot.querySelector("main[part='scroll']")
+      let scrollHeight = scrollEl.scrollHeight, infiniteHeight = (this as any).$refs.infiniteScrollRef.$el.offsetHeight, scrollTop = scrollEl.scrollTop, threshold = 100, height = scrollEl.offsetHeight
+      const distanceFromInfinite = scrollHeight - infiniteHeight - scrollTop - threshold - height
+      if(distanceFromInfinite < 0) {
+        this.isScrollingEnabled = false;
+      } else {
+        this.isScrollingEnabled = true;
+      }
+    },
     async loadMoreProducts(event: any) {
       this.getProducts(
         undefined,
         Math.ceil(
           this.products.list?.length / (process.env.VUE_APP_VIEW_SIZE as any)
         ).toString()
-      ).then(() => {
-        event.target.complete();
+      ).then(async () => {
+        await event.target.complete();
       });
     },
     async getProducts(vSize?: any, vIndex?: any) {
@@ -115,6 +128,7 @@ export default defineComponent({
   },
 
   async ionViewWillEnter() {
+    this.isScrollingEnabled = false;
     this.queryString = this.products.queryString;
     this.getProducts();
   },
