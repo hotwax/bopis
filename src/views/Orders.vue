@@ -158,7 +158,7 @@
         <ion-refresher-content pullingIcon="crescent" refreshingSpinner="crescent" />
       </ion-refresher>
       <ion-infinite-scroll @ionInfinite="loadMoreProducts($event)" threshold="100px" 
-        v-show="isScrollingEnabled && (segmentSelected === 'open' ? isOpenOrdersScrollable : segmentSelected === 'packed' ? isPackedOrdersScrollable : isCompletedOrdersScrollable)"
+        v-show="(segmentSelected === 'open' ? isOpenOrdersScrollable : segmentSelected === 'packed' ? isPackedOrdersScrollable : isCompletedOrdersScrollable)"
         ref="infiniteScrollRef">
         <ion-infinite-scroll-content loading-spinner="crescent" :loading-text="translate('Loading')" />
       </ion-infinite-scroll>
@@ -352,6 +352,10 @@ export default defineComponent({
       }
     },
     async loadMoreProducts (event: any) {
+      // Added this check here as if added on infinite-scroll component the Loading content does not get displayed
+      if (!(this.isScrollingEnabled && (this.segmentSelected === 'open' ? this.isOpenOrdersScrollable : this.segmentSelected === 'packed' ? this.isPackedOrdersScrollable : this.isCompletedOrdersScrollable))) {
+        await event.target.complete();
+      }
       if (this.segmentSelected === 'open') {
         this.getPickupOrders(
           undefined,
