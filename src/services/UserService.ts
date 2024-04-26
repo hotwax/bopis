@@ -32,21 +32,6 @@ const getUserProfile = async (token: any): Promise<any> => {
   }
 }
 
-const getAvailableTimeZones = async (): Promise <any>  => {
-  return api({
-    url: "getAvailableTimeZones",
-    method: "get",
-    cache: true
-  });
-}
-const setUserTimeZone = async (payload: any): Promise <any>  => {
-  return api({
-    url: "setUserTimeZone",
-    method: "post",
-    data: payload
-  });
-}
-
 const getCurrentEComStore = async (token: any, facilityId: any): Promise<any> => {
 
   // If the facilityId is not provided, it may be case of user not associated with any facility or the logout
@@ -249,10 +234,8 @@ const isEnumExists = async (enumId: string): Promise<any> => {
 export const UserService = {
     createEnumeration,
     login,
-    getAvailableTimeZones,
     getCurrentEComStore,
     getRerouteFulfillmentConfig,
-    setUserTimeZone,
     getUserPermissions,
     getUserProfile,
     isEnumExists,

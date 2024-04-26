@@ -111,22 +111,7 @@
 
       <section>
         <DxpProductIdentifier />
-
-        <ion-card>
-          <ion-card-header>
-            <ion-card-title>
-              {{ translate('Timezone') }}
-            </ion-card-title>
-          </ion-card-header>
-          <ion-card-content>
-            {{ translate('The timezone you select is used to ensure automations you schedule are always accurate to the time you select.') }}
-          </ion-card-content>
-          <ion-item lines="none">
-            <ion-label> {{ userProfile && userProfile.userTimeZone ? userProfile.userTimeZone : '-' }} </ion-label>
-            <ion-button @click="changeTimeZone()" slot="end" fill="outline" color="dark">{{ translate("Change") }}</ion-button>
-          </ion-item>
-        </ion-card>
-
+        <DxpTimeZoneSwitcher @timeZoneUpdated="timeZoneUpdated" />
         <DxpLanguageSwitcher />
 
         <ion-card>
@@ -205,15 +190,13 @@ import {
   IonHeader,
   IonIcon,
   IonItem,
-  IonLabel,
   IonList,
   IonPage,
   IonSelect,
   IonSelectOption,
   IonTitle,
   IonToggle,
-  IonToolbar,
-  modalController
+  IonToolbar
 } from '@ionic/vue';
 import { defineComponent } from 'vue';
 import {
@@ -226,7 +209,6 @@ import {
 } from 'ionicons/icons'
 import { mapGetters, useStore } from 'vuex';
 import { useRouter } from 'vue-router';
-import TimeZoneModal from './TimezoneModal.vue';
 import Image from '@/components/Image.vue';
 import { DateTime } from 'luxon';
 import { UserService } from '@/services/UserService'
@@ -252,7 +234,6 @@ export default defineComponent({
     IonHeader, 
     IonIcon,
     IonItem, 
-    IonLabel, 
     IonList,
     IonPage, 
     IonSelect, 
@@ -318,11 +299,9 @@ export default defineComponent({
         await this.store.dispatch('user/fetchNotificationPreferences')
       }
     },
-    async changeTimeZone() {
-      const timeZoneModal = await modalController.create({
-        component: TimeZoneModal,
-      });
-      return timeZoneModal.present();
+   
+    async timeZoneUpdated(tzId: string) {
+      await this.store.dispatch("user/setUserTimeZone", tzId)
     },
     async logout () {
       // remove firebase notification registration token -
