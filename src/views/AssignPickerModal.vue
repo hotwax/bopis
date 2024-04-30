@@ -205,7 +205,7 @@ export default defineComponent({
         resp = await PicklistService.getAvailablePickers(payload);
         if (resp.status === 200 && !hasError(resp) && resp.data.docs.length > 0) {
           const pickers = resp.data.docs.map((picker) => ({
-            name: picker.firstName || picker.lastName ? `${picker.firstName} ${picker.lastName}` : picker.groupName,
+            name: picker.groupName ? picker.groupName : `${picker.firstName} ${picker.lastName}`,  
             id: picker.partyId
           }))
           this.availablePickers = this.availablePickers.concat(pickers);

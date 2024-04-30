@@ -150,7 +150,7 @@ export default defineComponent({
         const resp = await PicklistService.getAvailablePickers(payload);
         if (resp.status === 200 && !hasError(resp)) {
           this.availablePickers = resp.data.docs.map((picker: any) => ({
-            name: picker.firstName || picker.lastName ? `${picker.firstName} ${picker.lastName}` : picker.groupName,
+            name: picker.groupName ? picker.groupName : `${picker.firstName} ${picker.lastName}`,  
             id: picker.partyId
           }))
         } else {
