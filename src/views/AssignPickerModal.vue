@@ -203,7 +203,7 @@ export default defineComponent({
       
       try {
         resp = await PicklistService.getAvailablePickers(payload);
-        if (resp.status === 200 && !hasError(resp) && resp.data.count > 0) {
+        if (resp.status === 200 && !hasError(resp) && resp.data.docs.length > 0) {
           const pickers = resp.data.docs.map((picker) => ({
             name: picker.firstName || picker.lastName ? `${picker.firstName} ${picker.lastName}` : picker.groupName,
             id: picker.partyId
