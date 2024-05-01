@@ -177,6 +177,10 @@ export default defineComponent({
           partyId_op: 'contains',
           partyId_ic: 'Y',
           partyId_grp: '4',
+          groupName_value: this.queryString,
+          groupName_op: 'contains',
+          groupName_ic: 'Y',
+          groupName_grp: '5'
         }
       }
 
@@ -192,16 +196,16 @@ export default defineComponent({
         orderBy: "firstName ASC",
         filterByDate: "Y",
         distinct: "Y",
-        fieldList: ["firstName", "lastName", "partyId"]
+        fieldList: ["firstName", "lastName", "partyId", "groupName"]
       }
       let resp;
       let total = 0;
       
       try {
         resp = await PicklistService.getAvailablePickers(payload);
-        if (resp.status === 200 && !hasError(resp) && resp.data.count > 0) {
+        if (resp.status === 200 && !hasError(resp) && resp.data.docs.length > 0) {
           const pickers = resp.data.docs.map((picker) => ({
-            name: picker.firstName+ ' ' +picker.lastName,
+            name: picker.groupName ? picker.groupName : `${picker.firstName} ${picker.lastName}`,  
             id: picker.partyId
           }))
           this.availablePickers = this.availablePickers.concat(pickers);
