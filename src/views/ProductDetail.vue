@@ -9,59 +9,185 @@
 
     <ion-content>
       <main v-if="Object.keys(product).length > 0">
-        <section class="product-image">
-          <DxpShopifyImg :src="currentVariant.mainImageUrl" />
-        </section>
-
-        <section class="product-info">
-          <ion-item lines="none">
-            <ion-label class="ion-text-wrap">
-              <p class="overline">{{ currentVariant.brandName }}</p>
-              <h1>{{ getProductIdentificationValue(productIdentificationPref.primaryId, currentVariant) }}</h1>
-              <h2>{{ getProductIdentificationValue(productIdentificationPref.secondaryId, currentVariant) }}</h2>
-            </ion-label>
-            <!-- Price is given undefined to $n funtction on first render, hence, conditional rendering with empty string -->
-            <ion-note slot="end">{{ currentVariant.LIST_PRICE_PURCHASE_USD_STORE_GROUP_price ? $n(currentVariant.LIST_PRICE_PURCHASE_USD_STORE_GROUP_price, 'currency', currency ) : '' }}</ion-note>
-          </ion-item>
-
-          <ion-list v-if="selectedColor">
-            <ion-list-header>{{ translate("Colors") }}</ion-list-header>
+        <div class="product-section">
+          
+          <section class="product-image">
+            <DxpShopifyImg :src="currentVariant.mainImageUrl" />
+          </section>
+  
+          <section class="product-info">
             <ion-item lines="none">
-              <ion-row>
-                <ion-chip :outline="selectedColor !== colorFeature" :key="colorFeature" v-for="colorFeature in Object.keys(features)" @click="selectedColor !== colorFeature && applyFeature(colorFeature, 'color')">
-                  <ion-label class="ion-text-wrap">{{ colorFeature }}</ion-label>
-                </ion-chip>
-              </ion-row>
+              <ion-label class="ion-text-wrap">
+                <p class="overline">{{ currentVariant.brandName }}</p>
+                <h1>{{ getProductIdentificationValue(productIdentificationPref.primaryId, currentVariant) }}</h1>
+                <h2>{{ getProductIdentificationValue(productIdentificationPref.secondaryId, currentVariant) }}</h2>
+              </ion-label>
+              <!-- Price is given undefined to $n funtction on first render, hence, conditional rendering with empty string -->
+              <ion-note slot="end">{{ currentVariant.LIST_PRICE_PURCHASE_USD_STORE_GROUP_price ? $n(currentVariant.LIST_PRICE_PURCHASE_USD_STORE_GROUP_price, 'currency', currency ) : '' }}</ion-note>
             </ion-item>
-          </ion-list>
+  
+            <ion-list v-if="selectedColor">
+              <ion-list-header>{{ translate("Colors") }}</ion-list-header>
+              <ion-item lines="none">
+                <ion-row>
+                  <ion-chip :outline="selectedColor !== colorFeature" :key="colorFeature" v-for="colorFeature in Object.keys(features)" @click="selectedColor !== colorFeature && applyFeature(colorFeature, 'color')">
+                    <ion-label class="ion-text-wrap">{{ colorFeature }}</ion-label>
+                  </ion-chip>
+                </ion-row>
+              </ion-item>
+            </ion-list>
+  
+            <ion-list v-if="selectedSize">
+              <ion-list-header>{{ translate("Sizes") }} </ion-list-header>
+              <ion-item lines="none">
+                <ion-row>
+                  <ion-chip :outline="selectedSize !== sizeFeature" :key="sizeFeature" v-for="sizeFeature in features[selectedColor]" @click="selectedSize !== sizeFeature && applyFeature(sizeFeature, 'size')">
+                    <ion-label class="ion-text-wrap">{{ sizeFeature }}</ion-label>
+                  </ion-chip>
+                </ion-row>
+              </ion-item>
+            </ion-list>
+            <div>
+              <ion-segment>
+                <ion-segment-button value="inStore" @click="selectedSegment = 'inStore'">
+                  <ion-label>In Store</ion-label>
+                </ion-segment-button>
+                <ion-segment-button value="otherLocations" @click="selectedSegment = 'otherLocations'">
+                  <ion-label>Other Locations</ion-label>
+                </ion-segment-button>
+              </ion-segment>
+  
+              <ion-list v-if="selectedSegment === 'inStore'">
+                <ion-item>
+                  <ion-label class="ion-text-wrap">Quantity on hand</ion-label>
+                  <ion-note slot="end">10</ion-note>
+                </ion-item>
+                <ion-item>
+                  <ion-label class="ion-text-wrap">Safety Stock</ion-label>
+                  <ion-note slot="end">10</ion-note>
+                </ion-item>
+                <ion-item>
+                  <ion-label class="ion-text-wrap">Order Reservation</ion-label>
+                  <ion-note slot="end">20</ion-note>
+                </ion-item>
+                <ion-item>
+                  <ion-label class="ion-text-wrap">Available to promise</ion-label>
+                  <ion-badge color="success" slot="end">70</ion-badge>
+                </ion-item>
+              </ion-list>
+  
+              <ion-list v-if="selectedSegment === 'otherLocations'">
+                <ion-item>
+                  <ion-label class="ion-text-wrap">Other Stores</ion-label>
+                  <ion-button @click="getOtherStoresInventoryDetails()" fill="outline">100 ATP</ion-button>
+                </ion-item>
+                <ion-item>
+                  <ion-label class="ion-text-wrap">Warehouse</ion-label>
+                  <ion-note slot="end">100 ATP</ion-note>
+                </ion-item>
+              </ion-list>
+            </div>
+          </section>
+        </div>
+    
+        <div>
+          <h3> {count} order reservtion at the store</h3>
+          <div class="reservation-section">
 
-          <ion-list v-if="selectedSize">
-            <ion-list-header>{{ translate("Sizes") }} </ion-list-header>
-            <ion-item lines="none">
-              <ion-row>
-                <ion-chip :outline="selectedSize !== sizeFeature" :key="sizeFeature" v-for="sizeFeature in features[selectedColor]" @click="selectedSize !== sizeFeature && applyFeature(sizeFeature, 'size')">
-                  <ion-label class="ion-text-wrap">{{ sizeFeature }}</ion-label>
-                </ion-chip>
-              </ion-row>
-            </ion-item>
-          </ion-list>
+            <ion-card>
+              <ion-item lines="none">
+                <ion-label class="ion-text-wrap"> Order ID
+                  <p>Customer name</p>
+                </ion-label>
+                <ion-badge color="primary" slot="end">Open</ion-badge> 
+              </ion-item>
+              <ion-item lines="none">
+                <ion-thumbnail slot="start">
+                  <DxpShopifyImg size="small" />
+                </ion-thumbnail>
+                <ion-label class="ion-text-wrap">
+                  <h4>BRAND</h4>
+                  <h3 class="ion-text-wrap">Virtual name</h3>
+                </ion-label>
+                <ion-note slot="end"> 2 units </ion-note>
+              </ion-item>
+              <ion-list-header color="light">
+                <ion-label>Order items</ion-label>
+              </ion-list-header>
+              <ion-item lines="none">
+                <ion-thumbnail slot="start">
+                  <DxpShopifyImg size="small" />
+                </ion-thumbnail>
+                <ion-label class="ion-text-wrap" >
+                  <p class="overline">BRAND</p>
+                  <h3 class="ion-text-wrap">Virtual name</h3>
+                </ion-label>
+              </ion-item>
+            </ion-card>
 
-          <ion-list>
-            <ion-list-header>{{ translate("Inventory") }}</ion-list-header>
-            <ion-item>
-              <ion-label class="ion-text-wrap">{{ translate("In store") }}</ion-label>
-              <ion-note slot="end"> {{ currentStoreInventory }} {{ translate("in stock") }}</ion-note>
-            </ion-item>
-            <ion-item>
-              <ion-label class="ion-text-wrap">{{ translate("Other stores") }}</ion-label>
-              <ion-button @click="getOtherStoresInventoryDetails()" fill="outline">{{ otherStoresInventory }} {{ translate("in stock") }}</ion-button>
-            </ion-item>
-            <ion-item lines="none">
-              <ion-label class="ion-text-wrap">{{ translate("Warehouse") }}</ion-label>
-              <ion-note slot="end">{{ warehouseInventory }} {{ translate("in stock") }}</ion-note>
-            </ion-item>
-          </ion-list>
-        </section>
+            <ion-card>
+              <ion-item lines="none">
+                <ion-label class="ion-text-wrap"> Order ID
+                  <p>Customer name</p>
+                </ion-label>
+                <ion-badge color="primary" slot="end">In Progress</ion-badge>  
+              </ion-item>
+              <ion-item lines="none">
+                <ion-thumbnail slot="start">
+                  <DxpShopifyImg size="small" />
+                </ion-thumbnail>
+                <ion-label class="ion-text-wrap" >
+                  <p class="overline">BRAND</p>
+                  <h3 class="ion-text-wrap">Virtual name</h3>
+                </ion-label>
+                <ion-note slot="end"> 2 units </ion-note>
+              </ion-item>
+              <ion-list-header color="light">
+                <ion-label>Order items</ion-label>
+              </ion-list-header>
+              <ion-item lines="none">
+                <ion-thumbnail slot="start">
+                  <DxpShopifyImg size="small" />
+                </ion-thumbnail>
+                <ion-label class="ion-text-wrap" >
+                  <p class="overline">BRAND</p>
+                  <h3 class="ion-text-wrap">Virtual name</h3>
+                </ion-label>
+              </ion-item>
+            </ion-card>
+
+            <ion-card>
+              <ion-item lines="none">
+                <ion-label class="ion-text-wrap"> Order ID
+                  <p>Customer name</p>
+                </ion-label>
+                <ion-badge color="primary" slot="end">Packed</ion-badge>
+              </ion-item>
+              <ion-item lines="none">
+                <ion-thumbnail slot="start">
+                  <DxpShopifyImg size="small" />
+                </ion-thumbnail>
+                <ion-label class="ion-text-wrap" >
+                  <p class="overline">BRAND</p>
+                  <h3 class="ion-text-wrap">Virtual name</h3>
+                </ion-label>
+                <ion-note slot="end"> 2 units </ion-note>
+              </ion-item>
+              <ion-list-header color="light">
+                <ion-label>Order items</ion-label>
+              </ion-list-header>
+              <ion-item lines="none">
+                <ion-thumbnail slot="start">
+                  <DxpShopifyImg size="small" />
+                </ion-thumbnail>
+                <ion-label class="ion-text-wrap" >
+                  <p class="overline">BRAND</p>
+                  <h3 class="ion-text-wrap">Virtual name</h3>
+                </ion-label>
+              </ion-item>
+            </ion-card>
+          </div>
+        </div>
       </main>
     </ion-content>
   </ion-page>
@@ -81,6 +207,7 @@ import {
   IonNote,
   IonPage,
   IonRow,
+  IonSegment,
   IonTitle,
   IonToolbar,
   modalController
@@ -110,6 +237,7 @@ export default defineComponent({
     IonNote,
     IonPage,
     IonRow,
+    IonSegment,
     IonTitle,
     IonToolbar,
     DxpShopifyImg
@@ -123,7 +251,8 @@ export default defineComponent({
       currentStoreInventory: 0,
       otherStoresInventory: 0,
       warehouseInventory: 0,
-      otherStoresInventoryDetails: [] as any
+      otherStoresInventoryDetails: [] as any,
+      selectedSegment: 'inStore',
     }
   },
   computed: {
@@ -251,12 +380,27 @@ export default defineComponent({
   width: 200px;
 }
 
+.metadata {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  row-gap: 4px;
+}
+
+.reservation-section {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(343px, 1fr));
+}
+
+.product-section {
+  display: grid;
+  grid-template-columns: auto 500px;
+  max-width: 1042px;
+}
+
 @media (min-width: 720px) {
   main {
-    display: grid;
-    grid-template-columns: auto 500px;
     padding: var(--spacer-sm);
-    max-width: 1042px;
     margin: auto;
   }
 
@@ -265,3 +409,4 @@ export default defineComponent({
   }
 }
 </style>
+ 
