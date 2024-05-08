@@ -70,7 +70,7 @@
                   <ion-label class="ion-text-wrap">Order Reservation</ion-label>
                   <ion-note slot="end">20</ion-note>
                 </ion-item>
-                <ion-item>
+                <ion-item lines="none">
                   <ion-label class="ion-text-wrap">Available to promise</ion-label>
                   <ion-badge color="success" slot="end">70</ion-badge>
                 </ion-item>
@@ -81,7 +81,7 @@
                   <ion-label class="ion-text-wrap">Other Stores</ion-label>
                   <ion-button @click="getOtherStoresInventoryDetails()" fill="outline">100 ATP</ion-button>
                 </ion-item>
-                <ion-item>
+                <ion-item lines="none">
                   <ion-label class="ion-text-wrap">Warehouse</ion-label>
                   <ion-note slot="end">100 ATP</ion-note>
                 </ion-item>
