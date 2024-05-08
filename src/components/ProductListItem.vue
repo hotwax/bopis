@@ -11,14 +11,16 @@
     </ion-label>
     <!-- Only show stock if its not a ship to store order -->
     <div v-if="!isShipToStoreOrder">
-      <ion-note v-if="showInfoIcon"> 50 ATP </ion-note>
-      <ion-spinner v-else-if="isFetchingStock" color="medium" name="crescent" />
-      <ion-button v-else fill="clear" @click.stop="fetchProductStock(item.productId)">
-        <ion-icon color="medium" slot="icon-only" :icon="cubeOutline"/>
+      <ion-button v-if="!isFetchingStock && !showInfoIcon" fill="clear" @click.stop="fetchProductStock(item.productId)">
+        <ion-icon color="medium" slot="icon-only" :icon="cubeOutline" />
       </ion-button>
-      <ion-button v-if="showInfoIcon" fill="clear" @click.stop="getInventoryComputationDetails">
-        <ion-icon slot="icon-only" :icon="informationCircleOutline" color="medium"></ion-icon>
-      </ion-button>
+      <div v-else-if="showInfoIcon" class="atp-info">
+        <ion-note slot="end"> 50 ATP </ion-note>
+        <ion-button fill="clear" @click.stop="getInventoryComputationDetails($event)">
+          <ion-icon :icon="informationCircleOutline" color="medium" />
+        </ion-button>
+      </div>
+      <ion-spinner v-else color="medium" name="crescent" />
     </div>
   </ion-item>
 </template>
@@ -70,9 +72,10 @@ export default defineComponent({
       this.isFetchingStock = false
       this.showInfoIcon = true;
     },
-    async getInventoryComputationDetails(){
+    async getInventoryComputationDetails(Event: any){
       const popover = await popoverController.create({
         component: InventoryDetailsPopover,
+        event: Event,
         // componentProps: { otherStoresInventory: this.otherStoresInventoryDetails }
       });
       await popover.present();
@@ -101,5 +104,11 @@ export default defineComponent({
 <style>
 ion-thumbnail > img {
   object-fit: contain;
+}
+
+.atp-info {
+  display: flex;
+  align-items: center; 
+  flex-direction: row; 
 }
 </style>

@@ -11,7 +11,7 @@
         <ion-note slot="end">4</ion-note>
       </ion-item>
       <ion-item>
-        <ion-label class="ion-text-wrap">Qrder reservation</ion-label>
+        <ion-label class="ion-text-wrap">Order reservation</ion-label>
         <ion-note slot="end">1</ion-note>
       </ion-item>
       <ion-item lines="none">

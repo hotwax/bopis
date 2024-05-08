@@ -48,7 +48,7 @@
               </ion-item>
             </ion-list>
             <div>
-              <ion-segment>
+              <ion-segment value="inStore">
                 <ion-segment-button value="inStore" @click="selectedSegment = 'inStore'">
                   <ion-label>In Store</ion-label>
                 </ion-segment-button>
@@ -107,37 +107,6 @@
                 </ion-thumbnail>
                 <ion-label class="ion-text-wrap">
                   <h4>BRAND</h4>
-                  <h3 class="ion-text-wrap">Virtual name</h3>
-                </ion-label>
-                <ion-note slot="end"> 2 units </ion-note>
-              </ion-item>
-              <ion-list-header color="light">
-                <ion-label>Order items</ion-label>
-              </ion-list-header>
-              <ion-item lines="none">
-                <ion-thumbnail slot="start">
-                  <DxpShopifyImg size="small" />
-                </ion-thumbnail>
-                <ion-label class="ion-text-wrap" >
-                  <p class="overline">BRAND</p>
-                  <h3 class="ion-text-wrap">Virtual name</h3>
-                </ion-label>
-              </ion-item>
-            </ion-card>
-
-            <ion-card>
-              <ion-item lines="none">
-                <ion-label class="ion-text-wrap"> Order ID
-                  <p>Customer name</p>
-                </ion-label>
-                <ion-badge color="primary" slot="end">In Progress</ion-badge>  
-              </ion-item>
-              <ion-item lines="none">
-                <ion-thumbnail slot="start">
-                  <DxpShopifyImg size="small" />
-                </ion-thumbnail>
-                <ion-label class="ion-text-wrap" >
-                  <p class="overline">BRAND</p>
                   <h3 class="ion-text-wrap">Virtual name</h3>
                 </ion-label>
                 <ion-note slot="end"> 2 units </ion-note>
@@ -396,6 +365,7 @@ export default defineComponent({
   display: grid;
   grid-template-columns: auto 500px;
   max-width: 1042px;
+  margin: auto;
 }
 
 @media (min-width: 720px) {
