@@ -10,9 +10,9 @@
     </ion-toolbar>
   </ion-header>
   <ion-content class="ion-padding">
-    <ion-searchbar/>
-    <ion-list v-if="otherStoresInventory.length">
-      <ion-item v-for="details in otherStoresInventory" :key="details.facilityName">
+    <ion-searchbar v-model="queryString" @keyup.enter="queryString = $event.target.value; searchFacilities()"/>
+    <ion-list v-if="filteredInventory.length">
+      <ion-item v-for="details in filteredInventory" :key="details.facilityName">
         <ion-label class="ion-text-wrap">{{ details.facilityName }}</ion-label>
         <ion-note slot="end">{{ details.stock }}</ion-note>
       </ion-item>
@@ -36,7 +36,8 @@ import {
   IonNote,
   IonTitle,
   IonToolbar,
-  modalController } from "@ionic/vue";
+  modalController
+} from "@ionic/vue";
 import { defineComponent } from "vue";
 import { close } from "ionicons/icons";
 import { useStore } from "@/store";
@@ -58,9 +59,26 @@ export default defineComponent({
     IonToolbar 
   },
   props: ["otherStoresInventory"],
+  data() {
+    return{
+      queryString: "",
+      filteredInventory: [] as any
+    }
+  },
+  mounted() {
+    this.filteredInventory = this.otherStoresInventory.slice();
+  },
   methods: {
     closeModal() {
       modalController.dismiss({ dismissed: true });
+    },
+    searchFacilities(){
+      if (this.queryString !== "") {
+        this.filteredInventory = this.otherStoresInventory.filter((facility: any) =>
+          facility.facilityName.toLowerCase().includes(this.queryString.toLowerCase()));
+      } else {
+        this.filteredInventory = this.otherStoresInventory.slice();
+      }
     }
   },
   setup() {
