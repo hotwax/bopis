@@ -60,7 +60,7 @@
               <ion-list v-if="selectedSegment === 'inStore'">
                 <ion-item>
                   <ion-label class="ion-text-wrap">Quantity on hand</ion-label>
-                  <ion-note slot="end">10</ion-note>
+                  <ion-note slot="end">{{  getProductStock(product)?.quantityOnHandTotal ?? '0' }}</ion-note>
                 </ion-item>
                 <ion-item>
                   <ion-label class="ion-text-wrap">Safety Stock</ion-label>
@@ -72,18 +72,18 @@
                 </ion-item>
                 <ion-item lines="none">
                   <ion-label class="ion-text-wrap">Available to promise</ion-label>
-                  <ion-badge color="success" slot="end">70</ion-badge>
+                  <ion-badge color="success" slot="end">{{  }}</ion-badge>
                 </ion-item>
               </ion-list>
   
               <ion-list v-if="selectedSegment === 'otherLocations'">
                 <ion-item>
                   <ion-label class="ion-text-wrap">Other Stores</ion-label>
-                  <ion-button @click="getOtherStoresInventoryDetails()" fill="outline">100 ATP</ion-button>
+                  <ion-button @click="getOtherStoresInventoryDetails()" fill="outline">{{ otherStoresInventory }}</ion-button>
                 </ion-item>
                 <ion-item lines="none">
                   <ion-label class="ion-text-wrap">Warehouse</ion-label>
-                  <ion-note slot="end">100 ATP</ion-note>
+                  <ion-note slot="end">{{ warehouseInventory }}</ion-note>
                 </ion-item>
               </ion-list>
             </div>
@@ -228,11 +228,15 @@ export default defineComponent({
     ...mapGetters({
       product: "product/getCurrent",
       currentFacility: 'user/getCurrentFacility',
-      currency: 'user/getCurrency'
+      currency: 'user/getCurrency',
+      getProductStock: 'stock/getProductStock',
+      getInventoryCount: 'stock/getInventoryCount',
     })
   },
   async beforeMount() {
     await this.store.dispatch('product/setCurrent', { productId: this.$route.params.productId })
+    await this.store.dispatch('stock/fetchStock', { productId: this.$route.params.productId })
+    await this.store.dispatch('stock/fetchInvCount', { productId: this.$route.params.productId });
     if (this.product.variants) {
       this.getFeatures()
       await this.updateVariant()
@@ -245,6 +249,7 @@ export default defineComponent({
       await this.updateVariant();
     },
     getFeatures() {
+      console.log(this.getInventoryCount);
       const features = {} as any
       this.product.variants.map((variant: any) => {
         const size = getFeature(variant.featureHierarchy, '1/SIZE/');

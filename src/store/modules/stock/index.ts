@@ -8,7 +8,8 @@ import RootState from '../../RootState'
 const stockModule: Module<StockState, RootState> = {
   namespaced: true,
   state: {
-    products: {}
+    products: {},
+    count: {},
   },
   getters,
   actions,

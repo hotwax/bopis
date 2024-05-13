@@ -26,6 +26,30 @@ const actions: ActionTree<StockState, RootState> = {
       logger.error(err)
       showToast(translate('No data available!'))
     }
+  },
+
+  async fetchInvCount({ commit }, { productId }) {
+    try {
+     
+      const params = {
+        "entityName": "ProductFacility",
+        "inputFields": {
+          productId,
+          "facilityId": this.state.user.currentFacility.facilityId
+        },
+        "fieldList": ["minimumStock", "lastInventoryCount"],
+        "viewSize": 1
+      } as any
+      
+      const resp: any = await StockService.getInventoryComputation(params);
+      if(!hasError(resp)) {
+        commit(types.INVENTORY_COMPUTATIONS, {  productId: productId, facilityId: this.state.user.currentFacility.facilityId, minimumStock: resp.minimumStock, lastInventoryCount: resp.lastInventoryCount})
+      }
+    }
+    catch (err) {
+      logger.error(err)
+      showToast(translate('No data available!'))
+    }
   }
 }
 export default actions;

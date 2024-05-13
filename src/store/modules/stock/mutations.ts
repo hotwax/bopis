@@ -11,6 +11,16 @@ const mutations: MutationTree <StockState> = {
         [payload.facilityId]: payload.stock
       }
     }
+  },
+  [types.INVENTORY_COMPUTATIONS] (state, { productId, facilityId, minimumStock, lastInventoryCount }) {
+    if (!state.count[productId]) {
+      state.count[productId] = {};
+    }
+  
+    state.count[productId][facilityId] = {
+      minimumStock,
+      lastInventoryCount
+    };
   }
 }
 export default mutations;
