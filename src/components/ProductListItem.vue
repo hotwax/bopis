@@ -15,7 +15,7 @@
         <ion-icon color="medium" slot="icon-only" :icon="cubeOutline" />
       </ion-button>
       <div v-else-if="showInfoIcon" class="atp-info">
-        <ion-note slot="end"> 50 ATP </ion-note>
+        <ion-note slot="end"> {{ getOnlineAtp() }} </ion-note>
         <ion-button fill="clear" @click.stop="getInventoryComputationDetails($event)">
           <ion-icon :icon="informationCircleOutline" color="medium" />
         </ion-button>
@@ -52,20 +52,35 @@ export default defineComponent({
       showInfoIcon: false
     }
   },
-  props: {
-    item: Object,
-    isShipToStoreOrder: {
-      type: Boolean,
-      default: false
-    }
-  },
+  props: ['item', 'isShipToStoreOrder'],
   computed: {
     ...mapGetters({
       getProduct: 'product/getProduct',
-      getProductStock: 'stock/getProductStock'
+      product: "product/getCurrent",
+      getInventoryCount: 'stock/getInventoryCount',
+      currentFacility: 'user/getCurrentFacility',
     })
   },
+  async beforeMount () {
+    await this.store.dispatch('stock/fetchInvCount', { productId: this.item.productId });
+  },
   methods: {
+    getMinimumStock() {
+      const inventoryCount = this.getInventoryCount;
+      const productId = this.item.productId;
+      if (inventoryCount && inventoryCount[productId]) {
+        return inventoryCount[productId][this.currentFacility.facilityId]?.minimumStock ?? 0;
+      }
+      return 0;
+    },
+    getOnlineAtp() {
+      const inventoryCount = this.getInventoryCount;
+      const productId = this.item.productId;
+      if (inventoryCount && inventoryCount[productId]) {
+        return inventoryCount[productId][this.currentFacility.facilityId]?.onlineAtp ?? 0;
+      }
+      return 0;
+    },
     async fetchProductStock(productId: string) {
       this.isFetchingStock = true
       await this.store.dispatch('stock/fetchStock', { productId })
@@ -73,13 +88,14 @@ export default defineComponent({
       this.showInfoIcon = true;
     },
     async getInventoryComputationDetails(Event: any){
+      const minimumStock = this.getMinimumStock();
+      const onlineAtp = this.getOnlineAtp();
       const popover = await popoverController.create({
         component: InventoryDetailsPopover,
         event: Event,
-        // componentProps: { otherStoresInventory: this.otherStoresInventoryDetails }
+        componentProps: { minimumStock, onlineAtp, item: this.item.productId }
       });
       await popover.present();
-
     },
     updateColor(stock: number) {
       return stock ? stock < 10 ? 'warning' : 'success' : 'danger';

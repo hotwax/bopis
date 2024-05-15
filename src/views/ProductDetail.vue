@@ -60,19 +60,19 @@
               <ion-list v-if="selectedSegment === 'inStore'">
                 <ion-item>
                   <ion-label class="ion-text-wrap">Quantity on hand</ion-label>
-                  <ion-note slot="end">{{  getProductStock(product)?.quantityOnHandTotal ?? '0' }}</ion-note>
+                  <ion-note slot="end">{{  getProductStock(product.variants[0].productId)?.quantityOnHandTotal ?? '0' }}</ion-note>
                 </ion-item>
                 <ion-item>
                   <ion-label class="ion-text-wrap">Safety Stock</ion-label>
-                  <ion-note slot="end">10</ion-note>
+                  <ion-note slot="end">{{ getMinimumStock() }}</ion-note>
                 </ion-item>
                 <ion-item>
                   <ion-label class="ion-text-wrap">Order Reservation</ion-label>
-                  <ion-note slot="end">20</ion-note>
+                  <ion-note slot="end">{{ reservedQuantity ?? '0' }}</ion-note>
                 </ion-item>
                 <ion-item lines="none">
                   <ion-label class="ion-text-wrap">Available to promise</ion-label>
-                  <ion-badge color="success" slot="end">{{  }}</ion-badge>
+                  <ion-badge color="success" slot="end">{{ getOnlineAtp() }}</ion-badge>
                 </ion-item>
               </ion-list>
   
@@ -91,70 +91,42 @@
         </div>
     
         <div>
-          <h3> {count} order reservtion at the store</h3>
+          <h3> {{ reservedQuantity ?? '0' }} order reservtion at the store</h3>
           <div class="reservation-section">
-
-            <ion-card>
+            <div v-for="(order, index) in otherItem" :key="index">
+            <ion-card> 
               <ion-item lines="none">
-                <ion-label class="ion-text-wrap"> Order ID
-                  <p>Customer name</p>
+                <ion-label class="ion-text-wrap"> {{ order.orderId }}
+                  <p>{{ order.customer ? order.customer.name : '' }}</p>
                 </ion-label>
-                <ion-badge color="primary" slot="end">Open</ion-badge> 
+                <ion-badge color="primary" slot="end">{{ order.category }}</ion-badge> 
               </ion-item>
-              <ion-item lines="none">
+
+              <ion-item lines="none" v-for="(item, index) in getOrderItems(order)" :key="index"> 
                 <ion-thumbnail slot="start">
-                  <DxpShopifyImg size="small" />
+                  <DxpShopifyImg :src="getProduct(item.productId).mainImageUrl" size="small" />
                 </ion-thumbnail>
                 <ion-label class="ion-text-wrap">
-                  <h4>BRAND</h4>
-                  <h3 class="ion-text-wrap">Virtual name</h3>
+                  <h4>{{ item.brand }}</h4>
+                  <h3 class="ion-text-wrap">{{ item.virtualName }}</h3>
                 </ion-label>
-                <ion-note slot="end"> 2 units </ion-note>
+                <ion-note slot="end">{{ item.quantity }}</ion-note>
               </ion-item>
-              <ion-list-header color="light">
+                <!-- other items -->
+              <ion-list-header n-list-header color="light" v-if="order.parts[0].items.some((item: any) => item.productId != this.product.variants[0].productId)">
                 <ion-label>Order items</ion-label>
               </ion-list-header>
-              <ion-item lines="none">
+              <ion-item lines="none" v-for="(item, index) in getOtherItems(order)" :key="index" >
                 <ion-thumbnail slot="start">
                   <DxpShopifyImg size="small" />
                 </ion-thumbnail>
                 <ion-label class="ion-text-wrap" >
-                  <p class="overline">BRAND</p>
-                  <h3 class="ion-text-wrap">Virtual name</h3>
+                  <p class="overline">{{ item.brand }}</p>
+                  <h3 class="ion-text-wrap">{{ item.virtualName }}</h3>
                 </ion-label>
               </ion-item>
             </ion-card>
-
-            <ion-card>
-              <ion-item lines="none">
-                <ion-label class="ion-text-wrap"> Order ID
-                  <p>Customer name</p>
-                </ion-label>
-                <ion-badge color="primary" slot="end">Packed</ion-badge>
-              </ion-item>
-              <ion-item lines="none">
-                <ion-thumbnail slot="start">
-                  <DxpShopifyImg size="small" />
-                </ion-thumbnail>
-                <ion-label class="ion-text-wrap" >
-                  <p class="overline">BRAND</p>
-                  <h3 class="ion-text-wrap">Virtual name</h3>
-                </ion-label>
-                <ion-note slot="end"> 2 units </ion-note>
-              </ion-item>
-              <ion-list-header color="light">
-                <ion-label>Order items</ion-label>
-              </ion-list-header>
-              <ion-item lines="none">
-                <ion-thumbnail slot="start">
-                  <DxpShopifyImg size="small" />
-                </ion-thumbnail>
-                <ion-label class="ion-text-wrap" >
-                  <p class="overline">BRAND</p>
-                  <h3 class="ion-text-wrap">Virtual name</h3>
-                </ion-label>
-              </ion-item>
-            </ion-card>
+            </div>
           </div>
         </div>
       </main>
@@ -190,6 +162,8 @@ import { sortSizes } from '@/apparel-sorter';
 import OtherStoresInventoryModal from "./OtherStoresInventoryModal.vue";
 import { DxpShopifyImg, getProductIdentificationValue, translate, useProductIdentificationStore } from "@hotwax/dxp-components";
 import logger from "@/logger";
+import { prepareOrderQuery } from '@/utils/solrHelper';
+import { UtilService } from '@/services/UtilService';
 
 export default defineComponent({
   name: "ProductDetail",
@@ -222,6 +196,8 @@ export default defineComponent({
       warehouseInventory: 0,
       otherStoresInventoryDetails: [] as any,
       selectedSegment: 'inStore',
+      queryString: '',
+      reservedQuantity: ''
     }
   },
   computed: {
@@ -231,25 +207,80 @@ export default defineComponent({
       currency: 'user/getCurrency',
       getProductStock: 'stock/getProductStock',
       getInventoryCount: 'stock/getInventoryCount',
-    })
+      otherItem: 'order/getOtherItem',
+      getProduct: 'product/getProduct',
+    }),
+    getOrderItems() {
+      return (order: any) => order.parts[0].items.filter((item: any) => item.productId == this.product.variants[0].productId);
+    },
+    getOtherItems() {
+      return (order: any) => order.parts[0].items.filter((item: any) => item.productId != this.product.variants[0].productId);
+    }
   },
   async beforeMount() {
     await this.store.dispatch('product/setCurrent', { productId: this.$route.params.productId })
-    await this.store.dispatch('stock/fetchStock', { productId: this.$route.params.productId })
-    await this.store.dispatch('stock/fetchInvCount', { productId: this.$route.params.productId });
+    await this.store.dispatch('stock/fetchStock', { productId: this.product.variants[0].productId })
+    await this.store.dispatch('stock/fetchInvCount', { productId: this.product.variants[0].productId });
     if (this.product.variants) {
       this.getFeatures()
       await this.updateVariant()
     }
   },
   methods: {
+    getMinimumStock() {
+      const inventoryCount = this.getInventoryCount;
+      const productId = this.currentVariant.productId;
+      if (inventoryCount && inventoryCount[productId]) {
+        return inventoryCount[productId][this.currentFacility.facilityId]?.minimumStock ?? 0;
+      }
+      return 0;
+    },
+    getOnlineAtp() {
+      const inventoryCount = this.getInventoryCount;
+      const productId = this.currentVariant.productId;
+      if (inventoryCount && inventoryCount[productId]) {
+        return inventoryCount[productId][this.currentFacility.facilityId]?.onlineAtp ?? 0;
+      }
+      return 0;
+    },
+
+    //For fetching the order reservation count.
+    async fetchReservedQuantity(productId: any){
+      const payload = prepareOrderQuery({
+        viewSize: "0",  // passing viewSize as 0, as we don't want to fetch any data
+        defType: "edismax",
+        filters: {
+          facilityId: this.currentFacility.facilityId,
+          productId: productId
+        },
+        facet: {
+          "reservedQuantityFacet": "sum(itemQuantity)"
+        }
+      })
+      try {
+        const resp = await UtilService.fetchReservedQuantity(payload)
+        if(resp.status == 200 && !hasError(resp)) {
+          this.reservedQuantity = resp.data.facets.reservedQuantityFacet
+        } else {
+          throw resp.data
+        }
+      } catch(err) {
+        logger.error('Failed to fetch reserved quantity', err)
+      }
+    },
+
+    //For fetching all the orders for this product & facility.
+    async getOpenOrders (vSize?: any, vIndex?: any) {
+      const viewSize = vSize ? vSize : process.env.VUE_APP_VIEW_SIZE;
+      const viewIndex = vIndex ? vIndex : 0;
+      await this.store.dispatch("order/getOrderDetails", { viewSize, viewIndex, facilityId: this.currentFacility.facilityId, productId: this.currentVariant.productId});
+    },
     async applyFeature(feature: string, type: string) {
       if(type === 'color') this.selectedColor = feature;
       else if(type === 'size') this.selectedSize = feature
       await this.updateVariant();
     },
     getFeatures() {
-      console.log(this.getInventoryCount);
       const features = {} as any
       this.product.variants.map((variant: any) => {
         const size = getFeature(variant.featureHierarchy, '1/SIZE/');
@@ -283,6 +314,8 @@ export default defineComponent({
       // if the variant does not have color or size as features
       this.currentVariant = variant || this.product.variants[0];
       await this.checkInventory();
+      await this.getOpenOrders();
+      this.fetchReservedQuantity( this.currentVariant.productId );
     },
     async checkInventory() {
       this.currentStoreInventory = this.otherStoresInventory = this.warehouseInventory = 0
@@ -354,16 +387,10 @@ export default defineComponent({
   width: 200px;
 }
 
-.metadata {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  row-gap: 4px;
-}
-
 .reservation-section {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(343px, 1fr));
+  grid-template-columns: repeat(3, 1fr);
+  /* gap: 5px; */
 }
 
 .product-section {

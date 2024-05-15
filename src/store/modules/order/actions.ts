@@ -10,8 +10,111 @@ import emitter from '@/event-bus'
 import store from "@/store";
 import { prepareOrderQuery } from "@/utils/solrHelper";
 import logger from "@/logger";
+import { getOrderCategory } from "@/utils/order";
 
 const actions: ActionTree<OrderState , RootState> ={
+
+  async getOrderDetails({commit}, payload ) {
+    // Show loader only when new query and not the infinite scroll
+    // if (payload.viewIndex === 0) emitter.emit("presentLoader");
+    let resp;
+    const orderQueryPayload = prepareOrderQuery({
+      ...payload,
+      orderStatusId: 'ORDER_APPROVED',
+      orderTypeId: 'SALES_ORDER',
+      '-fulfillmentStatus': '(Cancelled OR Rejected)',
+    })
+
+   try {
+      resp = await OrderService.getOpenOrders(orderQueryPayload);
+      if (resp.status === 200 && !hasError(resp) && resp.data.grouped?.orderId?.ngroups > 0) {
+        const orderIds = resp.data.grouped?.orderId?.groups.map((order: any) => order.doclist.docs[0].orderId);
+        const { productId, ...params } = payload;
+        this.dispatch('order/getOtherOrderItem', {...params, orderIds});
+        emitter.emit("dismissLoader");
+      } else {  
+        showToast(translate("Orders Not Found"))
+        emitter.emit("dismissLoader");
+      }
+      emitter.emit("dismissLoader");
+    } catch(err) {
+      logger.error(err)
+      showToast(translate("Something went wrong"))
+    }
+    return resp;
+  },
+
+  async getOtherOrderItem({ commit }, payload) {
+    // Show loader only when new query and not the infinite scroll
+    // if (payload.viewIndex === 0) emitter.emit("presentLoader");
+    let resp;
+
+    const orderQueryPayload = prepareOrderQuery({
+      ...payload,
+      orderStatusId: 'ORDER_APPROVED',
+      orderTypeId: 'SALES_ORDER',
+    })
+
+   try {
+      resp = await OrderService.getOpenOrders(orderQueryPayload);
+      if (resp.status === 200 && !hasError(resp) && resp.data.grouped?.orderId?.ngroups > 0) {
+        const orders = resp.data.grouped?.orderId?.groups.map((order: any) => {
+          const orderItem = order.doclist.docs[0]
+          return {
+            orderId: orderItem.orderId,
+            orderName: orderItem.orderName,
+            customer: {
+              partyId: orderItem.customerId,
+              name: orderItem.customerName
+            },
+            category: getOrderCategory(orderItem),
+            parts: order.doclist.docs.reduce((arr: Array<any>, item: any) => {
+              const currentOrderPart = arr.find((orderPart: any) => orderPart.orderPartSeqId === item.shipGroupSeqId)
+              if (!currentOrderPart) {
+                arr.push({
+                  orderPartSeqId: item.shipGroupSeqId,
+                  items: [{
+                    shipGroupSeqId: item.shipGroupSeqId,
+                    orderId: orderItem.orderId,
+                    orderItemSeqId: item.orderItemSeqId,
+                    quantity: item.itemQuantity,
+                    brand: item.productStoreId,
+                    virtualName: item.virtualProductName,
+                    productId: item.productId,
+                  }]
+                })
+              } else {
+                currentOrderPart.items.push({
+                  shipGroupSeqId: item.shipGroupSeqId,
+                  orderId: orderItem.orderId,
+                  orderItemSeqId: item.orderItemSeqId,
+                  quantity: item.itemQuantity,
+                  brand: item.productStoreId,
+                  virtualName: item.virtualProductName,
+                  productId: item.productId,
+                })
+              }
+              return arr
+            }, []),
+          }
+        })
+        // const total = resp.data.grouped?.orderId?.ngroups;
+        // if(payload.viewIndex && payletload.viewIndex > 0) orders = state.open.list.concat(orders)
+        commit(types.OTHER_ITEM_UPDATED, { orders })
+        emitter.emit("dismissLoader");
+      } else {
+        commit(types.OTHER_ITEM_UPDATED, { orders: {} })
+        showToast(translate("Orders Not Found"))
+      }
+      emitter.emit("dismissLoader");
+    }
+    catch(err) {
+      logger.error(err)
+      showToast(translate("Something went wrong"))
+    }
+    return resp;
+  },
+
   async getOpenOrders({ commit, state }, payload) {
     // Show loader only when new query and not the infinite scroll
     if (payload.viewIndex === 0) emitter.emit("presentLoader");

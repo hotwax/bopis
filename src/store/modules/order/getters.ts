@@ -3,6 +3,9 @@ import OrderState from "./OrderState"
 import RootState from "../../RootState";
 
 const getters: GetterTree<OrderState , RootState> = {
+  getOtherItem: (state) => {
+    return state.otherItem;
+  },
   getOpenOrders: (state) => {
     return state.open.list;
   },

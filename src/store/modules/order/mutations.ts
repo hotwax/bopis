@@ -3,6 +3,9 @@ import ProductState from './OrderState'
 import * as types from './mutation-types'
 
 const mutations: MutationTree <ProductState> = {
+  [types.OTHER_ITEM_UPDATED] (state, payload){
+    state.otherItem = payload.orders
+  },
   [types.ORDER_OPEN_UPDATED] (state , payload ) {
     state.open.list = payload.orders
     state.open.total = payload.total

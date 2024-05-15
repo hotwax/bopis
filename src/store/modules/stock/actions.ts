@@ -37,13 +37,13 @@ const actions: ActionTree<StockState, RootState> = {
           productId,
           "facilityId": this.state.user.currentFacility.facilityId
         },
-        "fieldList": ["minimumStock", "lastInventoryCount"],
+        "fieldList": ["minimumStock", "computedLastInventoryCount"],
         "viewSize": 1
       } as any
       
       const resp: any = await StockService.getInventoryComputation(params);
       if(!hasError(resp)) {
-        commit(types.INVENTORY_COMPUTATIONS, {  productId: productId, facilityId: this.state.user.currentFacility.facilityId, minimumStock: resp.minimumStock, lastInventoryCount: resp.lastInventoryCount})
+        commit(types.INVENTORY_COMPUTATIONS, {  productId: productId, facilityId: this.state.user.currentFacility.facilityId, minimumStock: resp.data.docs[0].minimumStock, onlineAtp: resp.data.docs[0].computedLastInventoryCount})
       }
     }
     catch (err) {
