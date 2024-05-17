@@ -59,30 +59,30 @@
   
               <ion-list v-if="selectedSegment === 'inStore'">
                 <ion-item>
-                  <ion-label class="ion-text-wrap">Quantity on hand</ion-label>
+                  <ion-label class="ion-text-wrap">{{ translate("Quantity on hands")}}</ion-label>
                   <ion-note slot="end">{{  getProductStock(product.variants[0].productId)?.quantityOnHandTotal ?? '0' }}</ion-note>
                 </ion-item>
                 <ion-item>
-                  <ion-label class="ion-text-wrap">Safety Stock</ion-label>
+                  <ion-label class="ion-text-wrap">{{ translate("Safety stock")}}</ion-label>
                   <ion-note slot="end">{{ getMinimumStock() }}</ion-note>
                 </ion-item>
                 <ion-item>
-                  <ion-label class="ion-text-wrap">Order Reservation</ion-label>
-                  <ion-note slot="end">{{ reservedQuantity ?? '0' }}</ion-note>
+                  <ion-label class="ion-text-wrap">{{ translate("Order reservations")}}</ion-label>
+                  <ion-note slot="end">{{ reservedQuantity }}</ion-note>
                 </ion-item>
                 <ion-item lines="none">
-                  <ion-label class="ion-text-wrap">Available to promise</ion-label>
+                  <ion-label class="ion-text-wrap">{{ translate("Available to promise")}}</ion-label>
                   <ion-badge color="success" slot="end">{{ getOnlineAtp() }}</ion-badge>
                 </ion-item>
               </ion-list>
   
               <ion-list v-if="selectedSegment === 'otherLocations'">
                 <ion-item>
-                  <ion-label class="ion-text-wrap">Other Stores</ion-label>
+                  <ion-label class="ion-text-wrap">{{ translate("Other stores")}}</ion-label>
                   <ion-button @click="getOtherStoresInventoryDetails()" fill="outline">{{ otherStoresInventory }}</ion-button>
                 </ion-item>
                 <ion-item lines="none">
-                  <ion-label class="ion-text-wrap">Warehouse</ion-label>
+                  <ion-label class="ion-text-wrap">{{ translate("Warehouse")}}</ion-label>
                   <ion-note slot="end">{{ warehouseInventory }}</ion-note>
                 </ion-item>
               </ion-list>
@@ -113,8 +113,8 @@
                 <ion-note slot="end">{{ item.quantity }}</ion-note>
               </ion-item>
                 <!-- other items -->
-              <ion-list-header n-list-header color="light" v-if="order.parts[0].items.some((item: any) => item.productId != this.product.variants[0].productId)">
-                <ion-label>Order items</ion-label>
+              <ion-list-header n-list-header color="light" v-if="order.parts[0].items.some((item: any) => item.productId != product.variants[0].productId)">
+                <ion-label>Other items</ion-label>
               </ion-list-header>
               <ion-item lines="none" v-for="(item, index) in getOtherItems(order)" :key="index" >
                 <ion-thumbnail slot="start">
