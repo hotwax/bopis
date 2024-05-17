@@ -59,30 +59,30 @@
   
               <ion-list v-if="selectedSegment === 'inStore'">
                 <ion-item>
-                  <ion-label class="ion-text-wrap">Quantity on hand</ion-label>
+                  <ion-label class="ion-text-wrap">{{ translate("Quantity on hands")}}</ion-label>
                   <ion-note slot="end">10</ion-note>
                 </ion-item>
                 <ion-item>
-                  <ion-label class="ion-text-wrap">Safety Stock</ion-label>
+                  <ion-label class="ion-text-wrap">{{ translate("Safety stock")}}</ion-label>
                   <ion-note slot="end">10</ion-note>
                 </ion-item>
                 <ion-item>
-                  <ion-label class="ion-text-wrap">Order Reservation</ion-label>
+                  <ion-label class="ion-text-wrap">{{ translate("Order reservations")}}</ion-label>
                   <ion-note slot="end">20</ion-note>
                 </ion-item>
                 <ion-item lines="none">
-                  <ion-label class="ion-text-wrap">Available to promise</ion-label>
+                  <ion-label class="ion-text-wrap">{{ translate("Available to promise")}}</ion-label>
                   <ion-badge color="success" slot="end">70</ion-badge>
                 </ion-item>
               </ion-list>
   
               <ion-list v-if="selectedSegment === 'otherLocations'">
                 <ion-item>
-                  <ion-label class="ion-text-wrap">Other Stores</ion-label>
+                  <ion-label class="ion-text-wrap">{{ translate("Other stores")}}</ion-label>
                   <ion-button @click="getOtherStoresInventoryDetails()" fill="outline">100 ATP</ion-button>
                 </ion-item>
                 <ion-item lines="none">
-                  <ion-label class="ion-text-wrap">Warehouse</ion-label>
+                  <ion-label class="ion-text-wrap">{{ translate("Warehouse")}}</ion-label>
                   <ion-note slot="end">100 ATP</ion-note>
                 </ion-item>
               </ion-list>
@@ -91,7 +91,7 @@
         </div>
     
         <div>
-          <h3> {count} order reservtion at the store</h3>
+          <h3> {{ translate({  },"order reservtions at the store")}} </h3>
           <div class="reservation-section">
 
             <ion-card>

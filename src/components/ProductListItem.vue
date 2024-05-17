@@ -17,7 +17,7 @@
       <div v-else-if="showInfoIcon" class="atp-info">
         <ion-note slot="end"> 50 ATP </ion-note>
         <ion-button fill="clear" @click.stop="getInventoryComputationDetails($event)">
-          <ion-icon :icon="informationCircleOutline" color="medium" />
+          <ion-icon slot="icon-only" :icon="informationCircleOutline" color="medium" />
         </ion-button>
       </div>
       <ion-spinner v-else color="medium" name="crescent" />
