@@ -91,7 +91,7 @@
         </div>
     
         <div>
-          <h3> {{ reservedQuantity ?? '0' }} order reservtion at the store</h3>
+          <h3>{{ translate('order reservtions at the store', { count: reservedQuantity }) }}</h3>
           <div class="reservation-section">
             <div v-for="(order, index) in otherItem" :key="index">
             <ion-card> 
@@ -197,7 +197,7 @@ export default defineComponent({
       otherStoresInventoryDetails: [] as any,
       selectedSegment: 'inStore',
       queryString: '',
-      reservedQuantity: ''
+      reservedQuantity: 0
     }
   },
   computed: {
