@@ -10,6 +10,7 @@
     </ion-toolbar>
   </ion-header>
   <ion-content class="ion-padding">
+    <ion-searchbar/>
     <ion-list v-if="otherStoresInventory.length">
       <ion-item v-for="details in otherStoresInventory" :key="details.facilityName">
         <ion-label class="ion-text-wrap">{{ details.facilityName }}</ion-label>
