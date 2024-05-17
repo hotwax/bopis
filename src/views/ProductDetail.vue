@@ -90,7 +90,7 @@
           </section>
         </div>
     
-        <div>
+        <div v-if="otherItem.length > 0">
           <h3>{{ translate('order reservtions at the store', { count: reservedQuantity }) }}</h3>
           <div class="reservation-section">
             <div v-for="(order, index) in otherItem" :key="index">
