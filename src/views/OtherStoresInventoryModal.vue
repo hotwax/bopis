@@ -66,6 +66,7 @@ export default defineComponent({
     }
   },
   mounted() {
+    // Create a copy of otherStoresInventory on mount
     this.filteredInventory = this.otherStoresInventory.slice();
   },
   methods: {
@@ -77,7 +78,8 @@ export default defineComponent({
         this.filteredInventory = this.otherStoresInventory.filter((facility: any) =>
           facility.facilityName.toLowerCase().includes(this.queryString.toLowerCase()));
       } else {
-        this.filteredInventory = this.otherStoresInventory.slice();
+        // Reset filteredInventory when query is empty
+        this.filteredInventory = this.otherStoresInventory.slice(); 
       }
     }
   },

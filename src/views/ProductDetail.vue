@@ -48,7 +48,7 @@
               </ion-item>
             </ion-list>
             <div>
-              <ion-segment value="inStore">
+              <ion-segment :value="selectedSegment">
                 <ion-segment-button value="inStore" @click="selectedSegment = 'inStore'">
                   <ion-label>In Store</ion-label>
                 </ion-segment-button>
@@ -60,7 +60,7 @@
               <ion-list v-if="selectedSegment === 'inStore'">
                 <ion-item>
                   <ion-label class="ion-text-wrap">{{ translate("Quantity on hands")}}</ion-label>
-                  <ion-note slot="end">{{  getProductStock(product.variants[0].productId)?.quantityOnHandTotal ?? '0' }}</ion-note>
+                  <ion-note slot="end">{{ getProductStock(product.variants[0].productId)?.quantityOnHandTotal ?? '0' }}</ion-note>
                 </ion-item>
                 <ion-item>
                   <ion-label class="ion-text-wrap">{{ translate("Safety stock")}}</ion-label>
@@ -68,7 +68,7 @@
                 </ion-item>
                 <ion-item>
                   <ion-label class="ion-text-wrap">{{ translate("Order reservations")}}</ion-label>
-                  <ion-note slot="end">{{ reservedQuantity }}</ion-note>
+                  <ion-note slot="end">{{ reservedQuantity ?? 0 }}</ion-note>
                 </ion-item>
                 <ion-item lines="none">
                   <ion-label class="ion-text-wrap">{{ translate("Available to promise")}}</ion-label>
@@ -110,9 +110,10 @@
                   <h4>{{ item.brand }}</h4>
                   <h3 class="ion-text-wrap">{{ item.virtualName }}</h3>
                 </ion-label>
-                <ion-note slot="end">{{ item.quantity }}</ion-note>
+                <ion-note slot="end">{{ translate("units", { item: item.quantity}) }}</ion-note>
               </ion-item>
-                <!-- other items -->
+
+              <!-- other items -->
               <ion-list-header n-list-header color="light" v-if="order.parts[0].items.some((item: any) => item.productId != product.variants[0].productId)">
                 <ion-label>Other items</ion-label>
               </ion-list-header>
@@ -220,7 +221,7 @@ export default defineComponent({
   async beforeMount() {
     await this.store.dispatch('product/setCurrent', { productId: this.$route.params.productId })
     await this.store.dispatch('stock/fetchStock', { productId: this.product.variants[0].productId })
-    await this.store.dispatch('stock/fetchInvCount', { productId: this.product.variants[0].productId });
+    await this.store.dispatch('stock/fetchInventoryCount', { productId: this.product.variants[0].productId });
     if (this.product.variants) {
       this.getFeatures()
       await this.updateVariant()
@@ -243,7 +244,6 @@ export default defineComponent({
       }
       return 0;
     },
-
     //For fetching the order reservation count.
     async fetchReservedQuantity(productId: any){
       const payload = prepareOrderQuery({
@@ -268,12 +268,9 @@ export default defineComponent({
         logger.error('Failed to fetch reserved quantity', err)
       }
     },
-
     //For fetching all the orders for this product & facility.
-    async getOpenOrders (vSize?: any, vIndex?: any) {
-      const viewSize = vSize ? vSize : process.env.VUE_APP_VIEW_SIZE;
-      const viewIndex = vIndex ? vIndex : 0;
-      await this.store.dispatch("order/getOrderDetails", { viewSize, viewIndex, facilityId: this.currentFacility.facilityId, productId: this.currentVariant.productId});
+    async getOrderDetails() {
+      await this.store.dispatch("order/getOrderDetails", { facilityId: this.currentFacility.facilityId, productId: this.currentVariant.productId });
     },
     async applyFeature(feature: string, type: string) {
       if(type === 'color') this.selectedColor = feature;
@@ -314,7 +311,7 @@ export default defineComponent({
       // if the variant does not have color or size as features
       this.currentVariant = variant || this.product.variants[0];
       await this.checkInventory();
-      await this.getOpenOrders();
+      await this.getOrderDetails();
       this.fetchReservedQuantity( this.currentVariant.productId );
     },
     async checkInventory() {

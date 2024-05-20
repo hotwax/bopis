@@ -13,14 +13,19 @@ const mutations: MutationTree <StockState> = {
     }
   },
   [types.INVENTORY_COMPUTATIONS] (state, { productId, facilityId, minimumStock, onlineAtp }) {
-    if (!state.count[productId]) {
-      state.count[productId] = {};
+    if (state.count[productId]) {
+      state.count[productId][facilityId] = {
+        minimumStock: minimumStock,
+        onlineAtp: onlineAtp
+      }
+    } else {
+      state.count[productId] = {
+        [facilityId]: {
+          minimumStock: minimumStock,
+          onlineAtp: onlineAtp
+        }
+      }
     }
-  
-    state.count[productId][facilityId] = {
-      minimumStock,
-      onlineAtp
-    };
   }
 }
 export default mutations;

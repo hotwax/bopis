@@ -25,7 +25,7 @@ const actions: ActionTree<OrderState , RootState> ={
       '-fulfillmentStatus': '(Cancelled OR Rejected)',
     })
 
-   try {
+    try {
       resp = await OrderService.getOpenOrders(orderQueryPayload);
       if (resp.status === 200 && !hasError(resp) && resp.data.grouped?.orderId?.ngroups > 0) {
         const orderIds = resp.data.grouped?.orderId?.groups.map((order: any) => order.doclist.docs[0].orderId);
@@ -48,14 +48,13 @@ const actions: ActionTree<OrderState , RootState> ={
     // Show loader only when new query and not the infinite scroll
     // if (payload.viewIndex === 0) emitter.emit("presentLoader");
     let resp;
-
     const orderQueryPayload = prepareOrderQuery({
       ...payload,
       orderStatusId: 'ORDER_APPROVED',
       orderTypeId: 'SALES_ORDER',
     })
 
-   try {
+    try {
       resp = await OrderService.getOpenOrders(orderQueryPayload);
       if (resp.status === 200 && !hasError(resp) && resp.data.grouped?.orderId?.ngroups > 0) {
         const orders = resp.data.grouped?.orderId?.groups.map((order: any) => {

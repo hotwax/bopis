@@ -28,9 +28,8 @@ const actions: ActionTree<StockState, RootState> = {
     }
   },
 
-  async fetchInvCount({ commit }, { productId }) {
+  async fetchInventoryCount({ commit }, { productId }) {
     try {
-     
       const params = {
         "entityName": "ProductFacility",
         "inputFields": {
@@ -43,7 +42,9 @@ const actions: ActionTree<StockState, RootState> = {
       
       const resp: any = await StockService.getInventoryComputation(params);
       if(!hasError(resp)) {
-        commit(types.INVENTORY_COMPUTATIONS, {  productId: productId, facilityId: this.state.user.currentFacility.facilityId, minimumStock: resp.data.docs[0].minimumStock, onlineAtp: resp.data.docs[0].computedLastInventoryCount})
+        commit(types.INVENTORY_COMPUTATIONS, { productId: productId, facilityId: this.state.user.currentFacility.facilityId, minimumStock: resp.data.docs[0].minimumStock, onlineAtp: resp.data.docs[0].computedLastInventoryCount })
+      } else {
+        throw resp.data;
       }
     }
     catch (err) {

@@ -99,13 +99,14 @@ export default defineComponent({
         logger.error('Failed to fetch reserved quantity', err)
       }
     },
+  },
 
-},
-setup () {
-  const store = useStore();
+  setup () {
+    const store = useStore();
     return {
-    store,
-    translate
-  }}
+      store,
+      translate
+    }
+  }
 })
 </script>

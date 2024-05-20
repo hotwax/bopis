@@ -62,7 +62,7 @@ export default defineComponent({
     })
   },
   async beforeMount () {
-    await this.store.dispatch('stock/fetchInvCount', { productId: this.item.productId });
+    await this.store.dispatch('stock/fetchInventoryCount', { productId: this.item.productId });
   },
   methods: {
     getMinimumStock() {
