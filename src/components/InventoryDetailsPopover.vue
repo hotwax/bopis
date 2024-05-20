@@ -47,16 +47,16 @@ import logger from "@/logger";
 export default defineComponent({  
   name: 'InventoryDetailsPopover',
   component:{
-    IonHeader,
-    IonToolbar,
+    IonBadge,
     IonButtons,
-    IonTitle,
     IonContent,
+    IonHeader,
     IonItem,
     IonLabel,
-    IonNote,
-    IonBadge,
     IonList,
+    IonNote,
+    IonTitle,
+    IonToolbar,
   },
   props: ['minimumStock', 'onlineAtp', 'item'],
   data () {
