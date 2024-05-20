@@ -12,7 +12,7 @@
       </ion-item>
       <ion-item>
         <ion-label class="ion-text-wrap">{{ translate("Order reservations")}}</ion-label>
-        <ion-note slot="end">{{ reservedQuantity }}</ion-note>
+        <ion-note slot="end">{{ reservedQuantity ?? 0 }}</ion-note>
       </ion-item>
       <ion-item lines="none">
         <ion-label class="ion-text-wrap">{{ translate("Online ATP")}}</ion-label>
@@ -72,7 +72,8 @@ export default defineComponent({
     })   
   },
   async beforeMount () {
-    await this.store.dispatch('stock/fetchStock', { productId: this.item.productId })
+    const productId = this.item?.productId;
+    await this.store.dispatch('stock/fetchStock', { productId })
     this.fetchReservedQuantity( this.item.productId );
   },
   methods: {

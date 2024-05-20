@@ -93,7 +93,7 @@ export default defineComponent({
       const popover = await popoverController.create({
         component: InventoryDetailsPopover,
         event: Event,
-        componentProps: { minimumStock, onlineAtp, item: this.item.productId }
+        componentProps: { minimumStock, onlineAtp, item: this.item }
       });
       await popover.present();
     },
