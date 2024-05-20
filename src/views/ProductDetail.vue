@@ -64,15 +64,15 @@
                 </ion-item>
                 <ion-item>
                   <ion-label class="ion-text-wrap">{{ translate("Safety stock")}}</ion-label>
-                  <ion-note slot="end">{{ getMinimumStock() }}</ion-note>
+                  <ion-note slot="end">{{ getInventoryInformation(product.variants[0].productId)?.minimumStock ?? '0' }}</ion-note>
                 </ion-item>
                 <ion-item>
                   <ion-label class="ion-text-wrap">{{ translate("Order reservations")}}</ion-label>
-                  <ion-note slot="end">{{ reservedQuantity ?? 0 }}</ion-note>
+                  <ion-note slot="end">{{ getInventoryInformation(product.variants[0].productId)?.reservedQuantity ?? '0' }}</ion-note>
                 </ion-item>
                 <ion-item lines="none">
                   <ion-label class="ion-text-wrap">{{ translate("Available to promise")}}</ion-label>
-                  <ion-badge color="success" slot="end">{{ getOnlineAtp() }}</ion-badge>
+                  <ion-badge color="success" slot="end">{{ getInventoryInformation(product.variants[0].productId)?.onlineAtp ?? '0' }}</ion-badge>
                 </ion-item>
               </ion-list>
   
@@ -91,7 +91,7 @@
         </div>
     
         <div v-if="otherItem.length > 0">
-          <h3>{{ translate('order reservtions at the store', { count: reservedQuantity }) }}</h3>
+          <h3>{{ translate('order reservtions at the store', { count: getInventoryInformation(product.variants[0].productId)?.reservedQuantity ?? '0' }) }}</h3>
           <div class="reservation-section">
             <div v-for="(order, index) in otherItem" :key="index">
             <ion-card> 
@@ -138,7 +138,9 @@
 <script lang="ts">
 import {
   IonBackButton,
+  IonBadge,
   IonButton,
+  IonCard,
   IonChip,
   IonContent,
   IonHeader,
@@ -150,7 +152,9 @@ import {
   IonPage,
   IonRow,
   IonSegment,
+  IonSegmentButton,
   IonTitle,
+  IonThumbnail,
   IonToolbar,
   modalController
 } from "@ionic/vue";
@@ -163,14 +167,14 @@ import { sortSizes } from '@/apparel-sorter';
 import OtherStoresInventoryModal from "./OtherStoresInventoryModal.vue";
 import { DxpShopifyImg, getProductIdentificationValue, translate, useProductIdentificationStore } from "@hotwax/dxp-components";
 import logger from "@/logger";
-import { prepareOrderQuery } from '@/utils/solrHelper';
-import { UtilService } from '@/services/UtilService';
 
 export default defineComponent({
   name: "ProductDetail",
   components: {
     IonBackButton,
+    IonBadge,
     IonButton,
+    IonCard,
     IonChip,
     IonContent,
     IonHeader,
@@ -182,7 +186,9 @@ export default defineComponent({
     IonPage,
     IonRow,
     IonSegment,
+    IonSegmentButton,
     IonTitle,
+    IonThumbnail,
     IonToolbar,
     DxpShopifyImg
   },
@@ -197,8 +203,7 @@ export default defineComponent({
       warehouseInventory: 0,
       otherStoresInventoryDetails: [] as any,
       selectedSegment: 'inStore',
-      queryString: '',
-      reservedQuantity: 0
+      queryString: ''
     }
   },
   computed: {
@@ -207,7 +212,7 @@ export default defineComponent({
       currentFacility: 'user/getCurrentFacility',
       currency: 'user/getCurrency',
       getProductStock: 'stock/getProductStock',
-      getInventoryCount: 'stock/getInventoryCount',
+      getInventoryInformation: 'stock/getInventoryInformation',
       otherItem: 'order/getOtherItem',
       getProduct: 'product/getProduct',
     }),
@@ -222,52 +227,13 @@ export default defineComponent({
     await this.store.dispatch('product/setCurrent', { productId: this.$route.params.productId })
     await this.store.dispatch('stock/fetchStock', { productId: this.product.variants[0].productId })
     await this.store.dispatch('stock/fetchInventoryCount', { productId: this.product.variants[0].productId });
+    await this.store.dispatch('stock/fetchReservedQuantity', { productId: this.product.variants[0].productId });
     if (this.product.variants) {
       this.getFeatures()
       await this.updateVariant()
     }
   },
   methods: {
-    getMinimumStock() {
-      const inventoryCount = this.getInventoryCount;
-      const productId = this.currentVariant.productId;
-      if (inventoryCount && inventoryCount[productId]) {
-        return inventoryCount[productId][this.currentFacility.facilityId]?.minimumStock ?? 0;
-      }
-      return 0;
-    },
-    getOnlineAtp() {
-      const inventoryCount = this.getInventoryCount;
-      const productId = this.currentVariant.productId;
-      if (inventoryCount && inventoryCount[productId]) {
-        return inventoryCount[productId][this.currentFacility.facilityId]?.onlineAtp ?? 0;
-      }
-      return 0;
-    },
-    //For fetching the order reservation count.
-    async fetchReservedQuantity(productId: any){
-      const payload = prepareOrderQuery({
-        viewSize: "0",  // passing viewSize as 0, as we don't want to fetch any data
-        defType: "edismax",
-        filters: {
-          facilityId: this.currentFacility.facilityId,
-          productId: productId
-        },
-        facet: {
-          "reservedQuantityFacet": "sum(itemQuantity)"
-        }
-      })
-      try {
-        const resp = await UtilService.fetchReservedQuantity(payload)
-        if(resp.status == 200 && !hasError(resp)) {
-          this.reservedQuantity = resp.data.facets.reservedQuantityFacet
-        } else {
-          throw resp.data
-        }
-      } catch(err) {
-        logger.error('Failed to fetch reserved quantity', err)
-      }
-    },
     //For fetching all the orders for this product & facility.
     async getOrderDetails() {
       await this.store.dispatch("order/getOrderDetails", { facilityId: this.currentFacility.facilityId, productId: this.currentVariant.productId });
@@ -312,7 +278,7 @@ export default defineComponent({
       this.currentVariant = variant || this.product.variants[0];
       await this.checkInventory();
       await this.getOrderDetails();
-      this.fetchReservedQuantity( this.currentVariant.productId );
+      // this.fetchReservedQuantity( this.currentVariant.productId );
     },
     async checkInventory() {
       this.currentStoreInventory = this.otherStoresInventory = this.warehouseInventory = 0

@@ -15,7 +15,7 @@
         <ion-icon color="medium" slot="icon-only" :icon="cubeOutline" />
       </ion-button>
       <div v-else-if="showInfoIcon" class="atp-info">
-        <ion-note slot="end"> {{ getOnlineAtp() }} </ion-note>
+        <ion-note slot="end"> {{ getInventoryInformation(item.productId)?.onlineAtp ?? '0' }} </ion-note>
         <ion-button fill="clear" @click.stop="getInventoryComputationDetails($event)">
           <ion-icon slot="icon-only" :icon="informationCircleOutline" color="medium" />
         </ion-button>
@@ -57,7 +57,7 @@ export default defineComponent({
     ...mapGetters({
       getProduct: 'product/getProduct',
       product: "product/getCurrent",
-      getInventoryCount: 'stock/getInventoryCount',
+      getInventoryInformation: 'stock/getInventoryInformation',
       currentFacility: 'user/getCurrentFacility',
     })
   },
@@ -65,22 +65,7 @@ export default defineComponent({
     await this.store.dispatch('stock/fetchInventoryCount', { productId: this.item.productId });
   },
   methods: {
-    getMinimumStock() {
-      const inventoryCount = this.getInventoryCount;
-      const productId = this.item.productId;
-      if (inventoryCount && inventoryCount[productId]) {
-        return inventoryCount[productId][this.currentFacility.facilityId]?.minimumStock ?? 0;
-      }
-      return 0;
-    },
-    getOnlineAtp() {
-      const inventoryCount = this.getInventoryCount;
-      const productId = this.item.productId;
-      if (inventoryCount && inventoryCount[productId]) {
-        return inventoryCount[productId][this.currentFacility.facilityId]?.onlineAtp ?? 0;
-      }
-      return 0;
-    },
+
     async fetchProductStock(productId: string) {
       this.isFetchingStock = true
       await this.store.dispatch('stock/fetchStock', { productId })
@@ -88,12 +73,10 @@ export default defineComponent({
       this.showInfoIcon = true;
     },
     async getInventoryComputationDetails(Event: any){
-      const minimumStock = this.getMinimumStock();
-      const onlineAtp = this.getOnlineAtp();
       const popover = await popoverController.create({
         component: InventoryDetailsPopover,
         event: Event,
-        componentProps: { minimumStock, onlineAtp, item: this.item }
+        componentProps: { item: this.item }
       });
       await popover.present();
     },

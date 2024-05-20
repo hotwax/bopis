@@ -7,6 +7,8 @@ import { hasError } from '@/adapter'
 import { showToast } from '@/utils'
 import { translate } from "@hotwax/dxp-components";
 import logger from '@/logger'
+import { prepareOrderQuery } from "@/utils/solrHelper";
+import { UtilService } from '@/services/UtilService';
 
 const actions: ActionTree<StockState, RootState> = {
   async fetchStock({ commit }, { productId }) {
@@ -42,7 +44,7 @@ const actions: ActionTree<StockState, RootState> = {
       
       const resp: any = await StockService.getInventoryComputation(params);
       if(!hasError(resp)) {
-        commit(types.INVENTORY_COMPUTATIONS, { productId: productId, facilityId: this.state.user.currentFacility.facilityId, minimumStock: resp.data.docs[0].minimumStock, onlineAtp: resp.data.docs[0].computedLastInventoryCount })
+        commit(types.STOCK_ADD_PRODUCT_INFORMATION, { productId: productId, facilityId: this.state.user.currentFacility.facilityId, minimumStock: resp.data.docs[0].minimumStock, onlineAtp: resp.data.docs[0].computedLastInventoryCount })
       } else {
         throw resp.data;
       }
@@ -50,6 +52,31 @@ const actions: ActionTree<StockState, RootState> = {
     catch (err) {
       logger.error(err)
       showToast(translate('No data available!'))
+    }
+  },
+
+  async fetchReservedQuantity({ commit }, { productId }) {
+    const payload = prepareOrderQuery({
+      viewSize: "0",  // passing viewSize as 0, as we don't want to fetch any data
+      defType: "edismax",
+      filters: {
+        facilityId: this.state.user.currentFacility.facilityId,
+        productId: productId
+      },
+      facet: {
+        "reservedQuantityFacet": "sum(itemQuantity)"
+      }
+    })
+    try {
+      const resp = await UtilService.fetchReservedQuantity(payload)
+      if(resp.status == 200 && !hasError(resp)) {
+        const reservedQuantity = resp.data.facets.reservedQuantityFacet
+        commit(types.STOCK_ADD_PRODUCT_INFORMATION, { productId, facilityId: this.state.user.currentFacility.facilityId, reservedQuantity });
+      } else {
+        throw resp.data
+      }
+    } catch(err) {
+      logger.error('Failed to fetch reserved quantity', err)
     }
   }
 }

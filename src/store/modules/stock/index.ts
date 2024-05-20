@@ -9,7 +9,7 @@ const stockModule: Module<StockState, RootState> = {
   namespaced: true,
   state: {
     products: {},
-    count: {},
+    inventoryInformation: {},
   },
   getters,
   actions,
