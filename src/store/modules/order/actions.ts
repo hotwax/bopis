@@ -16,7 +16,8 @@ const actions: ActionTree<OrderState , RootState> ={
 
   async getOrderDetails({commit}, payload ) {
     // Show loader only when new query and not the infinite scroll
-    // if (payload.viewIndex === 0) emitter.emit("presentLoader");
+    // if (payload.viewIndex === 0) 
+    emitter.emit("presentLoader");
     let resp;
     const orderQueryPayload = prepareOrderQuery({
       ...payload,
@@ -31,22 +32,21 @@ const actions: ActionTree<OrderState , RootState> ={
         const orderIds = resp.data.grouped?.orderId?.groups.map((order: any) => order.doclist.docs[0].orderId);
         const { productId, ...params } = payload;
         this.dispatch('order/getOtherOrderItem', {...params, orderIds});
-        emitter.emit("dismissLoader");
       } else {  
         showToast(translate("Orders Not Found"))
-        emitter.emit("dismissLoader");
       }
-      emitter.emit("dismissLoader");
     } catch(err) {
       logger.error(err)
       showToast(translate("Something went wrong"))
     }
+    emitter.emit("dismissLoader");
     return resp;
   },
 
   async getOtherOrderItem({ commit }, payload) {
     // Show loader only when new query and not the infinite scroll
-    // if (payload.viewIndex === 0) emitter.emit("presentLoader");
+    // if (payload.viewIndex === 0) 
+    emitter.emit("presentLoader");
     let resp;
     const orderQueryPayload = prepareOrderQuery({
       ...payload,
@@ -100,17 +100,16 @@ const actions: ActionTree<OrderState , RootState> ={
         // const total = resp.data.grouped?.orderId?.ngroups;
         // if(payload.viewIndex && payletload.viewIndex > 0) orders = state.open.list.concat(orders)
         commit(types.OTHER_ITEM_UPDATED, { orders })
-        emitter.emit("dismissLoader");
       } else {
         commit(types.OTHER_ITEM_UPDATED, { orders: {} })
         showToast(translate("Orders Not Found"))
       }
-      emitter.emit("dismissLoader");
     }
     catch(err) {
       logger.error(err)
       showToast(translate("Something went wrong"))
     }
+    emitter.emit("dismissLoader");
     return resp;
   },
 

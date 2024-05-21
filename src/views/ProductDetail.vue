@@ -114,7 +114,7 @@
               </ion-item>
 
               <!-- other items -->
-              <ion-list-header n-list-header color="light" v-if="order.parts[0].items.some((item: any) => item.productId != currentVariant.productId)">
+              <ion-list-header color="light" v-if="order.parts[0].items.some((item: any) => item.productId != currentVariant.productId)">
                 <ion-label>Other items</ion-label>
               </ion-list-header>
               <ion-item lines="none" v-for="(item, index) in getOtherItems(order)" :key="index" >
