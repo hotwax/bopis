@@ -10,7 +10,6 @@ const orderCategoryParameters = {
     },
   },
   'Packed': {
-    // Array to denote ORing
     'shipmentStatusId': {
       'value': 'SHIPMENT_SHIPPED'
     }

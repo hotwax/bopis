@@ -75,8 +75,7 @@ export default defineComponent({
     },
     searchFacilities(){
       if (this.queryString !== "") {
-        this.filteredInventory = this.otherStoresInventory.filter((facility: any) =>
-          facility.facilityName.toLowerCase().includes(this.queryString.toLowerCase()));
+        this.filteredInventory = this.otherStoresInventory.filter((facility: any) => facility.facilityName.toLowerCase().includes(this.queryString.toLowerCase()));
       } else {
         // Reset filteredInventory when query is empty
         this.filteredInventory = this.otherStoresInventory.slice(); 

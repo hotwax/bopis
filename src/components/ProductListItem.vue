@@ -15,7 +15,7 @@
         <ion-icon color="medium" slot="icon-only" :icon="cubeOutline" />
       </ion-button>
       <div v-else-if="showInfoIcon" class="atp-info">
-        <ion-note slot="end"> {{ getInventoryInformation(item.productId)?.onlineAtp ?? '0' }} </ion-note>
+        <ion-note slot="end"> {{ getInventoryInformation(item.productId).onlineAtp ?? '0' }} </ion-note>
         <ion-button fill="clear" @click.stop="getInventoryComputationDetails($event)">
           <ion-icon slot="icon-only" :icon="informationCircleOutline" color="medium" />
         </ion-button>

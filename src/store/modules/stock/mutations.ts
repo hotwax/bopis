@@ -12,17 +12,17 @@ const mutations: MutationTree <StockState> = {
       }
     }
   },
-  [types.STOCK_ADD_PRODUCT_INFORMATION] (state, { productId, facilityId, minimumStock, onlineAtp, reservedQuantity }) {
+  [types.STOCK_ADD_PRODUCT_INFORMATION] (state, { productId, facilityId, payload }) {
     if (!state.inventoryInformation[productId]) {
-      state.inventoryInformation[productId] = {}
+      state.inventoryInformation[productId] = {
+        [facilityId]: payload
+      }
+      return;
     }
 
-    const inventoryData = state.inventoryInformation[productId][facilityId] || {};
-
     state.inventoryInformation[productId][facilityId] = {
-      minimumStock: minimumStock != undefined ? minimumStock : inventoryData.minimumStock,
-      onlineAtp: onlineAtp != undefined ? onlineAtp : inventoryData.onlineAtp,
-      reservedQuantity: reservedQuantity != undefined ? reservedQuantity : inventoryData.reservedQuantity,
+      ...state.inventoryInformation[productId][facilityId],
+      ...payload
     }
   }
 }

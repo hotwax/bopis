@@ -4,19 +4,19 @@
       <ion-list-header>{{ translate("Inventory computation")}}</ion-list-header>
       <ion-item>
         <ion-label class="ion-text-wrap">{{ translate("Quantity on hands")}}</ion-label>
-        <ion-note slot="end">{{ getProductStock(item.productId)?.quantityOnHandTotal ?? '0' }}</ion-note>
+        <ion-note slot="end">{{ getProductStock(item.productId).quantityOnHandTotal ?? '0' }}</ion-note>
       </ion-item>
       <ion-item>
         <ion-label class="ion-text-wrap">{{ translate("Safety stock")}}</ion-label>
-        <ion-note slot="end">{{ getInventoryInformation(item.productId)?.minimumStock ?? '0' }}</ion-note>
+        <ion-note slot="end">{{ getInventoryInformation(item.productId).minimumStock ?? '0' }}</ion-note>
       </ion-item>
       <ion-item>
         <ion-label class="ion-text-wrap">{{ translate("Order reservations")}}</ion-label>
-        <ion-note slot="end">{{ getInventoryInformation(item.productId)?.reservedQuantity ?? '0' }}</ion-note>
+        <ion-note slot="end">{{ getInventoryInformation(item.productId).reservedQuantity ?? '0' }}</ion-note>
       </ion-item>
       <ion-item lines="none">
         <ion-label class="ion-text-wrap">{{ translate("Online ATP")}}</ion-label>
-        <ion-badge slot="end" color="success">{{ getInventoryInformation(item.productId)?.onlineAtp ?? '0' }}</ion-badge>
+        <ion-badge slot="end" color="success">{{ getInventoryInformation(item.productId).onlineAtp ?? '0' }}</ion-badge>
       </ion-item>
     </ion-list>
   </ion-content>

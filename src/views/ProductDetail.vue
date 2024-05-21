@@ -60,23 +60,23 @@
               <ion-list v-if="selectedSegment === 'inStore'">
                 <ion-item>
                   <ion-label class="ion-text-wrap">{{ translate("Quantity on hands")}}</ion-label>
-                  <ion-note slot="end">{{ getProductStock(product.variants[0].productId)?.quantityOnHandTotal ?? '0' }}</ion-note>
+                  <ion-note slot="end">{{ getProductStock(currentVariant.productId).quantityOnHandTotal ?? '0' }}</ion-note>
                 </ion-item>
                 <ion-item>
                   <ion-label class="ion-text-wrap">{{ translate("Safety stock")}}</ion-label>
-                  <ion-note slot="end">{{ getInventoryInformation(product.variants[0].productId)?.minimumStock ?? '0' }}</ion-note>
+                  <ion-note slot="end">{{ getInventoryInformation(currentVariant.productId).minimumStock ?? '0' }}</ion-note>
                 </ion-item>
                 <ion-item>
                   <ion-label class="ion-text-wrap">{{ translate("Order reservations")}}</ion-label>
-                  <ion-note slot="end">{{ getInventoryInformation(product.variants[0].productId)?.reservedQuantity ?? '0' }}</ion-note>
+                  <ion-note slot="end">{{ getInventoryInformation(currentVariant.productId).reservedQuantity ?? '0' }}</ion-note>
                 </ion-item>
                 <ion-item lines="none">
                   <ion-label class="ion-text-wrap">{{ translate("Available to promise")}}</ion-label>
-                  <ion-badge color="success" slot="end">{{ getInventoryInformation(product.variants[0].productId)?.onlineAtp ?? '0' }}</ion-badge>
+                  <ion-badge color="success" slot="end">{{ getInventoryInformation(currentVariant.productId).onlineAtp ?? '0' }}</ion-badge>
                 </ion-item>
               </ion-list>
   
-              <ion-list v-if="selectedSegment === 'otherLocations'">
+              <ion-list v-if="selectedSegment === 'otherLocations'"> 
                 <ion-item>
                   <ion-label class="ion-text-wrap">{{ translate("Other stores")}}</ion-label>
                   <ion-button @click="getOtherStoresInventoryDetails()" fill="outline">{{ otherStoresInventory }}</ion-button>
@@ -91,7 +91,7 @@
         </div>
     
         <div v-if="otherItem.length > 0">
-          <h3>{{ translate('order reservtions at the store', { count: getInventoryInformation(product.variants[0].productId)?.reservedQuantity ?? '0' }) }}</h3>
+          <h3>{{ translate('order reservtions at the store', { count: getInventoryInformation(currentVariant.productId).reservedQuantity ?? '0' }) }}</h3>
           <div class="reservation-section">
             <div v-for="(order, index) in otherItem" :key="index">
             <ion-card> 
@@ -225,9 +225,6 @@ export default defineComponent({
   },
   async beforeMount() {
     await this.store.dispatch('product/setCurrent', { productId: this.$route.params.productId })
-    await this.store.dispatch('stock/fetchStock', { productId: this.product.variants[0].productId })
-    await this.store.dispatch('stock/fetchInventoryCount', { productId: this.product.variants[0].productId });
-    await this.store.dispatch('stock/fetchReservedQuantity', { productId: this.product.variants[0].productId });
     if (this.product.variants) {
       this.getFeatures()
       await this.updateVariant()
@@ -278,7 +275,9 @@ export default defineComponent({
       this.currentVariant = variant || this.product.variants[0];
       await this.checkInventory();
       await this.getOrderDetails();
-      // this.fetchReservedQuantity( this.currentVariant.productId );
+      await this.store.dispatch('stock/fetchStock', { productId: this.currentVariant.productId })
+      await this.store.dispatch('stock/fetchInventoryCount', { productId: this.currentVariant.productId });
+      await this.store.dispatch('stock/fetchReservedQuantity', { productId: this.currentVariant.productId });
     },
     async checkInventory() {
       this.currentStoreInventory = this.otherStoresInventory = this.warehouseInventory = 0

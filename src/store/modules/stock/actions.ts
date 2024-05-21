@@ -43,15 +43,14 @@ const actions: ActionTree<StockState, RootState> = {
       } as any
       
       const resp: any = await StockService.getInventoryComputation(params);
-      if(!hasError(resp)) {
-        commit(types.STOCK_ADD_PRODUCT_INFORMATION, { productId: productId, facilityId: this.state.user.currentFacility.facilityId, minimumStock: resp.data.docs[0].minimumStock, onlineAtp: resp.data.docs[0].computedLastInventoryCount })
+      if(!hasError(resp) && resp.data.docs.length > 0) {
+        commit(types.STOCK_ADD_PRODUCT_INFORMATION, { productId: productId, facilityId: this.state.user.currentFacility.facilityId, payload: { minimumStock: resp.data.docs[0].minimumStock, onlineAtp: resp.data.docs[0].computedLastInventoryCount }})
       } else {
         throw resp.data;
       }
     }
     catch (err) {
       logger.error(err)
-      showToast(translate('No data available!'))
     }
   },
 
@@ -69,9 +68,9 @@ const actions: ActionTree<StockState, RootState> = {
     })
     try {
       const resp = await UtilService.fetchReservedQuantity(payload)
-      if(resp.status == 200 && !hasError(resp)) {
+      if(!hasError(resp) && resp.data.facets.reservedQuantityFacet) {
         const reservedQuantity = resp.data.facets.reservedQuantityFacet
-        commit(types.STOCK_ADD_PRODUCT_INFORMATION, { productId, facilityId: this.state.user.currentFacility.facilityId, reservedQuantity });
+        commit(types.STOCK_ADD_PRODUCT_INFORMATION, { productId, facilityId: this.state.user.currentFacility.facilityId, payload: { reservedQuantity }});
       } else {
         throw resp.data
       }
