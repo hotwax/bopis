@@ -59,7 +59,7 @@
   
               <ion-list v-if="selectedSegment === 'inStore'">
                 <ion-item>
-                  <ion-label class="ion-text-wrap">{{ translate("Quantity on hands")}}</ion-label>
+                  <ion-label class="ion-text-wrap">{{ translate("Quantity on hand")}}</ion-label>
                   <ion-note slot="end">{{ getProductStock(currentVariant.productId).quantityOnHandTotal ?? '0' }}</ion-note>
                 </ion-item>
                 <ion-item>

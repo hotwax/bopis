@@ -59,14 +59,10 @@ export default defineComponent({
       currentFacility: 'user/getCurrentFacility',
     })
   },
-  async beforeMount () {
-    await this.store.dispatch('stock/fetchInventoryCount', { productId: this.item.productId });
-  },
   methods: {
-
     async fetchProductStock(productId: string) {
       this.isFetchingStock = true
-      await this.store.dispatch('stock/fetchStock', { productId })
+      await this.store.dispatch('stock/fetchInventoryCount', { productId });
       this.isFetchingStock = false
       this.showInfoIcon = true;
     },
