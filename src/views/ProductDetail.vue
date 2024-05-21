@@ -89,7 +89,7 @@
             </div>
           </section>
         </div>
-    
+        
         <div v-if="otherItem.length > 0">
           <h3>{{ translate('order reservtions at the store', { count: getInventoryInformation(currentVariant.productId).reservedQuantity ?? '0' }) }}</h3>
           <div class="reservation-section">
@@ -114,7 +114,7 @@
               </ion-item>
 
               <!-- other items -->
-              <ion-list-header n-list-header color="light" v-if="order.parts[0].items.some((item: any) => item.productId != product.variants[0].productId)">
+              <ion-list-header n-list-header color="light" v-if="order.parts[0].items.some((item: any) => item.productId != currentVariant.productId)">
                 <ion-label>Other items</ion-label>
               </ion-list-header>
               <ion-item lines="none" v-for="(item, index) in getOtherItems(order)" :key="index" >
@@ -217,10 +217,10 @@ export default defineComponent({
       getProduct: 'product/getProduct',
     }),
     getOrderItems() {
-      return (order: any) => order.parts[0].items.filter((item: any) => item.productId == this.product.variants[0].productId);
+      return (order: any) => order.parts[0].items.filter((item: any) => item.productId == this.currentVariant.productId);
     },
     getOtherItems() {
-      return (order: any) => order.parts[0].items.filter((item: any) => item.productId != this.product.variants[0].productId);
+      return (order: any) => order.parts[0].items.filter((item: any) => item.productId != this.currentVariant.productId);
     }
   },
   async beforeMount() {
