@@ -68,8 +68,8 @@ const actions: ActionTree<StockState, RootState> = {
     })
     try {
       const resp = await UtilService.fetchReservedQuantity(payload)
-      if(!hasError(resp) && resp.data.facets.reservedQuantityFacet) {
-        const reservedQuantity = resp.data.facets.reservedQuantityFacet
+      if(!hasError(resp) && resp.data.facets.count) {
+        const reservedQuantity = resp.data.facets.count
         commit(types.STOCK_ADD_PRODUCT_INFORMATION, { productId, facilityId: this.state.user.currentFacility.facilityId, payload: { reservedQuantity }});
       } else {
         throw resp.data
