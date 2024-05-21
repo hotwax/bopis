@@ -43,7 +43,7 @@ const actions: ActionTree<StockState, RootState> = {
       } as any
       
       const resp: any = await StockService.getInventoryComputation(params);
-      if(!hasError(resp) && resp.data.docs.length > 0) {
+      if (!hasError(resp) && resp.data.docs.length > 0) {
         commit(types.STOCK_ADD_PRODUCT_INFORMATION, { productId: productId, facilityId: this.state.user.currentFacility.facilityId, payload: { minimumStock: resp.data.docs[0].minimumStock, onlineAtp: resp.data.docs[0].computedLastInventoryCount }})
       } else {
         throw resp.data;
@@ -68,7 +68,7 @@ const actions: ActionTree<StockState, RootState> = {
     })
     try {
       const resp = await UtilService.fetchReservedQuantity(payload)
-      if(!hasError(resp) && resp.data.facets.count) {
+      if (!hasError(resp) && resp.data.facets.count) {
         const reservedQuantity = resp.data.facets.count
         commit(types.STOCK_ADD_PRODUCT_INFORMATION, { productId, facilityId: this.state.user.currentFacility.facilityId, payload: { reservedQuantity }});
       } else {
