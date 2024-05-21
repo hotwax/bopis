@@ -6,8 +6,6 @@
     <ion-label class="ion-text-wrap">
       <h2>{{ getProductIdentificationValue(productIdentificationPref.primaryId, getProduct(item.productId)) }}</h2>
       <p class="ion-text-wrap">{{ getProductIdentificationValue(productIdentificationPref.secondaryId, getProduct(item.productId)) }}</p>
-      <p>Color: color</p>
-      <p>Size: size</p>
     </ion-label>
     <!-- Only show stock if its not a ship to store order -->
     <div v-if="!isShipToStoreOrder">
