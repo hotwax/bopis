@@ -1,17 +1,13 @@
 const orderCategoryParameters = {
   'Open': {
-    'isPicked': {
-      'value': 'N'
+    'shipmentStatusId': {
+      'value': '*',
+      'OP': 'NOT'
     }
-  },
-  'In Progress': {
-    'picklistItemStatusId': {
-      'value': 'PICKITEM_PENDING',
-    },
   },
   'Packed': {
     'shipmentStatusId': {
-      'value': 'SHIPMENT_SHIPPED'
+      'value': 'SHIPMENT_PACKED'
     }
   }
 }
