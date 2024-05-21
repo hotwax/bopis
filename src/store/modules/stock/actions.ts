@@ -30,13 +30,19 @@ const actions: ActionTree<StockState, RootState> = {
     }
   },
 
-  async fetchInventoryCount({ commit }, { productId }) {
+  async fetchInventoryCount({ commit, state }, { productId }) {
+
+    const facilityId = this.state.user.currentFacility.facilityId;
+    if (state.inventoryInformation[productId] && state.inventoryInformation[productId][facilityId]) {
+      return; 
+    }
+
     try {
       const params = {
         "entityName": "ProductFacility",
         "inputFields": {
           productId,
-          "facilityId": this.state.user.currentFacility.facilityId
+          "facilityId": facilityId
         },
         "fieldList": ["minimumStock", "computedLastInventoryCount"],
         "viewSize": 1
@@ -44,7 +50,7 @@ const actions: ActionTree<StockState, RootState> = {
       
       const resp: any = await StockService.getInventoryComputation(params);
       if (!hasError(resp) && resp.data.docs.length > 0) {
-        commit(types.STOCK_ADD_PRODUCT_INFORMATION, { productId: productId, facilityId: this.state.user.currentFacility.facilityId, payload: { minimumStock: resp.data.docs[0].minimumStock, onlineAtp: resp.data.docs[0].computedLastInventoryCount }})
+        commit(types.STOCK_ADD_PRODUCT_INFORMATION, { productId: productId, facilityId: facilityId, payload: { minimumStock: resp.data.docs[0].minimumStock, onlineAtp: resp.data.docs[0].computedLastInventoryCount }})
       } else {
         throw resp.data;
       }
@@ -54,12 +60,18 @@ const actions: ActionTree<StockState, RootState> = {
     }
   },
 
-  async fetchReservedQuantity({ commit }, { productId }) {
+  async fetchReservedQuantity({ commit, state }, { productId }) {
+
+    const facilityId = this.state.user.currentFacility.facilityId;
+    if (state.inventoryInformation[productId] && state.inventoryInformation[productId]?.[facilityId]?.reservedQuantity) {
+      return;
+    }
+
     const payload = prepareOrderQuery({
       viewSize: "0",  // passing viewSize as 0, as we don't want to fetch any data
       defType: "edismax",
       filters: {
-        facilityId: this.state.user.currentFacility.facilityId,
+        facilityId: facilityId,
         productId: productId
       },
       facet: {
@@ -70,7 +82,7 @@ const actions: ActionTree<StockState, RootState> = {
       const resp = await UtilService.fetchReservedQuantity(payload)
       if (!hasError(resp) && resp.data.facets.count) {
         const reservedQuantity = resp.data.facets.count
-        commit(types.STOCK_ADD_PRODUCT_INFORMATION, { productId, facilityId: this.state.user.currentFacility.facilityId, payload: { reservedQuantity }});
+        commit(types.STOCK_ADD_PRODUCT_INFORMATION, { productId, facilityId: facilityId, payload: { reservedQuantity }});
       } else {
         throw resp.data
       }

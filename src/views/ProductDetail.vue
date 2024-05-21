@@ -91,7 +91,7 @@
         </div>
         
         <div v-if="otherItem.length > 0">
-          <h3>{{ translate('order reservtions at the store', { count: getInventoryInformation(currentVariant.productId).reservedQuantity ?? '0' }) }}</h3>
+          <h3>{{ translate('order reservations at the store', { count: getInventoryInformation(currentVariant.productId).reservedQuantity ?? '0' }) }}</h3>
           <div class="reservation-section">
             <div v-for="(order, index) in otherItem" :key="index">
             <ion-card> 
@@ -110,7 +110,7 @@
                   <h4>{{ item.brand }}</h4>
                   <h3 class="ion-text-wrap">{{ item.virtualName }}</h3>
                 </ion-label>
-                <ion-note slot="end">{{ translate("units", { item: item.quantity}) }}</ion-note>
+                <ion-note slot="end">{{ translate(item.quantity == 1 ? "unit" : "units", { item: item.quantity }) }}</ion-note>
               </ion-item>
 
               <!-- other items -->

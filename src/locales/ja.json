@@ -110,7 +110,7 @@
   "Orders Not Found": "注文が見つかりません",
   "Order item rejection history": "Order item rejection history",
   "Order reservations": "Order reservations",
-  "order reservtions at the store": "{ count } order reservtions at the store",
+  "order reservations at the store": "{ count } order reservations at the store",
   "Other stores": "Other stores",
   "Packed": "梱包済み",
   "Packing Slip": "納品書",
@@ -195,6 +195,7 @@
   "This order will be removed from your dashboard. This action cannot be undone.": "この注文はダッシュボードから削除されます。{ space } この操作は元に戻せません。",
   "Update notification preferences": "Update notification preferences",
   "units": "{ item } units",
+  "unit": "{ item } unit",
   "View shipping orders along with pickup orders.": "店舗受取の注文と一緒に配送注文を表示します",
   "You do not have permission to access this page": "このページにアクセスする権限がありません",
   "Zipcode": "郵便番号"

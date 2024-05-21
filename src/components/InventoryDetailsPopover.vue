@@ -3,7 +3,7 @@
     <ion-list>
       <ion-list-header>{{ translate("Inventory computation")}}</ion-list-header>
       <ion-item>
-        <ion-label class="ion-text-wrap">{{ translate("Quantity on hands")}}</ion-label>
+        <ion-label class="ion-text-wrap">{{ translate("Quantity on hand")}}</ion-label>
         <ion-note slot="end">{{ getProductStock(item.productId).quantityOnHandTotal ?? '0' }}</ion-note>
       </ion-item>
       <ion-item>
