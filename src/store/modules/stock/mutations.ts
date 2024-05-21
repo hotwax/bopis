@@ -19,7 +19,7 @@ const mutations: MutationTree <StockState> = {
       }
       return;
     }
-
+    // If the inventory information for the productId exists update the information for the specific facilityId
     state.inventoryInformation[productId][facilityId] = {
       ...state.inventoryInformation[productId][facilityId],
       ...payload
