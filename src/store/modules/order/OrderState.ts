@@ -5,5 +5,5 @@ export default interface OrderState {
   packed: any;
   completed: any;
   shipToStore: any;
-  otherItem: any;
+  orders: any;
 }

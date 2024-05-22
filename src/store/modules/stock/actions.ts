@@ -14,7 +14,7 @@ const actions: ActionTree<StockState, RootState> = {
   async fetchStock({ commit }, { productId }) {
     try {
       const payload = {
-        productId,
+        productId: productId,
         facilityId: this.state.user.currentFacility.facilityId
       }
 
@@ -31,7 +31,6 @@ const actions: ActionTree<StockState, RootState> = {
   },
 
   async fetchInventoryCount({ commit, state }, { productId }) {
-
     const facilityId = this.state.user.currentFacility.facilityId;
     if (state.inventoryInformation[productId] && state.inventoryInformation[productId][facilityId]) {
       return; 
@@ -41,7 +40,7 @@ const actions: ActionTree<StockState, RootState> = {
       const params = {
         "entityName": "ProductFacility",
         "inputFields": {
-          productId,
+          "productId": productId,
           "facilityId": facilityId
         },
         "fieldList": ["minimumStock", "computedLastInventoryCount"],
@@ -61,9 +60,8 @@ const actions: ActionTree<StockState, RootState> = {
   },
 
   async fetchReservedQuantity({ commit, state }, { productId }) {
-
     const facilityId = this.state.user.currentFacility.facilityId;
-    if (state.inventoryInformation[productId] && state.inventoryInformation[productId]?.[facilityId]?.reservedQuantity) {
+    if (state.inventoryInformation[productId] && state.inventoryInformation[productId][facilityId]?.reservedQuantity) {
       return;
     }
 
@@ -78,6 +76,7 @@ const actions: ActionTree<StockState, RootState> = {
         "reservedQuantityFacet": "sum(itemQuantity)"
       }
     })
+
     try {
       const resp = await UtilService.fetchReservedQuantity(payload)
       if (!hasError(resp) && resp.data.facets.count) {

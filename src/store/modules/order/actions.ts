@@ -14,7 +14,7 @@ import { getOrderCategory } from "@/utils/order";
 
 const actions: ActionTree<OrderState , RootState> ={
 
-  async getOrderDetails({commit}, payload ) {
+  async getOrderDetails({ dispatch, commit }, payload ) {
     // Show loader only when new query and not the infinite scroll
     // if (payload.viewIndex === 0) 
     emitter.emit("presentLoader");
@@ -27,36 +27,41 @@ const actions: ActionTree<OrderState , RootState> ={
     })
 
     try {
-      resp = await OrderService.getOpenOrders(orderQueryPayload);
-      if (resp.status === 200 && !hasError(resp) && resp.data.grouped?.orderId?.ngroups > 0) {
+      resp = await OrderService.fetchOrderItems(orderQueryPayload);
+      if (!hasError(resp) && resp.data.grouped?.orderId?.ngroups > 0) {
         const orderIds = resp.data.grouped?.orderId?.groups.map((order: any) => order.doclist.docs[0].orderId);
-        const { productId, ...params } = payload;
-        this.dispatch('order/getOtherOrderItem', {...params, orderIds});
+        dispatch('fetchOrderItems', {...payload, orderIds});
       } else {  
         showToast(translate("Orders Not Found"))
+        commit(types.ORDER_INFO_UPDATED, { orders: {} })
       }
     } catch(err) {
       logger.error(err)
+      commit(types.ORDER_INFO_UPDATED, { orders: {} })
       showToast(translate("Something went wrong"))
     }
     emitter.emit("dismissLoader");
     return resp;
   },
 
-  async getOtherOrderItem({ commit }, payload) {
+  async fetchOrderItems({ commit }, payload) {
+    console.log('ppp', payload);
     // Show loader only when new query and not the infinite scroll
     // if (payload.viewIndex === 0) 
     emitter.emit("presentLoader");
     let resp;
+    const { productId, orderIds, ...params } = payload;
     const orderQueryPayload = prepareOrderQuery({
-      ...payload,
+      ...params,
+      orderIds,
       orderStatusId: 'ORDER_APPROVED',
       orderTypeId: 'SALES_ORDER',
     })
 
     try {
-      resp = await OrderService.getOpenOrders(orderQueryPayload);
-      if (resp.status === 200 && !hasError(resp) && resp.data.grouped?.orderId?.ngroups > 0) {
+      console.log('query', orderQueryPayload);
+      resp = await OrderService.fetchOrderItems(orderQueryPayload);
+      if (!hasError(resp) && resp.data.grouped?.orderId?.ngroups > 0) {
         const orders = resp.data.grouped?.orderId?.groups.map((order: any) => {
           const orderItem = order.doclist.docs[0]
           return {
@@ -67,46 +72,23 @@ const actions: ActionTree<OrderState , RootState> ={
               name: orderItem.customerName
             },
             category: getOrderCategory(orderItem),
-            parts: order.doclist.docs.reduce((arr: Array<any>, item: any) => {
-              const currentOrderPart = arr.find((orderPart: any) => orderPart.orderPartSeqId === item.shipGroupSeqId)
-              if (!currentOrderPart) {
-                arr.push({
-                  orderPartSeqId: item.shipGroupSeqId,
-                  items: [{
-                    shipGroupSeqId: item.shipGroupSeqId,
-                    orderId: orderItem.orderId,
-                    orderItemSeqId: item.orderItemSeqId,
-                    quantity: item.itemQuantity,
-                    brand: item.productStoreId,
-                    virtualName: item.virtualProductName,
-                    productId: item.productId,
-                  }]
-                })
-              } else {
-                currentOrderPart.items.push({
-                  shipGroupSeqId: item.shipGroupSeqId,
-                  orderId: orderItem.orderId,
-                  orderItemSeqId: item.orderItemSeqId,
-                  quantity: item.itemQuantity,
-                  brand: item.productStoreId,
-                  virtualName: item.virtualProductName,
-                  productId: item.productId,
-                })
-              }
-              return arr
-            }, []),
+            otherItems: order.doclist.docs.filter((item: any) => item.productId != productId),
+            currentItem: order.doclist.docs.filter((item: any) => item.productId == productId)
           }
         })
         // const total = resp.data.grouped?.orderId?.ngroups;
         // if(payload.viewIndex && payletload.viewIndex > 0) orders = state.open.list.concat(orders)
-        commit(types.OTHER_ITEM_UPDATED, { orders })
+        const productIds = orders.map((order: any) => order.otherItems.map((item: any) => item.productId)).flat();
+        this.dispatch('product/fetchProducts', { productIds })
+        commit(types.ORDER_INFO_UPDATED, { orders })
       } else {
-        commit(types.OTHER_ITEM_UPDATED, { orders: {} })
+        commit(types.ORDER_INFO_UPDATED, { orders: {} })
         showToast(translate("Orders Not Found"))
       }
     }
     catch(err) {
       logger.error(err)
+      commit(types.ORDER_INFO_UPDATED, { orders: {} })
       showToast(translate("Something went wrong"))
     }
     emitter.emit("dismissLoader");

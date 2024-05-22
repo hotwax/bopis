@@ -90,43 +90,43 @@
           </section>
         </div>
         
-        <div v-if="otherItem.length > 0">
+        <div v-if="orders.length > 0">
           <h3>{{ translate('order reservations at the store', { count: getInventoryInformation(currentVariant.productId).reservedQuantity ?? '0' }) }}</h3>
           <div class="reservation-section">
-            <div v-for="(order, index) in otherItem" :key="index">
-            <ion-card> 
-              <ion-item lines="none">
-                <ion-label class="ion-text-wrap"> {{ order.orderId }}
-                  <p>{{ order.customer ? order.customer.name : '' }}</p>
-                </ion-label>
-                <ion-badge color="primary" slot="end">{{ order.category }}</ion-badge> 
-              </ion-item>
+            <div v-for="(order, index) in orders" :key="index">
+              <ion-card> 
+                <ion-item lines="none">
+                  <ion-label class="ion-text-wrap"> {{ order.orderId }}
+                    <p>{{ order.customer ? order.customer.name : '' }}</p>
+                  </ion-label>
+                  <ion-badge color="primary" slot="end">{{ order.category }}</ion-badge> 
+                </ion-item>
 
-              <ion-item lines="none" v-for="(item, index) in getOrderItems(order)" :key="index"> 
-                <ion-thumbnail slot="start">
-                  <DxpShopifyImg :src="getProduct(item.productId).mainImageUrl" size="small" />
-                </ion-thumbnail>
-                <ion-label class="ion-text-wrap">
-                  <h4>{{ item.brand }}</h4>
-                  <h3 class="ion-text-wrap">{{ item.virtualName }}</h3>
-                </ion-label>
-                <ion-note slot="end">{{ translate(item.quantity == 1 ? "unit" : "units", { item: item.quantity }) }}</ion-note>
-              </ion-item>
+                <ion-item lines="none" v-for="(item, index) in order.currentItem" :key="index"> 
+                  <ion-thumbnail slot="start">
+                    <DxpShopifyImg :src="getProduct(item.productId).mainImageUrl" size="small" />
+                  </ion-thumbnail>
+                  <ion-label class="ion-text-wrap">
+                    <h4>{{ getProduct(item.productId).brandName }}</h4>
+                    <h3 class="ion-text-wrap">{{ item.virtualProductName }}</h3>
+                  </ion-label>
+                  <ion-note slot="end">{{ translate(item.itemQuantity == 1 ? "unit" : "units", { item: item.itemQuantity }) }}</ion-note>
+                </ion-item>
 
-              <!-- other items -->
-              <ion-list-header color="light" v-if="order.parts[0].items.some((item: any) => item.productId != currentVariant.productId)">
-                <ion-label>Other items</ion-label>
-              </ion-list-header>
-              <ion-item lines="none" v-for="(item, index) in getOtherItems(order)" :key="index" >
-                <ion-thumbnail slot="start">
-                  <DxpShopifyImg size="small" />
-                </ion-thumbnail>
-                <ion-label class="ion-text-wrap" >
-                  <p class="overline">{{ item.brand }}</p>
-                  <h3 class="ion-text-wrap">{{ item.virtualName }}</h3>
-                </ion-label>
-              </ion-item>
-            </ion-card>
+                <!-- other items -->
+                <ion-list-header color="light" v-if="order.otherItems.length > 0">
+                  <ion-label>Other items</ion-label>
+                </ion-list-header>
+                <ion-item lines="none" v-for="(item, index) in order.otherItems" :key="index" >
+                  <ion-thumbnail slot="start">
+                    <DxpShopifyImg size="small" />
+                  </ion-thumbnail>
+                  <ion-label class="ion-text-wrap" >
+                    <p class="overline">{{ getProduct(item.productId).brandName }}</p>
+                    <h3 class="ion-text-wrap">{{ item.virtualProductName }}</h3>
+                  </ion-label>
+                </ion-item>
+              </ion-card>
             </div>
           </div>
         </div>
@@ -213,15 +213,9 @@ export default defineComponent({
       currency: 'user/getCurrency',
       getProductStock: 'stock/getProductStock',
       getInventoryInformation: 'stock/getInventoryInformation',
-      otherItem: 'order/getOtherItem',
+      orders: 'order/getOrders',
       getProduct: 'product/getProduct',
     }),
-    getOrderItems() {
-      return (order: any) => order.parts[0].items.filter((item: any) => item.productId == this.currentVariant.productId);
-    },
-    getOtherItems() {
-      return (order: any) => order.parts[0].items.filter((item: any) => item.productId != this.currentVariant.productId);
-    }
   },
   async beforeMount() {
     await this.store.dispatch('product/setCurrent', { productId: this.$route.params.productId })

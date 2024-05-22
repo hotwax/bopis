@@ -1,9 +1,12 @@
 const orderCategoryParameters = {
   'Open': {
     'shipmentStatusId': {
-      'value': '*',
+      'value': ' ',
       'OP': 'NOT'
     }
+    // 'isPicked': {
+    //   'value': 'N'
+    // },
   },
   'Packed': {
     'shipmentStatusId': {
