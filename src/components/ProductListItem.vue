@@ -9,17 +9,17 @@
     </ion-label>
     <!-- Only show stock if its not a ship to store order -->
     <div v-if="!isShipToStoreOrder">
-      <ion-button v-if="!isFetchingStock && !showInfoIcon" fill="clear" @click.stop="fetchProductStock(item.productId)">
-        <ion-icon color="medium" slot="icon-only" :icon="cubeOutline" />
-      </ion-button>
-      <div v-else-if="showInfoIcon" class="atp-info">
+      <ion-spinner v-if="isFetchingStock" color="medium" name="crescent" />
+      <div v-else-if="getInventoryInformation(item.productId).onlineAtp" class="atp-info">
         <ion-note slot="end"> {{ getInventoryInformation(item.productId).onlineAtp ?? '0' }} </ion-note>
         <ion-button fill="clear" @click.stop="openInventoryDetailPopover($event)">
           <ion-icon slot="icon-only" :icon="informationCircleOutline" color="medium" />
         </ion-button>
       </div>
-      <ion-spinner v-else color="medium" name="crescent" />
-    </div>
+      <ion-button v-else fill="clear" @click.stop="fetchProductStock(item.productId)">
+        <ion-icon color="medium" slot="icon-only" :icon="cubeOutline" />
+      </ion-button>
+    </div>  
   </ion-item>
 </template>
 
@@ -47,7 +47,6 @@ export default defineComponent({
     return {
       goodIdentificationTypeId: process.env.VUE_APP_PRDT_IDENT_TYPE_ID,
       isFetchingStock: false,
-      showInfoIcon: false
     }
   },
   props: ['item', 'isShipToStoreOrder'],
@@ -64,7 +63,6 @@ export default defineComponent({
       this.isFetchingStock = true
       await this.store.dispatch('stock/fetchInventoryCount', { productId });
       this.isFetchingStock = false
-      this.showInfoIcon = true;
     },
     async openInventoryDetailPopover(Event: any){
       const popover = await popoverController.create({
