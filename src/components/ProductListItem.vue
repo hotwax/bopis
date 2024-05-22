@@ -10,7 +10,7 @@
     <!-- Only show stock if its not a ship to store order -->
     <div v-if="!isShipToStoreOrder">
       <ion-spinner v-if="isFetchingStock" color="medium" name="crescent" />
-      <div v-else-if="getInventoryInformation(item.productId).onlineAtp" class="atp-info">
+      <div v-else-if="getInventoryInformation(item.productId).onlineAtp >= 0" class="atp-info">
         <ion-note slot="end"> {{ getInventoryInformation(item.productId).onlineAtp ?? '0' }} </ion-note>
         <ion-button fill="clear" @click.stop="openInventoryDetailPopover($event)">
           <ion-icon slot="icon-only" :icon="informationCircleOutline" color="medium" />
