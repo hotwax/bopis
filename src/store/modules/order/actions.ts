@@ -45,7 +45,6 @@ const actions: ActionTree<OrderState , RootState> ={
   },
 
   async fetchOrderItems({ commit }, payload) {
-    console.log('ppp', payload);
     // Show loader only when new query and not the infinite scroll
     // if (payload.viewIndex === 0) 
     emitter.emit("presentLoader");
@@ -59,7 +58,6 @@ const actions: ActionTree<OrderState , RootState> ={
     })
 
     try {
-      console.log('query', orderQueryPayload);
       resp = await OrderService.fetchOrderItems(orderQueryPayload);
       if (!hasError(resp) && resp.data.grouped?.orderId?.ngroups > 0) {
         const orders = resp.data.grouped?.orderId?.groups.map((order: any) => {
