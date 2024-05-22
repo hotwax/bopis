@@ -47,7 +47,7 @@ const actions: ActionTree<StockState, RootState> = {
         "viewSize": 1
       } as any
       
-      const resp: any = await StockService.getInventoryComputation(params);
+      const resp: any = await StockService.fetchInventoryCount(params);
       if (!hasError(resp) && resp.data.docs.length > 0) {
         commit(types.STOCK_ADD_PRODUCT_INFORMATION, { productId: productId, facilityId: facilityId, payload: { minimumStock: resp.data.docs[0].minimumStock, onlineAtp: resp.data.docs[0].computedLastInventoryCount }})
       } else {

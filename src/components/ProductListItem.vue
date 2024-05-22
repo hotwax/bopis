@@ -14,7 +14,7 @@
       </ion-button>
       <div v-else-if="showInfoIcon" class="atp-info">
         <ion-note slot="end"> {{ getInventoryInformation(item.productId).onlineAtp ?? '0' }} </ion-note>
-        <ion-button fill="clear" @click.stop="getInventoryComputationDetails($event)">
+        <ion-button fill="clear" @click.stop="openInventoryDetailPopover($event)">
           <ion-icon slot="icon-only" :icon="informationCircleOutline" color="medium" />
         </ion-button>
       </div>
@@ -66,7 +66,7 @@ export default defineComponent({
       this.isFetchingStock = false
       this.showInfoIcon = true;
     },
-    async getInventoryComputationDetails(Event: any){
+    async openInventoryDetailPopover(Event: any){
       const popover = await popoverController.create({
         component: InventoryDetailsPopover,
         event: Event,

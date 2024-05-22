@@ -16,7 +16,7 @@ const getInventoryAvailableByFacility = async (query: any): Promise <any> => {
   });
 }
 
-const getInventoryComputation = async (payload: any ): Promise<any> => {
+const fetchInventoryCount = async (payload: any ): Promise<any> => {
   return api({
     url: 'performFind',
     method: 'post',
@@ -27,5 +27,5 @@ const getInventoryComputation = async (payload: any ): Promise<any> => {
 export const StockService = {
   checkInventory,
   getInventoryAvailableByFacility,
-  getInventoryComputation
+  fetchInventoryCount
 }
