@@ -119,7 +119,7 @@
                 </ion-list-header>
                 <ion-item lines="none" v-for="(item, index) in order.otherItems" :key="index" >
                   <ion-thumbnail slot="start">
-                    <DxpShopifyImg size="small" />
+                    <DxpShopifyImg :src="getProduct(item.productId).mainImageUrl" size="small" />
                   </ion-thumbnail>
                   <ion-label class="ion-text-wrap" >
                     <p class="overline">{{ getProduct(item.productId).brandName }}</p>
