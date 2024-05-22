@@ -76,8 +76,10 @@ const actions: ActionTree<OrderState , RootState> ={
         })
         // const total = resp.data.grouped?.orderId?.ngroups;
         // if(payload.viewIndex && payletload.viewIndex > 0) orders = state.open.list.concat(orders)
-        const productIds = orders.map((order: any) => order.otherItems.map((item: any) => item.productId)).flat();
-        this.dispatch('product/fetchProducts', { productIds })
+        const productIdOtherItems = orders.flatMap((order: any) => order.otherItems.map((item: any) => item.productId));
+        const productIdCurrentItems = orders.flatMap((order: any) => order.currentItem.map((item: any) => item.productId));
+        const allProductIds = [...productIdOtherItems, ...productIdCurrentItems];
+        this.dispatch('product/fetchProducts', { productIds: allProductIds });
         commit(types.ORDER_INFO_UPDATED, { orders })
       } else {
         commit(types.ORDER_INFO_UPDATED, { orders: {} })

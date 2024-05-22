@@ -107,8 +107,8 @@
                     <DxpShopifyImg :src="getProduct(item.productId).mainImageUrl" size="small" />
                   </ion-thumbnail>
                   <ion-label class="ion-text-wrap">
-                    <h4>{{ getProduct(item.productId).brandName }}</h4>
-                    <h3 class="ion-text-wrap">{{ item.virtualProductName }}</h3>
+                    <p class="ion-text-wrap">{{ getProductIdentificationValue(productIdentificationPref.secondaryId, getProduct(item.productId)) }}</p>
+                    <h2>{{ getProductIdentificationValue(productIdentificationPref.primaryId, getProduct(item.productId)) ? getProductIdentificationValue(productIdentificationPref.primaryId, getProduct(item.productId)) : item.productId }}</h2>
                   </ion-label>
                   <ion-note slot="end">{{ translate(item.itemQuantity == 1 ? "unit" : "units", { item: item.itemQuantity }) }}</ion-note>
                 </ion-item>
@@ -122,8 +122,8 @@
                     <DxpShopifyImg :src="getProduct(item.productId).mainImageUrl" size="small" />
                   </ion-thumbnail>
                   <ion-label class="ion-text-wrap" >
-                    <p class="overline">{{ getProduct(item.productId).brandName }}</p>
-                    <h3 class="ion-text-wrap">{{ item.virtualProductName }}</h3>
+                    <p class="ion-text-wrap">{{ getProductIdentificationValue(productIdentificationPref.secondaryId, getProduct(item.productId)) }}</p>
+                    <h2>{{ getProductIdentificationValue(productIdentificationPref.primaryId, getProduct(item.productId)) ? getProductIdentificationValue(productIdentificationPref.primaryId, getProduct(item.productId)) : item.productId }}</h2>
                   </ion-label>
                 </ion-item>
               </ion-card>
