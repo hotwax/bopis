@@ -99,7 +99,9 @@
                   <ion-label class="ion-text-wrap"> {{ order.orderId }}
                     <p>{{ order.customer ? order.customer.name : '' }}</p>
                   </ion-label>
-                  <ion-badge color="primary" slot="end">{{ order.category }}</ion-badge> 
+                  <ion-badge color="primary" slot="end">
+                    {{ order.shipmentMethod.shipmentMethodTypeDesc ? order.shipmentMethod.shipmentMethodTypeDesc : order.shipmentMethod.shipmentMethodTypeId }}
+                  </ion-badge> 
                 </ion-item>
 
                 <ion-item lines="none" v-for="(item, index) in order.currentItem" :key="index"> 

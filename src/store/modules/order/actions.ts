@@ -10,7 +10,6 @@ import emitter from '@/event-bus'
 import store from "@/store";
 import { prepareOrderQuery } from "@/utils/solrHelper";
 import logger from "@/logger";
-import { getOrderCategory } from "@/utils/order";
 
 const actions: ActionTree<OrderState , RootState> ={
 
@@ -23,7 +22,7 @@ const actions: ActionTree<OrderState , RootState> ={
       ...payload,
       orderStatusId: 'ORDER_APPROVED',
       orderTypeId: 'SALES_ORDER',
-      '-fulfillmentStatus': '(Cancelled OR Rejected)',
+      '-fulfillmentStatus': '(Cancelled OR Rejected OR Completed)',
     })
 
     try {
@@ -70,7 +69,10 @@ const actions: ActionTree<OrderState , RootState> ={
               partyId: orderItem.customerId,
               name: orderItem.customerName
             },
-            category: getOrderCategory(orderItem),
+            shipmentMethod: {
+              shipmentMethodTypeDesc: orderItem.shipmentMethodTypeDesc,
+              shipmentMethodTypeId: orderItem.shipmentMethodTypeId
+            },
             otherItems: order.doclist.docs.filter((item: any) => {
               if(item.productId != productId) {
                 productIds.push(item.productId)

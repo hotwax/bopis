@@ -70,7 +70,8 @@ const actions: ActionTree<StockState, RootState> = {
       defType: "edismax",
       filters: {
         facilityId: facilityId,
-        productId: productId
+        productId: productId,
+        '-fulfillmentStatus': '(Cancelled OR Rejected OR Completed)',
       },
       facet: {
         "reservedQuantityFacet": "sum(itemQuantity)"
