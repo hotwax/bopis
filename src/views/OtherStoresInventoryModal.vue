@@ -14,7 +14,7 @@
     <ion-list v-if="filteredInventory.length">
       <ion-item v-for="details in filteredInventory" :key="details.facilityName">
         <ion-label class="ion-text-wrap">{{ details.facilityName }}</ion-label>
-        <ion-note slot="end">{{ details.stock }}</ion-note>
+        <ion-note slot="end">{{ translate('ATP', { count: details.stock}) }}</ion-note>
       </ion-item>
     </ion-list>
     <div v-else class="ion-text-center">

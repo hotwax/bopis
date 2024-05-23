@@ -111,7 +111,7 @@
   "Orders Not Found": "Órdenes no encontradas",
   "Order item rejection history": "Historial de rechazo de artículos de pedido",
   "Order reservations": "Order reservations",
-  "order reservations at the store": "{ count } order reservations at the store",
+  "order reservations at": "{ count } order reservations at { store }",
   "Other stores": "Otras tiendas",
   "Packed": "Empacado",
   "Packing Slip": "Remisión de embalaje",

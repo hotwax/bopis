@@ -91,7 +91,7 @@
         </div>
         
         <div v-if="orders.length > 0">
-          <h3>{{ translate('order reservations at the store', { count: getInventoryInformation(currentVariant.productId).reservedQuantity ?? '0' }) }}</h3>
+          <h3>{{ translate('order reservations at', { count: getInventoryInformation(currentVariant.productId).reservedQuantity ?? '0', store: currentFacility.facilityName }) }}</h3>
           <div class="reservation-section">
             <div v-for="(order, index) in orders" :key="index">
               <ion-card> 
@@ -109,12 +109,11 @@
                     <DxpShopifyImg :src="getProduct(order.currentItem.productId).mainImageUrl" size="small" />
                   </ion-thumbnail>
                   <ion-label class="ion-text-wrap">
-                    <p class="ion-text-wrap">{{ getProductIdentificationValue(productIdentificationPref.secondaryId, getProduct(order.currentItem.productId)) }}</p>
                     <h2>{{ getProductIdentificationValue(productIdentificationPref.primaryId, getProduct(order.currentItem.productId)) ? getProductIdentificationValue(productIdentificationPref.primaryId, getProduct(order.currentItem.productId)) : order.currentItem.productId }}</h2>
+                    <p class="ion-text-wrap">{{ getProductIdentificationValue(productIdentificationPref.secondaryId, getProduct(order.currentItem.productId)) }}</p>
                   </ion-label>
                   <ion-note slot="end">{{ translate(order.currentItem.quantity == 1 ? "unit" : "units", { item: order.currentItem.quantity }) }}</ion-note>
                 </ion-item>
-
                 <!-- other items -->
                 <ion-list-header color="light" v-if="order.otherItems.length > 0">
                   <ion-label>Other items</ion-label>
@@ -124,8 +123,8 @@
                     <DxpShopifyImg :src="getProduct(item.productId).mainImageUrl" size="small" />
                   </ion-thumbnail>
                   <ion-label class="ion-text-wrap" >
-                    <p class="ion-text-wrap">{{ getProductIdentificationValue(productIdentificationPref.secondaryId, getProduct(item.productId)) }}</p>
                     <h2>{{ getProductIdentificationValue(productIdentificationPref.primaryId, getProduct(item.productId)) ? getProductIdentificationValue(productIdentificationPref.primaryId, getProduct(item.productId)) : item.productId }}</h2>
+                    <p class="ion-text-wrap">{{ getProductIdentificationValue(productIdentificationPref.secondaryId, getProduct(item.productId)) }}</p>
                   </ion-label>
                   <ion-note slot="end">{{ translate(item.quantity == 1 ? "unit" : "units", { item: item.quantity }) }}</ion-note>
                 </ion-item>

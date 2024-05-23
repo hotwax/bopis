@@ -114,7 +114,7 @@
   "Orders Not Found": "Orders Not Found",
   "Order item rejection history": "Order item rejection history",
   "Order reservations": "Order reservations",
-  "order reservations at the store": "{ count } order reservations at the store",
+  "order reservations at": "{ count } order reservations at { store }",
   "Other stores": "Other stores",
   "Packed": "Packed",
   "Packing Slip": "Packing Slip",
