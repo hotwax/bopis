@@ -60,6 +60,7 @@ const actions: ActionTree<OrderState , RootState> ={
     try {
       resp = await OrderService.fetchOrderItems(orderQueryPayload);
       if (!hasError(resp) && resp.data.grouped?.orderId?.ngroups > 0) {
+        const productIds: any = []
         const orders = resp.data.grouped?.orderId?.groups.map((order: any) => {
           const orderItem = order.doclist.docs[0]
           return {
@@ -70,16 +71,19 @@ const actions: ActionTree<OrderState , RootState> ={
               name: orderItem.customerName
             },
             category: getOrderCategory(orderItem),
-            otherItems: order.doclist.docs.filter((item: any) => item.productId != productId),
+            otherItems: order.doclist.docs.filter((item: any) => {
+              if(item.productId != productId) {
+                productIds.push(item.productId)
+                return item
+              }
+            }),
             currentItem: order.doclist.docs.filter((item: any) => item.productId == productId)
           }
         })
+        productIds.push(productId)
         // const total = resp.data.grouped?.orderId?.ngroups;
         // if(payload.viewIndex && payletload.viewIndex > 0) orders = state.open.list.concat(orders)
-        const productIdOtherItems = orders.flatMap((order: any) => order.otherItems.map((item: any) => item.productId));
-        const productIdCurrentItems = orders.flatMap((order: any) => order.currentItem.map((item: any) => item.productId));
-        const allProductIds = [...productIdOtherItems, ...productIdCurrentItems];
-        this.dispatch('product/fetchProducts', { productIds: allProductIds });
+        this.dispatch('product/fetchProducts', { productIds: productIds });
         commit(types.ORDER_INFO_UPDATED, { orders })
       } else {
         commit(types.ORDER_INFO_UPDATED, { orders: {} })
