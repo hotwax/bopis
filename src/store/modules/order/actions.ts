@@ -60,13 +60,15 @@ const actions: ActionTree<OrderState , RootState> ={
         const productIds: any = []
         const orders = resp.data.grouped?.orderId?.groups.map((order: any) => {
           const orderItem = order.doclist.docs[0]
-          let currentItem = {};
+          let currentItem: any = {};
           let currentItemQty = 0;
           const otherItemsObj: any = {};
-          order.doclist.docs.forEach((item: any) => {
+          order.doclist.docs.map((item: any) => {
             if (item.productId == productId) {
-              currentItemQty += item.itemQuantity;
-              currentItem = item;
+              currentItemQty += item.itemQuantity; 
+              if(!currentItem.productId) {
+                currentItem = item;
+              }
             } else {
               if (!otherItemsObj[item.productId]) {
                 otherItemsObj[item.productId] = { ...item, quantity: 0 };
@@ -75,6 +77,7 @@ const actions: ActionTree<OrderState , RootState> ={
               otherItemsObj[item.productId].quantity += item.itemQuantity;
             }
           });
+
           currentItem = { ...currentItem, quantity: currentItemQty };
           const otherItems = Object.values(otherItemsObj);
           
