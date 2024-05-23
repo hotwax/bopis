@@ -31,13 +31,11 @@ const actions: ActionTree<OrderState , RootState> ={
         const orderIds = resp.data.grouped?.orderId?.groups.map((order: any) => order.doclist.docs[0].orderId);
         dispatch('fetchOrderItems', {...payload, orderIds});
       } else {  
-        showToast(translate("Orders Not Found"))
         commit(types.ORDER_INFO_UPDATED, { orders: {} })
       }
     } catch(err) {
       logger.error(err)
       commit(types.ORDER_INFO_UPDATED, { orders: {} })
-      showToast(translate("Something went wrong"))
     }
     emitter.emit("dismissLoader");
     return resp;
@@ -62,6 +60,24 @@ const actions: ActionTree<OrderState , RootState> ={
         const productIds: any = []
         const orders = resp.data.grouped?.orderId?.groups.map((order: any) => {
           const orderItem = order.doclist.docs[0]
+          let currentItem = {};
+          let currentItemQty = 0;
+          const otherItemsObj: any = {};
+          order.doclist.docs.forEach((item: any) => {
+            if (item.productId == productId) {
+              currentItemQty += item.itemQuantity;
+              currentItem = item;
+            } else {
+              if (!otherItemsObj[item.productId]) {
+                otherItemsObj[item.productId] = { ...item, quantity: 0 };
+                productIds.push(item.productId);
+              }
+              otherItemsObj[item.productId].quantity += item.itemQuantity;
+            }
+          });
+          currentItem = { ...currentItem, quantity: currentItemQty };
+          const otherItems = Object.values(otherItemsObj);
+          
           return {
             orderId: orderItem.orderId,
             orderName: orderItem.orderName,
@@ -73,13 +89,8 @@ const actions: ActionTree<OrderState , RootState> ={
               shipmentMethodTypeDesc: orderItem.shipmentMethodTypeDesc,
               shipmentMethodTypeId: orderItem.shipmentMethodTypeId
             },
-            otherItems: order.doclist.docs.filter((item: any) => {
-              if(item.productId != productId) {
-                productIds.push(item.productId)
-                return item
-              }
-            }),
-            currentItem: order.doclist.docs.filter((item: any) => item.productId == productId)
+            otherItems: otherItems,
+            currentItem: currentItem
           }
         })
         productIds.push(productId)
@@ -89,13 +100,11 @@ const actions: ActionTree<OrderState , RootState> ={
         commit(types.ORDER_INFO_UPDATED, { orders })
       } else {
         commit(types.ORDER_INFO_UPDATED, { orders: {} })
-        showToast(translate("Orders Not Found"))
       }
     }
     catch(err) {
       logger.error(err)
       commit(types.ORDER_INFO_UPDATED, { orders: {} })
-      showToast(translate("Something went wrong"))
     }
     emitter.emit("dismissLoader");
     return resp;
