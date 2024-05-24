@@ -90,46 +90,45 @@
           </section>
         </div>
         
-        <div v-if="orders.length > 0">
+        <div v-if="orders.length">
           <h3>{{ translate('order reservations at', { count: getInventoryInformation(currentVariant.productId).reservedQuantity ?? '0', store: currentFacility.facilityName }) }}</h3>
           <div class="reservation-section">
-            <div v-for="(order, index) in orders" :key="index">
-              <ion-card> 
-                <ion-item lines="none">
-                  <ion-label class="ion-text-wrap"> {{ order.orderId }}
-                    <p>{{ order.customer ? order.customer.name : '' }}</p>
-                  </ion-label>
-                  <ion-badge color="primary" slot="end">
-                    {{ order.shipmentMethod.shipmentMethodTypeDesc ? order.shipmentMethod.shipmentMethodTypeDesc : order.shipmentMethod.shipmentMethodTypeId }}
-                  </ion-badge> 
-                </ion-item>
-                
-                <ion-item lines="none" :key="index"> 
-                  <ion-thumbnail slot="start">
-                    <DxpShopifyImg :src="getProduct(order.currentItem.productId).mainImageUrl" size="small" />
-                  </ion-thumbnail>
-                  <ion-label class="ion-text-wrap">
-                    <h2>{{ getProductIdentificationValue(productIdentificationPref.primaryId, getProduct(order.currentItem.productId)) ? getProductIdentificationValue(productIdentificationPref.primaryId, getProduct(order.currentItem.productId)) : order.currentItem.productId }}</h2>
-                    <p class="ion-text-wrap">{{ getProductIdentificationValue(productIdentificationPref.secondaryId, getProduct(order.currentItem.productId)) }}</p>
-                  </ion-label>
-                  <ion-note slot="end">{{ translate(order.currentItem.quantity == 1 ? "unit" : "units", { item: order.currentItem.quantity }) }}</ion-note>
-                </ion-item>
-                <!-- other items -->
-                <ion-list-header color="light" v-if="order.otherItems.length > 0">
-                  <ion-label>Other items</ion-label>
-                </ion-list-header>
-                <ion-item lines="none" v-for="(item, index) in order.otherItems" :key="index" >
-                  <ion-thumbnail slot="start">
-                    <DxpShopifyImg :src="getProduct(item.productId).mainImageUrl" size="small" />
-                  </ion-thumbnail>
-                  <ion-label class="ion-text-wrap" >
-                    <h2>{{ getProductIdentificationValue(productIdentificationPref.primaryId, getProduct(item.productId)) ? getProductIdentificationValue(productIdentificationPref.primaryId, getProduct(item.productId)) : item.productId }}</h2>
-                    <p class="ion-text-wrap">{{ getProductIdentificationValue(productIdentificationPref.secondaryId, getProduct(item.productId)) }}</p>
-                  </ion-label>
-                  <ion-note slot="end">{{ translate(item.quantity == 1 ? "unit" : "units", { item: item.quantity }) }}</ion-note>
-                </ion-item>
-              </ion-card>
-            </div>
+            <ion-card v-for="(order, index) in orders" :key="index"> 
+              <ion-item lines="none">
+                <ion-label class="ion-text-wrap">
+                  <h1>{{ order.customer.name }}</h1>
+                  <p>{{ order.orderName ? order.orderName : order.orderId }}</p>
+                </ion-label>
+                <ion-badge color="primary" slot="end">
+                  {{ order.shipmentMethod.shipmentMethodTypeDesc ? order.shipmentMethod.shipmentMethodTypeDesc : order.shipmentMethod.shipmentMethodTypeId }}
+                </ion-badge> 
+              </ion-item>
+              
+              <ion-item lines="none"> 
+                <ion-thumbnail slot="start">
+                  <DxpShopifyImg :src="getProduct(order.currentItem.productId).mainImageUrl" size="small" />
+                </ion-thumbnail>
+                <ion-label class="ion-text-wrap">
+                  <h2>{{ getProductIdentificationValue(productIdentificationPref.primaryId, getProduct(order.currentItem.productId)) ? getProductIdentificationValue(productIdentificationPref.primaryId, getProduct(order.currentItem.productId)) : order.currentItem.productId }}</h2>
+                  <p class="ion-text-wrap">{{ getProductIdentificationValue(productIdentificationPref.secondaryId, getProduct(order.currentItem.productId)) }}</p>
+                </ion-label>
+                <ion-note slot="end">{{ translate(order.currentItem.quantity == 1 ? "unit" : "units", { item: order.currentItem.quantity }) }}</ion-note>
+              </ion-item>
+              <!-- other items -->
+              <ion-list-header color="light" v-if="order.otherItems.length > 0">
+                <ion-label>{{ translate("Other items")}}</ion-label>
+              </ion-list-header>
+              <ion-item lines="none" v-for="(item, index) in order.otherItems" :key="index" >
+                <ion-thumbnail slot="start">
+                  <DxpShopifyImg :src="getProduct(item.productId).mainImageUrl" size="small" />
+                </ion-thumbnail>
+                <ion-label class="ion-text-wrap" >
+                  <h2>{{ getProductIdentificationValue(productIdentificationPref.primaryId, getProduct(item.productId)) ? getProductIdentificationValue(productIdentificationPref.primaryId, getProduct(item.productId)) : item.productId }}</h2>
+                  <p class="ion-text-wrap">{{ getProductIdentificationValue(productIdentificationPref.secondaryId, getProduct(item.productId)) }}</p>
+                </ion-label>
+                <ion-note slot="end">{{ translate(item.quantity == 1 ? "unit" : "units", { item: item.quantity }) }}</ion-note>
+              </ion-item>
+            </ion-card>
           </div>
         </div>
       </main>
@@ -229,7 +228,7 @@ export default defineComponent({
   methods: {
     //For fetching all the orders for this product & facility.
     async getOrderDetails() {
-      await this.store.dispatch("order/getOrderDetails", { facilityId: this.currentFacility.facilityId, productId: this.currentVariant.productId });
+      await this.store.dispatch("order/getOrderDetails", { viewSize: 200, facilityId: this.currentFacility.facilityId, productId: this.currentVariant.productId });
     },
     async applyFeature(feature: string, type: string) {
       if(type === 'color') this.selectedColor = feature;

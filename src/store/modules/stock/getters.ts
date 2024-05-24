@@ -10,7 +10,7 @@ const getters: GetterTree <StockState, RootState> = {
   },
   getInventoryInformation: (state) => (productId: any) => {
     const facilityId = store.state.user?.currentFacility?.facilityId
-    return state.inventoryInformation[productId] ? state.inventoryInformation[productId][facilityId] : {};
+    return state.inventoryInformation[productId] ? state.inventoryInformation[productId][facilityId] ? state.inventoryInformation[productId][facilityId] : {} : {};
   }
 }
 export default getters;

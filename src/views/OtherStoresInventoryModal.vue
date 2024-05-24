@@ -11,10 +11,10 @@
   </ion-header>
   <ion-content class="ion-padding">
     <ion-searchbar v-model="queryString" @keyup.enter="queryString = $event.target.value; searchFacilities()"/>
-    <ion-list v-if="filteredInventory.length">
-      <ion-item v-for="details in filteredInventory" :key="details.facilityName">
-        <ion-label class="ion-text-wrap">{{ details.facilityName }}</ion-label>
-        <ion-note slot="end">{{ translate('ATP', { count: details.stock}) }}</ion-note>
+    <ion-list v-if="storesInventory.length">
+      <ion-item v-for="storeInventory in storesInventory" :key="storeInventory.facilityName">
+        <ion-label class="ion-text-wrap">{{ storeInventory.facilityName }}</ion-label>
+        <ion-note slot="end">{{ translate('ATP', { count: storeInventory.stock}) }}</ion-note>
       </ion-item>
     </ion-list>
     <div v-else class="ion-text-center">
@@ -64,23 +64,23 @@ export default defineComponent({
   data() {
     return{
       queryString: "",
-      filteredInventory: [] as any
+      storesInventory: [] as any
     }
   },
   mounted() {
     // Create a copy of otherStoresInventory on mount
-    this.filteredInventory = this.otherStoresInventory.slice();
+    this.storesInventory = this.otherStoresInventory.slice();
   },
   methods: {
     closeModal() {
       modalController.dismiss({ dismissed: true });
     },
     searchFacilities(){
-      if (this.queryString !== "") {
-        this.filteredInventory = this.otherStoresInventory.filter((facility: any) => facility.facilityName.toLowerCase().includes(this.queryString.toLowerCase()));
+      if (this.queryString.trim() !== "") {
+        this.storesInventory = this.otherStoresInventory.filter((facility: any) => facility.facilityName.toLowerCase().includes(this.queryString.toLowerCase()));
       } else {
-        // Reset filteredInventory when query is empty
-        this.filteredInventory = this.otherStoresInventory.slice(); 
+        // Reset storesInventory when query is empty
+        this.storesInventory = this.otherStoresInventory.slice(); 
       }
     }
   },

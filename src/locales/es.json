@@ -113,6 +113,7 @@
   "Order reservations": "Order reservations",
   "order reservations at": "{ count } order reservations at { store }",
   "Other stores": "Otras tiendas",
+  "Other items": "Other items",
   "Packed": "Empacado",
   "Packing Slip": "Remisión de embalaje",
   "Packing slips help customer reconcile their order against the delivered items.": "Las remisiones de embalaje ayudan al cliente a conciliar su orden con los artículos entregados.",

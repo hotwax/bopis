@@ -14,8 +14,7 @@ import logger from "@/logger";
 const actions: ActionTree<OrderState , RootState> ={
 
   async getOrderDetails({ dispatch, commit }, payload ) {
-    // Show loader only when new query and not the infinite scroll
-    // if (payload.viewIndex === 0) 
+
     emitter.emit("presentLoader");
     let resp;
     const orderQueryPayload = prepareOrderQuery({
@@ -42,8 +41,7 @@ const actions: ActionTree<OrderState , RootState> ={
   },
 
   async fetchOrderItems({ commit }, payload) {
-    // Show loader only when new query and not the infinite scroll
-    // if (payload.viewIndex === 0) 
+  
     emitter.emit("presentLoader");
     let resp;
     const { productId, orderIds, ...params } = payload;
@@ -97,8 +95,7 @@ const actions: ActionTree<OrderState , RootState> ={
           }
         })
         productIds.push(productId)
-        // const total = resp.data.grouped?.orderId?.ngroups;
-        // if(payload.viewIndex && payletload.viewIndex > 0) orders = state.open.list.concat(orders)
+        
         this.dispatch('product/fetchProducts', { productIds: productIds });
         commit(types.ORDER_INFO_UPDATED, { orders })
       } else {
