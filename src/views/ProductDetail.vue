@@ -48,7 +48,7 @@
               </ion-item>
             </ion-list>
             <div>
-              <ion-segment value="inStore">
+              <ion-segment :value="selectedSegment">
                 <ion-segment-button value="inStore" @click="selectedSegment = 'inStore'">
                   <ion-label>In Store</ion-label>
                 </ion-segment-button>
@@ -59,100 +59,74 @@
   
               <ion-list v-if="selectedSegment === 'inStore'">
                 <ion-item>
-                  <ion-label class="ion-text-wrap">{{ translate("Quantity on hands")}}</ion-label>
-                  <ion-note slot="end">10</ion-note>
+                  <ion-label class="ion-text-wrap">{{ translate("Quantity on hand")}}</ion-label>
+                  <ion-note slot="end">{{ getProductStock(currentVariant.productId).quantityOnHandTotal ?? '0' }}</ion-note>
                 </ion-item>
                 <ion-item>
                   <ion-label class="ion-text-wrap">{{ translate("Safety stock")}}</ion-label>
-                  <ion-note slot="end">10</ion-note>
+                  <ion-note slot="end">{{ getInventoryInformation(currentVariant.productId).minimumStock ?? '0' }}</ion-note>
                 </ion-item>
                 <ion-item>
                   <ion-label class="ion-text-wrap">{{ translate("Order reservations")}}</ion-label>
-                  <ion-note slot="end">20</ion-note>
+                  <ion-note slot="end">{{ getInventoryInformation(currentVariant.productId).reservedQuantity ?? '0' }}</ion-note>
                 </ion-item>
                 <ion-item lines="none">
                   <ion-label class="ion-text-wrap">{{ translate("Available to promise")}}</ion-label>
-                  <ion-badge color="success" slot="end">70</ion-badge>
+                  <ion-badge color="success" slot="end">{{ getInventoryInformation(currentVariant.productId).onlineAtp ?? '0' }}</ion-badge>
                 </ion-item>
               </ion-list>
   
-              <ion-list v-if="selectedSegment === 'otherLocations'">
+              <ion-list v-if="selectedSegment === 'otherLocations'"> 
                 <ion-item>
                   <ion-label class="ion-text-wrap">{{ translate("Other stores")}}</ion-label>
-                  <ion-button @click="getOtherStoresInventoryDetails()" fill="outline">100 ATP</ion-button>
+                  <ion-button @click="getOtherStoresInventoryDetails()" fill="outline">{{ translate('ATP', { count: otherStoresInventory}) }}</ion-button>
                 </ion-item>
                 <ion-item lines="none">
                   <ion-label class="ion-text-wrap">{{ translate("Warehouse")}}</ion-label>
-                  <ion-note slot="end">100 ATP</ion-note>
+                  <ion-note slot="end">{{ translate('ATP', { count: warehouseInventory}) }}</ion-note>
                 </ion-item>
               </ion-list>
             </div>
           </section>
         </div>
-    
-        <div>
-          <h3> {{ translate({  },"order reservtions at the store")}} </h3>
+        
+        <div v-if="orders.length">
+          <h3>{{ translate('order reservations at', { count: getInventoryInformation(currentVariant.productId).reservedQuantity ?? '0', store: currentFacility.facilityName }) }}</h3>
           <div class="reservation-section">
-
-            <ion-card>
+            <ion-card v-for="(order, index) in orders" :key="index"> 
               <ion-item lines="none">
-                <ion-label class="ion-text-wrap"> Order ID
-                  <p>Customer name</p>
+                <ion-label class="ion-text-wrap">
+                  <h1>{{ order.customer.name }}</h1>
+                  <p>{{ order.orderName ? order.orderName : order.orderId }}</p>
                 </ion-label>
-                <ion-badge color="primary" slot="end">Open</ion-badge> 
+                <ion-badge color="primary" slot="end">
+                  {{ order.shipmentMethod.shipmentMethodTypeDesc ? order.shipmentMethod.shipmentMethodTypeDesc : order.shipmentMethod.shipmentMethodTypeId }}
+                </ion-badge> 
               </ion-item>
-              <ion-item lines="none">
+              
+              <ion-item lines="none"> 
                 <ion-thumbnail slot="start">
-                  <DxpShopifyImg size="small" />
+                  <DxpShopifyImg :src="getProduct(order.currentItem.productId).mainImageUrl" size="small" />
                 </ion-thumbnail>
                 <ion-label class="ion-text-wrap">
-                  <h4>BRAND</h4>
-                  <h3 class="ion-text-wrap">Virtual name</h3>
+                  <h2>{{ getProductIdentificationValue(productIdentificationPref.primaryId, getProduct(order.currentItem.productId)) ? getProductIdentificationValue(productIdentificationPref.primaryId, getProduct(order.currentItem.productId)) : order.currentItem.productId }}</h2>
+                  <p class="ion-text-wrap">{{ getProductIdentificationValue(productIdentificationPref.secondaryId, getProduct(order.currentItem.productId)) }}</p>
                 </ion-label>
-                <ion-note slot="end"> 2 units </ion-note>
+                <ion-note slot="end">{{ translate(order.currentItem.quantity == 1 ? "unit" : "units", { item: order.currentItem.quantity }) }}</ion-note>
               </ion-item>
-              <ion-list-header color="light">
-                <ion-label>Order items</ion-label>
+              <!-- other items -->
+              <ion-list-header color="light" v-if="order.otherItems.length > 0">
+                <ion-label>{{ translate("Other items")}}</ion-label>
               </ion-list-header>
-              <ion-item lines="none">
+              <ion-item lines="none" v-for="(item, index) in order.otherItems" :key="index" >
                 <ion-thumbnail slot="start">
-                  <DxpShopifyImg size="small" />
+                  <DxpShopifyImg :src="getProduct(item.productId).mainImageUrl" size="small" />
                 </ion-thumbnail>
                 <ion-label class="ion-text-wrap" >
-                  <p class="overline">BRAND</p>
-                  <h3 class="ion-text-wrap">Virtual name</h3>
+                  <h2>{{ getProductIdentificationValue(productIdentificationPref.primaryId, getProduct(item.productId)) ? getProductIdentificationValue(productIdentificationPref.primaryId, getProduct(item.productId)) : item.productId }}</h2>
+                  <p class="ion-text-wrap">{{ getProductIdentificationValue(productIdentificationPref.secondaryId, getProduct(item.productId)) }}</p>
                 </ion-label>
-              </ion-item>
-            </ion-card>
-
-            <ion-card>
-              <ion-item lines="none">
-                <ion-label class="ion-text-wrap"> Order ID
-                  <p>Customer name</p>
-                </ion-label>
-                <ion-badge color="primary" slot="end">Packed</ion-badge>
-              </ion-item>
-              <ion-item lines="none">
-                <ion-thumbnail slot="start">
-                  <DxpShopifyImg size="small" />
-                </ion-thumbnail>
-                <ion-label class="ion-text-wrap" >
-                  <p class="overline">BRAND</p>
-                  <h3 class="ion-text-wrap">Virtual name</h3>
-                </ion-label>
-                <ion-note slot="end"> 2 units </ion-note>
-              </ion-item>
-              <ion-list-header color="light">
-                <ion-label>Order items</ion-label>
-              </ion-list-header>
-              <ion-item lines="none">
-                <ion-thumbnail slot="start">
-                  <DxpShopifyImg size="small" />
-                </ion-thumbnail>
-                <ion-label class="ion-text-wrap" >
-                  <p class="overline">BRAND</p>
-                  <h3 class="ion-text-wrap">Virtual name</h3>
-                </ion-label>
+                <ion-note slot="end">{{ translate(item.quantity == 1 ? "unit" : "units", { item: item.quantity }) }}</ion-note>
               </ion-item>
             </ion-card>
           </div>
@@ -165,7 +139,9 @@
 <script lang="ts">
 import {
   IonBackButton,
+  IonBadge,
   IonButton,
+  IonCard,
   IonChip,
   IonContent,
   IonHeader,
@@ -177,7 +153,9 @@ import {
   IonPage,
   IonRow,
   IonSegment,
+  IonSegmentButton,
   IonTitle,
+  IonThumbnail,
   IonToolbar,
   modalController
 } from "@ionic/vue";
@@ -195,7 +173,9 @@ export default defineComponent({
   name: "ProductDetail",
   components: {
     IonBackButton,
+    IonBadge,
     IonButton,
+    IonCard,
     IonChip,
     IonContent,
     IonHeader,
@@ -207,7 +187,9 @@ export default defineComponent({
     IonPage,
     IonRow,
     IonSegment,
+    IonSegmentButton,
     IonTitle,
+    IonThumbnail,
     IonToolbar,
     DxpShopifyImg
   },
@@ -222,14 +204,19 @@ export default defineComponent({
       warehouseInventory: 0,
       otherStoresInventoryDetails: [] as any,
       selectedSegment: 'inStore',
+      queryString: ''
     }
   },
   computed: {
     ...mapGetters({
       product: "product/getCurrent",
       currentFacility: 'user/getCurrentFacility',
-      currency: 'user/getCurrency'
-    })
+      currency: 'user/getCurrency',
+      getProductStock: 'stock/getProductStock',
+      getInventoryInformation: 'stock/getInventoryInformation',
+      orders: 'order/getOrders',
+      getProduct: 'product/getProduct',
+    }),
   },
   async beforeMount() {
     await this.store.dispatch('product/setCurrent', { productId: this.$route.params.productId })
@@ -239,6 +226,10 @@ export default defineComponent({
     }
   },
   methods: {
+    //For fetching all the orders for this product & facility.
+    async getOrderDetails() {
+      await this.store.dispatch("order/getOrderDetails", { viewSize: 200, facilityId: this.currentFacility.facilityId, productId: this.currentVariant.productId });
+    },
     async applyFeature(feature: string, type: string) {
       if(type === 'color') this.selectedColor = feature;
       else if(type === 'size') this.selectedSize = feature
@@ -278,6 +269,10 @@ export default defineComponent({
       // if the variant does not have color or size as features
       this.currentVariant = variant || this.product.variants[0];
       await this.checkInventory();
+      await this.getOrderDetails();
+      await this.store.dispatch('stock/fetchStock', { productId: this.currentVariant.productId })
+      await this.store.dispatch('stock/fetchInventoryCount', { productId: this.currentVariant.productId });
+      await this.store.dispatch('stock/fetchReservedQuantity', { productId: this.currentVariant.productId });
     },
     async checkInventory() {
       this.currentStoreInventory = this.otherStoresInventory = this.warehouseInventory = 0
@@ -349,16 +344,10 @@ export default defineComponent({
   width: 200px;
 }
 
-.metadata {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  row-gap: 4px;
-}
-
 .reservation-section {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(343px, 1fr));
+  grid-template-columns: repeat(3, 1fr);
+  /* gap: 5px; */
 }
 
 .product-section {

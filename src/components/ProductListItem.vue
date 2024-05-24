@@ -6,22 +6,20 @@
     <ion-label class="ion-text-wrap">
       <h2>{{ getProductIdentificationValue(productIdentificationPref.primaryId, getProduct(item.productId)) }}</h2>
       <p class="ion-text-wrap">{{ getProductIdentificationValue(productIdentificationPref.secondaryId, getProduct(item.productId)) }}</p>
-      <p>Color: color</p>
-      <p>Size: size</p>
     </ion-label>
     <!-- Only show stock if its not a ship to store order -->
-    <div v-if="!isShipToStoreOrder">
-      <ion-button v-if="!isFetchingStock && !showInfoIcon" fill="clear" @click.stop="fetchProductStock(item.productId)">
-        <ion-icon color="medium" slot="icon-only" :icon="cubeOutline" />
-      </ion-button>
-      <div v-else-if="showInfoIcon" class="atp-info">
-        <ion-note slot="end"> 50 ATP </ion-note>
-        <ion-button fill="clear" @click.stop="getInventoryComputationDetails($event)">
+    <div slot="end" v-if="!isShipToStoreOrder">
+      <ion-spinner v-if="isFetchingStock" color="medium" name="crescent" />
+      <div v-else-if="getProductStock(item.productId).quantityOnHandTotal >= 0" class="atp-info">
+        <ion-note slot="end"> {{ translate("on hand", { count: getProductStock(item.productId).quantityOnHandTotal ?? '0' }) }} </ion-note>
+        <ion-button fill="clear" @click.stop="openInventoryDetailPopover($event)">
           <ion-icon slot="icon-only" :icon="informationCircleOutline" color="medium" />
         </ion-button>
       </div>
-      <ion-spinner v-else color="medium" name="crescent" />
-    </div>
+      <ion-button v-else fill="clear" @click.stop="fetchProductStock(item.productId)">
+        <ion-icon color="medium" slot="icon-only" :icon="cubeOutline" />
+      </ion-button>
+    </div>  
   </ion-item>
 </template>
 
@@ -49,37 +47,31 @@ export default defineComponent({
     return {
       goodIdentificationTypeId: process.env.VUE_APP_PRDT_IDENT_TYPE_ID,
       isFetchingStock: false,
-      showInfoIcon: false
     }
   },
-  props: {
-    item: Object,
-    isShipToStoreOrder: {
-      type: Boolean,
-      default: false
-    }
-  },
+  props: ['item', 'isShipToStoreOrder'],
   computed: {
     ...mapGetters({
       getProduct: 'product/getProduct',
-      getProductStock: 'stock/getProductStock'
+      product: "product/getCurrent",
+      getProductStock: 'stock/getProductStock',
+      currentFacility: 'user/getCurrentFacility',
     })
   },
   methods: {
     async fetchProductStock(productId: string) {
       this.isFetchingStock = true
-      await this.store.dispatch('stock/fetchStock', { productId })
+      await this.store.dispatch('stock/fetchStock', { productId });
       this.isFetchingStock = false
-      this.showInfoIcon = true;
     },
-    async getInventoryComputationDetails(Event: any){
+    async openInventoryDetailPopover(Event: any){
       const popover = await popoverController.create({
         component: InventoryDetailsPopover,
         event: Event,
-        // componentProps: { otherStoresInventory: this.otherStoresInventoryDetails }
+        showBackdrop: false,
+        componentProps: { item: this.item }
       });
       await popover.present();
-
     },
     updateColor(stock: number) {
       return stock ? stock < 10 ? 'warning' : 'success' : 'danger';

@@ -13,6 +13,14 @@ const getOpenOrders = async (payload: any): Promise <any> => {
   });
 }
 
+const fetchOrderItems = async (payload: any): Promise <any> => {
+  return api({
+    url: "solr-query",
+    method: "post",
+    data: payload
+  });
+}
+
 const getOrderDetails = async (payload: any): Promise <any> => {
   return api({
     url: "solr-query",
@@ -259,6 +267,7 @@ const getShippingPhoneNumber = async (orderId: string): Promise<any> => {
 }
 
 export const OrderService = {
+  fetchOrderItems,
   fetchOrderPaymentPreferences,
   getOpenOrders,
   getOrderDetails,

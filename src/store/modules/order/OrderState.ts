@@ -4,5 +4,6 @@ export default interface OrderState {
   current: any;
   packed: any;
   completed: any;
-  shipToStore: any
+  shipToStore: any;
+  orders: any;
 }
