@@ -15,7 +15,6 @@ const actions: ActionTree<OrderState , RootState> ={
 
   async getOrderDetails({ dispatch, commit }, payload ) {
 
-    emitter.emit("presentLoader");
     let resp;
     const orderQueryPayload = prepareOrderQuery({
       ...payload,
@@ -36,13 +35,11 @@ const actions: ActionTree<OrderState , RootState> ={
       logger.error(err)
       commit(types.ORDER_INFO_UPDATED, { orders: {} })
     }
-    emitter.emit("dismissLoader");
     return resp;
   },
 
   async fetchOrderItems({ commit }, payload) {
   
-    emitter.emit("presentLoader");
     let resp;
     const { productId, orderIds, ...params } = payload;
     const orderQueryPayload = prepareOrderQuery({
@@ -106,7 +103,6 @@ const actions: ActionTree<OrderState , RootState> ={
       logger.error(err)
       commit(types.ORDER_INFO_UPDATED, { orders: {} })
     }
-    emitter.emit("dismissLoader");
     return resp;
   },
 

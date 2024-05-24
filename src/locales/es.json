@@ -91,6 +91,7 @@
   "On rejecting this item, will be sent an email with alternate fulfillment options and this order item will be removed from your dashboard.": "Al rechazar este artículo, se enviará a {customerName} un correo electrónico con opciones de cumplimiento alternativas y este artículo del pedido se eliminará de su panel de control.",
   "On rejecting this order, will be sent an email with alternate fulfilment options and this order will be removed from your dashboard.": "Al rechazar este pedido, {customerName} recibirá un correo electrónico con opciones de cumplimiento alternativas y este pedido se eliminará de su panel.",
   "Online ATP": "Online ATP",
+  "on hand": "{ count } on hand",
   "Other stores inventory": "Inventario de otras tiendas",
   "Order": "Orden",
   "Order delivered to": "Orden entregada a {customerName}",

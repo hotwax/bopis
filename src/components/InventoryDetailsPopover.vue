@@ -59,7 +59,7 @@ export default defineComponent({
   },
   async beforeMount () {
     const productId = this.item?.productId;
-    await this.store.dispatch('stock/fetchStock', { productId })
+    await this.store.dispatch('stock/fetchInventoryCount', { productId });
     this.fetchReservedQuantity( this.item.productId );
   },
   methods: {

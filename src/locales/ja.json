@@ -91,6 +91,7 @@
   "On rejecting this item, will be sent an email with alternate fulfillment options and this order item will be removed from your dashboard.": "On rejecting this item, { customerName } will be sent an email with alternate fulfillment options and this order item will be removed from your dashboard.",
   "On rejecting this order, will be sent an email with alternate fulfilment options and this order will be removed from your dashboard.": "On rejecting this order, { customerName } will be sent an email with alternate fulfilment options and this order will be removed from your dashboard.",
   "Online ATP": "Online ATP",
+  "on hand": "{ count } on hand",
   "Other stores inventory": "その他店舗在庫",
   "Order": "注文",
   "Order delivered to": "注文は { customerName }様 に配達されました",
