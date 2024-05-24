@@ -68,6 +68,7 @@ export default defineComponent({
       const popover = await popoverController.create({
         component: InventoryDetailsPopover,
         event: Event,
+        showBackdrop: false,
         componentProps: { item: this.item }
       });
       await popover.present();
