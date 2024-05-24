@@ -8,7 +8,7 @@
       <p class="ion-text-wrap">{{ getProductIdentificationValue(productIdentificationPref.secondaryId, getProduct(item.productId)) }}</p>
     </ion-label>
     <!-- Only show stock if its not a ship to store order -->
-    <div v-if="!isShipToStoreOrder">
+    <div slot="end" v-if="!isShipToStoreOrder">
       <ion-spinner v-if="isFetchingStock" color="medium" name="crescent" />
       <div v-else-if="getProductStock(item.productId).quantityOnHandTotal >= 0" class="atp-info">
         <ion-note slot="end"> {{ translate("on hand", { count: getProductStock(item.productId).quantityOnHandTotal ?? '0' }) }} </ion-note>
