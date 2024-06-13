@@ -246,7 +246,6 @@ import AssignPickerModal from "@/views/AssignPickerModal.vue";
 import { copyToClipboard, getFeature, showToast } from '@/utils'
 import { DateTime } from "luxon";
 import { api, hasError } from '@/adapter';
-import ShipToCustomerModal from "@/components/ShipToCustomerModal.vue";
 import { OrderService } from "@/services/OrderService";
 import RejectOrderModal from "@/components/RejectOrderModal.vue";
 import { getProductIdentificationValue, translate, useProductIdentificationStore } from "@hotwax/dxp-components";
@@ -436,12 +435,6 @@ export default defineComponent({
         logger.error(err)
       }
     },
-    async shipToCustomer() {
-      const shipmodal = await modalController.create({
-        component: ShipToCustomerModal,
-      });
-      return shipmodal.present();
-    },
     async getCustomerContactDetails() {
       try {
         const resp = await OrderService.getCustomerContactDetails(this.$route.params.orderId)
@@ -541,6 +534,7 @@ export default defineComponent({
 
 ion-card-header {
   display: flex;
+  flex-direction: row;
   justify-content: space-between;
   align-items: center;
 }

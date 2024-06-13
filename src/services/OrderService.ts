@@ -13,6 +13,14 @@ const getOpenOrders = async (payload: any): Promise <any> => {
   });
 }
 
+const fetchOrderItems = async (payload: any): Promise <any> => {
+  return api({
+    url: "solr-query",
+    method: "post",
+    data: payload
+  });
+}
+
 const getOrderDetails = async (payload: any): Promise <any> => {
   return api({
     url: "solr-query",
@@ -102,8 +110,7 @@ const rejectOrderItem = async (payload: any): Promise <any> => {
 }
 
 const createPicklist = async (query: any): Promise <any> => {
-  let baseURL = store.getters['user/getInstanceUrl'];
-  baseURL = baseURL && baseURL.startsWith('http') ? baseURL : `https://${baseURL}.hotwax.io/api/`;
+  const baseURL = store.getters['user/getBaseUrl'];
   return client({
     url: 'createPicklist',
     method: 'POST',
@@ -301,6 +308,7 @@ const fetchTrackingCodes = async (shipmentIds: Array<string>): Promise<any> => {
 }
 
 export const OrderService = {
+  fetchOrderItems,
   fetchOrderPaymentPreferences,
   fetchTrackingCodes,
   findOrderShipGroup,

@@ -19,7 +19,9 @@ import {
   subscribeTopic,
   unsubscribeTopic,
   updateInstanceUrl,
-  updateToken
+  updateToken, 
+  getAvailableTimeZones, 
+  setUserTimeZone
 } from '@hotwax/oms-api'
 
 export {
@@ -43,5 +45,7 @@ export {
   subscribeTopic,
   unsubscribeTopic,
   updateInstanceUrl,
-  updateToken
+  updateToken,
+  getAvailableTimeZones, 
+  setUserTimeZone
 }

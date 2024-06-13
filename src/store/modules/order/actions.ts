@@ -13,6 +13,100 @@ import { getOrderCategory } from "@/utils/order";
 import logger from "@/logger";
 
 const actions: ActionTree<OrderState , RootState> ={
+
+  async getOrderDetails({ dispatch, commit }, payload ) {
+
+    let resp;
+    const orderQueryPayload = prepareOrderQuery({
+      ...payload,
+      orderStatusId: 'ORDER_APPROVED',
+      orderTypeId: 'SALES_ORDER',
+      '-fulfillmentStatus': '(Cancelled OR Rejected OR Completed)',
+    })
+
+    try {
+      resp = await OrderService.fetchOrderItems(orderQueryPayload);
+      if (!hasError(resp) && resp.data.grouped?.orderId?.ngroups > 0) {
+        const orderIds = resp.data.grouped?.orderId?.groups.map((order: any) => order.doclist.docs[0].orderId);
+        dispatch('fetchOrderItems', {...payload, orderIds});
+      } else {  
+        commit(types.ORDER_INFO_UPDATED, { orders: {} })
+      }
+    } catch(err) {
+      logger.error(err)
+      commit(types.ORDER_INFO_UPDATED, { orders: {} })
+    }
+    return resp;
+  },
+
+  async fetchOrderItems({ commit }, payload) {
+  
+    let resp;
+    const { productId, orderIds, ...params } = payload;
+    const orderQueryPayload = prepareOrderQuery({
+      ...params,
+      orderIds,
+      orderStatusId: 'ORDER_APPROVED',
+      orderTypeId: 'SALES_ORDER',
+    })
+
+    try {
+      resp = await OrderService.fetchOrderItems(orderQueryPayload);
+      if (!hasError(resp) && resp.data.grouped?.orderId?.ngroups > 0) {
+        const productIds: any = []
+        const orders = resp.data.grouped?.orderId?.groups.map((order: any) => {
+          const orderItem = order.doclist.docs[0]
+          let currentItem: any = {};
+          let currentItemQty = 0;
+          const otherItemsObj: any = {};
+          order.doclist.docs.map((item: any) => {
+            if (item.productId == productId) {
+              currentItemQty += item.itemQuantity; 
+              if(!currentItem.productId) {
+                currentItem = item;
+              }
+            } else {
+              if (!otherItemsObj[item.productId]) {
+                otherItemsObj[item.productId] = { ...item, quantity: 0 };
+                productIds.push(item.productId);
+              }
+              otherItemsObj[item.productId].quantity += item.itemQuantity;
+            }
+          });
+
+          currentItem = { ...currentItem, quantity: currentItemQty };
+          const otherItems = Object.values(otherItemsObj);
+          
+          return {
+            orderId: orderItem.orderId,
+            orderName: orderItem.orderName,
+            customer: {
+              partyId: orderItem.customerId,
+              name: orderItem.customerName
+            },
+            shipmentMethod: {
+              shipmentMethodTypeDesc: orderItem.shipmentMethodTypeDesc,
+              shipmentMethodTypeId: orderItem.shipmentMethodTypeId
+            },
+            otherItems: otherItems,
+            currentItem: currentItem
+          }
+        })
+        productIds.push(productId)
+        
+        this.dispatch('product/fetchProducts', { productIds: productIds });
+        commit(types.ORDER_INFO_UPDATED, { orders })
+      } else {
+        commit(types.ORDER_INFO_UPDATED, { orders: {} })
+      }
+    }
+    catch(err) {
+      logger.error(err)
+      commit(types.ORDER_INFO_UPDATED, { orders: {} })
+    }
+    return resp;
+  },
+
   async getOpenOrders({ commit, state }, payload) {
     // Show loader only when new query and not the infinite scroll
     if (payload.viewIndex === 0) emitter.emit("presentLoader");

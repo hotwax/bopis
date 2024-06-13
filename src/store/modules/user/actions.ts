@@ -47,7 +47,7 @@ const actions: ActionTree<UserState, RootState> = {
       if (permissionId) serverPermissionsFromRules.push(permissionId);
 
       const serverPermissions = await UserService.getUserPermissions({
-        permissionIds: serverPermissionsFromRules
+        permissionIds: [...new Set(serverPermissionsFromRules)]
       }, token);
       const appPermissions = prepareAppPermissions(serverPermissions);
 
@@ -57,9 +57,9 @@ const actions: ActionTree<UserState, RootState> = {
       if (permissionId) {
         // As the token is not yet set in the state passing token headers explicitly
         // TODO Abstract this out, how token is handled should be part of the method not the callee
-        const hasPermission = appPermissions.some((appPermissionId: any) => appPermissionId === permissionId );
+        const hasPermission = appPermissions.some((appPermission: any) => appPermission.action === permissionId );
         // If there are any errors or permission check fails do not allow user to login
-        if (hasPermission) {
+        if (!hasPermission) {
           const permissionError = 'You do not have permission to access the app.';
           showToast(translate(permissionError));
           logger.error("error", permissionError);
@@ -113,7 +113,7 @@ const actions: ActionTree<UserState, RootState> = {
       // TODO Check if handling of specific status codes is required.
       showToast(translate('Something went wrong while login. Please contact administrator'));
       logger.error("error", err);
-      return Promise.reject(new Error(err))
+      return Promise.reject(err instanceof Object ? err : new Error(err))
     }
   },
 
@@ -201,16 +201,13 @@ const actions: ActionTree<UserState, RootState> = {
   /**
    * Update user timeZone
    */
-  async setUserTimeZone ( { state, commit }, payload) {
-    const resp = await UserService.setUserTimeZone(payload)
-    if (resp.status === 200 && !hasError(resp)) {
-      const current: any = state.current;
-      current.userTimeZone = payload.timeZoneId;
-      commit(types.USER_INFO_UPDATED, current);
-      Settings.defaultZone = current.userTimeZone;
-      showToast(translate("Time zone updated successfully"));
-    }
+  async setUserTimeZone ( { state, commit }, timeZoneId) {
+    const current: any = state.current;
+    current.userTimeZone = timeZoneId;
+    commit(types.USER_INFO_UPDATED, current);
+    Settings.defaultZone = current.userTimeZone;
   },
+
 
   async getPartialOrderRejectionConfig ({ commit }) {
     let config = {};
@@ -308,7 +305,7 @@ const actions: ActionTree<UserState, RootState> = {
     try {
       resp = await getNotificationEnumIds(process.env.VUE_APP_NOTIF_ENUM_TYPE_ID)
       enumerationResp = resp.docs
-      resp = await getNotificationUserPrefTypeIds(process.env.VUE_APP_NOTIF_APP_ID)
+      resp = await getNotificationUserPrefTypeIds(process.env.VUE_APP_NOTIF_APP_ID, state.current.userLoginId)
       userPrefIds = resp.docs.map((userPref: any) => userPref.userPrefTypeId)
     } catch (error) {
       logger.error(error)

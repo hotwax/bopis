@@ -36,12 +36,13 @@ import { dxpComponents } from '@hotwax/dxp-components'
 import localeMessages from './locales';
 import { login, logout, loader } from '@/utils/user';
 import { addNotification, storeClientRegistrationToken } from '@/utils/firebase';
-import { getConfig, getProductIdentificationPref, initialise, setProductIdentificationPref, setUserLocale } from '@/adapter';
+import { getConfig, getProductIdentificationPref, initialise, setProductIdentificationPref, setUserLocale, getAvailableTimeZones, setUserTimeZone } from '@/adapter';
 import logger from './logger';
 
 const app = createApp(App)
   .use(IonicVue, {
-    mode: 'md'
+    mode: 'md',
+    innerHTMLTemplatesEnabled: true
   })
   .use(logger, {
     level: process.env.VUE_APP_DEFAULT_LOG_LEVEL
@@ -68,6 +69,8 @@ const app = createApp(App)
     setProductIdentificationPref,
     setUserLocale,
     storeClientRegistrationToken,
+    getAvailableTimeZones,
+    setUserTimeZone
   });
 
 // Filters are removed in Vue 3 and global filter introduced https://v3.vuejs.org/guide/migration/filters.html#global-filters
