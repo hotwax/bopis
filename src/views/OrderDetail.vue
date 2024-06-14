@@ -120,6 +120,56 @@
             </div>
           </ion-card>
           <p v-if="!order.part?.items?.length" class="empty-state">{{ translate('All order items are rejected') }}</p>
+
+          <ion-accordion-group v-if="order.shipGroups?.length">
+            <ion-accordion>
+              <ion-item slot="header">
+                <ion-label>{{ translate("Other shipments in this order") }}</ion-label>
+              </ion-item>
+              <div class="ion-padding" slot="content">
+                <ion-card v-for="shipGroup in order.shipGroups" :key="shipGroup.shipmentId">
+                  <ion-card-header>
+                    <div>
+                      <ion-card-subtitle class="overline">{{ getfacilityTypeDesc(shipGroup.facilityTypeId) }}</ion-card-subtitle>
+                      <ion-card-title>{{ shipGroup.facilityName }}</ion-card-title>
+                      {{ shipGroup.shipGroupSeqId }}
+                    </div>
+                    <ion-badge :color="shipGroup.category ? 'primary' : 'medium'">{{ shipGroup.category ? shipGroup.category : '-' }}</ion-badge>
+                  </ion-card-header>
+        
+                  <ion-item v-if="shipGroup.carrierPartyId">
+                    {{ getPartyName(shipGroup.carrierPartyId) }}
+                    <ion-label slot="end">{{ shipGroup.trackingCode }}</ion-label>
+                    <ion-icon slot="end" :icon="locateOutline" />
+                  </ion-item>
+        
+                  <ion-item v-if="shipGroup.shippingInstructions" color="light" lines="none">
+                    <ion-label class="ion-text-wrap">
+                      <p class="overline">{{ translate("Handling Instructions") }}</p>
+                      <p>{{ shipGroup.shippingInstructions }}</p>
+                    </ion-label>
+                  </ion-item>
+        
+                  <ion-item lines="none" v-for="item in shipGroup.items" :key="item">
+                    <ion-thumbnail slot="start">
+                      <ShopifyImg :src="getProduct(item.productId).mainImageUrl" size="small"/>
+                    </ion-thumbnail>
+                    <ion-label>
+                      <p class="overline">{{ getProductIdentificationValue(productIdentificationPref.secondaryId, getProduct(item.productId)) }}</p>
+                      {{ getProductIdentificationValue(productIdentificationPref.primaryId, getProduct(item.productId)) ? getProductIdentificationValue(productIdentificationPref.primaryId, getProduct(item.productId)) : getProduct(item.productId).productName }}
+                      <p>{{ translate("Color:", { color: getFeature(getProduct(item.productId).featureHierarchy, '1/COLOR') }) }}</p>
+                      <p>{{ translate("Size:", { size: getFeature(getProduct(item.productId).featureHierarchy, '1/SIZE') }) }}</p>
+                    </ion-label>
+                    <!-- TODO: add a spinner if the api takes too long to fetch the stock -->
+                    <ion-note slot="end" v-if="getProductStock(item.productId, item.facilityId).quantityOnHandTotal >= 0">{{ getProductStock(item.productId, item.facilityId).quantityOnHandTotal }} {{ translate('pieces in stock') }}</ion-note>
+                    <ion-button slot="end" fill="clear" v-else size="small" @click.stop="fetchProductStock(item.productId)">
+                      <ion-icon color="medium" slot="icon-only" :icon="cubeOutline"/>
+                    </ion-button>
+                  </ion-item>
+                </ion-card>
+              </div>
+            </ion-accordion>
+          </ion-accordion-group>
         </section>
       </main>
 
@@ -140,11 +190,16 @@
 <script lang="ts">
 import {
   alertController,
+  IonAccordion,
+  IonAccordionGroup,
   IonBackButton,
   IonBadge,
   IonButton,
   IonButtons,
   IonCard,
+  IonCardHeader,
+  IonCardSubtitle,
+  IonCardTitle,
   IonChip,
   IonContent,
   IonHeader,
@@ -153,14 +208,16 @@ import {
   IonList,
   IonPage,
   IonLabel,
+  IonNote,
   IonRow,
+  IonThumbnail,
   IonTitle,
   IonToolbar,
   IonFab,
   IonFabButton,
-  modalController,
+  modalController
 } from "@ionic/vue";
-import { defineComponent } from "vue";
+import { computed, defineComponent } from "vue";
 import { mapGetters, useStore } from "vuex";
 import {
   accessibilityOutline,
@@ -170,7 +227,9 @@ import {
   closeCircleOutline,
   checkmarkCircleOutline,
   checkmarkOutline,
+  cubeOutline,
   giftOutline,
+  locateOutline,
   mailOutline,
   printOutline,
   sendOutline,
@@ -184,12 +243,12 @@ import { Actions, hasPermission } from '@/authorization'
 import OrderItemRejHistoryModal from '@/components/OrderItemRejHistoryModal.vue';
 import ReportAnIssueModal from '@/components/ReportAnIssueModal.vue';
 import AssignPickerModal from "@/views/AssignPickerModal.vue";
-import { copyToClipboard, showToast } from '@/utils'
+import { copyToClipboard, getFeature, showToast } from '@/utils'
 import { DateTime } from "luxon";
 import { api, hasError } from '@/adapter';
 import { OrderService } from "@/services/OrderService";
 import RejectOrderModal from "@/components/RejectOrderModal.vue";
-import { translate } from "@hotwax/dxp-components";
+import { getProductIdentificationValue, translate, useProductIdentificationStore } from "@hotwax/dxp-components";
 import EditPickerModal from "@/components/EditPickerModal.vue";
 import emitter from '@/event-bus'
 import logger from "@/logger";
@@ -197,11 +256,16 @@ import logger from "@/logger";
 export default defineComponent({
   name: "OrderDetail",
   components: {
+    IonAccordion,
+    IonAccordionGroup,
     IonBackButton,
     IonBadge,
     IonButton,
     IonButtons,
     IonCard,
+    IonCardHeader,
+    IonCardSubtitle,
+    IonCardTitle,
     IonChip,
     IonContent,
     IonHeader,
@@ -210,7 +274,9 @@ export default defineComponent({
     IonList,
     IonPage,
     IonLabel,
+    IonNote,
     IonRow,
+    IonThumbnail,
     IonTitle,
     IonToolbar,
     ProductListItem,
@@ -241,10 +307,17 @@ export default defineComponent({
       getPaymentMethodDesc: 'util/getPaymentMethodDesc',
       getStatusDesc: 'util/getStatusDesc',
       showPackingSlip: 'user/showPackingSlip',
+      getProduct: 'product/getProduct',
+      getProductStock: 'stock/getProductStock',
+      getfacilityTypeDesc: 'util/getFacilityTypeDesc',
+      getPartyName: 'util/getPartyName',
     })
   },
   props: ['orderType', 'orderId', 'orderPartSeqId'],
   methods: {
+    async fetchProductStock(productId: string) {
+      await this.store.dispatch('stock/fetchStock', { productId })
+    },
     async assignPicker(order: any, part: any, facilityId: any) {
       const assignPickerModal = await modalController.create({
         component: AssignPickerModal,
@@ -420,6 +493,8 @@ export default defineComponent({
   setup() {
     const store = useStore();
     const router = useRouter();
+    const productIdentificationStore = useProductIdentificationStore();
+    let productIdentificationPref = computed(() => productIdentificationStore.getProductIdentificationPref)
 
     return {
       Actions,
@@ -433,9 +508,14 @@ export default defineComponent({
       closeCircleOutline,
       checkmarkCircleOutline,
       checkmarkOutline,
+      cubeOutline,
+      getProductIdentificationValue,
       giftOutline,
+      getFeature,
       hasPermission,
+      locateOutline,
       printOutline,
+      productIdentificationPref,
       router,
       store,
       timeOutline,
@@ -450,6 +530,13 @@ export default defineComponent({
 <style scoped>
 .border-top {
   border-top: 1px solid #ccc;
+}
+
+ion-card-header {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
 }
 
 @media (min-width: 768px) {

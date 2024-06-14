@@ -11,6 +11,12 @@ const getters: GetterTree <UtilState, RootState> = {
   },
   getStatusDesc: (state) => (statusId: string) => {
     return state.statusDesc[statusId] ? state.statusDesc[statusId] : statusId
-  }
+  },
+  getFacilityTypeDesc: (state) => (facilityTypeId: string) => {
+    return state.facilityTypeDesc[facilityTypeId] ? state.facilityTypeDesc[facilityTypeId] : ''
+  },
+  getPartyName: (state) => (partyId: string) => {
+    return state.partyNames[partyId] ? state.partyNames[partyId] : ''
+  },
 }
 export default getters;

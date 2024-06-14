@@ -33,6 +33,22 @@ const resetPicker = async (payload: any): Promise<any> => {
   })
 }
 
+const fetchFacilityTypeInformation = async (query: any): Promise<any> => {
+  return api({
+    url: "performFind",
+    method: "get",
+    params: query
+  });
+}
+
+const fetchPartyInformation = async (query: any): Promise<any> => {
+  return api({
+    url: "performFind",
+    method: "get",
+    params: query
+  });
+}
+
 const fetchReservedQuantity = async (query: any): Promise <any>  => {
   return api({
     url: "solr-query", 
@@ -42,6 +58,8 @@ const fetchReservedQuantity = async (query: any): Promise <any>  => {
 }
 
 export const UtilService = {
+  fetchFacilityTypeInformation,
+  fetchPartyInformation,
   fetchPaymentMethodTypeDesc,
   fetchRejectReasons,
   fetchStatusDesc,
