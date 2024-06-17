@@ -152,7 +152,7 @@
         
                   <ion-item lines="none" v-for="item in shipGroup.items" :key="item">
                     <ion-thumbnail slot="start">
-                      <ShopifyImg :src="getProduct(item.productId).mainImageUrl" size="small"/>
+                      <DxpShopifyImg :src="getProduct(item.productId).mainImageUrl" size="small"/>
                     </ion-thumbnail>
                     <ion-label>
                       <p class="overline">{{ getProductIdentificationValue(productIdentificationPref.secondaryId, getProduct(item.productId)) }}</p>
@@ -160,11 +160,19 @@
                       <p>{{ translate("Color:", { color: getFeature(getProduct(item.productId).featureHierarchy, '1/COLOR') }) }}</p>
                       <p>{{ translate("Size:", { size: getFeature(getProduct(item.productId).featureHierarchy, '1/SIZE') }) }}</p>
                     </ion-label>
-                    <!-- TODO: add a spinner if the api takes too long to fetch the stock -->
-                    <ion-note slot="end" v-if="getProductStock(item.productId, item.facilityId).quantityOnHandTotal >= 0">{{ getProductStock(item.productId, item.facilityId).quantityOnHandTotal }} {{ translate('pieces in stock') }}</ion-note>
-                    <ion-button slot="end" fill="clear" v-else size="small" @click.stop="fetchProductStock(item.productId)">
-                      <ion-icon color="medium" slot="icon-only" :icon="cubeOutline"/>
-                    </ion-button>
+
+                    <div slot="end">
+                      <ion-spinner v-if="item.isFetchingStock" color="medium" name="crescent" />
+                      <div v-else-if="getProductStock(item.productId).quantityOnHandTotal >= 0" class="atp-info">
+                        <ion-note slot="end"> {{ translate("on hand", { count: getProductStock(item.productId).quantityOnHandTotal ?? '0' }) }} </ion-note>
+                        <ion-button fill="clear" @click.stop="openInventoryDetailPopover($event, item)">
+                          <ion-icon slot="icon-only" :icon="informationCircleOutline" color="medium" />
+                        </ion-button>
+                      </div>
+                      <ion-button v-else fill="clear" @click.stop="fetchProductStock(item.productId, shipGroup.shipGroupSeqId)">
+                        <ion-icon color="medium" slot="icon-only" :icon="cubeOutline" />
+                      </ion-button>
+                    </div>
                   </ion-item>
                 </ion-card>
               </div>
@@ -210,12 +218,14 @@ import {
   IonLabel,
   IonNote,
   IonRow,
+  IonSpinner,
   IonThumbnail,
   IonTitle,
   IonToolbar,
   IonFab,
   IonFabButton,
-  modalController
+  modalController,
+  popoverController
 } from "@ionic/vue";
 import { computed, defineComponent } from "vue";
 import { mapGetters, useStore } from "vuex";
@@ -229,6 +239,7 @@ import {
   checkmarkOutline,
   cubeOutline,
   giftOutline,
+  informationCircleOutline,
   locateOutline,
   mailOutline,
   printOutline,
@@ -252,6 +263,7 @@ import { getProductIdentificationValue, translate, useProductIdentificationStore
 import EditPickerModal from "@/components/EditPickerModal.vue";
 import emitter from '@/event-bus'
 import logger from "@/logger";
+import InventoryDetailsPopover from '@/components/InventoryDetailsPopover.vue'
 
 export default defineComponent({
   name: "OrderDetail",
@@ -276,6 +288,7 @@ export default defineComponent({
     IonLabel,
     IonNote,
     IonRow,
+    IonSpinner,
     IonThumbnail,
     IonTitle,
     IonToolbar,
@@ -315,8 +328,10 @@ export default defineComponent({
   },
   props: ['orderType', 'orderId', 'orderPartSeqId'],
   methods: {
-    async fetchProductStock(productId: string) {
+    async fetchProductStock(productId: string, shipGroupSeqId: any) {
+      this.store.dispatch('order/updateOrderItemFetchingStatus', { productId, shipGroupSeqId })
       await this.store.dispatch('stock/fetchStock', { productId })
+      this.store.dispatch('order/updateOrderItemFetchingStatus', { productId, shipGroupSeqId })
     },
     async assignPicker(order: any, part: any, facilityId: any) {
       const assignPickerModal = await modalController.create({
@@ -477,7 +492,16 @@ export default defineComponent({
     },
     async printShippingLabelAndPackingSlip(order: any) {
       await OrderService.printShippingLabelAndPackingSlip(order.shipmentId)
-    }
+    },
+    async openInventoryDetailPopover(Event: any, item: any){
+      const popover = await popoverController.create({
+        component: InventoryDetailsPopover,
+        event: Event,
+        showBackdrop: false,
+        componentProps: { item }
+      });
+      await popover.present();
+    },
   },
   async mounted() {
     emitter.emit("presentLoader")
@@ -513,6 +537,7 @@ export default defineComponent({
       giftOutline,
       getFeature,
       hasPermission,
+      informationCircleOutline,
       locateOutline,
       printOutline,
       productIdentificationPref,

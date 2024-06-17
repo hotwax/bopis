@@ -312,6 +312,20 @@ const actions: ActionTree<OrderState , RootState> ={
     await dispatch('fetchShipGroupForOrder');
   },
 
+  async updateOrderItemFetchingStatus ({ commit, state }, payload) {
+    const order = state.current ? JSON.parse(JSON.stringify(state.current)) : {};
+
+    order.shipGroups?.find((shipGroup: any) => {
+      if(shipGroup.shipGroupSeqId === payload.shipGroupSeqId){
+        shipGroup.items?.find((item: any) => {
+          if(item.productId === payload.productId) item.isFetchingStock = !item.isFetchingStock
+        });
+      }
+    })
+
+    commit(types.ORDER_CURRENT_UPDATED, { order })
+  },
+
   async getPackedOrders ({ commit, state }, payload) {
     // Show loader only when new query and not the infinite scroll
     if (payload.viewIndex === 0) emitter.emit("presentLoader");
@@ -1122,6 +1136,8 @@ const actions: ActionTree<OrderState , RootState> ={
       const reservedShipGroupForOrder = shipGroups.find((group: any) => shipGroup.shipGroupSeqId === group.doclist?.docs[0]?.shipGroupSeqId)
 
       const reservedShipGroup = reservedShipGroupForOrder?.groupValue ? reservedShipGroupForOrder.doclist.docs[0] : ''
+
+      reservedShipGroupForOrder.doclist.docs.map((item: any) => item.isFetchingStock = false);
 
       return reservedShipGroup ? {
         ...shipGroup,
