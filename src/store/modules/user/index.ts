@@ -13,7 +13,7 @@ const userModule: Module<UserState, RootState> = {
       currentFacility: {},
       instanceUrl: '',
       preference: {
-        showShippingOrders: true,
+        showShippingOrders: false,
         showPackingSlip: false,
         configurePicker: false
       },
