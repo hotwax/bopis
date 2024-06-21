@@ -154,11 +154,9 @@
                     <ion-thumbnail slot="start">
                       <DxpShopifyImg :src="getProduct(item.productId).mainImageUrl" size="small"/>
                     </ion-thumbnail>
-                    <ion-label>
-                      <p class="overline">{{ getProductIdentificationValue(productIdentificationPref.secondaryId, getProduct(item.productId)) }}</p>
-                      {{ getProductIdentificationValue(productIdentificationPref.primaryId, getProduct(item.productId)) ? getProductIdentificationValue(productIdentificationPref.primaryId, getProduct(item.productId)) : getProduct(item.productId).productName }}
-                      <p>{{ translate("Color:", { color: getFeature(getProduct(item.productId).featureHierarchy, '1/COLOR') }) }}</p>
-                      <p>{{ translate("Size:", { size: getFeature(getProduct(item.productId).featureHierarchy, '1/SIZE') }) }}</p>
+                    <ion-label class="ion-text-wrap">
+                      <h2>{{ getProductIdentificationValue(productIdentificationPref.primaryId, getProduct(item.productId)) ? getProductIdentificationValue(productIdentificationPref.primaryId, getProduct(item.productId)) : getProduct(item.productId).productName }}</h2>
+                      <p class="ion-text-wrap">{{ getProductIdentificationValue(productIdentificationPref.secondaryId, getProduct(item.productId)) }}</p>
                     </ion-label>
 
                     <div slot="end">
