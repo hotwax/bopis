@@ -8,7 +8,7 @@ const prepareOrderQuery = (params: any) => {
         "rows": viewSize,
         "sort": "orderDate desc",
         "group": true,
-        "group.field": "orderId",
+        "group.field": params.groupBy ? params.groupBy : "orderId",
         "group.limit": 1000,
         "group.ngroups": true,
         "q.op": "AND",
@@ -53,12 +53,38 @@ const prepareOrderQuery = (params: any) => {
     payload.json.filter.push(`facilityId: ${params.facilityId}`)
   }
 
+  if (params.productId) {
+    payload.json.filter.push(`productId: ${params.productId}`)
+  }
+
+  if (params.filters) {
+    Object.keys(params.filters).forEach((key) => {
+      payload.json.filter.push(`${key}: ${params.filters[key]}`);
+    });
+  }
+  
+  if(params.orderIds){
+    payload.json.filter.push(`orderId: (${params.orderIds.join(' OR ')})`)
+  }
+
+  if(params.facet) {
+    payload.json['facet'] = params.facet
+  }
+
   if (params.orderPartSeqId) {
     payload.json.filter.push(`shipGroupSeqId: ${params.orderPartSeqId}`)
   }
 
   if (params.orderId) {
     payload.json.filter.push(`orderId: ${params.orderId}`)
+  }
+
+  if (params.shipGroupSeqId) {
+    payload.json.filter.push(`shipGroupSeqId: ${params.shipGroupSeqId}`)
+  }
+
+  if (params['-shipGroupSeqId']) {
+    payload.json.filter.push(`-shipGroupSeqId: ${params['-shipGroupSeqId']}`)
   }
 
   if(params.orderItemStatusId) {

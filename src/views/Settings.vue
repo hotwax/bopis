@@ -34,7 +34,7 @@
         <h1>{{ translate('OMS') }}</h1>
       </div>
       <section>
-        <OmsInstanceNavigator />
+        <DxpOmsInstanceNavigator />
 
         <ion-card>
           <ion-card-header>
@@ -46,8 +46,7 @@
             {{ translate('Specify which facility you want to operate from. Order, inventory and other configuration data will be specific to the facility you select.') }}
           </ion-card-content>
           <ion-item lines="none">
-            <ion-label>{{ translate("Select facility") }}</ion-label>
-            <ion-select interface="popover" :value="currentFacility?.facilityId" @ionChange="setFacility($event)">
+            <ion-select :label="translate('Select facility')" interface="popover" :value="currentFacility?.facilityId" @ionChange="setFacility($event)">
               <ion-select-option v-for="facility in (userProfile ? userProfile.facilities : [])" :key="facility.facilityId" :value="facility.facilityId" >{{ facility.facilityName }}</ion-select-option>
             </ion-select>
           </ion-item>
@@ -66,25 +65,20 @@
             {{ translate('Control what your customers are allowed to edit on their order when they are editing their order on Re-route Fulfillment.') }}
           </ion-card-content>
           <ion-item lines="none">
-            <ion-label>{{ translate("Delivery method") }}</ion-label>
-            <ion-toggle :disabled="!hasPermission(Actions.APP_RF_CONFIG_UPDATE) || Object.keys(rerouteFulfillmentConfig.allowDeliveryMethodUpdate).length == 0" :checked="rerouteFulfillmentConfig.allowDeliveryMethodUpdate.settingValue" @ionChange="updateRerouteFulfillmentConfiguration(rerouteFulfillmentConfig.allowDeliveryMethodUpdate, $event.detail.checked)" slot="end" />
+            <ion-toggle label-placement="start" :disabled="!hasPermission(Actions.APP_RF_CONFIG_UPDATE) || Object.keys(rerouteFulfillmentConfig.allowDeliveryMethodUpdate).length == 0" :checked="rerouteFulfillmentConfig.allowDeliveryMethodUpdate.settingValue" @ionChange="updateRerouteFulfillmentConfiguration(rerouteFulfillmentConfig.allowDeliveryMethodUpdate, $event.detail.checked)">{{ translate("Delivery method") }}</ion-toggle>
           </ion-item>
           <ion-item lines="none">
-            <ion-label>{{ translate("Delivery address") }}</ion-label>
-            <ion-toggle :disabled="!hasPermission(Actions.APP_RF_CONFIG_UPDATE) || Object.keys(rerouteFulfillmentConfig.allowDeliveryAddressUpdate).length == 0" :checked="rerouteFulfillmentConfig.allowDeliveryAddressUpdate.settingValue" @ionChange="updateRerouteFulfillmentConfiguration(rerouteFulfillmentConfig.allowDeliveryAddressUpdate, $event.detail.checked)" slot="end" />
+            <ion-toggle label-placement="start" :disabled="!hasPermission(Actions.APP_RF_CONFIG_UPDATE) || Object.keys(rerouteFulfillmentConfig.allowDeliveryAddressUpdate).length == 0" :checked="rerouteFulfillmentConfig.allowDeliveryAddressUpdate.settingValue" @ionChange="updateRerouteFulfillmentConfiguration(rerouteFulfillmentConfig.allowDeliveryAddressUpdate, $event.detail.checked)">{{ translate("Delivery address") }}</ion-toggle>
           </ion-item>
           <ion-item lines="none">
-            <ion-label>{{ translate("Pick up location") }}</ion-label>
-            <ion-toggle :disabled="!hasPermission(Actions.APP_RF_CONFIG_UPDATE) || Object.keys(rerouteFulfillmentConfig.allowPickupUpdate).length == 0" :checked="rerouteFulfillmentConfig.allowPickupUpdate.settingValue" @ionChange="updateRerouteFulfillmentConfiguration(rerouteFulfillmentConfig.allowPickupUpdate, $event.detail.checked)" slot="end" />
+            <ion-toggle label-placement="start" :disabled="!hasPermission(Actions.APP_RF_CONFIG_UPDATE) || Object.keys(rerouteFulfillmentConfig.allowPickupUpdate).length == 0" :checked="rerouteFulfillmentConfig.allowPickupUpdate.settingValue" @ionChange="updateRerouteFulfillmentConfiguration(rerouteFulfillmentConfig.allowPickupUpdate, $event.detail.checked)">{{ translate("Pick up location") }}</ion-toggle>
           </ion-item>
           <ion-item lines="none">
-            <ion-label>{{ translate("Cancel order before fulfillment") }}</ion-label>
             <!-- <p>Uploading order cancelations to Shopify is currently disabled. Order cancelations in HotWax will not be synced to Shopify.</p> -->
-            <ion-toggle :disabled="!hasPermission(Actions.APP_RF_CONFIG_UPDATE) || Object.keys(rerouteFulfillmentConfig.allowCancel).length == 0" :checked="rerouteFulfillmentConfig.allowCancel.settingValue" @ionChange="updateRerouteFulfillmentConfiguration(rerouteFulfillmentConfig.allowCancel, $event.detail.checked)" slot="end" />
+            <ion-toggle label-placement="start" :disabled="!hasPermission(Actions.APP_RF_CONFIG_UPDATE) || Object.keys(rerouteFulfillmentConfig.allowCancel).length == 0" :checked="rerouteFulfillmentConfig.allowCancel.settingValue" @ionChange="updateRerouteFulfillmentConfiguration(rerouteFulfillmentConfig.allowCancel, $event.detail.checked)">{{ translate("Cancel order before fulfillment") }}</ion-toggle>
           </ion-item>
           <ion-item lines="none">
-            <ion-label>{{ translate("Shipment method") }}</ion-label>
-            <ion-select :disabled="!hasPermission(Actions.APP_RF_CONFIG_UPDATE) || Object.keys(rerouteFulfillmentConfig.shippingMethod).length == 0" interface="popover" :value="rerouteFulfillmentConfig.shippingMethod.settingValue" @ionChange="updateRerouteFulfillmentConfiguration(rerouteFulfillmentConfig.shippingMethod, $event.detail.value)">
+            <ion-select :label="translate('Shipment method')" :disabled="!hasPermission(Actions.APP_RF_CONFIG_UPDATE) || Object.keys(rerouteFulfillmentConfig.shippingMethod).length == 0" interface="popover" :value="rerouteFulfillmentConfig.shippingMethod.settingValue" @ionChange="updateRerouteFulfillmentConfiguration(rerouteFulfillmentConfig.shippingMethod, $event.detail.value)">
               <ion-select-option v-for="shipmentMethod in availableShipmentMethods" :key="shipmentMethod.shipmentMethodTypeId" :value="shipmentMethod.shipmentMethodTypeId" >{{ shipmentMethod.description }}</ion-select-option>
             </ion-select>
           </ion-item>
@@ -100,8 +94,7 @@
             {{ translate('Specify whether you reject a BOPIS order partially when any order item inventory is insufficient at the store.') }}
           </ion-card-content>
           <ion-item lines="none">
-            <ion-label>{{ translate("Allow partial rejection") }}</ion-label>
-            <ion-toggle :disabled="!hasPermission(Actions.APP_PARTIAL_ORDER_REJECTION_CONFIG_UPDATE)" :checked="partialOrderRejectionConfig.settingValue" @ionChange="updatePartialOrderRejectionConfig(partialOrderRejectionConfig, $event.detail.checked)" slot="end" />
+            <ion-toggle label-placement="start" :disabled="!hasPermission(Actions.APP_PARTIAL_ORDER_REJECTION_CONFIG_UPDATE)" :checked="partialOrderRejectionConfig.settingValue" @ionChange="updatePartialOrderRejectionConfig(partialOrderRejectionConfig, $event.detail.checked)">{{ translate("Allow partial rejection") }}</ion-toggle>
           </ion-item>
         </ion-card>
         
@@ -117,24 +110,9 @@
       </div>
 
       <section>
-        <ProductIdentifier />
-
-        <ion-card>
-          <ion-card-header>
-            <ion-card-title>
-              {{ translate('Timezone') }}
-            </ion-card-title>
-          </ion-card-header>
-          <ion-card-content>
-            {{ translate('The timezone you select is used to ensure automations you schedule are always accurate to the time you select.') }}
-          </ion-card-content>
-          <ion-item lines="none">
-            <ion-label> {{ userProfile && userProfile.userTimeZone ? userProfile.userTimeZone : '-' }} </ion-label>
-            <ion-button @click="changeTimeZone()" slot="end" fill="outline" color="dark">{{ translate("Change") }}</ion-button>
-          </ion-item>
-        </ion-card>
-
-        <LanguageSwitcher />
+        <DxpProductIdentifier />
+        <DxpTimeZoneSwitcher @timeZoneUpdated="timeZoneUpdated" />
+        <DxpLanguageSwitcher />
 
         <ion-card>
           <ion-card-header>
@@ -146,8 +124,7 @@
             {{ translate('View shipping orders along with pickup orders.') }}
           </ion-card-content>
           <ion-item lines="none">
-            <ion-label>{{ translate("Show shipping orders") }}</ion-label>
-            <ion-toggle :checked="showShippingOrders" @ionChange="setShowShippingOrdersPreference($event)" slot="end" />
+            <ion-toggle label-placement="start" :checked="showShippingOrders" @ionChange="setShowShippingOrdersPreference($event)">{{ translate("Show shipping orders") }}</ion-toggle>
           </ion-item>
         </ion-card>
 
@@ -161,8 +138,7 @@
             {{ translate('Packing slips help customer reconcile their order against the delivered items.') }}
           </ion-card-content>
           <ion-item lines="none">
-            <ion-label>{{ translate("Generate packing slips") }}</ion-label>
-            <ion-toggle :checked="showPackingSlip" @ionChange="setShowPackingSlipPreference($event)" slot="end" />
+            <ion-toggle label-placement="start" :checked="showPackingSlip" @ionChange="setShowPackingSlipPreference($event)">{{ translate("Generate packing slips") }}</ion-toggle>
           </ion-item>
         </ion-card>
 
@@ -176,8 +152,7 @@
             {{ translate('Track who picked orders by entering picker IDs when packing an order.') }}
           </ion-card-content>
           <ion-item lines="none">
-            <ion-label>{{ translate("Enable tracking") }}</ion-label>
-            <ion-toggle :checked="configurePicker" @ionChange="setConfigurePickerPreference($event)" slot="end" />
+            <ion-toggle label-placement="start" :checked="configurePicker" @ionChange="setConfigurePickerPreference($event)">{{ translate("Enable tracking") }}</ion-toggle>
           </ion-item>
         </ion-card>
 
@@ -192,8 +167,7 @@
           </ion-card-content>
           <ion-list>
             <ion-item :key="pref.enumId" v-for="pref in notificationPrefs" lines="none">
-              <ion-label class="ion-text-wrap">{{ pref.description }}</ion-label>
-              <ion-toggle @click="confirmNotificationPrefUpdate(pref.enumId, $event)" :checked="pref.isEnabled" slot="end" />
+              <ion-toggle label-placement="start" @click="confirmNotificationPrefUpdate(pref.enumId, $event)" :checked="pref.isEnabled">{{ pref.description }}</ion-toggle>
             </ion-item>
           </ion-list>
         </ion-card>
@@ -216,15 +190,13 @@ import {
   IonHeader,
   IonIcon,
   IonItem,
-  IonLabel,
   IonList,
   IonPage,
   IonSelect,
   IonSelectOption,
   IonTitle,
   IonToggle,
-  IonToolbar,
-  modalController
+  IonToolbar
 } from '@ionic/vue';
 import { defineComponent } from 'vue';
 import {
@@ -237,7 +209,6 @@ import {
 } from 'ionicons/icons'
 import { mapGetters, useStore } from 'vuex';
 import { useRouter } from 'vue-router';
-import TimeZoneModal from './TimezoneModal.vue';
 import Image from '@/components/Image.vue';
 import { DateTime } from 'luxon';
 import { UserService } from '@/services/UserService'
@@ -263,7 +234,6 @@ export default defineComponent({
     IonHeader, 
     IonIcon,
     IonItem, 
-    IonLabel, 
     IonList,
     IonPage, 
     IonSelect, 
@@ -322,23 +292,16 @@ export default defineComponent({
   },
   methods: {
     async setFacility (event: any) {
-      // If the value is same, no need to update
-      // Handled case for programmatical changes
-      // https://github.com/ionic-team/ionic-framework/discussions/25532
-      // https://github.com/ionic-team/ionic-framework/issues/20106
-      // https://github.com/ionic-team/ionic-framework/pull/25858
-      if (this.userProfile && this.currentFacility?.facilityId !== event.detail.value) {
+      if (this.userProfile) {
         await this.store.dispatch('user/setFacility', {
           'facilityId': event.detail.value
         });
         await this.store.dispatch('user/fetchNotificationPreferences')
       }
     },
-    async changeTimeZone() {
-      const timeZoneModal = await modalController.create({
-        component: TimeZoneModal,
-      });
-      return timeZoneModal.present();
+   
+    async timeZoneUpdated(tzId: string) {
+      await this.store.dispatch("user/setUserTimeZone", tzId)
     },
     async logout () {
       emitter.emit('presentLoader', { message: 'Logging out', backdropDismiss: false })
@@ -427,12 +390,6 @@ export default defineComponent({
       }
     },
     async updateRerouteFulfillmentConfiguration(config: any, value: any) {
-      // Handled initial programmatical update
-      // When storing boolean values, it is stored as string. Further comparison needs conversion
-      if (config.settingValue === value || (typeof value === 'boolean' && (config.settingValue == 'true') === value)) {
-        return;
-      }
-      
       const params = {
         "fromDate": config.fromDate,
         "productStoreId": this.currentEComStore?.productStoreId,

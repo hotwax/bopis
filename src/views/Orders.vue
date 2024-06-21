@@ -28,7 +28,7 @@
         </ion-segment>
       </div>    
     </ion-header>
-    <ion-content>
+    <ion-content ref="contentRef" :scroll-events="true" @ionScroll="enableScrolling()">
       <div v-if="segmentSelected === 'open'">
         <div v-for="(order, index) in getOrdersByPart(orders)" :key="index" v-show="order.parts.length > 0">
           <ion-card button @click.prevent="viewOrder(order, order.part, 'open')">
@@ -157,7 +157,9 @@
       <ion-refresher slot="fixed" @ionRefresh="refreshOrders($event)">
         <ion-refresher-content pullingIcon="crescent" refreshingSpinner="crescent" />
       </ion-refresher>
-      <ion-infinite-scroll @ionInfinite="loadMoreProducts($event)" threshold="100px" :disabled="segmentSelected === 'open' ? !isOpenOrdersScrollable : segmentSelected === 'packed' ? !isPackedOrdersScrollable : !isCompletedOrdersScrollable">
+      <ion-infinite-scroll @ionInfinite="loadMoreProducts($event)" threshold="100px" 
+        v-show="(segmentSelected === 'open' ? isOpenOrdersScrollable : segmentSelected === 'packed' ? isPackedOrdersScrollable : isCompletedOrdersScrollable)"
+        ref="infiniteScrollRef">
         <ion-infinite-scroll-content loading-spinner="crescent" :loading-text="translate('Loading')" />
       </ion-infinite-scroll>
     </ion-content>
@@ -257,7 +259,8 @@ export default defineComponent({
   },
   data() {
     return {
-      queryString: ''
+      queryString: '',
+      isScrollingEnabled: false
     }
   },
   methods: {
@@ -337,28 +340,43 @@ export default defineComponent({
 
       await this.store.dispatch("order/getCompletedOrders", { viewSize, viewIndex, queryString: this.queryString, facilityId: this.currentFacility.facilityId });
     },
+    enableScrolling() {
+      const parentElement = (this as any).$refs.contentRef.$el
+      const scrollEl = parentElement.shadowRoot.querySelector("main[part='scroll']")
+      let scrollHeight = scrollEl.scrollHeight, infiniteHeight = (this as any).$refs.infiniteScrollRef.$el.offsetHeight, scrollTop = scrollEl.scrollTop, threshold = 100, height = scrollEl.offsetHeight
+      const distanceFromInfinite = scrollHeight - infiniteHeight - scrollTop - threshold - height
+      if(distanceFromInfinite < 0) {
+        this.isScrollingEnabled = false;
+      } else {
+        this.isScrollingEnabled = true;
+      }
+    },
     async loadMoreProducts (event: any) {
+      // Added this check here as if added on infinite-scroll component the Loading content does not get displayed
+      if (!(this.isScrollingEnabled && (this.segmentSelected === 'open' ? this.isOpenOrdersScrollable : this.segmentSelected === 'packed' ? this.isPackedOrdersScrollable : this.isCompletedOrdersScrollable))) {
+        await event.target.complete();
+      }
       if (this.segmentSelected === 'open') {
         this.getPickupOrders(
           undefined,
           Math.ceil(this.orders.length / process.env.VUE_APP_VIEW_SIZE).toString()
-        ).then(() => {
-          event.target.complete();
-        })
+        ).then(async () => {
+          await event.target.complete();
+       });
       } else if (this.segmentSelected === 'packed') {
         this.getPackedOrders(
           undefined,
           Math.ceil(this.packedOrders.length / process.env.VUE_APP_VIEW_SIZE).toString()
-        ).then(() => {
-          event.target.complete();
-        })
+        ).then(async () => {
+          await event.target.complete();
+       });
       } else {
         this.getCompletedOrders(
           undefined,
           Math.ceil(this.completedOrders.length / process.env.VUE_APP_VIEW_SIZE).toString()
-        ).then(() => {
-          event.target.complete();
-        })
+        ).then(async () => {
+          await event.target.complete();
+       });
       }
     },
     async readyForPickup (order: any, part: any) {
@@ -459,6 +477,7 @@ export default defineComponent({
     }
   },
   ionViewWillEnter () {
+    this.isScrollingEnabled = false;
     this.queryString = '';
 
     if(this.segmentSelected === 'open') {

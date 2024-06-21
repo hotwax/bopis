@@ -13,6 +13,14 @@ const getOpenOrders = async (payload: any): Promise <any> => {
   });
 }
 
+const fetchOrderItems = async (payload: any): Promise <any> => {
+  return api({
+    url: "solr-query",
+    method: "post",
+    data: payload
+  });
+}
+
 const getOrderDetails = async (payload: any): Promise <any> => {
   return api({
     url: "solr-query",
@@ -102,8 +110,7 @@ const rejectOrderItem = async (payload: any): Promise <any> => {
 }
 
 const createPicklist = async (query: any): Promise <any> => {
-  let baseURL = store.getters['user/getInstanceUrl'];
-  baseURL = baseURL && baseURL.startsWith('http') ? baseURL : `https://${baseURL}.hotwax.io/api/`;
+  const baseURL = store.getters['user/getBaseUrl'];
   return client({
     url: 'createPicklist',
     method: 'POST',
@@ -259,8 +266,52 @@ const getShippingPhoneNumber = async (orderId: string): Promise<any> => {
   return phoneNumber
 }
 
+const findOrderShipGroup = async (query: any): Promise<any> => {
+  return api({
+    url: "solr-query",
+    method: "post",
+    data: query
+  });
+}
+
+const fetchTrackingCodes = async (shipmentIds: Array<string>): Promise<any> => {
+  let shipmentTrackingCodes = [];
+  const params = {
+    "entityName": "ShipmentPackageRouteSeg",
+    "inputFields": {
+      "shipmentId": shipmentIds,
+      "shipmentId_op": "in",
+      "shipmentItemSeqId_op": "not-empty"
+    },
+    "fieldList": ["shipmentId", "shipmentPackageSeqId", "trackingCode"],
+    "viewSize": 250,  // maximum records we could have
+    "distinct": "Y"
+  }
+
+  try {
+    const resp = await api({
+      url: "performFind",
+      method: "get",
+      params
+    })
+
+    if (!hasError(resp)) {
+      shipmentTrackingCodes = resp?.data.docs;
+    } else if (!resp?.data.error || (resp.data.error && resp.data.error !== "No record found")) {
+      return Promise.reject(resp?.data.error);
+    }
+  } catch (err) {
+    console.error('Failed to fetch tracking codes for shipments', err)
+  }
+
+  return shipmentTrackingCodes;
+}
+
 export const OrderService = {
+  fetchOrderItems,
   fetchOrderPaymentPreferences,
+  fetchTrackingCodes,
+  findOrderShipGroup,
   getOpenOrders,
   getOrderDetails,
   getCompletedOrders,

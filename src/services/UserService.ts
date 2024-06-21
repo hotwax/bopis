@@ -32,21 +32,6 @@ const getUserProfile = async (token: any): Promise<any> => {
   }
 }
 
-const getAvailableTimeZones = async (): Promise <any>  => {
-  return api({
-    url: "getAvailableTimeZones",
-    method: "get",
-    cache: true
-  });
-}
-const setUserTimeZone = async (payload: any): Promise <any>  => {
-  return api({
-    url: "setUserTimeZone",
-    method: "post",
-    data: payload
-  });
-}
-
 const getCurrentEComStore = async (token: any, facilityId: any): Promise<any> => {
 
   // If the facilityId is not provided, it may be case of user not associated with any facility or the logout
@@ -76,12 +61,12 @@ const getCurrentEComStore = async (token: any, facilityId: any): Promise<any> =>
       }
     });
     if (hasError(resp)) {
-      return Promise.reject(resp.data);
+      throw resp.data;
     }
     
     return Promise.resolve(resp.data.docs?.length ? resp.data.docs[0] : {});
   } catch(error: any) {
-    return Promise.reject(error)
+    return Promise.resolve({})
   }
 }
 const getRerouteFulfillmentConfig = async (payload: any): Promise<any> => {
@@ -249,10 +234,8 @@ const isEnumExists = async (enumId: string): Promise<any> => {
 export const UserService = {
     createEnumeration,
     login,
-    getAvailableTimeZones,
     getCurrentEComStore,
     getRerouteFulfillmentConfig,
-    setUserTimeZone,
     getUserPermissions,
     getUserProfile,
     isEnumExists,

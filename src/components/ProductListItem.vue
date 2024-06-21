@@ -8,24 +8,28 @@
       <p class="ion-text-wrap">{{ getProductIdentificationValue(productIdentificationPref.secondaryId, getProduct(item.productId)) }}</p>
     </ion-label>
     <!-- Only show stock if its not a ship to store order -->
-    <div v-if="!isShipToStoreOrder">
-      <ion-note v-if="getProductStock(item.productId).quantityOnHandTotal >= 0" :color="updateColor(getProductStock(item.productId).quantityOnHandTotal)">
-        {{ getProductStock(item.productId).quantityOnHandTotal }} {{ translate('pieces in stock') }}
-      </ion-note>
-      <ion-spinner v-else-if="isFetchingStock" color="medium" name="crescent" />
+    <div slot="end" v-if="!isShipToStoreOrder">
+      <ion-spinner v-if="isFetchingStock" color="medium" name="crescent" />
+      <div v-else-if="getProductStock(item.productId).quantityOnHandTotal >= 0" class="atp-info">
+        <ion-note slot="end"> {{ translate("on hand", { count: getProductStock(item.productId).quantityOnHandTotal ?? '0' }) }} </ion-note>
+        <ion-button fill="clear" @click.stop="openInventoryDetailPopover($event)">
+          <ion-icon slot="icon-only" :icon="informationCircleOutline" color="medium" />
+        </ion-button>
+      </div>
       <ion-button v-else fill="clear" @click.stop="fetchProductStock(item.productId)">
-        <ion-icon color="medium" slot="icon-only" :icon="cubeOutline"/>
+        <ion-icon color="medium" slot="icon-only" :icon="cubeOutline" />
       </ion-button>
-    </div>
+    </div>  
   </ion-item>
 </template>
 
 <script lang="ts">
 import { computed, defineComponent } from "vue";
-import { IonButton, IonIcon, IonItem, IonLabel, IonNote, IonSpinner, IonThumbnail } from "@ionic/vue";
+import { IonButton, IonIcon, IonItem, IonLabel, IonNote, IonSpinner, IonThumbnail, popoverController } from "@ionic/vue";
 import { mapGetters, useStore } from 'vuex';
 import { getProductIdentificationValue, DxpShopifyImg, translate, useProductIdentificationStore } from '@hotwax/dxp-components'
-import { cubeOutline } from 'ionicons/icons'
+import { cubeOutline, informationCircleOutline } from 'ionicons/icons'
+import InventoryDetailsPopover from '@/components/InventoryDetailsPopover.vue'
 
 export default defineComponent({
   name: "ProductListItem",
@@ -42,27 +46,32 @@ export default defineComponent({
   data () {
     return {
       goodIdentificationTypeId: process.env.VUE_APP_PRDT_IDENT_TYPE_ID,
-      isFetchingStock: false
+      isFetchingStock: false,
     }
   },
-  props: {
-    item: Object,
-    isShipToStoreOrder: {
-      type: Boolean,
-      default: false
-    }
-  },
+  props: ['item', 'isShipToStoreOrder'],
   computed: {
     ...mapGetters({
       getProduct: 'product/getProduct',
-      getProductStock: 'stock/getProductStock'
+      product: "product/getCurrent",
+      getProductStock: 'stock/getProductStock',
+      currentFacility: 'user/getCurrentFacility',
     })
   },
   methods: {
     async fetchProductStock(productId: string) {
       this.isFetchingStock = true
-      await this.store.dispatch('stock/fetchStock', { productId })
+      await this.store.dispatch('stock/fetchStock', { productId });
       this.isFetchingStock = false
+    },
+    async openInventoryDetailPopover(Event: any){
+      const popover = await popoverController.create({
+        component: InventoryDetailsPopover,
+        event: Event,
+        showBackdrop: false,
+        componentProps: { item: this.item }
+      });
+      await popover.present();
     },
     updateColor(stock: number) {
       return stock ? stock < 10 ? 'warning' : 'success' : 'danger';
@@ -76,6 +85,7 @@ export default defineComponent({
       getProductIdentificationValue,
       productIdentificationPref,
       cubeOutline,
+      informationCircleOutline,
       store,
       translate
     }
@@ -86,5 +96,11 @@ export default defineComponent({
 <style>
 ion-thumbnail > img {
   object-fit: contain;
+}
+
+.atp-info {
+  display: flex;
+  align-items: center; 
+  flex-direction: row; 
 }
 </style>

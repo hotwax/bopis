@@ -9,9 +9,104 @@ import { translate } from "@hotwax/dxp-components";
 import emitter from '@/event-bus'
 import store from "@/store";
 import { prepareOrderQuery } from "@/utils/solrHelper";
+import { getOrderCategory } from "@/utils/order";
 import logger from "@/logger";
 
 const actions: ActionTree<OrderState , RootState> ={
+
+  async getOrderDetails({ dispatch, commit }, payload ) {
+
+    let resp;
+    const orderQueryPayload = prepareOrderQuery({
+      ...payload,
+      orderStatusId: 'ORDER_APPROVED',
+      orderTypeId: 'SALES_ORDER',
+      '-fulfillmentStatus': '(Cancelled OR Rejected OR Completed)',
+    })
+
+    try {
+      resp = await OrderService.fetchOrderItems(orderQueryPayload);
+      if (!hasError(resp) && resp.data.grouped?.orderId?.ngroups > 0) {
+        const orderIds = resp.data.grouped?.orderId?.groups.map((order: any) => order.doclist.docs[0].orderId);
+        dispatch('fetchOrderItems', {...payload, orderIds});
+      } else {  
+        commit(types.ORDER_INFO_UPDATED, { orders: {} })
+      }
+    } catch(err) {
+      logger.error(err)
+      commit(types.ORDER_INFO_UPDATED, { orders: {} })
+    }
+    return resp;
+  },
+
+  async fetchOrderItems({ commit }, payload) {
+  
+    let resp;
+    const { productId, orderIds, ...params } = payload;
+    const orderQueryPayload = prepareOrderQuery({
+      ...params,
+      orderIds,
+      orderStatusId: 'ORDER_APPROVED',
+      orderTypeId: 'SALES_ORDER',
+    })
+
+    try {
+      resp = await OrderService.fetchOrderItems(orderQueryPayload);
+      if (!hasError(resp) && resp.data.grouped?.orderId?.ngroups > 0) {
+        const productIds: any = []
+        const orders = resp.data.grouped?.orderId?.groups.map((order: any) => {
+          const orderItem = order.doclist.docs[0]
+          let currentItem: any = {};
+          let currentItemQty = 0;
+          const otherItemsObj: any = {};
+          order.doclist.docs.map((item: any) => {
+            if (item.productId == productId) {
+              currentItemQty += item.itemQuantity; 
+              if(!currentItem.productId) {
+                currentItem = item;
+              }
+            } else {
+              if (!otherItemsObj[item.productId]) {
+                otherItemsObj[item.productId] = { ...item, quantity: 0 };
+                productIds.push(item.productId);
+              }
+              otherItemsObj[item.productId].quantity += item.itemQuantity;
+            }
+          });
+
+          currentItem = { ...currentItem, quantity: currentItemQty };
+          const otherItems = Object.values(otherItemsObj);
+          
+          return {
+            orderId: orderItem.orderId,
+            orderName: orderItem.orderName,
+            customer: {
+              partyId: orderItem.customerId,
+              name: orderItem.customerName
+            },
+            shipmentMethod: {
+              shipmentMethodTypeDesc: orderItem.shipmentMethodTypeDesc,
+              shipmentMethodTypeId: orderItem.shipmentMethodTypeId
+            },
+            otherItems: otherItems,
+            currentItem: currentItem
+          }
+        })
+        productIds.push(productId)
+        
+        this.dispatch('product/fetchProducts', { productIds: productIds });
+        commit(types.ORDER_INFO_UPDATED, { orders })
+      } else {
+        commit(types.ORDER_INFO_UPDATED, { orders: {} })
+      }
+    }
+    catch(err) {
+      logger.error(err)
+      commit(types.ORDER_INFO_UPDATED, { orders: {} })
+    }
+    return resp;
+  },
+
   async getOpenOrders({ commit, state }, payload) {
     // Show loader only when new query and not the infinite scroll
     if (payload.viewIndex === 0) emitter.emit("presentLoader");
@@ -74,7 +169,8 @@ const actions: ActionTree<OrderState , RootState> ={
               return arr
             }, []),
             placedDate: orderItem.orderDate,
-            shippingInstructions: orderItem.shippingInstructions
+            shippingInstructions: orderItem.shippingInstructions,
+            shipGroupSeqId: orderItem.shipGroupSeqId
           }
         })
 
@@ -119,6 +215,7 @@ const actions: ActionTree<OrderState , RootState> ={
     // As one order can have multiple parts thus checking orderId and partSeq as well before making any api call
     if(current.orderId === payload.orderId && current.orderType === orderType && current.part?.orderPartSeqId === payload.orderPartSeqId) {
       this.dispatch('product/getProductInformation', { orders: [ current ] })
+      await dispatch('fetchShipGroupForOrder');
       return current 
     }
     if(orders.length) {
@@ -210,8 +307,9 @@ const actions: ActionTree<OrderState , RootState> ={
     await dispatch('updateCurrent', { order: currentOrder })
   },
 
-  updateCurrent ({ commit }, payload) {
+  async updateCurrent ({ commit, dispatch }, payload) {
     commit(types.ORDER_CURRENT_UPDATED, { order: payload.order })
+    await dispatch('fetchShipGroupForOrder');
   },
 
   async getPackedOrders ({ commit, state }, payload) {
@@ -276,7 +374,8 @@ const actions: ActionTree<OrderState , RootState> ={
               ids.push(picker.split('/')[0]);
               return ids;
             }, [])) : "",
-            picklistId: orderItem.picklistId 
+            picklistId: orderItem.picklistId,
+            shipGroupSeqId: orderItem.shipGroupSeqId
           }
         })
         this.dispatch('product/getProductInformation', { orders });
@@ -345,7 +444,8 @@ const actions: ActionTree<OrderState , RootState> ={
 
               return arr
             }, []),
-            placedDate: orderItem.orderDate
+            placedDate: orderItem.orderDate,
+            shipGroupSeqId: orderItem.shipGroupSeqId
           }
         })
         this.dispatch('product/getProductInformation', { orders });
@@ -915,6 +1015,156 @@ const actions: ActionTree<OrderState , RootState> ={
       logger.error("Error in fetching customer phone number for current order", err);
     }
     commit(types.ORDER_CURRENT_UPDATED, { order });
+  },
+
+  async fetchShipGroupForOrder({ dispatch, state }) {
+    const order = JSON.parse(JSON.stringify(state.current))
+
+    // return if orderId is not found on order
+    if (!order?.orderId) {
+      return;
+    }
+
+    const params = {
+      groupBy: 'shipGroupSeqId',
+      'shipGroupSeqId': '[* TO *]',  // check to ignore all those records for which shipGroupSeqId is not present
+      '-shipGroupSeqId': order.shipGroupSeqId,
+      orderId: order.orderId,
+      docType: 'ORDER'
+    }
+
+    const orderQueryPayload = prepareOrderQuery(params)
+
+    let resp, total, shipGroups = [];
+    const facilityTypeIds: Array<string> = [];
+
+    try {
+      resp = await OrderService.findOrderShipGroup(orderQueryPayload);
+
+      if (resp.status === 200 && !hasError(resp) && resp.data.grouped?.shipGroupSeqId.matches > 0) {
+        shipGroups = resp.data.grouped.shipGroupSeqId.groups
+      } else {
+        throw resp.data
+      }
+    } catch (err) {
+      console.error('Failed to fetch ship group information for order', err)
+    }
+
+    // return if shipGroups are not found for order
+    if (!shipGroups.length) {
+      return;
+    }
+
+    shipGroups = shipGroups.map((shipGroup: any) => {
+      const shipItem = shipGroup?.doclist?.docs[0]
+
+      if (!shipItem) {
+        return;
+      }
+
+      // In some case we are not having facilityTypeId in resp, resulting in undefined being pushed in the array
+      // so checking for facilityTypeId before updating the array
+      shipItem.facilityTypeId && facilityTypeIds.push(shipItem.facilityTypeId)
+
+      return {
+        items: shipGroup.doclist.docs,
+        facilityId: shipItem.facilityId,
+        facilityTypeId: shipItem.facilityTypeId,
+        facilityName: shipItem.facilityName,
+        shippingMethod: shipItem.shippingMethod,
+        orderId: shipItem.orderId,
+        shipGroupSeqId: shipItem.shipGroupSeqId
+      }
+    })
+
+    this.dispatch('util/fetchFacilityTypeInformation', facilityTypeIds)
+
+    // fetching reservation information for shipGroup from OISGIR doc
+    await dispatch('fetchAdditionalShipGroupForOrder', { shipGroups });
+  },
+
+  async fetchAdditionalShipGroupForOrder({ commit, state }, payload) {
+    const order = JSON.parse(JSON.stringify(state.current))
+    
+    
+    // return if orderId is not found on order
+    if (!order?.orderId) {
+      return;
+    }
+
+    const shipGroupSeqIds = payload.shipGroups.map((shipGroup: any) => shipGroup.shipGroupSeqId)
+    const orderId = order.orderId
+    
+    const params = {
+      groupBy: 'shipGroupSeqId',
+      'shipGroupSeqId': `(${shipGroupSeqIds.join(' OR ')})`,
+      '-fulfillmentStatus': '(Rejected OR Cancelled)',
+      orderId: orderId
+    }
+    
+    const orderQueryPayload = prepareOrderQuery(params)
+    
+    let resp, total, shipGroups: any = [];
+    
+    try {
+      resp = await OrderService.findOrderShipGroup(orderQueryPayload);
+      if (resp.status === 200 && !hasError(resp) && resp.data.grouped?.shipGroupSeqId.matches > 0) {
+        total = resp.data.grouped.shipGroupSeqId.ngroups
+        shipGroups = resp.data.grouped.shipGroupSeqId.groups
+      } else {
+        throw resp.data
+      }
+    } catch (err) {
+      console.error('Failed to fetch ship group information for order', err)
+    }
+
+    shipGroups = payload.shipGroups.map((shipGroup: any) => {
+      const reservedShipGroupForOrder = shipGroups.find((group: any) => shipGroup.shipGroupSeqId === group.doclist?.docs[0]?.shipGroupSeqId)
+
+      const reservedShipGroup = reservedShipGroupForOrder?.groupValue ? reservedShipGroupForOrder.doclist.docs[0] : ''
+
+      return reservedShipGroup ? {
+        ...shipGroup,
+        items: reservedShipGroupForOrder.doclist.docs,
+        carrierPartyId: reservedShipGroup.carrierPartyId,
+        shipmentId: reservedShipGroup.shipmentId,
+        category: getOrderCategory(reservedShipGroupForOrder.doclist.docs[0])
+      } : {
+        ...shipGroup,
+        category: getOrderCategory(shipGroup.items[0])
+      }
+    })
+
+    const carrierPartyIds: Array<string> = [];
+    const shipmentIds: Array<string> = [];
+
+
+    if (total) {
+      shipGroups.map((shipGroup: any) => {
+        if (shipGroup.shipmentId) shipmentIds.push(shipGroup.shipmentId)
+        if (shipGroup.carrierPartyId) carrierPartyIds.push(shipGroup.carrierPartyId)
+      })
+    }
+
+    try {
+      this.dispatch('util/fetchPartyInformation', carrierPartyIds)
+      const shipmentTrackingCodes = await OrderService.fetchTrackingCodes(shipmentIds)
+
+      shipGroups.find((shipGroup: any) => {
+        const trackingCode = shipmentTrackingCodes.find((shipmentTrackingCode: any) => shipGroup.shipmentId === shipmentTrackingCode.shipmentId)?.trackingCode
+
+        shipGroup.trackingCode = trackingCode;
+      })
+    } catch (err) {
+      console.error('Failed to fetch information for ship groups', err)
+    }
+
+    this.dispatch('product/getProductInformation', { orders: [{ parts: shipGroups }] })
+
+    order['shipGroups'] = shipGroups
+
+    commit(types.ORDER_CURRENT_UPDATED, {order})
+    return shipGroups;
   },
 }
 
