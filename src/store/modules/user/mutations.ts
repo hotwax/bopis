@@ -11,6 +11,11 @@ const mutations: MutationTree <UserState> = {
       state.current = {}
       state.currentFacility = {}
       state.permissions = []
+      state.preference= {
+        showShippingOrders: false,
+        showPackingSlip: false,
+        configurePicker: false
+      }
     },
     [types.USER_INFO_UPDATED] (state, payload) {
         state.current = payload
