@@ -4,7 +4,7 @@
       <DxpShopifyImg :src="getProduct(item.productId).mainImageUrl" size="small" />
     </ion-thumbnail>
     <ion-label class="ion-text-wrap">
-      <h2>{{ getProductIdentificationValue(productIdentificationPref.primaryId, getProduct(item.productId)) }}</h2>
+      <h2>{{ getProductIdentificationValue(productIdentificationPref.primaryId, getProduct(item.productId)) ? getProductIdentificationValue(productIdentificationPref.primaryId, getProduct(item.productId)) : getProduct(item.productId).productName }}</h2>
       <p class="ion-text-wrap">{{ getProductIdentificationValue(productIdentificationPref.secondaryId, getProduct(item.productId)) }}</p>
     </ion-label>
     <!-- Only show stock if its not a ship to store order -->
