@@ -1137,8 +1137,6 @@ const actions: ActionTree<OrderState , RootState> ={
 
       const reservedShipGroup = reservedShipGroupForOrder?.groupValue ? reservedShipGroupForOrder.doclist.docs[0] : ''
 
-      reservedShipGroupForOrder.doclist.docs.map((item: any) => item.isFetchingStock = false);
-
       return reservedShipGroup ? {
         ...shipGroup,
         items: reservedShipGroupForOrder.doclist.docs,
@@ -1149,6 +1147,10 @@ const actions: ActionTree<OrderState , RootState> ={
         ...shipGroup,
         category: getOrderCategory(shipGroup.items[0])
       }
+    })
+
+    shipGroups.map((shipGroup: any) => {
+      shipGroup.items.map((item: any) => item.isFetchingStock = false);
     })
 
     const carrierPartyIds: Array<string> = [];
