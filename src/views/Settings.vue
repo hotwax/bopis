@@ -416,7 +416,7 @@ export default defineComponent({
       }
       await this.store.dispatch('user/updatePartialOrderRejectionConfig', params)
     },
-    async updateNotificationPref(enumId: string, event: any) {
+    async updateNotificationPref(enumId: string) {
       try {
         emitter.emit('presentLoader',  { backdropDismiss: false })
         const facilityId = (this.currentFacility as any).facilityId
@@ -453,7 +453,7 @@ export default defineComponent({
             handler: async () => {
               // passing event reference for updation in case the API success
               alertController.dismiss()
-              await this.updateNotificationPref(enumId, event)
+              await this.updateNotificationPref(enumId)
             }
           }
         ],

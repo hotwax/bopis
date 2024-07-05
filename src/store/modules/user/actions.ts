@@ -324,7 +324,7 @@ const actions: ActionTree<UserState, RootState> = {
   },
 
   async updateNotificationPreferences({ commit }, payload) {
-      commit(types.USER_NOTIFICATIONS_PREFERENCES_UPDATED, payload)
+    commit(types.USER_NOTIFICATIONS_PREFERENCES_UPDATED, payload)
   },
 
   async storeClientRegistrationToken({ commit }, registrationToken) {
