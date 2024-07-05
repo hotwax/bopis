@@ -167,7 +167,7 @@
           </ion-card-content>
           <ion-list>
             <ion-item :key="pref.enumId" v-for="pref in notificationPrefs" lines="none">
-              <ion-toggle label-placement="start" @click="confirmNotificationPrefUpdate(pref.enumId, $event)" :checked="pref.isEnabled">{{ pref.description }}</ion-toggle>
+              <ion-toggle label-placement="start" @click.prevent="confirmNotificationPrefUpdate(pref.enumId, $event)" :checked="pref.isEnabled">{{ pref.description }}</ion-toggle>
             </ion-item>
           </ion-list>
         </ion-card>
@@ -416,29 +416,29 @@ export default defineComponent({
       }
       await this.store.dispatch('user/updatePartialOrderRejectionConfig', params)
     },
-    async updateNotificationPref(enumId: string, event: any) {
+    async updateNotificationPref(enumId: string) {
       try {
         emitter.emit('presentLoader',  { backdropDismiss: false })
         const facilityId = (this.currentFacility as any).facilityId
         const topicName = generateTopicName(facilityId, enumId)
-        // event.target.checked returns the initial value (the value that was there before clicking
-        // and updating the toggle). But it returns the updated value on further references (if passed
-        // as a parameter in other function, here in our case, passed from confirmNotificationPrefUpdate)
-        // Hence, event.target.checked here holds the updated value (value after the toggle action)
-        event.target.checked
-          ? await subscribeTopic(topicName, process.env.VUE_APP_NOTIF_APP_ID)
-          : await unsubscribeTopic(topicName, process.env.VUE_APP_NOTIF_APP_ID)
+
+        const notificationPref = this.notificationPrefs.find((pref: any) => pref.enumId === enumId)
+        notificationPref.isEnabled
+          ? await unsubscribeTopic(topicName, process.env.VUE_APP_NOTIF_APP_ID)
+          : await subscribeTopic(topicName, process.env.VUE_APP_NOTIF_APP_ID)
+
+        notificationPref.isEnabled = !notificationPref.isEnabled
+        await this.store.dispatch('user/updateNotificationPreferences', this.notificationPrefs)
         showToast(translate('Notification preferences updated.'))
       } catch (error) {
-        // reverting the value of toggle as event.target.checked is 
-        // updated on click event, and revert is needed on API fail
-        event.target.checked = !event.target.checked;
         showToast(translate('Notification preferences not updated. Please try again.'))
       } finally {
         emitter.emit("dismissLoader")
       }
     },
-    async confirmNotificationPrefUpdate(enumId: string, event: any) {
+    async confirmNotificationPrefUpdate(enumId: string, event: CustomEvent) {
+      event.stopImmediatePropagation();
+
       const message = translate("Are you sure you want to update the notification preferences?");
       const alert = await alertController.create({
         header: translate("Update notification preferences"),
@@ -446,18 +446,14 @@ export default defineComponent({
         buttons: [
           {
             text: translate("Cancel"),
-            handler: () => {
-              // reverting the value of toggle as event.target.checked is 
-              // updated on click event and revert is needed on "Cancel"
-              event.target.checked = !event.target.checked
-            }
+            role: "cancel"
           },
           {
             text: translate("Confirm"),
             handler: async () => {
-              // passing event reference for updation in case the API fails
+              // passing event reference for updation in case the API success
               alertController.dismiss()
-              await this.updateNotificationPref(enumId, event)
+              await this.updateNotificationPref(enumId)
             }
           }
         ],
