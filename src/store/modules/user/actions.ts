@@ -107,6 +107,7 @@ const actions: ActionTree<UserState, RootState> = {
 
       //fetching partial order rejection config for BOPIS orders
       await dispatch("getPartialOrderRejectionConfig");
+      await dispatch("fetchAllNotificationPrefs");
       
     } catch (err: any) {
       // If any of the API call in try block has status code other than 2xx it will be handled in common catch block.
@@ -321,6 +322,19 @@ const actions: ActionTree<UserState, RootState> = {
       }
       commit(types.USER_NOTIFICATIONS_PREFERENCES_UPDATED, notificationPreferences)
     }
+  },
+
+  async fetchAllNotificationPrefs({ commit, state }) {
+    let allNotificationPrefs = [];
+
+    try {
+      const resp = await getNotificationUserPrefTypeIds(process.env.VUE_APP_NOTIF_APP_ID, state.current.userLoginId)
+      allNotificationPrefs = resp.docs
+    } catch(error) {
+      logger.error(error)
+    }
+
+    commit(types.USER_ALL_NOTIFICATION_PREFS_UPDATED, allNotificationPrefs)
   },
 
   async updateNotificationPreferences({ commit }, payload) {

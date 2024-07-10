@@ -59,6 +59,9 @@ const getters: GetterTree <UserState, RootState> = {
     },
     getUnreadNotificationsStatus(state) {
         return state.hasUnreadNotifications
+    },
+    getAllNotificationPrefs(state) {
+        return state.allNotificationPrefs
     }
 }
 export default getters;
