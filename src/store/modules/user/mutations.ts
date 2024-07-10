@@ -15,7 +15,8 @@ const mutations: MutationTree <UserState> = {
         showShippingOrders: false,
         showPackingSlip: false,
         configurePicker: false
-      }
+      },
+      state.allNotificationPrefs = []
     },
     [types.USER_INFO_UPDATED] (state, payload) {
         state.current = payload
