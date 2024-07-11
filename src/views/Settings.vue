@@ -271,7 +271,7 @@ export default defineComponent({
       partialOrderRejectionConfig: 'user/getPartialOrderRejectionConfig',
       firebaseDeviceId: 'user/getFirebaseDeviceId',
       notificationPrefs: 'user/getNotificationPrefs',
-      allNotificationPrefs: 'user/allNotificationPrefs'
+      allNotificationPrefs: 'user/getAllNotificationPrefs'
     })
   },
   mounted() {
@@ -419,6 +419,7 @@ export default defineComponent({
     },
     async updateNotificationPref(enumId: string) {
       let isToggledOn = false;
+
       try {
         emitter.emit('presentLoader',  { backdropDismiss: false })
         const facilityId = (this.currentFacility as any).facilityId
@@ -438,7 +439,7 @@ export default defineComponent({
       } finally {
         emitter.emit("dismissLoader")
       }
-
+      
       try {
         if(!this.allNotificationPrefs.length && isToggledOn) {
           await initialiseFirebaseApp(JSON.parse(process.env.VUE_APP_FIREBASE_CONFIG), process.env.VUE_APP_FIREBASE_VAPID_KEY, storeClientRegistrationToken, addNotification)
