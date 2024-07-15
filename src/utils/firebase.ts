@@ -17,9 +17,20 @@ const generateTopicName = (facilityId: string, enumId: string) => {
   return `${userProfile.omsInstanceName}-${facilityId}-${enumId}`;
 };
 
+//Checking if firebase cloud messaging is configured.
+const isFcmConfigured = () => {
+  try {
+    const config = JSON.parse(process.env.VUE_APP_FIREBASE_CONFIG as any);
+    return !!(config && config.apiKey);
+  } catch (e) {
+    return false;
+  }
+}
+
 export {
   addNotification,
   generateTopicName,
   generateDeviceId,
+  isFcmConfigured,
   storeClientRegistrationToken
 }

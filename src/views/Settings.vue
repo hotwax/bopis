@@ -216,7 +216,7 @@ import { showToast } from '@/utils';
 import { hasError, removeClientRegistrationToken, subscribeTopic, unsubscribeTopic } from '@/adapter'
 import { initialiseFirebaseApp, translate } from "@hotwax/dxp-components";
 import { Actions, hasPermission } from '@/authorization'
-import { addNotification, generateTopicName, storeClientRegistrationToken } from "@/utils/firebase";
+import { addNotification, generateTopicName, isFcmConfigured, storeClientRegistrationToken } from "@/utils/firebase";
 import emitter from "@/event-bus"
 import logger from '@/logger';
 
@@ -421,7 +421,7 @@ export default defineComponent({
       let isToggledOn = false;
 
       try {
-        if (!process.env.VUE_APP_FIREBASE_CONFIG || !JSON.parse(process.env.VUE_APP_FIREBASE_CONFIG).apiKey) {
+        if (!isFcmConfigured()) {
           logger.error("FCM is not configured.");
           showToast(translate('Notification preferences not updated. Please try again.'))
           return;
