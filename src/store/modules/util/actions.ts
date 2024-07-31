@@ -15,10 +15,11 @@ const actions: ActionTree<UtilState, RootState> = {
           "parentEnumTypeId": ["REPORT_AN_ISSUE", "RPRT_NO_VAR_LOG"],
           "parentEnumTypeId_op": "in"
         },
-        "fieldList": ["enumId", "description"],
+        "fieldList": ["enumId", "enumName", "description"],
         "distinct": "Y",
         "entityName": "EnumTypeChildAndEnum",
-        "viewSize": 20 // keeping view size 20 as considering that we will have max 20 reasons
+        "viewSize": 20, // keeping view size 20 as considering that we will have max 20 reasons
+        "orderBy": "sequenceNum"
       }
 
       const resp = await UtilService.fetchRejectReasons(payload)
