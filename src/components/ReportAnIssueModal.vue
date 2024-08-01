@@ -17,7 +17,7 @@
       <ion-list-header>{{ translate("Select reason") }}</ion-list-header>
       <ion-radio-group v-model="rejectReasonId">
         <ion-item v-for="reason in rejectReasons" :key="reason.enumId">
-          <ion-radio label-placement="end" justify="start" :value="reason.enumId">{{ translate(reason.description ? reason.description : reason.enumId) }}</ion-radio>
+          <ion-radio label-placement="end" justify="start" :value="reason.enumId">{{ reason.description ? reason.description : reason.enumId }}</ion-radio>
         </ion-item>
       </ion-radio-group>
     </ion-list>
