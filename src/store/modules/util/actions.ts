@@ -18,7 +18,8 @@ const actions: ActionTree<UtilState, RootState> = {
         "fieldList": ["enumId", "description"],
         "distinct": "Y",
         "entityName": "EnumTypeChildAndEnum",
-        "viewSize": 20 // keeping view size 20 as considering that we will have max 20 reasons
+        "viewSize": 20, // keeping view size 20 as considering that we will have max 20 reasons
+        "orderBy": "sequenceNum"
       }
 
       const resp = await UtilService.fetchRejectReasons(payload)

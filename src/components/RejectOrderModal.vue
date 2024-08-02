@@ -16,8 +16,8 @@
     <ion-list>
       <ion-list-header>{{ translate("Select reason") }}</ion-list-header>
       <ion-radio-group v-model="rejectReasonId">
-        <ion-item v-for="reason in unfillableReasons" :key="reason.id">
-          <ion-radio :value="reason.id" label-placement="end" justify="start">{{ translate(reason.label) }}</ion-radio>
+        <ion-item v-for="reason in rejectReasons" :key="reason.enumId">
+          <ion-radio :value="reason.enumId" label-placement="end" justify="start">{{ reason.description ? reason.description : reason.enumId }}</ion-radio>
         </ion-item>
       </ion-radio-group>
     </ion-list>
@@ -73,7 +73,6 @@ export default defineComponent({
   },
   data() {
     return {
-      unfillableReasons: JSON.parse(process.env.VUE_APP_UNFILLABLE_REASONS),
       rejectReasonId: ''
     }
   },
@@ -81,6 +80,7 @@ export default defineComponent({
     ...mapGetters({
       order: "order/getCurrent",
       getProduct: 'product/getProduct',
+      rejectReasons: 'util/getRejectReasons',
     })
   },
   methods: {
