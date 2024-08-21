@@ -1134,7 +1134,6 @@ const actions: ActionTree<OrderState , RootState> ={
 
     shipGroups = payload.shipGroups.map((shipGroup: any) => {
       const reservedShipGroupForOrder = shipGroups.find((group: any) => shipGroup.shipGroupSeqId === group.doclist?.docs[0]?.shipGroupSeqId)
-
       const reservedShipGroup = reservedShipGroupForOrder?.groupValue ? reservedShipGroupForOrder.doclist.docs[0] : ''
 
       return reservedShipGroup ? {
@@ -1142,7 +1141,7 @@ const actions: ActionTree<OrderState , RootState> ={
         items: reservedShipGroupForOrder.doclist.docs,
         carrierPartyId: reservedShipGroup.carrierPartyId,
         shipmentId: reservedShipGroup.shipmentId,
-        category: getOrderCategory(reservedShipGroupForOrder.doclist.docs[0])
+        category: getOrderCategory({ ...reservedShipGroupForOrder.doclist.docs[0], ...shipGroup.items[0] }) // Passing shipGroup item information as we need to derive the order status and for that we need some properties those are available on ORDER doc
       } : {
         ...shipGroup,
         category: getOrderCategory(shipGroup.items[0])
