@@ -78,7 +78,7 @@ const getOrderCategory = (order: any) => {
     const paramKeys = Object.keys(parameters)
     // used every as to check against each filtering property
     
-    // Added check for property value *, as we add * as value when operator NOT is defined and also for * values we want to just check for whether the property exist or not
+    // Added check for property value *, as we will add * as value when operator NOT is defined and also for * values we do not want to check for property existence directly on order
     const isMatched = paramKeys.every((key: string) => (parameters[key].value === "*" || Object.prototype.hasOwnProperty.call(order, key)) && handleParameterMatching(order[key], parameters[key].value, parameters[key]['OP']))
 
     // return the value when all params matched for an order
