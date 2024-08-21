@@ -513,6 +513,9 @@ export default defineComponent({
 </script>
 
 <style scoped>
+ion-item {
+  --background: transparent;
+}
 
 @media (min-width: 343px) {
   ion-content > div {
