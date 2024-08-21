@@ -1,9 +1,7 @@
+import store from "@/store"
+
 const orderCategoryParameters = {
   'Open': {
-    'shipmentMethodTypeId': {
-      'value': 'STOREPICKUP',
-      'OP': 'NOT'
-    },
     'shipmentStatusId': {
       'value': '*',
       'OP': 'NOT',
@@ -20,10 +18,6 @@ const orderCategoryParameters = {
     }
   },
   'Packed': {
-    'shipmentMethodTypeId': {
-      'value': 'STOREPICKUP',
-      'OP': 'NOT'
-    },
     'shipmentStatusId': {
       'value': 'SHIPMENT_PACKED',
     },
@@ -36,10 +30,6 @@ const orderCategoryParameters = {
     },
   },
   'Completed': {
-    'shipmentMethodTypeId': {
-      'value': 'STOREPICKUP',
-      'OP': 'NOT'
-    },
     'orderItemStatusId': {
       'value': 'ITEM_COMPLETED'
     },
@@ -50,7 +40,7 @@ const orderCategoryParameters = {
       'value': 'ORDER'
     }
   }
-}
+} as any
 
 const handleParameterMatching = (orderVal: any, parameterVal: any, operation?: string) => {
   // considering params will always be an Array for ORing and ANDing
@@ -73,6 +63,13 @@ const handleParameterMatching = (orderVal: any, parameterVal: any, operation?: s
 }
 
 const getOrderCategory = (order: any) => {
+
+  if(!store.state.user.preference.showShippingOrders) {
+    orderCategoryParameters["Open"]["shipmentMethodTypeId"] = { value: "STOREPICKUP" }
+    orderCategoryParameters["Packed"]["shipmentMethodTypeId"] = { value: "STOREPICKUP" }
+    orderCategoryParameters["Completed"]["shipmentMethodTypeId"] = { value: "STOREPICKUP" }
+  }
+
   const orderCategoryParameterEntries = Object.entries(orderCategoryParameters)
   let result = ''
   // using find, as once any of the category is matched then return from here;
@@ -81,7 +78,8 @@ const getOrderCategory = (order: any) => {
     const paramKeys = Object.keys(parameters)
     // used every as to check against each filtering property
     
-    const isMatched = paramKeys.every((key: string) => Object.prototype.hasOwnProperty.call(order, key) && handleParameterMatching(order[key], parameters[key].value, parameters[key]['OP']))
+    // Added check for property value *, as we add * as value when operator NOT is defined and also for * values we want to just check for whether the property exist or not
+    const isMatched = paramKeys.every((key: string) => (parameters[key].value === "*" || Object.prototype.hasOwnProperty.call(order, key)) && handleParameterMatching(order[key], parameters[key].value, parameters[key]['OP']))
 
     // return the value when all params matched for an order
     if (isMatched) {

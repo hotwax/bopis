@@ -134,7 +134,7 @@
                       <ion-card-title>{{ shipGroup.facilityName }}</ion-card-title>
                       {{ shipGroup.shipGroupSeqId }}
                     </div>
-                    <ion-badge :color="shipGroup.category ? 'primary' : 'medium'">{{ shipGroup.category ? shipGroup.category : '-' }}</ion-badge>
+                    <ion-badge :color="shipGroup.category ? 'primary' : 'medium'">{{ shipGroup.category ? shipGroup.category : translate('Pending allocation') }}</ion-badge>
                   </ion-card-header>
         
                   <ion-item v-if="shipGroup.carrierPartyId">
