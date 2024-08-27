@@ -170,7 +170,9 @@ const actions: ActionTree<OrderState , RootState> ={
             }, []),
             placedDate: orderItem.orderDate,
             shippingInstructions: orderItem.shippingInstructions,
-            shipGroupSeqId: orderItem.shipGroupSeqId
+            shipGroupSeqId: orderItem.shipGroupSeqId,
+            isPicked: orderItem.isPicked,
+            picklistId: orderItem.picklistId
           }
         })
 
@@ -538,7 +540,7 @@ const actions: ActionTree<OrderState , RootState> ={
   async packShipGroupItems ({ state, dispatch, commit }, payload) {
     emitter.emit("presentLoader")
 
-    if (store.state.user.preference.configurePicker) {
+    if (store.state.user.preference.configurePicker && payload.order.isPicked !== 'Y') {
       let resp;
 
       const items = payload.order.parts[0].items;

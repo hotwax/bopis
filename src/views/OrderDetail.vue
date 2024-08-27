@@ -336,6 +336,13 @@ export default defineComponent({
         component: AssignPickerModal,
         componentProps: { order, part, facilityId }
       });
+
+      assignPickerModal.onDidDismiss().then(async(result: any) => {
+        if(result.data.dismissed) {
+          await this.store.dispatch('order/packShipGroupItems', { order, part, facilityId, selectedPicker: result.data.selectedPicker })
+        }
+      })
+
       return assignPickerModal.present();
     },
     async editPicker(order: any) {
