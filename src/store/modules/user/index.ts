@@ -15,7 +15,8 @@ const userModule: Module<UserState, RootState> = {
       preference: {
         showShippingOrders: false,
         showPackingSlip: false,
-        configurePicker: false
+        configurePicker: false,
+        printPicklistPref: false
       },
       currentEComStore: {},
       partialOrderRejectionConfig: {},

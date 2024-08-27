@@ -14,7 +14,8 @@ const mutations: MutationTree <UserState> = {
       state.preference= {
         showShippingOrders: false,
         showPackingSlip: false,
-        configurePicker: false
+        configurePicker: false,
+        printPicklistPref: false
       },
       state.allNotificationPrefs = []
     },
