@@ -493,6 +493,11 @@ export default defineComponent({
         return;
       }
 
+      if(!this.configurePicker) {
+        await this.createPicklist(order, "_NA_");
+        return;
+      }
+
       const assignPickerModal = await modalController.create({
         component: AssignPickerModal,
         componentProps: { order, part, facilityId: this.currentFacility.facilityId }
