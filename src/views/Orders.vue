@@ -530,7 +530,11 @@ export default defineComponent({
         if(!hasError(resp)) {
           // generating picklist after creating a new picklist
           await OrderService.printPicklist(resp.data.picklistId)
-          this.getPickupOrders();
+          const orders = JSON.parse(JSON.stringify(this.orders))
+          const updatedOrder = orders.find((currentOrder: any) => currentOrder.orderId === order.orderId);
+          updatedOrder["isPicked"] = "Y"
+          updatedOrder["picklistId"] = resp.data.picklistId
+          this.store.dispatch("order/updateOpenOrder", { orders, total: orders.length })
         } else {
           throw resp.data;
         }

@@ -965,6 +965,10 @@ const actions: ActionTree<OrderState , RootState> ={
     emitter.emit("dismissLoader");
   },
 
+  updateOpenOrder ({ commit }, payload) {
+    commit(types.ORDER_OPEN_UPDATED, {orders: payload.orders , total: payload.total})
+  },
+
   // clearning the orders state when logout, or user store is changed
   clearOrders ({ commit }) {
     commit(types.ORDER_OPEN_UPDATED, {orders: {} , total: 0})
