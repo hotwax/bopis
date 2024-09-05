@@ -108,6 +108,7 @@
   "Order will be marked as completed. This action is irreversible.": "注文の完了がマークされます。この操作は元に戻せません。",
   "Orders": "注文",
   "Orders Not Found": "注文が見つかりません",
+  "Order item split": "Order item split",
   "Order item rejection history": "注文アイテムの拒否履歴",
   "Order reservations": "注文予約",
   "order reservations at": "{count} 件の注文予約が {store} にあります",
