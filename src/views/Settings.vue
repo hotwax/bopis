@@ -78,6 +78,9 @@
             <ion-toggle label-placement="start" :disabled="!hasPermission(Actions.APP_RF_CONFIG_UPDATE) || Object.keys(rerouteFulfillmentConfig.allowCancel).length == 0" :checked="rerouteFulfillmentConfig.allowCancel.settingValue" @ionChange="updateRerouteFulfillmentConfiguration(rerouteFulfillmentConfig.allowCancel, $event.detail.checked)">{{ translate("Cancel order before fulfillment") }}</ion-toggle>
           </ion-item>
           <ion-item lines="none">
+            <ion-toggle label-placement="start" :disabled="!hasPermission(Actions.APP_RF_CONFIG_UPDATE) || Object.keys(rerouteFulfillmentConfig.orderItemSplit).length == 0" :checked="rerouteFulfillmentConfig.orderItemSplit.settingValue" @ionChange="updateRerouteFulfillmentConfiguration(rerouteFulfillmentConfig.orderItemSplit, $event.detail.checked)">{{ translate("Order item split") }}</ion-toggle>
+          </ion-item>
+          <ion-item lines="none">
             <ion-select :label="translate('Shipment method')" :disabled="!hasPermission(Actions.APP_RF_CONFIG_UPDATE) || Object.keys(rerouteFulfillmentConfig.shippingMethod).length == 0" interface="popover" :value="rerouteFulfillmentConfig.shippingMethod.settingValue" @ionChange="updateRerouteFulfillmentConfiguration(rerouteFulfillmentConfig.shippingMethod, $event.detail.value)">
               <ion-select-option v-for="shipmentMethod in availableShipmentMethods" :key="shipmentMethod.shipmentMethodTypeId" :value="shipmentMethod.shipmentMethodTypeId" >{{ shipmentMethod.description }}</ion-select-option>
             </ion-select>
@@ -254,7 +257,8 @@ export default defineComponent({
         allowDeliveryAddressUpdate: {},
         allowPickupUpdate: {},
         allowCancel: {},
-        shippingMethod: {}
+        shippingMethod: {},
+        orderItemSplit: {}
       } as any,
       availableShipmentMethods: [] as any,
       rerouteFulfillmentConfigMapping: (process.env.VUE_APP_RF_CNFG_MPNG? JSON.parse(process.env.VUE_APP_RF_CNFG_MPNG) : {}) as any
