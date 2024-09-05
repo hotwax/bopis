@@ -5,22 +5,28 @@ import StockState from './StockState'
 import * as types from './mutation-types'
 import { hasError } from '@/adapter'
 import { showToast } from '@/utils'
-import { translate } from "@hotwax/dxp-components";
+import { translate, useUserStore } from "@hotwax/dxp-components";
 import logger from '@/logger'
 import { prepareOrderQuery } from "@/utils/solrHelper";
 import { UtilService } from '@/services/UtilService';
 
+const getCurrentFacilityId = () => {
+  const currentFacility: any = useUserStore().getCurrentFacility;
+  return currentFacility?.facilityId
+}
+
 const actions: ActionTree<StockState, RootState> = {
   async fetchStock({ commit }, { productId }) {
+    const facilityId = getCurrentFacilityId()
     try {
       const payload = {
         productId: productId,
-        facilityId: this.state.user.currentFacility.facilityId
+        facilityId: facilityId
       }
 
       const resp: any = await StockService.getInventoryAvailableByFacility(payload);
       if (!hasError(resp)) {
-        commit(types.STOCK_ADD_PRODUCT, { productId: payload.productId, facilityId: this.state.user.currentFacility.facilityId, stock: resp.data })
+        commit(types.STOCK_ADD_PRODUCT, { productId: payload.productId, facilityId: facilityId, stock: resp.data })
       } else {
         throw resp.data;
       }
@@ -31,7 +37,7 @@ const actions: ActionTree<StockState, RootState> = {
   },
 
   async fetchInventoryCount({ commit, state }, { productId }) {
-    const facilityId = this.state.user.currentFacility.facilityId;
+    const facilityId = getCurrentFacilityId();
     if (state.inventoryInformation[productId] && state.inventoryInformation[productId][facilityId]) {
       return; 
     }
@@ -60,7 +66,7 @@ const actions: ActionTree<StockState, RootState> = {
   },
 
   async fetchReservedQuantity({ commit, state }, { productId }) {
-    const facilityId = this.state.user.currentFacility.facilityId;
+    const facilityId = getCurrentFacilityId();
     if (state.inventoryInformation[productId] && state.inventoryInformation[productId][facilityId]?.reservedQuantity) {
       return;
     }

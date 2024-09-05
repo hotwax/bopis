@@ -55,7 +55,6 @@ export default defineComponent({
       getProduct: 'product/getProduct',
       product: "product/getCurrent",
       getProductStock: 'stock/getProductStock',
-      currentFacility: 'user/getCurrentFacility',
     })
   },
   methods: {

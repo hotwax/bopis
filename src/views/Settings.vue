@@ -35,23 +35,7 @@
       </div>
       <section>
         <DxpOmsInstanceNavigator />
-
-        <ion-card>
-          <ion-card-header>
-            <ion-card-title>
-              {{ translate("Facility") }}
-            </ion-card-title>
-          </ion-card-header>
-          <ion-card-content>
-            {{ translate('Specify which facility you want to operate from. Order, inventory and other configuration data will be specific to the facility you select.') }}
-          </ion-card-content>
-          <ion-item lines="none">
-            <ion-select :label="translate('Select facility')" interface="popover" :value="currentFacility?.facilityId" @ionChange="setFacility($event)">
-              <ion-select-option v-for="facility in (userProfile ? userProfile.facilities : [])" :key="facility.facilityId" :value="facility.facilityId" >{{ facility.facilityName }}</ion-select-option>
-            </ion-select>
-          </ion-item>
-        </ion-card>
-
+        <DxpFacilitySwitcher @updateFacility="handleFacilityUpdate($event)"/>
         <ion-card>
           <ion-card-header>
             <ion-card-subtitle>
@@ -198,7 +182,7 @@ import {
   IonToggle,
   IonToolbar
 } from '@ionic/vue';
-import { defineComponent } from 'vue';
+import { defineComponent, computed } from 'vue';
 import {
   codeWorkingOutline,
   ellipsisVertical,
@@ -214,7 +198,7 @@ import { DateTime } from 'luxon';
 import { UserService } from '@/services/UserService'
 import { showToast } from '@/utils';
 import { hasError, removeClientRegistrationToken, subscribeTopic, unsubscribeTopic } from '@/adapter'
-import { initialiseFirebaseApp, translate } from "@hotwax/dxp-components";
+import { initialiseFirebaseApp, translate, useUserStore } from "@hotwax/dxp-components";
 import { Actions, hasPermission } from '@/authorization'
 import { addNotification, generateTopicName, isFcmConfigured, storeClientRegistrationToken } from "@/utils/firebase";
 import emitter from "@/event-bus"
@@ -263,7 +247,6 @@ export default defineComponent({
   computed: {
     ...mapGetters({
       userProfile: 'user/getUserProfile',
-      currentFacility: 'user/getCurrentFacility',
       currentEComStore: 'user/getCurrentEComStore',
       configurePicker: "user/configurePicker",
       showShippingOrders: 'user/showShippingOrders',
@@ -292,15 +275,10 @@ export default defineComponent({
     await this.store.dispatch('user/fetchNotificationPreferences')
   },
   methods: {
-    async setFacility (event: any) {
-      if (this.userProfile) {
-        await this.store.dispatch('user/setFacility', {
-          'facilityId': event.detail.value
-        });
-        await this.store.dispatch('user/fetchNotificationPreferences')
-      }
+    async handleFacilityUpdate(selectedFacilityId: any) {
+      await this.store.dispatch('user/setFacilityUpdates', selectedFacilityId);
+      await this.store.dispatch('user/fetchNotificationPreferences')
     },
-   
     async timeZoneUpdated(tzId: string) {
       await this.store.dispatch("user/setUserTimeZone", tzId)
     },
@@ -428,7 +406,7 @@ export default defineComponent({
         }
 
         emitter.emit('presentLoader',  { backdropDismiss: false })
-        const facilityId = (this.currentFacility as any).facilityId
+        const facilityId = this.currentFacility.value?.facilityId
         const topicName = generateTopicName(facilityId, enumId)
 
         const notificationPref = this.notificationPrefs.find((pref: any) => pref.enumId === enumId)
@@ -485,9 +463,12 @@ export default defineComponent({
   setup () {
     const store = useStore();
     const router = useRouter();
+    const userStore = useUserStore()
+    let currentFacility: any = computed(() => userStore.getCurrentFacility) 
 
     return {
       Actions,
+      currentFacility,
       ellipsisVertical,
       hasPermission,
       personCircleOutline,

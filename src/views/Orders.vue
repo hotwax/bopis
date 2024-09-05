@@ -190,7 +190,7 @@ import {
   IonToolbar,
   modalController
 } from "@ionic/vue";
-import { defineComponent, ref } from "vue";
+import { defineComponent, ref, computed } from "vue";
 import ProductListItem from '@/components/ProductListItem.vue'
 import {
   swapVerticalOutline,
@@ -206,7 +206,7 @@ import { copyToClipboard, showToast } from '@/utils'
 import { DateTime } from 'luxon';
 import emitter from "@/event-bus"
 import { api, hasError } from '@/adapter';
-import { translate } from "@hotwax/dxp-components";
+import { translate, useUserStore } from "@hotwax/dxp-components";
 import AssignPickerModal from "./AssignPickerModal.vue";
 import { OrderService } from "@/services/OrderService";
 import { Actions, hasPermission } from '@/authorization'
@@ -248,7 +248,6 @@ export default defineComponent({
       packedOrders: 'order/getPackedOrders',
       completedOrders: 'order/getCompletedOrders',
       configurePicker: "user/configurePicker",
-      currentFacility: 'user/getCurrentFacility',
       isPackedOrdersScrollable: 'order/isPackedOrdersScrollable',
       isOpenOrdersScrollable: 'order/isOpenOrdersScrollable',
       isCompletedOrdersScrollable: 'order/isCompletedOrdersScrollable',
@@ -326,19 +325,19 @@ export default defineComponent({
       const viewSize = vSize ? vSize : process.env.VUE_APP_VIEW_SIZE;
       const viewIndex = vIndex ? vIndex : 0;
 
-      await this.store.dispatch("order/getOpenOrders", { viewSize, viewIndex, queryString: this.queryString, facilityId: this.currentFacility.facilityId });
+      await this.store.dispatch("order/getOpenOrders", { viewSize, viewIndex, queryString: this.queryString, facilityId: this.currentFacility.value?.facilityId });
     },
     async getPackedOrders (vSize?: any, vIndex?: any) {
       const viewSize = vSize ? vSize : process.env.VUE_APP_VIEW_SIZE;
       const viewIndex = vIndex ? vIndex : 0;
 
-      await this.store.dispatch("order/getPackedOrders", { viewSize, viewIndex, queryString: this.queryString, facilityId: this.currentFacility.facilityId });
+      await this.store.dispatch("order/getPackedOrders", { viewSize, viewIndex, queryString: this.queryString, facilityId: this.currentFacility.value?.facilityId });
     },
     async getCompletedOrders (vSize?: any, vIndex?: any) {
       const viewSize = vSize ? vSize : process.env.VUE_APP_VIEW_SIZE;
       const viewIndex = vIndex ? vIndex : 0;
 
-      await this.store.dispatch("order/getCompletedOrders", { viewSize, viewIndex, queryString: this.queryString, facilityId: this.currentFacility.facilityId });
+      await this.store.dispatch("order/getCompletedOrders", { viewSize, viewIndex, queryString: this.queryString, facilityId: this.currentFacility.value?.facilityId });
     },
     enableScrolling() {
       const parentElement = (this as any).$refs.contentRef.$el
@@ -380,7 +379,7 @@ export default defineComponent({
       }
     },
     async readyForPickup (order: any, part: any) {
-      if(this.configurePicker) return this.assignPicker(order, part, this.currentFacility.facilityId);
+      if(this.configurePicker) return this.assignPicker(order, part, this.currentFacility.value?.facilityId);
       const pickup = part.shipmentMethodEnum?.shipmentMethodEnumId === 'STOREPICKUP';
       const header = pickup ? translate('Ready for pickup') : translate('Ready to ship');
       const message = pickup ? translate('An email notification will be sent to that their order is ready for pickup. This order will also be moved to the packed orders tab.', { customerName: order.customer.name, space: '<br/><br/>'}) : '';
@@ -395,7 +394,7 @@ export default defineComponent({
           },{
             text: header,
             handler: () => {
-              this.store.dispatch('order/packShipGroupItems', {order, part, facilityId: this.currentFacility.facilityId})
+              this.store.dispatch('order/packShipGroupItems', {order, part, facilityId: this.currentFacility.value?.facilityId})
             }
           }]
         });
@@ -492,11 +491,14 @@ export default defineComponent({
     const router = useRouter();
     const store = useStore();
     const segmentSelected = ref('open');
-
+    const userStore = useUserStore()
+    let currentFacility: any = computed(() => userStore.getCurrentFacility) 
+    
     return {
       Actions,
       callOutline,
       copyToClipboard,
+      currentFacility,
       hasPermission,
       notificationsOutline,
       mailOutline,

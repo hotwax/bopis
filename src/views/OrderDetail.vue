@@ -257,7 +257,7 @@ import { DateTime } from "luxon";
 import { api, hasError } from '@/adapter';
 import { OrderService } from "@/services/OrderService";
 import RejectOrderModal from "@/components/RejectOrderModal.vue";
-import { getProductIdentificationValue, translate, useProductIdentificationStore } from "@hotwax/dxp-components";
+import { getProductIdentificationValue, translate, useProductIdentificationStore, useUserStore } from "@hotwax/dxp-components";
 import EditPickerModal from "@/components/EditPickerModal.vue";
 import emitter from '@/event-bus'
 import logger from "@/logger";
@@ -312,7 +312,6 @@ export default defineComponent({
   computed: {
     ...mapGetters({
       order: "order/getCurrent",
-      currentFacility: 'user/getCurrentFacility',
       configurePicker: "user/configurePicker",
       partialOrderRejectionConfig: 'user/getPartialOrderRejectionConfig',
       getPaymentMethodDesc: 'util/getPaymentMethodDesc',
@@ -373,7 +372,7 @@ export default defineComponent({
     },
     async getOrderDetail(orderId: any, orderPartSeqId: any, orderType: any) {
       const payload = {
-        facilityId: this.currentFacility.facilityId,
+        facilityId: this.currentFacility.value?.facilityId,
         orderId,
         orderPartSeqId
       }
@@ -388,7 +387,7 @@ export default defineComponent({
       return rejectOrderModal.present();
     },
     async readyForPickup(order: any, part: any) {
-      if (this.configurePicker) return this.assignPicker(order, part, this.currentFacility.facilityId);
+      if (this.configurePicker) return this.assignPicker(order, part, this.currentFacility.value?.facilityId);
       const pickup = part?.shipmentMethodEnum?.shipmentMethodEnumId === 'STOREPICKUP';
       const header = pickup ? translate('Ready for pickup') : translate('Ready to ship');
       const message = pickup ? translate('An email notification will be sent to that their order is ready for pickup. This order will also be moved to the packed orders tab.', { customerName: order.customer.name, space: '<br/><br/>' }) : '';
@@ -403,7 +402,7 @@ export default defineComponent({
           }, {
             text: header,
             handler: async () => {
-              await this.store.dispatch('order/packShipGroupItems', { order: order, part: part, facilityId: this.currentFacility.facilityId })
+              await this.store.dispatch('order/packShipGroupItems', { order: order, part: part, facilityId: this.currentFacility.value?.facilityId })
             }
           }]
         });
@@ -515,8 +514,10 @@ export default defineComponent({
   setup() {
     const store = useStore();
     const router = useRouter();
+    const userStore = useUserStore()
     const productIdentificationStore = useProductIdentificationStore();
     let productIdentificationPref = computed(() => productIdentificationStore.getProductIdentificationPref)
+    let currentFacility: any = computed(() => userStore.getCurrentFacility) 
 
     return {
       Actions,
@@ -531,6 +532,7 @@ export default defineComponent({
       checkmarkCircleOutline,
       checkmarkOutline,
       cubeOutline,
+      currentFacility,
       getProductIdentificationValue,
       giftOutline,
       getFeature,

@@ -166,7 +166,7 @@ import { getFeature, showToast } from "@/utils";
 import { hasError } from '@/adapter'
 import { sortSizes } from '@/apparel-sorter';
 import OtherStoresInventoryModal from "./OtherStoresInventoryModal.vue";
-import { DxpShopifyImg, getProductIdentificationValue, translate, useProductIdentificationStore } from "@hotwax/dxp-components";
+import { DxpShopifyImg, getProductIdentificationValue, translate, useProductIdentificationStore, useUserStore } from "@hotwax/dxp-components";
 import logger from "@/logger";
 
 export default defineComponent({
@@ -210,7 +210,6 @@ export default defineComponent({
   computed: {
     ...mapGetters({
       product: "product/getCurrent",
-      currentFacility: 'user/getCurrentFacility',
       currency: 'user/getCurrency',
       getProductStock: 'stock/getProductStock',
       getInventoryInformation: 'stock/getInventoryInformation',
@@ -228,7 +227,7 @@ export default defineComponent({
   methods: {
     //For fetching all the orders for this product & facility.
     async getOrderDetails() {
-      await this.store.dispatch("order/getOrderDetails", { viewSize: 200, facilityId: this.currentFacility.facilityId, productId: this.currentVariant.productId });
+      await this.store.dispatch("order/getOrderDetails", { viewSize: 200, facilityId: this.currentFacility.value?.facilityId, productId: this.currentVariant.productId });
     },
     async applyFeature(feature: string, type: string) {
       if(type === 'color') this.selectedColor = feature;
@@ -295,7 +294,7 @@ export default defineComponent({
         if (resp.status === 200 && !hasError(resp) && resp.data.docs.length) {
           resp.data.docs.map((storeInventory: any) => {
             if(storeInventory.atp) {
-              const isCurrentStore = storeInventory.facilityId === this.currentFacility.facilityId;
+              const isCurrentStore = storeInventory.facilityId === this.currentFacility.value?.facilityId;
               if (isCurrentStore) this.currentStoreInventory = storeInventory.atp;
               if (storeInventory.facilityTypeId === 'WAREHOUSE') {
                 this.warehouseInventory += storeInventory.atp
@@ -322,10 +321,13 @@ export default defineComponent({
   },
   setup() {
     const store = useStore();
+    const userStore = useUserStore()
     const productIdentificationStore = useProductIdentificationStore();
     let productIdentificationPref = computed(() => productIdentificationStore.getProductIdentificationPref)
+    let currentFacility: any = computed(() => userStore.getCurrentFacility) 
 
     return {
+      currentFacility,
       getProductIdentificationValue,
       productIdentificationPref,
       store,
