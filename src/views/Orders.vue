@@ -520,6 +520,7 @@ export default defineComponent({
       items.map((item: any, index: number) => {
         formData.append("itemStatusId_o_"+index, "PICKITEM_PENDING")
         formData.append("pickerIds_o_"+index, selectedPicker)
+        formData.append("picked_o_"+index, item.quantity)
         Object.keys(item).map((property) => {
           if(property !== "facilityId") formData.append(property+'_o_'+index, item[property])
         })
