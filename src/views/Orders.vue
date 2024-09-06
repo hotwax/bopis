@@ -72,7 +72,7 @@
                 {{ order.part.shipmentMethodEnum?.shipmentMethodEnumId === 'STOREPICKUP' ? translate("Ready for pickup") : translate("Ready to ship") }}
               </ion-button>
               <div></div>
-              <ion-button v-if="printPicklistPref" :disabled="order.isPicked === 'Y'" slot="end" fill="clear" @click.stop="printPicklist(order, order.part)">
+              <ion-button v-if="printPicklistPref" slot="end" fill="clear" @click.stop="printPicklist(order, order.part)">
                 <ion-icon :icon="printOutline" slot="icon-only" />
               </ion-button>
             </div>
