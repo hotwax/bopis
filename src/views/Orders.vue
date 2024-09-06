@@ -72,7 +72,7 @@
                 {{ order.part.shipmentMethodEnum?.shipmentMethodEnumId === 'STOREPICKUP' ? translate("Ready for pickup") : translate("Ready to ship") }}
               </ion-button>
               <div></div>
-              <ion-button v-if="printPicklistPref" slot="end" fill="clear" @click.stop="printPicklist(order, order.part)">
+              <ion-button v-if="printPicklistPref" :disabled="order.isPicked === 'Y'" slot="end" fill="clear" @click.stop="printPicklist(order, order.part)">
                 <ion-icon :icon="printOutline" slot="icon-only" />
               </ion-button>
             </div>
@@ -407,11 +407,42 @@ export default defineComponent({
           },{
             text: header,
             handler: () => {
-              this.store.dispatch('order/packShipGroupItems', {order, part, facilityId: this.currentFacility.facilityId})
+              if(!pickup) {
+                this.packShippingOrders(order, part);
+              } else {
+                this.store.dispatch('order/packShipGroupItems', {order, part, facilityId: this.currentFacility.facilityId})
+              }
             }
           }]
         });
       return alert.present();
+    },
+    async packShippingOrders(currenOrder: any, part: any) {
+      try {
+        const resp = await OrderService.packOrder({
+          'picklistBinId': currenOrder.picklistBinId,
+          'orderId': currenOrder.orderId
+        })
+
+        if(!hasError(resp)) {
+          showToast(translate("Order packed and ready for delivery"));
+          const orders = JSON.parse(JSON.stringify(this.orders));
+          const orderIndex = orders.findIndex((order: any) => {
+            return order.orderId === currenOrder.orderId && order.parts.some((part: any) => {
+              return part.orderPartSeqId === part.orderPartSeqId;
+            });
+          });
+          if (orderIndex > -1) {
+            orders.splice(orderIndex, 1);
+            this.store.dispatch("order/updateOpenOrder", { orders, total: orders.length  })
+          }
+        } else {
+          throw resp.data;
+        }
+      } catch(error: any) {
+        logger.error(error);
+        showToast(translate("Something went wrong"))
+      }
     },
     async deliverShipment (order: any) {
       await this.store.dispatch('order/deliverShipment', order)
@@ -535,6 +566,7 @@ export default defineComponent({
           const updatedOrder = orders.find((currentOrder: any) => currentOrder.orderId === order.orderId);
           updatedOrder["isPicked"] = "Y"
           updatedOrder["picklistId"] = resp.data.picklistId
+          updatedOrder["picklistBinId"] = resp.data.picklistBinId
           this.store.dispatch("order/updateOpenOrder", { orders, total: orders.length })
         } else {
           throw resp.data;

@@ -172,7 +172,8 @@ const actions: ActionTree<OrderState , RootState> ={
             shippingInstructions: orderItem.shippingInstructions,
             shipGroupSeqId: orderItem.shipGroupSeqId,
             isPicked: orderItem.isPicked,
-            picklistId: orderItem.picklistId
+            picklistId: orderItem.picklistId,
+            picklistBinId: orderItem.picklistBinId
           }
         })
 
@@ -592,7 +593,7 @@ const actions: ActionTree<OrderState , RootState> ={
         const shipmentMethodTypeId = payload.part?.shipmentMethodEnum?.shipmentMethodEnumId
         if (shipmentMethodTypeId !== 'STOREPICKUP') {
           // TODO: find a better way to get the shipmentId
-          const shipmentId = resp.data._EVENT_MESSAGE_.match(/\d+/g)[0]
+          const shipmentId = resp.data.shipmentId ? resp.data.shipmentId : resp.data._EVENT_MESSAGE_.match(/\d+/g)[0]
           await dispatch('packDeliveryItems', shipmentId).then((data) => {
             if (!hasError(data) && !data.data._EVENT_MESSAGE_) {
               showToast(translate("Something went wrong"))

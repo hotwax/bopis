@@ -339,6 +339,14 @@ const fetchTrackingCodes = async (shipmentIds: Array<string>): Promise<any> => {
   return shipmentTrackingCodes;
 }
 
+const packOrder = async (payload: any): Promise<any> => {
+  return api({
+    url: "/service/packStoreFulfillmentOrder",
+    method: "post",
+    data: payload
+  })
+}
+
 export const OrderService = {
   fetchOrderItems,
   fetchOrderPaymentPreferences,
@@ -359,6 +367,7 @@ export const OrderService = {
   getShipmentItems,
   getCustomerContactDetails,
   getShippingPhoneNumber,
+  packOrder,
   printPicklist,
   printShippingLabelAndPackingSlip
 }
