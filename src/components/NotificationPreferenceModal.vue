@@ -44,10 +44,10 @@ import {
   modalController,
   alertController,
 } from "@ionic/vue";
-import { defineComponent } from "vue";
+import { computed, defineComponent } from "vue";
 import { closeOutline, save } from "ionicons/icons";
 import { mapGetters, useStore } from "vuex";
-import { translate } from '@hotwax/dxp-components'
+import { translate, useUserStore } from '@hotwax/dxp-components'
 import { showToast } from "@/utils";
 import emitter from "@/event-bus"
 import { generateTopicName } from "@/utils/firebase";
@@ -82,7 +82,6 @@ export default defineComponent({
   },
   computed: {
     ...mapGetters({
-      currentFacility: 'user/getCurrentFacility',
       instanceUrl: 'user/getInstanceUrl',
       notificationPrefs: 'user/getNotificationPrefs'
     }),
@@ -138,7 +137,7 @@ export default defineComponent({
       }
     },
     async handleTopicSubscription() {
-      const facilityId = (this.currentFacility as any).facilityId
+      const facilityId = this.currentFacility?.facilityId
       const subscribeRequests = [] as any
       this.notificationPrefToUpdate.subscribe.map(async (enumId: string) => {
         const topicName = generateTopicName(facilityId, enumId)
@@ -182,9 +181,12 @@ export default defineComponent({
   },
   setup() {
     const store = useStore();
+    const userStore = useUserStore()
+    let currentFacility: any = computed(() => userStore.getCurrentFacility) 
 
     return {
       closeOutline,
+      currentFacility,
       translate,
       save,
       store

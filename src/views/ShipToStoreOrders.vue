@@ -122,7 +122,7 @@ import {
   IonTitle,
   IonToolbar,
 } from "@ionic/vue";
-import { defineComponent, ref } from "vue";
+import { defineComponent, ref, computed } from "vue";
 import ProductListItem from '@/components/ProductListItem.vue'
 import { mailOutline } from "ionicons/icons";
 import { mapGetters, useStore } from 'vuex'
@@ -133,7 +133,7 @@ import { DateTime } from 'luxon';
 import emitter from "@/event-bus"
 import { Actions, hasPermission } from '@/authorization'
 import { OrderService } from "@/services/OrderService";
-import { translate } from "@hotwax/dxp-components";
+import { translate, useUserStore } from "@hotwax/dxp-components";
 import logger from "@/logger";
 
 export default defineComponent({
@@ -168,7 +168,6 @@ export default defineComponent({
   },
   computed: {
     ...mapGetters({
-      currentFacility: 'user/getCurrentFacility',
       incomingOrders: 'order/getShipToStoreIncomingOrders',
       readyForPickupOrders: 'order/getShipToStoreReadyForPickupOrders',
       completedOrders: 'order/getShipToStoreCompletedOrders',
@@ -201,19 +200,19 @@ export default defineComponent({
       const viewSize = vSize ? vSize : process.env.VUE_APP_VIEW_SIZE;
       const viewIndex = vIndex ? vIndex : 0;
 
-      await this.store.dispatch("order/getShipToStoreIncomingOrders", { viewSize, viewIndex, queryString: this.queryString, facilityId: this.currentFacility.facilityId });
+      await this.store.dispatch("order/getShipToStoreIncomingOrders", { viewSize, viewIndex, queryString: this.queryString, facilityId: this.currentFacility?.facilityId });
     },
     async getReadyForPickupOrders (vSize?: any, vIndex?: any) {
       const viewSize = vSize ? vSize : process.env.VUE_APP_VIEW_SIZE;
       const viewIndex = vIndex ? vIndex : 0;
 
-      await this.store.dispatch("order/getShipToStoreReadyForPickupOrders", { viewSize, viewIndex, queryString: this.queryString, facilityId: this.currentFacility.facilityId });
+      await this.store.dispatch("order/getShipToStoreReadyForPickupOrders", { viewSize, viewIndex, queryString: this.queryString, facilityId: this.currentFacility?.facilityId });
     },
     async getCompletedOrders (vSize?: any, vIndex?: any) {
       const viewSize = vSize ? vSize : process.env.VUE_APP_VIEW_SIZE;
       const viewIndex = vIndex ? vIndex : 0;
 
-      await this.store.dispatch("order/getShipToStoreCompletedOrders", { viewSize, viewIndex, queryString: this.queryString, facilityId: this.currentFacility.facilityId });
+      await this.store.dispatch("order/getShipToStoreCompletedOrders", { viewSize, viewIndex, queryString: this.queryString, facilityId: this.currentFacility?.facilityId });
     },
     enableScrolling() {
       const parentElement = (this as any).$refs.contentRef.$el
@@ -420,11 +419,14 @@ export default defineComponent({
   setup () {
     const router = useRouter();
     const store = useStore();
+    const userStore = useUserStore()
     const segmentSelected = ref('incoming');
+    let currentFacility: any = computed(() => userStore.getCurrentFacility) 
 
     return {
       Actions,
       copyToClipboard,
+      currentFacility,
       hasPermission,
       mailOutline,
       router,

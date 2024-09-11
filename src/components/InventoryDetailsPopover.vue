@@ -54,7 +54,6 @@ export default defineComponent({
       product: "product/getCurrent",
       getProductStock: 'stock/getProductStock',
       getInventoryInformation: 'stock/getInventoryInformation',
-      currentFacility: 'user/getCurrentFacility',
     })   
   },
   async beforeMount () {

@@ -9,7 +9,6 @@ import {
   getUserPreference,
   getNotificationEnumIds,
   getNotificationUserPrefTypeIds,
-  getUserFacilities,
   hasError,
   logout,
   resetConfig,
@@ -71,8 +70,9 @@ const actions: ActionTree<UserState, RootState> = {
 
       //fetching user facilities
       const isAdminUser = appPermissions.some((appPermission: any) => appPermission?.action === "APP_STOREFULFILLMENT_ADMIN" );
-      const baseURL = store.getters['user/getBaseUrl'];
-      const facilities = await getUserFacilities(token, baseURL, userProfile?.partyId, "PICKUP", isAdminUser);
+      const facilities = await useUserStore().getUserFacilities(userProfile?.partyId, "PICKUP", isAdminUser)
+      await useUserStore().getPreferredFacility('SELECTED_FACILITY')
+    
       userProfile.facilities = facilities;
 
       // removing duplicate records as a single user can be associated with a facility by multiple roles.
@@ -82,7 +82,7 @@ const actions: ActionTree<UserState, RootState> = {
         return uniqueFacilities
       }, []);
       // TODO Use a separate API for getting facilities, this should handle user like admin accessing the app
-      const currentFacility = userProfile.facilities.length > 0 ? userProfile.facilities[0] : {};
+      const currentFacility: any = useUserStore().getCurrentFacility
       const currentEComStore = await UserService.getCurrentEComStore(token, currentFacility?.facilityId);
       const userPreference = await getUserPreference(token, getters['getBaseUrl'], 'BOPIS_PREFERENCE')
 
@@ -96,7 +96,6 @@ const actions: ActionTree<UserState, RootState> = {
 
       // TODO user single mutation
       commit(types.USER_INFO_UPDATED, userProfile);
-      commit(types.USER_CURRENT_FACILITY_UPDATED, currentFacility);
       commit(types.USER_CURRENT_ECOM_STORE_UPDATED, currentEComStore)
       commit(types.USER_PREFERENCE_UPDATED, userPreference)
       commit(types.USER_PERMISSIONS_UPDATED, appPermissions);
@@ -175,20 +174,14 @@ const actions: ActionTree<UserState, RootState> = {
   },
 
   /**
-   * update current facility information
+   * run after updating current facility
    */
-  async setFacility ({ commit, dispatch, state }, payload) {
-    let facility = payload.facility;
-    if(!facility && state.current?.facilities) {
-      facility = state.current.facilities.find((facility: any) => facility.facilityId === payload.facilityId);
-    }
+  async setFacilityUpdates ({ commit, dispatch, state }, selectedFacilityId) {
     // clearing the orders state whenever changing the facility
     dispatch("order/clearOrders", null, {root: true})
     dispatch("product/clearProducts", null, {root: true})
-    commit(types.USER_CURRENT_FACILITY_UPDATED, facility);
-    const eComStore = await UserService.getCurrentEComStore(undefined, facility?.facilityId);
+    const eComStore = await UserService.getCurrentEComStore(state.token, selectedFacilityId);
     commit(types.USER_CURRENT_ECOM_STORE_UPDATED, eComStore)
-
     await useProductIdentificationStore().getIdentificationPref(eComStore?.productStoreId)
   },
   /**
@@ -301,7 +294,8 @@ const actions: ActionTree<UserState, RootState> = {
 
   async fetchNotificationPreferences({ commit, state }) {
     let resp = {} as any
-    const facilityId = (state.currentFacility as any).facilityId
+    const currentFacility: any = useUserStore().getCurrentFacility
+    const facilityId = currentFacility?.facilityId
     let notificationPreferences = [], enumerationResp = [], userPrefIds = [] as any
     try {
       resp = await getNotificationEnumIds(process.env.VUE_APP_NOTIF_ENUM_TYPE_ID)
