@@ -227,7 +227,7 @@ export default defineComponent({
   methods: {
     //For fetching all the orders for this product & facility.
     async getOrderDetails() {
-      await this.store.dispatch("order/getOrderDetails", { viewSize: 200, facilityId: this.currentFacility.value?.facilityId, productId: this.currentVariant.productId });
+      await this.store.dispatch("order/getOrderDetails", { viewSize: 200, facilityId: this.currentFacility?.facilityId, productId: this.currentVariant.productId });
     },
     async applyFeature(feature: string, type: string) {
       if(type === 'color') this.selectedColor = feature;
@@ -294,7 +294,7 @@ export default defineComponent({
         if (resp.status === 200 && !hasError(resp) && resp.data.docs.length) {
           resp.data.docs.map((storeInventory: any) => {
             if(storeInventory.atp) {
-              const isCurrentStore = storeInventory.facilityId === this.currentFacility.value?.facilityId;
+              const isCurrentStore = storeInventory.facilityId === this.currentFacility?.facilityId;
               if (isCurrentStore) this.currentStoreInventory = storeInventory.atp;
               if (storeInventory.facilityTypeId === 'WAREHOUSE') {
                 this.warehouseInventory += storeInventory.atp

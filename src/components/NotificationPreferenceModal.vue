@@ -137,7 +137,7 @@ export default defineComponent({
       }
     },
     async handleTopicSubscription() {
-      const facilityId = this.currentFacility.value?.facilityId
+      const facilityId = this.currentFacility?.facilityId
       const subscribeRequests = [] as any
       this.notificationPrefToUpdate.subscribe.map(async (enumId: string) => {
         const topicName = generateTopicName(facilityId, enumId)

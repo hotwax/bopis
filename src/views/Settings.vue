@@ -406,7 +406,7 @@ export default defineComponent({
         }
 
         emitter.emit('presentLoader',  { backdropDismiss: false })
-        const facilityId = this.currentFacility.value?.facilityId
+        const facilityId = this.currentFacility?.facilityId
         const topicName = generateTopicName(facilityId, enumId)
 
         const notificationPref = this.notificationPrefs.find((pref: any) => pref.enumId === enumId)

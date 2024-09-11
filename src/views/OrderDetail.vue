@@ -372,7 +372,7 @@ export default defineComponent({
     },
     async getOrderDetail(orderId: any, orderPartSeqId: any, orderType: any) {
       const payload = {
-        facilityId: this.currentFacility.value?.facilityId,
+        facilityId: this.currentFacility?.facilityId,
         orderId,
         orderPartSeqId
       }
@@ -387,7 +387,7 @@ export default defineComponent({
       return rejectOrderModal.present();
     },
     async readyForPickup(order: any, part: any) {
-      if (this.configurePicker) return this.assignPicker(order, part, this.currentFacility.value?.facilityId);
+      if (this.configurePicker) return this.assignPicker(order, part, this.currentFacility?.facilityId);
       const pickup = part?.shipmentMethodEnum?.shipmentMethodEnumId === 'STOREPICKUP';
       const header = pickup ? translate('Ready for pickup') : translate('Ready to ship');
       const message = pickup ? translate('An email notification will be sent to that their order is ready for pickup. This order will also be moved to the packed orders tab.', { customerName: order.customer.name, space: '<br/><br/>' }) : '';
@@ -402,7 +402,7 @@ export default defineComponent({
           }, {
             text: header,
             handler: async () => {
-              await this.store.dispatch('order/packShipGroupItems', { order: order, part: part, facilityId: this.currentFacility.value?.facilityId })
+              await this.store.dispatch('order/packShipGroupItems', { order: order, part: part, facilityId: this.currentFacility?.facilityId })
             }
           }]
         });
