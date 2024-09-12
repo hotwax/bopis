@@ -151,8 +151,11 @@
           <ion-card-content>
             {{ translate('Track who picked orders by entering picker IDs when packing an order.') }}
           </ion-card-content>
-          <ion-item lines="none">
+          <ion-item>
             <ion-toggle label-placement="start" :checked="configurePicker" @ionChange="setConfigurePickerPreference($event)">{{ translate("Enable tracking") }}</ion-toggle>
+          </ion-item>
+          <ion-item lines="none">
+            <ion-toggle label-placement="start" :checked="printPicklistPref" @ionChange="setPrintPicklistPreference($event)">{{ translate("Print picklists") }}</ion-toggle>
           </ion-item>
         </ion-card>
 
@@ -271,7 +274,8 @@ export default defineComponent({
       partialOrderRejectionConfig: 'user/getPartialOrderRejectionConfig',
       firebaseDeviceId: 'user/getFirebaseDeviceId',
       notificationPrefs: 'user/getNotificationPrefs',
-      allNotificationPrefs: 'user/getAllNotificationPrefs'
+      allNotificationPrefs: 'user/getAllNotificationPrefs',
+      printPicklistPref: "user/printPicklistPref",
     })
   },
   mounted() {
@@ -332,6 +336,9 @@ export default defineComponent({
     },
     setConfigurePickerPreference (ev: any){
       this.store.dispatch('user/setUserPreference', { configurePicker: ev.detail.checked })
+    },
+    setPrintPicklistPreference (ev: any){
+      this.store.dispatch('user/setUserPreference', { printPicklistPref: ev.detail.checked })
     },
     getDateTime(time: any) {
       return DateTime.fromMillis(time).toLocaleString(DateTime.DATETIME_MED);

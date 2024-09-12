@@ -4,6 +4,7 @@ import { translate } from '@hotwax/dxp-components';
 import store from '@/store';
 import { formatPhoneNumber, showToast } from '@/utils';
 import logger from '@/logger';
+import { cogOutline } from 'ionicons/icons';
 
 const getOpenOrders = async (payload: any): Promise <any> => {
   return api({
@@ -118,6 +119,37 @@ const createPicklist = async (query: any): Promise <any> => {
     baseURL,
     headers: { "Content-Type": "multipart/form-data" },
   })
+}
+
+const printPicklist = async (picklistId: string): Promise<any> => {
+  try {
+    // Get picklist from the server
+    const resp: any = await api({
+      method: 'get',
+      url: 'PrintPicklist.pdf',
+      params: {
+        picklistId
+      },
+      responseType: "blob"
+    })
+
+    if (!resp || resp.status !== 200 || hasError(resp)) {
+      throw resp.data;
+    }
+
+    // Generate local file URL for the blob received
+    const pdfUrl = window.URL.createObjectURL(resp.data);
+    // Open the file in new tab
+    try {
+      (window as any).open(pdfUrl, "_blank").focus();
+    }
+    catch {
+      showToast(translate('Unable to open as browser is blocking pop-ups.', {documentName: 'picklist'}), { icon: cogOutline });
+    }
+  } catch (err) {
+    showToast(translate('Failed to print picklist'))
+    logger.error("Failed to print picklist", err)
+  }
 }
 
 const sendPickupScheduledNotification = async (payload: any): Promise <any> => {
@@ -307,6 +339,14 @@ const fetchTrackingCodes = async (shipmentIds: Array<string>): Promise<any> => {
   return shipmentTrackingCodes;
 }
 
+const packOrder = async (payload: any): Promise<any> => {
+  return api({
+    url: "/service/packStoreFulfillmentOrder",
+    method: "post",
+    data: payload
+  })
+}
+
 export const OrderService = {
   fetchOrderItems,
   fetchOrderPaymentPreferences,
@@ -327,5 +367,7 @@ export const OrderService = {
   getShipmentItems,
   getCustomerContactDetails,
   getShippingPhoneNumber,
+  packOrder,
+  printPicklist,
   printShippingLabelAndPackingSlip
 }

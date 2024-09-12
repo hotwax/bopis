@@ -115,7 +115,7 @@ const actions: ActionTree<OrderState , RootState> ={
     const orderQueryPayload = prepareOrderQuery({
       ...payload,
       shipmentMethodTypeId: !store.state.user.preference.showShippingOrders ? 'STOREPICKUP' : '',
-      '-shipmentStatusId': '*',
+      '-shipmentStatusId': '(SHIPMENT_PACKED OR SHIPMENT_SHIPPED)',
       '-fulfillmentStatus': '(Cancelled OR Rejected)',
       orderStatusId: 'ORDER_APPROVED',
       orderTypeId: 'SALES_ORDER'
@@ -170,7 +170,10 @@ const actions: ActionTree<OrderState , RootState> ={
             }, []),
             placedDate: orderItem.orderDate,
             shippingInstructions: orderItem.shippingInstructions,
-            shipGroupSeqId: orderItem.shipGroupSeqId
+            shipGroupSeqId: orderItem.shipGroupSeqId,
+            isPicked: orderItem.isPicked,
+            picklistId: orderItem.picklistId,
+            picklistBinId: orderItem.picklistBinId
           }
         })
 
@@ -538,7 +541,7 @@ const actions: ActionTree<OrderState , RootState> ={
   async packShipGroupItems ({ state, dispatch, commit }, payload) {
     emitter.emit("presentLoader")
 
-    if (store.state.user.preference.configurePicker) {
+    if (store.state.user.preference.configurePicker && payload.order.isPicked !== 'Y') {
       let resp;
 
       const items = payload.order.parts[0].items;
@@ -547,6 +550,7 @@ const actions: ActionTree<OrderState , RootState> ={
       items.map((item: any, index: number) => {
         formData.append("itemStatusId_o_"+index, "PICKITEM_PENDING")
         formData.append("pickerIds_o_"+index, payload.selectedPicker)
+        formData.append("picked_o_"+index, item.quantity)
         Object.keys(item).map((property) => {
           if(property !== "facilityId") formData.append(property+'_o_'+index, item[property])
         })
@@ -589,7 +593,7 @@ const actions: ActionTree<OrderState , RootState> ={
         const shipmentMethodTypeId = payload.part?.shipmentMethodEnum?.shipmentMethodEnumId
         if (shipmentMethodTypeId !== 'STOREPICKUP') {
           // TODO: find a better way to get the shipmentId
-          const shipmentId = resp.data._EVENT_MESSAGE_.match(/\d+/g)[0]
+          const shipmentId = resp.data.shipmentId ? resp.data.shipmentId : resp.data._EVENT_MESSAGE_.match(/\d+/g)[0]
           await dispatch('packDeliveryItems', shipmentId).then((data) => {
             if (!hasError(data) && !data.data._EVENT_MESSAGE_) {
               showToast(translate("Something went wrong"))
@@ -606,7 +610,10 @@ const actions: ActionTree<OrderState , RootState> ={
               }
             }
           })
+        } else {
+          dispatch("removeOpenOrder", payload)
         }
+
         // Adding readyToHandover or readyToShip because we need to show the user that the order has moved to the packed tab
         if(payload.order.part.shipmentMethodEnum.shipmentMethodEnumId === 'STOREPICKUP'){
           payload.order = { ...payload.order, readyToHandover: true }
@@ -626,6 +633,21 @@ const actions: ActionTree<OrderState , RootState> ={
 
     emitter.emit("dismissLoader")
     return resp;
+  },
+
+  removeOpenOrder({ commit, state }, payload) {
+    const orders = JSON.parse(JSON.stringify(state.open.list));
+
+    const orderIndex = orders.findIndex((order: any) => {
+      return order.orderId === payload.order.orderId && order.parts.some((part: any) => {
+        return part.orderPartSeqId === payload.part.orderPartSeqId;
+      });
+    });
+
+    if (orderIndex > -1) {
+      orders.splice(orderIndex, 1);
+      commit(types.ORDER_OPEN_UPDATED, { orders, total: state.open.total -1 })
+    }
   },
 
   // TODO: handle the unfillable items count
@@ -961,6 +983,10 @@ const actions: ActionTree<OrderState , RootState> ={
 
     commit(types.ORDER_ITEM_REJECTION_HISTORY_UPDATED, rejectionHistory)
     emitter.emit("dismissLoader");
+  },
+
+  updateOpenOrder ({ commit }, payload) {
+    commit(types.ORDER_OPEN_UPDATED, {orders: payload.orders , total: payload.total})
   },
 
   // clearning the orders state when logout, or user store is changed

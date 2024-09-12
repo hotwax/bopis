@@ -5,14 +5,30 @@ import { DateTime } from "luxon";
 
 // TODO Use separate files for specific utilities
 
-const showToast = async (message: string) => {
-  const toast = await toastController
-    .create({
-      message,
-      duration: 3000,
-      position: 'top',
-    })
-  return toast.present();
+const showToast = async (message: string, options?: any) => {
+  const config = {
+    message,
+    ...options
+  } as any;
+
+  if (!options?.position) {
+    config.position = 'top';
+  }
+  if (options?.canDismiss) {
+    config.buttons = [
+      {
+        text: translate('Dismiss'),
+        role: 'cancel',
+      },
+    ]
+  }
+  if (!options?.manualDismiss) {
+    config.duration = 3000;
+  }
+
+  const toast = await toastController.create(config)
+  // present toast if manual dismiss is not needed
+  return !options?.manualDismiss ? toast.present() : toast
 }
 
 const copyToClipboard = async (text: any, showCopiedValue = true) => {
