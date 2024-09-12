@@ -417,25 +417,16 @@ export default defineComponent({
         });
       return alert.present();
     },
-    async packShippingOrders(currenOrder: any, part: any) {
+    async packShippingOrders(currentOrder: any, part: any) {
       try {
         const resp = await OrderService.packOrder({
-          'picklistBinId': currenOrder.picklistBinId,
-          'orderId': currenOrder.orderId
+          'picklistBinId': currentOrder.picklistBinId,
+          'orderId': currentOrder.orderId
         })
 
         if(!hasError(resp)) {
           showToast(translate("Order packed and ready for delivery"));
-          const orders = JSON.parse(JSON.stringify(this.orders));
-          const orderIndex = orders.findIndex((order: any) => {
-            return order.orderId === currenOrder.orderId && order.parts.some((part: any) => {
-              return part.orderPartSeqId === part.orderPartSeqId;
-            });
-          });
-          if (orderIndex > -1) {
-            orders.splice(orderIndex, 1);
-            this.store.dispatch("order/updateOpenOrder", { orders, total: orders.length  })
-          }
+          this.store.dispatch("order/removeOpenOrder", { order: currentOrder, part })
         } else {
           throw resp.data;
         }

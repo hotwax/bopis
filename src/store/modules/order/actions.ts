@@ -611,16 +611,7 @@ const actions: ActionTree<OrderState , RootState> ={
             }
           })
         } else {
-          // Remove order from the list if action is successful
-          const orderIndex = state.open.list.findIndex((order: any) => {
-            return order.orderId === payload.order.orderId && order.parts.some((part: any) => {
-              return part.orderPartSeqId === payload.part.orderPartSeqId;
-            });
-          });
-          if (orderIndex > -1) {
-            state.open.list.splice(orderIndex, 1);
-            commit(types.ORDER_OPEN_UPDATED, { orders: state.open.list, total: state.open.total -1 })
-          }
+          dispatch("removeOpenOrder", payload)
         }
 
         // Adding readyToHandover or readyToShip because we need to show the user that the order has moved to the packed tab
@@ -642,6 +633,21 @@ const actions: ActionTree<OrderState , RootState> ={
 
     emitter.emit("dismissLoader")
     return resp;
+  },
+
+  removeOpenOrder({ commit, state }, payload) {
+    const orders = JSON.parse(JSON.stringify(state.open.list));
+
+    const orderIndex = orders.findIndex((order: any) => {
+      return order.orderId === payload.order.orderId && order.parts.some((part: any) => {
+        return part.orderPartSeqId === payload.part.orderPartSeqId;
+      });
+    });
+
+    if (orderIndex > -1) {
+      orders.splice(orderIndex, 1);
+      commit(types.ORDER_OPEN_UPDATED, { orders, total: state.open.total -1 })
+    }
   },
 
   // TODO: handle the unfillable items count
