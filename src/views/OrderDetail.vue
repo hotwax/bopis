@@ -338,7 +338,7 @@ export default defineComponent({
       });
 
       assignPickerModal.onDidDismiss().then(async(result: any) => {
-        if(result.data.dismissed) {
+        if(result.data.selectedPicker) {
           await this.store.dispatch('order/packShipGroupItems', { order, part, facilityId, selectedPicker: result.data.selectedPicker })
         }
       })
@@ -395,7 +395,7 @@ export default defineComponent({
       return rejectOrderModal.present();
     },
     async readyForPickup(order: any, part: any) {
-      if (this.configurePicker) return this.assignPicker(order, part, this.currentFacility.facilityId);
+      if(this.configurePicker && order.isPicked !== 'Y') return this.assignPicker(order, part, this.currentFacility.facilityId);
       const pickup = part?.shipmentMethodEnum?.shipmentMethodEnumId === 'STOREPICKUP';
       const header = pickup ? translate('Ready for pickup') : translate('Ready to ship');
       const message = pickup ? translate('An email notification will be sent to that their order is ready for pickup. This order will also be moved to the packed orders tab.', { customerName: order.customer.name, space: '<br/><br/>' }) : '';
@@ -410,11 +410,34 @@ export default defineComponent({
           }, {
             text: header,
             handler: async () => {
-              await this.store.dispatch('order/packShipGroupItems', { order: order, part: part, facilityId: this.currentFacility.facilityId })
+              if(!pickup) {
+                this.packShippingOrders(order, part);
+              } else {
+                this.store.dispatch('order/packShipGroupItems', {order, part, facilityId: this.currentFacility.facilityId})
+              }
             }
           }]
         });
       return alert.present();
+    },
+    async packShippingOrders(currentOrder: any, part: any) {
+      try {
+        const resp = await OrderService.packOrder({
+          'picklistBinId': currentOrder.picklistBinId,
+          'orderId': currentOrder.orderId
+        })
+
+        if(!hasError(resp)) {
+          showToast(translate("Order packed and ready for delivery"));
+          this.store.dispatch("order/updateCurrent", { order: { ...currentOrder, readyToShip: true } }) 
+          this.store.dispatch("order/removeOpenOrder", { order: currentOrder, part })
+        } else {
+          throw resp.data;
+        }
+      } catch(error: any) {
+        logger.error(error);
+        showToast(translate("Something went wrong"))
+      }
     },
     async fetchRejectReasons() {
       await this.store.dispatch('util/fetchRejectReasons');

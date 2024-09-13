@@ -231,8 +231,17 @@ const isEnumExists = async (enumId: string): Promise<any> => {
   }
 }
 
+const ensurePartyRole = async (payload: any): Promise <any> => {
+  return api({
+    url: "service/ensurePartyRole",
+    method: "post",
+    data: payload
+  });
+}
+
 export const UserService = {
     createEnumeration,
+    ensurePartyRole,
     login,
     getCurrentEComStore,
     getRerouteFulfillmentConfig,

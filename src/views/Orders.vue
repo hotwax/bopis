@@ -213,6 +213,7 @@ import { api, hasError } from '@/adapter';
 import { translate } from "@hotwax/dxp-components";
 import AssignPickerModal from "./AssignPickerModal.vue";
 import { OrderService } from "@/services/OrderService";
+import { UserService } from "@/services/UserService";
 import { Actions, hasPermission } from '@/authorization'
 import logger from "@/logger";
 
@@ -276,7 +277,7 @@ export default defineComponent({
       });
 
       assignPickerModal.onDidDismiss().then(async(result: any) => {
-        if(result.data?.dismissed) {
+        if(result.data?.selectedPicker) {
           await this.store.dispatch('order/packShipGroupItems', { order, part, facilityId, selectedPicker: result.data.selectedPicker })
         }
       })
@@ -516,6 +517,20 @@ export default defineComponent({
       }
 
       if(!this.configurePicker) {
+        try {
+          const resp = await UserService.ensurePartyRole({
+            partyId: "_NA_",
+            roleTypeId: "WAREHOUSE_PICKER",
+          })
+
+          if(hasError(resp)) {
+            throw resp.data;
+          }
+        } catch (error) {
+          showToast(translate("Something went wrong. Picklist can not be created."));
+          logger.error(error)
+          return;
+        }
         await this.createPicklist(order, "_NA_");
         return;
       }
@@ -526,7 +541,7 @@ export default defineComponent({
       });
 
       assignPickerModal.onDidDismiss().then(async(result: any) => {
-        if(result.data?.dismissed) {
+        if(result.data?.selectedPicker) {
           this.createPicklist(order, result.data.selectedPicker)
         }
       })
