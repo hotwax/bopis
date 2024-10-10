@@ -28,7 +28,7 @@ import "@hotwax/apps-theme";
 
 import store from './store'
 
-import permissionPlugin from '@/authorization';
+import permissionPlugin, { Actions, hasPermission } from '@/authorization';
 import permissionRules from '@/authorization/Rules';
 import permissionActions from '@/authorization/Actions';
 
@@ -54,6 +54,7 @@ const app = createApp(App)
     actions: permissionActions
   })
   .use(dxpComponents, {
+    Actions,
     addNotification,
     appLoginUrl: process.env.VUE_APP_LOGIN_URL as string,
     appFirebaseConfig: JSON.parse(process.env.VUE_APP_FIREBASE_CONFIG),
@@ -70,6 +71,7 @@ const app = createApp(App)
     setUserLocale,
     storeClientRegistrationToken,
     getAvailableTimeZones,
+    hasPermission,
     setUserTimeZone
   });
 
