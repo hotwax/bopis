@@ -27,18 +27,6 @@ const getters: GetterTree <UserState, RootState> = {
         const baseUrl = process.env.VUE_APP_BASE_URL;
         return baseUrl ? baseUrl : state.instanceUrl;
     },
-    showShippingOrders (state) {
-        return state.preference.showShippingOrders;
-    },
-    printPicklistPref (state) {
-        return state.preference.printPicklistPref;
-    },
-    configurePicker (state) {
-        return state.preference.configurePicker;
-    },
-    showPackingSlip (state) {
-        return state.preference.showPackingSlip;
-    },
     getCurrency (state) {
         return state.currentEComStore.defaultCurrencyUomId ? state.currentEComStore.defaultCurrencyUomId : 'USD';
     },

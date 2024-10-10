@@ -11,12 +11,6 @@ const mutations: MutationTree <UserState> = {
       state.current = {}
       state.currentFacility = {}
       state.permissions = []
-      state.preference= {
-        showShippingOrders: false,
-        showPackingSlip: false,
-        configurePicker: false,
-        printPicklistPref: false
-      },
       state.allNotificationPrefs = [],
       state.bopisProductStoreSettings = {}
     },
@@ -28,9 +22,6 @@ const mutations: MutationTree <UserState> = {
     },
     [types.USER_INSTANCE_URL_UPDATED] (state, payload) {
         state.instanceUrl = payload;
-    },
-    [types.USER_PREFERENCE_UPDATED] (state, payload) {
-        state.preference = {...state.preference, ...payload};
     },
     [types.USER_CURRENT_ECOM_STORE_UPDATED] (state, payload) {
         state.currentEComStore = payload

@@ -3,7 +3,6 @@ export default interface UserState {
     current: any;
     currentFacility: object;
     instanceUrl: string;
-    preference: any;
     permissions: any;
     currentEComStore: any;
     partialOrderRejectionConfig: any

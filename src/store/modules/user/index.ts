@@ -12,12 +12,6 @@ const userModule: Module<UserState, RootState> = {
       current: {},
       currentFacility: {},
       instanceUrl: '',
-      preference: {
-        showShippingOrders: false,
-        showPackingSlip: false,
-        configurePicker: false,
-        printPicklistPref: false
-      },
       currentEComStore: {},
       partialOrderRejectionConfig: {},
       permissions: [],

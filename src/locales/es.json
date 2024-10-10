@@ -43,6 +43,7 @@
   "Failed to load packing slip": "Error al cargar el documento de embalaje",
   "Failed to update configuration": "No se pudo actualizar la configuración",
   "Failed to print shipping label and packing slip": "Error al imprimir la etiqueta de envío y la hoja de embalaje",
+  "Failed to update product store setting.": "Failed to update product store setting.",
   "First name": "Nombre",
   "Generate packing slips": "Generar documentos de embalaje",
   "Generate shipping documents": "Generar documentos de envío",

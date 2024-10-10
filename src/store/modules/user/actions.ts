@@ -7,14 +7,12 @@ import UserState from './UserState'
 import * as types from './mutation-types'
 import { showToast } from '@/utils'
 import {
-  getUserPreference,
   getNotificationEnumIds,
   getNotificationUserPrefTypeIds,
   getUserFacilities,
   hasError,
   logout,
   resetConfig,
-  setUserPreference,
   storeClientRegistrationToken,
   updateInstanceUrl,
   updateToken
@@ -85,7 +83,6 @@ const actions: ActionTree<UserState, RootState> = {
       // TODO Use a separate API for getting facilities, this should handle user like admin accessing the app
       const currentFacility = userProfile.facilities.length > 0 ? userProfile.facilities[0] : {};
       const currentEComStore = await UserService.getCurrentEComStore(token, currentFacility?.facilityId);
-      const userPreference = await getUserPreference(token, getters['getBaseUrl'], 'BOPIS_PREFERENCE')
 
       /*  ---- Guard clauses ends here --- */
 
@@ -99,7 +96,6 @@ const actions: ActionTree<UserState, RootState> = {
       commit(types.USER_INFO_UPDATED, userProfile);
       commit(types.USER_CURRENT_FACILITY_UPDATED, currentFacility);
       commit(types.USER_CURRENT_ECOM_STORE_UPDATED, currentEComStore)
-      commit(types.USER_PREFERENCE_UPDATED, userPreference)
       commit(types.USER_PERMISSIONS_UPDATED, appPermissions);
       commit(types.USER_TOKEN_CHANGED, { newToken: token })
 
@@ -283,14 +279,6 @@ const actions: ActionTree<UserState, RootState> = {
     await dispatch("getPartialOrderRejectionConfig");
   },
 
-  setUserPreference( {state, commit }, payload){
-    commit(types.USER_PREFERENCE_UPDATED, payload)
-    setUserPreference({
-      'userPrefTypeId': 'BOPIS_PREFERENCE',
-      'userPrefValue': JSON.stringify(state.preference)
-    });
-  },
-
   addNotification({ state, commit }, payload) {
     const notifications = JSON.parse(JSON.stringify(state.notifications))
     notifications.push({ ...payload.notification, time: DateTime.now().toMillis() })
@@ -461,7 +449,7 @@ const actions: ActionTree<UserState, RootState> = {
         throw resp.data;
       }
     } catch(err) {
-      showToast(translate("Failed to product store setting."))
+      showToast(translate("Failed to update product store setting."))
       logger.error(err)
     }
 
