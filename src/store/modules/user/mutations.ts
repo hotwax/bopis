@@ -17,7 +17,8 @@ const mutations: MutationTree <UserState> = {
         configurePicker: false,
         printPicklistPref: false
       },
-      state.allNotificationPrefs = []
+      state.allNotificationPrefs = [],
+      state.bopisProductStoreSettings = {}
     },
     [types.USER_INFO_UPDATED] (state, payload) {
         state.current = payload
@@ -54,6 +55,9 @@ const mutations: MutationTree <UserState> = {
     },
     [types.USER_ALL_NOTIFICATION_PREFS_UPDATED] (state, payload) {
         state.allNotificationPrefs = payload
+    },
+    [types.USER_BOPIS_PRODUCT_STORE_SETTINGS_UPDATED] (state, payload) {
+        state.bopisProductStoreSettings = payload
     }
     
 }

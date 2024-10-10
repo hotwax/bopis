@@ -65,6 +65,10 @@ const getters: GetterTree <UserState, RootState> = {
     },
     getAllNotificationPrefs(state) {
         return state.allNotificationPrefs
-    }
+    },
+    getBopisProductStoreSettings: (state) => (enumId: string) => {
+        return state.bopisProductStoreSettings[enumId]
+    },
+
 }
 export default getters;

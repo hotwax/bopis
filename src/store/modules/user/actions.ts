@@ -1,4 +1,5 @@
 import { UserService } from '@/services/UserService'
+import { UtilService } from '@/services/UtilService'
 import { ActionTree } from 'vuex'
 import RootState from '@/store/RootState'
 import store from '@/store';
@@ -108,6 +109,7 @@ const actions: ActionTree<UserState, RootState> = {
       //fetching partial order rejection config for BOPIS orders
       await dispatch("getPartialOrderRejectionConfig");
       await dispatch("fetchAllNotificationPrefs");
+      await dispatch("fetchBopisProductStoreSettings");
       
     } catch (err: any) {
       // If any of the API call in try block has status code other than 2xx it will be handled in common catch block.
@@ -335,6 +337,137 @@ const actions: ActionTree<UserState, RootState> = {
     }
 
     commit(types.USER_ALL_NOTIFICATION_PREFS_UPDATED, allNotificationPrefs)
+  },
+
+  async fetchBopisProductStoreSettings({ commit, dispatch }) {
+    const productStoreSettings = JSON.parse(process.env.VUE_APP_PRODUCT_STORE_SETTING_ENUMS);
+    const settingValues = {} as any;
+
+    const payload = {
+      "inputFields": {
+        "productStoreId": this.state.user.currentEComStore.productStoreId,
+        "settingTypeEnumId": Object.keys(productStoreSettings),
+        "settingTypeEnumId_op": "in"
+      },
+      "filterByDate": 'Y',
+      "entityName": "ProductStoreSetting",
+      "fieldList": ["settingTypeEnumId", "settingValue", "fromDate"]
+    }
+
+    try {
+      const resp = await UtilService.getProductStoreSettings(payload) as any
+      if(!hasError(resp)) {
+        resp.data.docs.map((setting: any) => {
+          settingValues[setting.settingTypeEnumId] = setting.settingValue === "true"
+        })
+      } else {
+        throw resp.data;
+      }
+    } catch(err) {
+      logger.error(err)
+    }
+
+    const enumIdsToCreate = Object.keys(productStoreSettings).filter((settingTypeEnumId) => !Object.keys(settingValues).includes(settingTypeEnumId));
+
+    await Promise.allSettled(enumIdsToCreate.map(async (enumId: any) => {
+      await dispatch("createProductStoreSetting", productStoreSettings[enumId])
+    }))
+    
+    enumIdsToCreate.map((enumId: any) => settingValues[enumId] = false)
+
+    commit(types.USER_BOPIS_PRODUCT_STORE_SETTINGS_UPDATED, settingValues)
+  },
+
+  async createProductStoreSetting({ commit }, enumeration) {
+    const fromDate = Date.now()
+
+    try {
+      if(!await UtilService.isEnumExists(enumeration.enumId)) {
+        const resp = await UtilService.createEnumeration({
+          "enumId": enumeration.enumId,
+          "enumTypeId": "PROD_STR_STNG",
+          "description": enumeration.description,
+          "enumName": enumeration.enumName
+        })
+
+        if(hasError(resp)) {
+          throw resp.data;
+        }
+      }
+
+      const params = {
+        fromDate,
+        "productStoreId": this.state.user.currentEComStore.productStoreId,
+        "settingTypeEnumId": enumeration.enumId,
+        "settingValue": "false"
+      }
+
+      await UtilService.createProductStoreSetting(params) as any
+    } catch(err) {
+      logger.error(err)
+    }
+
+    return fromDate;
+  },
+
+  async setProductStoreSetting({ commit, dispatch, state }, payload) {
+    const productStoreSettings = JSON.parse(process.env.VUE_APP_PRODUCT_STORE_SETTING_ENUMS);
+    let prefValue = state.bopisProductStoreSettings[payload.enumId]
+    const eComStoreId = this.state.user.currentEComStore.productStoreId;
+
+    // when selecting none as ecom store, not updating the pref as it's not possible to save pref with empty productStoreId
+    if(!eComStoreId) {
+      showToast(translate("Unable to update product store setting."))
+      return;
+    }
+
+    let fromDate;
+
+    try {
+      const resp = await UtilService.getProductStoreSettings({
+        "inputFields": {
+          "productStoreId": this.state.user.currentEComStore.productStoreId,
+          "settingTypeEnumId": payload.enumId
+        },
+        "filterByDate": 'Y',
+        "entityName": "ProductStoreSetting",
+        "fieldList": ["fromDate"],
+        "viewSize": 1
+      }) as any
+      if(!hasError(resp)) {
+        fromDate = resp.data.docs[0]?.fromDate
+      }
+    } catch(err) {
+      logger.error(err)
+    }
+
+    if(!fromDate) {
+      fromDate = await dispatch("createProductStoreSetting", productStoreSettings[payload.enumId]);
+    }
+
+    const params = {
+      "fromDate": fromDate,
+      "productStoreId": eComStoreId,
+      "settingTypeEnumId": payload.enumId,
+      "settingValue": `${payload.value}`
+    }
+
+    try {
+      const resp = await UtilService.updateProductStoreSetting(params) as any
+
+      if((!hasError(resp))) {
+        prefValue = payload.value
+      } else {
+        throw resp.data;
+      }
+    } catch(err) {
+      showToast(translate("Failed to product store setting."))
+      logger.error(err)
+    }
+
+    const settingValues = JSON.parse(JSON.stringify(state.bopisProductStoreSettings))
+    settingValues[payload.enumId] = prefValue
+    commit(types.USER_BOPIS_PRODUCT_STORE_SETTINGS_UPDATED, settingValues)
   },
 
   async updateNotificationPreferences({ commit }, payload) {

@@ -25,7 +25,8 @@ const userModule: Module<UserState, RootState> = {
       notificationPrefs: [],
       firebaseDeviceId: '',
       hasUnreadNotifications: true,
-      allNotificationPrefs: []
+      allNotificationPrefs: [],
+      bopisProductStoreSettings: {}
     },
     getters,
     actions,

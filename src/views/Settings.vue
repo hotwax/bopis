@@ -124,7 +124,7 @@
             {{ translate('View shipping orders along with pickup orders.') }}
           </ion-card-content>
           <ion-item lines="none">
-            <ion-toggle label-placement="start" :checked="showShippingOrders" @ionChange="setShowShippingOrdersPreference($event)">{{ translate("Show shipping orders") }}</ion-toggle>
+            <ion-toggle label-placement="start" :checked="getBopisProductStoreSettings('SHOW_SHIPPING_ORDERS')" @ionChange="setBopisProductStoreSettings($event, 'SHOW_SHIPPING_ORDERS')">{{ translate("Show shipping orders") }}</ion-toggle>
           </ion-item>
         </ion-card>
 
@@ -138,7 +138,7 @@
             {{ translate('Packing slips help customer reconcile their order against the delivered items.') }}
           </ion-card-content>
           <ion-item lines="none">
-            <ion-toggle label-placement="start" :checked="showPackingSlip" @ionChange="setShowPackingSlipPreference($event)">{{ translate("Generate packing slips") }}</ion-toggle>
+            <ion-toggle label-placement="start" :checked="getBopisProductStoreSettings('PRINT_PACKING_SLIPS')" @ionChange="setBopisProductStoreSettings($event, 'PRINT_PACKING_SLIPS')">{{ translate("Generate packing slips") }}</ion-toggle>
           </ion-item>
         </ion-card>
 
@@ -152,10 +152,10 @@
             {{ translate('Track who picked orders by entering picker IDs when packing an order.') }}
           </ion-card-content>
           <ion-item>
-            <ion-toggle label-placement="start" :checked="configurePicker" @ionChange="setConfigurePickerPreference($event)">{{ translate("Enable tracking") }}</ion-toggle>
+            <ion-toggle label-placement="start" :checked="getBopisProductStoreSettings('ENABLE_TRACKING')" @ionChange="setBopisProductStoreSettings($event, 'ENABLE_TRACKING')">{{ translate("Enable tracking") }}</ion-toggle>
           </ion-item>
           <ion-item lines="none">
-            <ion-toggle label-placement="start" :checked="printPicklistPref" @ionChange="setPrintPicklistPreference($event)">{{ translate("Print picklists") }}</ion-toggle>
+            <ion-toggle label-placement="start" :checked="getBopisProductStoreSettings('PRINT_PICKLISTS')" @ionChange="setBopisProductStoreSettings($event, 'PRINT_PICKLISTS')">{{ translate("Print picklists") }}</ion-toggle>
           </ion-item>
         </ion-card>
 
@@ -276,6 +276,7 @@ export default defineComponent({
       notificationPrefs: 'user/getNotificationPrefs',
       allNotificationPrefs: 'user/getAllNotificationPrefs',
       printPicklistPref: "user/printPicklistPref",
+      getBopisProductStoreSettings: "user/getBopisProductStoreSettings"
     })
   },
   mounted() {
@@ -328,17 +329,8 @@ export default defineComponent({
     goToLaunchpad() {
       window.location.href = `${process.env.VUE_APP_LOGIN_URL}`
     },
-    setShowShippingOrdersPreference (ev: any) {
-      this.store.dispatch('user/setUserPreference', { showShippingOrders: ev.detail.checked })
-    },
-    setShowPackingSlipPreference (ev: any){
-      this.store.dispatch('user/setUserPreference', { showPackingSlip: ev.detail.checked })
-    },
-    setConfigurePickerPreference (ev: any){
-      this.store.dispatch('user/setUserPreference', { configurePicker: ev.detail.checked })
-    },
-    setPrintPicklistPreference (ev: any){
-      this.store.dispatch('user/setUserPreference', { printPicklistPref: ev.detail.checked })
+    setBopisProductStoreSettings (ev: any, enumId: any) {
+      this.store.dispatch('user/setProductStoreSetting', { enumId, value: ev.detail.checked })
     },
     getDateTime(time: any) {
       return DateTime.fromMillis(time).toLocaleString(DateTime.DATETIME_MED);
