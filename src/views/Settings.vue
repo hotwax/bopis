@@ -123,7 +123,7 @@
           <ion-card-content>
             {{ translate('View shipping orders along with pickup orders.') }}
           </ion-card-content>
-          <ion-item lines="none" :disabled="!hasPermission(Actions.APP_SETTING_UPDATE)">
+          <ion-item lines="none" :disabled="!hasPermission(Actions.APP_SHOW_SHIPPING_ORD_PREF_UPDATE)">
             <ion-toggle label-placement="start" :checked="getBopisProductStoreSettings('SHOW_SHIPPING_ORDERS')" @ionChange="setBopisProductStoreSettings($event, 'SHOW_SHIPPING_ORDERS')">{{ translate("Show shipping orders") }}</ion-toggle>
           </ion-item>
         </ion-card>
@@ -137,7 +137,7 @@
           <ion-card-content>
             {{ translate('Packing slips help customer reconcile their order against the delivered items.') }}
           </ion-card-content>
-          <ion-item lines="none" :disabled="!hasPermission(Actions.APP_SETTING_UPDATE)">
+          <ion-item lines="none" :disabled="!hasPermission(Actions.APP_PRINT_PACKING_SLIP_PREF_UPDATE)">
             <ion-toggle label-placement="start" :checked="getBopisProductStoreSettings('PRINT_PACKING_SLIPS')" @ionChange="setBopisProductStoreSettings($event, 'PRINT_PACKING_SLIPS')">{{ translate("Generate packing slips") }}</ion-toggle>
           </ion-item>
         </ion-card>
@@ -151,10 +151,10 @@
           <ion-card-content>
             {{ translate('Track who picked orders by entering picker IDs when packing an order.') }}
           </ion-card-content>
-          <ion-item :disabled="!hasPermission(Actions.APP_SETTING_UPDATE)">
+          <ion-item :disabled="!hasPermission(Actions.APP_ENABLE_TRACKING_PREF_UPDATE)">
             <ion-toggle label-placement="start" :checked="getBopisProductStoreSettings('ENABLE_TRACKING')" @ionChange="setBopisProductStoreSettings($event, 'ENABLE_TRACKING')">{{ translate("Enable tracking") }}</ion-toggle>
           </ion-item>
-          <ion-item lines="none" :disabled="!hasPermission(Actions.APP_SETTING_UPDATE)">
+          <ion-item lines="none" :disabled="!hasPermission(Actions.APP_PRINT_PICKLIST_PREF_UPDATE)">
             <ion-toggle label-placement="start" :checked="getBopisProductStoreSettings('PRINT_PICKLISTS')" @ionChange="setBopisProductStoreSettings($event, 'PRINT_PICKLISTS')">{{ translate("Print picklists") }}</ion-toggle>
           </ion-item>
         </ion-card>
