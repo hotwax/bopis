@@ -275,8 +275,8 @@ export default defineComponent({
     await this.store.dispatch('user/fetchNotificationPreferences')
   },
   methods: {
-    async handleFacilityUpdate(selectedFacilityId: any) {
-      await this.store.dispatch('user/setFacilityUpdates', selectedFacilityId);
+    async handleFacilityUpdate(selectedFacility: any) {
+      await this.store.dispatch('user/setFacilityUpdates', selectedFacility?.facilityId);
       await this.store.dispatch('user/fetchNotificationPreferences')
     },
     async timeZoneUpdated(tzId: string) {

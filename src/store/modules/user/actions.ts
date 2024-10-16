@@ -71,7 +71,7 @@ const actions: ActionTree<UserState, RootState> = {
       //fetching user facilities
       const isAdminUser = appPermissions.some((appPermission: any) => appPermission?.action === "APP_STOREFULFILLMENT_ADMIN" );
       const facilities = await useUserStore().getUserFacilities(userProfile?.partyId, "PICKUP", isAdminUser)
-      await useUserStore().getPreferredFacility('SELECTED_FACILITY')
+      await useUserStore().getFacilityPreference('SELECTED_FACILITY')
     
       userProfile.facilities = facilities;
 
