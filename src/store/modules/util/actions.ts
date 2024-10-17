@@ -5,23 +5,44 @@ import * as types from './mutation-types'
 import { UtilService } from '@/services/UtilService'
 import { hasError } from '@/adapter'
 import logger from '@/logger'
+import store from '@/store'
 
 const actions: ActionTree<UtilState, RootState> = {
   async fetchRejectReasons({ commit }) {
+    const permissions = store.getters['user/getUserPermissions'];
+    const isAdminUser = permissions.some((permission: any) => permission.action === "APP_STOREFULFILLMENT_ADMIN")
+
     let rejectReasons = [];
-    try {
-      const payload = {
+    let payload = {
+      "distinct": "Y",
+      "viewSize": 100,
+      "orderBy": "sequenceNum"
+    } as any;
+
+    if(isAdminUser) {
+      payload = {
         "inputFields": {
           "parentEnumTypeId": ["REPORT_AN_ISSUE", "RPRT_NO_VAR_LOG"],
           "parentEnumTypeId_op": "in"
         },
         "fieldList": ["enumId", "description"],
-        "distinct": "Y",
         "entityName": "EnumTypeChildAndEnum",
-        "viewSize": 20, // keeping view size 20 as considering that we will have max 20 reasons
-        "orderBy": "sequenceNum"
+        ...payload
       }
+    } else {
+      payload = {
+        "inputFields": {
+          "enumerationGroupId": "FF_REJ_RSN_GRP"
+        },
+        "fieldList": ["enumerationGroupId", "enumId", "sequenceNum", "enumDescription", "enumName"],
+        "entityName": "EnumerationGroupAndMember",
+        "filterByDate": "Y",
+        ...payload
+      }
+    }
 
+
+    try {
       const resp = await UtilService.fetchRejectReasons(payload)
 
       if(!hasError(resp) && resp.data.count > 0) {
