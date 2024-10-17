@@ -32,7 +32,7 @@ const actions: ActionTree<UtilState, RootState> = {
     } else {
       payload = {
         "inputFields": {
-          "enumerationGroupId": "FF_REJ_RSN_GRP"
+          "enumerationGroupId": "BOPIS_REJ_RSN_GRP"
         },
         "fieldList": ["enumerationGroupId", "enumId", "sequenceNum", "enumDescription", "enumName"],
         "entityName": "EnumerationGroupAndMember",
