@@ -532,7 +532,7 @@ export default defineComponent({
   },
   async mounted() {
     emitter.emit("presentLoader")
-    await this.store.dispatch("fetchBopisProductStoreSettings");
+    await this.store.dispatch("user/fetchBopisProductStoreSettings");
     await this.getOrderDetail(this.orderId, this.orderPartSeqId, this.orderType);
 
     // fetch customer details and rejection reasons only when we get the orders information
