@@ -114,7 +114,7 @@ const actions: ActionTree<OrderState , RootState> ={
 
     const orderQueryPayload = prepareOrderQuery({
       ...payload,
-      shipmentMethodTypeId: !store.state.user.preference.showShippingOrders ? 'STOREPICKUP' : '',
+      shipmentMethodTypeId: !store.state.user.bopisProductStoreSettings['SHOW_SHIPPING_ORDERS'] ? 'STOREPICKUP' : '',
       '-shipmentStatusId': '(SHIPMENT_PACKED OR SHIPMENT_SHIPPED)',
       '-fulfillmentStatus': '(Cancelled OR Rejected)',
       orderStatusId: 'ORDER_APPROVED',
@@ -234,7 +234,7 @@ const actions: ActionTree<OrderState , RootState> ={
 
     const orderQueryPayload = prepareOrderQuery({
       ...payload,
-      shipmentMethodTypeId: !store.state.user.preference.showShippingOrders ? 'STOREPICKUP' : '',
+      shipmentMethodTypeId: !store.state.user.bopisProductStoreSettings['SHOW_SHIPPING_ORDERS'] ? 'STOREPICKUP' : '',
       orderTypeId: 'SALES_ORDER'
     })
     
@@ -335,7 +335,7 @@ const actions: ActionTree<OrderState , RootState> ={
     let resp;
     const orderQueryPayload = prepareOrderQuery({
       ...payload,
-      shipmentMethodTypeId: !store.state.user.preference.showShippingOrders ? 'STOREPICKUP' : '',
+      shipmentMethodTypeId: !store.state.user.bopisProductStoreSettings['SHOW_SHIPPING_ORDERS'] ? 'STOREPICKUP' : '',
       shipmentStatusId: "SHIPMENT_PACKED",
       orderTypeId: 'SALES_ORDER',
       '-fulfillmentStatus': '(Cancelled OR Rejected)',
@@ -421,7 +421,7 @@ const actions: ActionTree<OrderState , RootState> ={
     let resp;
     const orderQueryPayload = prepareOrderQuery({
       ...payload,
-      shipmentMethodTypeId: !store.state.user.preference.showShippingOrders ? 'STOREPICKUP' : '',
+      shipmentMethodTypeId: !store.state.user.bopisProductStoreSettings['SHOW_SHIPPING_ORDERS'] ? 'STOREPICKUP' : '',
       orderItemStatusId: "ITEM_COMPLETED",
       orderTypeId: 'SALES_ORDER',
       docType: 'ORDER'
@@ -541,7 +541,7 @@ const actions: ActionTree<OrderState , RootState> ={
   async packShipGroupItems ({ state, dispatch, commit }, payload) {
     emitter.emit("presentLoader")
 
-    if (store.state.user.preference.configurePicker && payload.order.isPicked !== 'Y') {
+    if (store.state.user.bopisProductStoreSettings['ENABLE_TRACKING'] && payload.order.isPicked !== 'Y') {
       let resp;
 
       const items = payload.order.parts[0].items;
