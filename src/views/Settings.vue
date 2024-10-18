@@ -279,6 +279,7 @@ export default defineComponent({
     this.appVersion = this.appInfo.branch ? (this.appInfo.branch + "-" + this.appInfo.revision) : this.appInfo.tag;
   },
   async ionViewWillEnter() {
+    await dispatch("fetchBopisProductStoreSettings");
     // Only fetch configuration when environment mapping exists
     if (Object.keys(this.rerouteFulfillmentConfigMapping).length > 0) {
       this.getAvailableShipmentMethods();
