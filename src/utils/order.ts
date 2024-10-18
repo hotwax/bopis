@@ -64,7 +64,7 @@ const handleParameterMatching = (orderVal: any, parameterVal: any, operation?: s
 
 const getOrderCategory = (order: any) => {
 
-  if(!store.state.user.preference.showShippingOrders) {
+  if(!store.state.user.bopisProductStoreSettings['SHOW_SHIPPING_ORDERS']) {
     orderCategoryParameters["Open"]["shipmentMethodTypeId"] = { value: "STOREPICKUP" }
     orderCategoryParameters["Packed"]["shipmentMethodTypeId"] = { value: "STOREPICKUP" }
     orderCategoryParameters["Completed"]["shipmentMethodTypeId"] = { value: "STOREPICKUP" }

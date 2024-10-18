@@ -268,7 +268,6 @@ export default defineComponent({
       userProfile: 'user/getUserProfile',
       currentFacility: 'user/getCurrentFacility',
       currentEComStore: 'user/getCurrentEComStore',
-      showShippingOrders: 'user/showShippingOrders',
       partialOrderRejectionConfig: 'user/getPartialOrderRejectionConfig',
       firebaseDeviceId: 'user/getFirebaseDeviceId',
       notificationPrefs: 'user/getNotificationPrefs',
