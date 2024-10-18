@@ -14,7 +14,7 @@
           <ion-button v-if="orderType === 'open'" class="ion-hide-md-up" :disabled="!order?.orderId || !hasPermission(Actions.APP_ORDER_UPDATE) || order.readyToHandover || order.readyToShip || order.rejected" @click="rejectOrder()">
             <ion-icon slot="icon-only" color="danger" :icon="bagRemoveOutline" />
           </ion-button>
-          <ion-button v-else-if="orderType === 'packed' && showPackingSlip" :class="order.part?.shipmentMethodEnum?.shipmentMethodEnumId !== 'STOREPICKUP' ? 'ion-hide-md-up' : ''" :disabled="!order?.orderId || !hasPermission(Actions.APP_ORDER_UPDATE) || order.handovered || order.shipped" @click="order.part?.shipmentMethodEnum?.shipmentMethodEnumId === 'STOREPICKUP' ? printPackingSlip(order) : printShippingLabelAndPackingSlip(order)">
+          <ion-button v-else-if="orderType === 'packed' && getBopisProductStoreSettings('PRINT_PACKING_SLIPS')" :class="order.part?.shipmentMethodEnum?.shipmentMethodEnumId !== 'STOREPICKUP' ? 'ion-hide-md-up' : ''" :disabled="!order?.orderId || !hasPermission(Actions.APP_ORDER_UPDATE) || order.handovered || order.shipped" @click="order.part?.shipmentMethodEnum?.shipmentMethodEnumId === 'STOREPICKUP' ? printPackingSlip(order) : printShippingLabelAndPackingSlip(order)">
             <ion-icon slot="icon-only" :icon="printOutline" />
           </ion-button>
         </ion-buttons>
@@ -79,7 +79,7 @@
               <p>{{ order.shippingInstructions }}</p>
             </ion-label>
           </ion-item>
-          <ion-item v-if="orderType === 'packed' && configurePicker && order.pickers" lines="none">
+          <ion-item v-if="orderType === 'packed' && getBopisProductStoreSettings('ENABLE_TRACKING') && order.pickers" lines="none">
             <ion-label>
               {{ order.pickers ? translate("Picked by", { pickers: order.pickers }) : translate("No picker assigned.") }}
             </ion-label>
@@ -313,15 +313,14 @@ export default defineComponent({
     ...mapGetters({
       order: "order/getCurrent",
       currentFacility: 'user/getCurrentFacility',
-      configurePicker: "user/configurePicker",
       partialOrderRejectionConfig: 'user/getPartialOrderRejectionConfig',
       getPaymentMethodDesc: 'util/getPaymentMethodDesc',
       getStatusDesc: 'util/getStatusDesc',
-      showPackingSlip: 'user/showPackingSlip',
       getProduct: 'product/getProduct',
       getProductStock: 'stock/getProductStock',
       getfacilityTypeDesc: 'util/getFacilityTypeDesc',
       getPartyName: 'util/getPartyName',
+      getBopisProductStoreSettings: 'user/getBopisProductStoreSettings'
     })
   },
   props: ['orderType', 'orderId', 'orderPartSeqId'],
@@ -395,7 +394,7 @@ export default defineComponent({
       return rejectOrderModal.present();
     },
     async readyForPickup(order: any, part: any) {
-      if(this.configurePicker && order.isPicked !== 'Y') return this.assignPicker(order, part, this.currentFacility.facilityId);
+      if(this.getBopisProductStoreSettings('ENABLE_TRACKING') && order.isPicked !== 'Y') return this.assignPicker(order, part, this.currentFacility.facilityId);
       const pickup = part?.shipmentMethodEnum?.shipmentMethodEnumId === 'STOREPICKUP';
       const header = pickup ? translate('Ready for pickup') : translate('Ready to ship');
       const message = pickup ? translate('An email notification will be sent to that their order is ready for pickup. This order will also be moved to the packed orders tab.', { customerName: order.customer.name, space: '<br/><br/>' }) : '';

@@ -268,14 +268,11 @@ export default defineComponent({
       userProfile: 'user/getUserProfile',
       currentFacility: 'user/getCurrentFacility',
       currentEComStore: 'user/getCurrentEComStore',
-      configurePicker: "user/configurePicker",
       showShippingOrders: 'user/showShippingOrders',
-      showPackingSlip: 'user/showPackingSlip',
       partialOrderRejectionConfig: 'user/getPartialOrderRejectionConfig',
       firebaseDeviceId: 'user/getFirebaseDeviceId',
       notificationPrefs: 'user/getNotificationPrefs',
       allNotificationPrefs: 'user/getAllNotificationPrefs',
-      printPicklistPref: "user/printPicklistPref",
       getBopisProductStoreSettings: "user/getBopisProductStoreSettings"
     })
   },
