@@ -582,7 +582,7 @@ export default defineComponent({
       }
     }
   },
-  ionViewWillEnter () {
+  async ionViewWillEnter () {
     await this.store.dispatch("fetchBopisProductStoreSettings");
     this.isScrollingEnabled = false;
     this.queryString = '';
