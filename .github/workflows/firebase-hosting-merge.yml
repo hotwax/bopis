@@ -14,5 +14,5 @@ jobs:
     secrets:
       envPAT: ${{ secrets.envPAT }}
       HOTWAX_PUBLIC_SECRET: ${{ secrets.HOTWAX_PUBLIC_SECRET }}
-      VUE_APP_FIREBASE_CONFIG: ${{ secrets.VUE_APP_FIREBASE_CONFIG }}
-      VUE_APP_FIREBASE_VAPID_KEY: ${{ secrets.VUE_APP_FIREBASE_VAPID_KEY }}
+      VUE_APP_FIREBASE_CONFIG: ${{ secrets.DEV_VUE_APP_FIREBASE_CONFIG }}
+      VUE_APP_FIREBASE_VAPID_KEY: ${{ secrets.DEV_VUE_APP_FIREBASE_VAPID_KEY }}
