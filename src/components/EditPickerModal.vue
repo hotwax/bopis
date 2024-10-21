@@ -15,9 +15,12 @@
 
     <ion-list>
       <ion-list-header>{{ translate("Staff") }}</ion-list-header>
-      <div class="ion-padding" v-if="!availablePickers.length">
-        {{ translate("No picker found") }}
+      <div v-if="isLoading" class="empty-state">
+        <ion-spinner name="crescent" />
+        <ion-label>{{ translate("Fetching pickers") }}</ion-label>
       </div>
+      <div class="empty-state" v-else-if="!availablePickers.length">{{ translate('No picker found') }}</div>
+
       <div v-else>
         <ion-radio-group :value="selectedPicker.id">
           <ion-item v-for="(picker, index) in availablePickers" :key="index" @click="updateSelectedPicker(picker.id)">
@@ -55,6 +58,7 @@ import {
   IonRadio,
   IonRadioGroup,
   IonSearchbar,
+  IonSpinner,
   IonTitle,
   IonToolbar,
   alertController,
@@ -88,14 +92,16 @@ export default defineComponent({
     IonToolbar,
     IonRadio,
     IonRadioGroup,
-    IonSearchbar
+    IonSearchbar,
+    IonSpinner
   },
   data () {
     return {
       availablePickers: [] as any,
       queryString: '',
       selectedPicker: {} as any,
-      selectedPickerId: this.order.pickerIds[0]
+      selectedPickerId: this.order.pickerIds[0],
+      isLoading: false
     }
   },
   async mounted() {
@@ -108,6 +114,7 @@ export default defineComponent({
       this.selectedPicker = this.availablePickers.find((picker: any) => picker.id == id)
     },
     async findPickers() {
+      this.isLoading = true;
       let inputFields = {}
       this.availablePickers = []
 
@@ -159,6 +166,7 @@ export default defineComponent({
       } catch (err) {
         logger.error('Failed to fetch the pickers information or there are no pickers available', err)
       }
+      this.isLoading = false;
     },
     async confirmSave() {
       const message = translate("Replace current pickers with new selection?");
