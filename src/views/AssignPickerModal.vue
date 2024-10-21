@@ -164,7 +164,7 @@ export default defineComponent({
       });
     },
     async getPicker(vSize, vIndex) {
-      this.isLoading = true;
+      if(!vIndex) this.isLoading = true;
       let inputFields = {}
 
       if(this.queryString.length > 0) {
