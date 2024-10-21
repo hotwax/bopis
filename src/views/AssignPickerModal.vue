@@ -13,7 +13,11 @@
   <ion-content ref="contentRef" :scroll-events="true" @ionScroll="enableScrolling()">
     <ion-searchbar v-model="queryString" @keyup.enter="queryString = $event.target.value; searchPicker()"/>
 
-    <div class="ion-text-center ion-margin-top" v-if="!availablePickers.length">{{ translate('No picker found') }}</div>
+    <div v-if="isLoading" class="empty-state">
+      <ion-spinner name="crescent" />
+      <ion-label>{{ translate("Fetching pickers") }}</ion-label>
+    </div>
+    <div class="ion-text-center ion-margin-top" v-else-if="!availablePickers.length">{{ translate('No picker found') }}</div>
 
     <ion-list v-else>
       <ion-list-header>{{ translate("Staff") }}</ion-list-header>
@@ -64,11 +68,13 @@ import {
   IonHeader,
   IonIcon,
   IonItem,
+  IonLabel,
   IonList,
   IonListHeader,
   IonRadio,
   IonRadioGroup,
   IonSearchbar,
+  IonSpinner,
   IonTitle,
   IonToolbar,
   IonInfiniteScroll,
@@ -94,11 +100,13 @@ export default defineComponent({
     IonHeader,
     IonIcon,
     IonItem,
+    IonLabel,
     IonList,
     IonListHeader,
     IonRadio,
     IonRadioGroup,
     IonSearchbar,
+    IonSpinner,
     IonTitle,
     IonToolbar,
     IonInfiniteScroll,
@@ -111,7 +119,8 @@ export default defineComponent({
       queryString: '',
       availablePickers: [],
       isScrollable: true,
-      isScrollingEnabled: false
+      isScrollingEnabled: false,
+      isLoading: false
     }
   },
   methods: {
@@ -155,6 +164,7 @@ export default defineComponent({
       });
     },
     async getPicker(vSize, vIndex) {
+      this.isLoading = true;
       let inputFields = {}
 
       if(this.queryString.length > 0) {
@@ -216,6 +226,7 @@ export default defineComponent({
         logger.error(translate('Something went wrong'))
       }
       this.isScrollable = this.availablePickers.length < total;
+      this.isLoading = false;
     }
   },
   async mounted() {

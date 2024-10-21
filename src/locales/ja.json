@@ -44,6 +44,7 @@
   "Failed to update configuration": "設定の更新に失敗しました",
   "Failed to print shipping label and packing slip": "出荷ラベルと納品書の印刷に失敗しました。",
   "Failed to update product store setting.":"Failed to update product store setting.",
+  "Fetching pickers": "Fetching pickers",
   "First name": "名",
   "Generate packing slips": "内容明細票の作成",
   "Generate shipping documents": "出荷書類を生成する",
