@@ -46,6 +46,7 @@
   "Failed to update configuration": "Failed to update configuration",
   "Failed to print shipping label and packing slip": "Failed to print shipping label and packing slip",
   "Failed to update product store setting.": "Failed to update product store setting.",
+  "Fetching pickers": "Fetching pickers",
   "First name": "First name",
   "Generate packing slips": "Generate packing slips",
   "Generate shipping documents": "Generate shipping documents",
