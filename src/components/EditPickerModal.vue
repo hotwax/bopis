@@ -222,7 +222,7 @@ export default defineComponent({
             text: translate("Replace"),
             handler: () => {
               this.resetPicker().then(() => {
-                this.closeModal()
+                this.closeModal({ selectedPicker: this.selectedPicker })
               })
             }
           }
@@ -249,8 +249,8 @@ export default defineComponent({
         logger.error('Something went wrong, could not edit picker')
       }
     },
-    closeModal() {
-      modalController.dismiss({ selectedPicker: this.selectedPicker });
+    closeModal(payload = {}) {
+      modalController.dismiss({ dismissed: true, ...payload });
     },
     getAlreadyAssignedPicker() {
       this.selectedPicker = this.availablePickers.find((picker: any) => this.selectedPickerId === picker.id)
