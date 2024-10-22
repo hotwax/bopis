@@ -10,8 +10,8 @@
     </ion-toolbar>
   </ion-header>
 
-  <ion-content class="ion-padding">
-    <ion-searchbar v-model="queryString" @keyup.enter="queryString = $event.target.value; findPickers()" />
+  <ion-content class="ion-padding" ref="contentRef" :scroll-events="true" @ionScroll="enableScrolling()">
+    <ion-searchbar v-model="queryString" @keyup.enter="queryString = $event.target.value; searchPicker()" />
 
     <ion-list>
       <ion-list-header>{{ translate("Staff") }}</ion-list-header>
@@ -34,12 +34,25 @@
         </ion-radio-group>
       </div>
     </ion-list>
-    <ion-fab vertical="bottom" horizontal="end" slot="fixed">
-      <ion-fab-button :disabled="isPickerAlreadySelected()" @click="confirmSave()">
-        <ion-icon :icon="saveOutline" />
-      </ion-fab-button>
-    </ion-fab>
+
+    <ion-infinite-scroll
+      @ionInfinite="loadMorePickers($event)"
+      threshold="100px"
+      v-show="isScrollable"
+      ref="infiniteScrollRef"
+    >
+      <ion-infinite-scroll-content
+        loading-spinner="crescent"
+        :loading-text="translate('Loading')"
+      />
+    </ion-infinite-scroll>
   </ion-content>
+
+  <ion-fab vertical="bottom" horizontal="end" slot="fixed">
+    <ion-fab-button :disabled="isPickerAlreadySelected()" @click="confirmSave()">
+      <ion-icon :icon="saveOutline" />
+    </ion-fab-button>
+  </ion-fab>
 </template>
 
 <script lang="ts">
@@ -51,6 +64,8 @@ import {
   IonFabButton,
   IonHeader,
   IonIcon,
+  IonInfiniteScroll,
+  IonInfiniteScrollContent,
   IonItem,
   IonLabel,
   IonList,
@@ -82,6 +97,8 @@ export default defineComponent({
     IonContent,
     IonHeader,
     IonIcon,
+    IonInfiniteScroll,
+    IonInfiniteScrollContent,
     IonItem,
     IonFab,
     IonFabButton,
@@ -101,7 +118,9 @@ export default defineComponent({
       queryString: '',
       selectedPicker: {} as any,
       selectedPickerId: this.order.pickerIds[0],
-      isLoading: false
+      isLoading: false,
+      isScrollable: true,
+      isScrollingEnabled: false,
     }
   },
   async mounted() {
@@ -113,59 +132,81 @@ export default defineComponent({
     updateSelectedPicker(id: string) {
       this.selectedPicker = this.availablePickers.find((picker: any) => picker.id == id)
     },
-    async findPickers() {
-      this.isLoading = true;
-      let inputFields = {}
+    enableScrolling() {
+      const parentElement = (this as any).$refs.contentRef.$el
+      const scrollEl = parentElement.shadowRoot.querySelector("div[part='scroll']")
+      let scrollHeight = scrollEl.scrollHeight, infiniteHeight = (this as any).$refs.infiniteScrollRef.$el.offsetHeight, scrollTop = scrollEl.scrollTop, threshold = 100, height = scrollEl.offsetHeight
+      const distanceFromInfinite = scrollHeight - infiniteHeight - scrollTop - threshold - height
+      if(distanceFromInfinite < 0) {
+        this.isScrollingEnabled = false;
+      } else {
+        this.isScrollingEnabled = true;
+      }
+    },
+    async loadMorePickers(event: any) {
+      // Added this check here as if added on infinite-scroll component the Loading content does not gets displayed
+      if(!(this.isScrollingEnabled && this.isScrollable)) {
+        await event.target.complete();
+      }
+      this.findPickers(
+        undefined,
+        Math.ceil(
+          this.availablePickers.length / (process.env.VUE_APP_VIEW_SIZE)
+        ).toString()
+      ).then(async () => {
+        await event.target.complete();
+      });
+    },
+    async searchPicker() {
       this.availablePickers = []
+      this.findPickers()
+    },
+    async findPickers(vSize?: any, vIndex?: any) {
+      if(!vIndex) this.isLoading = true;
+      const viewSize = vSize ? vSize : process.env.VUE_APP_VIEW_SIZE;
+      let query = {}
 
-      if (this.queryString.length > 0) {
-        inputFields = {
-          firstName_value: this.queryString,
-          firstName_op: 'contains',
-          firstName_ic: 'Y',
-          firstName_grp: '1',
-          lastName_value: this.queryString,
-          lastName_op: 'contains',
-          lastName_ic: 'Y',
-          lastName_grp: '2',
-          partyId_value: this.queryString,
-          partyId_op: 'contains',
-          partyId_ic: 'Y',
-          partyId_grp: '3',
-          groupName_value: this.queryString,
-          groupName_op: 'contains',
-          groupName_ic: 'Y',
-          groupName_grp: '4'
-        }
+      if(this.queryString.length > 0) {
+        let keyword = this.queryString.trim().split(' ')
+        query = `(${keyword.map(key => `*${key}*`).join(' OR ')}) OR "${this.queryString}"^100`;
+      }
+      else {
+        query = `*:*`
       }
 
       const payload = {
-        inputFields: {
-          ...inputFields,
-          roleTypeIdTo: 'WAREHOUSE_PICKER'
-        },
-        viewSize: 50,
-        entityName: 'PartyRelationshipAndDetail',
-        noConditionFind: 'Y',
-        orderBy: "firstName ASC",
-        filterByDate: "Y",
-        distinct: "Y",
-        fieldList: ["firstName", "lastName", "partyId", "groupName"]
+        "json": {
+          "params": {
+            "rows": viewSize,
+            "start": viewSize*vIndex,
+            "q": query,
+            "defType" : "edismax",
+            "qf": "firstName lastName groupName partyId externalId",
+            "sort": "firstName asc"
+          },
+          "filter": ["docType:EMPLOYEE", "WAREHOUSE_PICKER_role:true"]
+        }
       }
-      
+      let total = 0;
+
       try {
         const resp = await PicklistService.getAvailablePickers(payload);
-        if (resp.status === 200 && !hasError(resp)) {
-          this.availablePickers = resp.data.docs.map((picker: any) => ({
-            name: picker.groupName ? picker.groupName : `${picker.firstName} ${picker.lastName}`,  
-            id: picker.partyId
+        if (resp.status === 200 && !hasError(resp) && resp.data.response.docs.length > 0) {
+          const pickers = resp.data.response.docs.map((picker: any) => ({
+            name: picker.groupName ? picker.groupName : (picker.firstName || picker.lastName)
+                ? (picker.firstName ? picker.firstName : '') + (picker.lastName ? ' ' + picker.lastName : '') : picker.partyId,
+            id: picker.partyId,
+            externalId: picker.externalId
           }))
+          this.availablePickers = this.availablePickers.concat(pickers);
+          total = resp.data.response?.numFound;
         } else {
-          throw resp.data
+          logger.error(translate('Something went wrong'))
         }
       } catch (err) {
-        logger.error('Failed to fetch the pickers information or there are no pickers available', err)
+        logger.error(translate('Something went wrong'))
       }
+      this.isScrollable = this.availablePickers.length < total;
       this.isLoading = false;
     },
     async confirmSave() {
