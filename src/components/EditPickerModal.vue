@@ -201,10 +201,10 @@ export default defineComponent({
           this.availablePickers = this.availablePickers.concat(pickers);
           total = resp.data.response?.numFound;
         } else {
-          logger.error(translate('Something went wrong'))
+          throw resp.data;
         }
       } catch (err) {
-        logger.error(translate('Something went wrong'))
+        logger.error('Failed to fetch the pickers information or there are no pickers available', err)
       }
       this.isScrollable = this.availablePickers.length < total;
       this.isLoading = false;
