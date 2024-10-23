@@ -140,7 +140,7 @@ export default defineComponent({
     },
     enableScrolling() {
       const parentElement = (this).$refs.contentRef.$el
-      const scrollEl = parentElement.shadowRoot.querySelector("main[part='scroll']")
+      const scrollEl = parentElement.shadowRoot.querySelector("div[part='scroll']")
       let scrollHeight = scrollEl.scrollHeight, infiniteHeight = (this).$refs.infiniteScrollRef.$el.offsetHeight, scrollTop = scrollEl.scrollTop, threshold = 100, height = scrollEl.offsetHeight
       const distanceFromInfinite = scrollHeight - infiniteHeight - scrollTop - threshold - height
       if(distanceFromInfinite < 0) {
@@ -165,60 +165,43 @@ export default defineComponent({
     },
     async getPicker(vSize, vIndex) {
       if(!vIndex) this.isLoading = true;
-      let inputFields = {}
+      const viewSize = vSize ? vSize : process.env.VUE_APP_VIEW_SIZE;
+      let query = {}
 
       if(this.queryString.length > 0) {
-
-        inputFields = {
-          firstName_value: this.queryString,
-          firstName_op: 'contains',
-          firstName_ic: 'Y',
-          firstName_grp: '1',
-          externalId_value: this.queryString,
-          externalId_op: 'contains',
-          externalId_ic: 'Y',
-          externalId_grp: '2',
-          lastName_value: this.queryString,
-          lastName_op: 'contains',
-          lastName_ic: 'Y',
-          lastName_grp: '3',
-          partyId_value: this.queryString,
-          partyId_op: 'contains',
-          partyId_ic: 'Y',
-          partyId_grp: '4',
-          groupName_value: this.queryString,
-          groupName_op: 'contains',
-          groupName_ic: 'Y',
-          groupName_grp: '5'
-        }
+        let keyword = this.queryString.trim().split(' ')
+        query = `(${keyword.map(key => `*${key}*`).join(' OR ')}) OR "${this.queryString}"^100`;
+      }
+      else {
+        query = `*:*`
       }
 
       const payload = {
-        inputFields: {
-          ...inputFields,
-          roleTypeIdTo: 'WAREHOUSE_PICKER'
-        },
-        viewSize: vSize ? vSize : process.env.VUE_APP_VIEW_SIZE,
-        viewIndex: vIndex ? vIndex : 0,
-        entityName: 'PartyRelationshipAndDetail',
-        noConditionFind: 'Y',
-        orderBy: "firstName ASC",
-        filterByDate: "Y",
-        distinct: "Y",
-        fieldList: ["firstName", "lastName", "partyId", "groupName"]
+        "json": {
+          "params": {
+            "rows": viewSize,
+            "start": viewSize*vIndex,
+            "q": query,
+            "defType" : "edismax",
+            "qf": "firstName lastName groupName partyId externalId",
+            "sort": "firstName asc"
+          },
+          "filter": ["docType:EMPLOYEE", "WAREHOUSE_PICKER_role:true"]
+        }
       }
-      let resp;
       let total = 0;
-      
+
       try {
-        resp = await PicklistService.getAvailablePickers(payload);
-        if (resp.status === 200 && !hasError(resp) && resp.data.docs.length > 0) {
-          const pickers = resp.data.docs.map((picker) => ({
-            name: picker.groupName ? picker.groupName : `${picker.firstName} ${picker.lastName}`,  
-            id: picker.partyId
+        const resp = await PicklistService.getAvailablePickers(payload);
+        if (resp.status === 200 && !hasError(resp) && resp.data.response.docs.length > 0) {
+          const pickers = resp.data.response.docs.map((picker) => ({
+            name: picker.groupName ? picker.groupName : (picker.firstName || picker.lastName)
+                ? (picker.firstName ? picker.firstName : '') + (picker.lastName ? ' ' + picker.lastName : '') : picker.partyId,
+            id: picker.partyId,
+            externalId: picker.externalId
           }))
           this.availablePickers = this.availablePickers.concat(pickers);
-          total = resp.data.count;
+          total = resp.data.response?.numFound;
         } else {
           logger.error(translate('Something went wrong'))
         }
