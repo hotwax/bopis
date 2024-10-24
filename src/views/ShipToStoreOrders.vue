@@ -406,7 +406,8 @@ export default defineComponent({
       return alert.present();
     },
   },
-  ionViewWillEnter() {
+  async ionViewWillEnter() {
+    await this.store.dispatch("user/fetchBopisProductStoreSettings");
     this.isScrollingEnabled = false;
     this.queryString = '';
     if (this.segmentSelected === 'incoming') {
