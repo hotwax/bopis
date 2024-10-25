@@ -36,7 +36,7 @@ import { dxpComponents } from '@hotwax/dxp-components'
 import localeMessages from './locales';
 import { login, logout, loader } from '@/utils/user';
 import { addNotification, storeClientRegistrationToken } from '@/utils/firebase';
-import { getConfig, getProductIdentificationPref, initialise, setProductIdentificationPref, setUserLocale, getAvailableTimeZones, setUserTimeZone } from '@/adapter';
+import { getConfig, fetchGoodIdentificationTypes, getProductIdentificationPref, initialise, setProductIdentificationPref, setUserLocale, getAvailableTimeZones, setUserTimeZone } from '@/adapter';
 import logger from './logger';
 
 const app = createApp(App)
@@ -61,6 +61,7 @@ const app = createApp(App)
     appFirebaseVapidKey: process.env.VUE_APP_FIREBASE_VAPID_KEY,
     defaultImgUrl: require("@/assets/images/defaultImage.png"),
     getConfig,
+    fetchGoodIdentificationTypes,
     getProductIdentificationPref,
     initialise,
     loader,
