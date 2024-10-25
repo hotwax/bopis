@@ -112,7 +112,7 @@ const rejectOrderItem = async (payload: any): Promise <any> => {
 
 const createPicklist = async (query: any): Promise <any> => {
   const baseURL = store.getters['user/getBaseUrl'];
-  return client({
+  return api({
     url: 'createPicklist',
     method: 'POST',
     data: query,
