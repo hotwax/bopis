@@ -176,6 +176,7 @@ const actions: ActionTree<UserState, RootState> = {
    * update current facility information
    */
   async setFacility ({ commit, dispatch, state }, payload) {
+    const token = store.getters['user/getUserToken'];
     let facility = payload.facility;
     if(!facility && state.current?.facilities) {
       facility = state.current.facilities.find((facility: any) => facility.facilityId === payload.facilityId);
@@ -184,7 +185,7 @@ const actions: ActionTree<UserState, RootState> = {
     dispatch("order/clearOrders", null, {root: true})
     dispatch("product/clearProducts", null, {root: true})
     commit(types.USER_CURRENT_FACILITY_UPDATED, facility);
-    const eComStore = await UserService.getCurrentEComStore(undefined, facility?.facilityId);
+    const eComStore = await UserService.getCurrentEComStore(token, facility?.facilityId);
     commit(types.USER_CURRENT_ECOM_STORE_UPDATED, eComStore)
 
     await useProductIdentificationStore().getIdentificationPref(eComStore?.productStoreId)
