@@ -356,14 +356,9 @@ const actions: ActionTree<UserState, RootState> = {
       logger.error(err)
     }
 
-    const enumIdsToCreate = Object.keys(productStoreSettings).filter((settingTypeEnumId) => !Object.keys(settingValues).includes(settingTypeEnumId));
-
-    await Promise.allSettled(enumIdsToCreate.map(async (enumId: any) => {
-      await dispatch("createProductStoreSetting", productStoreSettings[enumId])
-    }))
-    
-    enumIdsToCreate.map((enumId: any) => settingValues[enumId] = false)
-
+    //Set default to false if there is no product setting exists
+    const missingSettings = Object.keys(productStoreSettings).filter((settingTypeEnumId) => !Object.keys(settingValues).includes(settingTypeEnumId));
+    missingSettings.map((settingTypeEnumId: any) => settingValues[settingTypeEnumId] = false)
     commit(types.USER_BOPIS_PRODUCT_STORE_SETTINGS_UPDATED, settingValues)
   },
 
@@ -413,7 +408,7 @@ const actions: ActionTree<UserState, RootState> = {
     let fromDate;
 
     try {
-      const resp = await UtilService.getProductStoreSettings({
+      let resp = await UtilService.getProductStoreSettings({
         "inputFields": {
           "productStoreId": this.state.user.currentEComStore.productStoreId,
           "settingTypeEnumId": payload.enumId
@@ -425,29 +420,21 @@ const actions: ActionTree<UserState, RootState> = {
       }) as any
       if(!hasError(resp)) {
         fromDate = resp.data.docs[0]?.fromDate
-      }
-    } catch(err) {
-      logger.error(err)
-    }
-
-    if(!fromDate) {
-      fromDate = await dispatch("createProductStoreSetting", productStoreSettings[payload.enumId]);
-    }
-
-    const params = {
-      "fromDate": fromDate,
-      "productStoreId": eComStoreId,
-      "settingTypeEnumId": payload.enumId,
-      "settingValue": `${payload.value}`
-    }
-
-    try {
-      const resp = await UtilService.updateProductStoreSetting(params) as any
-
-      if((!hasError(resp))) {
-        prefValue = payload.value
+        const params = {
+          "fromDate": fromDate,
+          "productStoreId": eComStoreId,
+          "settingTypeEnumId": payload.enumId,
+          "settingValue": `${payload.value}`
+        }
+        
+        resp = await UtilService.updateProductStoreSetting(params) as any
+        if((!hasError(resp))) {
+          prefValue = payload.value
+        } else {
+          throw resp.data;
+        }
       } else {
-        throw resp.data;
+        throw resp.data
       }
     } catch(err) {
       showToast(translate("Failed to update product store setting."))
