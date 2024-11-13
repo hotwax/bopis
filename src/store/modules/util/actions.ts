@@ -11,6 +11,7 @@ const actions: ActionTree<UtilState, RootState> = {
   async fetchRejectReasons({ commit }) {
     const permissions = store.getters['user/getUserPermissions'];
     const isAdminUser = permissions.some((permission: any) => permission.action === "APP_STOREFULFILLMENT_ADMIN")
+    let isAdminReasonsNeeded = false;
 
     let rejectReasons = [];
     let payload = {
@@ -53,6 +54,33 @@ const actions: ActionTree<UtilState, RootState> = {
       }
     } catch (err) {
       logger.error('Failed to fetch reject reasons', err)
+      if(!isAdminUser) isAdminReasonsNeeded = true;
+    }
+
+    // Refetching all rejection reasons if the api fails to fetch bopis rejection reason due to no entity found.
+    // Todo: revert these changes when all the oms are updated.
+    if(isAdminReasonsNeeded) {
+      try {
+        const resp = await UtilService.fetchRejectReasons({
+          "inputFields": {
+            "parentEnumTypeId": ["REPORT_AN_ISSUE", "RPRT_NO_VAR_LOG"],
+            "parentEnumTypeId_op": "in"
+          },
+          "fieldList": ["enumId", "description"],
+          "entityName": "EnumTypeChildAndEnum",
+          "distinct": "Y",
+          "viewSize": 100,
+          "orderBy": "sequenceNum"
+        })
+  
+        if(!hasError(resp)) {
+          rejectReasons = resp.data.docs
+        } else {
+          throw resp.data;
+        }
+      } catch(err) {
+        logger.error('Failed to fetch reject reasons', err)
+      }
     }
 
     commit(types.UTIL_REJECT_REASONS_UPDATED, rejectReasons)
