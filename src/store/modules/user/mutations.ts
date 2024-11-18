@@ -10,21 +10,14 @@ const mutations: MutationTree <UserState> = {
       state.token = ''
       state.current = {}
       state.permissions = []
-      state.preference= {
-        showShippingOrders: false,
-        showPackingSlip: false,
-        configurePicker: false
-      },
-      state.allNotificationPrefs = []
+      state.allNotificationPrefs = [],
+      state.bopisProductStoreSettings = {}
     },
     [types.USER_INFO_UPDATED] (state, payload) {
         state.current = payload
     },
     [types.USER_INSTANCE_URL_UPDATED] (state, payload) {
         state.instanceUrl = payload;
-    },
-    [types.USER_PREFERENCE_UPDATED] (state, payload) {
-        state.preference = {...state.preference, ...payload};
     },
     [types.USER_CURRENT_ECOM_STORE_UPDATED] (state, payload) {
         state.currentEComStore = payload
@@ -49,6 +42,9 @@ const mutations: MutationTree <UserState> = {
     },
     [types.USER_ALL_NOTIFICATION_PREFS_UPDATED] (state, payload) {
         state.allNotificationPrefs = payload
+    },
+    [types.USER_BOPIS_PRODUCT_STORE_SETTINGS_UPDATED] (state, payload) {
+        state.bopisProductStoreSettings = payload
     }
     
 }

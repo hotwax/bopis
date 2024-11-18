@@ -2,7 +2,6 @@ export default interface UserState {
     token: string;
     current: any;
     instanceUrl: string;
-    preference: any;
     permissions: any;
     currentEComStore: any;
     partialOrderRejectionConfig: any
@@ -11,4 +10,5 @@ export default interface UserState {
     firebaseDeviceId: string;
     hasUnreadNotifications: boolean;
     allNotificationPrefs: any;
+    bopisProductStoreSettings: any;
 }

@@ -28,7 +28,7 @@ import "@hotwax/apps-theme";
 
 import store from './store'
 
-import permissionPlugin from '@/authorization';
+import permissionPlugin, { Actions, hasPermission } from '@/authorization';
 import permissionRules from '@/authorization/Rules';
 import permissionActions from '@/authorization/Actions';
 
@@ -36,7 +36,7 @@ import { dxpComponents } from '@hotwax/dxp-components'
 import localeMessages from './locales';
 import { login, logout, loader } from '@/utils/user';
 import { addNotification, storeClientRegistrationToken } from '@/utils/firebase';
-import { getConfig, getProductIdentificationPref, getUserFacilities, getUserPreference, initialise, setProductIdentificationPref, setUserLocale, getAvailableTimeZones, setUserTimeZone, setUserPreference } from '@/adapter';
+import { getConfig, fetchGoodIdentificationTypes, getProductIdentificationPref, getUserFacilities, getUserPreference, initialise, setProductIdentificationPref, setUserLocale, getAvailableTimeZones, setUserTimeZone, setUserPreference } from '@/adapter';
 import logger from './logger';
 
 const app = createApp(App)
@@ -54,12 +54,14 @@ const app = createApp(App)
     actions: permissionActions
   })
   .use(dxpComponents, {
+    Actions,
     addNotification,
     appLoginUrl: process.env.VUE_APP_LOGIN_URL as string,
     appFirebaseConfig: JSON.parse(process.env.VUE_APP_FIREBASE_CONFIG),
     appFirebaseVapidKey: process.env.VUE_APP_FIREBASE_VAPID_KEY,
     defaultImgUrl: require("@/assets/images/defaultImage.png"),
     getConfig,
+    fetchGoodIdentificationTypes,
     getProductIdentificationPref,
     initialise,
     loader,
@@ -70,6 +72,7 @@ const app = createApp(App)
     setUserLocale,
     storeClientRegistrationToken,
     getAvailableTimeZones,
+    hasPermission,
     setUserTimeZone,
     getUserFacilities,
     setUserPreference,

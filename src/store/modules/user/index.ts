@@ -11,11 +11,6 @@ const userModule: Module<UserState, RootState> = {
       token: '',
       current: {},
       instanceUrl: '',
-      preference: {
-        showShippingOrders: false,
-        showPackingSlip: false,
-        configurePicker: false
-      },
       currentEComStore: {},
       partialOrderRejectionConfig: {},
       permissions: [],
@@ -23,7 +18,8 @@ const userModule: Module<UserState, RootState> = {
       notificationPrefs: [],
       firebaseDeviceId: '',
       hasUnreadNotifications: true,
-      allNotificationPrefs: []
+      allNotificationPrefs: [],
+      bopisProductStoreSettings: {}
     },
     getters,
     actions,

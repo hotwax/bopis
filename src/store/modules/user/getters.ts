@@ -24,15 +24,6 @@ const getters: GetterTree <UserState, RootState> = {
         const baseUrl = process.env.VUE_APP_BASE_URL;
         return baseUrl ? baseUrl : state.instanceUrl;
     },
-    showShippingOrders (state) {
-        return state.preference.showShippingOrders;
-    },
-    configurePicker (state) {
-        return state.preference.configurePicker;
-    },
-    showPackingSlip (state) {
-        return state.preference.showPackingSlip;
-    },
     getCurrency (state) {
         return state.currentEComStore.defaultCurrencyUomId ? state.currentEComStore.defaultCurrencyUomId : 'USD';
     },
@@ -59,6 +50,10 @@ const getters: GetterTree <UserState, RootState> = {
     },
     getAllNotificationPrefs(state) {
         return state.allNotificationPrefs
-    }
+    },
+    getBopisProductStoreSettings: (state) => (enumId: string) => {
+        return state.bopisProductStoreSettings[enumId]
+    },
+
 }
 export default getters;

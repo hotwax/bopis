@@ -13,7 +13,11 @@
   <ion-content ref="contentRef" :scroll-events="true" @ionScroll="enableScrolling()">
     <ion-searchbar v-model="queryString" @keyup.enter="queryString = $event.target.value; searchPicker()"/>
 
-    <div class="ion-text-center ion-margin-top" v-if="!availablePickers.length">{{ translate('No picker found') }}</div>
+    <div v-if="isLoading" class="empty-state">
+      <ion-spinner name="crescent" />
+      <ion-label>{{ translate("Fetching pickers") }}</ion-label>
+    </div>
+    <div class="empty-state" v-else-if="!availablePickers.length">{{ translate('No picker found') }}</div>
 
     <ion-list v-else>
       <ion-list-header>{{ translate("Staff") }}</ion-list-header>
@@ -64,11 +68,13 @@ import {
   IonHeader,
   IonIcon,
   IonItem,
+  IonLabel,
   IonList,
   IonListHeader,
   IonRadio,
   IonRadioGroup,
   IonSearchbar,
+  IonSpinner,
   IonTitle,
   IonToolbar,
   IonInfiniteScroll,
@@ -94,11 +100,13 @@ export default defineComponent({
     IonHeader,
     IonIcon,
     IonItem,
+    IonLabel,
     IonList,
     IonListHeader,
     IonRadio,
     IonRadioGroup,
     IonSearchbar,
+    IonSpinner,
     IonTitle,
     IonToolbar,
     IonInfiniteScroll,
@@ -111,7 +119,8 @@ export default defineComponent({
       queryString: '',
       availablePickers: [],
       isScrollable: true,
-      isScrollingEnabled: false
+      isScrollingEnabled: false,
+      isLoading: false
     }
   },
   methods: {
@@ -124,15 +133,14 @@ export default defineComponent({
     },
     readyForPickup () {
       if (this.selectedPicker) {
-        this.store.dispatch('order/packShipGroupItems', { order: this.order, part: this.part, facilityId: this.facilityId, selectedPicker: this.selectedPicker })
-        modalController.dismiss({ dismissed: true });
+        modalController.dismiss({ dismissed: true, selectedPicker: this.selectedPicker });
       } else {
         showToast(translate('Select a picker'))
       }
     },
     enableScrolling() {
       const parentElement = (this).$refs.contentRef.$el
-      const scrollEl = parentElement.shadowRoot.querySelector("main[part='scroll']")
+      const scrollEl = parentElement.shadowRoot.querySelector("div[part='scroll']")
       let scrollHeight = scrollEl.scrollHeight, infiniteHeight = (this).$refs.infiniteScrollRef.$el.offsetHeight, scrollTop = scrollEl.scrollTop, threshold = 100, height = scrollEl.offsetHeight
       const distanceFromInfinite = scrollHeight - infiniteHeight - scrollTop - threshold - height
       if(distanceFromInfinite < 0) {
@@ -156,60 +164,44 @@ export default defineComponent({
       });
     },
     async getPicker(vSize, vIndex) {
-      let inputFields = {}
+      if(!vIndex) this.isLoading = true;
+      const viewSize = vSize ? vSize : process.env.VUE_APP_VIEW_SIZE;
+      let query = {}
 
       if(this.queryString.length > 0) {
-
-        inputFields = {
-          firstName_value: this.queryString,
-          firstName_op: 'contains',
-          firstName_ic: 'Y',
-          firstName_grp: '1',
-          externalId_value: this.queryString,
-          externalId_op: 'contains',
-          externalId_ic: 'Y',
-          externalId_grp: '2',
-          lastName_value: this.queryString,
-          lastName_op: 'contains',
-          lastName_ic: 'Y',
-          lastName_grp: '3',
-          partyId_value: this.queryString,
-          partyId_op: 'contains',
-          partyId_ic: 'Y',
-          partyId_grp: '4',
-          groupName_value: this.queryString,
-          groupName_op: 'contains',
-          groupName_ic: 'Y',
-          groupName_grp: '5'
-        }
+        let keyword = this.queryString.trim().split(' ')
+        query = `(${keyword.map(key => `*${key}*`).join(' OR ')}) OR "${this.queryString}"^100`;
+      }
+      else {
+        query = `*:*`
       }
 
       const payload = {
-        inputFields: {
-          ...inputFields,
-          roleTypeIdTo: 'WAREHOUSE_PICKER'
-        },
-        viewSize: vSize ? vSize : process.env.VUE_APP_VIEW_SIZE,
-        viewIndex: vIndex ? vIndex : 0,
-        entityName: 'PartyRelationshipAndDetail',
-        noConditionFind: 'Y',
-        orderBy: "firstName ASC",
-        filterByDate: "Y",
-        distinct: "Y",
-        fieldList: ["firstName", "lastName", "partyId", "groupName"]
+        "json": {
+          "params": {
+            "rows": viewSize,
+            "start": viewSize*vIndex,
+            "q": query,
+            "defType" : "edismax",
+            "qf": "firstName lastName groupName partyId externalId",
+            "sort": "firstName asc"
+          },
+          "filter": ["docType:EMPLOYEE", "WAREHOUSE_PICKER_role:true"]
+        }
       }
-      let resp;
       let total = 0;
-      
+
       try {
-        resp = await PicklistService.getAvailablePickers(payload);
-        if (resp.status === 200 && !hasError(resp) && resp.data.docs.length > 0) {
-          const pickers = resp.data.docs.map((picker) => ({
-            name: picker.groupName ? picker.groupName : `${picker.firstName} ${picker.lastName}`,  
-            id: picker.partyId
+        const resp = await PicklistService.getAvailablePickers(payload);
+        if (resp.status === 200 && !hasError(resp) && resp.data.response.docs.length > 0) {
+          const pickers = resp.data.response.docs.map((picker) => ({
+            name: picker.groupName ? picker.groupName : (picker.firstName || picker.lastName)
+                ? (picker.firstName ? picker.firstName : '') + (picker.lastName ? ' ' + picker.lastName : '') : picker.partyId,
+            id: picker.partyId,
+            externalId: picker.externalId
           }))
           this.availablePickers = this.availablePickers.concat(pickers);
-          total = resp.data.count;
+          total = resp.data.response?.numFound;
         } else {
           logger.error(translate('Something went wrong'))
         }
@@ -217,6 +209,7 @@ export default defineComponent({
         logger.error(translate('Something went wrong'))
       }
       this.isScrollable = this.availablePickers.length < total;
+      this.isLoading = false;
     }
   },
   async mounted() {

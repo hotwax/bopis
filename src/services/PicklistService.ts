@@ -2,10 +2,9 @@ import { api } from '@/adapter';
 
 const getAvailablePickers = async (query: any): Promise <any> => {
   return api({
-    url: 'performFind',
-    method: 'POST',
+    url: "solr-query",
+    method: "post",
     data: query,
-    cache: true
   })
 }
 

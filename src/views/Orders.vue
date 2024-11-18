@@ -71,6 +71,10 @@
               <ion-button :disabled="!hasPermission(Actions.APP_ORDER_UPDATE)" fill="clear" @click.stop="readyForPickup(order, order.part)">
                 {{ order.part.shipmentMethodEnum?.shipmentMethodEnumId === 'STOREPICKUP' ? translate("Ready for pickup") : translate("Ready to ship") }}
               </ion-button>
+              <div></div>
+              <ion-button v-if="getBopisProductStoreSettings('PRINT_PICKLISTS')" slot="end" fill="clear" @click.stop="printPicklist(order, order.part)">
+                <ion-icon :icon="printOutline" slot="icon-only" />
+              </ion-button>
             </div>
           </ion-card>
         </div>
@@ -82,7 +86,7 @@
               <ion-label class="ion-text-wrap">
                 <h1>{{ order.customer.name }}</h1>
                 <p>{{ order.orderName ? order.orderName : order.orderId }}</p>
-                <p v-if="configurePicker">{{ order.pickers ? translate("Picked by", { pickers: order.pickers }) : translate("No picker assigned.") }}</p>
+                <p v-if="getBopisProductStoreSettings('ENABLE_TRACKING')">{{ order.pickers ? translate("Picked by", { pickers: order.pickers }) : translate("No picker assigned.") }}</p>
               </ion-label>
               <ion-badge v-if="order.placedDate" color="dark" slot="end">{{ timeFromNow(order.placedDate) }}</ion-badge>
             </ion-item>
@@ -114,7 +118,7 @@
               <ion-button :disabled="!hasPermission(Actions.APP_ORDER_UPDATE)" fill="clear" @click.stop="deliverShipment(order)">
                 {{ order.part.shipmentMethodEnum.shipmentMethodEnumId === 'STOREPICKUP' ? translate("Handover") : translate("Ship") }}
               </ion-button>
-              <ion-button v-if="showPackingSlip" fill="clear" slot="end" @click.stop="printPackingSlip(order)">
+              <ion-button v-if="getBopisProductStoreSettings('PRINT_PACKING_SLIPS')" fill="clear" slot="end" @click.stop="printPackingSlip(order)">
                 <ion-icon slot="icon-only" :icon="printOutline" />
               </ion-button>
               <ion-button v-if="order.part.shipmentMethodEnum.shipmentMethodEnumId === 'STOREPICKUP'" fill="clear" slot="end" @click.stop="sendReadyForPickupEmail(order)">
@@ -209,6 +213,7 @@ import { api, hasError } from '@/adapter';
 import { translate, useUserStore } from "@hotwax/dxp-components";
 import AssignPickerModal from "./AssignPickerModal.vue";
 import { OrderService } from "@/services/OrderService";
+import { UserService } from "@/services/UserService";
 import { Actions, hasPermission } from '@/authorization'
 import logger from "@/logger";
 
@@ -251,9 +256,9 @@ export default defineComponent({
       isPackedOrdersScrollable: 'order/isPackedOrdersScrollable',
       isOpenOrdersScrollable: 'order/isOpenOrdersScrollable',
       isCompletedOrdersScrollable: 'order/isCompletedOrdersScrollable',
-      showPackingSlip: 'user/showPackingSlip',
       notifications: 'user/getNotifications',
-      unreadNotificationsStatus: 'user/getUnreadNotificationsStatus'
+      unreadNotificationsStatus: 'user/getUnreadNotificationsStatus',
+      getBopisProductStoreSettings: 'user/getBopisProductStoreSettings'
     })
   },
   data() {
@@ -268,6 +273,13 @@ export default defineComponent({
         component: AssignPickerModal,
         componentProps: { order, part, facilityId }
       });
+
+      assignPickerModal.onDidDismiss().then(async(result: any) => {
+        if(result.data?.selectedPicker) {
+          await this.store.dispatch('order/packShipGroupItems', { order, part, facilityId, selectedPicker: result.data.selectedPicker })
+        }
+      })
+
       return assignPickerModal.present();
     },
     timeFromNow (time: any) {
@@ -378,7 +390,7 @@ export default defineComponent({
       }
     },
     async readyForPickup (order: any, part: any) {
-      if(this.configurePicker) return this.assignPicker(order, part, this.currentFacility?.facilityId);
+      if(this.getBopisProductStoreSettings('ENABLE_TRACKING') && order.isPicked !== 'Y') return this.assignPicker(order, part, this.currentFacility?.facilityId);
       const pickup = part.shipmentMethodEnum?.shipmentMethodEnumId === 'STOREPICKUP';
       const header = pickup ? translate('Ready for pickup') : translate('Ready to ship');
       const message = pickup ? translate('An email notification will be sent to that their order is ready for pickup. This order will also be moved to the packed orders tab.', { customerName: order.customer.name, space: '<br/><br/>'}) : '';
@@ -393,11 +405,33 @@ export default defineComponent({
           },{
             text: header,
             handler: () => {
-              this.store.dispatch('order/packShipGroupItems', {order, part, facilityId: this.currentFacility?.facilityId})
+              if(!pickup) {
+                this.packShippingOrders(order, part);
+              } else {
+                this.store.dispatch('order/packShipGroupItems', {order, part, facilityId: this.currentFacility?.facilityId})
+              }
             }
           }]
         });
       return alert.present();
+    },
+    async packShippingOrders(currentOrder: any, part: any) {
+      try {
+        const resp = await OrderService.packOrder({
+          'picklistBinId': currentOrder.picklistBinId,
+          'orderId': currentOrder.orderId
+        })
+
+        if(!hasError(resp)) {
+          showToast(translate("Order packed and ready for delivery"));
+          this.store.dispatch("order/removeOpenOrder", { order: currentOrder, part })
+        } else {
+          throw resp.data;
+        }
+      } catch(error: any) {
+        logger.error(error);
+        showToast(translate("Something went wrong"))
+      }
     },
     async deliverShipment (order: any) {
       await this.store.dispatch('order/deliverShipment', order)
@@ -472,6 +506,79 @@ export default defineComponent({
     viewNotifications() {
       this.store.dispatch('user/setUnreadNotificationsStatus', false)
       this.$router.push({ path: '/notifications' })
+    },
+    async printPicklist(order: any, part: any) {
+      if(order.isPicked === 'Y') {
+        await OrderService.printPicklist(order.picklistId)
+        return;
+      }
+
+      if(!this.getBopisProductStoreSettings('ENABLE_TRACKING')) {
+        try {
+          const resp = await UserService.ensurePartyRole({
+            partyId: "_NA_",
+            roleTypeId: "WAREHOUSE_PICKER",
+          })
+
+          if(hasError(resp)) {
+            throw resp.data;
+          }
+        } catch (error) {
+          showToast(translate("Something went wrong. Picklist can not be created."));
+          logger.error(error)
+          return;
+        }
+        await this.createPicklist(order, "_NA_");
+        return;
+      }
+
+      const assignPickerModal = await modalController.create({
+        component: AssignPickerModal,
+        componentProps: { order, part, facilityId: this.currentFacility.facilityId }
+      });
+
+      assignPickerModal.onDidDismiss().then(async(result: any) => {
+        if(result.data?.selectedPicker) {
+          this.createPicklist(order, result.data.selectedPicker)
+        }
+      })
+
+      return assignPickerModal.present();
+    },
+    async createPicklist(order: any, selectedPicker: any) {
+      let resp;
+
+      const items = order.parts[0].items;
+      const formData = new FormData();
+      formData.append("facilityId", items[0].facilityId);
+      items.map((item: any, index: number) => {
+        formData.append("itemStatusId_o_"+index, "PICKITEM_PENDING")
+        formData.append("pickerIds_o_"+index, selectedPicker)
+        formData.append("picked_o_"+index, item.quantity)
+        Object.keys(item).map((property) => {
+          if(property !== "facilityId") formData.append(property+'_o_'+index, item[property])
+        })
+      });
+
+      try {
+        resp = await OrderService.createPicklist(formData);
+        if(!hasError(resp)) {
+          // generating picklist after creating a new picklist
+          await OrderService.printPicklist(resp.data.picklistId)
+          const orders = JSON.parse(JSON.stringify(this.orders))
+          const updatedOrder = orders.find((currentOrder: any) => currentOrder.orderId === order.orderId);
+          updatedOrder["isPicked"] = "Y"
+          updatedOrder["picklistId"] = resp.data.picklistId
+          updatedOrder["picklistBinId"] = resp.data.picklistBinId
+          this.store.dispatch("order/updateOpenOrder", { orders, total: orders.length })
+        } else {
+          throw resp.data;
+        }
+      } catch (err) {
+        showToast(translate('Something went wrong. Picklist can not be created.'));
+        emitter.emit("dismissLoader");
+        return;
+      }
     }
   },
   ionViewWillEnter () {

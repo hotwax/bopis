@@ -14,7 +14,7 @@
           <ion-button v-if="orderType === 'open'" class="ion-hide-md-up" :disabled="!order?.orderId || !hasPermission(Actions.APP_ORDER_UPDATE) || order.readyToHandover || order.readyToShip || order.rejected" @click="rejectOrder()">
             <ion-icon slot="icon-only" color="danger" :icon="bagRemoveOutline" />
           </ion-button>
-          <ion-button v-else-if="orderType === 'packed' && showPackingSlip" :class="order.part?.shipmentMethodEnum?.shipmentMethodEnumId !== 'STOREPICKUP' ? 'ion-hide-md-up' : ''" :disabled="!order?.orderId || !hasPermission(Actions.APP_ORDER_UPDATE) || order.handovered || order.shipped" @click="order.part?.shipmentMethodEnum?.shipmentMethodEnumId === 'STOREPICKUP' ? printPackingSlip(order) : printShippingLabelAndPackingSlip(order)">
+          <ion-button v-else-if="orderType === 'packed' && getBopisProductStoreSettings('PRINT_PACKING_SLIPS')" :class="order.part?.shipmentMethodEnum?.shipmentMethodEnumId !== 'STOREPICKUP' ? 'ion-hide-md-up' : ''" :disabled="!order?.orderId || !hasPermission(Actions.APP_ORDER_UPDATE) || order.handovered || order.shipped" @click="order.part?.shipmentMethodEnum?.shipmentMethodEnumId === 'STOREPICKUP' ? printPackingSlip(order) : printShippingLabelAndPackingSlip(order)">
             <ion-icon slot="icon-only" :icon="printOutline" />
           </ion-button>
         </ion-buttons>
@@ -79,7 +79,7 @@
               <p>{{ order.shippingInstructions }}</p>
             </ion-label>
           </ion-item>
-          <ion-item v-if="orderType === 'packed' && configurePicker && order.pickers" lines="none">
+          <ion-item v-if="orderType === 'packed' && getBopisProductStoreSettings('ENABLE_TRACKING') && order.pickers" lines="none">
             <ion-label>
               {{ order.pickers ? translate("Picked by", { pickers: order.pickers }) : translate("No picker assigned.") }}
             </ion-label>
@@ -316,11 +316,11 @@ export default defineComponent({
       partialOrderRejectionConfig: 'user/getPartialOrderRejectionConfig',
       getPaymentMethodDesc: 'util/getPaymentMethodDesc',
       getStatusDesc: 'util/getStatusDesc',
-      showPackingSlip: 'user/showPackingSlip',
       getProduct: 'product/getProduct',
       getProductStock: 'stock/getProductStock',
       getfacilityTypeDesc: 'util/getFacilityTypeDesc',
       getPartyName: 'util/getPartyName',
+      getBopisProductStoreSettings: 'user/getBopisProductStoreSettings'
     })
   },
   props: ['orderType', 'orderId', 'orderPartSeqId'],
@@ -335,6 +335,13 @@ export default defineComponent({
         component: AssignPickerModal,
         componentProps: { order, part, facilityId }
       });
+
+      assignPickerModal.onDidDismiss().then(async(result: any) => {
+        if(result.data.selectedPicker) {
+          await this.store.dispatch('order/packShipGroupItems', { order, part, facilityId, selectedPicker: result.data.selectedPicker })
+        }
+      })
+
       return assignPickerModal.present();
     },
     async editPicker(order: any) {
@@ -387,7 +394,7 @@ export default defineComponent({
       return rejectOrderModal.present();
     },
     async readyForPickup(order: any, part: any) {
-      if (this.configurePicker) return this.assignPicker(order, part, this.currentFacility?.facilityId);
+      if(this.getBopisProductStoreSettings('ENABLE_TRACKING') && order.isPicked !== 'Y') return this.assignPicker(order, part, this.currentFacility?.facilityId);
       const pickup = part?.shipmentMethodEnum?.shipmentMethodEnumId === 'STOREPICKUP';
       const header = pickup ? translate('Ready for pickup') : translate('Ready to ship');
       const message = pickup ? translate('An email notification will be sent to that their order is ready for pickup. This order will also be moved to the packed orders tab.', { customerName: order.customer.name, space: '<br/><br/>' }) : '';
@@ -402,11 +409,34 @@ export default defineComponent({
           }, {
             text: header,
             handler: async () => {
-              await this.store.dispatch('order/packShipGroupItems', { order: order, part: part, facilityId: this.currentFacility?.facilityId })
+              if(!pickup) {
+                this.packShippingOrders(order, part);
+              } else {
+                this.store.dispatch('order/packShipGroupItems', {order, part, facilityId: this.currentFacility?.facilityId})
+              }
             }
           }]
         });
       return alert.present();
+    },
+    async packShippingOrders(currentOrder: any, part: any) {
+      try {
+        const resp = await OrderService.packOrder({
+          'picklistBinId': currentOrder.picklistBinId,
+          'orderId': currentOrder.orderId
+        })
+
+        if(!hasError(resp)) {
+          showToast(translate("Order packed and ready for delivery"));
+          this.store.dispatch("order/updateCurrent", { order: { ...currentOrder, readyToShip: true } }) 
+          this.store.dispatch("order/removeOpenOrder", { order: currentOrder, part })
+        } else {
+          throw resp.data;
+        }
+      } catch(error: any) {
+        logger.error(error);
+        showToast(translate("Something went wrong"))
+      }
     },
     async fetchRejectReasons() {
       await this.store.dispatch('util/fetchRejectReasons');

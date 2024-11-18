@@ -1,6 +1,6 @@
 {
   "name": "bopis",
-  "version": "2.24.2",
+  "version": "2.26.6",
   "private": true,
   "description": "HotWax BOPIS app",
   "scripts": {
@@ -17,8 +17,8 @@
     "@casl/ability": "^6.0.0",
     "@hotwax/app-version-info": "^1.0.0",
     "@hotwax/apps-theme": "^1.2.6",
-    "@hotwax/dxp-components": "file:../dxp-components",
-    "@hotwax/oms-api": "file:../oms-api",
+    "@hotwax/dxp-components": "^1.15.5",
+    "@hotwax/oms-api": "^1.16.0",
     "@ionic/core": "^7.6.0",
     "@ionic/vue": "^7.6.0",
     "@ionic/vue-router": "^7.6.0",

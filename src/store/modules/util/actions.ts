@@ -5,23 +5,46 @@ import * as types from './mutation-types'
 import { UtilService } from '@/services/UtilService'
 import { hasError } from '@/adapter'
 import logger from '@/logger'
+import store from '@/store'
 
 const actions: ActionTree<UtilState, RootState> = {
   async fetchRejectReasons({ commit }) {
+    const permissions = store.getters['user/getUserPermissions'];
+    const isAdminUser = permissions.some((permission: any) => permission.action === "APP_STOREFULFILLMENT_ADMIN")
+    let isAdminReasonsNeeded = false;
+
     let rejectReasons = [];
-    try {
-      const payload = {
+    let payload = {
+      "distinct": "Y",
+      "viewSize": 100,
+      "orderBy": "sequenceNum"
+    } as any;
+
+    if(isAdminUser) {
+      payload = {
         "inputFields": {
           "parentEnumTypeId": ["REPORT_AN_ISSUE", "RPRT_NO_VAR_LOG"],
           "parentEnumTypeId_op": "in"
         },
         "fieldList": ["enumId", "description"],
-        "distinct": "Y",
         "entityName": "EnumTypeChildAndEnum",
-        "viewSize": 20, // keeping view size 20 as considering that we will have max 20 reasons
-        "orderBy": "sequenceNum"
+        ...payload
       }
+    } else {
+      payload = {
+        "inputFields": {
+          "enumerationGroupId": "BOPIS_REJ_RSN_GRP"
+        },
+        // We should not fetch description here, as the description contains EnumGroup description which we don't want to show on UI.
+        "fieldList": ["enumerationGroupId", "enumId", "sequenceNum", "enumDescription", "enumName"],
+        "entityName": "EnumerationGroupAndMember",
+        "filterByDate": "Y",
+        ...payload
+      }
+    }
 
+
+    try {
       const resp = await UtilService.fetchRejectReasons(payload)
 
       if(!hasError(resp) && resp.data.count > 0) {
@@ -31,6 +54,33 @@ const actions: ActionTree<UtilState, RootState> = {
       }
     } catch (err) {
       logger.error('Failed to fetch reject reasons', err)
+      if(!isAdminUser) isAdminReasonsNeeded = true;
+    }
+
+    // Refetching all rejection reasons if the api fails to fetch bopis rejection reason due to no entity found.
+    // Todo: revert these changes when all the oms are updated.
+    if(isAdminReasonsNeeded) {
+      try {
+        const resp = await UtilService.fetchRejectReasons({
+          "inputFields": {
+            "parentEnumTypeId": ["REPORT_AN_ISSUE", "RPRT_NO_VAR_LOG"],
+            "parentEnumTypeId_op": "in"
+          },
+          "fieldList": ["enumId", "description"],
+          "entityName": "EnumTypeChildAndEnum",
+          "distinct": "Y",
+          "viewSize": 100,
+          "orderBy": "sequenceNum"
+        })
+  
+        if(!hasError(resp)) {
+          rejectReasons = resp.data.docs
+        } else {
+          throw resp.data;
+        }
+      } catch(err) {
+        logger.error('Failed to fetch reject reasons', err)
+      }
     }
 
     commit(types.UTIL_REJECT_REASONS_UPDATED, rejectReasons)
