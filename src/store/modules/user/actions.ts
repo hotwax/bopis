@@ -5,7 +5,7 @@ import RootState from '@/store/RootState'
 import store from '@/store';
 import UserState from './UserState'
 import * as types from './mutation-types'
-import { showToast } from '@/utils'
+import { getCurrentFacilityId, showToast } from '@/utils'
 import {
   getNotificationEnumIds,
   getNotificationUserPrefTypeIds,
@@ -285,9 +285,8 @@ const actions: ActionTree<UserState, RootState> = {
 
   async fetchNotificationPreferences({ commit, state }) {
     let resp = {} as any
-    const currentFacility: any = useUserStore().getCurrentFacility
-    const facilityId = currentFacility?.facilityId
     let notificationPreferences = [], enumerationResp = [], userPrefIds = [] as any
+
     try {
       resp = await getNotificationEnumIds(process.env.VUE_APP_NOTIF_ENUM_TYPE_ID)
       enumerationResp = resp.docs
@@ -300,7 +299,7 @@ const actions: ActionTree<UserState, RootState> = {
       // data and getNotificationUserPrefTypeIds fails or returns empty response (all disbaled)
       if (enumerationResp.length) {
         notificationPreferences = enumerationResp.reduce((notifactionPref: any, pref: any) => {
-          const userPrefTypeIdToSearch = generateTopicName(facilityId, pref.enumId)
+          const userPrefTypeIdToSearch = generateTopicName(getCurrentFacilityId(), pref.enumId)
           notifactionPref.push({ ...pref, isEnabled: userPrefIds.includes(userPrefTypeIdToSearch) })
           return notifactionPref
         }, [])
