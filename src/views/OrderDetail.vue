@@ -312,7 +312,6 @@ export default defineComponent({
   computed: {
     ...mapGetters({
       order: "order/getCurrent",
-      configurePicker: "user/configurePicker",
       partialOrderRejectionConfig: 'user/getPartialOrderRejectionConfig',
       getPaymentMethodDesc: 'util/getPaymentMethodDesc',
       getStatusDesc: 'util/getStatusDesc',
