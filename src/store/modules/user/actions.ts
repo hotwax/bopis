@@ -174,12 +174,12 @@ const actions: ActionTree<UserState, RootState> = {
   /**
    * run after updating current facility
    */
-  async setFacilityUpdates ({ commit, dispatch }, selectedFacilityId) {
+  async setFacility({ commit, dispatch }, facilityId) {
     const token = store.getters['user/getUserToken'];
     // clearing the orders state whenever changing the facility
     dispatch("order/clearOrders", null, {root: true})
     dispatch("product/clearProducts", null, {root: true})
-    const eComStore = await UserService.getCurrentEComStore(token, selectedFacilityId);
+    const eComStore = await UserService.getCurrentEComStore(token, facilityId);
     commit(types.USER_CURRENT_ECOM_STORE_UPDATED, eComStore)
     await useProductIdentificationStore().getIdentificationPref(eComStore?.productStoreId)
   },

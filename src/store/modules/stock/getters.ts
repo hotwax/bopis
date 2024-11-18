@@ -1,12 +1,8 @@
 import { GetterTree } from 'vuex'
-import { useUserStore } from "@hotwax/dxp-components";
 import StockState from './StockState'
 import RootState from '../../RootState'
+import { getCurrentFacilityId } from '@/utils'
 
-const getCurrentFacilityId = () => {
-  const currentFacility: any = useUserStore().getCurrentFacility;
-  return currentFacility?.facilityId
-}
 
 const getters: GetterTree <StockState, RootState> = {
   getProductStock: (state, RootState) => (productId: any) => {

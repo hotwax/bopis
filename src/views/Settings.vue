@@ -35,7 +35,7 @@
       </div>
       <section>
         <DxpOmsInstanceNavigator />
-        <DxpFacilitySwitcher @updateFacility="handleFacilityUpdate($event)"/>
+        <DxpFacilitySwitcher @updateFacility="updateFacility(facility)"/>
         <ion-card>
           <ion-card-header>
             <ion-card-subtitle>
@@ -276,8 +276,8 @@ export default defineComponent({
     await this.store.dispatch('user/fetchNotificationPreferences')
   },
   methods: {
-    async handleFacilityUpdate(selectedFacility: any) {
-      await this.store.dispatch('user/setFacilityUpdates', selectedFacility?.facilityId);
+    async updateFacility(facility: any) {
+      await this.store.dispatch('user/setFacility', facility?.facilityId);
       await this.store.dispatch('user/fetchNotificationPreferences')
     },
     async timeZoneUpdated(tzId: string) {

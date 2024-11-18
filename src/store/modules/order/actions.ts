@@ -3,19 +3,15 @@ import { ActionTree } from 'vuex'
 import RootState from '@/store/RootState'
 import OrderState from './OrderState'
 import * as types from './mutation-types'
-import { showToast } from "@/utils";
+import { showToast, getCurrentFacilityId } from "@/utils";
 import { hasError } from '@/adapter'
-import { translate, useUserStore } from "@hotwax/dxp-components";
+import { translate } from "@hotwax/dxp-components";
 import emitter from '@/event-bus'
 import store from "@/store";
 import { prepareOrderQuery } from "@/utils/solrHelper";
 import { getOrderCategory } from "@/utils/order";
 import logger from "@/logger";
 
-const getCurrentFacilityId = () => {
-  const currentFacility: any = useUserStore().getCurrentFacility;
-  return currentFacility?.facilityId
-}
 
 const actions: ActionTree<OrderState , RootState> ={
 

@@ -4,16 +4,12 @@ import RootState from '@/store/RootState'
 import StockState from './StockState'
 import * as types from './mutation-types'
 import { hasError } from '@/adapter'
-import { showToast } from '@/utils'
-import { translate, useUserStore } from "@hotwax/dxp-components";
+import { showToast, getCurrentFacilityId } from '@/utils'
+import { translate } from "@hotwax/dxp-components";
 import logger from '@/logger'
 import { prepareOrderQuery } from "@/utils/solrHelper";
 import { UtilService } from '@/services/UtilService';
 
-const getCurrentFacilityId = () => {
-  const currentFacility: any = useUserStore().getCurrentFacility;
-  return currentFacility?.facilityId
-}
 
 const actions: ActionTree<StockState, RootState> = {
   async fetchStock({ commit }, { productId }) {
