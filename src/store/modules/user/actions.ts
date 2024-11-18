@@ -81,8 +81,7 @@ const actions: ActionTree<UserState, RootState> = {
         return uniqueFacilities
       }, []);
       // TODO Use a separate API for getting facilities, this should handle user like admin accessing the app
-      const currentFacility: any = useUserStore().getCurrentFacility
-      const currentEComStore = await UserService.getCurrentEComStore(token, currentFacility?.facilityId);
+      const currentEComStore = await UserService.getCurrentEComStore(token, getCurrentFacilityId());
 
       /*  ---- Guard clauses ends here --- */
 
