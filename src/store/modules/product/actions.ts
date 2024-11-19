@@ -145,6 +145,50 @@ const actions: ActionTree<ProductState, RootState> = {
 
   clearProducts ({ commit }) {
     commit(types.PRODUCT_LIST_UPDATED, { products: [], total: 0, queryString: '' })
+  },
+
+  async fetchProductComponents ( { commit, dispatch, state }, { productId }) {
+    // If there are no products skip the API call
+    if (productId === '') return;
+
+    const cachedProductIds = Object.keys(state.cached);
+    if (!cachedProductIds.includes(productId)) {
+      await dispatch('fetchProducts', { productIds: [productId] })
+    }
+    const product = state.cached[productId]
+    if (product.productComponents && product.productComponents.length > 0) {
+      return;
+    }
+
+    let resp;
+    try {
+      resp = await ProductService.fetchProductComponents({
+        "entityName": "ProductAssoc",
+          "inputFields": {
+            "productId": productId,
+            "productTypeId": "PRODUCT_COMPONENT"
+          },
+          "fieldList": ["productId", "productIdTo", "productAssocTypeId"],
+          "viewIndex": 0,
+          "viewSize": 250,  // maximum records we could have
+          "distinct": "Y",
+          "noConditionFind": "Y",
+          "filterByDate": "Y"
+      })
+      if (!hasError(resp)) {
+        const productComponents = resp.data.docs;
+        const componentProductIds = productComponents.map((productComponent: any) => productComponent.productIdTo);
+        await dispatch('fetchProducts', { productIds: componentProductIds })
+        
+        product["productComponents"] = productComponents;
+        commit(types.PRODUCT_ADD_TO_CACHED_MULTIPLE, { products: [product] });
+      } else {
+        throw resp.data
+      }
+    } catch(err) {
+      logger.error('Failed to fetch product components information', err)
+    }
+    return resp;
   }
 }
 
