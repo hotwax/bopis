@@ -6,14 +6,10 @@
     <ion-label class="ion-text-wrap">
       <h2>{{ getProductIdentificationValue(productIdentificationPref.primaryId, getProduct(item.productId)) ? getProductIdentificationValue(productIdentificationPref.primaryId, getProduct(item.productId)) : getProduct(item.productId).productName }}</h2>
       <p class="ion-text-wrap">{{ getProductIdentificationValue(productIdentificationPref.secondaryId, getProduct(item.productId)) }}</p>
+      <ion-badge color="dark" v-if="isKit(item)">{{ translate("Kit") }}</ion-badge>
     </ion-label>
     <!-- Only show stock if its not a ship to store order -->
-    <div slot="end" v-if="!isShipToStoreOrder">
-      <ion-button v-if="isKit(item)" fill="clear" size="small" @click.stop="fetchKitComponents(item)">
-        <ion-icon v-if="showKitComponents" color="medium" slot="icon-only" :icon="chevronUpOutline"/>
-        <ion-icon v-else color="medium" slot="icon-only" :icon="listOutline"/>
-      </ion-button>
-
+    <div class="show-kit-components" slot="end" v-if="!isShipToStoreOrder">
       <ion-spinner v-if="isFetchingStock" color="medium" name="crescent" />
       <div v-else-if="getProductStock(item.productId).quantityOnHandTotal >= 0" class="atp-info">
         <ion-note slot="end"> {{ translate("on hand", { count: getProductStock(item.productId).quantityOnHandTotal ?? '0' }) }} </ion-note>
@@ -24,6 +20,12 @@
       <ion-button v-else fill="clear" @click.stop="fetchProductStock(item.productId)">
         <ion-icon color="medium" slot="icon-only" :icon="cubeOutline" />
       </ion-button>
+
+      <ion-button v-if="isKit(item)" fill="clear" size="small" @click.stop="fetchKitComponents(item)">
+        <ion-icon v-if="showKitComponents" color="medium" slot="icon-only" :icon="chevronUpOutline"/>
+        <ion-icon v-else color="medium" slot="icon-only" :icon="listOutline"/>
+      </ion-button>
+
     </div>  
   </ion-item>
 
@@ -52,7 +54,7 @@
 
 <script lang="ts">
 import { computed, defineComponent } from "vue";
-import { IonButton, IonCard, IonIcon, IonItem, IonLabel, IonNote, IonSkeletonText, IonSpinner, IonThumbnail, popoverController } from "@ionic/vue";
+import { IonBadge, IonButton, IonCard, IonIcon, IonItem, IonLabel, IonNote, IonSkeletonText, IonSpinner, IonThumbnail, popoverController } from "@ionic/vue";
 import { mapGetters, useStore } from 'vuex';
 import { getProductIdentificationValue, DxpShopifyImg, translate, useProductIdentificationStore } from '@hotwax/dxp-components'
 import { chevronUpOutline, cubeOutline, informationCircleOutline, listOutline } from 'ionicons/icons'
@@ -62,6 +64,7 @@ import { isKit } from '@/utils/order'
 export default defineComponent({
   name: "ProductListItem",
   components: {
+    IonBadge,
     IonButton,
     IonCard,
     IonIcon,
@@ -139,5 +142,8 @@ ion-thumbnail > img {
   display: flex;
   align-items: center; 
   flex-direction: row; 
+}
+.show-kit-components {
+  justify-items: end;
 }
 </style>
