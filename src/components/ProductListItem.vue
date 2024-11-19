@@ -80,7 +80,7 @@ export default defineComponent({
       showKitComponents: false
     }
   },
-  props: ['item', 'isShipToStoreOrder', 'segmentSelected'],
+  props: ['item', 'isShipToStoreOrder'],
   computed: {
     ...mapGetters({
       getProduct: 'product/getProduct',
