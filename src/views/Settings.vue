@@ -35,7 +35,7 @@
       </div>
       <section>
         <DxpOmsInstanceNavigator />
-        <DxpFacilitySwitcher @updateFacility="updateFacility(facility)"/>
+        <DxpFacilitySwitcher @updateFacility="updateFacility" />
         <ion-card>
           <ion-card-header>
             <ion-card-subtitle>
