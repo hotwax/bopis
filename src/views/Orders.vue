@@ -252,7 +252,6 @@ export default defineComponent({
       orders: 'order/getOpenOrders',
       packedOrders: 'order/getPackedOrders',
       completedOrders: 'order/getCompletedOrders',
-      configurePicker: "user/configurePicker",
       isPackedOrdersScrollable: 'order/isPackedOrdersScrollable',
       isOpenOrdersScrollable: 'order/isOpenOrdersScrollable',
       isCompletedOrdersScrollable: 'order/isCompletedOrdersScrollable',
