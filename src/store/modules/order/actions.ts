@@ -9,7 +9,8 @@ import { translate } from "@hotwax/dxp-components";
 import emitter from '@/event-bus'
 import store from "@/store";
 import { prepareOrderQuery } from "@/utils/solrHelper";
-import { getOrderCategory } from "@/utils/order";
+import { getOrderCategory, removeKitComponents } from '@/utils/order'
+
 import logger from "@/logger";
 
 
@@ -126,6 +127,12 @@ const actions: ActionTree<OrderState , RootState> ={
       resp = await OrderService.getOpenOrders(orderQueryPayload)
       if (resp.status === 200 && !hasError(resp) && resp.data.grouped?.orderId?.ngroups > 0) {
 
+        const productIds = [] as any;
+        resp.data.grouped?.orderId?.groups.forEach((order: any) => {
+          productIds.push(...order.doclist.docs.map((item: any) => item.productId));
+        });
+        await this.dispatch('product/fetchProducts', { productIds });
+
         let orders = resp.data.grouped?.orderId?.groups.map((order: any) => {
           const orderItem = order.doclist.docs[0]
           return {
@@ -136,7 +143,7 @@ const actions: ActionTree<OrderState , RootState> ={
               name: orderItem.customerName
             },
             statusId: orderItem.orderStatusId,
-            parts: order.doclist.docs.reduce((arr: Array<any>, item: any) => {
+            parts: removeKitComponents(order.doclist.docs.reduce((arr: Array<any>, item: any) => {
               const currentOrderPart = arr.find((orderPart: any) => orderPart.orderPartSeqId === item.shipGroupSeqId)
               if (!currentOrderPart) {
                 arr.push({
@@ -168,7 +175,7 @@ const actions: ActionTree<OrderState , RootState> ={
               }
 
               return arr
-            }, []),
+            }, [])),
             placedDate: orderItem.orderDate,
             shippingInstructions: orderItem.shippingInstructions,
             shipGroupSeqId: orderItem.shipGroupSeqId,
@@ -179,8 +186,6 @@ const actions: ActionTree<OrderState , RootState> ={
         })
 
         const total = resp.data.grouped?.orderId?.ngroups;
-
-        this.dispatch('product/getProductInformation', { orders })
 
         if(payload.viewIndex && payload.viewIndex > 0) orders = state.open.list.concat(orders)
         commit(types.ORDER_OPEN_UPDATED, { orders, total })
@@ -218,7 +223,7 @@ const actions: ActionTree<OrderState , RootState> ={
     const orders = JSON.parse(JSON.stringify(state.open.list)) as any
     // As one order can have multiple parts thus checking orderId and partSeq as well before making any api call
     if(current.orderId === payload.orderId && current.orderType === orderType && current.part?.orderPartSeqId === payload.orderPartSeqId) {
-      this.dispatch('product/getProductInformation', { orders: [ current ] })
+      await this.dispatch('product/getProductInformation', { orders: [ current ] })
       await dispatch('fetchShipGroupForOrder');
       return current 
     }
@@ -254,7 +259,7 @@ const actions: ActionTree<OrderState , RootState> ={
               name: orderItem.customerName
             },
             statusId: orderItem.orderStatusId,
-            parts: order.doclist.docs.reduce((arr: Array<any>, item: any) => {
+            parts: removeKitComponents(order.doclist.docs.reduce((arr: Array<any>, item: any) => {
               const currentOrderPart = arr.find((orderPart: any) => orderPart.orderPartSeqId === item.shipGroupSeqId)
               if (!currentOrderPart) {
                 arr.push({
@@ -280,7 +285,7 @@ const actions: ActionTree<OrderState , RootState> ={
               }
 
               return arr
-            }, []),
+            }, [])),
             placedDate: orderItem.orderDate,
             shippingInstructions: orderItem.shippingInstructions,
             orderType: orderType,
@@ -345,6 +350,12 @@ const actions: ActionTree<OrderState , RootState> ={
     try {
       resp = await OrderService.getPackedOrders(orderQueryPayload)
       if (resp.status === 200 && resp.data.grouped?.orderId?.ngroups > 0 && !hasError(resp)) {
+        const productIds = [] as any;
+        resp.data.grouped?.orderId?.groups.forEach((order: any) => {
+          productIds.push(...order.doclist.docs.map((item: any) => item.productId));
+        });
+        await this.dispatch('product/fetchProducts', { productIds });
+
         let orders = resp?.data?.grouped?.orderId?.groups.map((order: any) => {
           const orderItem = order.doclist.docs[0]
           return {
@@ -357,7 +368,7 @@ const actions: ActionTree<OrderState , RootState> ={
               name: orderItem.customerName,
             },
             statusId: orderItem.orderStatusId,
-            parts: order.doclist.docs.reduce((arr: Array<any>, item: any) => {
+            parts: removeKitComponents(order.doclist.docs.reduce((arr: Array<any>, item: any) => {
               const currentOrderPart = arr.find((orderPart: any) => orderPart.orderPartSeqId === item.shipGroupSeqId)
               if (!currentOrderPart) {
                 arr.push({
@@ -381,7 +392,7 @@ const actions: ActionTree<OrderState , RootState> ={
               }
 
               return arr
-            }, []),
+            }, [])),
             placedDate: orderItem.orderDate,
             shippingInstructions: orderItem.shippingInstructions,
             pickers: orderItem.pickers ? (orderItem.pickers.reduce((names: any, picker: string) => {
@@ -396,7 +407,6 @@ const actions: ActionTree<OrderState , RootState> ={
             shipGroupSeqId: orderItem.shipGroupSeqId
           }
         })
-        this.dispatch('product/getProductInformation', { orders });
 
         const total = resp.data.grouped?.orderId?.ngroups;
 
@@ -431,6 +441,12 @@ const actions: ActionTree<OrderState , RootState> ={
     try {
       resp = await OrderService.getCompletedOrders(orderQueryPayload)
       if (resp.status === 200 && resp.data.grouped?.orderId?.ngroups > 0 && !hasError(resp)) {
+        const productIds = [] as any;
+        resp.data.grouped?.orderId?.groups.forEach((order: any) => {
+          productIds.push(...order.doclist.docs.map((item: any) => item.productId));
+        });
+        await this.dispatch('product/fetchProducts', { productIds });
+
         let orders = resp?.data?.grouped?.orderId?.groups.map((order: any) => {
           const orderItem = order.doclist.docs[0]
           return {
@@ -441,7 +457,7 @@ const actions: ActionTree<OrderState , RootState> ={
               name: orderItem.customerPartyName,
             },
             statusId: orderItem.orderStatusId,
-            parts: order.doclist.docs.reduce((arr: Array<any>, item: any) => {
+            parts: removeKitComponents(order.doclist.docs.reduce((arr: Array<any>, item: any) => {
               const currentOrderPart = arr.find((orderPart: any) => orderPart.orderPartSeqId === item.shipGroupSeqId)
               if (!currentOrderPart) {
                 arr.push({
@@ -461,12 +477,11 @@ const actions: ActionTree<OrderState , RootState> ={
               }
 
               return arr
-            }, []),
+            }, [])),
             placedDate: orderItem.orderDate,
             shipGroupSeqId: orderItem.shipGroupSeqId
           }
         })
-        this.dispatch('product/getProductInformation', { orders });
 
         const total = resp.data.grouped?.orderId?.ngroups;
 

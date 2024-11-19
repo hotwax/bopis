@@ -9,6 +9,11 @@
     </ion-label>
     <!-- Only show stock if its not a ship to store order -->
     <div slot="end" v-if="!isShipToStoreOrder">
+      <ion-button v-if="isKit(item)" fill="clear" size="small" @click.stop="fetchKitComponents(item)">
+        <ion-icon v-if="showKitComponents" color="medium" slot="icon-only" :icon="chevronUpOutline"/>
+        <ion-icon v-else color="medium" slot="icon-only" :icon="listOutline"/>
+      </ion-button>
+
       <ion-spinner v-if="isFetchingStock" color="medium" name="crescent" />
       <div v-else-if="getProductStock(item.productId).quantityOnHandTotal >= 0" class="atp-info">
         <ion-note slot="end"> {{ translate("on hand", { count: getProductStock(item.productId).quantityOnHandTotal ?? '0' }) }} </ion-note>
@@ -21,24 +26,49 @@
       </ion-button>
     </div>  
   </ion-item>
+
+  <template v-if="showKitComponents && !getProduct(item.productId)?.productComponents">
+    <ion-item lines="none">
+      <ion-skeleton-text animated style="height: 80%;"/>
+    </ion-item>
+    <ion-item lines="none">
+      <ion-skeleton-text animated style="height: 80%;"/>
+    </ion-item>
+  </template>
+  <template v-else-if="showKitComponents && getProduct(item.productId)?.productComponents">
+    <ion-card v-for="(productComponent, index) in getProduct(item.productId).productComponents" :key="index">
+      <ion-item lines="none">
+        <ion-thumbnail slot="start">
+          <DxpShopifyImg :src="getProduct(productComponent.productIdTo).mainImageUrl" size="small"/>
+        </ion-thumbnail>
+        <ion-label>
+          <p class="overline">{{ getProductIdentificationValue(productIdentificationPref.secondaryId, getProduct(productComponent.productIdTo)) }}</p>
+          {{ getProductIdentificationValue(productIdentificationPref.primaryId, getProduct(productComponent.productIdTo)) ? getProductIdentificationValue(productIdentificationPref.primaryId, getProduct(productComponent.productIdTo)) : productComponent.productIdTo }}
+        </ion-label>
+      </ion-item>
+    </ion-card>
+  </template>
 </template>
 
 <script lang="ts">
 import { computed, defineComponent } from "vue";
-import { IonButton, IonIcon, IonItem, IonLabel, IonNote, IonSpinner, IonThumbnail, popoverController } from "@ionic/vue";
+import { IonButton, IonCard, IonIcon, IonItem, IonLabel, IonNote, IonSkeletonText, IonSpinner, IonThumbnail, popoverController } from "@ionic/vue";
 import { mapGetters, useStore } from 'vuex';
 import { getProductIdentificationValue, DxpShopifyImg, translate, useProductIdentificationStore } from '@hotwax/dxp-components'
-import { cubeOutline, informationCircleOutline } from 'ionicons/icons'
+import { chevronUpOutline, cubeOutline, informationCircleOutline, listOutline } from 'ionicons/icons'
 import InventoryDetailsPopover from '@/components/InventoryDetailsPopover.vue'
+import { isKit } from '@/utils/order'
 
 export default defineComponent({
   name: "ProductListItem",
   components: {
     IonButton,
+    IonCard,
     IonIcon,
     IonItem,
     IonLabel,
     IonNote,
+    IonSkeletonText,
     IonSpinner,
     IonThumbnail,
     DxpShopifyImg
@@ -47,6 +77,7 @@ export default defineComponent({
     return {
       goodIdentificationTypeId: process.env.VUE_APP_PRDT_IDENT_TYPE_ID,
       isFetchingStock: false,
+      showKitComponents: false
     }
   },
   props: ['item', 'isShipToStoreOrder'],
@@ -58,6 +89,10 @@ export default defineComponent({
     })
   },
   methods: {
+    async fetchKitComponents(orderItem: any) {
+      this.store.dispatch('product/fetchProductComponents', { productId: orderItem.productId })
+      this.showKitComponents = !this.showKitComponents
+    },
     async fetchProductStock(productId: string) {
       this.isFetchingStock = true
       await this.store.dispatch('stock/fetchStock', { productId });
@@ -81,10 +116,13 @@ export default defineComponent({
     const productIdentificationStore = useProductIdentificationStore();
     let productIdentificationPref = computed(() => productIdentificationStore.getProductIdentificationPref)
     return {
+      chevronUpOutline,
       getProductIdentificationValue,
       productIdentificationPref,
       cubeOutline,
       informationCircleOutline,
+      isKit,
+      listOutline,
       store,
       translate
     }

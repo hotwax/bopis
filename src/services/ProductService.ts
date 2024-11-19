@@ -18,7 +18,15 @@ const findProducts = async (query: any): Promise <any>  => {
     cache: true
   });
 }
+const fetchProductComponents = async (params: any): Promise<any> => {
+  return await api({
+    url: "performFind",
+    method: "get",
+    params
+  })
+}
 export const ProductService = {
   fetchProducts,
-  findProducts
+  findProducts,
+  fetchProductComponents
 }
