@@ -1,6 +1,6 @@
 import { toastController } from '@ionic/vue';
 import { Plugins } from '@capacitor/core';
-import { translate } from '@hotwax/dxp-components'
+import { translate, useUserStore } from '@hotwax/dxp-components'
 import { DateTime } from "luxon";
 
 // TODO Use separate files for specific utilities
@@ -73,4 +73,9 @@ const formatPhoneNumber = (countryCode: string | null, areaCode: string | null, 
   }
 }
 
-export { copyToClipboard, showToast, handleDateTimeInput, getFeature, formatPhoneNumber }
+const getCurrentFacilityId = () => {
+  const currentFacility: any = useUserStore().getCurrentFacility;
+  return currentFacility?.facilityId
+}
+
+export { copyToClipboard, showToast, handleDateTimeInput, getFeature, formatPhoneNumber, getCurrentFacilityId }

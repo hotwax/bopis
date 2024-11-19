@@ -3,7 +3,7 @@ import { ActionTree } from 'vuex'
 import RootState from '@/store/RootState'
 import OrderState from './OrderState'
 import * as types from './mutation-types'
-import { showToast } from "@/utils";
+import { showToast, getCurrentFacilityId } from "@/utils";
 import { hasError } from '@/adapter'
 import { translate } from "@hotwax/dxp-components";
 import emitter from '@/event-bus'
@@ -11,6 +11,7 @@ import store from "@/store";
 import { prepareOrderQuery } from "@/utils/solrHelper";
 import { getOrderCategory } from "@/utils/order";
 import logger from "@/logger";
+
 
 const actions: ActionTree<OrderState , RootState> ={
 
@@ -700,7 +701,7 @@ const actions: ActionTree<OrderState , RootState> ={
       inputFields: {
         statusId: "SHIPMENT_SHIPPED",
         shipmentMethodTypeId: "SHIP_TO_STORE",
-        orderFacilityId: this.state.user.currentFacility.facilityId
+        orderFacilityId: getCurrentFacilityId()
       },
       viewSize: payload.viewSize ? payload.viewSize : process.env.VUE_APP_VIEW_SIZE,
       viewIndex: payload.viewIndex ? payload.viewIndex : 0,
@@ -786,7 +787,7 @@ const actions: ActionTree<OrderState , RootState> ={
       inputFields: {
         statusId: "PICKUP_SCHEDULED",
         shipmentMethodTypeId: "SHIP_TO_STORE",
-        orderFacilityId: this.state.user.currentFacility.facilityId
+        orderFacilityId: getCurrentFacilityId()
       },
       viewSize: payload.viewSize ? payload.viewSize : process.env.VUE_APP_VIEW_SIZE,
       viewIndex: payload.viewIndex ? payload.viewIndex : 0,
@@ -872,7 +873,7 @@ const actions: ActionTree<OrderState , RootState> ={
       inputFields: {
         statusId: "SHIPMENT_DELIVERED",
         shipmentMethodTypeId: "SHIP_TO_STORE",
-        orderFacilityId: this.state.user.currentFacility.facilityId
+        orderFacilityId: getCurrentFacilityId()
       },
       viewSize: payload.viewSize ? payload.viewSize : process.env.VUE_APP_VIEW_SIZE,
       viewIndex: payload.viewIndex ? payload.viewIndex : 0,

@@ -36,7 +36,7 @@ import { dxpComponents } from '@hotwax/dxp-components'
 import localeMessages from './locales';
 import { login, logout, loader } from '@/utils/user';
 import { addNotification, storeClientRegistrationToken } from '@/utils/firebase';
-import { getConfig, fetchGoodIdentificationTypes, getProductIdentificationPref, initialise, setProductIdentificationPref, setUserLocale, getAvailableTimeZones, setUserTimeZone } from '@/adapter';
+import { getConfig, fetchGoodIdentificationTypes, getProductIdentificationPref, getUserFacilities, getUserPreference, initialise, setProductIdentificationPref, setUserLocale, getAvailableTimeZones, setUserTimeZone, setUserPreference } from '@/adapter';
 import logger from './logger';
 
 const app = createApp(App)
@@ -73,7 +73,10 @@ const app = createApp(App)
     storeClientRegistrationToken,
     getAvailableTimeZones,
     hasPermission,
-    setUserTimeZone
+    setUserTimeZone,
+    getUserFacilities,
+    setUserPreference,
+    getUserPreference
   });
 
 // Filters are removed in Vue 3 and global filter introduced https://v3.vuejs.org/guide/migration/filters.html#global-filters

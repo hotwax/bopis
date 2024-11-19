@@ -9,16 +9,12 @@ const mutations: MutationTree <UserState> = {
     [types.USER_END_SESSION] (state) {
       state.token = ''
       state.current = {}
-      state.currentFacility = {}
       state.permissions = []
       state.allNotificationPrefs = [],
       state.bopisProductStoreSettings = {}
     },
     [types.USER_INFO_UPDATED] (state, payload) {
         state.current = payload
-    },
-    [types.USER_CURRENT_FACILITY_UPDATED] (state, payload) {
-        state.currentFacility = payload;
     },
     [types.USER_INSTANCE_URL_UPDATED] (state, payload) {
         state.instanceUrl = payload;

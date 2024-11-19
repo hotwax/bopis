@@ -5,11 +5,10 @@ import RootState from '@/store/RootState'
 import store from '@/store';
 import UserState from './UserState'
 import * as types from './mutation-types'
-import { showToast } from '@/utils'
+import { getCurrentFacilityId, showToast } from '@/utils'
 import {
   getNotificationEnumIds,
   getNotificationUserPrefTypeIds,
-  getUserFacilities,
   hasError,
   logout,
   resetConfig,
@@ -70,8 +69,9 @@ const actions: ActionTree<UserState, RootState> = {
 
       //fetching user facilities
       const isAdminUser = appPermissions.some((appPermission: any) => appPermission?.action === "APP_STOREFULFILLMENT_ADMIN" );
-      const baseURL = store.getters['user/getBaseUrl'];
-      const facilities = await getUserFacilities(token, baseURL, userProfile?.partyId, "PICKUP", isAdminUser);
+      const facilities = await useUserStore().getUserFacilities(userProfile?.partyId, "PICKUP", isAdminUser)
+      await useUserStore().getFacilityPreference('SELECTED_FACILITY')
+    
       userProfile.facilities = facilities;
 
       // removing duplicate records as a single user can be associated with a facility by multiple roles.
@@ -81,8 +81,7 @@ const actions: ActionTree<UserState, RootState> = {
         return uniqueFacilities
       }, []);
       // TODO Use a separate API for getting facilities, this should handle user like admin accessing the app
-      const currentFacility = userProfile.facilities.length > 0 ? userProfile.facilities[0] : {};
-      const currentEComStore = await UserService.getCurrentEComStore(token, currentFacility?.facilityId);
+      const currentEComStore = await UserService.getCurrentEComStore(token, getCurrentFacilityId());
 
       /*  ---- Guard clauses ends here --- */
 
@@ -94,7 +93,6 @@ const actions: ActionTree<UserState, RootState> = {
 
       // TODO user single mutation
       commit(types.USER_INFO_UPDATED, userProfile);
-      commit(types.USER_CURRENT_FACILITY_UPDATED, currentFacility);
       commit(types.USER_CURRENT_ECOM_STORE_UPDATED, currentEComStore)
       commit(types.USER_PERMISSIONS_UPDATED, appPermissions);
       commit(types.USER_TOKEN_CHANGED, { newToken: token })
@@ -173,21 +171,15 @@ const actions: ActionTree<UserState, RootState> = {
   },
 
   /**
-   * update current facility information
+   * run after updating current facility
    */
-  async setFacility ({ commit, dispatch, state }, payload) {
+  async setFacility({ commit, dispatch }, facilityId) {
     const token = store.getters['user/getUserToken'];
-    let facility = payload.facility;
-    if(!facility && state.current?.facilities) {
-      facility = state.current.facilities.find((facility: any) => facility.facilityId === payload.facilityId);
-    }
     // clearing the orders state whenever changing the facility
     dispatch("order/clearOrders", null, {root: true})
     dispatch("product/clearProducts", null, {root: true})
-    commit(types.USER_CURRENT_FACILITY_UPDATED, facility);
-    const eComStore = await UserService.getCurrentEComStore(token, facility?.facilityId);
+    const eComStore = await UserService.getCurrentEComStore(token, facilityId);
     commit(types.USER_CURRENT_ECOM_STORE_UPDATED, eComStore)
-
     await useProductIdentificationStore().getIdentificationPref(eComStore?.productStoreId)
   },
   /**
@@ -292,8 +284,8 @@ const actions: ActionTree<UserState, RootState> = {
 
   async fetchNotificationPreferences({ commit, state }) {
     let resp = {} as any
-    const facilityId = (state.currentFacility as any).facilityId
     let notificationPreferences = [], enumerationResp = [], userPrefIds = [] as any
+
     try {
       resp = await getNotificationEnumIds(process.env.VUE_APP_NOTIF_ENUM_TYPE_ID)
       enumerationResp = resp.docs
@@ -306,7 +298,7 @@ const actions: ActionTree<UserState, RootState> = {
       // data and getNotificationUserPrefTypeIds fails or returns empty response (all disbaled)
       if (enumerationResp.length) {
         notificationPreferences = enumerationResp.reduce((notifactionPref: any, pref: any) => {
-          const userPrefTypeIdToSearch = generateTopicName(facilityId, pref.enumId)
+          const userPrefTypeIdToSearch = generateTopicName(getCurrentFacilityId(), pref.enumId)
           notifactionPref.push({ ...pref, isEnabled: userPrefIds.includes(userPrefTypeIdToSearch) })
           return notifactionPref
         }, [])
