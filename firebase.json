@@ -20,7 +20,7 @@
           },
           {
             "key": "Content-Security-Policy",
-            "value": "default-src 'self';font-src 'self' data: *;script-src 'self' 'unsafe-inline' 'unsafe-eval' fonts.googleapis.com;img-src 'self' 'unsafe-inline' *.shopify.com javascript: ;style-src 'self' 'unsafe-inline' *; connect-src 'self' *"
+            "value": "default-src 'self';font-src 'self' data: *;script-src 'self' 'unsafe-inline' 'unsafe-eval' fonts.googleapis.com https://www.gstatic.com;img-src 'self' 'unsafe-inline' *.shopify.com javascript: ;style-src 'self' 'unsafe-inline' *;connect-src 'self' *"
           },
           {
             "key": "strict-transport-security",
@@ -51,7 +51,7 @@
           },
           {
             "key": "Content-Security-Policy",
-            "value": "default-src 'self';font-src 'self' data: *;script-src 'self' 'unsafe-inline' 'unsafe-eval' fonts.googleapis.com;img-src 'self' 'unsafe-inline' *.shopify.com javascript: ;style-src 'self' 'unsafe-inline' *; connect-src 'self' *"
+            "value": "default-src 'self';font-src 'self' data: *;script-src 'self' 'unsafe-inline' 'unsafe-eval' fonts.googleapis.com https://www.gstatic.com;img-src 'self' 'unsafe-inline' *.shopify.com javascript: ;style-src 'self' 'unsafe-inline' *;connect-src 'self' *"
           },
           {
             "key": "strict-transport-security",
@@ -82,7 +82,7 @@
           },
           {
             "key": "Content-Security-Policy",
-            "value": "default-src 'self';font-src 'self' data: *;script-src 'self' 'unsafe-inline' 'unsafe-eval' fonts.googleapis.com;img-src 'self' 'unsafe-inline' *.shopify.com javascript: ;style-src 'self' 'unsafe-inline' *; connect-src 'self' *"
+            "value": "default-src 'self';font-src 'self' data: *;script-src 'self' 'unsafe-inline' 'unsafe-eval' fonts.googleapis.com https://www.gstatic.com;img-src 'self' 'unsafe-inline' *.shopify.com javascript: ;style-src 'self' 'unsafe-inline' *;connect-src 'self' *"
           },
           {
             "key": "strict-transport-security",
@@ -113,7 +113,7 @@
           },
           {
             "key": "Content-Security-Policy",
-            "value": "default-src 'self';font-src 'self' data: *;script-src 'self' 'unsafe-inline' 'unsafe-eval' fonts.googleapis.com;img-src 'self' 'unsafe-inline' *.shopify.com javascript: ;style-src 'self' 'unsafe-inline' *; connect-src 'self' *"
+            "value": "default-src 'self';font-src 'self' data: *;script-src 'self' 'unsafe-inline' 'unsafe-eval' fonts.googleapis.com https://www.gstatic.com;img-src 'self' 'unsafe-inline' *.shopify.com javascript: ;style-src 'self' 'unsafe-inline' *;connect-src 'self' *"
           },
           {
             "key": "strict-transport-security",
@@ -144,7 +144,7 @@
           },
           {
             "key": "Content-Security-Policy",
-            "value": "default-src 'self';font-src 'self' data: *;script-src 'self' 'unsafe-inline' 'unsafe-eval' fonts.googleapis.com;img-src 'self' 'unsafe-inline' *.shopify.com javascript: ;style-src 'self' 'unsafe-inline' *; connect-src 'self' *"
+            "value": "default-src 'self';font-src 'self' data: *;script-src 'self' 'unsafe-inline' 'unsafe-eval' fonts.googleapis.com https://www.gstatic.com;img-src 'self' 'unsafe-inline' *.shopify.com javascript: ;style-src 'self' 'unsafe-inline' *;connect-src 'self' *"
           },
           {
             "key": "strict-transport-security",
