@@ -65,9 +65,15 @@
             <ion-toggle label-placement="start" :disabled="!hasPermission(Actions.APP_RF_CONFIG_UPDATE) || Object.keys(rerouteFulfillmentConfig.orderItemSplit).length == 0" :checked="rerouteFulfillmentConfig.orderItemSplit.settingValue" @ionChange="updateRerouteFulfillmentConfiguration(rerouteFulfillmentConfig.orderItemSplit, $event.detail.checked)">{{ translate("Order item split") }}</ion-toggle>
           </ion-item>
           <ion-item lines="none">
-            <ion-select :label="translate('Shipment method')" :disabled="!hasPermission(Actions.APP_RF_CONFIG_UPDATE) || Object.keys(rerouteFulfillmentConfig.shippingMethod).length == 0" interface="popover" :value="rerouteFulfillmentConfig.shippingMethod.settingValue" @ionChange="updateRerouteFulfillmentConfiguration(rerouteFulfillmentConfig.shippingMethod, $event.detail.value)">
-              <ion-select-option v-for="shipmentMethod in availableShipmentMethods" :key="shipmentMethod.shipmentMethodTypeId" :value="shipmentMethod.shipmentMethodTypeId" >{{ shipmentMethod.description }}</ion-select-option>
-            </ion-select>
+            <ion-label v-if="Object.keys(getShipmentMethodConfig()).length > 0">
+              <p class="overline">{{ translate('Shipment method') }}</p>
+              {{ getShipmentMethodConfig()?.shipmentMethodDesc }}
+              <p>{{ getShipmentMethodConfig().carrierName }}</p>
+            </ion-label>
+            <ion-label v-else>
+              {{ translate('Shipment method') }}
+            </ion-label>
+            <ion-button slot="end" fill="outline" color="dark" :disabled="!hasPermission(Actions.APP_RF_CONFIG_UPDATE) || Object.keys(rerouteFulfillmentConfig.shippingMethod).length == 0" @click="openEditShipmentMethodModal(rerouteFulfillmentConfig.shippingMethod)">{{ Object.keys(getShipmentMethodConfig()).length > 0 ? translate('Edit') : translate('Add')}}</ion-button>
           </ion-item>
         </ion-card>
 
@@ -180,13 +186,13 @@ import {
   IonHeader,
   IonIcon,
   IonItem,
+  IonLabel,
   IonList,
   IonPage,
-  IonSelect,
-  IonSelectOption,
   IonTitle,
   IonToggle,
-  IonToolbar
+  IonToolbar,
+  modalController
 } from '@ionic/vue';
 import { defineComponent, computed } from 'vue';
 import {
@@ -209,6 +215,7 @@ import { Actions, hasPermission } from '@/authorization'
 import { addNotification, generateTopicName, isFcmConfigured, storeClientRegistrationToken } from "@/utils/firebase";
 import emitter from "@/event-bus"
 import logger from '@/logger';
+import EditShipmentMethodModal from '@/components/EditShipmentMethodModal.vue';
 
 export default defineComponent({
   name: 'Settings',
@@ -224,10 +231,9 @@ export default defineComponent({
     IonHeader, 
     IonIcon,
     IonItem, 
+    IonLabel,
     IonList,
     IonPage, 
-    IonSelect, 
-    IonSelectOption,
     IonTitle,
     IonToggle, 
     IonToolbar,
@@ -247,6 +253,7 @@ export default defineComponent({
         shippingMethod: {},
         orderItemSplit: {}
       } as any,
+      carriers: [] as any,
       availableShipmentMethods: [] as any,
       rerouteFulfillmentConfigMapping: (process.env.VUE_APP_RF_CNFG_MPNG? JSON.parse(process.env.VUE_APP_RF_CNFG_MPNG) : {}) as any
     }
@@ -268,6 +275,7 @@ export default defineComponent({
   async ionViewWillEnter() {
     // Only fetch configuration when environment mapping exists
     if (Object.keys(this.rerouteFulfillmentConfigMapping).length > 0) {
+      this.fetchCarriers()
       this.getAvailableShipmentMethods();
       this.getRerouteFulfillmentConfiguration();
     }
@@ -314,6 +322,59 @@ export default defineComponent({
     getDateTime(time: any) {
       return DateTime.fromMillis(time).toLocaleString(DateTime.DATETIME_MED);
     },
+    async openEditShipmentMethodModal(config: any) {
+      const editShipmentMethodModal = await modalController.create({
+        component: EditShipmentMethodModal,
+        componentProps: { currentcConfig: this.getShipmentMethodConfig(), carriers:  this.carriers, availableShipmentMethods: this.availableShipmentMethods }
+      });
+      
+      editShipmentMethodModal.onDidDismiss().then(async(result: any) => {
+        if(result.data?.shippingMethod) {
+          await this.updateRerouteFulfillmentConfiguration(config, result.data?.shippingMethod)
+        }
+      })
+
+      return editShipmentMethodModal.present();
+    },
+    getShipmentMethodConfig() {
+      if (Object.keys(this.rerouteFulfillmentConfig.shippingMethod).length !== 0) {
+        try {
+          const shippingMethodConfig = this.rerouteFulfillmentConfig.shippingMethod.settingValue ? JSON.parse(this.rerouteFulfillmentConfig.shippingMethod.settingValue) : {};
+          if (Object.keys(shippingMethodConfig).length > 0) {
+            const shipmentMethodDesc = this.availableShipmentMethods.find((shipmentMethod: any) => shipmentMethod.shipmentMethodTypeId === shippingMethodConfig.shipmentMethodTypeId)?.description;
+            const carrierName = this.carriers.find((carrier: any) => carrier.partyId === shippingMethodConfig.carrierPartyId)?.groupName;
+            return { ...shippingMethodConfig, shipmentMethodDesc, carrierName };
+          }
+        } catch (error) {
+          console.error('Error parsing shipping method config:', error);
+          return {};
+        }
+      }
+      return {};
+    },
+    async fetchCarriers () {
+      this.availableShipmentMethods = [];
+      try {
+        const resp = await UserService.getRerouteFulfillmentConfig({
+          "entityName": "CarrierShipmentMethodCount",
+          "inputFields": {
+            "roleTypeId": "CARRIER",
+            "partyTypeId": "PARTY_GROUP"
+          },
+          "fieldList": ["partyId", "roleTypeId", "groupName"],
+          "viewIndex": 0,
+          "viewSize": 250,  // maximum records we could have
+          "distinct": "Y",
+          "noConditionFind": "Y",
+          "orderBy": "groupName"
+        }) as any;
+        if (!hasError(resp) && resp.data?.docs) {
+          this.carriers = resp.data.docs;
+        }
+      } catch(err) {
+        logger.error(err)
+      }
+    },
     async getAvailableShipmentMethods () {
       this.availableShipmentMethods = [];
       try {
@@ -325,8 +386,8 @@ export default defineComponent({
           },
           "filterByDate": 'Y',
           "entityName": "ProductStoreShipmentMethView",
-          "fieldList": ["shipmentMethodTypeId", "description"],
-          "viewSize": 10
+          "fieldList": ["productStoreShipMethId", "partyId", "shipmentMethodTypeId", "description"],
+          "viewSize": 250
         }) as any;
         if (!hasError(resp) && resp.data?.docs) {
           this.availableShipmentMethods = resp.data.docs;
