@@ -435,8 +435,8 @@ export default defineComponent({
     },
     async deliverShipment (order: any) {
       await this.store.dispatch('order/deliverShipment', order)
-      .then(async (resp) => {
-        if(!hasError(resp)){
+      .then((resp) => {
+        if(!hasError(resp)) {
           showToast(translate('Order delivered to', {customerName: order.customer.name}))
 
           const productIds = [...new Set(order.parts.reduce((productId: any, part: any) => {
@@ -444,13 +444,12 @@ export default defineComponent({
             return productId.concat(ids)
           }, []))]
 
-          const fetchProductStock = productIds.map(async (productId: any) => {
+          productIds.map((productId: any) => {
             const productStock = this.getProductStock(productId);
             if (productStock && productStock.quantityOnHandTotal >= 0) {
-              return this.store.dispatch('stock/fetchStock', { productId })
+              this.store.dispatch('stock/fetchStock', { productId });
             }
           })
-          await Promise.allSettled(fetchProductStock);
         }
       })
     },
