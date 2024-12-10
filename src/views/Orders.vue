@@ -439,6 +439,8 @@ export default defineComponent({
         if(!hasError(resp)) {
           showToast(translate('Order delivered to', {customerName: order.customer.name}))
 
+          // We are collecting the product IDs of the order items and then fetching stock information
+          // for each product ID if it is available for updated inventory.
           const productIds = [...new Set(order.parts.reduce((productId: any, part: any) => {
             const ids = part.items.map((item: any) => item.productId)
             return productId.concat(ids)
