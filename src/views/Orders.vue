@@ -257,7 +257,8 @@ export default defineComponent({
       isCompletedOrdersScrollable: 'order/isCompletedOrdersScrollable',
       notifications: 'user/getNotifications',
       unreadNotificationsStatus: 'user/getUnreadNotificationsStatus',
-      getBopisProductStoreSettings: 'user/getBopisProductStoreSettings'
+      getBopisProductStoreSettings: 'user/getBopisProductStoreSettings',
+      getProductStock: 'stock/getProductStock',
     })
   },
   data() {
@@ -435,8 +436,22 @@ export default defineComponent({
     async deliverShipment (order: any) {
       await this.store.dispatch('order/deliverShipment', order)
       .then((resp) => {
-        if(!hasError(resp)){
+        if(!hasError(resp)) {
           showToast(translate('Order delivered to', {customerName: order.customer.name}))
+
+          // We are collecting the product IDs of the order items and then fetching stock information
+          // for each product ID if it is available for updated inventory.
+          const productIds = [...new Set(order.parts.reduce((productId: any, part: any) => {
+            const ids = part.items.map((item: any) => item.productId)
+            return productId.concat(ids)
+          }, []))]
+
+          productIds.map((productId: any) => {
+            const productStock = this.getProductStock(productId);
+            if (productStock && productStock.quantityOnHandTotal >= 0) {
+              this.store.dispatch('stock/fetchStock', { productId });
+            }
+          })
         }
       })
     },
