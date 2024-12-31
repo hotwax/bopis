@@ -107,56 +107,58 @@
             </ion-button>
           </ion-item>
 
-          <ion-card>
-            <ion-card-header>
-              <ion-card-title>{{ order?.customer?.name || order?.customer?.partyId }}</ion-card-title>
-            </ion-card-header>
-            <ion-list>
-              <ion-item>
-                <ion-icon :icon="mailOutline" slot="start" />
-                <ion-label class="ion-text-wrap">{{ order.billingEmail || "-" }}</ion-label>
-              </ion-item>
-              <ion-item>
-                <ion-icon :icon="callOutline" slot="start" />
-                <ion-label>{{ order.billingPhone || "-" }}</ion-label>
-              </ion-item>
-              <ion-item lines="none">
-                <ion-icon :icon="cashOutline" slot="start" />
-                <ion-label v-if="order.billingAddress" class="ion-text-wrap">
-                  {{ order.billingAddress.toName }}
-                  <p>{{ order.billingAddress.address1 }}</p>
-                  <p>{{ order.billingAddress.address2 }}</p>
-                  <p>{{ order.billingAddress.city }} {{ order.billingAddress.city && order.billingAddress.postalCode && ',' }} {{ order.billingAddress.postalCode }}</p>
-                  <p>{{ order.billingAddress.stateName }} {{ order.billingAddress.stateName && order.billingAddress.countryName && ',' }} {{ order.billingAddress.countryName }}</p>
-                </ion-label>
-                <ion-label v-else>{{ "-" }}</ion-label>
-              </ion-item>
-            </ion-list>
-          </ion-card>
-
-          <ion-card>
-            <ion-card-header>
-              <ion-card-title>{{ translate("Payment") }}</ion-card-title>
-            </ion-card-header>
-            <div v-if="order.orderPayments?.length">
-              <ion-list v-for="(orderPayment, index) in order.orderPayments" :key="index">
+          <div class="info">
+            <ion-card>
+              <ion-card-header>
+                <ion-card-title>{{ order?.customer?.name || order?.customer?.partyId }}</ion-card-title>
+              </ion-card-header>
+              <ion-list>
+                <ion-item>
+                  <ion-icon :icon="mailOutline" slot="start" />
+                  <ion-label class="ion-text-wrap">{{ order.billingEmail || "-" }}</ion-label>
+                </ion-item>
+                <ion-item>
+                  <ion-icon :icon="callOutline" slot="start" />
+                  <ion-label>{{ order.billingPhone || "-" }}</ion-label>
+                </ion-item>
                 <ion-item lines="none">
-                  <ion-label class="ion-text-wrap">
-                    <p class="overline">{{ orderPayment.methodTypeId }}</p>
-                    <ion-label>{{ translate(getPaymentMethodDesc(orderPayment.methodTypeId)) || orderPayment.methodTypeId }}</ion-label>
-                    <ion-note :color="getColorByDesc(getStatusDesc(orderPayment.paymentStatus))">{{ translate(getStatusDesc(orderPayment.paymentStatus)) }}</ion-note>
+                  <ion-icon :icon="cashOutline" slot="start" />
+                  <ion-label v-if="order.billingAddress" class="ion-text-wrap">
+                    {{ order.billingAddress.toName }}
+                    <p>{{ order.billingAddress.address1 }}</p>
+                    <p>{{ order.billingAddress.address2 }}</p>
+                    <p>{{ order.billingAddress.city }} {{ order.billingAddress.city && order.billingAddress.postalCode && ',' }} {{ order.billingAddress.postalCode }}</p>
+                    <p>{{ order.billingAddress.stateName }} {{ order.billingAddress.stateName && order.billingAddress.countryName && ',' }} {{ order.billingAddress.countryName }}</p>
                   </ion-label>
-                  <div slot="end" class="ion-text-end">
-                    <ion-badge v-if="order.orderPayments.length > 1 && index === 0" color="dark">{{ translate("Latest") }}</ion-badge>
-                    <ion-label slot="end">{{ formatCurrency(orderPayment.amount, order.currencyUom) }}</ion-label>
-                  </div>
+                  <ion-label v-else>{{ "-" }}</ion-label>
                 </ion-item>
               </ion-list>
-            </div>
-            <p v-else class="empty-state">
-              {{ translate("No payments found") }}
-            </p>
-          </ion-card>
+            </ion-card>
+
+            <ion-card>
+              <ion-card-header>
+                <ion-card-title>{{ translate("Payment") }}</ion-card-title>
+              </ion-card-header>
+              <div v-if="order.orderPayments?.length">
+                <ion-list v-for="(orderPayment, index) in order.orderPayments" :key="index">
+                  <ion-item lines="none">
+                    <ion-label class="ion-text-wrap">
+                      <p class="overline">{{ orderPayment.methodTypeId }}</p>
+                      <ion-label>{{ translate(getPaymentMethodDesc(orderPayment.methodTypeId)) || orderPayment.methodTypeId }}</ion-label>
+                      <ion-note :color="getColorByDesc(getStatusDesc(orderPayment.paymentStatus))">{{ translate(getStatusDesc(orderPayment.paymentStatus)) }}</ion-note>
+                    </ion-label>
+                    <div slot="end" class="ion-text-end">
+                      <ion-badge v-if="order.orderPayments.length > 1 && index === 0" color="dark">{{ translate("Latest") }}</ion-badge>
+                      <ion-label slot="end">{{ formatCurrency(orderPayment.amount, order.currencyUom) }}</ion-label>
+                    </div>
+                  </ion-item>
+                </ion-list>
+              </div>
+              <p v-else class="empty-state">
+                {{ translate("No payments found") }}
+              </p>
+            </ion-card>
+          </div>
 
           <ion-accordion-group v-if="order.shipGroups?.length">
             <ion-accordion>
@@ -653,10 +655,16 @@ ion-card-header {
   align-items: center;
 }
 
+.info {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(314px, max-content));
+  align-items: start;
+}
+
 @media (min-width: 768px) {
   main {
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: 1fr .75fr;
     gap: var(--spacer-base);
     max-width: 1200px;
     margin-inline: auto;
