@@ -95,4 +95,14 @@ const getColorByDesc = (desc: string) => ({
   "default": "medium"
 } as any)[desc]
 
-export { copyToClipboard, showToast, handleDateTimeInput, getFeature, formatPhoneNumber, getCurrentFacilityId, getColorByDesc }
+const currentSymbol: any = {
+  "USD": "$",
+  "EUR": "€",
+  "JPY": "¥"
+}
+
+const formatCurrency = (amount: any, code: string) => {
+  return `${currentSymbol[code] || code} ${amount || 0}`
+}
+
+export { copyToClipboard, showToast, handleDateTimeInput, getFeature, formatPhoneNumber, getCurrentFacilityId, getColorByDesc, formatCurrency }
