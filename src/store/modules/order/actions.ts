@@ -203,6 +203,229 @@ const actions: ActionTree<OrderState , RootState> ={
     return resp;
   },
 
+  async fetchAdditionalOrderInformation({ commit, dispatch, state }, orderId) {
+    let order = JSON.parse(JSON.stringify(state.current))
+
+    console.log('solr info', JSON.parse(JSON.stringify(state.current)))
+
+    try {
+      const apiPayload = [{
+        inputFields: {
+          orderId
+        },
+        viewSize: 50,
+        filterByDate: "Y",
+        entityName: "OrderHeaderAndRoles"
+      }, {
+        inputFields: {
+          orderId,
+          contactMechPurposeTypeId: ["BILLING_LOCATION", "BILLING_EMAIL", "PHONE_BILLING"],
+          contactMechPurposeTypeId_op: "in"
+        },
+        viewSize: 50,
+        fieldList: ["contactMechPurposeTypeId", "contactMechId"],
+        entityName: "OrderContactMech"
+      }, {
+        inputFields: {
+          orderId
+        },
+        viewSize: 50,
+        filterByDate: "Y",
+        fieldList: ["orderIdentificationTypeId", "orderId", "idValue"],
+        entityName: "OrderIdentification"
+      }, {
+        inputFields: {
+          orderId,
+          attrName: ["customerId", "municipio"],
+          attrName_op: "in",
+          attrName_ic: "Y"
+        },
+        viewSize: 50,
+        fieldList: ["attrName", "attrValue"],
+        entityName: "OrderAttribute"
+      }, {
+        inputFields: {
+          orderId,
+          statusId: ["ORDER_COMPLETED", "ORDER_APPROVED"],
+          statusId_op: "in"
+        },
+        viewSize: 2,
+        entityName: "OrderStatus"
+      }, {
+        inputFields: {
+          orderId,
+          statusId: "PAYMENT_CANCELLED",
+          statusId_op: "notEqual"
+        },
+        orderBy: "createdDate DESC",
+        viewSize: 50,
+        fieldList: ["paymentMethodTypeId", "maxAmount", "statusId"],
+        entityName: "OrderPaymentPreference"
+      }, {
+        inputFields: {
+          orderId
+        },
+        viewSize: 50,
+        entityName: "OrderItemShipGroupAndFacility"
+      }, {
+        inputFields: {
+          orderId,
+          shipmentStatusId: "SHIPMENT_INPUT",
+          shipmentStatusId_op: "notEqual"
+        },
+        fieldList: ["orderId", "shipGroupSeqId", "shipmentId", "trackingIdNumber"],
+        viewSize: 50,
+        entityName: "OrderShipmentAndRouteSegment"
+      }]
+
+      const [orderHeader, orderContactMech, orderIdentifications, orderAttributes, orderStatusInfo, orderPaymentPreference, orderShipGroups, orderRouteSegment] = await Promise.allSettled(apiPayload.map((payload: any) => OrderService.performFind(payload)))
+
+      if(orderHeader.status === "fulfilled" && !hasError(orderHeader.value) && orderHeader.value.data.count > 0) {
+        order = {
+          ...order,
+          ...orderHeader.value.data.docs[0]
+        }
+
+        console.log('order uuu', order)
+
+        if(!order.orderId) {
+          throw "Failed to fetch order information"
+        }
+      }
+      if(orderContactMech.status === "fulfilled" && !hasError(orderContactMech.value) && orderContactMech.value.data.count > 0) {
+        const orderContactMechTypes: any = orderContactMech.value.data.docs.reduce((contactMechTypes: any, contactMech: any) => {
+          contactMechTypes[contactMech.contactMechPurposeTypeId] = contactMech.contactMechId
+
+          return contactMechTypes;
+        }, {})
+
+        const postalAddress = await OrderService.performFind({
+          inputFields: {
+            contactMechId: Object.keys(orderContactMechTypes).filter((mechType: string) => mechType === "BILLING_LOCATION").map((mechType: string) => orderContactMechTypes[mechType]),
+            contactMechId_op: "in"
+          },
+          viewSize: 20,
+          entityName: "PostalAddressAndGeo"
+        })
+
+        if(!hasError(postalAddress) && postalAddress.data.count > 0) {
+          postalAddress.data.docs.map((address: any) => {
+            if(address.contactMechId === orderContactMechTypes["BILLING_LOCATION"]) {
+              order["billingAddress"] = address
+            }
+          })
+        }
+
+        const customerInfo = await OrderService.performFind({
+          inputFields: {
+            contactMechId: Object.keys(orderContactMechTypes).filter((mechType: string) => mechType === "BILLING_EMAIL" || mechType === "PHONE_BILLING").map((mechType: string) => orderContactMechTypes[mechType]),
+            contactMechId_op: "in"
+          },
+          viewSize: 20,
+          fieldList: ["infoString", "contactMechId", "tnContactNumber"],
+          entityName: "ContactMechDetail"
+        })
+
+        if(!hasError(customerInfo) && customerInfo.data.count > 0) {
+          customerInfo.data.docs.map((info: any) => {
+            if(info.contactMechId === orderContactMechTypes["BILLING_EMAIL"]) {
+              order["billingEmail"] = info.infoString
+            }
+
+            if(info.contactMechId === orderContactMechTypes["PHONE_BILLING"]) {
+              order["billingPhone"] = info.tnContactNumber
+            }
+          })
+        }
+      }
+
+      // Fetching order identifications
+      if(orderIdentifications.status === "fulfilled" && !hasError(orderIdentifications.value) && orderIdentifications.value.data.count > 0) {
+        order["shopifyOrderId"] = orderIdentifications.value.data.docs.find((identification: any) => identification.orderIdentificationTypeId === "SHOPIFY_ORD_ID")?.idValue
+      }
+
+      // Fetching order attributes
+      order["orderAttributes"] = {}
+      if(orderAttributes.status === "fulfilled" && !hasError(orderAttributes.value) && orderAttributes.value.data.count > 0) {
+        orderAttributes.value.data.docs.map((attribute: any) => {
+          // For some attbiutes we get casing difference, like customerId, CustomerId, so adding ic in performFind, but to display it correctly on UI, converting it into lowerCase
+          order["orderAttributes"][attribute.attrName.toLowerCase()] = attribute.attrValue
+        })
+      }
+
+      // Fetching brokering information for order
+      if(orderStatusInfo.status === "fulfilled" && !hasError(orderStatusInfo.value) && orderStatusInfo.value.data.count > 0) {
+        order["approvedDate"] = orderStatusInfo.value.data.docs.find((info: any) => info.statusId === "ORDER_APPROVED")?.statusDatetime
+        order["completedDate"] = orderStatusInfo.value.data.docs.find((info: any) => info.statusId === "ORDER_COMPLETED")?.statusDatetime
+      }
+
+      // Fetching payment preference for order
+      if(orderPaymentPreference.status === "fulfilled" && !hasError(orderPaymentPreference.value) && orderPaymentPreference.value.data.count > 0) {
+        const paymentMethodTypeIds: Array<string> = [];
+        const statusIds: Array<string> = [];
+        order["orderPayments"] = orderPaymentPreference.value.data.docs.map((paymentPreference: any) => {
+          paymentMethodTypeIds.push(paymentPreference.paymentMethodTypeId)
+          statusIds.push(paymentPreference.statusId)
+          return {
+            amount: paymentPreference["maxAmount"],
+            methodTypeId: paymentPreference["paymentMethodTypeId"],
+            paymentStatus: paymentPreference["statusId"]
+          }
+        })
+
+        this.dispatch("util/fetchStatusDesc", statusIds)
+
+        if(paymentMethodTypeIds.length) {
+          this.dispatch("util/fetchPaymentMethodTypeDesc", paymentMethodTypeIds)
+        }
+      }
+
+      const shipGroupSeqIds: Array<string> = [];
+      const shipmentMethodIds: Array<string> = []
+
+      const orderRouteSegmentInfo = orderRouteSegment.status === "fulfilled" && orderRouteSegment.value.data.docs?.length > 0 ? orderRouteSegment.value.data.docs.reduce((orderSegmentInfo: any, routeSegment: any) => {
+        if(orderSegmentInfo[routeSegment.shipGroupSeqId]) orderSegmentInfo[routeSegment.shipGroupSeqId].push(routeSegment)
+        else orderSegmentInfo[routeSegment.shipGroupSeqId] = [routeSegment]
+        return orderSegmentInfo
+      }, {}) : []
+
+      const carrierPartyIds = [] as any;
+
+      // TODO: fetch carrier info
+      // const carrierInfo = await dispatch("fetchCarriersTrackingInfo", Array.from(new Set(carrierPartyIds)));
+      // Object.keys(order["shipGroups"]).map((shipGroupId: any) => {
+      //   const shipGroup = order["shipGroups"][shipGroupId]
+      //   shipGroup.map((item: any) => item["carrierPartyName"] = carrierInfo[item.carrierPartyId]?.carrierName || "")
+      // })
+
+      // this.dispatch("util/fetchShipmentMethodTypeDesc", shipmentMethodIds)
+
+      order["shipGroupFulfillmentStatus"] = {}
+      const picklistBinInfo = await OrderService.performFind({
+        inputFields: {
+          orderId,
+          shipGroupSeqId: shipGroupSeqIds,
+          shipGroupSeqId_op: "in"
+        },
+        viewSize: 20,
+        fieldList: ["shipGroupSeqId", "itemStatusId"],
+        entityName: "PicklistItemAndBin"
+      })
+
+      if(!hasError(picklistBinInfo) && picklistBinInfo.data.count > 0) {
+        picklistBinInfo.data.docs.map((binInfo: any) => {
+          order["shipGroupFulfillmentStatus"][binInfo.shipGroupSeqId] = (binInfo.itemStatusId === "PICKITEM_PENDING" ? "Picking" : binInfo.itemStatusId === "PICKITEM_PICKED" || binInfo.itemStatusId === "PICKITEM_COMPLETED" ? binInfo.shipmentMethodTypeId === "STOREPICKUP" ? "Ready for pickup" : "Packed" : "")
+        })
+      }
+
+      // await this.dispatch("product/fetchProducts", { productIds })
+    } catch(err) {
+      logger.error(err)
+    }
+
+    commit(types.ORDER_CURRENT_UPDATED, { order })
+  },
+
   async getOrderDetail({ dispatch, state }, { payload, orderType }) {
     if(orderType === 'open') {
       payload['orderStatusId'] = "ORDER_APPROVED"
@@ -222,11 +445,11 @@ const actions: ActionTree<OrderState , RootState> ={
     const current = state.current as any
     const orders = JSON.parse(JSON.stringify(state.open.list)) as any
     // As one order can have multiple parts thus checking orderId and partSeq as well before making any api call
-    if(current.orderId === payload.orderId && current.orderType === orderType && current.part?.orderPartSeqId === payload.orderPartSeqId) {
-      await this.dispatch('product/getProductInformation', { orders: [ current ] })
-      await dispatch('fetchShipGroupForOrder');
-      return current 
-    }
+    // if(current.orderId === payload.orderId && current.orderType === orderType && current.part?.orderPartSeqId === payload.orderPartSeqId) {
+    //   await this.dispatch('product/getProductInformation', { orders: [ current ] })
+    //   await dispatch('fetchShipGroupForOrder');
+    //   return current 
+    // }
     if(orders.length) {
       const order = orders.find((order: any) => {
         return order.orderId === payload.orderId;
@@ -287,6 +510,7 @@ const actions: ActionTree<OrderState , RootState> ={
               return arr
             }, [])),
             placedDate: orderItem.orderDate,
+            entryDate: orderItem.entryDate,
             shippingInstructions: orderItem.shippingInstructions,
             orderType: orderType,
             pickers: orderItem.pickers ? (orderItem.pickers.reduce((names: any, picker: string) => {
@@ -315,10 +539,11 @@ const actions: ActionTree<OrderState , RootState> ={
 
     await dispatch('updateCurrent', { order: currentOrder })
   },
-
+  
   async updateCurrent ({ commit, dispatch }, payload) {
     commit(types.ORDER_CURRENT_UPDATED, { order: payload.order })
     await dispatch('fetchShipGroupForOrder');
+    dispatch("fetchAdditionalOrderInformation", payload.order.orderId)
   },
 
   async updateOrderItemFetchingStatus ({ commit, state }, payload) {

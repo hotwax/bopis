@@ -347,6 +347,14 @@ const packOrder = async (payload: any): Promise<any> => {
   })
 }
 
+const performFind = async (payload: any): Promise<any> => {
+  return api({
+    url: "/performFind",
+    method: "post",
+    data: payload
+  });
+}
+
 export const OrderService = {
   fetchOrderItems,
   fetchOrderPaymentPreferences,
@@ -368,6 +376,7 @@ export const OrderService = {
   getCustomerContactDetails,
   getShippingPhoneNumber,
   packOrder,
+  performFind,
   printPicklist,
   printShippingLabelAndPackingSlip
 }

@@ -78,4 +78,21 @@ const getCurrentFacilityId = () => {
   return currentFacility?.facilityId
 }
 
-export { copyToClipboard, showToast, handleDateTimeInput, getFeature, formatPhoneNumber, getCurrentFacilityId }
+const getColorByDesc = (desc: string) => ({
+  "Approved": "primary",
+  "Authorized": "medium",
+  "Cancelled": "danger",
+  "Completed": "success",
+  "Created": "medium",
+  "Declined": "danger",
+  "Held": "warning",
+  "Not-Authorized": "warning",
+  "Not-Received": "warning",
+  "Pending": "warning",
+  "Received": "success",
+  "Refunded": "success",
+  "Settled": "success",
+  "default": "medium"
+} as any)[desc]
+
+export { copyToClipboard, showToast, handleDateTimeInput, getFeature, formatPhoneNumber, getCurrentFacilityId, getColorByDesc }
