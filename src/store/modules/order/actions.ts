@@ -203,10 +203,9 @@ const actions: ActionTree<OrderState , RootState> ={
     return resp;
   },
 
-  async fetchAdditionalOrderInformation({ commit, dispatch, state }, orderId) {
-    let order = JSON.parse(JSON.stringify(state.current))
-
-    console.log('solr info', JSON.parse(JSON.stringify(state.current)))
+  async fetchAdditionalOrderInformation({ commit, dispatch, state }, orderDetails) {
+    let order = orderDetails;
+    const orderId = order.orderId
 
     try {
       const apiPayload = [{
@@ -285,8 +284,6 @@ const actions: ActionTree<OrderState , RootState> ={
           ...order,
           ...orderHeader.value.data.docs[0]
         }
-
-        console.log('order uuu', order)
 
         if(!order.orderId) {
           throw "Failed to fetch order information"
@@ -423,7 +420,7 @@ const actions: ActionTree<OrderState , RootState> ={
       logger.error(err)
     }
 
-    commit(types.ORDER_CURRENT_UPDATED, { order })
+    await dispatch('updateCurrent', { order })
   },
 
   async getOrderDetail({ dispatch, state }, { payload, orderType }) {
@@ -445,17 +442,18 @@ const actions: ActionTree<OrderState , RootState> ={
     const current = state.current as any
     const orders = JSON.parse(JSON.stringify(state.open.list)) as any
     // As one order can have multiple parts thus checking orderId and partSeq as well before making any api call
-    // if(current.orderId === payload.orderId && current.orderType === orderType && current.part?.orderPartSeqId === payload.orderPartSeqId) {
-    //   await this.dispatch('product/getProductInformation', { orders: [ current ] })
-    //   await dispatch('fetchShipGroupForOrder');
-    //   return current 
-    // }
+    if(current.orderId === payload.orderId && current.orderType === orderType && current.part?.orderPartSeqId === payload.orderPartSeqId) {
+      await this.dispatch('product/getProductInformation', { orders: [ current ] })
+      // TODO: if we can store additional order information and just fetch shipGroup info as it was previously
+      await dispatch("fetchAdditionalOrderInformation", current)
+      return current 
+    }
     if(orders.length) {
       const order = orders.find((order: any) => {
         return order.orderId === payload.orderId;
       })
       if(order) {
-        await dispatch('updateCurrent', { order })
+        await dispatch("fetchAdditionalOrderInformation", order)
         return order;
       }
     }
@@ -537,13 +535,12 @@ const actions: ActionTree<OrderState , RootState> ={
       logger.error(err)
     }
 
-    await dispatch('updateCurrent', { order: currentOrder })
+    dispatch("fetchAdditionalOrderInformation", currentOrder)
   },
   
   async updateCurrent ({ commit, dispatch }, payload) {
     commit(types.ORDER_CURRENT_UPDATED, { order: payload.order })
     await dispatch('fetchShipGroupForOrder');
-    dispatch("fetchAdditionalOrderInformation", payload.order.orderId)
   },
 
   async updateOrderItemFetchingStatus ({ commit, state }, payload) {

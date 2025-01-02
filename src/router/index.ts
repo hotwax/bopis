@@ -15,6 +15,7 @@ import { translate } from '@hotwax/dxp-components'
 import 'vue-router'
 import { DxpLogin, useAuthStore } from '@hotwax/dxp-components';
 import { loader } from '@/utils/user';
+import OrderDetailUpdated from '@/views/OrderDetailUpdated.vue';
 
 // Defining types for the meta values
 declare module 'vue-router' {
@@ -89,7 +90,7 @@ const routes: Array<RouteRecordRaw> = [
   {
     path: "/orderdetail/:orderType/:orderId/:orderPartSeqId",
     name: "OrderDetail",
-    component: OrderDetail,
+    component: OrderDetailUpdated,
     beforeEnter: authGuard,
     props: true,
     meta: {
