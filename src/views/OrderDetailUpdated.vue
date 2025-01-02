@@ -11,7 +11,7 @@
           <ion-button :disabled="!order?.orderId" @click="openOrderItemRejHistoryModal()">
             <ion-icon slot="icon-only" :icon="timeOutline" />
           </ion-button>
-          <ion-button v-if="orderType === 'open' && getBopisProductStoreSettings('PRINT_PACKING_SLIPS')" :disabled="!order?.orderId || !hasPermission(Actions.APP_ORDER_UPDATE) || order.handovered || order.shipped"  @click="order.part?.shipmentMethodEnum?.shipmentMethodEnumId === 'STOREPICKUP' ? printPackingSlip(order) : printShippingLabelAndPackingSlip(order)">
+          <ion-button v-if="orderType === 'open'" :disabled="!order?.orderId || !hasPermission(Actions.APP_ORDER_UPDATE) || order.handovered || order.shipped"  @click="printPicklist(order, order.part)">
             <ion-icon slot="icon-only" :icon="printOutline" />
           </ion-button>
           <ion-button v-else-if="orderType === 'packed' && getBopisProductStoreSettings('PRINT_PACKING_SLIPS')" :class="order.part?.shipmentMethodEnum?.shipmentMethodEnumId !== 'STOREPICKUP' ? 'ion-hide-md-up' : ''" :disabled="!order?.orderId || !hasPermission(Actions.APP_ORDER_UPDATE) || order.handovered || order.shipped" @click="order.part?.shipmentMethodEnum?.shipmentMethodEnumId === 'STOREPICKUP' ? printPackingSlip(order) : printShippingLabelAndPackingSlip(order)">
@@ -815,8 +815,6 @@ export default defineComponent({
         if(!hasError(resp)) {
           // generating picklist after creating a new picklist
           await OrderService.printPicklist(resp.data.picklistId)
-          // const orders = JSON.parse(JSON.stringify(this.orders))
-          // const updatedOrder = orders.find((currentOrder: any) => currentOrder.orderId === order.orderId);
           order["isPicked"] = "Y"
           order["picklistId"] = resp.data.picklistId
           order["picklistBinId"] = resp.data.picklistBinId
