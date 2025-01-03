@@ -170,6 +170,27 @@
           <p v-if="!order.part?.items?.length && orderType === 'open'" class="empty-state">{{ translate("All order items are rejected") }}</p>
           <p v-if="!order.part?.items?.length && orderType === 'packed'" class="empty-state">{{ translate("All order items are cancelled") }}</p>
 
+          <template v-if="orderType === 'packed'">
+            <ion-item lines="none" v-if="isCancelationSyncJobEnabled && isProcessRefundEnabled">
+              <ion-icon slot="start" :icon="checkmarkDoneOutline"/>
+              <ion-label>
+                {{ translate("Cancelation and refund sync to Shopify is enabled.") }}
+              </ion-label>
+            </ion-item>
+            <ion-item lines="none" v-else-if="isCancelationSyncJobEnabled">
+              <ion-icon slot="start" :icon="warningOutline"/>
+              <ion-label>
+                {{ translate("Cancelation sync to Shopify is enabled. Refund processing is disabled.") }}
+              </ion-label>
+            </ion-item>
+            <ion-item lines="none" v-else>
+              <ion-icon slot="start" :icon="closeOutline"/>
+              <ion-label>
+                {{ translate("Cancelation and refund sync to Shopify is not enabled.") }}
+              </ion-label>
+            </ion-item>
+          </template>
+
           <ion-item lines="none" v-if="orderType === 'open' && order.part?.items?.length">
             <ion-button size="default" :disabled="!hasPermission(Actions.APP_ORDER_UPDATE) || order.readyToHandover || order.readyToShip || order.rejected || order.hasRejectedItem" @click="readyForPickup(order, order.part)">
               <ion-icon slot="start" :icon="bagCheckOutline"/>
@@ -179,7 +200,6 @@
               {{ translate("Reject Items") }}
             </ion-button>
           </ion-item>
-
           <ion-item lines="none" v-else-if="orderType === 'packed' && order.part?.items?.length" class="ion-hide-md-down">
             <ion-button size="default" :disabled="!hasPermission(Actions.APP_ORDER_UPDATE) || order.handovered || order.shipped || order.cancelled || order.hasCancelledItems" expand="block" @click="deliverShipment(order)">
               <ion-icon slot="start" :icon="checkmarkDoneOutline"/>
@@ -349,6 +369,7 @@ import {
   callOutline,
   cashOutline,
   copyOutline,
+  closeOutline,
   closeCircleOutline,
   checkmarkCircleOutline,
   checkmarkDoneOutline,
@@ -371,7 +392,8 @@ import {
   trashOutline,
   chevronUpOutline,
   listOutline,
-  caretDownOutline
+  caretDownOutline,
+  warningOutline
 } from "ionicons/icons";
 import { useRouter } from 'vue-router'
 import { Actions, hasPermission } from '@/authorization'
@@ -390,6 +412,7 @@ import { isKit } from '@/utils/order'
 import ReportAnIssuePopover from "@/components/ReportAnIssuePopover.vue";
 import { UserService } from "@/services/UserService";
 import ConfirmCancelModal from "@/components/ConfirmCancelModal.vue";
+import { UtilService } from "@/services/UtilService";
 
 export default defineComponent({
   name: "OrderDetail",
@@ -434,6 +457,9 @@ export default defineComponent({
       } as any,
       showKitComponents: false,
       rejectEntireOrderReasonId: "REJ_AVOID_ORD_SPLIT",
+      isCancelationSyncJobEnabled: false,
+      isProcessRefundEnabled: false,
+      cancelJobNextRunTime: ""
     }
   },
   computed: {
@@ -449,6 +475,7 @@ export default defineComponent({
       getBopisProductStoreSettings: 'user/getBopisProductStoreSettings',
       rejectReasons: 'util/getRejectReasons',
       cancelReasons: 'util/getCancelReasons',
+      currentEComStore: 'user/getCurrentEComStore',
     })
   },
   props: ['orderType', 'orderId', 'orderPartSeqId'],
@@ -576,7 +603,9 @@ export default defineComponent({
       const cancelOrderConfirmModal = await modalController.create({
         component: ConfirmCancelModal,
         componentProps: {
-          order
+          order,
+          isCancelationSyncJobEnabled: this.isCancelationSyncJobEnabled,
+          isProcessRefundEnabled: this.isProcessRefundEnabled
         }
       });
 
@@ -893,6 +922,56 @@ export default defineComponent({
         emitter.emit("dismissLoader");
         return;
       }
+    },
+    async fetchJobs() {
+      // TODO: Add check to only fetch the jobs for current product store
+      let params = {
+        inputFields: {
+          statusId: ["SERVICE_DRAFT", "SERVICE_PENDING"],
+          statusId_op: "in",
+          systemJobEnumId: "JOB_UL_CNCLD_ORD",
+          systemJobEnumId_op: "equals"
+        },
+        orderBy: "runTime DESC",
+        noConditionFind: "Y",
+        viewSize: 50
+      } as any
+
+      try {
+        const resp = await UtilService.fetchJobInformation(params)
+
+        if(!hasError(resp) && resp.data.count) {
+          resp.data.docs.find((job: any) => {
+            if(job.statusId === "SERVICE_PENDING") {
+              this.isCancelationSyncJobEnabled = true;
+              this.cancelJobNextRunTime = job.runTime
+              this.getProcessRefundStatus();
+            }
+          })
+        }
+      } catch(err) {
+        logger.error(err)
+      }
+    },
+    async getProcessRefundStatus() {
+      try {
+        const params = {
+          inputFields: {
+            productStoreId: this.currentEComStore?.productStoreId,
+            productStoreId_op: "equals"
+          },
+          entityName: "ShopifyConfig",
+          fieldList: ["shopifyConfigId", "processRefund"],
+          viewSize: 1
+        }
+
+        const resp = await UtilService.getProcessRefundStatus(params);
+        if(!hasError(resp) && resp.data?.count > 0) {
+          this.isProcessRefundEnabled = resp.data.docs[0]?.processRefund === "Y"
+        }
+      } catch(err) {
+        logger.error(err)
+      }
     }
   },
   async mounted() {
@@ -903,6 +982,11 @@ export default defineComponent({
     if(this.order.orderId) {
       this.orderType === "open" ? await this.fetchRejectReasons() : await this.fetchCancelReasons();
     }
+
+    if(this.orderType === "packed") {
+      this.fetchJobs();
+    }
+
     emitter.emit("dismissLoader")
   },
   setup() {
@@ -925,6 +1009,7 @@ export default defineComponent({
       copyOutline,
       copyToClipboard,
       closeCircleOutline,
+      closeOutline,
       checkmarkCircleOutline,
       checkmarkDoneOutline,
       checkmarkOutline,
@@ -950,6 +1035,7 @@ export default defineComponent({
       sunnyOutline,
       ticketOutline,
       timeOutline,
+      warningOutline,
       mailOutline,
       sendOutline,
       translate,

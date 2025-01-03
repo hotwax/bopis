@@ -30,12 +30,26 @@
         <ion-note slot="end">{{ orderTotal }}</ion-note>
       </ion-item>
 
-      <ion-item lines="full">
+      <ion-item lines="full" v-if="isCancelationSyncJobEnabled && isProcessRefundEnabled">
         <ion-label>
-          {{ translate("Estimated time to refund customer to Shopify") }}
+          {{ translate("Estimated time to refund customer on Shopify") }}
           <p>{{ translate("Showing the next estimated time to sync cancelation to Shopify") }}</p>
         </ion-label>
-        <ion-note slot="end">{{ "15 mins" }}</ion-note>
+        <ion-note slot="end">{{ cancelJobNextRunTime }}</ion-note>
+      </ion-item>
+      <ion-item lines="full" v-else-if="isCancelationSyncJobEnabled">
+        <ion-label>
+          {{ translate("Estimated time to cancelation on Shopify") }}
+          <p>{{ translate("Showing the next estimated time to sync cancelation to Shopify") }}</p>
+          <p>{{ translate("Cancelation sync to Shopify is enabled. Refund processing is disabled.") }}</p>
+        </ion-label>
+        <ion-note slot="end">{{ cancelJobNextRunTime }}</ion-note>
+      </ion-item>
+      <ion-item lines="full" v-else>
+        <ion-label>
+          {{ translate("Cancelation not syncing to Shopify") }}
+          <p>{{ translate("Cancelation and refund sync to Shopify is not enabled.") }}</p>
+        </ion-label>
       </ion-item>
     </ion-list>
 
@@ -90,10 +104,9 @@ export default defineComponent({
     IonThumbnail,
     IonToolbar
   },
-  props: ["order"],
+  props: ["order", "isCancelationSyncJobEnabled", "isProcessRefundEnabled", "cancelJobNextRunTime"],
   data() {
     return {
-      showKitComponents: false,
       cancelledItems: [] as Array<any>,
       orderTotal: 0,
       currentOrder: {} as any

@@ -115,14 +115,32 @@ const isEnumExists = async (enumId: string): Promise<any> => {
   }
 }
 
+const fetchJobInformation = async (payload: any): Promise <any>  => {
+  return api({
+    url: "/findJobs",
+    method: "get",
+    params: payload
+  });
+}
+
+const getProcessRefundStatus = async (payload: any): Promise<any> => {
+  return api({
+    url: "performFind",
+    method: "post",
+    data: payload
+  });
+}
+
 export const UtilService = {
   createEnumeration,
   createProductStoreSetting,
   fetchFacilityTypeInformation,
+  fetchJobInformation,
   fetchPartyInformation,
   fetchPaymentMethodTypeDesc,
   fetchRejectReasons,
   fetchStatusDesc,
+  getProcessRefundStatus,
   getProductStoreSettings,
   isEnumExists,
   resetPicker,
