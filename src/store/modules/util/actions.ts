@@ -6,6 +6,7 @@ import { UtilService } from '@/services/UtilService'
 import { hasError } from '@/adapter'
 import logger from '@/logger'
 import store from '@/store'
+import { OrderService } from '@/services/OrderService'
 
 const actions: ActionTree<UtilState, RootState> = {
   async fetchRejectReasons({ commit }) {
@@ -86,8 +87,40 @@ const actions: ActionTree<UtilState, RootState> = {
     commit(types.UTIL_REJECT_REASONS_UPDATED, rejectReasons)
   },
 
+  async fetchCancelReasons({ commit }) {
+    let cancelReasons = [];
+    const payload = {
+      "inputFields": {
+        "enumTypeId": "ODR_ITM_CH_REASON"
+      },
+      "fieldList": ["enumId", "description"],
+      "entityName": "Enumeration",
+      "distinct": "Y",
+      "viewSize": 100,
+      "orderBy": "sequenceNum"
+    }
+
+    try {
+      const resp = await OrderService.performFind(payload)
+
+      if(!hasError(resp) && resp.data.count > 0) {
+        cancelReasons = resp.data.docs
+      } else {
+        throw resp.data
+      }
+    } catch (err) {
+      logger.error('Failed to fetch cancel reasons', err)
+    }
+
+    commit(types.UTIL_CANCEL_REASONS_UPDATED, cancelReasons)
+  },
+
   async updateRejectReasons({ commit }, payload) {
     commit(types.UTIL_REJECT_REASONS_UPDATED, payload)
+  },
+
+  async updateCancelReasons({ commit }, payload) {
+    commit(types.UTIL_CANCEL_REASONS_UPDATED, payload)
   },
 
   async fetchPaymentMethodTypeDesc({ commit, state }, paymentMethodTypeIds) {

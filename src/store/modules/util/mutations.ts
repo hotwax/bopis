@@ -18,5 +18,8 @@ const mutations: MutationTree <UtilState> = {
   [types.UTIL_PARTY_NAMES_UPDATED](state, payload) {
     state.partyNames = payload
   },
+  [types.UTIL_CANCEL_REASONS_UPDATED] (state, payload) {
+    state.cancelReasons = payload
+  },
 }
 export default mutations;

@@ -18,5 +18,8 @@ const getters: GetterTree <UtilState, RootState> = {
   getPartyName: (state) => (partyId: string) => {
     return state.partyNames[partyId] ? state.partyNames[partyId] : ''
   },
+  getCancelReasons(state) {
+    return state.cancelReasons ? state.cancelReasons : []
+  },
 }
 export default getters;

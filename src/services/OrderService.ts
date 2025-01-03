@@ -355,7 +355,16 @@ const performFind = async (payload: any): Promise<any> => {
   });
 }
 
+const cancelItem = async (payload: any): Promise<any> => {
+  return api({
+    url: "cancelOrderItem",
+    method: "post",
+    data: payload
+  });
+}
+
 export const OrderService = {
+  cancelItem,
   fetchOrderItems,
   fetchOrderPaymentPreferences,
   fetchTrackingCodes,

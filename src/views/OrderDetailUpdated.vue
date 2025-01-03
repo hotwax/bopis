@@ -87,19 +87,32 @@
                 <p class="ion-text-wrap">{{ getProductIdentificationValue(productIdentificationPref.secondaryId, getProduct(item.productId)) }}</p>
                 <ion-badge color="dark" v-if="isKit(item)">{{ translate("Kit") }}</ion-badge>
               </ion-label>
-              <!-- Rejection Reason -->
-              <ion-chip v-if="item.rejectReason" outline color="danger" @click.stop="openRejectReasonPopover($event, item, order)">
-                <ion-icon :icon="closeCircleOutline" @click.stop="removeRejectionReason($event, item, order)"/>
-                <ion-label>{{ getRejectionReasonDescription(item.rejectReason) }}</ion-label>
-                <ion-icon :icon="caretDownOutline"/>
-              </ion-chip>
-              <ion-chip v-else-if="isEntierOrderRejectionEnabled(order)" outline color="danger" @click.stop="openRejectReasonPopover($event, item, order)">
-                <ion-label>{{ getRejectionReasonDescription(rejectEntireOrderReasonId) ? getRejectionReasonDescription(rejectEntireOrderReasonId) : translate('Reject entire order')}}</ion-label>
-                <ion-icon :icon="caretDownOutline"/>
-              </ion-chip>
-              <ion-button v-else slot="end" color="danger" fill="clear" size="small" @click.stop="openRejectReasonPopover($event, item, order)">
-                <ion-icon slot="icon-only" :icon="trashOutline"/>
-              </ion-button>
+              <template v-if="orderType === 'open'">
+                <!-- Rejection Reason -->
+                <ion-chip v-if="item.rejectReason" outline color="danger" @click.stop="openRejectReasonPopover($event, item, order)">
+                  <ion-icon :icon="closeCircleOutline" @click.stop="removeRejectionReason($event, item, order)"/>
+                  <ion-label>{{ getRejectionReasonDescription(item.rejectReason) }}</ion-label>
+                  <ion-icon :icon="caretDownOutline"/>
+                </ion-chip>
+                <ion-chip v-else-if="isEntierOrderRejectionEnabled(order)" outline color="danger" @click.stop="openRejectReasonPopover($event, item, order)">
+                  <ion-label>{{ getRejectionReasonDescription(rejectEntireOrderReasonId) ? getRejectionReasonDescription(rejectEntireOrderReasonId) : translate('Reject entire order')}}</ion-label>
+                  <ion-icon :icon="caretDownOutline"/>
+                </ion-chip>
+                <ion-button v-else slot="end" color="danger" fill="clear" size="small" @click.stop="openRejectReasonPopover($event, item, order)">
+                  <ion-icon slot="icon-only" :icon="trashOutline"/>
+                </ion-button>
+              </template>
+              <template v-else-if="orderType === 'packed'">
+                <!-- Order item calcellation flow -->
+                <ion-chip v-if="item.cancelReason" outline color="danger" @click.stop="openCancelReasonPopover($event, item, order)">
+                  <ion-icon :icon="closeCircleOutline" @click.stop="removeCancellationReason($event, item, order)"/>
+                  <ion-label>{{ getCancelReasonDescription(item.cancelReason) }}</ion-label>
+                  <ion-icon :icon="caretDownOutline"/>
+                </ion-chip>
+                <ion-button v-else slot="end" color="danger" fill="clear" size="small" @click.stop="openCancelReasonPopover($event, item, order)">
+                  {{ translate("Cancel") }}
+                </ion-button>
+              </template>
 
               <div class="show-kit-components" slot="end">
                 <ion-spinner v-if="item.isFetchingStock" color="medium" name="crescent" />
@@ -144,7 +157,8 @@
               </ion-card>
             </template>
           </ion-card>
-          <p v-if="!order.part?.items?.length" class="empty-state">{{ translate("All order items are rejected") }}</p>
+          <p v-if="!order.part?.items?.length && orderType === 'open'" class="empty-state">{{ translate("All order items are rejected") }}</p>
+          <p v-if="!order.part?.items?.length && orderType === 'packed'" class="empty-state">{{ translate("All order items are cancelled") }}</p>
 
           <ion-item lines="none" v-if="orderType === 'open' && order.part?.items?.length">
             <ion-button size="default" :disabled="!hasPermission(Actions.APP_ORDER_UPDATE) || order.readyToHandover || order.readyToShip || order.rejected || order.hasRejectedItem" @click="readyForPickup(order, order.part)">
@@ -157,11 +171,12 @@
           </ion-item>
 
           <ion-item lines="none" v-else-if="orderType === 'packed' && order.part?.items?.length" class="ion-hide-md-down">
-            <ion-button size="default" :disabled="!hasPermission(Actions.APP_ORDER_UPDATE) || order.handovered || order.shipped" expand="block" fill="outline" @click="order?.part?.shipmentMethodEnum?.shipmentMethodEnumId === 'STOREPICKUP' ? sendReadyForPickupEmail(order) : printShippingLabelAndPackingSlip(order)">
-              {{ order?.part?.shipmentMethodEnum?.shipmentMethodEnumId === 'STOREPICKUP' ? translate("Resend customer email") : translate("Generate shipping documents") }}
-            </ion-button>
-            <ion-button size="default" :disabled="!hasPermission(Actions.APP_ORDER_UPDATE) || order.handovered || order.shipped" expand="block" @click="deliverShipment(order)">
+            <ion-button size="default" :disabled="!hasPermission(Actions.APP_ORDER_UPDATE) || order.handovered || order.shipped || order.cancelled || order.hasCancelledItems" expand="block" @click="deliverShipment(order)">
+              <ion-icon slot="start" :icon="checkmarkDoneOutline"/>
               {{ order.part?.shipmentMethodEnum?.shipmentMethodEnumId === 'STOREPICKUP' ? translate("Handover") : translate("Ship") }}
+            </ion-button>
+            <ion-button size="default" :disabled="!hasPermission(Actions.APP_ORDER_UPDATE) || order.handovered || order.shipped || order.cancelled || !order.hasCancelledItems" expand="block" fill="outline" @click="cancelOrder(order)">
+              {{ translate("Cancel Items") }}
             </ion-button>
           </ion-item>
 
@@ -278,7 +293,7 @@
         </ion-fab-button>
       </ion-fab>
       <ion-fab v-else-if="orderType === 'packed' && order?.orderId" class="ion-hide-md-up" vertical="bottom" horizontal="end" slot="fixed" >
-        <ion-fab-button :disabled="!hasPermission(Actions.APP_ORDER_UPDATE) || order.handovered || order.shipped" @click="deliverShipment(order)">
+        <ion-fab-button :disabled="!hasPermission(Actions.APP_ORDER_UPDATE) || order.handovered || order.shipped || order.cancelled" @click="deliverShipment(order)">
           <ion-icon :icon="order.part?.shipmentMethodEnum?.shipmentMethodEnumId === 'STOREPICKUP' ? accessibilityOutline : checkmarkOutline" />
         </ion-fab-button>
       </ion-fab>
@@ -364,6 +379,7 @@ import InventoryDetailsPopover from '@/components/InventoryDetailsPopover.vue'
 import { isKit } from '@/utils/order'
 import ReportAnIssuePopover from "@/components/ReportAnIssuePopover.vue";
 import { UserService } from "@/services/UserService";
+import ConfirmCancelModal from "@/components/ConfirmCancelModal.vue";
 
 export default defineComponent({
   name: "OrderDetail",
@@ -422,6 +438,7 @@ export default defineComponent({
       getPartyName: 'util/getPartyName',
       getBopisProductStoreSettings: 'user/getBopisProductStoreSettings',
       rejectReasons: 'util/getRejectReasons',
+      cancelReasons: 'util/getCancelReasons',
     })
   },
   props: ['orderType', 'orderId', 'orderPartSeqId'],
@@ -545,6 +562,16 @@ export default defineComponent({
 
       emitter.emit("dismissLoader");
     },
+    async cancelOrder(order: any) {
+      const cancelOrderConfirmModal = await modalController.create({
+        component: ConfirmCancelModal,
+        componentProps: {
+          order
+        }
+      });
+
+      return cancelOrderConfirmModal.present();
+    },
     async readyForPickup(order: any, part: any) {
       if(this.getBopisProductStoreSettings('ENABLE_TRACKING') && order.isPicked !== 'Y') return this.assignPicker(order, part, this.currentFacility?.facilityId);
       const pickup = part?.shipmentMethodEnum?.shipmentMethodEnumId === 'STOREPICKUP';
@@ -592,6 +619,9 @@ export default defineComponent({
     },
     async fetchRejectReasons() {
       await this.store.dispatch('util/fetchRejectReasons');
+    },
+    async fetchCancelReasons() {
+      await this.store.dispatch('util/fetchCancelReasons');
     },
     timeFromNow(time: any) {
       const timeDiff = DateTime.fromISO(time).diff(DateTime.local());
@@ -710,6 +740,30 @@ export default defineComponent({
         this.updateRejectReason(result.data, item, order)
       }
     },
+    async openCancelReasonPopover(ev: Event, item: any, order: any) {
+      const cancelItemPopover = await popoverController.create({
+        component: ReportAnIssuePopover,
+        componentProps: {
+          reasonType: "cancel"
+        },
+        event: ev,
+        translucent: true,
+        showBackdrop: false,
+      });
+
+      cancelItemPopover.present();
+
+      const result = await cancelItemPopover.onDidDismiss();
+
+      if (result.data) {
+        this.updateCancelReason(result.data, item, order)
+      }
+    },
+    async updateCancelReason(updatedReason: string, item: any, order: any) {
+      item.cancelReason = updatedReason;
+      order.hasCancelledItems = true
+      this.store.dispatch("order/updateCurrent", { order })
+    },
     async updateRejectReason(updatedReason: string, item: any, order: any) {
       item.rejectReason = updatedReason;
 
@@ -726,20 +780,22 @@ export default defineComponent({
       const reason = this.rejectReasons?.find((reason: any) => reason.enumId === rejectionReasonId)
       return reason?.description ? reason.description : reason?.enumDescription ? reason.enumDescription : reason?.enumId;
     },
+    getCancelReasonDescription(cancelReasonId: string) {
+      const reason = this.cancelReasons?.find((reason: any) => reason.enumId === cancelReasonId)
+      return reason?.description ? reason.description : reason?.enumDescription ? reason.enumDescription : reason?.enumId;
+    },
     isEntierOrderRejectionEnabled(order: any) {
       return (!this.partialOrderRejectionConfig || !this.partialOrderRejectionConfig.settingValue || !JSON.parse(this.partialOrderRejectionConfig.settingValue)) && order.hasRejectedItem
     },
     async removeRejectionReason(ev: Event, item: any, order: any) {
-      // delete item["rejectReason"];
       delete item["rejectedComponents"];
       item.rejectReason = "";
-      // order.items.map((orderItem: any) => {
-      //   if(orderItem.orderItemSeqId === item.orderItemSeqId) {
-      //     delete orderItem["rejectReason"];
-      //     delete orderItem["rejectedComponents"];
-      //   }
-      // })
       order.hasRejectedItem = order.part.items.some((item: any) => item.rejectReason);
+      this.store.dispatch("order/updateCurrent", { order })
+    },
+    async removeCancellationReason(ev: Event, item: any, order: any) {
+      item.cancelReason = "";
+      order.hasCancelledItems = order.part.items.some((item: any) => item.cancelReason);
       this.store.dispatch("order/updateCurrent", { order })
     },
     rejectKitComponent(order: any, item: any, componentProductId: string) {
@@ -833,9 +889,9 @@ export default defineComponent({
     emitter.emit("presentLoader")
     await this.getOrderDetail(this.orderId, this.orderPartSeqId, this.orderType);
 
-    // fetch customer details and rejection reasons only when we get the orders information
+    // fetch rejection reasons only when we get the orders information
     if(this.order.orderId) {
-      await this.fetchRejectReasons();
+      this.orderType === "open" ? await this.fetchRejectReasons() : await this.fetchCancelReasons();
     }
     emitter.emit("dismissLoader")
   },

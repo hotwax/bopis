@@ -1,7 +1,12 @@
 <template>
   <ion-content>
-    <ion-list>
+    <ion-list v-if="reasonType === 'reject'">
       <ion-item v-for="reason in rejectReasons" :key="reason.enumId" @click="updateIssue(reason.enumId)" button>
+        {{ reason.description ? translate(reason.description) : reason.enumDescription ? translate(reason.enumDescription) : reason.enumId  }}
+      </ion-item>
+    </ion-list>
+    <ion-list v-else>
+      <ion-item v-for="reason in cancelReasons" :key="reason.enumId" @click="updateIssue(reason.enumId)" button>
         {{ reason.description ? translate(reason.description) : reason.enumDescription ? translate(reason.enumDescription) : reason.enumId  }}
       </ion-item>
     </ion-list>
@@ -26,9 +31,16 @@ export default defineComponent({
     IonItem,
     IonList
   },
+  props: {
+    reasonType: {
+      type: String,
+      default: "reject"
+    }
+  },
   computed: {
     ...mapGetters({
       rejectReasons: 'util/getRejectReasons',
+      cancelReasons: 'util/getCancelReasons',
     })
   },
   methods: {

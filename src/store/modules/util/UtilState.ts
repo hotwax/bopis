@@ -4,4 +4,5 @@ export default interface UtilState {
   statusDesc: any;
   facilityTypeDesc: any;
   partyNames: any;
+  cancelReasons: Array<any>;
 }
