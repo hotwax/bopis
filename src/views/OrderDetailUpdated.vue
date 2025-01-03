@@ -98,7 +98,7 @@
                 <p class="ion-text-wrap">{{ getProductIdentificationValue(productIdentificationPref.secondaryId, getProduct(item.productId)) }}</p>
                 <ion-badge color="dark" v-if="isKit(item)">{{ translate("Kit") }}</ion-badge>
               </ion-label>
-              <template v-if="orderType === 'open'">
+              <template v-if="orderType === 'open' && !(order.readyToHandover || order.readyToShip)">
                 <!-- Rejection Reason -->
                 <ion-chip v-if="item.rejectReason" outline color="danger" @click.stop="openRejectReasonPopover($event, item, order)">
                   <ion-icon :icon="closeCircleOutline" @click.stop="removeRejectionReason($event, item, order)"/>
@@ -113,8 +113,8 @@
                   <ion-icon slot="icon-only" :icon="trashOutline"/>
                 </ion-button>
               </template>
-              <template v-else-if="orderType === 'packed'">
-                <!-- Order item calcellation flow -->
+              <!-- Order item calcelation flow -->
+              <template v-else-if="orderType === 'packed' && !(order.handovered || order.shipped)">
                 <ion-chip v-if="item.cancelReason" outline color="danger" @click.stop="openCancelReasonPopover($event, item, order)">
                   <ion-icon :icon="closeCircleOutline" @click.stop="removeCancellationReason($event, item, order)"/>
                   <ion-label>{{ getCancelReasonDescription(item.cancelReason) }}</ion-label>
@@ -141,7 +141,6 @@
                   <ion-icon v-if="showKitComponents" color="medium" slot="icon-only" :icon="chevronUpOutline"/>
                   <ion-icon v-else color="medium" slot="icon-only" :icon="listOutline"/>
                 </ion-button>
-
               </div>  
             </ion-item>
 
