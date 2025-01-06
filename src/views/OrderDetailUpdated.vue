@@ -29,7 +29,7 @@
           <ion-item lines="none">
             <ion-icon slot="start" :icon="timeOutline" class="mobile-only" />
             <h2>{{ translate("Timeline") }}</h2>
-            <!-- <ion-badge slot="end" :color="getColorByDesc(orderStatuses[order.statusId].label) || getColorByDesc('default')">{{ translate(orderStatuses[order.statusId].label) }}</ion-badge> -->
+            <ion-badge slot="end" :color="getColorByDesc(getOrderStatus(order, order.part, orderType))">{{ translate(getOrderStatus(order, order.part, orderType)) }}</ion-badge>
           </ion-item>
 
           <ion-list class="desktop-only">
@@ -422,6 +422,7 @@ import ReportAnIssuePopover from "@/components/ReportAnIssuePopover.vue";
 import { UserService } from "@/services/UserService";
 import ConfirmCancelModal from "@/components/ConfirmCancelModal.vue";
 import { UtilService } from "@/services/UtilService";
+import { getOrderStatus } from "@/utils/order"
 
 export default defineComponent({
   name: "OrderDetail",
@@ -1029,6 +1030,7 @@ export default defineComponent({
       downloadOutline,
       formatCurrency,
       getColorByDesc,
+      getOrderStatus,
       getProductIdentificationValue,
       giftOutline,
       getFeature,

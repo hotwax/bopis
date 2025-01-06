@@ -89,8 +89,12 @@ const getColorByDesc = (desc: string) => ({
   "Not-Authorized": "warning",
   "Not-Received": "warning",
   "Pending": "warning",
+  "Picked up": "success",
+  "Picking": "dark",
+  "Ready for pickup": "primary",
   "Received": "success",
   "Refunded": "success",
+  "Reserved": "medium",
   "Settled": "success",
   "default": "medium"
 } as any)[desc]
