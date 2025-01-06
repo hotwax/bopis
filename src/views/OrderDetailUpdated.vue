@@ -5,9 +5,6 @@
         <ion-back-button default-href="/" slot="start" />
         <ion-title>{{ translate("Order details") }}</ion-title>
         <ion-buttons slot="end">
-          <ion-button v-if="orderType === 'packed' && order.part?.shipmentMethodEnum?.shipmentMethodEnumId === 'STOREPICKUP'" class="ion-hide-md-up" :disabled="!order?.orderId || !hasPermission(Actions.APP_ORDER_UPDATE) || order.handovered || order.shipped" @click="sendReadyForPickupEmail(order)">
-            <ion-icon slot="icon-only" :icon="mailOutline" />
-          </ion-button>
           <ion-button :disabled="!order?.orderId" @click="openOrderItemRejHistoryModal()">
             <ion-icon slot="icon-only" :icon="timeOutline" />
           </ion-button>
@@ -57,6 +54,17 @@
                 <p>{{ findTimeDiff(order.orderDate, order.approvedDate) }}</p>
                 {{ translate("Approved for fulfillment") }}
               </ion-label>
+              <ion-note slot="end">{{ formatDateTime(order.approvedDate) }}</ion-note>
+            </ion-item>
+            <ion-item v-if="order.pickers">
+              <ion-icon :icon="personAddOutline" slot="start" />
+              <ion-label>
+                <!-- TODO: add correct picklist creation date -->
+                <p>{{ findTimeDiff(order.orderDate, order.approvedDate) }}</p>
+                {{ translate("Picker assigned") }}
+                <p>{{ order.pickers }}</p>
+              </ion-label>
+              <!-- TODO: add correct picklist creation date -->
               <ion-note slot="end">{{ formatDateTime(order.approvedDate) }}</ion-note>
             </ion-item>
             <ion-item v-if="order.completedDate">
@@ -393,7 +401,8 @@ import {
   chevronUpOutline,
   listOutline,
   caretDownOutline,
-  warningOutline
+  warningOutline,
+  personAddOutline
 } from "ionicons/icons";
 import { useRouter } from 'vue-router'
 import { Actions, hasPermission } from '@/authorization'
@@ -873,7 +882,7 @@ export default defineComponent({
           logger.error(error)
           return;
         }
-        await this.createPicklist(order, "_NA_");
+        await this.createPicklist(order, "_NA_", "Default");
         return;
       }
 
@@ -884,13 +893,13 @@ export default defineComponent({
 
       assignPickerModal.onDidDismiss().then(async(result: any) => {
         if(result.data?.selectedPicker) {
-          this.createPicklist(order, result.data.selectedPicker)
+          this.createPicklist(order, result.data.selectedPicker, result.data.picker)
         }
       })
 
       return assignPickerModal.present();
     },
-    async createPicklist(order: any, selectedPicker: any) {
+    async createPicklist(order: any, selectedPicker: any, picker: any) {
       let resp;
 
       const items = order.part.items;
@@ -911,6 +920,7 @@ export default defineComponent({
           // generating picklist after creating a new picklist
           await OrderService.printPicklist(resp.data.picklistId)
           order["isPicked"] = "Y"
+          order["pickers"] = picker.name
           order["picklistId"] = resp.data.picklistId
           order["picklistBinId"] = resp.data.picklistBinId
           this.store.dispatch('order/updateCurrent', { order })
@@ -1027,6 +1037,7 @@ export default defineComponent({
       isKit,
       listOutline,
       locateOutline,
+      personAddOutline,
       printOutline,
       productIdentificationPref,
       pulseOutline,
