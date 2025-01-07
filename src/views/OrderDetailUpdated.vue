@@ -97,60 +97,64 @@
           </ion-item>
 
           <ion-card v-for="(item, index) in order.part?.items" :key="index">
-            <ion-item lines="none">
-              <ion-thumbnail slot="start">
-                <DxpShopifyImg :src="getProduct(item.productId).mainImageUrl" size="small" />
-              </ion-thumbnail>
-              <ion-label class="ion-text-wrap">
-                <h2>{{ getProductIdentificationValue(productIdentificationPref.primaryId, getProduct(item.productId)) ? getProductIdentificationValue(productIdentificationPref.primaryId, getProduct(item.productId)) : getProduct(item.productId).productName }}</h2>
-                <p class="ion-text-wrap">{{ getProductIdentificationValue(productIdentificationPref.secondaryId, getProduct(item.productId)) }}</p>
-                <ion-badge color="dark" v-if="isKit(item)">{{ translate("Kit") }}</ion-badge>
-              </ion-label>
-              <template v-if="orderType === 'open' && !(order.readyToHandover || order.readyToShip)">
-                <!-- Rejection Reason -->
-                <ion-chip v-if="item.rejectReason" outline color="danger" @click.stop="openRejectReasonPopover($event, item, order)">
-                  <ion-icon :icon="closeCircleOutline" @click.stop="removeRejectionReason($event, item, order)"/>
-                  <ion-label>{{ getRejectionReasonDescription(item.rejectReason) }}</ion-label>
-                  <ion-icon :icon="caretDownOutline"/>
-                </ion-chip>
-                <ion-chip v-else-if="isEntierOrderRejectionEnabled(order)" outline color="danger" @click.stop="openRejectReasonPopover($event, item, order)">
-                  <ion-label>{{ getRejectionReasonDescription(rejectEntireOrderReasonId) ? getRejectionReasonDescription(rejectEntireOrderReasonId) : translate('Reject entire order')}}</ion-label>
-                  <ion-icon :icon="caretDownOutline"/>
-                </ion-chip>
-                <ion-button v-else slot="end" color="danger" fill="clear" size="small" @click.stop="openRejectReasonPopover($event, item, order)">
-                  <ion-icon slot="icon-only" :icon="trashOutline"/>
-                </ion-button>
-              </template>
-              <!-- Order item calcelation flow -->
-              <template v-else-if="orderType === 'packed' && !(order.handovered || order.shipped)">
-                <ion-chip v-if="item.cancelReason" outline color="danger" @click.stop="openCancelReasonPopover($event, item, order)">
-                  <ion-icon :icon="closeCircleOutline" @click.stop="removeCancellationReason($event, item, order)"/>
-                  <ion-label>{{ getCancelReasonDescription(item.cancelReason) }}</ion-label>
-                  <ion-icon :icon="caretDownOutline"/>
-                </ion-chip>
-                <ion-button v-else slot="end" color="danger" fill="clear" size="small" @click.stop="openCancelReasonPopover($event, item, order)">
-                  {{ translate("Cancel") }}
-                </ion-button>
-              </template>
+            <div class="order-item">
+              <ion-item class="product-info" lines="none">
+                <ion-thumbnail slot="start">
+                  <DxpShopifyImg :src="getProduct(item.productId).mainImageUrl" size="small" />
+                </ion-thumbnail>
+                <ion-label class="ion-text-wrap">
+                  <h2>{{ getProductIdentificationValue(productIdentificationPref.primaryId, getProduct(item.productId)) ? getProductIdentificationValue(productIdentificationPref.primaryId, getProduct(item.productId)) : getProduct(item.productId).productName }}</h2>
+                  <p class="ion-text-wrap">{{ getProductIdentificationValue(productIdentificationPref.secondaryId, getProduct(item.productId)) }}</p>
+                  <ion-badge color="dark" v-if="isKit(item)">{{ translate("Kit") }}</ion-badge>
+                </ion-label>
+              </ion-item>
+              <div class="product-metadata">
+                <template v-if="orderType === 'open' && !(order.readyToHandover || order.readyToShip)">
+                  <!-- Rejection Reason -->
+                  <ion-chip v-if="item.rejectReason" outline color="danger" @click.stop="openRejectReasonPopover($event, item, order)">
+                    <ion-icon :icon="closeCircleOutline" @click.stop="removeRejectionReason($event, item, order)"/>
+                    <ion-label>{{ getRejectionReasonDescription(item.rejectReason) }}</ion-label>
+                    <ion-icon :icon="caretDownOutline"/>
+                  </ion-chip>
+                  <ion-chip v-else-if="isEntierOrderRejectionEnabled(order)" outline color="danger" @click.stop="openRejectReasonPopover($event, item, order)">
+                    <ion-label>{{ getRejectionReasonDescription(rejectEntireOrderReasonId) ? getRejectionReasonDescription(rejectEntireOrderReasonId) : translate('Reject entire order')}}</ion-label>
+                    <ion-icon :icon="caretDownOutline"/>
+                  </ion-chip>
+                  <ion-button v-else slot="end" color="danger" fill="clear" size="small" @click.stop="openRejectReasonPopover($event, item, order)">
+                    <ion-icon slot="icon-only" :icon="trashOutline"/>
+                  </ion-button>
+                </template>
+                <!-- Order item calcelation flow -->
+                <template v-else-if="orderType === 'packed' && !(order.handovered || order.shipped)">
+                  <ion-chip v-if="item.cancelReason" outline color="danger" @click.stop="openCancelReasonPopover($event, item, order)">
+                    <ion-icon :icon="closeCircleOutline" @click.stop="removeCancellationReason($event, item, order)"/>
+                    <ion-label>{{ getCancelReasonDescription(item.cancelReason) }}</ion-label>
+                    <ion-icon :icon="caretDownOutline"/>
+                  </ion-chip>
+                  <ion-button v-else slot="end" color="danger" fill="clear" size="small" @click.stop="openCancelReasonPopover($event, item, order)">
+                    {{ translate("Cancel") }}
+                  </ion-button>
+                </template>
 
-              <div class="show-kit-components" slot="end">
-                <ion-spinner v-if="item.isFetchingStock" color="medium" name="crescent" />
-                <div v-else-if="getProductStock(item.productId).quantityOnHandTotal >= 0" class="atp-info">
-                  <ion-note slot="end"> {{ translate("on hand", { count: getProductStock(item.productId).quantityOnHandTotal ?? '0' }) }} </ion-note>
-                  <ion-button fill="clear" @click.stop="openInventoryDetailPopover($event, item)">
-                    <ion-icon slot="icon-only" :icon="informationCircleOutline" color="medium" />
+                <div class="show-kit-components" slot="end">
+                  <ion-spinner v-if="item.isFetchingStock" color="medium" name="crescent" />
+                  <div v-else-if="getProductStock(item.productId).quantityOnHandTotal >= 0" class="atp-info">
+                    <ion-note slot="end"> {{ translate("on hand", { count: getProductStock(item.productId).quantityOnHandTotal ?? '0' }) }} </ion-note>
+                    <ion-button fill="clear" @click.stop="openInventoryDetailPopover($event, item)">
+                      <ion-icon slot="icon-only" :icon="informationCircleOutline" color="medium" />
+                    </ion-button>
+                  </div>
+                  <ion-button v-else fill="clear" @click.stop="fetchProductStock(item.productId, order.shipGroupSeqId)">
+                    <ion-icon color="medium" slot="icon-only" :icon="cubeOutline" />
+                  </ion-button>
+
+                  <ion-button v-if="isKit(item)" fill="clear" size="small" @click.stop="fetchKitComponents(item)">
+                    <ion-icon v-if="showKitComponents" color="medium" slot="icon-only" :icon="chevronUpOutline"/>
+                    <ion-icon v-else color="medium" slot="icon-only" :icon="listOutline"/>
                   </ion-button>
                 </div>
-                <ion-button v-else fill="clear" @click.stop="fetchProductStock(item.productId, order.shipGroupSeqId)">
-                  <ion-icon color="medium" slot="icon-only" :icon="cubeOutline" />
-                </ion-button>
-
-                <ion-button v-if="isKit(item)" fill="clear" size="small" @click.stop="fetchKitComponents(item)">
-                  <ion-icon v-if="showKitComponents" color="medium" slot="icon-only" :icon="chevronUpOutline"/>
-                  <ion-icon v-else color="medium" slot="icon-only" :icon="listOutline"/>
-                </ion-button>
-              </div>  
-            </ion-item>
+              </div>
+            </div>
 
             <template v-if="isKit(item) && showKitComponents && !getProduct(item.productId)?.productComponents">
               <ion-item lines="none">
@@ -1074,6 +1078,25 @@ ion-card-header {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(314px, max-content));
   align-items: start;
+}
+
+.order-item {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  padding: var(--spacer-xs) 0;
+}
+
+.product-info {
+  padding: var(--spacer-sm);
+  padding-left: 0;
+}
+
+.product-metadata {
+  display: flex;
+  align-items: center;
+  margin-inline-start: auto;
+  padding-inline-end: var(--spacer-sm);
+  text-align: end;
 }
 
 @media (min-width: 768px) {
