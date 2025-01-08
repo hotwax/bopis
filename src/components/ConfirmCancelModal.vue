@@ -144,6 +144,9 @@ export default defineComponent({
           orderItemSeqId: item.orderItemSeqId,
           shipGroupSeqId: item.shipGroupSeqId,
           cancelQuantity: item.quantity ? parseInt(item.quantity) : 1,
+          itemReasonMap: {
+            [item.orderItemSeqId]: item.cancelReason
+          }
         }
 
         try {
