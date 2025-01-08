@@ -148,15 +148,15 @@
                     <ion-icon color="medium" slot="icon-only" :icon="cubeOutline" />
                   </ion-button>
 
-                  <ion-button v-if="isKit(item)" fill="clear" size="small" @click.stop="fetchKitComponents(item)">
-                    <ion-icon v-if="showKitComponents" color="medium" slot="icon-only" :icon="chevronUpOutline"/>
+                  <ion-button v-if="isKit(item)" fill="clear" size="small" @click.stop="fetchKitComponents(item, order)">
+                    <ion-icon v-if="item.showKitComponents" color="medium" slot="icon-only" :icon="chevronUpOutline"/>
                     <ion-icon v-else color="medium" slot="icon-only" :icon="listOutline"/>
                   </ion-button>
                 </div>
               </div>
             </div>
 
-            <template v-if="isKit(item) && showKitComponents && !getProduct(item.productId)?.productComponents">
+            <template v-if="isKit(item) && item.showKitComponents && !getProduct(item.productId)?.productComponents">
               <ion-item lines="none">
                 <ion-skeleton-text animated style="height: 80%;"/>
               </ion-item>
@@ -164,7 +164,7 @@
                 <ion-skeleton-text animated style="height: 80%;"/>
               </ion-item>
             </template>
-            <template v-else-if="isKit(item) && showKitComponents && getProduct(item.productId)?.productComponents">
+            <template v-else-if="isKit(item) && item.showKitComponents && getProduct(item.productId)?.productComponents">
               <ion-card v-for="(productComponent, index) in getProduct(item.productId).productComponents" :key="index">
                 <ion-item lines="none">
                   <ion-thumbnail slot="start">
@@ -217,7 +217,7 @@
               <ion-icon slot="start" :icon="checkmarkDoneOutline"/>
               {{ order.part?.shipmentMethodEnum?.shipmentMethodEnumId === 'STOREPICKUP' ? translate("Handover") : translate("Ship") }}
             </ion-button>
-            <ion-button size="default" :disabled="!hasPermission(Actions.APP_ORDER_UPDATE) || order.handovered || order.shipped || order.cancelled || !order.hasCancelledItems" expand="block" fill="outline" @click="cancelOrder(order)">
+            <ion-button color="danger" size="default" :disabled="!hasPermission(Actions.APP_ORDER_UPDATE) || order.handovered || order.shipped || order.cancelled || !order.hasCancelledItems" expand="block" fill="outline" @click="cancelOrder(order)">
               {{ translate("Cancel Items") }}
             </ion-button>
           </ion-item>
@@ -371,8 +371,7 @@ import {
   IonFab,
   IonFabButton,
   modalController,
-  popoverController,
-  IonItemOption
+  popoverController
 } from "@ionic/vue";
 import { computed, defineComponent } from "vue";
 import { mapGetters, useStore } from "vuex";
@@ -469,7 +468,6 @@ export default defineComponent({
         'PAYMENT_REFUNDED': 'warning',
         'PAYMENT_SETTLED': ''
       } as any,
-      showKitComponents: false,
       rejectEntireOrderReasonId: "REJ_AVOID_ORD_SPLIT",
       isCancelationSyncJobEnabled: false,
       isProcessRefundEnabled: false,
@@ -619,7 +617,8 @@ export default defineComponent({
         componentProps: {
           order,
           isCancelationSyncJobEnabled: this.isCancelationSyncJobEnabled,
-          isProcessRefundEnabled: this.isProcessRefundEnabled
+          isProcessRefundEnabled: this.isProcessRefundEnabled,
+          cancelJobNextRunTime: this.cancelJobNextRunTime
         }
       });
 
@@ -767,11 +766,12 @@ export default defineComponent({
       if(timeDiff.minutes) diffString += `${Math.round(timeDiff.minutes)} minutes`
       return diffString
     },
-    async fetchKitComponents(orderItem: any, toggleKitComponents = true) {
+    async fetchKitComponents(orderItem: any, order: any, toggleKitComponents = true) {
       await this.store.dispatch('product/fetchProductComponents', { productId: orderItem.productId })
 
       if(toggleKitComponents) {
-        this.showKitComponents = !this.showKitComponents
+        orderItem.showKitComponents = !orderItem.showKitComponents
+        this.store.dispatch("order/updateCurrentOrderInfo", order)
       }
     },
     updateColor(stock: number) {
@@ -822,7 +822,7 @@ export default defineComponent({
 
       // If the current item is kit, and if its components are not available then fetch the components for the kit and mark those components as rejected components
       if(isKit(item)) {
-        if(!this.getProduct(item.productId).productComponents) await this.fetchKitComponents(item, false)
+        if(!this.getProduct(item.productId).productComponents) await this.fetchKitComponents(item, order, false)
         item.rejectedComponents = this.getProduct(item.productId).productComponents?.map((product: any) => product.productIdTo)
       }
 
@@ -945,7 +945,8 @@ export default defineComponent({
           statusId: ["SERVICE_DRAFT", "SERVICE_PENDING"],
           statusId_op: "in",
           systemJobEnumId: "JOB_UL_CNCLD_ORD",
-          systemJobEnumId_op: "equals"
+          systemJobEnumId_op: "equals",
+          productStoreId: this.currentEComStore?.productStoreId,
         },
         orderBy: "runTime DESC",
         noConditionFind: "Y",
@@ -961,6 +962,7 @@ export default defineComponent({
               this.isCancelationSyncJobEnabled = true;
               this.cancelJobNextRunTime = job.runTime
               this.getProcessRefundStatus();
+              return true;
             }
           })
         }

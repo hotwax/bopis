@@ -159,7 +159,8 @@ const actions: ActionTree<OrderState , RootState> ={
                     productId: item.productId,
                     facilityId: item.facilityId,
                     quantity: item.itemQuantity,
-                    inventoryItemId: item.inventoryItemId
+                    inventoryItemId: item.inventoryItemId,
+                    showKitComponents: false
                   }]
                 })
               } else {
@@ -170,7 +171,8 @@ const actions: ActionTree<OrderState , RootState> ={
                   productId: item.productId,
                   facilityId: item.facilityId,
                   quantity: item.itemQuantity,
-                  inventoryItemId: item.inventoryItemId
+                  inventoryItemId: item.inventoryItemId,
+                  showKitComponents: false
                 })
               }
 
@@ -203,7 +205,7 @@ const actions: ActionTree<OrderState , RootState> ={
     return resp;
   },
 
-  async fetchAdditionalOrderInformation({ commit, dispatch, state }, orderDetails) {
+  async fetchAdditionalOrderInformation({ dispatch }, orderDetails) {
     let order = orderDetails;
     const orderId = order.orderId
 
@@ -493,7 +495,8 @@ const actions: ActionTree<OrderState , RootState> ={
                     orderItemSeqId: item.orderItemSeqId,
                     productId: item.productId,
                     facilityId: item.facilityId,
-                    quantity: item.itemQuantity
+                    quantity: item.itemQuantity,
+                    showKitComponents: false
                   }]
                 })
               } else {
@@ -501,7 +504,8 @@ const actions: ActionTree<OrderState , RootState> ={
                   orderItemSeqId: item.orderItemSeqId,
                   productId: item.productId,
                   facilityId: item.facilityId,
-                  quantity: item.itemQuantity
+                  quantity: item.itemQuantity,
+                  showKitComponents: false
                 })
               }
 
@@ -541,6 +545,13 @@ const actions: ActionTree<OrderState , RootState> ={
   async updateCurrent ({ commit, dispatch }, payload) {
     commit(types.ORDER_CURRENT_UPDATED, { order: payload.order })
     await dispatch('fetchShipGroupForOrder');
+  },
+
+  // This action is added mainly to toggle the showKitComponent property for item from the order detail page
+  // TODO: check whether we can use this action instead of calling updateCurrent on order info update
+  // as calling update current again fetches the shipGroup info which is not required in all the cases.
+  async updateCurrentOrderInfo ({ commit }, order) {
+    commit(types.ORDER_CURRENT_UPDATED, { order })
   },
 
   async updateOrderItemFetchingStatus ({ commit, state }, payload) {
@@ -602,14 +613,16 @@ const actions: ActionTree<OrderState , RootState> ={
                   items: [{
                     orderItemSeqId: item.orderItemSeqId,
                     productId: item.productId,
-                    facilityId: item.facilityId
+                    facilityId: item.facilityId,
+                    showKitComponents: false
                   }]
                 })
               } else {
                 currentOrderPart.items.push({
                   orderItemSeqId: item.orderItemSeqId,
                   productId: item.productId,
-                  facilityId: item.facilityId
+                  facilityId: item.facilityId,
+                  showKitComponents: false
                 })
               }
 
@@ -687,14 +700,16 @@ const actions: ActionTree<OrderState , RootState> ={
                   items: [{
                     orderItemSeqId: item.orderItemSeqId,
                     productId: item.productId,
-                    facilityId: item.facilityId
+                    facilityId: item.facilityId,
+                    showKitComponents: false
                   }]
                 })
               } else {
                 currentOrderPart.items.push({
                   orderItemSeqId: item.orderItemSeqId,
                   productId: item.productId,
-                  facilityId: item.facilityId
+                  facilityId: item.facilityId,
+                  showKitComponents: false
                 })
               }
 
