@@ -35,7 +35,7 @@
           {{ translate("Estimated time to refund customer on Shopify") }}
           <p>{{ translate("Showing the next estimated time to sync cancelation to Shopify") }}</p>
         </ion-label>
-        <ion-note slot="end">{{ cancelJobNextRunTime }}</ion-note>
+        <ion-note slot="end">{{ runTimeDiff }}</ion-note>
       </ion-item>
       <ion-item lines="full" v-else-if="isCancelationSyncJobEnabled">
         <ion-label>
@@ -43,7 +43,7 @@
           <p>{{ translate("Showing the next estimated time to sync cancelation to Shopify") }}</p>
           <p>{{ translate("Cancelation sync to Shopify is enabled. Refund processing is disabled.") }}</p>
         </ion-label>
-        <ion-note slot="end">{{ cancelJobNextRunTime }}</ion-note>
+        <ion-note slot="end">{{ runTimeDiff }}</ion-note>
       </ion-item>
       <ion-item lines="full" v-else>
         <ion-label>
@@ -85,6 +85,7 @@ import { getProductIdentificationValue, translate, useProductIdentificationStore
 import { isKit } from "@/utils/order"
 import { showToast } from "@/utils";
 import { hasError } from "@hotwax/oms-api";
+import { DateTime } from "luxon";
 
 export default defineComponent({
   name: "ConfirmCancelModal",
@@ -109,7 +110,8 @@ export default defineComponent({
     return {
       cancelledItems: [] as Array<any>,
       orderTotal: 0,
-      currentOrder: {} as any
+      currentOrder: {} as any,
+      runTimeDiff: ""
     }
   },
   computed: {
@@ -123,6 +125,8 @@ export default defineComponent({
     this.currentOrder = JSON.parse(JSON.stringify(this.order))
     this.cancelledItems = this.currentOrder.part.items.filter((item: any) => item.cancelReason)
     this.orderTotal = this.cancelledItems.reduce((total: any, item: any) => this.getProduct(item.productId).LIST_PRICE_PURCHASE_USD_STORE_GROUP_price + total, 0)
+    const timeDiff = DateTime.fromMillis(this.cancelJobNextRunTime).diff(DateTime.local());
+    this.runTimeDiff = DateTime.local().plus(timeDiff).toRelative();
   },
   methods: {
     closeModal() {
