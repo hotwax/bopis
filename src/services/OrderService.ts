@@ -349,7 +349,7 @@ const packOrder = async (payload: any): Promise<any> => {
 
 const performFind = async (payload: any): Promise<any> => {
   return api({
-    url: "/performFind",
+    url: "performFind",
     method: "post",
     data: payload
   });

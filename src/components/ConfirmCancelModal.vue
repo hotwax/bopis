@@ -105,7 +105,7 @@ export default defineComponent({
     IonThumbnail,
     IonToolbar
   },
-  props: ["order", "isCancelationSyncJobEnabled", "isProcessRefundEnabled", "cancelJobNextRunTime"],
+  props: ["order", "isCancelationSyncJobEnabled", "isProcessRefundEnabled", "cancelJobNextRunTime", "orderType"],
   data() {
     return {
       cancelledItems: [] as Array<any>,
@@ -173,11 +173,11 @@ export default defineComponent({
         // This is done because when cancelling some of the order items the shipment is marked as approved, resulting in removing the order from packed tab
         // but we need the order to be displayed in packed tab as it still has some items as reserved status
         if(isCancelled) {
-          await this.store.dispatch("packDeliveryItems", this.currentOrder.shipmentId)
+          await this.store.dispatch("order/packDeliveryItems", this.currentOrder.shipmentId)
         }
       }
 
-      this.store.dispatch("order/updateCurrent", { order: this.currentOrder });
+      await this.store.dispatch("order/updateCurrent", { order: this.currentOrder });
       this.closeModal();
     }
   },

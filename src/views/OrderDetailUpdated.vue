@@ -8,10 +8,10 @@
           <ion-button :disabled="!order?.orderId" @click="openOrderItemRejHistoryModal()">
             <ion-icon slot="icon-only" :icon="timeOutline" />
           </ion-button>
-          <ion-button v-if="orderType === 'open'" :disabled="!order?.orderId || !hasPermission(Actions.APP_ORDER_UPDATE) || order.handovered || order.shipped"  @click="printPicklist(order, order.part)">
+          <ion-button v-if="orderType === 'open'" :disabled="!order?.orderId || !hasPermission(Actions.APP_ORDER_UPDATE) || order.handovered || order.shipped || !order.part?.items?.length"  @click="printPicklist(order, order.part)">
             <ion-icon slot="icon-only" :icon="printOutline" />
           </ion-button>
-          <ion-button v-else-if="orderType === 'packed' && getBopisProductStoreSettings('PRINT_PACKING_SLIPS')" :class="order.part?.shipmentMethodEnum?.shipmentMethodEnumId !== 'STOREPICKUP' ? 'ion-hide-md-up' : ''" :disabled="!order?.orderId || !hasPermission(Actions.APP_ORDER_UPDATE) || order.handovered || order.shipped" @click="order.part?.shipmentMethodEnum?.shipmentMethodEnumId === 'STOREPICKUP' ? printPackingSlip(order) : printShippingLabelAndPackingSlip(order)">
+          <ion-button v-else-if="orderType === 'packed' && getBopisProductStoreSettings('PRINT_PACKING_SLIPS')" :class="order.part?.shipmentMethodEnum?.shipmentMethodEnumId !== 'STOREPICKUP' ? 'ion-hide-md-up' : ''" :disabled="!order?.orderId || !hasPermission(Actions.APP_ORDER_UPDATE) || order.handovered || order.shipped || !order.part?.items?.length" @click="order.part?.shipmentMethodEnum?.shipmentMethodEnumId === 'STOREPICKUP' ? printPackingSlip(order) : printShippingLabelAndPackingSlip(order)">
             <ion-icon slot="icon-only" :icon="printOutline" />
           </ion-button>
         </ion-buttons>
@@ -33,47 +33,14 @@
           </ion-item>
 
           <ion-list class="desktop-only">
-            <ion-item v-if="order.orderDate">
-              <ion-icon :icon="sunnyOutline" slot="start" />
+            <ion-item v-for="event in orderTimeline" :key="event.id">
+              <ion-icon :icon="event.icon" slot="start" />
               <ion-label>
-                {{ translate("Created in Shopify") }}
+                <p v-if="event.timeDiff">{{ event.timeDiff }}</p>
+                {{ translate(event.label) }}
+                <p v-if="event.metaData">{{ event.metaData }}</p>
               </ion-label>
-              <ion-note slot="end">{{ formatDateTime(order.orderDate) }}</ion-note>
-            </ion-item>
-            <ion-item v-if="order.entryDate">
-              <ion-icon :icon="downloadOutline" slot="start" />
-              <ion-label>
-                <p>{{ findTimeDiff(order.orderDate, order.entryDate) }}</p>
-                {{ translate("Imported from Shopify") }}
-              </ion-label>
-              <ion-note slot="end">{{ formatDateTime(order.entryDate) }}</ion-note>
-            </ion-item>
-            <ion-item v-if="order.approvedDate">
-              <ion-icon :icon="pulseOutline" slot="start" />
-              <ion-label>
-                <p>{{ findTimeDiff(order.orderDate, order.approvedDate) }}</p>
-                {{ translate("Approved for fulfillment") }}
-              </ion-label>
-              <ion-note slot="end">{{ formatDateTime(order.approvedDate) }}</ion-note>
-            </ion-item>
-            <ion-item v-if="order.pickers">
-              <ion-icon :icon="personAddOutline" slot="start" />
-              <ion-label>
-                <!-- TODO: add correct picklist creation date -->
-                <p>{{ findTimeDiff(order.orderDate, order.approvedDate) }}</p>
-                {{ translate("Picker assigned") }}
-                <p>{{ order.pickers }}</p>
-              </ion-label>
-              <!-- TODO: add correct picklist creation date -->
-              <ion-note slot="end">{{ formatDateTime(order.approvedDate) }}</ion-note>
-            </ion-item>
-            <ion-item v-if="order.completedDate">
-              <ion-icon :icon="pulseOutline" slot="start" />
-              <ion-label>
-                <p>{{ findTimeDiff(order.orderDate, order.completedDate) }}</p>
-                {{ translate("Order completed") }}
-              </ion-label>
-              <ion-note slot="end">{{ formatDateTime(order.completedDate) }}</ion-note>
+              <ion-note slot="end" v-if="event.valueType === 'date-time-millis'">{{ formatDateTime(event.value) }}</ion-note>
             </ion-item>
           </ion-list>
         </aside>
@@ -204,20 +171,20 @@
           </template>
 
           <ion-item lines="none" v-if="orderType === 'open' && order.part?.items?.length">
-            <ion-button size="default" :disabled="!hasPermission(Actions.APP_ORDER_UPDATE) || order.readyToHandover || order.readyToShip || order.rejected || order.hasRejectedItem" @click="readyForPickup(order, order.part)">
+            <ion-button size="default" :disabled="!hasPermission(Actions.APP_ORDER_UPDATE) || order.readyToHandover || order.readyToShip || order.rejected || hasRejectedItems" @click="readyForPickup(order, order.part)">
               <ion-icon slot="start" :icon="bagCheckOutline"/>
               {{ order?.part?.shipmentMethodEnum?.shipmentMethodEnumId === 'STOREPICKUP' ? translate("Ready for pickup") : translate("Ready to ship") }}
             </ion-button>
-            <ion-button size="default" :disabled="!hasPermission(Actions.APP_ORDER_UPDATE) || order.readyToHandover || order.readyToShip || order.rejected || !order.hasRejectedItem" color="danger" fill="outline" @click="rejectOrder()">
+            <ion-button size="default" :disabled="!hasPermission(Actions.APP_ORDER_UPDATE) || order.readyToHandover || order.readyToShip || order.rejected || !hasRejectedItems" color="danger" fill="outline" @click="rejectOrder()">
               {{ translate("Reject Items") }}
             </ion-button>
           </ion-item>
           <ion-item lines="none" v-else-if="orderType === 'packed' && order.part?.items?.length" class="ion-hide-md-down">
-            <ion-button size="default" :disabled="!hasPermission(Actions.APP_ORDER_UPDATE) || order.handovered || order.shipped || order.cancelled || order.hasCancelledItems" expand="block" @click="deliverShipment(order)">
+            <ion-button size="default" :disabled="!hasPermission(Actions.APP_ORDER_UPDATE) || order.handovered || order.shipped || order.cancelled || hasCancelledItems" expand="block" @click="deliverShipment(order)">
               <ion-icon slot="start" :icon="checkmarkDoneOutline"/>
               {{ order.part?.shipmentMethodEnum?.shipmentMethodEnumId === 'STOREPICKUP' ? translate("Handover") : translate("Ship") }}
             </ion-button>
-            <ion-button color="danger" size="default" :disabled="!hasPermission(Actions.APP_ORDER_UPDATE) || order.handovered || order.shipped || order.cancelled || !order.hasCancelledItems" expand="block" fill="outline" @click="cancelOrder(order)">
+            <ion-button color="danger" size="default" :disabled="!hasPermission(Actions.APP_ORDER_UPDATE) || order.handovered || order.shipped || order.cancelled || !hasCancelledItems" expand="block" fill="outline" @click="cancelOrder(order)">
               {{ translate("Cancel Items") }}
             </ion-button>
           </ion-item>
@@ -373,7 +340,7 @@ import {
   modalController,
   popoverController
 } from "@ionic/vue";
-import { computed, defineComponent } from "vue";
+import { computed, defineComponent, resolveComponent } from "vue";
 import { mapGetters, useStore } from "vuex";
 import {
   accessibilityOutline,
@@ -405,7 +372,8 @@ import {
   listOutline,
   caretDownOutline,
   warningOutline,
-  personAddOutline
+  personAddOutline,
+  medkitOutline
 } from "ionicons/icons";
 import { useRouter } from 'vue-router'
 import { Actions, hasPermission } from '@/authorization'
@@ -471,7 +439,10 @@ export default defineComponent({
       rejectEntireOrderReasonId: "REJ_AVOID_ORD_SPLIT",
       isCancelationSyncJobEnabled: false,
       isProcessRefundEnabled: false,
-      cancelJobNextRunTime: ""
+      cancelJobNextRunTime: "",
+      orderTimeline: [] as any,
+      hasCancelledItems: false,
+      hasRejectedItems: false
     }
   },
   computed: {
@@ -607,7 +578,8 @@ export default defineComponent({
       // If all the items are rejected then marking the whole order as rejected
       if(!order.part.items.length) order.rejected = true;
 
-      this.store.dispatch("order/updateCurrent", { order });
+      await this.store.dispatch("order/updateCurrent", { order });
+      this.hasRejectedItems = this.order.part.items.some((item: any) => item.rejectReason);
 
       emitter.emit("dismissLoader");
     },
@@ -618,9 +590,14 @@ export default defineComponent({
           order,
           isCancelationSyncJobEnabled: this.isCancelationSyncJobEnabled,
           isProcessRefundEnabled: this.isProcessRefundEnabled,
-          cancelJobNextRunTime: this.cancelJobNextRunTime
+          cancelJobNextRunTime: this.cancelJobNextRunTime,
+          orderType: this.orderType
         }
       });
+
+      cancelOrderConfirmModal.onDidDismiss().then(() => {
+        this.hasCancelledItems = this.order.part.items.some((item: any) => item.cancelReason);
+      })
 
       return cancelOrderConfirmModal.present();
     },
@@ -814,7 +791,7 @@ export default defineComponent({
     },
     async updateCancelReason(updatedReason: string, item: any, order: any) {
       item.cancelReason = updatedReason;
-      order.hasCancelledItems = true
+      this.hasCancelledItems = true
       this.store.dispatch("order/updateCurrent", { order })
     },
     async updateRejectReason(updatedReason: string, item: any, order: any) {
@@ -826,7 +803,7 @@ export default defineComponent({
         item.rejectedComponents = this.getProduct(item.productId).productComponents?.map((product: any) => product.productIdTo)
       }
 
-      order.hasRejectedItem = true
+      this.hasRejectedItems = true
       this.store.dispatch("order/updateCurrent", { order })
     },
     getRejectionReasonDescription(rejectionReasonId: string) {
@@ -838,17 +815,17 @@ export default defineComponent({
       return reason?.description ? reason.description : reason?.enumDescription ? reason.enumDescription : reason?.enumId;
     },
     isEntierOrderRejectionEnabled(order: any) {
-      return (!this.partialOrderRejectionConfig || !this.partialOrderRejectionConfig.settingValue || !JSON.parse(this.partialOrderRejectionConfig.settingValue)) && order.hasRejectedItem
+      return (!this.partialOrderRejectionConfig || !this.partialOrderRejectionConfig.settingValue || !JSON.parse(this.partialOrderRejectionConfig.settingValue)) && this.hasRejectedItems
     },
     async removeRejectionReason(ev: Event, item: any, order: any) {
       delete item["rejectedComponents"];
       item.rejectReason = "";
-      order.hasRejectedItem = order.part.items.some((item: any) => item.rejectReason);
+      this.hasRejectedItems = order.part.items.some((item: any) => item.rejectReason);
       this.store.dispatch("order/updateCurrent", { order })
     },
     async removeCancellationReason(ev: Event, item: any, order: any) {
       item.cancelReason = "";
-      order.hasCancelledItems = order.part.items.some((item: any) => item.cancelReason);
+      this.hasCancelledItems = order.part.items.some((item: any) => item.cancelReason);
       this.store.dispatch("order/updateCurrent", { order })
     },
     rejectKitComponent(order: any, item: any, componentProductId: string) {
@@ -989,6 +966,185 @@ export default defineComponent({
       } catch(err) {
         logger.error(err)
       }
+    },
+    async fetchOrderChangeHistory() {
+      // Only fetching the records those are store pickup related
+      // Added fromFacility check as when customer manually moves order it will be moved from PICKUP_REJECTED queue
+      // Added facilityId check as when order is rejected/canceled it will be moved to PICKUP_REJECTED queue
+      // TODO: need to implement the support to fetch the history for ship orders
+      let orderChangeHistory = []
+      try {
+        let payload = {
+          inputFields: {
+            orderId: this.order.orderId,
+            fromFacilityId_value: "PICKUP_REJECTED",
+            fromFacilityId_op: "equals",
+            fromFacilityId_grp :"1",
+            facilityId_value: "PICKUP_REJECTED",
+            facilityId_op: "equals",
+            facilityId_grp: "2"
+          },
+          entityName: "OrderFacilityChange",
+          orderBy: "changeDatetime DESC",
+          viewSize: 250,
+        }
+
+        const resp = await OrderService.performFind(payload);
+        if(!hasError(resp) && resp.data.docs?.length) {
+          orderChangeHistory = resp.data.docs
+        } else {
+          throw resp.data;
+        }
+      } catch(err) {
+        logger.error("Failed to fetch order change history", err)
+      }
+
+      return orderChangeHistory
+    },
+    async fetchOrderCommunicationEvent() {
+      let orderCommunicationEvent = []
+      try {
+        let payload = {
+          inputFields: {
+            orderId: this.order.orderId,
+            subject: "pickup",
+            subject_op: "contains",
+            communicationEventTypeId: "EMAIL_COMMUNICATION"
+          },
+          entityName: "CommunicationEventAndOrder",
+          viewSize: 250,
+          orderBy: "entryDate ASC",
+          fieldList: ["communicationEventId", "entryDate", "orderId"]
+        }
+
+        const resp = await OrderService.performFind(payload);
+        if(!hasError(resp) && resp.data.docs?.length) {
+          orderCommunicationEvent = resp.data.docs
+        } else {
+          throw resp.data;
+        }
+      } catch(err) {
+        logger.error("Failed to fetch communication events for order", err)
+      }
+
+      return orderCommunicationEvent
+    },
+    sortSequence(sequence: any, sortOnField: string) {
+      return sequence.sort((a: any, b: any) => {
+        if(a[sortOnField] === b[sortOnField]) return 0;
+
+        // Sort undefined values at last
+        if(a[sortOnField] == undefined) return 1;
+        if(b[sortOnField] == undefined) return -1;
+
+        return a[sortOnField] - b[sortOnField]
+      })
+    },
+    async prepareOrderTimeline() {
+      let orderChangeHistory = await this.fetchOrderChangeHistory();
+      const orderPickupEmailCommnicationEvent = await this.fetchOrderCommunicationEvent();
+
+      // Removed the first record from the list, the first mail is sent as soon as item is marked for pickup
+      // and we do not need to add the same in the timeline
+      const communicationEvents = orderPickupEmailCommnicationEvent.slice(1).map((event: any) => ({
+        ...event,
+        sortDate: event.entryDate
+      }))
+
+      orderChangeHistory = orderChangeHistory.map((orderChange: any) => ({
+        ...orderChange,
+        sortDate: orderChange.changeDatetime
+      }))
+
+      const orderTimelineComponents = this.sortSequence([...communicationEvents, ...orderChangeHistory], "sortDate")
+
+      this.orderTimeline = []
+
+      // Add order creation date to timeline
+      if(this.order.orderDate) {
+        this.orderTimeline.push({
+          label: "Created in Shopify",
+          id: "orderDate",
+          value: this.order.orderDate,
+          icon: sunnyOutline,
+          valueType: "date-time-millis"
+        })
+      }
+
+      // Add order import date to timeline
+      if(this.order.entryDate) {
+        this.orderTimeline.push({
+          label: "Imported from Shopify",
+          id: "entryDate",
+          value: this.order.entryDate,
+          icon: downloadOutline,
+          valueType: "date-time-millis",
+          timeDiff: this.findTimeDiff(this.order.orderDate, this.order.entryDate)
+        })
+      }
+
+      // Add order approved date to timeline
+      if(this.order.approvedDate) {
+        this.orderTimeline.push({
+          label: "Approved for fulfillment",
+          id: "approvedDate",
+          value: this.order.approvedDate,
+          icon: pulseOutline,
+          valueType: "date-time-millis",
+          timeDiff: this.findTimeDiff(this.order.orderDate, this.order.approvedDate)
+        })
+      }
+
+      // Add picker info to timeline
+      if(this.order.pickers?.length) {
+        this.orderTimeline.push({
+          label: "Picker assigned",
+          id: "pickerInfo",
+          value: this.order.approvedDate,
+          icon: personAddOutline,
+          valueType: "date-time-millis",
+          timeDiff: this.findTimeDiff(this.order.orderDate, this.order.approvedDate),
+          metaData: this.order.pickers
+        })
+      }
+
+      if(orderTimelineComponents.length) {
+        orderTimelineComponents.map((component: any) => {
+          let label = "Pickup remainder"
+          let id = "pickupRemainder"
+          let icon = mailOutline
+          if(component.facilityId === "PICKUP_REJECTED") {
+            label = "Rejected",
+            id = "rejected",
+            icon = trashOutline
+          } else if(component.fromFacilityId === "PICKUP_REJECTED") {
+            label = "Assigned for fulfillment",
+            id = "assigned",
+            icon = medkitOutline
+          }
+
+          this.orderTimeline.push({
+            label,
+            id,
+            value: component.sortDate,
+            icon,
+            valueType: "date-time-millis",
+            timeDiff: this.findTimeDiff(this.order.orderDate, component.sortDate)
+          })
+        })
+      }
+
+      // Add order completed date to timeline
+      if(this.order.completedDate) {
+        this.orderTimeline.push({
+          label: "Order completed",
+          id: "completedDate",
+          value: this.order.completedDate,
+          icon: pulseOutline,
+          valueType: "date-time-millis",
+          timeDiff: this.findTimeDiff(this.order.orderDate, this.order.completedDate)
+        })
+      }
     }
   },
   async mounted() {
@@ -1002,7 +1158,12 @@ export default defineComponent({
 
     if(this.orderType === "packed") {
       this.fetchJobs();
+      this.hasCancelledItems = this.order.part.items.some((item: any) => item.cancelReason);
+    } else if(this.orderType === "open") {
+      this.hasRejectedItems = this.order.part.items.some((item: any) => item.rejectReason);
     }
+
+    await this.prepareOrderTimeline();
 
     emitter.emit("dismissLoader")
   },
@@ -1112,6 +1273,7 @@ ion-card-header {
   }
 
   aside {
+    border-left: 1px solid black;
     grid-column: 2;
     grid-row: 1;
   }
