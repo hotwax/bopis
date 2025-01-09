@@ -476,6 +476,8 @@ export default defineComponent({
 
       assignPickerModal.onDidDismiss().then(async(result: any) => {
         if(result.data.selectedPicker) {
+          this.order.pickers = result.data.picker
+          this.order.picklistDate = DateTime.now().toMillis()
           await this.store.dispatch('order/packShipGroupItems', { order, part, facilityId, selectedPicker: result.data.selectedPicker })
         }
       })
@@ -581,6 +583,11 @@ export default defineComponent({
       await this.store.dispatch("order/updateCurrent", { order });
       this.hasRejectedItems = this.order.part.items.some((item: any) => item.rejectReason);
 
+      // We are only preparing the complete timeline for the store pickup order
+      if(this.order.part?.shipmentMethodEnum?.shipmentMethodEnumId === "STOREPICKUP") {
+        this.prepareOrderTimeline();
+      }
+
       emitter.emit("dismissLoader");
     },
     async cancelOrder(order: any) {
@@ -597,6 +604,10 @@ export default defineComponent({
 
       cancelOrderConfirmModal.onDidDismiss().then(() => {
         this.hasCancelledItems = this.order.part.items.some((item: any) => item.cancelReason);
+        // We are only preparing the complete timeline for the store pickup order
+        if(this.order.part?.shipmentMethodEnum?.shipmentMethodEnumId === "STOREPICKUP") {
+          this.prepareOrderTimeline();
+        }
       })
 
       return cancelOrderConfirmModal.present();
@@ -876,6 +887,9 @@ export default defineComponent({
       assignPickerModal.onDidDismiss().then(async(result: any) => {
         if(result.data?.selectedPicker) {
           this.createPicklist(order, result.data.selectedPicker, result.data.picker)
+          this.order.pickers = result.data.picker
+          this.order.picklistDate = DateTime.now().toMillis()
+          this.prepareOrderTimeline();
         }
       })
 
@@ -1096,14 +1110,14 @@ export default defineComponent({
       }
 
       // Add picker info to timeline
-      if(this.order.pickers?.length) {
+      if(this.order.pickers?.length && this.order.picklistDate) {
         this.orderTimeline.push({
           label: "Picker assigned",
           id: "pickerInfo",
-          value: this.order.approvedDate,
+          value: this.order.picklistDate,
           icon: personAddOutline,
           valueType: "date-time-millis",
-          timeDiff: this.findTimeDiff(this.order.orderDate, this.order.approvedDate),
+          timeDiff: this.findTimeDiff(this.order.orderDate, this.order.picklistDate),
           metaData: this.order.pickers
         })
       }

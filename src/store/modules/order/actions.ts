@@ -182,6 +182,14 @@ const actions: ActionTree<OrderState , RootState> ={
             shippingInstructions: orderItem.shippingInstructions,
             shipGroupSeqId: orderItem.shipGroupSeqId,
             isPicked: orderItem.isPicked,
+            pickers: orderItem.pickers ? (orderItem.pickers.reduce((names: any, picker: string) => {
+              names.push(picker.split('/')[1]);
+              return names;
+            }, [])).join(', ') : "",
+            pickerIds: orderItem.pickers ? (orderItem.pickers.reduce((ids: any, picker: string) => {
+              ids.push(picker.split('/')[0]);
+              return ids;
+            }, [])) : "",
             picklistId: orderItem.picklistId,
             picklistBinId: orderItem.picklistBinId
           }
@@ -376,6 +384,21 @@ const actions: ActionTree<OrderState , RootState> ={
 
         if(paymentMethodTypeIds.length) {
           this.dispatch("util/fetchPaymentMethodTypeDesc", paymentMethodTypeIds)
+        }
+      }
+
+      if(order.picklistId) {
+        const picklistInfo = await OrderService.performFind({
+          inputFields: {
+            picklistId: order.picklistId,
+          },
+          viewSize: 1,
+          entityName: "Picklist",
+          fieldList: ["picklistId", "picklistDate"]
+        })
+
+        if(!hasError(picklistInfo) && picklistInfo.data.count > 0) {
+          order["picklistDate"] = picklistInfo.data.docs[0].picklistDate
         }
       }
 
@@ -716,7 +739,16 @@ const actions: ActionTree<OrderState , RootState> ={
               return arr
             }, [])),
             placedDate: orderItem.orderDate,
-            shipGroupSeqId: orderItem.shipGroupSeqId
+            shipGroupSeqId: orderItem.shipGroupSeqId,
+            pickers: orderItem.pickers ? (orderItem.pickers.reduce((names: any, picker: string) => {
+              names.push(picker.split('/')[1]);
+              return names;
+            }, [])).join(', ') : "",
+            pickerIds: orderItem.pickers ? (orderItem.pickers.reduce((ids: any, picker: string) => {
+              ids.push(picker.split('/')[0]);
+              return ids;
+            }, [])) : "",
+            picklistId: orderItem.picklistId
           }
         })
 
