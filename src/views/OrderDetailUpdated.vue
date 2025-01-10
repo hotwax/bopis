@@ -340,7 +340,7 @@ import {
   modalController,
   popoverController
 } from "@ionic/vue";
-import { computed, defineComponent, resolveComponent } from "vue";
+import { computed, defineComponent } from "vue";
 import { mapGetters, useStore } from "vuex";
 import {
   accessibilityOutline,
@@ -384,16 +384,14 @@ import { DateTime } from "luxon";
 import { api, hasError } from '@/adapter';
 import { OrderService } from "@/services/OrderService";
 import { getProductIdentificationValue, translate, useProductIdentificationStore, useUserStore } from "@hotwax/dxp-components";
-import EditPickerModal from "@/components/EditPickerModal.vue";
 import emitter from '@/event-bus'
 import logger from "@/logger";
 import InventoryDetailsPopover from '@/components/InventoryDetailsPopover.vue'
-import { isKit } from '@/utils/order'
+import { isKit, getOrderStatus } from '@/utils/order'
 import ReportAnIssuePopover from "@/components/ReportAnIssuePopover.vue";
 import { UserService } from "@/services/UserService";
 import ConfirmCancelModal from "@/components/ConfirmCancelModal.vue";
 import { UtilService } from "@/services/UtilService";
-import { getOrderStatus } from "@/utils/order"
 
 export default defineComponent({
   name: "OrderDetail",
@@ -425,17 +423,6 @@ export default defineComponent({
   },
   data() {
     return {
-      customerEmail: '',
-      statusColor: {
-        'PAYMENT_AUTHORIZED': '',
-        'PAYMENT_CANCELLED': 'warning',
-        'PAYMENT_DECLINED': 'warning',
-        'PAYMENT_NOT_AUTH': 'warning',
-        'PAYMENT_NOT_RECEIVED': 'warning',
-        'PAYMENT_RECEIVED': '',
-        'PAYMENT_REFUNDED': 'warning',
-        'PAYMENT_SETTLED': ''
-      } as any,
       rejectEntireOrderReasonId: "REJ_AVOID_ORD_SPLIT",
       isCancelationSyncJobEnabled: false,
       isProcessRefundEnabled: false,
@@ -485,23 +472,6 @@ export default defineComponent({
       })
 
       return assignPickerModal.present();
-    },
-    async editPicker(order: any) {
-      const editPickerModal = await modalController.create({
-        component: EditPickerModal,
-        componentProps: { order }
-      });
-
-      editPickerModal.onDidDismiss().then((result) => {
-        if(result.data?.selectedPicker){
-          const selectedPicker = result.data.selectedPicker
-          this.order.pickers = selectedPicker.name
-          this.order.pickerIds = [selectedPicker.id]
-          this.store.dispatch('order/updateCurrent', { order: this.order })
-        }
-      })
-
-      return editPickerModal.present();
     },
     async deliverShipment(order: any) {
       await this.store.dispatch('order/deliverShipment', order)
@@ -665,10 +635,6 @@ export default defineComponent({
     async fetchCancelReasons() {
       await this.store.dispatch('util/fetchCancelReasons');
     },
-    timeFromNow(time: any) {
-      const timeDiff = DateTime.fromISO(time).diff(DateTime.local());
-      return DateTime.local().plus(timeDiff).toRelative();
-    },
     async printPackingSlip(order: any) {
       try {
         // Get packing slip from the server
@@ -700,36 +666,6 @@ export default defineComponent({
         showToast(translate("Failed to load packing slip"))
         logger.error(err)
       }
-    },
-    async sendReadyForPickupEmail(order: any) {
-      const header = translate('Resend email')
-      const message = translate('An email notification will be sent to that their order is ready for pickup.', { customerName: order.customer.name });
-
-      const alert = await alertController
-        .create({
-          header: header,
-          message: message,
-          buttons: [{
-            text: translate('Cancel'),
-            role: 'cancel'
-          },{
-            text: translate('Send'),
-            handler: async () => {
-              try {
-                const resp = await OrderService.sendPickupScheduledNotification({ shipmentId: order.shipmentId });
-                if (!hasError(resp)) {
-                  showToast(translate("Email sent successfully"))
-                } else {
-                  showToast(translate("Something went wrong while sending the email."))
-                }
-              } catch (error) {
-                showToast(translate("Something went wrong while sending the email."))
-                logger.error(error)
-              }
-            }
-          }]
-        });
-      return alert.present();
     },
     async printShippingLabelAndPackingSlip(order: any) {
       await OrderService.printShippingLabelAndPackingSlip(order.shipmentId)
@@ -763,9 +699,6 @@ export default defineComponent({
         orderItem.showKitComponents = !orderItem.showKitComponents
         this.store.dispatch("order/updateCurrentOrderInfo", order)
       }
-    },
-    updateColor(stock: number) {
-      return stock ? stock < 10 ? 'warning' : 'success' : 'danger';
     },
     async openRejectReasonPopover(ev: Event, item: any, order: any) {
       const reportIssuePopover = await popoverController.create({
