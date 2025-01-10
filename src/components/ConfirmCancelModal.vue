@@ -144,9 +144,7 @@ export default defineComponent({
           orderItemSeqId: item.orderItemSeqId,
           shipGroupSeqId: item.shipGroupSeqId,
           cancelQuantity: item.quantity ? parseInt(item.quantity) : 1,
-          itemReasonMap: {
-            [`irm_${item.orderItemSeqId}`]: item.cancelReason
-          }
+          [`irm_${item.orderItemSeqId}`]: item.cancelReason
         }
 
         try {

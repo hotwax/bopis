@@ -442,7 +442,9 @@ export default defineComponent({
       cancelJobNextRunTime: "",
       orderTimeline: [] as any,
       hasCancelledItems: false,
-      hasRejectedItems: false
+      hasRejectedItems: false,
+      pickers: [],
+      picklistDate: 0
     }
   },
   computed: {
@@ -476,8 +478,8 @@ export default defineComponent({
 
       assignPickerModal.onDidDismiss().then(async(result: any) => {
         if(result.data.selectedPicker) {
-          this.order.pickers = result.data.picker
-          this.order.picklistDate = DateTime.now().toMillis()
+          this.pickers = result.data.picker
+          this.picklistDate = DateTime.now().toMillis()
           await this.store.dispatch('order/packShipGroupItems', { order, part, facilityId, selectedPicker: result.data.selectedPicker })
         }
       })
@@ -887,8 +889,8 @@ export default defineComponent({
       assignPickerModal.onDidDismiss().then(async(result: any) => {
         if(result.data?.selectedPicker) {
           this.createPicklist(order, result.data.selectedPicker, result.data.picker)
-          this.order.pickers = result.data.picker
-          this.order.picklistDate = DateTime.now().toMillis()
+          this.pickers = result.data.picker
+          this.picklistDate = DateTime.now().toMillis()
           this.prepareOrderTimeline();
         }
       })
@@ -1055,6 +1057,7 @@ export default defineComponent({
       })
     },
     async prepareOrderTimeline() {
+      const timeline = []
       let orderChangeHistory = await this.fetchOrderChangeHistory();
       const orderPickupEmailCommnicationEvent = await this.fetchOrderCommunicationEvent();
 
@@ -1070,13 +1073,11 @@ export default defineComponent({
         sortDate: orderChange.changeDatetime
       }))
 
-      const orderTimelineComponents = this.sortSequence([...communicationEvents, ...orderChangeHistory], "sortDate")
-
-      this.orderTimeline = []
+      const orderTimelineComponents = [...communicationEvents, ...orderChangeHistory]
 
       // Add order creation date to timeline
       if(this.order.orderDate) {
-        this.orderTimeline.push({
+        timeline.push({
           label: "Created in Shopify",
           id: "orderDate",
           value: this.order.orderDate,
@@ -1087,7 +1088,7 @@ export default defineComponent({
 
       // Add order import date to timeline
       if(this.order.entryDate) {
-        this.orderTimeline.push({
+        timeline.push({
           label: "Imported from Shopify",
           id: "entryDate",
           value: this.order.entryDate,
@@ -1099,7 +1100,7 @@ export default defineComponent({
 
       // Add order approved date to timeline
       if(this.order.approvedDate) {
-        this.orderTimeline.push({
+        timeline.push({
           label: "Approved for fulfillment",
           id: "approvedDate",
           value: this.order.approvedDate,
@@ -1110,15 +1111,16 @@ export default defineComponent({
       }
 
       // Add picker info to timeline
-      if(this.order.pickers?.length && this.order.picklistDate) {
-        this.orderTimeline.push({
+      if((this.order.pickers?.length && this.order.picklistDate) || this.pickers) {
+        const date = this.order.picklistDate || this.picklistDate || DateTime.now().toMillis()
+        timeline.push({
           label: "Picker assigned",
           id: "pickerInfo",
-          value: this.order.picklistDate,
+          value: date,
           icon: personAddOutline,
           valueType: "date-time-millis",
-          timeDiff: this.findTimeDiff(this.order.orderDate, this.order.picklistDate),
-          metaData: this.order.pickers
+          timeDiff: this.findTimeDiff(this.order.orderDate, date),
+          metaData: this.order.pickers || this.pickers
         })
       }
 
@@ -1137,7 +1139,7 @@ export default defineComponent({
             icon = medkitOutline
           }
 
-          this.orderTimeline.push({
+          timeline.push({
             label,
             id,
             value: component.sortDate,
@@ -1150,7 +1152,7 @@ export default defineComponent({
 
       // Add order completed date to timeline
       if(this.order.completedDate) {
-        this.orderTimeline.push({
+        timeline.push({
           label: "Order completed",
           id: "completedDate",
           value: this.order.completedDate,
@@ -1159,6 +1161,8 @@ export default defineComponent({
           timeDiff: this.findTimeDiff(this.order.orderDate, this.order.completedDate)
         })
       }
+
+      this.orderTimeline = this.sortSequence(timeline, "value")
     }
   },
   async mounted() {
