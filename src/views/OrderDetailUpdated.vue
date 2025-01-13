@@ -185,7 +185,7 @@
               {{ order.part?.shipmentMethodEnum?.shipmentMethodEnumId === 'STOREPICKUP' ? translate("Handover") : translate("Ship") }}
             </ion-button>
             <ion-button color="danger" size="default" :disabled="!hasPermission(Actions.APP_ORDER_UPDATE) || order.handovered || order.shipped || order.cancelled || !hasCancelledItems" expand="block" fill="outline" @click="cancelOrder(order)">
-              {{ translate("Cancel Items") }}
+              {{ translate("Cancel items") }}
             </ion-button>
           </ion-item>
 
@@ -333,6 +333,7 @@ import {
   IonPage,
   IonLabel,
   IonNote,
+  IonSkeletonText,
   IonSpinner,
   IonThumbnail,
   IonTitle,
@@ -414,6 +415,7 @@ export default defineComponent({
     IonPage,
     IonLabel,
     IonNote,
+    IonSkeletonText,
     IonSpinner,
     IonThumbnail,
     IonTitle,

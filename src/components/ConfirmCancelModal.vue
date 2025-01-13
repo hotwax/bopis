@@ -40,7 +40,6 @@
       <ion-item lines="full" v-else-if="isCancelationSyncJobEnabled">
         <ion-label>
           {{ translate("Estimated time to cancelation on Shopify") }}
-          <p>{{ translate("Showing the next estimated time to sync cancelation to Shopify") }}</p>
           <p>{{ translate("Cancelation sync to Shopify is enabled. Refund processing is disabled.") }}</p>
         </ion-label>
         <ion-note slot="end">{{ runTimeDiff }}</ion-note>
@@ -81,11 +80,11 @@ import { computed, defineComponent } from "vue";
 import { closeOutline, saveOutline } from "ionicons/icons";
 import { mapGetters, useStore } from "vuex"
 import { OrderService } from "@/services/OrderService";
-import { getProductIdentificationValue, translate, useProductIdentificationStore, useUserStore } from "@hotwax/dxp-components";
+import { getProductIdentificationValue, translate, useProductIdentificationStore } from "@hotwax/dxp-components";
 import { isKit } from "@/utils/order"
-import { showToast } from "@/utils";
 import { hasError } from "@hotwax/oms-api";
 import { DateTime } from "luxon";
+import emitter from "@/event-bus";
 
 export default defineComponent({
   name: "ConfirmCancelModal",
@@ -137,6 +136,7 @@ export default defineComponent({
       return reason?.description ? reason.description : reason?.enumDescription ? reason.enumDescription : reason?.enumId;
     },
     async cancelOrder() {
+      emitter.emit("presentLoader");
       let isCancelled = true
       for (const item of this.cancelledItems) {
         const params = {
@@ -176,6 +176,7 @@ export default defineComponent({
       }
 
       await this.store.dispatch("order/updateCurrent", { order: this.currentOrder });
+      emitter.emit("dismissLoader");
       this.closeModal();
     }
   },

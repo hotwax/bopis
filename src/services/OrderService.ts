@@ -1,4 +1,4 @@
-import { api, client, hasError } from '@/adapter';
+import { api, hasError } from '@/adapter';
 import emitter from '@/event-bus';
 import { translate } from '@hotwax/dxp-components';
 import store from '@/store';
