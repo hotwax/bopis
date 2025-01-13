@@ -416,7 +416,7 @@ const actions: ActionTree<OrderState , RootState> ={
   async getOrderDetail({ dispatch, state }, { payload, orderType }) {
     if(orderType === 'open') {
       payload['orderStatusId'] = "ORDER_APPROVED"
-      payload['-shipmentStatusId'] = "*"
+      payload['-shipmentStatusId'] = "(SHIPMENT_PACKED OR SHIPMENT_SHIPPED)"
       payload['-fulfillmentStatus'] = '(Cancelled OR Rejected)'
     } else if(orderType === 'packed') {
       payload['shipmentStatusId'] = "SHIPMENT_PACKED"

@@ -1179,7 +1179,7 @@ export default defineComponent({
               },
               fieldList: ["shipmentId", "statusId", "statusDate"],
               viewSize: 50,
-              entityName: "ShipmentStatus"
+              entityName: "ShipmentAndShipmentStatus"
             }) as any
 
             if(!hasError(resp) && shipmentStatusResp.data?.docs.length) {
