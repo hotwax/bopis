@@ -124,9 +124,21 @@ const removeKitComponents = (parts: any) => {
   return updatedParts;
 };
 
+const getOrderStatus = (order: any, part: any, orderRouteSegment: any) => {
+  if(order.statusId === "ORDER_COMPLETED") {
+    return part.shipmentMethodEnum.shipmentMethodEnumId === "STOREPICKUP" ? "Picked up" : "Completed"
+  }
+
+  if(orderRouteSegment?.length) {
+    return orderRouteSegment[0]?.shipmentStatusId === "SHIPMENT_PACKED" ? "Ready for pickup" : orderRouteSegment[0]?.shipmentStatusId === "SHIPMENT_APPROVED" && order.pickers ? "Picking" : "Reserved"
+  }
+
+  return "Reserved"
+}
 
 export {
   getOrderCategory,
+  getOrderStatus,
   isKit,
   removeKitComponents
 }

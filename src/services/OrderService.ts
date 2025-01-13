@@ -1,4 +1,4 @@
-import { api, client, hasError } from '@/adapter';
+import { api, hasError } from '@/adapter';
 import emitter from '@/event-bus';
 import { translate } from '@hotwax/dxp-components';
 import store from '@/store';
@@ -347,7 +347,24 @@ const packOrder = async (payload: any): Promise<any> => {
   })
 }
 
+const performFind = async (payload: any): Promise<any> => {
+  return api({
+    url: "performFind",
+    method: "post",
+    data: payload
+  });
+}
+
+const cancelItem = async (payload: any): Promise<any> => {
+  return api({
+    url: "cancelOrderItem",
+    method: "post",
+    data: payload
+  });
+}
+
 export const OrderService = {
+  cancelItem,
   fetchOrderItems,
   fetchOrderPaymentPreferences,
   fetchTrackingCodes,
@@ -368,6 +385,7 @@ export const OrderService = {
   getCustomerContactDetails,
   getShippingPhoneNumber,
   packOrder,
+  performFind,
   printPicklist,
   printShippingLabelAndPackingSlip
 }

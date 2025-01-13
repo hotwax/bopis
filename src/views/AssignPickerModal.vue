@@ -133,7 +133,8 @@ export default defineComponent({
     },
     readyForPickup () {
       if (this.selectedPicker) {
-        modalController.dismiss({ dismissed: true, selectedPicker: this.selectedPicker });
+        const picker = this.availablePickers.find((picker) => picker.id == this.selectedPicker);
+        modalController.dismiss({ dismissed: true, selectedPicker: this.selectedPicker, picker });
       } else {
         showToast(translate('Select a picker'))
       }

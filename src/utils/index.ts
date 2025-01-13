@@ -78,4 +78,35 @@ const getCurrentFacilityId = () => {
   return currentFacility?.facilityId
 }
 
-export { copyToClipboard, showToast, handleDateTimeInput, getFeature, formatPhoneNumber, getCurrentFacilityId }
+const getColorByDesc = (desc: string) => ({
+  "Approved": "primary",
+  "Authorized": "medium",
+  "Cancelled": "danger",
+  "Completed": "success",
+  "Created": "medium",
+  "Declined": "danger",
+  "Held": "warning",
+  "Not-Authorized": "warning",
+  "Not-Received": "warning",
+  "Pending": "warning",
+  "Picked up": "success",
+  "Picking": "dark",
+  "Ready for pickup": "primary",
+  "Received": "success",
+  "Refunded": "success",
+  "Reserved": "medium",
+  "Settled": "success",
+  "default": "medium"
+} as any)[desc]
+
+const currentSymbol: any = {
+  "USD": "$",
+  "EUR": "€",
+  "JPY": "¥"
+}
+
+const formatCurrency = (amount: any, code: string) => {
+  return `${currentSymbol[code] || code} ${amount || 0}`
+}
+
+export { copyToClipboard, showToast, handleDateTimeInput, getFeature, formatPhoneNumber, getCurrentFacilityId, getColorByDesc, formatCurrency }

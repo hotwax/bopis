@@ -159,7 +159,8 @@ const actions: ActionTree<OrderState , RootState> ={
                     productId: item.productId,
                     facilityId: item.facilityId,
                     quantity: item.itemQuantity,
-                    inventoryItemId: item.inventoryItemId
+                    inventoryItemId: item.inventoryItemId,
+                    showKitComponents: false
                   }]
                 })
               } else {
@@ -170,7 +171,8 @@ const actions: ActionTree<OrderState , RootState> ={
                   productId: item.productId,
                   facilityId: item.facilityId,
                   quantity: item.itemQuantity,
-                  inventoryItemId: item.inventoryItemId
+                  inventoryItemId: item.inventoryItemId,
+                  showKitComponents: false
                 })
               }
 
@@ -180,6 +182,14 @@ const actions: ActionTree<OrderState , RootState> ={
             shippingInstructions: orderItem.shippingInstructions,
             shipGroupSeqId: orderItem.shipGroupSeqId,
             isPicked: orderItem.isPicked,
+            pickers: orderItem.pickers ? (orderItem.pickers.reduce((names: any, picker: string) => {
+              names.push(picker.split('/')[1]);
+              return names;
+            }, [])).join(', ') : "",
+            pickerIds: orderItem.pickers ? (orderItem.pickers.reduce((ids: any, picker: string) => {
+              ids.push(picker.split('/')[0]);
+              return ids;
+            }, [])) : "",
             picklistId: orderItem.picklistId,
             picklistBinId: orderItem.picklistBinId
           }
@@ -203,10 +213,196 @@ const actions: ActionTree<OrderState , RootState> ={
     return resp;
   },
 
-  async getOrderDetail({ dispatch, state }, { payload, orderType }) {
+  async fetchAdditionalOrderInformation({ dispatch }, orderDetails) {
+    let order = orderDetails;
+    const orderId = order.orderId
+
+    try {
+      const apiPayload = [{
+        inputFields: {
+          orderId
+        },
+        viewSize: 50,
+        filterByDate: "Y",
+        entityName: "OrderHeaderAndRoles"
+      }, {
+        inputFields: {
+          orderId,
+          contactMechPurposeTypeId: ["BILLING_LOCATION", "BILLING_EMAIL", "PHONE_BILLING"],
+          contactMechPurposeTypeId_op: "in"
+        },
+        viewSize: 50,
+        fieldList: ["contactMechPurposeTypeId", "contactMechId"],
+        entityName: "OrderContactMech"
+      }, {
+        inputFields: {
+          orderId
+        },
+        viewSize: 50,
+        filterByDate: "Y",
+        fieldList: ["orderIdentificationTypeId", "orderId", "idValue"],
+        entityName: "OrderIdentification"
+      }, {
+        inputFields: {
+          orderId,
+          attrName: ["customerId", "municipio"],
+          attrName_op: "in",
+          attrName_ic: "Y"
+        },
+        viewSize: 50,
+        fieldList: ["attrName", "attrValue"],
+        entityName: "OrderAttribute"
+      }, {
+        inputFields: {
+          orderId,
+          statusId: ["ORDER_COMPLETED", "ORDER_APPROVED"],
+          statusId_op: "in"
+        },
+        viewSize: 2,
+        entityName: "OrderStatus"
+      }, {
+        inputFields: {
+          orderId,
+          statusId: "PAYMENT_CANCELLED",
+          statusId_op: "notEqual"
+        },
+        orderBy: "createdDate DESC",
+        viewSize: 50,
+        fieldList: ["paymentMethodTypeId", "maxAmount", "statusId"],
+        entityName: "OrderPaymentPreference"
+      }, {
+        inputFields: {
+          orderId
+        },
+        viewSize: 50,
+        entityName: "OrderItemShipGroupAndFacility"
+      }]
+
+      const [orderHeader, orderContactMech, orderIdentifications, orderAttributes, orderStatusInfo, orderPaymentPreference] = await Promise.allSettled(apiPayload.map((payload: any) => OrderService.performFind(payload)))
+
+      if(orderHeader.status === "fulfilled" && !hasError(orderHeader.value) && orderHeader.value.data.count > 0) {
+        order = {
+          ...order,
+          ...orderHeader.value.data.docs[0]
+        }
+
+        if(!order.orderId) {
+          throw "Failed to fetch order information"
+        }
+      }
+      if(orderContactMech.status === "fulfilled" && !hasError(orderContactMech.value) && orderContactMech.value.data.count > 0) {
+        const orderContactMechTypes: any = orderContactMech.value.data.docs.reduce((contactMechTypes: any, contactMech: any) => {
+          contactMechTypes[contactMech.contactMechPurposeTypeId] = contactMech.contactMechId
+
+          return contactMechTypes;
+        }, {})
+
+        const postalAddress = await OrderService.performFind({
+          inputFields: {
+            contactMechId: Object.keys(orderContactMechTypes).filter((mechType: string) => mechType === "BILLING_LOCATION").map((mechType: string) => orderContactMechTypes[mechType]),
+            contactMechId_op: "in"
+          },
+          viewSize: 20,
+          entityName: "PostalAddressAndGeo"
+        })
+
+        if(!hasError(postalAddress) && postalAddress.data.count > 0) {
+          postalAddress.data.docs.map((address: any) => {
+            if(address.contactMechId === orderContactMechTypes["BILLING_LOCATION"]) {
+              order["billingAddress"] = address
+            }
+          })
+        }
+
+        const customerInfo = await OrderService.performFind({
+          inputFields: {
+            contactMechId: Object.keys(orderContactMechTypes).filter((mechType: string) => mechType === "BILLING_EMAIL" || mechType === "PHONE_BILLING").map((mechType: string) => orderContactMechTypes[mechType]),
+            contactMechId_op: "in"
+          },
+          viewSize: 20,
+          fieldList: ["infoString", "contactMechId", "tnContactNumber"],
+          entityName: "ContactMechDetail"
+        })
+
+        if(!hasError(customerInfo) && customerInfo.data.count > 0) {
+          customerInfo.data.docs.map((info: any) => {
+            if(info.contactMechId === orderContactMechTypes["BILLING_EMAIL"]) {
+              order["billingEmail"] = info.infoString
+            }
+
+            if(info.contactMechId === orderContactMechTypes["PHONE_BILLING"]) {
+              order["billingPhone"] = info.tnContactNumber
+            }
+          })
+        }
+      }
+
+      // Fetching order identifications
+      if(orderIdentifications.status === "fulfilled" && !hasError(orderIdentifications.value) && orderIdentifications.value.data.count > 0) {
+        order["shopifyOrderId"] = orderIdentifications.value.data.docs.find((identification: any) => identification.orderIdentificationTypeId === "SHOPIFY_ORD_ID")?.idValue
+      }
+
+      // Fetching order attributes
+      order["orderAttributes"] = {}
+      if(orderAttributes.status === "fulfilled" && !hasError(orderAttributes.value) && orderAttributes.value.data.count > 0) {
+        orderAttributes.value.data.docs.map((attribute: any) => {
+          // For some attbiutes we get casing difference, like customerId, CustomerId, so adding ic in performFind, but to display it correctly on UI, converting it into lowerCase
+          order["orderAttributes"][attribute.attrName.toLowerCase()] = attribute.attrValue
+        })
+      }
+
+      // Fetching brokering information for order
+      if(orderStatusInfo.status === "fulfilled" && !hasError(orderStatusInfo.value) && orderStatusInfo.value.data.count > 0) {
+        order["approvedDate"] = orderStatusInfo.value.data.docs.find((info: any) => info.statusId === "ORDER_APPROVED")?.statusDatetime
+        order["completedDate"] = orderStatusInfo.value.data.docs.find((info: any) => info.statusId === "ORDER_COMPLETED")?.statusDatetime
+      }
+
+      // Fetching payment preference for order
+      if(orderPaymentPreference.status === "fulfilled" && !hasError(orderPaymentPreference.value) && orderPaymentPreference.value.data.count > 0) {
+        const paymentMethodTypeIds: Array<string> = [];
+        const statusIds: Array<string> = [];
+        order["orderPayments"] = orderPaymentPreference.value.data.docs.map((paymentPreference: any) => {
+          paymentMethodTypeIds.push(paymentPreference.paymentMethodTypeId)
+          statusIds.push(paymentPreference.statusId)
+          return {
+            amount: paymentPreference["maxAmount"],
+            methodTypeId: paymentPreference["paymentMethodTypeId"],
+            paymentStatus: paymentPreference["statusId"]
+          }
+        })
+
+        this.dispatch("util/fetchStatusDesc", statusIds)
+
+        if(paymentMethodTypeIds.length) {
+          this.dispatch("util/fetchPaymentMethodTypeDesc", paymentMethodTypeIds)
+        }
+      }
+
+      if(order.picklistId) {
+        const picklistInfo = await OrderService.performFind({
+          inputFields: {
+            picklistId: order.picklistId,
+          },
+          viewSize: 1,
+          entityName: "Picklist",
+          fieldList: ["picklistId", "picklistDate"]
+        })
+
+        if(!hasError(picklistInfo) && picklistInfo.data.count > 0) {
+          order["picklistDate"] = picklistInfo.data.docs[0].picklistDate
+        }
+      }
+    } catch(err) {
+      logger.error(err)
+    }
+
+    await dispatch('updateCurrent', { order })
+  },
+
+  async getOrderDetail({ dispatch }, { payload, orderType }) {
     if(orderType === 'open') {
       payload['orderStatusId'] = "ORDER_APPROVED"
-      payload['-shipmentStatusId'] = "*"
+      payload['-shipmentStatusId'] = "(SHIPMENT_PACKED OR SHIPMENT_SHIPPED)"
       payload['-fulfillmentStatus'] = '(Cancelled OR Rejected)'
     } else if(orderType === 'packed') {
       payload['shipmentStatusId'] = "SHIPMENT_PACKED"
@@ -219,24 +415,24 @@ const actions: ActionTree<OrderState , RootState> ={
       return;
     }
 
-    const current = state.current as any
-    const orders = JSON.parse(JSON.stringify(state.open.list)) as any
-    // As one order can have multiple parts thus checking orderId and partSeq as well before making any api call
-    if(current.orderId === payload.orderId && current.orderType === orderType && current.part?.orderPartSeqId === payload.orderPartSeqId) {
-      await this.dispatch('product/getProductInformation', { orders: [ current ] })
-      await dispatch('fetchShipGroupForOrder');
-      return current 
-    }
-    if(orders.length) {
-      const order = orders.find((order: any) => {
-        return order.orderId === payload.orderId;
-      })
-      if(order) {
-        await dispatch('updateCurrent', { order })
-        return order;
-      }
-    }
-
+    // const current = state.current as any
+    // const orders = JSON.parse(JSON.stringify(state.open.list)) as any
+    // // As one order can have multiple parts thus checking orderId and partSeq as well before making any api call
+    // if(current.orderId === payload.orderId && current.orderType === orderType && current.part?.orderPartSeqId === payload.orderPartSeqId) {
+    //   await this.dispatch('product/getProductInformation', { orders: [ current ] })
+    //   // TODO: if we can store additional order information and just fetch shipGroup info as it was previously
+    //   await dispatch("fetchAdditionalOrderInformation", current)
+    //   return current
+    // }
+    // if(orders.length) {
+    //   const order = orders.find((order: any) => {
+    //     return order.orderId === payload.orderId;
+    //   })
+    //   if(order) {
+    //     await dispatch("fetchAdditionalOrderInformation", order)
+    //     return order;
+    //   }
+    // }
 
     const orderQueryPayload = prepareOrderQuery({
       ...payload,
@@ -254,6 +450,7 @@ const actions: ActionTree<OrderState , RootState> ={
           return {
             orderId: orderItem.orderId,
             orderName: orderItem.orderName,
+            shipmentId: orderItem.shipmentId,
             customer: {
               partyId: orderItem.customerId,
               name: orderItem.customerName
@@ -272,7 +469,11 @@ const actions: ActionTree<OrderState , RootState> ={
                     orderItemSeqId: item.orderItemSeqId,
                     productId: item.productId,
                     facilityId: item.facilityId,
-                    quantity: item.itemQuantity
+                    quantity: item.itemQuantity,
+                    showKitComponents: false,
+                    shipGroupSeqId: item.shipGroupSeqId,
+                    orderId: orderItem.orderId,
+                    inventoryItemId: item.inventoryItemId
                   }]
                 })
               } else {
@@ -280,13 +481,18 @@ const actions: ActionTree<OrderState , RootState> ={
                   orderItemSeqId: item.orderItemSeqId,
                   productId: item.productId,
                   facilityId: item.facilityId,
-                  quantity: item.itemQuantity
+                  quantity: item.itemQuantity,
+                  showKitComponents: false,
+                  shipGroupSeqId: item.shipGroupSeqId,
+                  orderId: orderItem.orderId,
+                  inventoryItemId: item.inventoryItemId
                 })
               }
 
               return arr
             }, [])),
             placedDate: orderItem.orderDate,
+            entryDate: orderItem.entryDate,
             shippingInstructions: orderItem.shippingInstructions,
             orderType: orderType,
             pickers: orderItem.pickers ? (orderItem.pickers.reduce((names: any, picker: string) => {
@@ -297,7 +503,8 @@ const actions: ActionTree<OrderState , RootState> ={
               ids.push(picker.split('/')[0]);
               return ids;
             }, [])) : "",
-            picklistId: orderItem.picklistId
+            picklistId: orderItem.picklistId,
+            shipGroupSeqId: orderItem.shipGroupSeqId
           }
         })
 
@@ -313,12 +520,19 @@ const actions: ActionTree<OrderState , RootState> ={
       logger.error(err)
     }
 
-    await dispatch('updateCurrent', { order: currentOrder })
+    await dispatch("fetchAdditionalOrderInformation", currentOrder)
   },
-
+  
   async updateCurrent ({ commit, dispatch }, payload) {
     commit(types.ORDER_CURRENT_UPDATED, { order: payload.order })
     await dispatch('fetchShipGroupForOrder');
+  },
+
+  // This action is added mainly to toggle the showKitComponent property for item from the order detail page
+  // TODO: check whether we can use this action instead of calling updateCurrent on order info update
+  // as calling update current again fetches the shipGroup info which is not required in all the cases.
+  async updateCurrentOrderInfo ({ commit }, order) {
+    commit(types.ORDER_CURRENT_UPDATED, { order })
   },
 
   async updateOrderItemFetchingStatus ({ commit, state }, payload) {
@@ -380,14 +594,16 @@ const actions: ActionTree<OrderState , RootState> ={
                   items: [{
                     orderItemSeqId: item.orderItemSeqId,
                     productId: item.productId,
-                    facilityId: item.facilityId
+                    facilityId: item.facilityId,
+                    showKitComponents: false
                   }]
                 })
               } else {
                 currentOrderPart.items.push({
                   orderItemSeqId: item.orderItemSeqId,
                   productId: item.productId,
-                  facilityId: item.facilityId
+                  facilityId: item.facilityId,
+                  showKitComponents: false
                 })
               }
 
@@ -462,24 +678,39 @@ const actions: ActionTree<OrderState , RootState> ={
               if (!currentOrderPart) {
                 arr.push({
                   orderPartSeqId: item.shipGroupSeqId,
+                  shipmentMethodEnum: {
+                    shipmentMethodEnumId: item.shipmentMethodTypeId,
+                    shipmentMethodEnumDesc: item.shipmentMethodTypeDesc
+                  },
                   items: [{
                     orderItemSeqId: item.orderItemSeqId,
                     productId: item.productId,
-                    facilityId: item.facilityId
+                    facilityId: item.facilityId,
+                    showKitComponents: false
                   }]
                 })
               } else {
                 currentOrderPart.items.push({
                   orderItemSeqId: item.orderItemSeqId,
                   productId: item.productId,
-                  facilityId: item.facilityId
+                  facilityId: item.facilityId,
+                  showKitComponents: false
                 })
               }
 
               return arr
             }, [])),
             placedDate: orderItem.orderDate,
-            shipGroupSeqId: orderItem.shipGroupSeqId
+            shipGroupSeqId: orderItem.shipGroupSeqId,
+            pickers: orderItem.pickers ? (orderItem.pickers.reduce((names: any, picker: string) => {
+              names.push(picker.split('/')[1]);
+              return names;
+            }, [])).join(', ') : "",
+            pickerIds: orderItem.pickers ? (orderItem.pickers.reduce((ids: any, picker: string) => {
+              ids.push(picker.split('/')[0]);
+              return ids;
+            }, [])) : "",
+            picklistId: orderItem.picklistId
           }
         })
 
@@ -528,7 +759,7 @@ const actions: ActionTree<OrderState , RootState> ={
 
         if(order.part.shipmentMethodEnum.shipmentMethodEnumId === 'STOREPICKUP'){
           order = { ...order, handovered: true }
-        }else {
+        } else {
           order = { ...order, shipped: true }
         }
 

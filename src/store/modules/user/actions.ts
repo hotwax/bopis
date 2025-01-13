@@ -151,6 +151,7 @@ const actions: ActionTree<UserState, RootState> = {
     dispatch('clearNotificationState')
     dispatch('clearPartialOrderRejectionConfig');
     this.dispatch('util/updateRejectReasons', [])
+    this.dispatch('util/updateCancelReasons', [])
     this.dispatch('order/clearOrders')
     commit(types.USER_END_SESSION)
     resetPermissions();
