@@ -278,7 +278,7 @@ const actions: ActionTree<OrderState , RootState> ={
         entityName: "OrderItemShipGroupAndFacility"
       }]
 
-      const [orderHeader, orderContactMech, orderIdentifications, orderAttributes, orderStatusInfo, orderPaymentPreference, orderShipGroups] = await Promise.allSettled(apiPayload.map((payload: any) => OrderService.performFind(payload)))
+      const [orderHeader, orderContactMech, orderIdentifications, orderAttributes, orderStatusInfo, orderPaymentPreference] = await Promise.allSettled(apiPayload.map((payload: any) => OrderService.performFind(payload)))
 
       if(orderHeader.status === "fulfilled" && !hasError(orderHeader.value) && orderHeader.value.data.count > 0) {
         order = {
@@ -392,20 +392,6 @@ const actions: ActionTree<OrderState , RootState> ={
           order["picklistDate"] = picklistInfo.data.docs[0].picklistDate
         }
       }
-
-      const shipGroupSeqIds: Array<string> = [];
-      const shipmentMethodIds: Array<string> = []
-
-      const carrierPartyIds = [] as any;
-
-      // TODO: fetch carrier info
-      // const carrierInfo = await dispatch("fetchCarriersTrackingInfo", Array.from(new Set(carrierPartyIds)));
-      // Object.keys(order["shipGroups"]).map((shipGroupId: any) => {
-      //   const shipGroup = order["shipGroups"][shipGroupId]
-      //   shipGroup.map((item: any) => item["carrierPartyName"] = carrierInfo[item.carrierPartyId]?.carrierName || "")
-      // })
-
-      // this.dispatch("util/fetchShipmentMethodTypeDesc", shipmentMethodIds)
     } catch(err) {
       logger.error(err)
     }
@@ -413,7 +399,7 @@ const actions: ActionTree<OrderState , RootState> ={
     await dispatch('updateCurrent', { order })
   },
 
-  async getOrderDetail({ dispatch, state }, { payload, orderType }) {
+  async getOrderDetail({ dispatch }, { payload, orderType }) {
     if(orderType === 'open') {
       payload['orderStatusId'] = "ORDER_APPROVED"
       payload['-shipmentStatusId'] = "(SHIPMENT_PACKED OR SHIPMENT_SHIPPED)"
