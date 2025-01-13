@@ -126,7 +126,7 @@ const removeKitComponents = (parts: any) => {
 
 const getOrderStatus = (order: any, part: any, orderRouteSegment: any) => {
   if(order.statusId === "ORDER_COMPLETED") {
-    return part.shipmentMethodEnum.shipmentMethodTypeId === "STOREPICKUP" ? "Picked up" : "Completed"
+    return part.shipmentMethodEnum.shipmentMethodEnumId === "STOREPICKUP" ? "Picked up" : "Completed"
   }
 
   if(orderRouteSegment?.length) {
