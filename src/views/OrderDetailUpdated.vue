@@ -242,7 +242,7 @@
             </ion-card>
           </div>
 
-          <ion-item lines="none" v-if="order.shipGroups?.length">
+          <ion-item lines="none" v-if="order.shipGroups?.filter((group: any) => group.shipGroupSeqId !== order.part.orderPartSeqId)?.length">
             <ion-label>{{ translate("Other shipments in this order") }}</ion-label>
           </ion-item>
           <div class="ion-padding">
@@ -432,7 +432,7 @@ export default defineComponent({
       orderTimeline: [] as any,
       hasCancelledItems: false,
       hasRejectedItems: false,
-      pickers: [],
+      pickers: [] as any,
       picklistDate: 0,
       orderStatus: ""
     }
@@ -471,6 +471,7 @@ export default defineComponent({
           this.pickers = result.data.picker
           this.picklistDate = DateTime.now().toMillis()
           await this.store.dispatch('order/packShipGroupItems', { order, part, facilityId, selectedPicker: result.data.selectedPicker })
+          this.prepareOrderTimeline();
         }
       })
 
@@ -690,7 +691,7 @@ export default defineComponent({
       return DateTime.fromMillis(date).toLocaleString({ hour: "numeric", minute: "2-digit", day: "numeric", month: "short", year: "numeric", hourCycle: "h12" })
     },
     findTimeDiff(startTime: any, endTime: any) {
-      if(!endTime) {
+      if(!endTime || !startTime) {
         return ""
       }
 
@@ -822,6 +823,9 @@ export default defineComponent({
           return;
         }
         await this.createPicklist(order, "_NA_", "Default");
+        this.pickers = ["Default"]
+        this.picklistDate = DateTime.now().toMillis()
+        this.prepareOrderTimeline();
         return;
       }
 
@@ -832,7 +836,7 @@ export default defineComponent({
 
       assignPickerModal.onDidDismiss().then(async(result: any) => {
         if(result.data?.selectedPicker) {
-          this.createPicklist(order, result.data.selectedPicker, result.data.picker)
+          await this.createPicklist(order, result.data.selectedPicker, result.data.picker)
           this.pickers = result.data.picker
           this.picklistDate = DateTime.now().toMillis()
           this.prepareOrderTimeline();
@@ -845,6 +849,7 @@ export default defineComponent({
       let resp;
 
       const items = order.part.items;
+      console.log('items', items);
       const formData = new FormData();
       formData.append("facilityId", items[0].facilityId);
       items.map((item: any, index: number) => {
@@ -1025,6 +1030,8 @@ export default defineComponent({
 
       const orderTimelineComponents = [...communicationEvents, ...orderChangeHistory]
 
+      console.log('this.order.orderDate', this.order)
+
       // Add order creation date to timeline
       if(this.order.orderDate) {
         timeline.push({
@@ -1061,7 +1068,7 @@ export default defineComponent({
       }
 
       // Add picker info to timeline
-      if((this.order.pickers?.length && this.order.picklistDate) || this.pickers) {
+      if((this.order.pickers?.length && this.order.picklistDate) || this.pickers.length) {
         const date = this.order.picklistDate || this.picklistDate || DateTime.now().toMillis()
         timeline.push({
           label: "Picker assigned",
@@ -1103,25 +1110,24 @@ export default defineComponent({
       // Add order completed date to timeline
       if(this.order.completedDate) {
         timeline.push({
-          label: "Order completed",
+          label: this.order.part.shipmentMethodEnum.shipmentMethodEnumId === "STOREPICKUP" ? "Picked up" : "Order completed",
           id: "completedDate",
           value: this.order.completedDate,
-          icon: pulseOutline,
+          icon: checkmarkDoneOutline,
           valueType: "date-time-millis",
           timeDiff: this.findTimeDiff(this.order.orderDate, this.order.completedDate)
         })
       }
 
-      // If order status is ready for pickup
-      if(this.orderStatus === "Ready for pickup") {
-        const getShipmentPackedDate = shipmentStatusInfo.find((statusInfo: any) => statusInfo.statusId === "SHIPMENT_PACKED")
+      const getShipmentPackedDate = shipmentStatusInfo?.find((statusInfo: any) => statusInfo.statusId === "SHIPMENT_PACKED")
+      if(getShipmentPackedDate?.statusDate) {
         timeline.push({
           label: "Ready for pickup",
           id: "packedDate",
-          value: getShipmentPackedDate?.statusDate,
+          value: getShipmentPackedDate.statusDate,
           icon: bagCheckOutline,
           valueType: "date-time-millis",
-          timeDiff: this.findTimeDiff(this.order.orderDate, getShipmentPackedDate?.statusDate)
+          timeDiff: this.findTimeDiff(this.order.orderDate, getShipmentPackedDate.statusDate)
         })
       }
 
