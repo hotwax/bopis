@@ -869,7 +869,6 @@ export default defineComponent({
       let resp;
 
       const items = order.part.items;
-      console.log('items', items);
       const formData = new FormData();
       formData.append("facilityId", items[0].facilityId);
       items.map((item: any, index: number) => {
@@ -1052,8 +1051,6 @@ export default defineComponent({
       }))
 
       const orderTimelineComponents = [...communicationEvents, ...orderChangeHistory]
-
-      console.log('this.order.orderDate', this.order)
 
       // Add order creation date to timeline
       if(this.order.orderDate) {

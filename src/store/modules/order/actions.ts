@@ -759,7 +759,6 @@ const actions: ActionTree<OrderState , RootState> ={
       resp = await OrderService.updateShipment(params)
       if (resp.status === 200 && !hasError(resp)) {
         // Remove order from the list if action is successful
-        console.log('state.packed.list', state.packed.list)
         const orderIndex = state.packed.list.findIndex((packedOrder: any) => {
           return packedOrder.orderId === order.orderId && order.parts.some((part: any) => {
             return packedOrder.parts.some((packedOrderPart: any) => {
@@ -767,7 +766,6 @@ const actions: ActionTree<OrderState , RootState> ={
             })
           });
         });
-        console.log('orderIndex', orderIndex)
         if (orderIndex > -1) {
           state.packed.list.splice(orderIndex, 1);
           commit(types.ORDER_PACKED_UPDATED, { orders: state.packed.list, total: state.packed.total -1 })
@@ -775,11 +773,9 @@ const actions: ActionTree<OrderState , RootState> ={
 
         if(order.part.shipmentMethodEnum.shipmentMethodEnumId === 'STOREPICKUP'){
           order = { ...order, handovered: true }
-        }else {
+        } else {
           order = { ...order, shipped: true }
         }
-
-        console.log('order', order)
 
         dispatch('updateCurrent', { order })
       } else {
