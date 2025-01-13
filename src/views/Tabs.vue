@@ -11,9 +11,8 @@
           <ion-icon :icon="infiniteOutline" />
           <ion-label>{{ translate("Orders") }}</ion-label>
         </ion-tab-button>
-
         <ion-tab-button tab="more" href="/tabs/settings">
-          <ion-icon :icon="settings" />
+          <ion-icon :icon="settingsOutline" />
           <ion-label>{{ translate("Settings") }}</ion-label>
         </ion-tab-button>
       </ion-tab-bar>
@@ -25,7 +24,7 @@
 import { IonIcon, IonLabel, IonPage, IonTabBar, IonTabButton, IonTabs, IonRouterOutlet } from "@ionic/vue";
 import {
   infiniteOutline,
-  settings,
+  settingsOutline,
   shirtOutline,
 } from "ionicons/icons";
 import { translate } from "@hotwax/dxp-components";
@@ -36,7 +35,7 @@ export default {
   setup () {
     return {
       infiniteOutline,
-      settings,
+      settingsOutline,
       shirtOutline,
       translate
     };
