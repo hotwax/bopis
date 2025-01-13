@@ -270,7 +270,7 @@
                   </ion-label>
                 </ion-item>
 
-                <ion-item lines="none" v-for="item in shipGroup.items" :key="item">
+                <ion-item lines="none" v-for="item in shipGroup?.items" :key="item">
                   <ion-thumbnail slot="start">
                     <DxpShopifyImg :src="getProduct(item.productId).mainImageUrl" size="small"/>
                   </ion-thumbnail>
@@ -305,7 +305,7 @@
       </ion-fab>
       <ion-fab v-else-if="orderType === 'packed' && order?.orderId" class="ion-hide-md-up" vertical="bottom" horizontal="end" slot="fixed" >
         <ion-fab-button :disabled="!hasPermission(Actions.APP_ORDER_UPDATE) || order.handovered || order.shipped || order.cancelled" @click="deliverShipment(order)">
-          <ion-icon :icon="order.part?.shipmentMethodEnum?.shipmentMethodEnumId === 'STOREPICKUP' ? accessibilityOutline : checkmarkOutline" />
+          <ion-icon :icon="checkmarkDoneOutline" />
         </ion-fab-button>
       </ion-fab>
     </ion-content>
@@ -345,7 +345,6 @@ import {
 import { computed, defineComponent } from "vue";
 import { mapGetters, useStore } from "vuex";
 import {
-  accessibilityOutline,
   callOutline,
   cashOutline,
   copyOutline,
@@ -353,7 +352,6 @@ import {
   closeCircleOutline,
   checkmarkCircleOutline,
   checkmarkDoneOutline,
-  checkmarkOutline,
   cubeOutline,
   giftOutline,
   informationCircleOutline,
@@ -478,9 +476,31 @@ export default defineComponent({
       return assignPickerModal.present();
     },
     async deliverShipment(order: any) {
-      await this.store.dispatch('order/deliverShipment', order)
-      // Update the order timeline once the order is delivered/handovered
-      this.prepareOrderTimeline();
+      const pickup = order.part?.shipmentMethodEnum?.shipmentMethodEnumId === 'STOREPICKUP';
+      const header = pickup ? translate("Handover") : translate("Ship");
+      const message = pickup ? translate("Verify that the items in the package are valid and the customer has received their order. Once the order is handed over to the customer it cannot be undone.", { space: '<br/><br/>' }) : '';
+
+      const alert = await alertController
+        .create({
+          header,
+          message,
+          buttons: [{
+            text: translate('Cancel'),
+            role: 'cancel'
+          }, {
+            text: translate(header),
+            handler: async () => {
+              await this.store.dispatch('order/deliverShipment', order).then((resp: any) => {
+                if(!hasError(resp)) {
+                  // Update order timeline once the order is completed
+                  // Sending statusId explicitly as we do not fetch the order info again on handover
+                  this.prepareOrderTimeline({ statusId: "ORDER_COMPLETED" });
+                }
+              })
+            }
+          }]
+        });
+      return alert.present();
     },
     async openOrderItemRejHistoryModal() {
       const orderItemRejHistoryModal = await modalController.create({
@@ -1005,13 +1025,16 @@ export default defineComponent({
         return a[sortOnField] - b[sortOnField]
       })
     },
-    async prepareOrderTimeline() {
+    async prepareOrderTimeline(paramsToUpdate ?: any) {
       const timeline = []
 
       const {orderRouteSegment, shipmentStatusInfo} = await this.fetchOrderRouteSegmentInfo();
 
       // Get order status using utility method
-      this.orderStatus = this.getOrderStatus(this.order, this.order.part, orderRouteSegment)
+      this.orderStatus = this.getOrderStatus({
+        ...this.order,
+        ...paramsToUpdate
+      }, this.order.part, orderRouteSegment)
 
       let orderChangeHistory = await this.fetchOrderChangeHistory();
       const orderPickupEmailCommnicationEvent = await this.fetchOrderCommunicationEvent();
@@ -1186,9 +1209,9 @@ export default defineComponent({
 
     if(this.orderType === "packed") {
       this.fetchJobs();
-      this.hasCancelledItems = this.order.part.items.some((item: any) => item.cancelReason);
+      this.hasCancelledItems = this.order.part?.items.some((item: any) => item.cancelReason);
     } else if(this.orderType === "open") {
-      this.hasRejectedItems = this.order.part.items.some((item: any) => item.rejectReason);
+      this.hasRejectedItems = this.order.part?.items.some((item: any) => item.rejectReason);
     }
 
     await this.prepareOrderTimeline();
@@ -1205,7 +1228,6 @@ export default defineComponent({
 
     return {
       Actions,
-      accessibilityOutline,
       bagCheckOutline,
       bagHandleOutline,
       bagRemoveOutline,
@@ -1218,7 +1240,6 @@ export default defineComponent({
       closeOutline,
       checkmarkCircleOutline,
       checkmarkDoneOutline,
-      checkmarkOutline,
       chevronUpOutline,
       cubeOutline,
       currentFacility,
