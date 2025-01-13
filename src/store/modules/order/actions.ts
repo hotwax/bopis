@@ -429,24 +429,24 @@ const actions: ActionTree<OrderState , RootState> ={
       return;
     }
 
-    const current = state.current as any
-    const orders = JSON.parse(JSON.stringify(state.open.list)) as any
-    // As one order can have multiple parts thus checking orderId and partSeq as well before making any api call
-    if(current.orderId === payload.orderId && current.orderType === orderType && current.part?.orderPartSeqId === payload.orderPartSeqId) {
-      await this.dispatch('product/getProductInformation', { orders: [ current ] })
-      // TODO: if we can store additional order information and just fetch shipGroup info as it was previously
-      await dispatch("fetchAdditionalOrderInformation", current)
-      return current
-    }
-    if(orders.length) {
-      const order = orders.find((order: any) => {
-        return order.orderId === payload.orderId;
-      })
-      if(order) {
-        await dispatch("fetchAdditionalOrderInformation", order)
-        return order;
-      }
-    }
+    // const current = state.current as any
+    // const orders = JSON.parse(JSON.stringify(state.open.list)) as any
+    // // As one order can have multiple parts thus checking orderId and partSeq as well before making any api call
+    // if(current.orderId === payload.orderId && current.orderType === orderType && current.part?.orderPartSeqId === payload.orderPartSeqId) {
+    //   await this.dispatch('product/getProductInformation', { orders: [ current ] })
+    //   // TODO: if we can store additional order information and just fetch shipGroup info as it was previously
+    //   await dispatch("fetchAdditionalOrderInformation", current)
+    //   return current
+    // }
+    // if(orders.length) {
+    //   const order = orders.find((order: any) => {
+    //     return order.orderId === payload.orderId;
+    //   })
+    //   if(order) {
+    //     await dispatch("fetchAdditionalOrderInformation", order)
+    //     return order;
+    //   }
+    // }
 
     const orderQueryPayload = prepareOrderQuery({
       ...payload,
@@ -464,6 +464,7 @@ const actions: ActionTree<OrderState , RootState> ={
           return {
             orderId: orderItem.orderId,
             orderName: orderItem.orderName,
+            shipmentId: orderItem.shipmentId,
             customer: {
               partyId: orderItem.customerId,
               name: orderItem.customerName
@@ -483,7 +484,10 @@ const actions: ActionTree<OrderState , RootState> ={
                     productId: item.productId,
                     facilityId: item.facilityId,
                     quantity: item.itemQuantity,
-                    showKitComponents: false
+                    showKitComponents: false,
+                    shipGroupSeqId: item.shipGroupSeqId,
+                    orderId: orderItem.orderId,
+                    inventoryItemId: item.inventoryItemId
                   }]
                 })
               } else {
@@ -492,7 +496,10 @@ const actions: ActionTree<OrderState , RootState> ={
                   productId: item.productId,
                   facilityId: item.facilityId,
                   quantity: item.itemQuantity,
-                  showKitComponents: false
+                  showKitComponents: false,
+                  shipGroupSeqId: item.shipGroupSeqId,
+                  orderId: orderItem.orderId,
+                  inventoryItemId: item.inventoryItemId
                 })
               }
 
@@ -510,7 +517,8 @@ const actions: ActionTree<OrderState , RootState> ={
               ids.push(picker.split('/')[0]);
               return ids;
             }, [])) : "",
-            picklistId: orderItem.picklistId
+            picklistId: orderItem.picklistId,
+            shipGroupSeqId: orderItem.shipGroupSeqId
           }
         })
 
@@ -526,7 +534,7 @@ const actions: ActionTree<OrderState , RootState> ={
       logger.error(err)
     }
 
-    dispatch("fetchAdditionalOrderInformation", currentOrder)
+    await dispatch("fetchAdditionalOrderInformation", currentOrder)
   },
   
   async updateCurrent ({ commit, dispatch }, payload) {
@@ -684,6 +692,10 @@ const actions: ActionTree<OrderState , RootState> ={
               if (!currentOrderPart) {
                 arr.push({
                   orderPartSeqId: item.shipGroupSeqId,
+                  shipmentMethodEnum: {
+                    shipmentMethodEnumId: item.shipmentMethodTypeId,
+                    shipmentMethodEnumDesc: item.shipmentMethodTypeDesc
+                  },
                   items: [{
                     orderItemSeqId: item.orderItemSeqId,
                     productId: item.productId,
