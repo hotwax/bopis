@@ -29,7 +29,7 @@
           <ion-item lines="none">
             <ion-icon slot="start" :icon="timeOutline" class="mobile-only" />
             <h2>{{ translate("Timeline") }}</h2>
-            <ion-badge slot="end" :color="getColorByDesc(getOrderStatus(order, order.part, orderType))">{{ translate(getOrderStatus(order, order.part, orderType)) }}</ion-badge>
+            <ion-badge slot="end" :color="getColorByDesc(orderStatus)">{{ translate(orderStatus) }}</ion-badge>
           </ion-item>
 
           <ion-list class="desktop-only">
@@ -40,7 +40,7 @@
                 {{ translate(event.label) }}
                 <p v-if="event.metaData">{{ event.metaData }}</p>
               </ion-label>
-              <ion-note slot="end" v-if="event.valueType === 'date-time-millis'">{{ formatDateTime(event.value) }}</ion-note>
+              <ion-note slot="end" v-if="event.value && event.valueType === 'date-time-millis'">{{ formatDateTime(event.value) }}</ion-note>
             </ion-item>
           </ion-list>
         </aside>
@@ -246,52 +246,54 @@
             <ion-label>{{ translate("Other shipments in this order") }}</ion-label>
           </ion-item>
           <div class="ion-padding">
-            <ion-card v-for="shipGroup in order.shipGroups" :key="shipGroup.shipmentId">
-              <ion-card-header>
-                <div>
-                  <ion-card-subtitle class="overline">{{ getfacilityTypeDesc(shipGroup.facilityTypeId) }}</ion-card-subtitle>
-                  <ion-card-title>{{ shipGroup.facilityName }}</ion-card-title>
-                  {{ shipGroup.shipGroupSeqId }}
-                </div>
-                <ion-badge :color="shipGroup.category ? 'primary' : 'medium'">{{ shipGroup.category ? shipGroup.category : translate('Pending allocation') }}</ion-badge>
-              </ion-card-header>
-    
-              <ion-item v-if="shipGroup.carrierPartyId">
-                {{ getPartyName(shipGroup.carrierPartyId) }}
-                <ion-label slot="end">{{ shipGroup.trackingCode }}</ion-label>
-                <ion-icon slot="end" :icon="locateOutline" />
-              </ion-item>
-    
-              <ion-item v-if="shipGroup.shippingInstructions" color="light" lines="none">
-                <ion-label class="ion-text-wrap">
-                  <p class="overline">{{ translate("Handling Instructions") }}</p>
-                  <p>{{ shipGroup.shippingInstructions }}</p>
-                </ion-label>
-              </ion-item>
-    
-              <ion-item lines="none" v-for="item in shipGroup.items" :key="item">
-                <ion-thumbnail slot="start">
-                  <DxpShopifyImg :src="getProduct(item.productId).mainImageUrl" size="small"/>
-                </ion-thumbnail>
-                <ion-label class="ion-text-wrap">
-                  <h2>{{ getProductIdentificationValue(productIdentificationPref.primaryId, getProduct(item.productId)) ? getProductIdentificationValue(productIdentificationPref.primaryId, getProduct(item.productId)) : getProduct(item.productId).productName }}</h2>
-                  <p class="ion-text-wrap">{{ getProductIdentificationValue(productIdentificationPref.secondaryId, getProduct(item.productId)) }}</p>
-                </ion-label>
+            <template v-for="shipGroup in order.shipGroups" :key="shipGroup.shipmentId">
+              <ion-card v-if="shipGroup.shipGroupSeqId !== order.part.orderPartSeqId">
+                <ion-card-header>
+                  <div>
+                    <ion-card-subtitle class="overline">{{ getfacilityTypeDesc(shipGroup.facilityTypeId) }}</ion-card-subtitle>
+                    <ion-card-title>{{ shipGroup.facilityName }}</ion-card-title>
+                    {{ shipGroup.shipGroupSeqId }}
+                  </div>
+                  <ion-badge :color="shipGroup.category ? 'primary' : 'medium'">{{ shipGroup.category ? shipGroup.category : translate('Pending allocation') }}</ion-badge>
+                </ion-card-header>
 
-                <div slot="end">
-                  <ion-spinner v-if="item.isFetchingStock" color="medium" name="crescent" />
-                  <div v-else-if="getProductStock(item.productId).quantityOnHandTotal >= 0" class="atp-info">
-                    <ion-note slot="end"> {{ translate("on hand", { count: getProductStock(item.productId).quantityOnHandTotal ?? '0' }) }} </ion-note>
-                    <ion-button fill="clear" @click.stop="openInventoryDetailPopover($event, item)">
-                      <ion-icon slot="icon-only" :icon="informationCircleOutline" color="medium" />
+                <ion-item v-if="shipGroup.carrierPartyId">
+                  {{ getPartyName(shipGroup.carrierPartyId) }}
+                  <ion-label slot="end">{{ shipGroup.trackingCode }}</ion-label>
+                  <ion-icon slot="end" :icon="locateOutline" />
+                </ion-item>
+
+                <ion-item v-if="shipGroup.shippingInstructions" color="light" lines="none">
+                  <ion-label class="ion-text-wrap">
+                    <p class="overline">{{ translate("Handling Instructions") }}</p>
+                    <p>{{ shipGroup.shippingInstructions }}</p>
+                  </ion-label>
+                </ion-item>
+
+                <ion-item lines="none" v-for="item in shipGroup.items" :key="item">
+                  <ion-thumbnail slot="start">
+                    <DxpShopifyImg :src="getProduct(item.productId).mainImageUrl" size="small"/>
+                  </ion-thumbnail>
+                  <ion-label class="ion-text-wrap">
+                    <h2>{{ getProductIdentificationValue(productIdentificationPref.primaryId, getProduct(item.productId)) ? getProductIdentificationValue(productIdentificationPref.primaryId, getProduct(item.productId)) : getProduct(item.productId).productName }}</h2>
+                    <p class="ion-text-wrap">{{ getProductIdentificationValue(productIdentificationPref.secondaryId, getProduct(item.productId)) }}</p>
+                  </ion-label>
+
+                  <div slot="end">
+                    <ion-spinner v-if="item.isFetchingStock" color="medium" name="crescent" />
+                    <div v-else-if="getProductStock(item.productId).quantityOnHandTotal >= 0" class="atp-info">
+                      <ion-note slot="end"> {{ translate("on hand", { count: getProductStock(item.productId).quantityOnHandTotal ?? '0' }) }} </ion-note>
+                      <ion-button fill="clear" @click.stop="openInventoryDetailPopover($event, item)">
+                        <ion-icon slot="icon-only" :icon="informationCircleOutline" color="medium" />
+                      </ion-button>
+                    </div>
+                    <ion-button v-else fill="clear" @click.stop="fetchProductStock(item.productId, shipGroup.shipGroupSeqId)">
+                      <ion-icon color="medium" slot="icon-only" :icon="cubeOutline" />
                     </ion-button>
                   </div>
-                  <ion-button v-else fill="clear" @click.stop="fetchProductStock(item.productId, shipGroup.shipGroupSeqId)">
-                    <ion-icon color="medium" slot="icon-only" :icon="cubeOutline" />
-                  </ion-button>
-                </div>
-              </ion-item>
-            </ion-card>
+                </ion-item>
+              </ion-card>
+            </template>
           </div>
         </section>
       </main>
@@ -431,7 +433,8 @@ export default defineComponent({
       hasCancelledItems: false,
       hasRejectedItems: false,
       pickers: [],
-      picklistDate: 0
+      picklistDate: 0,
+      orderStatus: ""
     }
   },
   computed: {
@@ -475,6 +478,8 @@ export default defineComponent({
     },
     async deliverShipment(order: any) {
       await this.store.dispatch('order/deliverShipment', order)
+      // Update the order timeline once the order is delivered/handovered
+      this.prepareOrderTimeline();
     },
     async openOrderItemRejHistoryModal() {
       const orderItemRejHistoryModal = await modalController.create({
@@ -601,10 +606,12 @@ export default defineComponent({
             text: header,
             handler: async () => {
               if(!pickup) {
-                this.packShippingOrders(order, part);
+                await this.packShippingOrders(order, part);
               } else {
-                this.store.dispatch('order/packShipGroupItems', {order, part, facilityId: this.currentFacility?.facilityId})
+                await this.store.dispatch('order/packShipGroupItems', {order, part, facilityId: this.currentFacility?.facilityId})
               }
+              // Update order timeline once the order is marked as ready for pickup
+              this.prepareOrderTimeline();
             }
           }]
         });
@@ -683,6 +690,10 @@ export default defineComponent({
       return DateTime.fromMillis(date).toLocaleString({ hour: "numeric", minute: "2-digit", day: "numeric", month: "short", year: "numeric", hourCycle: "h12" })
     },
     findTimeDiff(startTime: any, endTime: any) {
+      if(!endTime) {
+        return ""
+      }
+
       const timeDiff = DateTime.fromMillis(endTime).diff(DateTime.fromMillis(startTime), ["years", "months", "days", "hours", "minutes"]);
       let diffString = "+ ";
       if(timeDiff.years) diffString += `${Math.round(timeDiff.years)} years `
@@ -991,6 +1002,12 @@ export default defineComponent({
     },
     async prepareOrderTimeline() {
       const timeline = []
+
+      const {orderRouteSegment, shipmentStatusInfo} = await this.fetchOrderRouteSegmentInfo();
+
+      // Get order status using utility method
+      this.orderStatus = this.getOrderStatus(this.order, this.order.part, orderRouteSegment)
+
       let orderChangeHistory = await this.fetchOrderChangeHistory();
       const orderPickupEmailCommnicationEvent = await this.fetchOrderCommunicationEvent();
 
@@ -1095,7 +1112,61 @@ export default defineComponent({
         })
       }
 
+      // If order status is ready for pickup
+      if(this.orderStatus === "Ready for pickup") {
+        const getShipmentPackedDate = shipmentStatusInfo.find((statusInfo: any) => statusInfo.statusId === "SHIPMENT_PACKED")
+        timeline.push({
+          label: "Ready for pickup",
+          id: "packedDate",
+          value: getShipmentPackedDate?.statusDate,
+          icon: bagCheckOutline,
+          valueType: "date-time-millis",
+          timeDiff: this.findTimeDiff(this.order.orderDate, getShipmentPackedDate?.statusDate)
+        })
+      }
+
       this.orderTimeline = this.sortSequence(timeline, "value")
+    },
+    async fetchOrderRouteSegmentInfo() {
+      let orderRouteSegment = []
+      let shipmentStatusInfo = []
+      try {
+        const resp = await OrderService.performFind({
+          inputFields: {
+            orderId: this.order.orderId,
+            shipGroupSeqId: this.order.part.orderPartSeqId
+          },
+          fieldList: ["orderId", "shipGroupSeqId", "shipmentId", "shipmentStatusId", "trackingIdNumber"],
+          viewSize: 50,
+          entityName: "OrderShipmentAndRouteSegment"
+        }) as any
+
+        if(!hasError(resp) && resp.data?.docs.length) {
+          orderRouteSegment = resp.data.docs
+
+          if(resp.data.docs[0].shipmentId) {
+            const shipmentStatusResp = await OrderService.performFind({
+              inputFields: {
+                shipmentId: resp.data.docs[0].shipmentId
+              },
+              fieldList: ["shipmentId", "statusId", "statusDate"],
+              viewSize: 50,
+              entityName: "ShipmentStatus"
+            }) as any
+
+            if(!hasError(resp) && shipmentStatusResp.data?.docs.length) {
+              shipmentStatusInfo = shipmentStatusResp.data.docs
+            }
+          }
+        }
+      } catch(err) {
+        logger.error("Failed to fetch route segment info for order")
+      }
+
+      return {
+        orderRouteSegment,
+        shipmentStatusInfo
+      }
     }
   },
   async mounted() {

@@ -276,18 +276,9 @@ const actions: ActionTree<OrderState , RootState> ={
         },
         viewSize: 50,
         entityName: "OrderItemShipGroupAndFacility"
-      }, {
-        inputFields: {
-          orderId,
-          shipmentStatusId: "SHIPMENT_INPUT",
-          shipmentStatusId_op: "notEqual"
-        },
-        fieldList: ["orderId", "shipGroupSeqId", "shipmentId", "trackingIdNumber"],
-        viewSize: 50,
-        entityName: "OrderShipmentAndRouteSegment"
       }]
 
-      const [orderHeader, orderContactMech, orderIdentifications, orderAttributes, orderStatusInfo, orderPaymentPreference, orderShipGroups, orderRouteSegment] = await Promise.allSettled(apiPayload.map((payload: any) => OrderService.performFind(payload)))
+      const [orderHeader, orderContactMech, orderIdentifications, orderAttributes, orderStatusInfo, orderPaymentPreference, orderShipGroups] = await Promise.allSettled(apiPayload.map((payload: any) => OrderService.performFind(payload)))
 
       if(orderHeader.status === "fulfilled" && !hasError(orderHeader.value) && orderHeader.value.data.count > 0) {
         order = {
@@ -405,12 +396,6 @@ const actions: ActionTree<OrderState , RootState> ={
       const shipGroupSeqIds: Array<string> = [];
       const shipmentMethodIds: Array<string> = []
 
-      const orderRouteSegmentInfo = orderRouteSegment.status === "fulfilled" && orderRouteSegment.value.data.docs?.length > 0 ? orderRouteSegment.value.data.docs.reduce((orderSegmentInfo: any, routeSegment: any) => {
-        if(orderSegmentInfo[routeSegment.shipGroupSeqId]) orderSegmentInfo[routeSegment.shipGroupSeqId].push(routeSegment)
-        else orderSegmentInfo[routeSegment.shipGroupSeqId] = [routeSegment]
-        return orderSegmentInfo
-      }, {}) : []
-
       const carrierPartyIds = [] as any;
 
       // TODO: fetch carrier info
@@ -421,26 +406,6 @@ const actions: ActionTree<OrderState , RootState> ={
       // })
 
       // this.dispatch("util/fetchShipmentMethodTypeDesc", shipmentMethodIds)
-
-      order["shipGroupFulfillmentStatus"] = {}
-      const picklistBinInfo = await OrderService.performFind({
-        inputFields: {
-          orderId,
-          shipGroupSeqId: shipGroupSeqIds,
-          shipGroupSeqId_op: "in"
-        },
-        viewSize: 20,
-        fieldList: ["shipGroupSeqId", "itemStatusId"],
-        entityName: "PicklistItemAndBin"
-      })
-
-      if(!hasError(picklistBinInfo) && picklistBinInfo.data.count > 0) {
-        picklistBinInfo.data.docs.map((binInfo: any) => {
-          order["shipGroupFulfillmentStatus"][binInfo.shipGroupSeqId] = (binInfo.itemStatusId === "PICKITEM_PENDING" ? "Picking" : binInfo.itemStatusId === "PICKITEM_PICKED" || binInfo.itemStatusId === "PICKITEM_COMPLETED" ? binInfo.shipmentMethodTypeId === "STOREPICKUP" ? "Ready for pickup" : "Packed" : "")
-        })
-      }
-
-      // await this.dispatch("product/fetchProducts", { productIds })
     } catch(err) {
       logger.error(err)
     }
@@ -471,7 +436,7 @@ const actions: ActionTree<OrderState , RootState> ={
       await this.dispatch('product/getProductInformation', { orders: [ current ] })
       // TODO: if we can store additional order information and just fetch shipGroup info as it was previously
       await dispatch("fetchAdditionalOrderInformation", current)
-      return current 
+      return current
     }
     if(orders.length) {
       const order = orders.find((order: any) => {
@@ -482,7 +447,6 @@ const actions: ActionTree<OrderState , RootState> ={
         return order;
       }
     }
-
 
     const orderQueryPayload = prepareOrderQuery({
       ...payload,
@@ -783,6 +747,7 @@ const actions: ActionTree<OrderState , RootState> ={
       resp = await OrderService.updateShipment(params)
       if (resp.status === 200 && !hasError(resp)) {
         // Remove order from the list if action is successful
+        console.log('state.packed.list', state.packed.list)
         const orderIndex = state.packed.list.findIndex((packedOrder: any) => {
           return packedOrder.orderId === order.orderId && order.parts.some((part: any) => {
             return packedOrder.parts.some((packedOrderPart: any) => {
@@ -790,6 +755,7 @@ const actions: ActionTree<OrderState , RootState> ={
             })
           });
         });
+        console.log('orderIndex', orderIndex)
         if (orderIndex > -1) {
           state.packed.list.splice(orderIndex, 1);
           commit(types.ORDER_PACKED_UPDATED, { orders: state.packed.list, total: state.packed.total -1 })
@@ -800,6 +766,8 @@ const actions: ActionTree<OrderState , RootState> ={
         }else {
           order = { ...order, shipped: true }
         }
+
+        console.log('order', order)
 
         dispatch('updateCurrent', { order })
       } else {
