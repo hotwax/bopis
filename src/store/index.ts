@@ -21,7 +21,7 @@ const state: any = {
 }
 
 const persistState = createPersistedState({
-    paths: ['user', 'order.current'],
+    paths: ['user', 'order.current', "util.facilities", "util.enumerations"],
     fetchBeforeUse: true
 })
 

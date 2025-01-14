@@ -21,5 +21,11 @@ const getters: GetterTree <UtilState, RootState> = {
   getCancelReasons(state) {
     return state.cancelReasons ? state.cancelReasons : []
   },
+  getFacilityName: (state) => (facilityId: string) => {
+    return state.facilities[facilityId] ? state.facilities[facilityId] : facilityId
+  },
+  getEnumDescription: (state) => (enumId: string) => {
+    return state.enumerations[enumId] ? state.enumerations[enumId] : enumId
+  },
 }
 export default getters;

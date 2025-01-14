@@ -21,5 +21,11 @@ const mutations: MutationTree <UtilState> = {
   [types.UTIL_CANCEL_REASONS_UPDATED] (state, payload) {
     state.cancelReasons = payload
   },
+  [types.UTIL_FACILITIES_UPDATED] (state, payload) {
+    state.facilities = payload
+  },
+  [types.UTIL_ENUMERATIONS_UPDATED] (state, payload) {
+    state.enumerations = payload
+  },
 }
 export default mutations;

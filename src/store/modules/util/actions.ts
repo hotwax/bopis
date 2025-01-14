@@ -295,6 +295,90 @@ const actions: ActionTree<UtilState, RootState> = {
     return partyInformation;
   },
 
+  // Fetching all the facilities
+  async fetchFacilities({ commit, state }, facilityIds) {
+    const facilities = JSON.parse(JSON.stringify(state.facilities))
+
+    const cachedFacilityIds = Object.keys(facilities);
+    const facilityIdFilter = [...new Set(facilityIds.filter((facilityId: any) => !cachedFacilityIds.includes(facilityId)))]
+
+    // If there are no facility info to fetch skip the API call
+    if (!facilityIdFilter.length) return;
+
+    const payload = {
+      inputFields: {
+        facilityId: facilityIdFilter,
+        facilityId_op: "in"
+      },
+      viewSize: facilityIdFilter.length,
+      entityName: "Facility",
+      noConditionFind: 'Y',
+      distinct: "Y",
+      fieldList: ["facilityId", "facilityName"]
+    }
+
+    try {
+      const resp = await UtilService.fetchFacilities(payload);
+
+      if (!hasError(resp) && resp.data?.docs.length > 0) {
+        resp.data.docs.map((facility: any) => {
+          facilities[facility.facilityId] = facility["facilityName"]
+        })
+
+        commit(types.UTIL_FACILITIES_UPDATED, facilities)
+      } else {
+        throw resp.data;
+      }
+    } catch (err) {
+      console.error("Failed to fetch facility information", err)
+    }
+  },
+
+  async clearFacilities({ commit }) {
+    commit(types.UTIL_FACILITIES_UPDATED, {})
+  },
+
+  async fetchEnumerations({ commit, state }, enumIds) {
+    const enumerations = JSON.parse(JSON.stringify(state.enumerations))
+
+    const cachedEunmIds = Object.keys(enumerations);
+    const enumIdsFilter = [...new Set(enumIds.filter((enumId: any) => !cachedEunmIds.includes(enumId)))]
+
+    // If there are no enum info to fetch skip the API call
+    if (!enumIdsFilter.length) return;
+
+    const payload = {
+      inputFields: {
+        enumId: enumIdsFilter,
+        enumId_op: "in"
+      },
+      viewSize: enumIdsFilter.length,
+      entityName: "Enumeration",
+      noConditionFind: 'Y',
+      distinct: "Y",
+      fieldList: ["enumId", "description"]
+    }
+
+    try {
+      const resp = await UtilService.fetchEnumerations(payload);
+
+      if (!hasError(resp) && resp.data?.docs.length > 0) {
+        resp.data.docs.map((enumeration: any) => {
+          enumerations[enumeration.enumId] = enumeration["description"]
+        })
+
+        commit(types.UTIL_ENUMERATIONS_UPDATED, enumerations)
+      } else {
+        throw resp.data;
+      }
+    } catch (err) {
+      console.error("Failed to fetch enumeration information", err)
+    }
+  },
+
+  async clearEnumerations({ commit }) {
+    commit(types.UTIL_ENUMERATIONS_UPDATED, {})
+  }
 }
 
 export default actions;

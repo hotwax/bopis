@@ -451,6 +451,8 @@ export default defineComponent({
       rejectReasons: 'util/getRejectReasons',
       cancelReasons: 'util/getCancelReasons',
       currentEComStore: 'user/getCurrentEComStore',
+      getFacilityName: "util/getFacilityName",
+      getEnumDescription: "util/getEnumDescription"
     })
   },
   props: ['orderType', 'orderId', 'orderPartSeqId'],
@@ -1047,10 +1049,20 @@ export default defineComponent({
         sortDate: event.entryDate
       }))
 
-      orderChangeHistory = orderChangeHistory.map((orderChange: any) => ({
-        ...orderChange,
-        sortDate: orderChange.changeDatetime
-      }))
+      const facilityIds = [] as Array<string>
+      const enumIds = [] as Array<string>
+      orderChangeHistory = orderChangeHistory.map((orderChange: any) => {
+        facilityIds.push(orderChange.facilityId)
+        facilityIds.push(orderChange.fromFacilityId)
+        enumIds.push(orderChange.changeReasonEnumId)
+        return {
+          ...orderChange,
+          sortDate: orderChange.changeDatetime
+        }
+      })
+
+      await this.store.dispatch("util/fetchFacilities", [...new Set(facilityIds)])
+      await this.store.dispatch("util/fetchEnumerations", [...new Set(enumIds)])
 
       const orderTimelineComponents = [...communicationEvents, ...orderChangeHistory]
 
@@ -1108,14 +1120,17 @@ export default defineComponent({
           let label = "Pickup remainder"
           let id = "pickupRemainder"
           let icon = mailOutline
+          let metaData = ""
           if(component.facilityId === "PICKUP_REJECTED") {
-            label = "Rejected",
-            id = "rejected",
+            label = "Rejected"
+            id = "rejected"
             icon = trashOutline
+            metaData = this.getFacilityName(component.fromFacilityId) + ": " + this.getEnumDescription(component.changeReasonEnumId)
           } else if(component.fromFacilityId === "PICKUP_REJECTED") {
-            label = "Assigned for fulfillment",
-            id = "assigned",
+            label = "Assigned for fulfillment"
+            id = "assigned"
             icon = medkitOutline
+            metaData = this.getFacilityName(component.facilityId) + ": " + this.getEnumDescription(component.changeReasonEnumId)
           }
 
           timeline.push({
@@ -1124,7 +1139,8 @@ export default defineComponent({
             value: component.sortDate,
             icon,
             valueType: "date-time-millis",
-            timeDiff: this.findTimeDiff(this.order.orderDate, component.sortDate)
+            timeDiff: this.findTimeDiff(this.order.orderDate, component.sortDate),
+            metaData
           })
         })
       }
