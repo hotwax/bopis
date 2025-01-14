@@ -5,6 +5,9 @@
         <ion-back-button default-href="/" slot="start" />
         <ion-title>{{ translate("Order details") }}</ion-title>
         <ion-buttons slot="end">
+          <ion-button v-if="orderType === 'packed' && order.part?.shipmentMethodEnum?.shipmentMethodEnumId === 'STOREPICKUP'" :disabled="!order?.orderId || !hasPermission(Actions.APP_ORDER_UPDATE) || order.handovered || order.shipped" @click="sendReadyForPickupEmail(order)">
+            <ion-icon slot="icon-only" :icon="mailOutline" />
+          </ion-button>
           <ion-button :disabled="!order?.orderId" @click="openOrderItemRejHistoryModal()">
             <ion-icon slot="icon-only" :icon="timeOutline" />
           </ion-button>
@@ -24,7 +27,7 @@
         <p>{{ translate("Order not found")}}</p>
       </div>
       <main v-else>
-        <aside>
+        <aside class="ion-hide-md-down">
           <!-- Timeline -->
           <ion-item lines="none">
             <ion-icon slot="start" :icon="timeOutline" class="mobile-only" />
@@ -1211,7 +1214,37 @@ export default defineComponent({
         orderRouteSegment,
         shipmentStatusInfo
       }
-    }
+    },
+    async sendReadyForPickupEmail(order: any) {
+      const header = translate("Resend email")
+      const message = translate("An email notification will be sent to that their order is ready for pickup.", { customerName: order.customer.name });
+
+      const alert = await alertController
+        .create({
+          header: header,
+          message: message,
+          buttons: [{
+            text: translate("Cancel"),
+            role: "cancel"
+          },{
+            text: translate("Send"),
+            handler: async () => {
+              try {
+                const resp = await OrderService.sendPickupScheduledNotification({ shipmentId: order.shipmentId });
+                if (!hasError(resp)) {
+                  showToast(translate("Email sent successfully"))
+                } else {
+                  showToast(translate("Something went wrong while sending the email."))
+                }
+              } catch (error) {
+                showToast(translate("Something went wrong while sending the email."))
+                logger.error(error)
+              }
+            }
+          }]
+        });
+      return alert.present();
+    },
   },
   async mounted() {
     emitter.emit("presentLoader")
