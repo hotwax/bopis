@@ -452,8 +452,8 @@ const actions: ActionTree<OrderState , RootState> ={
             orderName: orderItem.orderName,
             shipmentId: orderItem.shipmentId,
             customer: {
-              partyId: orderItem.customerId,
-              name: orderItem.customerName
+              partyId: orderItem.customerId || orderItem.customerPartyId,
+              name: orderItem.customerName || orderItem.customerPartyName
             },
             statusId: orderItem.orderStatusId,
             parts: removeKitComponents(order.doclist.docs.reduce((arr: Array<any>, item: any) => {
@@ -469,7 +469,7 @@ const actions: ActionTree<OrderState , RootState> ={
                     orderItemSeqId: item.orderItemSeqId,
                     productId: item.productId,
                     facilityId: item.facilityId,
-                    quantity: item.itemQuantity,
+                    quantity: item.itemQuantity || item.quantity,
                     showKitComponents: false,
                     shipGroupSeqId: item.shipGroupSeqId,
                     orderId: orderItem.orderId,
@@ -481,7 +481,7 @@ const actions: ActionTree<OrderState , RootState> ={
                   orderItemSeqId: item.orderItemSeqId,
                   productId: item.productId,
                   facilityId: item.facilityId,
-                  quantity: item.itemQuantity,
+                  quantity: item.itemQuantity || item.quantity,
                   showKitComponents: false,
                   shipGroupSeqId: item.shipGroupSeqId,
                   orderId: orderItem.orderId,
