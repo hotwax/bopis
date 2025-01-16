@@ -1040,7 +1040,7 @@ export default defineComponent({
       this.orderStatus = this.getOrderStatus({
         ...this.order,
         ...paramsToUpdate
-      }, this.order.part, orderRouteSegment)
+      }, this.order.part, orderRouteSegment, this.orderType)
 
       let orderChangeHistory = await this.fetchOrderChangeHistory();
       const orderPickupEmailCommnicationEvent = await this.fetchOrderCommunicationEvent();
@@ -1148,15 +1148,15 @@ export default defineComponent({
         })
       }
 
-      // Add order completed date to timeline
-      if(this.order.completedDate) {
+      // Add order completed date to timeline, if we do not have order completed date then check for orderType
+      if(this.order.completedDate || this.orderType === "completed") {
         timeline.push({
           label: this.order.part.shipmentMethodEnum.shipmentMethodEnumId === "STOREPICKUP" ? "Picked up" : "Order completed",
           id: "completedDate",
-          value: this.order.completedDate,
+          value: this.order.completedDate ? this.order.completedDate : undefined,
           icon: checkmarkDoneOutline,
           valueType: "date-time-millis",
-          timeDiff: this.findTimeDiff(this.order.orderDate, this.order.completedDate)
+          timeDiff: this.order.completedDate ? this.findTimeDiff(this.order.orderDate, this.order.completedDate) : ""
         })
       }
 
