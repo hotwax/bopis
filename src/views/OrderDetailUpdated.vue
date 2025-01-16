@@ -30,12 +30,11 @@
         <aside class="ion-hide-md-down">
           <!-- Timeline -->
           <ion-item lines="none">
-            <ion-icon slot="start" :icon="timeOutline" class="mobile-only" />
             <h2>{{ translate("Timeline") }}</h2>
             <ion-badge slot="end" :color="getColorByDesc(orderStatus)">{{ translate(orderStatus) }}</ion-badge>
           </ion-item>
 
-          <ion-list class="desktop-only">
+          <ion-list class="ion-margin-start desktop-only">
             <ion-item v-for="event in orderTimeline" :key="event.id">
               <ion-icon :icon="event.icon" slot="start" />
               <ion-label>
@@ -244,7 +243,10 @@
               </p>
             </ion-card>
           </div>
+        </section>
 
+        <!-- Other shipments info -->
+        <div class="other-shipments">
           <ion-item lines="none" v-if="order.shipGroups?.filter((group: any) => group.shipGroupSeqId !== order.part.orderPartSeqId)?.length">
             <ion-label>{{ translate("Other shipments in this order") }}</ion-label>
           </ion-item>
@@ -298,7 +300,7 @@
               </ion-card>
             </template>
           </div>
-        </section>
+        </div>
       </main>
 
       <ion-fab v-if="orderType === 'open' && order?.orderId" class="ion-hide-md-up" vertical="bottom" horizontal="end" slot="fixed" >
@@ -1359,13 +1361,22 @@ ion-card-header {
   text-align: end;
 }
 
+@media (min-width: 343px) {
+  .other-shipments {
+    grid-column: 1/-1;
+  }
+
+  .other-shipments > div {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(343px, 1fr));
+  }
+}
+
 @media (min-width: 768px) {
   main {
     display: grid;
-    grid-template-columns: 1fr .75fr;
+    grid-template-columns: 1fr .6fr;
     gap: var(--spacer-base);
-    max-width: 1200px;
-    margin-inline: auto;
     margin-top: var(--spacer-xl);
   }
 
