@@ -22,12 +22,12 @@
           <p class="ion-text-wrap">{{ getCancelReasonDescription(item.cancelReason) }}</p>
           <ion-badge color="dark" v-if="isKit(item)">{{ translate("Kit") }}</ion-badge>
         </ion-label>
-        <ion-note slot="end">{{ getProduct(item.productId).LIST_PRICE_PURCHASE_USD_STORE_GROUP_price ? getProduct(item.productId).LIST_PRICE_PURCHASE_USD_STORE_GROUP_price : "" }}</ion-note>
+        <ion-note slot="end">{{ getProduct(item.productId).LIST_PRICE_PURCHASE_USD_STORE_GROUP_price ? formatCurrency(getProduct(item.productId).LIST_PRICE_PURCHASE_USD_STORE_GROUP_price, order.currencyUom) : "" }}</ion-note>
       </ion-item>
 
       <ion-item lines="full">
         <ion-label>{{ translate("Total") }}</ion-label>
-        <ion-note slot="end">{{ orderTotal }}</ion-note>
+        <ion-note slot="end">{{ formatCurrency(orderTotal, order.currencyUom) }}</ion-note>
       </ion-item>
 
       <ion-item lines="full" v-if="isCancelationSyncJobEnabled && isProcessRefundEnabled">
@@ -82,6 +82,7 @@ import { mapGetters, useStore } from "vuex"
 import { OrderService } from "@/services/OrderService";
 import { getProductIdentificationValue, translate, useProductIdentificationStore } from "@hotwax/dxp-components";
 import { isKit } from "@/utils/order"
+import { formatCurrency } from "@/utils";
 import { hasError } from "@hotwax/oms-api";
 import { DateTime } from "luxon";
 import emitter from "@/event-bus";
@@ -188,6 +189,7 @@ export default defineComponent({
     return {
       closeOutline,
       isKit,
+      formatCurrency,
       getProductIdentificationValue,
       productIdentificationPref,
       saveOutline,
