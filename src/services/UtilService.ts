@@ -131,9 +131,27 @@ const getProcessRefundStatus = async (payload: any): Promise<any> => {
   });
 }
 
+const fetchFacilities = async (payload: any): Promise<any> => {
+  return api({
+    url: "performFind",
+    method: "post",
+    data: payload
+  });
+}
+
+const fetchEnumerations = async (payload: any): Promise<any> => {
+  return api({
+    url: "performFind",
+    method: "post",
+    data: payload
+  });
+}
+
 export const UtilService = {
   createEnumeration,
   createProductStoreSetting,
+  fetchEnumerations,
+  fetchFacilities,
   fetchFacilityTypeInformation,
   fetchJobInformation,
   fetchPartyInformation,

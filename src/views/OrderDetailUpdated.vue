@@ -5,6 +5,9 @@
         <ion-back-button default-href="/" slot="start" />
         <ion-title>{{ translate("Order details") }}</ion-title>
         <ion-buttons slot="end">
+          <ion-button v-if="orderType === 'packed' && order.part?.shipmentMethodEnum?.shipmentMethodEnumId === 'STOREPICKUP'" :disabled="!order?.orderId || !hasPermission(Actions.APP_ORDER_UPDATE) || order.handovered || order.shipped" @click="sendReadyForPickupEmail(order)">
+            <ion-icon slot="icon-only" :icon="mailOutline" />
+          </ion-button>
           <ion-button :disabled="!order?.orderId" @click="openOrderItemRejHistoryModal()">
             <ion-icon slot="icon-only" :icon="timeOutline" />
           </ion-button>
@@ -24,15 +27,14 @@
         <p>{{ translate("Order not found")}}</p>
       </div>
       <main v-else>
-        <aside>
+        <aside class="ion-hide-md-down">
           <!-- Timeline -->
           <ion-item lines="none">
-            <ion-icon slot="start" :icon="timeOutline" class="mobile-only" />
             <h2>{{ translate("Timeline") }}</h2>
             <ion-badge slot="end" :color="getColorByDesc(orderStatus)">{{ translate(orderStatus) }}</ion-badge>
           </ion-item>
 
-          <ion-list class="desktop-only">
+          <ion-list class="ion-margin-start desktop-only">
             <ion-item v-for="event in orderTimeline" :key="event.id">
               <ion-icon :icon="event.icon" slot="start" />
               <ion-label>
@@ -241,7 +243,10 @@
               </p>
             </ion-card>
           </div>
+        </section>
 
+        <!-- Other shipments info -->
+        <div class="other-shipments">
           <ion-item lines="none" v-if="order.shipGroups?.filter((group: any) => group.shipGroupSeqId !== order.part.orderPartSeqId)?.length">
             <ion-label>{{ translate("Other shipments in this order") }}</ion-label>
           </ion-item>
@@ -295,7 +300,7 @@
               </ion-card>
             </template>
           </div>
-        </section>
+        </div>
       </main>
 
       <ion-fab v-if="orderType === 'open' && order?.orderId" class="ion-hide-md-up" vertical="bottom" horizontal="end" slot="fixed" >
@@ -451,6 +456,8 @@ export default defineComponent({
       rejectReasons: 'util/getRejectReasons',
       cancelReasons: 'util/getCancelReasons',
       currentEComStore: 'user/getCurrentEComStore',
+      getFacilityName: "util/getFacilityName",
+      getEnumDescription: "util/getEnumDescription"
     })
   },
   props: ['orderType', 'orderId', 'orderPartSeqId'],
@@ -1035,7 +1042,7 @@ export default defineComponent({
       this.orderStatus = this.getOrderStatus({
         ...this.order,
         ...paramsToUpdate
-      }, this.order.part, orderRouteSegment)
+      }, this.order.part, orderRouteSegment, this.orderType)
 
       let orderChangeHistory = await this.fetchOrderChangeHistory();
       const orderPickupEmailCommnicationEvent = await this.fetchOrderCommunicationEvent();
@@ -1047,10 +1054,20 @@ export default defineComponent({
         sortDate: event.entryDate
       }))
 
-      orderChangeHistory = orderChangeHistory.map((orderChange: any) => ({
-        ...orderChange,
-        sortDate: orderChange.changeDatetime
-      }))
+      const facilityIds = [] as Array<string>
+      const enumIds = [] as Array<string>
+      orderChangeHistory = orderChangeHistory.map((orderChange: any) => {
+        facilityIds.push(orderChange.facilityId)
+        facilityIds.push(orderChange.fromFacilityId)
+        enumIds.push(orderChange.changeReasonEnumId)
+        return {
+          ...orderChange,
+          sortDate: orderChange.changeDatetime
+        }
+      })
+
+      await this.store.dispatch("util/fetchFacilities", [...new Set(facilityIds)])
+      await this.store.dispatch("util/fetchEnumerations", [...new Set(enumIds)])
 
       const orderTimelineComponents = [...communicationEvents, ...orderChangeHistory]
 
@@ -1108,14 +1125,17 @@ export default defineComponent({
           let label = "Pickup remainder"
           let id = "pickupRemainder"
           let icon = mailOutline
+          let metaData = ""
           if(component.facilityId === "PICKUP_REJECTED") {
-            label = "Rejected",
-            id = "rejected",
+            label = "Rejected"
+            id = "rejected"
             icon = trashOutline
+            metaData = this.getFacilityName(component.fromFacilityId) + ": " + this.getEnumDescription(component.changeReasonEnumId)
           } else if(component.fromFacilityId === "PICKUP_REJECTED") {
-            label = "Assigned for fulfillment",
-            id = "assigned",
+            label = "Assigned for fulfillment"
+            id = "assigned"
             icon = medkitOutline
+            metaData = this.getFacilityName(component.facilityId) + ": " + this.getEnumDescription(component.changeReasonEnumId)
           }
 
           timeline.push({
@@ -1124,20 +1144,21 @@ export default defineComponent({
             value: component.sortDate,
             icon,
             valueType: "date-time-millis",
-            timeDiff: this.findTimeDiff(this.order.orderDate, component.sortDate)
+            timeDiff: this.findTimeDiff(this.order.orderDate, component.sortDate),
+            metaData
           })
         })
       }
 
-      // Add order completed date to timeline
-      if(this.order.completedDate) {
+      // Add order completed date to timeline, if we do not have order completed date then check for orderType
+      if(this.order.completedDate || this.orderType === "completed") {
         timeline.push({
           label: this.order.part.shipmentMethodEnum.shipmentMethodEnumId === "STOREPICKUP" ? "Picked up" : "Order completed",
           id: "completedDate",
-          value: this.order.completedDate,
+          value: this.order.completedDate ? this.order.completedDate : undefined,
           icon: checkmarkDoneOutline,
           valueType: "date-time-millis",
-          timeDiff: this.findTimeDiff(this.order.orderDate, this.order.completedDate)
+          timeDiff: this.order.completedDate ? this.findTimeDiff(this.order.orderDate, this.order.completedDate) : ""
         })
       }
 
@@ -1195,7 +1216,37 @@ export default defineComponent({
         orderRouteSegment,
         shipmentStatusInfo
       }
-    }
+    },
+    async sendReadyForPickupEmail(order: any) {
+      const header = translate("Resend email")
+      const message = translate("An email notification will be sent to that their order is ready for pickup.", { customerName: order.customer.name });
+
+      const alert = await alertController
+        .create({
+          header: header,
+          message: message,
+          buttons: [{
+            text: translate("Cancel"),
+            role: "cancel"
+          },{
+            text: translate("Send"),
+            handler: async () => {
+              try {
+                const resp = await OrderService.sendPickupScheduledNotification({ shipmentId: order.shipmentId });
+                if (!hasError(resp)) {
+                  showToast(translate("Email sent successfully"))
+                } else {
+                  showToast(translate("Something went wrong while sending the email."))
+                }
+              } catch (error) {
+                showToast(translate("Something went wrong while sending the email."))
+                logger.error(error)
+              }
+            }
+          }]
+        });
+      return alert.present();
+    },
   },
   async mounted() {
     emitter.emit("presentLoader")
@@ -1310,13 +1361,22 @@ ion-card-header {
   text-align: end;
 }
 
+@media (min-width: 343px) {
+  .other-shipments {
+    grid-column: 1/-1;
+  }
+
+  .other-shipments > div {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(343px, 1fr));
+  }
+}
+
 @media (min-width: 768px) {
   main {
     display: grid;
-    grid-template-columns: 1fr .75fr;
+    grid-template-columns: 1fr .6fr;
     gap: var(--spacer-base);
-    max-width: 1200px;
-    margin-inline: auto;
     margin-top: var(--spacer-xl);
   }
 

@@ -5,4 +5,6 @@ export default interface UtilState {
   facilityTypeDesc: any;
   partyNames: any;
   cancelReasons: Array<any>;
+  facilities: any;
+  enumerations: any;
 }

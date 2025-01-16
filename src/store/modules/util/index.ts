@@ -13,7 +13,9 @@ const utilModule: Module<UtilState, RootState> = {
     statusDesc: {},
     facilityTypeDesc: {},
     partyNames: {},
-    cancelReasons: []
+    cancelReasons: [],
+    facilities: {},
+    enumerations: {}
   },
   getters,
   actions,
