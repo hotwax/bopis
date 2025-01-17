@@ -26,10 +26,13 @@
           </ion-select>
         </template>
         <template v-else>
-          <ion-label>
+          <ion-label v-if="carrierPartyId">
             {{ translate('No shipment methods linked to', {carrierName: getCarrierName(carrierPartyId)}) }}
           </ion-label>
-          <ion-button @click="openShippingMethodDocumentReference()" fill="clear" color="medium" slot="end">
+          <ion-label v-else>
+            {{ translate("Select a carrier to see the linked shipment methods") }}
+          </ion-label>
+          <ion-button v-if="carrierPartyId" @click="openShippingMethodDocumentReference()" fill="clear" color="medium" slot="end">
             <ion-icon slot="icon-only" :icon="informationCircleOutline" />
           </ion-button>
         </template>
