@@ -413,6 +413,7 @@ export default defineComponent({
         if (!payload.inputFields.settingTypeEnumId) {
           payload.inputFields.settingTypeEnumId = Object.values(this.rerouteFulfillmentConfigMapping);
           payload.inputFields.settingTypeEnumId_op = "in"
+          payload.viewSize = Object.values(this.rerouteFulfillmentConfigMapping)?.length
 
         }
 
