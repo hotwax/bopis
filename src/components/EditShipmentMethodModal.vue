@@ -15,7 +15,7 @@
         <ion-label>{{ translate('Select which shipping method orders will receive when customer choose to have delivered instead of picked up.') }}</ion-label>
       </ion-item>
       <ion-item>
-        <ion-select :label="translate('Carrier')" v-model="carrierPartyId" interface="popover" @ionChange="getProductStoreShipmentMethods(carrierPartyId)">
+        <ion-select :label="translate('Carrier')" v-model="carrierPartyId" interface="popover" @ionChange="getProductStoreShipmentMethods(carrierPartyId)" :placeholder="translate('carrier')">
           <ion-select-option v-for="carrier in carriers" :key="carrier.partyId" :value="carrier.partyId">{{ carrier.groupName }}</ion-select-option>
         </ion-select>
       </ion-item>

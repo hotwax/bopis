@@ -28,6 +28,7 @@
   "Cancelation sync to Shopify is enabled. Refund processing is disabled.": "Cancelation sync to Shopify is enabled. Refund processing is disabled.",
   "canceled from the order": "canceled from the order",
   "Carrier": "Carrier",
+  "carrier": "carrier",
   "Control what your customers are allowed to edit on their order when they are editing their order on Re-route Fulfillment.": "Control what your customers are allowed to edit on their order when they are editing their order on Re-route Fulfillment.",
   "Change": "Change",
   "Changed Mind": "Changed Mind",
