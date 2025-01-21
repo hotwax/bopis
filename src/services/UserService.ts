@@ -206,31 +206,6 @@ const createEnumeration = async (payload: any): Promise<any> => {
   })
 }
 
-const isEnumExists = async (enumId: string): Promise<any> => {
-  try {
-    const resp = await api({
-      url: 'performFind',
-      method: 'POST',
-      data: {
-        entityName: "Enumeration",
-        inputFields: {
-          enumId
-        },
-        viewSize: 1,
-        fieldList: ["enumId"],
-        noConditionFind: 'Y'
-      }
-    }) as any
-
-    if (!hasError(resp) && resp.data.docs.length) {
-      return true
-    }
-    return false
-  } catch (err) {
-    return false
-  }
-}
-
 const ensurePartyRole = async (payload: any): Promise <any> => {
   return api({
     url: "service/ensurePartyRole",
@@ -247,7 +222,6 @@ export const UserService = {
     getRerouteFulfillmentConfig,
     getUserPermissions,
     getUserProfile,
-    isEnumExists,
     updateRerouteFulfillmentConfig,
     getPartialOrderRejectionConfig,
     createPartialOrderRejectionConfig,

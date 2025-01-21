@@ -233,7 +233,7 @@ const actions: ActionTree<UserState, RootState> = {
   async updatePartialOrderRejectionConfig ({ dispatch }, payload) {  
     let resp = {} as any;
     try {
-      if(!await UserService.isEnumExists("BOPIS_PART_ODR_REJ")) {
+      if(!await UtilService.isEnumExists("BOPIS_PART_ODR_REJ")) {
         resp = await UserService.createEnumeration({
           "enumId": "BOPIS_PART_ODR_REJ",
           "enumTypeId": "PROD_STR_STNG",
