@@ -198,14 +198,6 @@ const getUserPermissions = async (payload: any, token: any): Promise<any> => {
     }
 }
 
-const createEnumeration = async (payload: any): Promise<any> => {
-  return api({
-    url: "service/createEnumeration",
-    method: "post",
-    data: payload
-  })
-}
-
 const ensurePartyRole = async (payload: any): Promise <any> => {
   return api({
     url: "service/ensurePartyRole",
@@ -215,7 +207,6 @@ const ensurePartyRole = async (payload: any): Promise <any> => {
 }
 
 export const UserService = {
-    createEnumeration,
     ensurePartyRole,
     login,
     getCurrentEComStore,

@@ -234,7 +234,7 @@ const actions: ActionTree<UserState, RootState> = {
     let resp = {} as any;
     try {
       if(!await UtilService.isEnumExists("BOPIS_PART_ODR_REJ")) {
-        resp = await UserService.createEnumeration({
+        resp = await UtilService.createEnumeration({
           "enumId": "BOPIS_PART_ODR_REJ",
           "enumTypeId": "PROD_STR_STNG",
           "description": "BOPIS Partial Order Rejection",
