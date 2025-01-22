@@ -15,7 +15,7 @@
         <ion-label>{{ translate('Select which shipping method orders will receive when customer choose to have delivered instead of picked up.') }}</ion-label>
       </ion-item>
       <ion-item>
-        <ion-select :label="translate('Carrier')" v-model="carrierPartyId" interface="popover" @ionChange="getProductStoreShipmentMethods(carrierPartyId)">
+        <ion-select :label="translate('Carrier')" v-model="carrierPartyId" interface="popover" @ionChange="getProductStoreShipmentMethods(carrierPartyId)" :placeholder="translate('carrier')">
           <ion-select-option v-for="carrier in carriers" :key="carrier.partyId" :value="carrier.partyId">{{ carrier.groupName }}</ion-select-option>
         </ion-select>
       </ion-item>
@@ -26,10 +26,13 @@
           </ion-select>
         </template>
         <template v-else>
-          <ion-label>
+          <ion-label v-if="carrierPartyId">
             {{ translate('No shipment methods linked to', {carrierName: getCarrierName(carrierPartyId)}) }}
           </ion-label>
-          <ion-button @click="openShippingMethodDocumentReference()" fill="clear" color="medium" slot="end">
+          <ion-label v-else>
+            {{ translate("Select a carrier to see the linked shipment methods") }}
+          </ion-label>
+          <ion-button v-if="carrierPartyId" @click="openShippingMethodDocumentReference()" fill="clear" color="medium" slot="end">
             <ion-icon slot="icon-only" :icon="informationCircleOutline" />
           </ion-button>
         </template>
