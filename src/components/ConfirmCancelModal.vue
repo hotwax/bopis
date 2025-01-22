@@ -134,7 +134,7 @@ export default defineComponent({
     },
     getCancelReasonDescription(cancelReasonId: string) {
       const reason = this.cancelReasons?.find((reason: any) => reason.enumId === cancelReasonId)
-      return reason?.description ? reason.description : reason?.enumDescription ? reason.enumDescription : reason?.enumId;
+      return reason?.enumDescription ? reason.enumDescription : reason?.enumId;
     },
     async cancelOrder() {
       emitter.emit("presentLoader");
