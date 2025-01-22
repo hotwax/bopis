@@ -7,7 +7,7 @@
     </ion-list>
     <ion-list v-else>
       <ion-item v-for="reason in cancelReasons" :key="reason.enumId" @click="updateIssue(reason.enumId)" button>
-        {{ reason.description ? translate(reason.description) : reason.enumDescription ? translate(reason.enumDescription) : reason.enumId  }}
+        {{ reason.enumDescription ? translate(reason.enumDescription) : reason.enumId  }}
       </ion-item>
     </ion-list>
   </ion-content>

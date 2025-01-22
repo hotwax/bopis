@@ -799,7 +799,7 @@ export default defineComponent({
     },
     getCancelReasonDescription(cancelReasonId: string) {
       const reason = this.cancelReasons?.find((reason: any) => reason.enumId === cancelReasonId)
-      return reason?.description ? reason.description : reason?.enumDescription ? reason.enumDescription : reason?.enumId;
+      return reason?.enumDescription ? reason.enumDescription : reason?.enumId;
     },
     isEntierOrderRejectionEnabled(order: any) {
       return (!this.partialOrderRejectionConfig || !this.partialOrderRejectionConfig.settingValue || !JSON.parse(this.partialOrderRejectionConfig.settingValue)) && this.hasRejectedItems

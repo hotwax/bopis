@@ -91,10 +91,10 @@ const actions: ActionTree<UtilState, RootState> = {
     let cancelReasons = [];
     const payload = {
       "inputFields": {
-        "enumTypeId": "ODR_ITM_CH_REASON"
+        "enumerationGroupId": "BOPIS_CNCL_RES"
       },
-      "fieldList": ["enumId", "description"],
-      "entityName": "Enumeration",
+      "fieldList": ["enumId", "enumDescription"],
+      "entityName": "EnumerationGroupAndMember",
       "distinct": "Y",
       "viewSize": 100,
       "orderBy": "sequenceNum"
