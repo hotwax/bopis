@@ -18,12 +18,6 @@
       "hosting": {
         "prod": [
           "hotwax-bopis"
-        ],
-        "prod-v1": [
-          "hotwax-bopis"
-        ],
-        "prod-v2": [
-          "hotwax-bopis-v2"
         ]
       }
     }
