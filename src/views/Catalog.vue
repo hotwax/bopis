@@ -12,8 +12,7 @@
           <DxpShopifyImg :src="product.mainImageUrl" size="large"/>
           <ion-item lines="none">
             <ion-label>
-              <h2>{{ getProductIdentificationValue(productIdentificationPref.primaryId, product) }}</h2>
-              <p>{{ getProductIdentificationValue(productIdentificationPref.secondaryId, product) }}</p>
+              <h2>{{ product.productName }}</h2>
             </ion-label>
           </ion-item>
         </ion-card>
