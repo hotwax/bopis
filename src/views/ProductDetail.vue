@@ -360,7 +360,7 @@ export default defineComponent({
 }
 
 .product-info {
-  flex: 2 1 300px;
+  flex: 2 1 360px;
 }
 
 @media (min-width: 720px) {
