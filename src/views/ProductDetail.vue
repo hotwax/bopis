@@ -342,10 +342,6 @@ export default defineComponent({
   text-align: center;
 }
 
-.product-image > img {
-  width: 200px;
-}
-
 .reservation-section {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -353,20 +349,23 @@ export default defineComponent({
 }
 
 .product-section {
-  display: grid;
-  grid-template-columns: auto 500px;
+  display: flex;
+  flex-wrap: wrap;
   max-width: 1042px;
   margin: auto;
+}
+
+.product-image {
+  flex: 1 1 300px;
+}
+
+.product-info {
+  flex: 2 1 300px;
 }
 
 @media (min-width: 720px) {
   main {
     padding: var(--spacer-sm);
-    margin: auto;
-  }
-
-  .product-image > img {
-    width: 400px;
   }
 }
 </style>
