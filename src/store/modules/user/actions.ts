@@ -70,9 +70,9 @@ const actions: ActionTree<UserState, RootState> = {
       //fetching user facilities
       const isAdminUser = appPermissions.some((appPermission: any) => appPermission?.action === "APP_STOREFULFILLMENT_ADMIN" );
       const facilities = await useUserStore().getUserFacilities(userProfile?.partyId, "PICKUP", isAdminUser)
-      await useUserStore().getFacilityPreference('SELECTED_FACILITY')
-
       if(!facilities.length) throw "Unable to login. User is not associated with any facility"
+
+      await useUserStore().getFacilityPreference('SELECTED_FACILITY')
     
       userProfile.facilities = facilities;
 
