@@ -53,6 +53,10 @@
               <h1>{{ order.orderName }}</h1>
               <p>{{ order.orderId }}</p>
             </ion-label>
+            <ion-chip v-if="order.pickers || orderType === 'open' || orderType === 'packed'" outline slot="end" @click="editPicker(order)">
+              <ion-icon :icon="personOutline"/>
+              <ion-label>{{ order.pickers }}</ion-label>
+            </ion-chip>
           </ion-item>
 
            <!-- Order Status -->
@@ -363,6 +367,7 @@ import {
   informationCircleOutline,
   locateOutline,
   mailOutline,
+  personOutline,
   printOutline,
   pulseOutline,
   sendOutline,
@@ -385,6 +390,7 @@ import { useRouter } from 'vue-router'
 import { Actions, hasPermission } from '@/authorization'
 import OrderItemRejHistoryModal from '@/components/OrderItemRejHistoryModal.vue';
 import AssignPickerModal from "@/views/AssignPickerModal.vue";
+import EditPickerModal from "@/components/EditPickerModal.vue";
 import { copyToClipboard, formatCurrency, getColorByDesc, getFeature, showToast } from '@/utils'
 import { DateTime } from "luxon";
 import { api, hasError } from '@/adapter';
@@ -475,14 +481,33 @@ export default defineComponent({
 
       assignPickerModal.onDidDismiss().then(async(result: any) => {
         if(result.data.selectedPicker) {
-          this.pickers = result.data.picker
+          const selectedPicker = result.data.picker
+          this.pickers = selectedPicker
           this.picklistDate = DateTime.now().toMillis()
+          this.order.pickers = selectedPicker.name
+          this.order.pickerIds = [selectedPicker.id]
           await this.store.dispatch('order/packShipGroupItems', { order, part, facilityId, selectedPicker: result.data.selectedPicker })
           this.prepareOrderTimeline();
         }
       })
 
       return assignPickerModal.present();
+    },
+    async editPicker(order: any) {
+      const editPickerModal = await modalController.create({
+        component: EditPickerModal,
+        componentProps: { order }
+      });
+
+      editPickerModal.onDidDismiss().then((result) => {
+        if(result.data?.selectedPicker){
+          const selectedPicker = result.data.selectedPicker
+          this.order.pickers = selectedPicker.name
+          this.order.pickerIds = [selectedPicker.id]
+          this.store.dispatch('order/updateCurrent', { order: this.order })
+        }
+      })
+      return editPickerModal.present();
     },
     async deliverShipment(order: any) {
       const pickup = order.part?.shipmentMethodEnum?.shipmentMethodEnumId === 'STOREPICKUP';
@@ -1305,6 +1330,7 @@ export default defineComponent({
       isKit,
       listOutline,
       locateOutline,
+      personOutline,
       personAddOutline,
       printOutline,
       productIdentificationPref,

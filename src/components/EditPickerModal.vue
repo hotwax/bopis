@@ -22,7 +22,7 @@
       <div class="empty-state" v-else-if="!availablePickers.length">{{ translate('No picker found') }}</div>
 
       <div v-else>
-        <ion-radio-group :value="selectedPicker.id">
+        <ion-radio-group :value="selectedPicker?.id">
           <ion-item v-for="(picker, index) in availablePickers" :key="index" @click="updateSelectedPicker(picker.id)">
             <ion-radio :value="picker.id">
               <ion-label>
@@ -90,7 +90,7 @@ import { PicklistService } from "@/services/PicklistService";
 import logger from "@/logger";
 
 export default defineComponent({
-  name: "EditPickersModal",
+  name: "EditPickerModal",
   components: { 
     IonButton,
     IonButtons,
@@ -155,6 +155,7 @@ export default defineComponent({
         ).toString()
       ).then(async () => {
         await event.target.complete();
+        this.getAlreadyAssignedPicker();
       });
     },
     async searchPicker() {
