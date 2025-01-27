@@ -84,7 +84,7 @@ const actions: ActionTree<UserState, RootState> = {
       }, []);
       // TODO Use a separate API for getting facilities, this should handle user like admin accessing the app
       const currentEComStore = await UserService.getCurrentEComStore(token, getCurrentFacilityId());
-
+      await useUserStore().setEComStorePreference(currentEComStore);
       /*  ---- Guard clauses ends here --- */
 
       setPermissions(appPermissions);
@@ -184,6 +184,7 @@ const actions: ActionTree<UserState, RootState> = {
     dispatch("order/clearOrders", null, {root: true})
     dispatch("product/clearProducts", null, {root: true})
     const eComStore = await UserService.getCurrentEComStore(token, facilityId);
+    await useUserStore().setEComStorePreference(eComStore);
     commit(types.USER_CURRENT_ECOM_STORE_UPDATED, eComStore)
     await useProductIdentificationStore().getIdentificationPref(eComStore?.productStoreId)
   },
