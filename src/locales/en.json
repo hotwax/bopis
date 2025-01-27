@@ -253,7 +253,7 @@
   "will be removed from your dashboard. This action cannot be undone.": "{ productName } will be removed from your dashboard.{ space } This action cannot be undone.",
   "Worn Display": "Worn Display",
   "This order will be removed from your dashboard. This action cannot be undone.": "This order will be removed from your dashboard.{ space } This action cannot be undone.",
-  "Unable to login. User is not assocaited with any facility": "Unable to login. User is not assocaited with any facility",
+  "Unable to login. User is not associated with any facility": "Unable to login. User is not associated with any facility",
   "units": "{ item } units",
   "unit": "{ item } unit",
   "Update notification preferences": "Update notification preferences",
