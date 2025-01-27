@@ -155,7 +155,8 @@ export default defineComponent({
         ).toString()
       ).then(async () => {
         await event.target.complete();
-        this.getAlreadyAssignedPicker();
+        // Retrieve already assigned picker if not already selected
+        if(!this.selectedPicker) this.getAlreadyAssignedPicker();
       });
     },
     async searchPicker() {
