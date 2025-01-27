@@ -235,6 +235,7 @@
   "Total": "Total",
   "Track Pickers": "受取人の追跡",
   "Track who picked orders by entering picker IDs when packing an order.": "注文を梱包する際に受取人IDを入力することで、誰が注文を受け取ったかを追跡できます。",
+  "Unable to login. User is not associated with any facility": "Unable to login. User is not associated with any facility",
   "Unable to open as browser is blocking pop-ups.": "ブラウザーがポップアップをブロックしているため、{documentName} を開くことができません。",
   "Unfillable Items": "記入不可の項目",
   "Update time zone": "タイムゾーンを更新する",
