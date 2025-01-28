@@ -291,6 +291,7 @@ export default defineComponent({
     async updateFacility(facility: any) {
       await this.store.dispatch('user/setFacility', facility?.facilityId);
       await this.store.dispatch('user/fetchNotificationPreferences')
+      this.getRerouteFulfillmentConfiguration();
     },
     async timeZoneUpdated(tzId: string) {
       await this.store.dispatch("user/setUserTimeZone", tzId)
@@ -423,9 +424,16 @@ export default defineComponent({
           resp.data.docs.map((config: any) => {
             this.rerouteFulfillmentConfig[rerouteFulfillmentConfigMappingFlipped[config.settingTypeEnumId]] = config;
           })
+        } else {
+          Object.keys(this.rerouteFulfillmentConfigMapping).map((key) => {
+            this.rerouteFulfillmentConfig[key] = {};
+          });
         }
       } catch(err) {
         logger.error(err)
+        Object.keys(this.rerouteFulfillmentConfigMapping).map((key) => {
+          this.rerouteFulfillmentConfig[key] = {};
+        });
       }
     },
     async updateRerouteFulfillmentConfiguration(config: any, value: any) {

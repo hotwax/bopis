@@ -186,6 +186,8 @@ const actions: ActionTree<UserState, RootState> = {
     const eComStore = await UserService.getCurrentEComStore(token, facilityId);
     await useUserStore().setEComStorePreference(eComStore);
     commit(types.USER_CURRENT_ECOM_STORE_UPDATED, eComStore)
+    //fetching partial order rejection config for BOPIS orders aftering updating facility
+    await dispatch("getPartialOrderRejectionConfig");
     await useProductIdentificationStore().getIdentificationPref(eComStore?.productStoreId)
   },
   /**
