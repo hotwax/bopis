@@ -22,7 +22,7 @@
       <div class="empty-state" v-else-if="!availablePickers.length">{{ translate('No picker found') }}</div>
 
       <div v-else>
-        <ion-radio-group :value="selectedPicker.id">
+        <ion-radio-group :value="selectedPicker?.id">
           <ion-item v-for="(picker, index) in availablePickers" :key="index" @click="updateSelectedPicker(picker.id)">
             <ion-radio :value="picker.id">
               <ion-label>
@@ -90,7 +90,7 @@ import { PicklistService } from "@/services/PicklistService";
 import logger from "@/logger";
 
 export default defineComponent({
-  name: "EditPickersModal",
+  name: "EditPickerModal",
   components: { 
     IonButton,
     IonButtons,
@@ -155,6 +155,8 @@ export default defineComponent({
         ).toString()
       ).then(async () => {
         await event.target.complete();
+        // Retrieve already assigned picker if not already selected
+        if(!this.selectedPicker) this.getAlreadyAssignedPicker();
       });
     },
     async searchPicker() {
@@ -220,10 +222,15 @@ export default defineComponent({
           },
           {
             text: translate("Replace"),
-            handler: () => {
-              this.resetPicker().then(() => {
+            handler: async () => {
+              try { 
+                await this.resetPicker()
                 this.closeModal({ selectedPicker: this.selectedPicker })
-              })
+              } catch(err) {
+                showToast(translate('Something went wrong, could not edit picker.'))
+                logger.error('Something went wrong, could not edit picker', err)
+                this.closeModal();
+              }
             }
           }
         ],
@@ -233,20 +240,15 @@ export default defineComponent({
     async resetPicker() {
       const pickerId = this.selectedPicker.id
       // Api call to remove already selected picker and assign new picker
-      try {
-        const resp = await UtilService.resetPicker({
-          pickerIds: pickerId,
-          picklistId: this.order.picklistId
-        });
+      const resp = await UtilService.resetPicker({
+        pickerIds: pickerId,
+        picklistId: this.order.picklistId
+      });
 
-        if (resp.status === 200 && !hasError(resp)) {
-          showToast(translate("Pickers successfully replaced in the picklist with the new selections."))
-        } else {
-          throw resp.data
-        }
-      } catch (err) {
-        showToast(translate('Something went wrong, could not edit picker.'))
-        logger.error('Something went wrong, could not edit picker')
+      if(resp.status === 200 && !hasError(resp)) {
+        showToast(translate("Pickers successfully replaced in the picklist with the new selections."))
+      } else {
+        throw resp.data
       }
     },
     closeModal(payload = {}) {
