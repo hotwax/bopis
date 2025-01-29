@@ -53,7 +53,7 @@
               <h1>{{ order.orderName }}</h1>
               <p>{{ order.orderId }}</p>
             </ion-label>
-            <ion-chip :disabled="!hasPermission(Actions.APP_ORDER_UPDATE)" v-if="order.pickers || orderType === 'open' || orderType === 'packed' && getBopisProductStoreSettings('ENABLE_TRACKING')" outline slot="end" @click="editPicker(order)">
+            <ion-chip :disabled="!hasPermission(Actions.APP_ORDER_UPDATE)" v-if="order.pickers && (orderType === 'open' || orderType === 'packed') && getBopisProductStoreSettings('ENABLE_TRACKING')" outline slot="end" @click="editPicker(order)">
               <ion-icon :icon="personOutline"/>
               <ion-label>{{ order.pickers }}</ion-label>
             </ion-chip>
