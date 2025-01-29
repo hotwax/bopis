@@ -291,7 +291,10 @@ export default defineComponent({
     async updateFacility(facility: any) {
       await this.store.dispatch('user/setFacility', facility?.facilityId);
       await this.store.dispatch('user/fetchNotificationPreferences')
-      this.getRerouteFulfillmentConfiguration();
+      if(Object.keys(this.rerouteFulfillmentConfigMapping).length > 0) {
+        this.getAvailableShipmentMethods();
+        this.getRerouteFulfillmentConfiguration();
+      }
     },
     async timeZoneUpdated(tzId: string) {
       await this.store.dispatch("user/setUserTimeZone", tzId)
