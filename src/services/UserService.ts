@@ -48,6 +48,8 @@ const getCurrentEComStore = async (token: any, facilityId: any): Promise<any> =>
       "fieldList": ["defaultCurrencyUomId", "productStoreId"],
       "entityName": "ProductStoreFacilityDetail",
       "noConditionFind": "Y",
+      "distinct": "Y",
+      "filterByDate": "Y"
     }
     
     const resp = await client({
