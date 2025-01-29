@@ -222,10 +222,15 @@ export default defineComponent({
           },
           {
             text: translate("Replace"),
-            handler: () => {
-              this.resetPicker().then(() => {
+            handler: async () => {
+              try { 
+                await this.resetPicker()
                 this.closeModal({ selectedPicker: this.selectedPicker })
-              })
+              } catch(err) {
+                showToast(translate('Something went wrong, could not edit picker.'))
+                logger.error('Something went wrong, could not edit picker', err)
+                this.closeModal();
+              }
             }
           }
         ],
@@ -235,20 +240,15 @@ export default defineComponent({
     async resetPicker() {
       const pickerId = this.selectedPicker.id
       // Api call to remove already selected picker and assign new picker
-      try {
-        const resp = await UtilService.resetPicker({
-          pickerIds: pickerId,
-          picklistId: this.order.picklistId
-        });
+      const resp = await UtilService.resetPicker({
+        pickerIds: pickerId,
+        picklistId: this.order.picklistId
+      });
 
-        if (resp.status === 200 && !hasError(resp)) {
-          showToast(translate("Pickers successfully replaced in the picklist with the new selections."))
-        } else {
-          throw resp.data
-        }
-      } catch (err) {
-        showToast(translate('Something went wrong, could not edit picker.'))
-        logger.error('Something went wrong, could not edit picker')
+      if(resp.status === 200 && !hasError(resp)) {
+        showToast(translate("Pickers successfully replaced in the picklist with the new selections."))
+      } else {
+        throw resp.data
       }
     },
     closeModal(payload = {}) {
