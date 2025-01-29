@@ -505,6 +505,7 @@ export default defineComponent({
           this.order.pickers = selectedPicker.name
           this.order.pickerIds = [selectedPicker.id]
           this.store.dispatch('order/updateCurrent', { order: this.order })
+          this.prepareOrderTimeline();
         }
       })
       return editPickerModal.present();
