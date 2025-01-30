@@ -110,8 +110,8 @@
           </div>
         </aside>
         <section>
-          <ion-card v-for="(item, index) in order.part?.items" :key="index">
-            <ProductListItem :item="item" />
+          <ion-card >
+            <ProductListItem v-for="(item, index) in order.part?.items" :key="index" :item="item" />
             <!-- Checking for true as a string as the settingValue contains a string and not boolean-->
             <div v-if="orderType === 'open' && partialOrderRejectionConfig?.settingValue == 'true'" class="border-top">
               <ion-button :disabled="order?.readyToHandover || order.readyToShip || order?.rejected" fill="clear" @click="openReportAnIssueModal(item)">
