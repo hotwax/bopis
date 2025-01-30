@@ -28,7 +28,6 @@
       </div>
       <main v-else>
         <aside class="ion-hide-md-down">
-          <div>
             <!-- Timeline -->
             <ion-item lines="none">
               <h2>{{ translate("Timeline") }}</h2>
@@ -46,7 +45,6 @@
                 <ion-note slot="end" v-if="event.value && event.valueType === 'date-time-millis'">{{ formatDateTime(event.value) }}</ion-note>
               </ion-item>
             </ion-list>
-          </div>
         </aside>
         <section>
           <ion-item lines="none">
@@ -323,6 +321,7 @@
 </template>
 
 <script lang="ts">
+
 import {
   alertController,
   IonBackButton,
@@ -1359,7 +1358,7 @@ export default defineComponent({
 }
 
 ion-card-header {
-  display: flex;
+  flex-direction: unset;
   justify-content: space-between;
   align-items: center;
 }
@@ -1406,9 +1405,10 @@ ion-card-header {
     grid-template-columns: 1fr .6fr;
     gap: var(--spacer-base);
     margin-top: var(--spacer-xl);
+    align-items: start;
   }
 
-  aside > div {
+  aside {
     border-left: 1px solid black;
     grid-column: 2;
     grid-row: 1;
