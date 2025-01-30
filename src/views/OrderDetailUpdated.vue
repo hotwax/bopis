@@ -69,8 +69,8 @@
             <ion-label class="ion-text-wrap">{{ order.handovered ? translate("Order is successfully handed over to customer.") : translate("Order is successfully shipped.") }}</ion-label>
           </ion-item>
 
-          <ion-card v-for="(item, index) in order.part?.items" :key="index">
-            <div class="order-item">
+          <ion-card>
+            <div v-for="(item, index) in order.part?.items" :key="index" class="order-item">
               <ion-item class="product-info" lines="none">
                 <ion-thumbnail slot="start">
                   <DxpShopifyImg :src="getProduct(item.productId).mainImageUrl" size="small" />
@@ -127,30 +127,29 @@
                   </ion-button>
                 </div>
               </div>
-            </div>
-
-            <template v-if="isKit(item) && item.showKitComponents && !getProduct(item.productId)?.productComponents">
-              <ion-item lines="none">
-                <ion-skeleton-text animated style="height: 80%;"/>
-              </ion-item>
-              <ion-item lines="none">
-                <ion-skeleton-text animated style="height: 80%;"/>
-              </ion-item>
-            </template>
-            <template v-else-if="isKit(item) && item.showKitComponents && getProduct(item.productId)?.productComponents">
-              <ion-card v-for="(productComponent, index) in getProduct(item.productId).productComponents" :key="index">
+              <template v-if="isKit(item) && item.showKitComponents && !getProduct(item.productId)?.productComponents">
                 <ion-item lines="none">
-                  <ion-thumbnail slot="start">
-                    <DxpShopifyImg :src="getProduct(productComponent.productIdTo).mainImageUrl" size="small"/>
-                  </ion-thumbnail>
-                  <ion-label>
-                    <p class="overline">{{ getProductIdentificationValue(productIdentificationPref.secondaryId, getProduct(productComponent.productIdTo)) }}</p>
-                    {{ getProductIdentificationValue(productIdentificationPref.primaryId, getProduct(productComponent.productIdTo)) ? getProductIdentificationValue(productIdentificationPref.primaryId, getProduct(productComponent.productIdTo)) : productComponent.productIdTo }}
-                  </ion-label>
-                  <ion-checkbox slot="end" aria-label="Rejection Reason kit component" v-if="item.rejectReason || isEntierOrderRejectionEnabled(order)" :checked="item.rejectedComponents?.includes(productComponent.productIdTo)" @ionChange="rejectKitComponent(order, item, productComponent.productIdTo)" />
+                  <ion-skeleton-text animated style="height: 80%;"/>
                 </ion-item>
-              </ion-card>
-            </template>
+                <ion-item lines="none">
+                  <ion-skeleton-text animated style="height: 80%;"/>
+                </ion-item>
+              </template>
+              <template v-else-if="isKit(item) && item.showKitComponents && getProduct(item.productId)?.productComponents">
+                <ion-card v-for="(productComponent, index) in getProduct(item.productId).productComponents" :key="index">
+                  <ion-item lines="none">
+                    <ion-thumbnail slot="start">
+                      <DxpShopifyImg :src="getProduct(productComponent.productIdTo).mainImageUrl" size="small"/>
+                    </ion-thumbnail>
+                    <ion-label>
+                      <p class="overline">{{ getProductIdentificationValue(productIdentificationPref.secondaryId, getProduct(productComponent.productIdTo)) }}</p>
+                      {{ getProductIdentificationValue(productIdentificationPref.primaryId, getProduct(productComponent.productIdTo)) ? getProductIdentificationValue(productIdentificationPref.primaryId, getProduct(productComponent.productIdTo)) : productComponent.productIdTo }}
+                    </ion-label>
+                    <ion-checkbox slot="end" aria-label="Rejection Reason kit component" v-if="item.rejectReason || isEntierOrderRejectionEnabled(order)" :checked="item.rejectedComponents?.includes(productComponent.productIdTo)" @ionChange="rejectKitComponent(order, item, productComponent.productIdTo)" />
+                  </ion-item>
+                </ion-card>
+              </template>
+            </div>
           </ion-card>
           <p v-if="!order.part?.items?.length && orderType === 'open'" class="empty-state">{{ translate("All order items are rejected") }}</p>
           <p v-if="!order.part?.items?.length && orderType === 'packed'" class="empty-state">{{ translate("All order items are cancelled") }}</p>
@@ -1358,7 +1357,6 @@ export default defineComponent({
 
 ion-card-header {
   display: flex;
-  flex-direction: row;
   justify-content: space-between;
   align-items: center;
 }
