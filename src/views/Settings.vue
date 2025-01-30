@@ -289,9 +289,11 @@ export default defineComponent({
   },
   methods: {
     async updateFacility(facility: any) {
+      const previousStoreId = this.currentEComStore.productStoreId
       await this.store.dispatch('user/setFacility', facility?.facilityId);
       await this.store.dispatch('user/fetchNotificationPreferences')
-      if(Object.keys(this.rerouteFulfillmentConfigMapping).length > 0) {
+      const currentStoreId = this.currentEComStore.productStoreId
+      if(Object.keys(this.rerouteFulfillmentConfigMapping).length > 0 && previousStoreId !== currentStoreId) {
         this.getAvailableShipmentMethods();
         this.getRerouteFulfillmentConfiguration();
       }
