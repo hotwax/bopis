@@ -28,23 +28,25 @@
       </div>
       <main v-else>
         <aside class="ion-hide-md-down">
-          <!-- Timeline -->
-          <ion-item lines="none">
-            <h2>{{ translate("Timeline") }}</h2>
-            <ion-badge slot="end" :color="getColorByDesc(orderStatus)">{{ translate(orderStatus) }}</ion-badge>
-          </ion-item>
-
-          <ion-list class="ion-margin-start desktop-only">
-            <ion-item v-for="event in orderTimeline" :key="event.id">
-              <ion-icon :icon="event.icon" slot="start" />
-              <ion-label>
-                <p v-if="event.timeDiff">{{ event.timeDiff }}</p>
-                {{ translate(event.label) }}
-                <p v-if="event.metaData">{{ event.metaData }}</p>
-              </ion-label>
-              <ion-note slot="end" v-if="event.value && event.valueType === 'date-time-millis'">{{ formatDateTime(event.value) }}</ion-note>
+          <div>
+            <!-- Timeline -->
+            <ion-item lines="none">
+              <h2>{{ translate("Timeline") }}</h2>
+              <ion-badge slot="end" :color="getColorByDesc(orderStatus)">{{ translate(orderStatus) }}</ion-badge>
             </ion-item>
-          </ion-list>
+
+            <ion-list class="ion-margin-start desktop-only">
+              <ion-item v-for="event in orderTimeline" :key="event.id">
+                <ion-icon :icon="event.icon" slot="start" />
+                <ion-label>
+                  <p v-if="event.timeDiff">{{ event.timeDiff }}</p>
+                  {{ translate(event.label) }}
+                  <p v-if="event.metaData">{{ event.metaData }}</p>
+                </ion-label>
+                <ion-note slot="end" v-if="event.value && event.valueType === 'date-time-millis'">{{ formatDateTime(event.value) }}</ion-note>
+              </ion-item>
+            </ion-list>
+          </div>
         </aside>
         <section>
           <ion-item lines="none">
@@ -1370,7 +1372,7 @@ ion-card-header {
 
 .order-item {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
+  grid-template-columns: 1fr auto;
   padding: var(--spacer-xs) 0;
 }
 
@@ -1406,7 +1408,7 @@ ion-card-header {
     margin-top: var(--spacer-xl);
   }
 
-  aside {
+  aside > div {
     border-left: 1px solid black;
     grid-column: 2;
     grid-row: 1;
