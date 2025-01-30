@@ -1351,7 +1351,8 @@ export default defineComponent({
 </script>
 
 <style scoped>
-.border-top {
+
+.border-top, .order-item:not(:first-child) {
   border-top: 1px solid #ccc;
 }
 
