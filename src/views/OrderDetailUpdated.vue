@@ -127,7 +127,8 @@
                   </ion-button>
                 </div>
               </div>
-              <template v-if="isKit(item) && item.showKitComponents && !getProduct(item.productId)?.productComponents">
+              <div class="kit-products" v-if="isKit(item) && item.showKitComponents">
+              <template v-if="!getProduct(item.productId)?.productComponents">
                 <ion-item lines="none">
                   <ion-skeleton-text animated style="height: 80%;"/>
                 </ion-item>
@@ -135,7 +136,7 @@
                   <ion-skeleton-text animated style="height: 80%;"/>
                 </ion-item>
               </template>
-              <template v-else-if="isKit(item) && item.showKitComponents && getProduct(item.productId)?.productComponents">
+              <template v-else-if="getProduct(item.productId)?.productComponents">
                 <ion-card v-for="(productComponent, index) in getProduct(item.productId).productComponents" :key="index">
                   <ion-item lines="none">
                     <ion-thumbnail slot="start">
@@ -149,6 +150,7 @@
                   </ion-item>
                 </ion-card>
               </template>
+              </div>
             </div>
           </ion-card>
           <p v-if="!order.part?.items?.length && orderType === 'open'" class="empty-state">{{ translate("All order items are rejected") }}</p>
@@ -1372,6 +1374,8 @@ ion-card-header {
 .order-item {
   display: grid;
   grid-template-columns: 1fr auto;
+  grid-template-areas: "products metadata"
+                       "kit-products kit-products";
   padding: var(--spacer-xs) 0;
 }
 
@@ -1386,6 +1390,10 @@ ion-card-header {
   margin-inline-start: auto;
   padding-inline-end: var(--spacer-sm);
   text-align: end;
+}
+
+.kit-products {
+  grid-area: kit-products;
 }
 
 @media (min-width: 343px) {
