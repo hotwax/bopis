@@ -90,7 +90,7 @@
                       <ion-icon :icon="caretDownOutline"/>
                     </ion-chip>
                     <ion-chip v-else-if="isEntierOrderRejectionEnabled(order)" outline color="danger" @click.stop="openRejectReasonPopover($event, item, order)">
-                      <ion-label>{{ getRejectionReasonDescription(rejectEntireOrderReasonId) ? getRejectionReasonDescription(rejectEntireOrderReasonId) : translate('Reject entire order')}}</ion-label>
+                      <ion-label>{{ getRejectionReasonDescription(rejectEntireOrderReasonId) ? getRejectionReasonDescription(rejectEntireOrderReasonId) : translate("Reject to avoid order split (no variance)") }}</ion-label>
                       <ion-icon :icon="caretDownOutline"/>
                     </ion-chip>
                     <ion-button v-else slot="end" color="danger" fill="clear" size="small" @click.stop="openRejectReasonPopover($event, item, order)">
@@ -146,7 +146,7 @@
                       <p class="overline">{{ getProductIdentificationValue(productIdentificationPref.secondaryId, getProduct(productComponent.productIdTo)) }}</p>
                       {{ getProductIdentificationValue(productIdentificationPref.primaryId, getProduct(productComponent.productIdTo)) ? getProductIdentificationValue(productIdentificationPref.primaryId, getProduct(productComponent.productIdTo)) : productComponent.productIdTo }}
                     </ion-label>
-                    <ion-checkbox slot="end" aria-label="Rejection Reason kit component" v-if="item.rejectReason || isEntierOrderRejectionEnabled(order)" :checked="item.rejectedComponents?.includes(productComponent.productIdTo)" @ionChange="rejectKitComponent(order, item, productComponent.productIdTo)" />
+                    <ion-checkbox slot="end" aria-label="Rejection Reason kit component" v-if="item.rejectReason || isEntierOrderRejectionEnabled(order)" :checked="item.rejectedComponents?.includes(productComponent.productIdTo)" @ionChange="rejectKitComponent(order, item, productComponent.productIdTo)" color="danger"/>
                   </ion-item>
                 </template>
               </div>

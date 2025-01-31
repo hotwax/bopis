@@ -169,6 +169,7 @@
   "Ready to ship": "出荷する準備ができました",
   "Refunded": "Refunded",
   "Reject": "Reject",
+  "Reject to avoid order split (no variance)": "Reject to avoid order split (no variance)",
   "Rejected": "Rejected",
   "Reject Items": "Reject Items",
   "Reject Order": "注文を拒否",
