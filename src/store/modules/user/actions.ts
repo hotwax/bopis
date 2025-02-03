@@ -183,10 +183,18 @@ const actions: ActionTree<UserState, RootState> = {
     // clearing the orders state whenever changing the facility
     dispatch("order/clearOrders", null, {root: true})
     dispatch("product/clearProducts", null, {root: true})
+    const previousEComStore = await useUserStore().getCurrentEComStore as any
+    // fetching the eComStore for updated facility
     const eComStore = await UserService.getCurrentEComStore(token, facilityId);
-    await useUserStore().setEComStorePreference(eComStore);
-    commit(types.USER_CURRENT_ECOM_STORE_UPDATED, eComStore)
-    await useProductIdentificationStore().getIdentificationPref(eComStore?.productStoreId)
+
+    if(previousEComStore.productStoreId !== eComStore.productStoreId) {
+      await useUserStore().setEComStorePreference(eComStore);
+      commit(types.USER_CURRENT_ECOM_STORE_UPDATED, eComStore)
+      //fetching partial order rejection config for BOPIS orders aftering updating facility
+      await dispatch("getPartialOrderRejectionConfig");
+      await dispatch("fetchBopisProductStoreSettings");
+      await useProductIdentificationStore().getIdentificationPref(eComStore?.productStoreId)
+    }
   },
   /**
    * Set User Instance Url
