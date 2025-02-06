@@ -39,8 +39,9 @@ import {
   IonToolbar,
   modalController
 } from "@ionic/vue";
-import { defineComponent } from "vue";
+import { computed, defineComponent } from "vue";
 import { close } from "ionicons/icons";
+import { mapGetters } from "vuex";
 import { useStore } from "@/store";
 import { translate } from "@hotwax/dxp-components";
 
@@ -60,16 +61,24 @@ export default defineComponent({
     IonTitle,
     IonToolbar 
   },
-  props: ["otherStoresInventory"],
+  props: ["otherStoresInventory","currentFacilityId"],
   data() {
     return{
       queryString: "",
       storesInventory: [] as any
     }
   },
-  mounted() {
+  computed: {
+    ...mapGetters({
+      FacilityLatLong: 'util/getCurrentFacilityLatLon',
+    }),
+  },
+  async mounted() {
     // Create a copy of otherStoresInventory on mount
     this.storesInventory = this.otherStoresInventory.slice();
+    
+    // fetch latitude and longitude of the facility by dispaching an action
+    await this.store.dispatch("util/fetchCurrentFacilityLatLon", this.currentFacilityId);
   },
   methods: {
     closeModal() {

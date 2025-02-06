@@ -378,7 +378,32 @@ const actions: ActionTree<UtilState, RootState> = {
 
   async clearEnumerations({ commit }) {
     commit(types.UTIL_ENUMERATIONS_UPDATED, {})
-  }
+  },
+
+  async fetchCurrentFacilityLatLon({ commit }, facilityId) {
+    const payload = {
+      inputFields: {
+        facilityId: facilityId
+      },
+      entityName: "FacilityContactDetailByPurpose",
+      orderBy: "fromDate DESC",
+      filterByDate: "Y",
+      fieldList: ["latitude", "longitude"],
+      viewSize: 5
+    }
+
+    try {
+      const resp = await UtilService.fetchCurrentFacilityLatLon(payload)
+      
+      if (!hasError(resp) && resp.data?.docs.length > 0) {
+        commit(types.UTIL_CURRENT_FACILITY_LATLON_UPDATED, resp.data.docs[0])
+      } else {
+        throw resp.data
+      }
+    } catch (err) {
+      console.error("Failed to fetch facility lat/long information", err)
+    }
+  },  
 }
 
 export default actions;

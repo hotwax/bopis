@@ -7,4 +7,5 @@ export default interface UtilState {
   cancelReasons: Array<any>;
   facilities: any;
   enumerations: any;
+  currentFacilityLatLon: any; 
 }

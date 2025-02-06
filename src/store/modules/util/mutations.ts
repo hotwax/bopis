@@ -27,5 +27,8 @@ const mutations: MutationTree <UtilState> = {
   [types.UTIL_ENUMERATIONS_UPDATED] (state, payload) {
     state.enumerations = payload
   },
+  [types.UTIL_CURRENT_FACILITY_LATLON_UPDATED] (state, payload) {
+    state.currentFacilityLatLon = payload
+  }
 }
 export default mutations;
