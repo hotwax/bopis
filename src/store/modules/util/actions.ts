@@ -396,14 +396,21 @@ const actions: ActionTree<UtilState, RootState> = {
       const resp = await UtilService.fetchCurrentFacilityLatLon(payload)
       
       if (!hasError(resp) && resp.data?.docs.length > 0) {
-        commit(types.UTIL_CURRENT_FACILITY_LATLON_UPDATED, resp.data.docs[0])
+        // Find first doc with non-null coordinates
+        const validCoords = resp.data.docs.find((doc: any) => 
+          doc.latitude !== null && doc.longitude !== null
+        )
+        
+        if (validCoords) {
+          commit(types.UTIL_CURRENT_FACILITY_LATLON_UPDATED, validCoords)
+        }
       } else {
         throw resp.data
       }
     } catch (err) {
       console.error("Failed to fetch facility lat/long information", err)
     }
-  },  
+  },
 }
 
 export default actions;

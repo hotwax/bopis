@@ -12,6 +12,13 @@
   <ion-content class="ion-padding">
     <ion-searchbar v-model="queryString" @keyup.enter="queryString = $event.target.value; searchFacilities()"/>
     <ion-list v-if="storesInventory.length">
+      <ion-item>
+  <ion-label>Current Facility Coordinates:</ion-label>
+  <ion-note slot="end">
+    Lat: {{ currentFacilityCoords.latitude }}, 
+    Long: {{ currentFacilityCoords.longitude }}
+  </ion-note>
+</ion-item>
       <ion-item v-for="storeInventory in storesInventory" :key="storeInventory.facilityName">
         <ion-label class="ion-text-wrap">{{ storeInventory.facilityName }}</ion-label>
         <ion-note slot="end">{{ translate('ATP', { count: storeInventory.stock}) }}</ion-note>
@@ -70,8 +77,11 @@ export default defineComponent({
   },
   computed: {
     ...mapGetters({
-      FacilityLatLong: 'util/getCurrentFacilityLatLon',
+      FacilityLatLon: 'util/getCurrentFacilityLatLon'
     }),
+    currentFacilityCoords() {
+      return this.FacilityLatLon;
+    }
   },
   async mounted() {
     // Create a copy of otherStoresInventory on mount
