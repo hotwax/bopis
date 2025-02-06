@@ -18,6 +18,11 @@
     Lat: {{ currentFacilityCoords.latitude }}, 
     Long: {{ currentFacilityCoords.longitude }}
   </ion-note>
+  <div v-if="nearbyStores.length">
+  <div v-for="store in nearbyStores" :key="store.identifier">
+    {{ store.storeCode }} - {{ store.dist }} km
+  </div>
+</div>
 </ion-item>
       <ion-item v-for="storeInventory in storesInventory" :key="storeInventory.facilityName">
         <ion-label class="ion-text-wrap">{{ storeInventory.facilityName }}</ion-label>
@@ -77,18 +82,35 @@ export default defineComponent({
   },
   computed: {
     ...mapGetters({
-      FacilityLatLon: 'util/getCurrentFacilityLatLon'
+      FacilityLatLon: 'util/getCurrentFacilityLatLon',
+      storeLookupByLatLon: 'util/getStoreLookupByLatLon'
     }),
     currentFacilityCoords() {
       return this.FacilityLatLon;
+    },
+    nearbyStores() {
+      return this.storeLookupByLatLon || [];
     }
   },
   async mounted() {
     // Create a copy of otherStoresInventory on mount
     this.storesInventory = this.otherStoresInventory.slice();
     
-    // fetch latitude and longitude of the facility by dispaching an action
+    // fetch latitude and longitude of the facility by dispatching an action
+    try {
     await this.store.dispatch("util/fetchCurrentFacilityLatLon", this.currentFacilityId);
+
+    if (this.currentFacilityCoords?.latitude && this.currentFacilityCoords?.longitude) {
+      await this.store.dispatch("util/fetchStoreLookupByLatLon", {
+        latitude: this.currentFacilityCoords.latitude,
+        longitude: this.currentFacilityCoords.longitude
+      });
+    } else {
+      throw new Error('Invalid facility coordinates');
+    }
+  } catch (error) {
+    throw new Error('Error fetching facility coordinates');
+  }
   },
   methods: {
     closeModal() {

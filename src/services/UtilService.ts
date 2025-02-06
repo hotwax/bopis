@@ -155,6 +155,14 @@ const fetchCurrentFacilityLatLon = async (payload: any): Promise<any> => {
   });
 }
 
+const fetchStoreLookupByLatLon = async (payload: any): Promise<any> => {
+  return api({
+    url: "storeLookup",
+    method: "post",
+    data: payload
+  });
+}
+
 export const UtilService = {
   createEnumeration,
   createProductStoreSetting,
@@ -172,5 +180,6 @@ export const UtilService = {
   resetPicker,
   updateProductStoreSetting,
   fetchReservedQuantity,
-  fetchCurrentFacilityLatLon
+  fetchCurrentFacilityLatLon,
+  fetchStoreLookupByLatLon
 }

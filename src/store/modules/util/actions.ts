@@ -411,6 +411,25 @@ const actions: ActionTree<UtilState, RootState> = {
       console.error("Failed to fetch facility lat/long information", err)
     }
   },
+
+  async fetchStoreLookupByLatLon({ commit }, point) {
+    const payload = {
+      viewSize: 250,
+      filters: ["storeType: RETAIL_STORE"],
+      point: `${point.latitude},${point.longitude}`    }
+      
+    try {
+      const resp = await UtilService.fetchStoreLookupByLatLon(payload)
+
+      if (!hasError(resp) && resp.data?.response?.docs?.length > 0) {
+        commit(types.UTIL_STORE_LOOKUP_BY_LATLON_UPDATED, resp.data.response.docs)
+      } else {
+        throw resp.data
+      }
+    } catch (err) {
+      console.error("Failed to fetch stores by lat/lon information", err)
+    }
+  },
 }
 
 export default actions;

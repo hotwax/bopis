@@ -8,4 +8,5 @@ export default interface UtilState {
   facilities: any;
   enumerations: any;
   currentFacilityLatLon: any; 
+  storeLookupByLatLon: any;
 }

@@ -17,6 +17,7 @@ const utilModule: Module<UtilState, RootState> = {
     facilities: {},
     enumerations: {},
     currentFacilityLatLon: {},
+    storeLookupByLatLon: {}
   },
   getters,
   actions,

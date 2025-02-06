@@ -29,6 +29,9 @@ const getters: GetterTree <UtilState, RootState> = {
   },
   getCurrentFacilityLatLon: (state) => {
     return state.currentFacilityLatLon ? state.currentFacilityLatLon : {}
+  },
+  getStoreLookupByLatLon: (state) => {
+    return state.storeLookupByLatLon ? state.storeLookupByLatLon : {}
   }
 }
 export default getters;
