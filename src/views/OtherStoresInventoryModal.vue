@@ -170,31 +170,23 @@ export default defineComponent({
     },
     searchFacilities() {
       this.isRefreshing = true;
-      // First get the full mapped inventory
       let filteredInventory = this.mapStock(this.storesInventory, this.storeLookupByLatLon);
       if (this.queryString.trim() !== "") {
         filteredInventory = filteredInventory.filter((store: any) =>
           store.storeName.toLowerCase().includes(this.queryString.toLowerCase())
         );
       }
-
-      // Apply hide empty stores filter if active
       if (this.hideEmptyStores) {
         filteredInventory = filteredInventory.filter((store: any) => store.stock > 0);
       }
-
       this.atpMappedStoresInventory = filteredInventory;
       this.isRefreshing = false;
     },
-    // method to map the facilitty inventory to the store lookup data
+    // method to map the facilitty inventory from props to the store lookup data from api call
     mapStock(storesInventory: any[], storeLookupByLatLon: any[]): any[] {
-      // skip first item (current facility) using slice(1)
-      return storeLookupByLatLon.slice(1).map((store, index) => {
-        // Find the matching facility in the storesInventory array based on facilityId
+      return storeLookupByLatLon.slice(1).map((store, index) => {  // skips first item (current facility)
         const matchingFacility = storesInventory.find(facility => facility.facilityId === store.storeCode);
-        // Get the store hours status
         const storeHoursInfo = this.getStoreHoursStatus(store);
-        // Return the modified object
         return {
           ...store,
           index: index + 1,
@@ -228,7 +220,6 @@ export default defineComponent({
       if (this.hideEmptyStores) {
         this.atpMappedStoresInventory = this.atpMappedStoresInventory.filter((store: any) => store.stock > 0);
       } else {
-        // Reset to full list
         this.atpMappedStoresInventory = this.mapStock(this.storesInventory, this.storeLookupByLatLon);
       }
       // Run the current filter to maintain the current sort type
