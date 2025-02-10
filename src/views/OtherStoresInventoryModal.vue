@@ -18,20 +18,20 @@
         </ion-button>
       </ion-buttons>
     </ion-toolbar>
-    <ion-searchbar v-model="queryString" placeholder="Search store name" :debounce="500"
+    <ion-searchbar v-model="queryString" :placeholder="translate('Search store name')" :debounce="500"
       @ionInput="queryString = $event.target.value; searchFacilities()"
       @keyup.enter="queryString = $event.target.value; searchFacilities()" />
   </ion-header>
   <ion-content>
     <ion-list>
       <ion-item>
-        <ion-label>Hide facilities without stock</ion-label>
+        <ion-label>{{ translate("Hide facilities without stock") }}</ion-label>
         <ion-toggle @click="toggleHideEmptyStock" />
       </ion-item>
     </ion-list>
     <ion-accordion-group v-if="atpMappedStoresInventory.length">
       <ion-accordion v-for="inventory in atpMappedStoresInventory" :key="inventory.storeCode"
-        :value="String(inventory.storeCode)" :toggle-icon="hasWeekCalendar(inventory) ? caretDownCircle : false"
+        :value="String(inventory.storeCode)" :toggle-icon="hasWeekCalendar(inventory) ? chevronDownOutline : false"
         :readonly="!hasWeekCalendar(inventory)">
         <ion-item slot="header" lines="inset">
           <ion-label class="ion-text-wrap">
@@ -81,15 +81,17 @@ import {
   IonItem,
   IonIcon,
   IonLabel,
+  IonList,
   IonNote,
   IonSearchbar,
   IonTitle,
+  IonToggle,
   IonToolbar,
   modalController,
   IonSpinner
 } from "@ionic/vue";
 import { defineComponent } from "vue";
-import { close, locationOutline, textOutline } from "ionicons/icons";
+import { close, locationOutline, textOutline, chevronDownOutline } from "ionicons/icons";
 import { mapGetters } from "vuex";
 import { useStore } from "@/store";
 import { translate } from "@hotwax/dxp-components";
@@ -107,9 +109,11 @@ export default defineComponent({
     IonIcon,
     IonItem,
     IonLabel,
+    IonList,
     IonNote,
     IonSearchbar,
     IonTitle,
+    IonToggle,
     IonToolbar,
     IonSpinner
   },
@@ -161,7 +165,7 @@ export default defineComponent({
     } finally {
       this.isRefreshing = false;
     }
-    // Sort by name by default in all cases
+    // Sort by name by default
     this.sortByName();
   },
   methods: {
@@ -182,7 +186,7 @@ export default defineComponent({
       this.atpMappedStoresInventory = filteredInventory;
       this.isRefreshing = false;
     },
-    // method to map the facilitty inventory from props to the store lookup data from api call
+    // method to map the facility inventory from props to the store lookup data from api call
     mapStock(storesInventory: any[], storeLookupByLatLon: any[]): any[] {
       return storeLookupByLatLon.slice(1).map((store, index) => {  // skips first item (current facility)
         const matchingFacility = storesInventory.find(facility => facility.facilityId === store.storeCode);
@@ -209,9 +213,9 @@ export default defineComponent({
     // method to run the current filter to maintain the current sort type when toggling empty stock toggle
     runCurrentFilter() {
       if (this.activeSortType === 'distance') {
-        this.atpMappedStoresInventory.sort((a: any, b: any) => a.dist - b.dist);
+        this.sortByDistance();
       } else if (this.activeSortType === 'name') {
-        this.atpMappedStoresInventory.sort((a: any, b: any) => a.storeName.localeCompare(b.storeName));
+        this.sortByName();
       }
     },
     // method to handle empty stock toggle
@@ -222,14 +226,11 @@ export default defineComponent({
       } else {
         this.atpMappedStoresInventory = this.mapStock(this.storesInventory, this.storeLookupByLatLon);
       }
-      // Run the current filter to maintain the current sort type
-      this.runCurrentFilter();
+      this.runCurrentFilter();   // Run the current filter to maintain the current sort type
     },
     getCurrentWeekday() {
-      const today = DateTime.now()
-      // Get weekday index (1-7, Monday is 1, Sunday is 7)
-      const weekdayIndex = today.weekday
-      // Convert to 0-6 index (Sunday is 0, Monday is 1)
+      const today = DateTime.now() // Get weekday index (1-7, Monday is 1, Sunday is 7)
+      const weekdayIndex = today.weekday // Convert to 0-6 index (Sunday is 0, Monday is 1)
       const momentWeekday = weekdayIndex === 7 ? 0 : weekdayIndex
       return momentWeekday
     },
@@ -286,7 +287,8 @@ export default defineComponent({
       locationOutline,
       textOutline,
       store,
-      translate
+      translate,
+      chevronDownOutline
     };
   }
 });
