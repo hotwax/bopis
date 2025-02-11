@@ -29,32 +29,31 @@
         <ion-toggle @click="toggleHideEmptyStock" />
       </ion-item>
     </ion-list>
-    <ion-accordion-group v-if="atpMappedStoresInventory.length">
-      <ion-accordion v-for="inventory in atpMappedStoresInventory" :key="inventory.storeCode"
-        :value="String(inventory.storeCode)" :toggle-icon="hasWeekCalendar(inventory) ? chevronDownOutline : false"
-        :readonly="!hasWeekCalendar(inventory)">
+    <ion-accordion-group v-if="storesWithInventory.length">
+      <ion-accordion v-for="store in storesWithInventory" :key="store.storeCode" :value="store.storeCode"
+        :toggle-icon="hasWeekCalendar(store) ? chevronDownOutline : false" :readonly="!hasWeekCalendar(store)">
         <ion-item slot="header" lines="inset">
           <ion-label class="ion-text-wrap">
-            <p class="overline">{{ inventory.storeCode }}</p>
-            <h2>{{ inventory.storeName }}</h2>
-            <ion-note v-if="hasWeekCalendar(inventory)" :color="inventory.isOpen ? '' : 'danger'">
-              {{ inventory.hoursDisplay }}
+            <p class="overline">{{ store.storeCode }}</p>
+            <h2>{{ store.storeName }}</h2>
+            <ion-note v-if="hasWeekCalendar(store)" :color="store.isOpen ? '' : 'danger'">
+              {{ store.hoursDisplay }}
             </ion-note>
-            <p v-if="typeof inventory.dist === 'number'">{{ Math.round(inventory.dist) }} miles</p>
+            <p v-if="typeof store.dist === 'number'">{{ Math.round(store.dist) }} miles</p>
           </ion-label>
-          <ion-button fill="clear" slot="end">
-            <ion-note slot="end">{{ translate('ATP', { count: inventory.stock }) }}</ion-note>
-          </ion-button>
+          <div slot="end">
+            <ion-note slot="end">{{ translate('ATP', { count: store.stock }) }}</ion-note>
+          </div>
         </ion-item>
-        <div class="ion-padding" slot="content" v-if="hasWeekCalendar(inventory)">
+        <div class="ion-padding" slot="content" v-if="hasWeekCalendar(store)">
           <ion-list lines="none">
             <ion-item v-for="day in weekArray" :key="day">
               <ion-label>
                 <p>{{ capitalizeFirst(day) }}</p>
               </ion-label>
               <ion-label slot="end">
-                <p v-if="inventory[`${day}_open`] && inventory[`${day}_close`]">
-                  {{ formatTime(inventory[`${day}_open`]) }} - {{ formatTime(inventory[`${day}_close`]) }}
+                <p v-if="store[`${day}_open`] && store[`${day}_close`]">
+                  {{ formatTime(store[`${day}_open`]) }} - {{ formatTime(store[`${day}_close`]) }}
                 </p>
                 <p v-else>Closed</p>
               </ion-label>
@@ -123,7 +122,7 @@ export default defineComponent({
       queryString: "",
       isRefreshing: false,
       storesInventory: [] as any, // will be used when fallback
-      atpMappedStoresInventory: [] as any, // will be used primarily.
+      storesWithInventory: [] as any, // will be used primarily.
       hideEmptyStores: false,
       activeSortType: "name", // 'name' or 'distance'
       weekArray: ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"]
@@ -131,14 +130,14 @@ export default defineComponent({
   },
   computed: {
     ...mapGetters({
-      FacilityLatLon: 'util/getCurrentFacilityLatLon',
-      storeLookupByLatLon: 'util/getStoreLookupByLatLon'
+      FacilityInformation: 'util/getCurrentFacilityInformation',
+      storesInformation: 'util/getStoresInformation'
     }),
     currentFacilityCoords() {
-      return this.FacilityLatLon;
+      return this.FacilityInformation;
     },
     nearbyStores() {
-      return this.storeLookupByLatLon || [];
+      return this.storesInformation || [];
     },
   },
   async mounted() {
@@ -147,17 +146,17 @@ export default defineComponent({
     this.storesInventory = this.otherStoresInventory.slice();
     // Fetching Lat Lon for current facility and then fetching store lookup
     try {
-      await this.store.dispatch("util/fetchCurrentFacilityLatLon", this.currentFacilityId);
+      await this.store.dispatch("util/fetchCurrentFacilityInformation", this.currentFacilityId);
       if (this.currentFacilityCoords?.latitude && this.currentFacilityCoords?.longitude) {
-        await this.store.dispatch("util/fetchStoreLookupByLatLon", {
+        await this.store.dispatch("util/fetchStoresInformation", {
           latitude: this.currentFacilityCoords.latitude,
           longitude: this.currentFacilityCoords.longitude
         });
-        this.atpMappedStoresInventory = this.mapStock(this.storesInventory, this.storeLookupByLatLon);
+        this.storesWithInventory = this.mapStock(this.storesInventory, this.storesInformation);
       }
     } catch (error) {
       // Fallback mapping when APIs fail
-      this.atpMappedStoresInventory = this.storesInventory.map((facility: any) => ({
+      this.storesWithInventory = this.storesInventory.map((facility: any) => ({
         storeCode: facility.facilityId,
         storeName: facility.facilityName,
         stock: facility.stock
@@ -174,7 +173,7 @@ export default defineComponent({
     },
     searchFacilities() {
       this.isRefreshing = true;
-      let filteredInventory = this.mapStock(this.storesInventory, this.storeLookupByLatLon);
+      let filteredInventory = this.mapStock(this.storesInventory, this.storesInformation);
       if (this.queryString.trim() !== "") {
         filteredInventory = filteredInventory.filter((store: any) =>
           store.storeName.toLowerCase().includes(this.queryString.toLowerCase())
@@ -183,12 +182,12 @@ export default defineComponent({
       if (this.hideEmptyStores) {
         filteredInventory = filteredInventory.filter((store: any) => store.stock > 0);
       }
-      this.atpMappedStoresInventory = filteredInventory;
+      this.storesWithInventory = filteredInventory;
       this.isRefreshing = false;
     },
     // method to map the facility inventory from props to the store lookup data from api call
-    mapStock(storesInventory: any[], storeLookupByLatLon: any[]): any[] {
-      return storeLookupByLatLon.slice(1).map((store, index) => {  // skips first item (current facility)
+    mapStock(storesInventory: any[], storesInformation: any[]): any[] {
+      return storesInformation.slice(1).map((store, index) => {  // skips first item (current facility)
         const matchingFacility = storesInventory.find(facility => facility.facilityId === store.storeCode);
         const storeHoursInfo = this.getStoreHoursStatus(store);
         return {
@@ -200,15 +199,25 @@ export default defineComponent({
         };
       });
     },
+    // logic for sorting stores by names
+    sortByNameLogic(a: any, b: any): number {
+      return a.storeName.localeCompare(b.storeName);
+    },
     // method to sort the stores by distance 
     sortByDistance() {
       this.activeSortType = 'distance';
-      this.atpMappedStoresInventory.sort((a: any, b: any) => a.dist - b.dist);
+      // if store has Infinity distance, move it to the end
+      this.storesWithInventory.sort((a: any, b: any) => {
+        if (a.dist === "Infinity" && b.dist === "Infinity") return this.sortByNameLogic(a, b);  //If both stores have "Infinity" distance, sorts them alphabetically by store name
+        if (a.dist === "Infinity") return 1;  //If only store 'a' has "Infinity" distance, moves it to the end.
+        if (b.dist === "Infinity") return -1;  //If only store 'b' has "Infinity" distance, moves it to the end.
+        return a.dist - b.dist;  //For stores with numeric distances, sorts them in ascending order.
+      });
     },
     // method to sort the stores by name
     sortByName() {
       this.activeSortType = 'name';
-      this.atpMappedStoresInventory.sort((a: any, b: any) => a.storeName.localeCompare(b.storeName));
+      this.storesWithInventory.sort((a: any, b: any) => this.sortByNameLogic(a, b));
     },
     // method to run the current filter to maintain the current sort type when toggling empty stock toggle
     runCurrentFilter() {
@@ -222,9 +231,9 @@ export default defineComponent({
     toggleHideEmptyStock() {
       this.hideEmptyStores = !this.hideEmptyStores;
       if (this.hideEmptyStores) {
-        this.atpMappedStoresInventory = this.atpMappedStoresInventory.filter((store: any) => store.stock > 0);
+        this.storesWithInventory = this.storesWithInventory.filter((store: any) => store.stock > 0);
       } else {
-        this.atpMappedStoresInventory = this.mapStock(this.storesInventory, this.storeLookupByLatLon);
+        this.storesWithInventory = this.mapStock(this.storesInventory, this.storesInformation);
       }
       this.runCurrentFilter();   // Run the current filter to maintain the current sort type
     },

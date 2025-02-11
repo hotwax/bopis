@@ -27,11 +27,11 @@ const mutations: MutationTree <UtilState> = {
   [types.UTIL_ENUMERATIONS_UPDATED] (state, payload) {
     state.enumerations = payload
   },
-  [types.UTIL_CURRENT_FACILITY_LATLON_UPDATED] (state, payload) {
-    state.currentFacilityLatLon = payload
+  [types.UTIL_CURRENT_FACILITY_INFORMATION_UPDATED] (state, payload) {
+    state.currentFacilityInformation = payload
   },
-  [types.UTIL_STORE_LOOKUP_BY_LATLON_UPDATED] (state, payload) {
-    state.storeLookupByLatLon = payload
+  [types.UTIL_STORES_INFORMATION_UPDATED] (state, payload) {
+    state.storesInformation = payload
   }
 }
 export default mutations;

@@ -147,7 +147,7 @@ const fetchEnumerations = async (payload: any): Promise<any> => {
   });
 }
 
-const fetchCurrentFacilityLatLon = async (payload: any): Promise<any> => {
+const fetchCurrentFacilityInformation = async (payload: any): Promise<any> => {
   return api({
     url: "performFind",
     method: "post",
@@ -155,7 +155,7 @@ const fetchCurrentFacilityLatLon = async (payload: any): Promise<any> => {
   });
 }
 
-const fetchStoreLookupByLatLon = async (payload: any): Promise<any> => {
+const fetchStoresInformation = async (payload: any): Promise<any> => {
   return api({
     url: "storeLookup",
     method: "post",
@@ -180,6 +180,6 @@ export const UtilService = {
   resetPicker,
   updateProductStoreSetting,
   fetchReservedQuantity,
-  fetchCurrentFacilityLatLon,
-  fetchStoreLookupByLatLon
+  fetchCurrentFacilityInformation,
+  fetchStoresInformation
 }

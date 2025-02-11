@@ -380,10 +380,10 @@ const actions: ActionTree<UtilState, RootState> = {
     commit(types.UTIL_ENUMERATIONS_UPDATED, {})
   },
 
-  async fetchCurrentFacilityLatLon({ commit }, facilityId) {
+  async fetchCurrentFacilityInformation({ commit }, facilityId) {
     const payload = {
       inputFields: {
-        facilityId: facilityId
+        facilityId
       },
       entityName: "FacilityContactDetailByPurpose",
       orderBy: "fromDate DESC",
@@ -393,7 +393,7 @@ const actions: ActionTree<UtilState, RootState> = {
     }
 
     try {
-      const resp = await UtilService.fetchCurrentFacilityLatLon(payload)
+      const resp = await UtilService.fetchCurrentFacilityInformation(payload)
       
       if (!hasError(resp) && resp.data?.docs.length > 0) {
         // Find first doc with non-null coordinates
@@ -402,32 +402,32 @@ const actions: ActionTree<UtilState, RootState> = {
         )
         
         if (validCoords) {
-          commit(types.UTIL_CURRENT_FACILITY_LATLON_UPDATED, validCoords)
+          commit(types.UTIL_CURRENT_FACILITY_INFORMATION_UPDATED, validCoords)
         }
       } else {
         throw resp.data
       }
     } catch (err) {
-      console.error("Failed to fetch facility lat/long information", err)
+      logger.error("Failed to fetch facility lat/long information", err)
     }
   },
 
-  async fetchStoreLookupByLatLon({ commit }, point) {
+  async fetchStoresInformation({ commit }, point) {
     const payload = {
       viewSize: 250,
       filters: ["storeType: RETAIL_STORE"],
       point: `${point.latitude},${point.longitude}`    }
       
     try {
-      const resp = await UtilService.fetchStoreLookupByLatLon(payload)
+      const resp = await UtilService.fetchStoresInformation(payload)
 
       if (!hasError(resp) && resp.data?.response?.docs?.length > 0) {
-        commit(types.UTIL_STORE_LOOKUP_BY_LATLON_UPDATED, resp.data.response.docs)
+        commit(types.UTIL_STORES_INFORMATION_UPDATED, resp.data.response.docs)
       } else {
         throw resp.data
       }
     } catch (err) {
-      console.error("Failed to fetch stores by lat/lon information", err)
+      logger.error("Failed to fetch stores information by lat/lon", err)
     }
   },
 }
