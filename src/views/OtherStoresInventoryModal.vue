@@ -10,23 +10,20 @@
       <ion-buttons slot="end">
         <ion-button @click="sortByDistance">
           <ion-icon slot="icon-only" :icon="locationOutline"
-            :color="activeSortType === 'distance' ? 'primary' : 'medium'"></ion-icon>
+            :color="sortBy === 'distance' ? 'primary' : 'medium'"></ion-icon>
         </ion-button>
         <ion-button @click="sortByName">
           <ion-icon slot="icon-only" :icon="textOutline"
-            :color="activeSortType === 'name' ? 'primary' : 'medium'"></ion-icon>
+            :color="sortBy === 'name' ? 'primary' : 'medium'"></ion-icon>
         </ion-button>
       </ion-buttons>
     </ion-toolbar>
-    <ion-searchbar v-model="queryString" :placeholder="translate('Search store name')" :debounce="500"
-      @ionInput="queryString = $event.target.value; searchFacilities()"
-      @keyup.enter="queryString = $event.target.value; searchFacilities()" />
+    <ion-searchbar v-model="queryString" :placeholder="translate('Search store name')" @keyup.enter="queryString = $event.target.value; searchFacilities()" />
   </ion-header>
   <ion-content>
     <ion-list>
       <ion-item>
-        <ion-label>{{ translate("Hide facilities without stock") }}</ion-label>
-        <ion-toggle @click="toggleHideEmptyStock" />
+       <ion-toggle @click="toggleHideEmptyStock" label-placement="start">{{ translate("Hide facilities without stock")}}</ion-toggle>
       </ion-item>
     </ion-list>
     <ion-accordion-group v-if="storesWithInventory.length">
@@ -39,7 +36,7 @@
             <ion-note v-if="hasWeekCalendar(store)" :color="store.isOpen ? '' : 'danger'">
               {{ store.hoursDisplay }}
             </ion-note>
-            <p v-if="typeof store.dist === 'number'">{{ Math.round(store.dist) }} miles</p>
+            <p v-if="typeof store.dist === 'number'">{{ Math.round(store.dist) }} {{translate("miles")}}</p>
           </ion-label>
           <div slot="end">
             <ion-note slot="end">{{ translate('ATP', { count: store.stock }) }}</ion-note>
@@ -49,13 +46,13 @@
           <ion-list lines="none">
             <ion-item v-for="day in weekArray" :key="day">
               <ion-label>
-                <p>{{ capitalizeFirst(day) }}</p>
+                <p>{{ translate(day) }}</p>
               </ion-label>
               <ion-label slot="end">
                 <p v-if="store[`${day}_open`] && store[`${day}_close`]">
                   {{ formatTime(store[`${day}_open`]) }} - {{ formatTime(store[`${day}_close`]) }}
                 </p>
-                <p v-else>Closed</p>
+                <p v-else>{{ translate("Closed") }}</p>
               </ion-label>
             </ion-item>
           </ion-list>
@@ -124,7 +121,7 @@ export default defineComponent({
       storesInventory: [] as any, // will be used when fallback
       storesWithInventory: [] as any, // will be used primarily.
       hideEmptyStores: false,
-      activeSortType: "name", // 'name' or 'distance'
+      sortBy: "name", // 'name' or 'distance'
       weekArray: ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"]
     }
   },
@@ -205,7 +202,7 @@ export default defineComponent({
     },
     // method to sort the stores by distance 
     sortByDistance() {
-      this.activeSortType = 'distance';
+      this.sortBy = 'distance';
       // if store has Infinity distance, move it to the end
       this.storesWithInventory.sort((a: any, b: any) => {
         if (a.dist === "Infinity" && b.dist === "Infinity") return this.sortByNameLogic(a, b);  //If both stores have "Infinity" distance, sorts them alphabetically by store name
@@ -216,14 +213,14 @@ export default defineComponent({
     },
     // method to sort the stores by name
     sortByName() {
-      this.activeSortType = 'name';
+      this.sortBy = 'name';
       this.storesWithInventory.sort((a: any, b: any) => this.sortByNameLogic(a, b));
     },
     // method to run the current filter to maintain the current sort type when toggling empty stock toggle
     runCurrentFilter() {
-      if (this.activeSortType === 'distance') {
+      if (this.sortBy === 'distance') {
         this.sortByDistance();
-      } else if (this.activeSortType === 'name') {
+      } else if (this.sortBy === 'name') {
         this.sortByName();
       }
     },
@@ -262,28 +259,25 @@ export default defineComponent({
         const openTime = DateTime.fromFormat(store[openKey], 'HH:mm:ss');
         const closeTime = DateTime.fromFormat(store[closeKey], 'HH:mm:ss');
 
-        const openDisplay = openTime.toFormat('ha').toLowerCase();
-        const closeDisplay = closeTime.toFormat('ha').toLowerCase();
+        const openDisplay = openTime.toFormat('hh:mm a').toLowerCase();
+        const closeDisplay = closeTime.toFormat('hh:mm a').toLowerCase();
 
         const isOpen = now >= openTime && now <= closeTime;
 
         return {
-          display: isOpen ? `Open: ${openDisplay} - ${closeDisplay}` : 'Closed',
+          display: isOpen ? `${translate("Open")} ${openDisplay} - ${closeDisplay}` : translate("Closed"),
           isOpen
         };
       }
 
       // Case 3: Has calendar but no hours for today
       else return {
-        display: 'Closed',
+        display: translate("Closed"),
         isOpen: false
       };
     },
     hasWeekCalendar(store: any): boolean {
       return Object.keys(store).some(key => /_open$|_close$/.test(key));
-    },
-    capitalizeFirst(string: string): string {
-      return string.charAt(0).toUpperCase() + string.slice(1);
     },
     formatTime(time: string): string {
       return DateTime.fromFormat(time, 'HH:mm:ss').toFormat('h:mm a');
