@@ -420,7 +420,8 @@ const actions: ActionTree<UtilState, RootState> = {
     const payload = {
       viewSize: 250,
       filters: ["storeType: RETAIL_STORE"],
-      point: `${point.latitude},${point.longitude}`    }
+      point: `${point.latitude},${point.longitude}`
+    }
       
     try {
       const resp = await UtilService.fetchStoresInformation(payload)
