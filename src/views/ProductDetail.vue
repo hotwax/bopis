@@ -314,7 +314,7 @@ export default defineComponent({
     async getOtherStoresInventoryDetails() {
       const otherStoresInventoryModal = await modalController.create({
         component: OtherStoresInventoryModal,
-        componentProps: { otherStoresInventory: this.otherStoresInventoryDetails, currentFacilityId: this.currentFacility?.facilityId }
+        componentProps: { otherStoresInventory: this.otherStoresInventoryDetails }
       });
       return otherStoresInventoryModal.present();
     }

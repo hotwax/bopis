@@ -99,11 +99,11 @@ import {
   modalController,
   IonSpinner
 } from "@ionic/vue";
-import { defineComponent } from "vue";
+import { computed, defineComponent } from "vue";
 import { close, locationOutline, textOutline, chevronDownOutline } from "ionicons/icons";
 import { mapGetters } from "vuex";
 import { useStore } from "@/store";
-import { translate } from "@hotwax/dxp-components";
+import { translate, useUserStore  } from "@hotwax/dxp-components";
 import { DateTime } from "luxon";
 
 export default defineComponent({
@@ -126,7 +126,7 @@ export default defineComponent({
     IonToolbar,
     IonSpinner
   },
-  props: ["otherStoresInventory", "currentFacilityId"],
+  props: ["otherStoresInventory"],
   data() {
     return {
       queryString: "",
@@ -153,11 +153,10 @@ export default defineComponent({
     this.storesInventory = this.otherStoresInventory.slice();
 
     try {
-      console.log(this.storesInventory);
       // Check if the state already has the required data
       if (!this.FacilityInformation || !this.FacilityInformation.latitude || !this.FacilityInformation.longitude) {
         // Fetching Lat Lon for current facility
-        await this.store.dispatch("util/fetchCurrentFacilityLatLon", this.currentFacilityId);
+        await this.store.dispatch("util/fetchCurrentFacilityLatLon", this.currentFacility?.facilityId);
       }
 
       if (!this.storesInformation || this.storesInformation.length === 0) {
@@ -173,7 +172,6 @@ export default defineComponent({
       // Map the stock information
       this.storesWithInventory = this.mapStock(this.storesInventory, this.storesInformation);
     } catch (error) {
-      console.error('Error fetching data:', error);
       // Fallback mapping when APIs fail
       this.storesWithInventory = this.storesInventory.map((facility: any) => ({
         storeCode: facility.facilityId,
@@ -308,13 +306,16 @@ export default defineComponent({
   },
   setup() {
     const store = useStore();
+    const userStore = useUserStore();
+    let currentFacility: any = computed(() => userStore.getCurrentFacility);
     return {
       close,
       locationOutline,
       textOutline,
       store,
       translate,
-      chevronDownOutline
+      chevronDownOutline,
+      currentFacility
     };
   }
 });
