@@ -13,51 +13,64 @@
             :color="sortBy === 'distance' ? 'primary' : 'medium'"></ion-icon>
         </ion-button>
         <ion-button @click="sortByName">
-          <ion-icon slot="icon-only" :icon="textOutline"
-            :color="sortBy === 'name' ? 'primary' : 'medium'"></ion-icon>
+          <ion-icon slot="icon-only" :icon="textOutline" :color="sortBy === 'name' ? 'primary' : 'medium'"></ion-icon>
         </ion-button>
       </ion-buttons>
     </ion-toolbar>
-    <ion-searchbar v-model="queryString" :placeholder="translate('Search store name')" @keyup.enter="queryString = $event.target.value; searchFacilities()" />
+    <ion-searchbar v-model="queryString" :placeholder="translate('Search store name')"
+      @keyup.enter="queryString = $event.target.value; searchFacilities()" />
   </ion-header>
   <ion-content>
     <ion-list>
       <ion-item>
-       <ion-toggle @click="toggleHideEmptyStock" label-placement="start">{{ translate("Hide facilities without stock")}}</ion-toggle>
+        <ion-toggle @click="toggleHideEmptyStock" label-placement="start">{{ translate("Hide facilities without stock")}}</ion-toggle>
       </ion-item>
     </ion-list>
     <ion-accordion-group v-if="storesWithInventory.length">
-      <ion-accordion v-for="store in storesWithInventory" :key="store.storeCode" :value="store.storeCode"
-        :toggle-icon="hasWeekCalendar(store) ? chevronDownOutline : false" :readonly="!hasWeekCalendar(store)">
-        <ion-item slot="header" lines="inset">
+      <template v-for="store in storesWithInventory" :key="store.storeCode">
+        <!-- render accordion for items with calendar -->
+        <ion-accordion v-if="hasWeekCalendar(store)" :value="store.storeCode">
+          <ion-item slot="header" lines="inset">
+            <ion-label class="ion-text-wrap">
+              <p class="overline">{{ store.storeCode }}</p>
+              <h2>{{ store.storeName }}</h2>
+              <ion-note v-if="hasWeekCalendar(store)" :color="store.isOpen ? '' : 'danger'">
+                {{ store.hoursDisplay }}
+              </ion-note>
+              <p v-if="typeof store.dist === 'number'">{{ Math.round(store.dist) }} {{ translate("miles") }}</p>
+            </ion-label>
+            <div slot="end">
+              <ion-note slot="end">{{ translate('ATP', { count: store.stock }) }}</ion-note>
+            </div>
+          </ion-item>
+          <div class="ion-padding" slot="content">
+            <ion-list lines="none">
+              <ion-item v-for="day in weekArray" :key="day">
+                <ion-label>
+                  <p>{{ translate(day) }}</p>
+                </ion-label>
+                <ion-label slot="end">
+                  <p v-if="store[`${day}_open`] && store[`${day}_close`]">
+                    {{ formatTime(store[`${day}_open`]) }} - {{ formatTime(store[`${day}_close`]) }}
+                  </p>
+                  <p v-else>{{ translate("Closed") }}</p>
+                </ion-label>
+              </ion-item>
+            </ion-list>
+          </div>
+        </ion-accordion>
+        <!-- render list for items without calendar -->
+        <ion-item v-else>
           <ion-label class="ion-text-wrap">
             <p class="overline">{{ store.storeCode }}</p>
             <h2>{{ store.storeName }}</h2>
-            <ion-note v-if="hasWeekCalendar(store)" :color="store.isOpen ? '' : 'danger'">
-              {{ store.hoursDisplay }}
-            </ion-note>
-            <p v-if="typeof store.dist === 'number'">{{ Math.round(store.dist) }} {{translate("miles")}}</p>
+            <p v-if="typeof store.dist === 'number'">{{ Math.round(store.dist) }} {{ translate("miles") }}</p>
           </ion-label>
           <div slot="end">
             <ion-note slot="end">{{ translate('ATP', { count: store.stock }) }}</ion-note>
           </div>
         </ion-item>
-        <div class="ion-padding" slot="content" v-if="hasWeekCalendar(store)">
-          <ion-list lines="none">
-            <ion-item v-for="day in weekArray" :key="day">
-              <ion-label>
-                <p>{{ translate(day) }}</p>
-              </ion-label>
-              <ion-label slot="end">
-                <p v-if="store[`${day}_open`] && store[`${day}_close`]">
-                  {{ formatTime(store[`${day}_open`]) }} - {{ formatTime(store[`${day}_close`]) }}
-                </p>
-                <p v-else>{{ translate("Closed") }}</p>
-              </ion-label>
-            </ion-item>
-          </ion-list>
-        </div>
-      </ion-accordion>
+      </template>
     </ion-accordion-group>
     <div v-else class="ion-text-center">
       <ion-spinner v-if="isRefreshing" name="crescent" />
@@ -127,31 +140,40 @@ export default defineComponent({
   },
   computed: {
     ...mapGetters({
-      FacilityInformation: 'util/getCurrentFacilityInformation',
+      FacilityInformation: 'util/getCurrentFacilityLatLon',
       storesInformation: 'util/getStoresInformation'
     }),
-    currentFacilityCoords() {
-      return this.FacilityInformation;
-    },
     nearbyStores() {
       return this.storesInformation || [];
     },
   },
-  async mounted() {
+ async mounted() {
     this.isRefreshing = true;
     // Create a copy of otherStoresInventory on mount
     this.storesInventory = this.otherStoresInventory.slice();
-    // Fetching Lat Lon for current facility and then fetching store lookup
+
     try {
-      await this.store.dispatch("util/fetchCurrentFacilityInformation", this.currentFacilityId);
-      if (this.currentFacilityCoords?.latitude && this.currentFacilityCoords?.longitude) {
-        await this.store.dispatch("util/fetchStoresInformation", {
-          latitude: this.currentFacilityCoords.latitude,
-          longitude: this.currentFacilityCoords.longitude
-        });
-        this.storesWithInventory = this.mapStock(this.storesInventory, this.storesInformation);
+      console.log(this.storesInventory);
+      // Check if the state already has the required data
+      if (!this.FacilityInformation || !this.FacilityInformation.latitude || !this.FacilityInformation.longitude) {
+        // Fetching Lat Lon for current facility
+        await this.store.dispatch("util/fetchCurrentFacilityLatLon", this.currentFacilityId);
       }
+
+      if (!this.storesInformation || this.storesInformation.length === 0) {
+        // Fetching store lookup
+        if (this.FacilityInformation?.latitude && this.FacilityInformation?.longitude) {
+          await this.store.dispatch("util/fetchStoresInformation", {
+            latitude: this.FacilityInformation.latitude,
+            longitude: this.FacilityInformation.longitude
+          });
+        }
+      }
+
+      // Map the stock information
+      this.storesWithInventory = this.mapStock(this.storesInventory, this.storesInformation);
     } catch (error) {
+      console.error('Error fetching data:', error);
       // Fallback mapping when APIs fail
       this.storesWithInventory = this.storesInventory.map((facility: any) => ({
         storeCode: facility.facilityId,
@@ -161,6 +183,7 @@ export default defineComponent({
     } finally {
       this.isRefreshing = false;
     }
+
     // Sort by name by default
     this.sortByName();
   },

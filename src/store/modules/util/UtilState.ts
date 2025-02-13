@@ -7,6 +7,6 @@ export default interface UtilState {
   cancelReasons: Array<any>;
   facilities: any;
   enumerations: any;
-  currentFacilityInformation: any; 
+  facilitiesLatLng: any; 
   storesInformation: any;
 }

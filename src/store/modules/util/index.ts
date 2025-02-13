@@ -16,8 +16,8 @@ const utilModule: Module<UtilState, RootState> = {
     cancelReasons: [],
     facilities: {},
     enumerations: {},
-    currentFacilityInformation: {},
-    storesInformation: {}
+    facilitiesLatLng: {},
+    storesInformation: []
   },
   getters,
   actions,

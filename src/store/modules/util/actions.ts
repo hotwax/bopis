@@ -380,7 +380,7 @@ const actions: ActionTree<UtilState, RootState> = {
     commit(types.UTIL_ENUMERATIONS_UPDATED, {})
   },
 
-  async fetchCurrentFacilityInformation({ commit }, facilityId) {
+  async fetchCurrentFacilityLatLon({ commit }, facilityId) {
     const payload = {
       inputFields: {
         facilityId
@@ -393,7 +393,7 @@ const actions: ActionTree<UtilState, RootState> = {
     }
 
     try {
-      const resp = await UtilService.fetchCurrentFacilityInformation(payload)
+      const resp = await UtilService.fetchCurrentFacilityLatLon(payload)
       
       if (!hasError(resp) && resp.data?.docs.length > 0) {
         // Find first doc with non-null coordinates
@@ -402,7 +402,7 @@ const actions: ActionTree<UtilState, RootState> = {
         )
         
         if (validCoords) {
-          commit(types.UTIL_CURRENT_FACILITY_INFORMATION_UPDATED, validCoords)
+          commit(types.UTIL_CURRENT_FACILITY_LAT_LON_UPDATED, validCoords)
         }
       } else {
         throw resp.data
@@ -410,6 +410,10 @@ const actions: ActionTree<UtilState, RootState> = {
     } catch (err) {
       logger.error("Failed to fetch facility lat/long information", err)
     }
+  },
+
+    async clearCurrentFacilityLatLon({ commit }) {
+    commit(types.UTIL_CURRENT_FACILITY_LAT_LON_UPDATED, {})
   },
 
   async fetchStoresInformation({ commit }, point) {
@@ -430,6 +434,10 @@ const actions: ActionTree<UtilState, RootState> = {
       logger.error("Failed to fetch stores information by lat/lon", err)
     }
   },
+
+  async clearStoresInformation({ commit }) {
+    commit(types.UTIL_STORES_INFORMATION_UPDATED, [])
+  }
 }
 
 export default actions;
