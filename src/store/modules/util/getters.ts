@@ -27,8 +27,8 @@ const getters: GetterTree <UtilState, RootState> = {
   getEnumDescription: (state) => (enumId: string) => {
     return state.enumerations[enumId] ? state.enumerations[enumId] : enumId
   },
-  getCurrentFacilityLatLon: (state) => {
-    return state.facilitiesLatLng ? state.facilitiesLatLng : {}
+   getFacilityLatLon: (state) => (facilityId: string) => {
+    return state.facilitiesLatLng[facilityId] ? state.facilitiesLatLng[facilityId] : {}
   },
   getStoresInformation: (state) => {
     return state.storesInformation ? state.storesInformation : []

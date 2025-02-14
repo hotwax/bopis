@@ -140,7 +140,7 @@ export default defineComponent({
   },
   computed: {
     ...mapGetters({
-      FacilityInformation: 'util/getCurrentFacilityLatLon',
+      facilityLatLon: 'util/getFacilityLatLon',
       storesInformation: 'util/getStoresInformation'
     }),
     nearbyStores() {
@@ -151,20 +151,21 @@ export default defineComponent({
     this.isRefreshing = true;
     // Create a copy of otherStoresInventory on mount
     this.storesInventory = this.otherStoresInventory.slice();
+    const currentFacilityId = this.currentFacility?.facilityId;
 
     try {
       // Check if the state already has the required data
-      if (!this.FacilityInformation || !this.FacilityInformation.latitude || !this.FacilityInformation.longitude) {
+      if (!this.facilityLatLon(currentFacilityId).latitude || !this.facilityLatLon(currentFacilityId).longitude) {
         // Fetching Lat Lon for current facility
-        await this.store.dispatch("util/fetchCurrentFacilityLatLon", this.currentFacility?.facilityId);
+        await this.store.dispatch("util/fetchCurrentFacilityLatLon", currentFacilityId);
       }
 
       if (!this.storesInformation || this.storesInformation.length === 0) {
         // Fetching store lookup
-        if (this.FacilityInformation?.latitude && this.FacilityInformation?.longitude) {
+        if (this.facilityLatLon(currentFacilityId)?.latitude && this.facilityLatLon(currentFacilityId)?.longitude) {
           await this.store.dispatch("util/fetchStoresInformation", {
-            latitude: this.FacilityInformation.latitude,
-            longitude: this.FacilityInformation.longitude
+            latitude: this.facilityLatLon(currentFacilityId).latitude,
+            longitude: this.facilityLatLon(currentFacilityId).longitude
           });
         }
       }

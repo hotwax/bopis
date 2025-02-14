@@ -402,7 +402,7 @@ const actions: ActionTree<UtilState, RootState> = {
         )
         
         if (validCoords) {
-          commit(types.UTIL_CURRENT_FACILITY_LAT_LON_UPDATED, validCoords)
+          commit(types.UTIL_FACILITY_LAT_LON_UPDATED, { facilityId, validCoords })
         }
       } else {
         throw resp.data
@@ -413,7 +413,7 @@ const actions: ActionTree<UtilState, RootState> = {
   },
 
     async clearCurrentFacilityLatLon({ commit }) {
-    commit(types.UTIL_CURRENT_FACILITY_LAT_LON_UPDATED, {})
+    commit(types.UTIL_FACILITY_LAT_LON_UPDATED, {})
   },
 
   async fetchStoresInformation({ commit }, point) {
