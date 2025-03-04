@@ -133,7 +133,7 @@ export default defineComponent({
       isRefreshing: false,
       storesInventory: [] as any, // will be used when fallback
       storesWithInventory: [] as any, // will be used primarily.
-      hideEmptyStores: false,
+      hideStoresWithoutInventory: false,
       sortBy: "name", // 'name' or 'distance'
       weekArray: ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"]
     }
@@ -142,10 +142,7 @@ export default defineComponent({
     ...mapGetters({
       facilityLatLon: 'util/getFacilityLatLon',
       storesInformation: 'util/getStoresInformation'
-    }),
-    nearbyStores() {
-      return this.storesInformation || [];
-    },
+    })
   },
  async mounted() {
     this.isRefreshing = true;
@@ -198,7 +195,7 @@ export default defineComponent({
           store.storeName.toLowerCase().includes(this.queryString.toLowerCase())
         );
       }
-      if (this.hideEmptyStores) {
+      if (this.hideStoresWithoutInventory) {
         filteredInventory = filteredInventory.filter((store: any) => store.stock > 0);
       }
       this.storesWithInventory = filteredInventory;
@@ -208,7 +205,7 @@ export default defineComponent({
     mapStock(storesInventory: any[], storesInformation: any[]): any[] {
       return storesInformation.slice(1).map((store, index) => {  // skips first item (current facility)
         const matchingFacility = storesInventory.find(facility => facility.facilityId === store.storeCode);
-        const storeHoursInfo = this.getStoreHoursStatus(store);
+        const storeHoursInfo = this.getStoreHoursInfo(store);
         return {
           ...store,
           index: index + 1,
@@ -219,7 +216,7 @@ export default defineComponent({
       });
     },
     // logic for sorting stores by names
-    sortByNameLogic(a: any, b: any): number {
+    sortStoresAlphabetically(a: any, b: any): number {
       return a.storeName.localeCompare(b.storeName);
     },
     // method to sort the stores by distance 
@@ -227,7 +224,7 @@ export default defineComponent({
       this.sortBy = 'distance';
       // if store has Infinity distance, move it to the end
       this.storesWithInventory.sort((a: any, b: any) => {
-        if (a.dist === "Infinity" && b.dist === "Infinity") return this.sortByNameLogic(a, b);  //If both stores have "Infinity" distance, sorts them alphabetically by store name
+        if (a.dist === "Infinity" && b.dist === "Infinity") return this.sortStoresAlphabetically(a, b);  //If both stores have "Infinity" distance, sorts them alphabetically by store name
         if (a.dist === "Infinity") return 1;  //If only store 'a' has "Infinity" distance, moves it to the end.
         if (b.dist === "Infinity") return -1;  //If only store 'b' has "Infinity" distance, moves it to the end.
         return a.dist - b.dist;  //For stores with numeric distances, sorts them in ascending order.
@@ -236,25 +233,25 @@ export default defineComponent({
     // method to sort the stores by name
     sortByName() {
       this.sortBy = 'name';
-      this.storesWithInventory.sort((a: any, b: any) => this.sortByNameLogic(a, b));
+      this.storesWithInventory.sort((a: any, b: any) => this.sortStoresAlphabetically(a, b));
     },
     // method to run the current filter to maintain the current sort type when toggling empty stock toggle
-    runCurrentFilter() {
+    updateSort() {
       if (this.sortBy === 'distance') {
         this.sortByDistance();
-      } else if (this.sortBy === 'name') {
+      } else {
         this.sortByName();
       }
     },
     // method to handle empty stock toggle
     toggleHideEmptyStock() {
-      this.hideEmptyStores = !this.hideEmptyStores;
-      if (this.hideEmptyStores) {
+      this.hideStoresWithoutInventory = !this.hideStoresWithoutInventory;
+      if (this.hideStoresWithoutInventory) {
         this.storesWithInventory = this.storesWithInventory.filter((store: any) => store.stock > 0);
       } else {
         this.storesWithInventory = this.mapStock(this.storesInventory, this.storesInformation);
       }
-      this.runCurrentFilter();   // Run the current filter to maintain the current sort type
+      this.updateSort();   // Run the current filter to maintain the current sort type
     },
     getCurrentWeekday() {
       const today = DateTime.now() // Get weekday index (1-7, Monday is 1, Sunday is 7)
@@ -263,7 +260,7 @@ export default defineComponent({
       return momentWeekday
     },
     // method to get the store hours status
-    getStoreHoursStatus(store: any) {
+    getStoreHoursInfo(store: any) {
       const currentDay = this.weekArray[this.getCurrentWeekday()];
       const hasCalendar = Object.keys(store).some(key => /_open$|_close$/.test(key));
 
