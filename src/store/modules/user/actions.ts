@@ -303,7 +303,10 @@ const actions: ActionTree<UserState, RootState> = {
     try {
       resp = await getNotificationEnumIds(process.env.VUE_APP_NOTIF_ENUM_TYPE_ID)
       enumerationResp = resp.docs
-      resp = await getNotificationUserPrefTypeIds(process.env.VUE_APP_NOTIF_APP_ID, state.current.userLoginId)
+      resp = await getNotificationUserPrefTypeIds(process.env.VUE_APP_NOTIF_APP_ID, state.current.userLoginId, {
+        "userPrefTypeId": getCurrentFacilityId(),
+        "userPrefTypeId_op": "contains"
+      })
       userPrefIds = resp.docs.map((userPref: any) => userPref.userPrefTypeId)
     } catch (error) {
       logger.error(error)
@@ -325,7 +328,10 @@ const actions: ActionTree<UserState, RootState> = {
     let allNotificationPrefs = [];
 
     try {
-      const resp = await getNotificationUserPrefTypeIds(process.env.VUE_APP_NOTIF_APP_ID, state.current.userLoginId)
+      const resp = await getNotificationUserPrefTypeIds(process.env.VUE_APP_NOTIF_APP_ID, state.current.userLoginId, {
+        "userPrefTypeId": getCurrentFacilityId(),
+        "userPrefTypeId_op": "contains"
+      })
       allNotificationPrefs = resp.docs
     } catch(error) {
       logger.error(error)
