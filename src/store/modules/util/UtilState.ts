@@ -8,7 +8,7 @@ export default interface UtilState {
   facilities: any;
   enumerations: any;
   facilitiesLatLng: {
-  [facilityId :string]: { latitude: any , longitude: any }
-},
+    [facilityId :string]: { latitude: any , longitude: any }
+  },
   storesInformation: any;
 }

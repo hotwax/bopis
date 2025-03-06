@@ -412,7 +412,7 @@ const actions: ActionTree<UtilState, RootState> = {
     }
   },
 
-    async clearCurrentFacilityLatLon({ commit }) {
+  async clearCurrentFacilityLatLon({ commit }) {
     commit(types.UTIL_FACILITY_LAT_LON_UPDATED, {})
   },
 

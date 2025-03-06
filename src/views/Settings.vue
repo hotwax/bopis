@@ -296,9 +296,6 @@ export default defineComponent({
         this.getAvailableShipmentMethods();
         this.getRerouteFulfillmentConfiguration();
       }
-      // clear facility lat lon and stores information state when facility changes
-      this.store.dispatch("util/clearCurrentFacilityLatLon", {})
-      this.store.dispatch("util/clearStoresInformation", {})
     },
     async timeZoneUpdated(tzId: string) {
       await this.store.dispatch("user/setUserTimeZone", tzId)
@@ -311,6 +308,10 @@ export default defineComponent({
       } catch (error) {
         logger.error(error)
       }
+
+      // clear facility lat lon and stores information state when facility changes
+      this.store.dispatch("util/clearCurrentFacilityLatLon", {})
+      this.store.dispatch("util/clearStoresInformation", {})
 
       this.store.dispatch('user/logout', { isUserUnauthorised: false }).then((redirectionUrl) => {
         // if not having redirection url then redirect the user to launchpad
