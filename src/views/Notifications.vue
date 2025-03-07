@@ -110,12 +110,9 @@ main {
   main {
     display: flex;
     justify-content: center;
-    align-items: start;
-    gap: var(--spacer-2xl);
-    max-width: 990px;
   }
 
-  main > on-list {
+  main > ion-list {
     max-width: 120ch;
   }
 }
