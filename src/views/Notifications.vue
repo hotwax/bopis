@@ -9,7 +9,6 @@
 
     <ion-content>
       <main>
-        <section>
           <ion-list v-if="notifications.length">
             <ion-item v-for="(notification, index) in notifications" :key="index">
               <ion-label class="ion-text-wrap">
@@ -22,7 +21,6 @@
           <div v-else class="ion-text-center">
             {{ translate('No notifications to show') }}
           </div>
-        </section>
       </main>
       <ion-fab slot="fixed" size="small" vertical="top" horizontal="end" :edge="true">
         <ion-fab-button size="small" @click="openNotificationSettings()">
@@ -117,8 +115,8 @@ main {
     max-width: 990px;
   }
 
-  main > section {
-    max-width: 50ch;
+  main > on-list {
+    max-width: 120ch;
   }
 }
 </style>
