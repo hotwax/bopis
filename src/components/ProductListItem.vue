@@ -78,7 +78,6 @@ export default defineComponent({
   },
   data () {
     return {
-      goodIdentificationTypeId: process.env.VUE_APP_PRDT_IDENT_TYPE_ID,
       isFetchingStock: false,
       showKitComponents: false
     }
