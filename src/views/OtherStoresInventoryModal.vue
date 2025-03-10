@@ -67,7 +67,7 @@
             <p v-if="typeof store.dist === 'number'">{{ Math.round(store.dist) }} {{ translate("miles") }}</p>
           </ion-label>
           <div slot="end">
-            <ion-note slot="end">{{ translate('ATP', { count: store.stock }) }}</ion-note>
+            <ion-note>{{ translate('ATP', { count: store.stock }) }}</ion-note>
           </div>
         </ion-item>
       </template>
