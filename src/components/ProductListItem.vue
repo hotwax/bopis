@@ -21,6 +21,10 @@
         <ion-icon color="medium" slot="icon-only" :icon="cubeOutline" />
       </ion-button>
 
+      <ion-button color="medium" fill="clear" size="small" v-if="item.productTypeId === 'GIFT_CARD'" @click.stop="openGiftCardActivationModal(item)">
+        <ion-icon slot="icon-only" :icon="item.isGCActivated ? gift : giftOutline"/>
+      </ion-button>
+      
       <ion-button v-if="isKit(item)" fill="clear" size="small" @click.stop="fetchKitComponents(item)">
         <ion-icon v-if="showKitComponents" color="medium" slot="icon-only" :icon="chevronUpOutline"/>
         <ion-icon v-else color="medium" slot="icon-only" :icon="listOutline"/>
@@ -54,11 +58,12 @@
 
 <script lang="ts">
 import { computed, defineComponent } from "vue";
-import { IonBadge, IonButton, IonCard, IonIcon, IonItem, IonLabel, IonNote, IonSkeletonText, IonSpinner, IonThumbnail, popoverController } from "@ionic/vue";
+import { IonBadge, IonButton, IonCard, IonIcon, IonItem, IonLabel, IonNote, IonSkeletonText, IonSpinner, IonThumbnail, popoverController, modalController } from "@ionic/vue";
 import { mapGetters, useStore } from 'vuex';
 import { getProductIdentificationValue, DxpShopifyImg, translate, useProductIdentificationStore } from '@hotwax/dxp-components'
-import { chevronUpOutline, cubeOutline, informationCircleOutline, listOutline } from 'ionicons/icons'
+import { chevronUpOutline, cubeOutline, informationCircleOutline, listOutline, gift, giftOutline } from 'ionicons/icons'
 import InventoryDetailsPopover from '@/components/InventoryDetailsPopover.vue'
+import GiftCardActivationModal from "@/components/GiftCardActivationModal.vue";
 import { isKit } from '@/utils/order'
 
 export default defineComponent({
@@ -82,7 +87,7 @@ export default defineComponent({
       showKitComponents: false
     }
   },
-  props: ['item', 'isShipToStoreOrder'],
+  props: ['item', 'isShipToStoreOrder', 'orderId'],
   computed: {
     ...mapGetters({
       getProduct: 'product/getProduct',
@@ -111,6 +116,18 @@ export default defineComponent({
     },
     updateColor(stock: number) {
       return stock ? stock < 10 ? 'warning' : 'success' : 'danger';
+    },
+    async openGiftCardActivationModal(item: any) {
+      const modal = await modalController.create({
+        component: GiftCardActivationModal,
+        componentProps: { item, orderId: this.orderId }
+      })
+      modal.onDidDismiss().then((result: any) => {
+        if(result.data?.isGCActivated) {
+          this.store.dispatch("order/updateCurrentItemGCActivationDetails", { item, orderId: this.orderId, isDetailsPage: false })
+        }
+      })
+      modal.present();
     }
   },
   setup() {
@@ -123,6 +140,8 @@ export default defineComponent({
       productIdentificationPref,
       cubeOutline,
       informationCircleOutline,
+      gift,
+      giftOutline,
       isKit,
       listOutline,
       store,

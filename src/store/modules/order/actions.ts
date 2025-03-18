@@ -10,7 +10,7 @@ import emitter from '@/event-bus'
 import store from "@/store";
 import { prepareOrderQuery } from "@/utils/solrHelper";
 import { getOrderCategory, removeKitComponents } from '@/utils/order'
-
+import { UtilService } from "@/services/UtilService";
 import logger from "@/logger";
 
 
@@ -396,6 +396,10 @@ const actions: ActionTree<OrderState , RootState> ={
       logger.error(err)
     }
 
+    if(orderDetails.orderType === 'packed') {
+      order = await dispatch("fetchGiftCardActivationDetails", { isDetailsPage: true, currentOrders: [order] });
+    }
+
     await dispatch('updateCurrent', { order })
   },
 
@@ -549,7 +553,7 @@ const actions: ActionTree<OrderState , RootState> ={
     commit(types.ORDER_CURRENT_UPDATED, { order })
   },
 
-  async getPackedOrders ({ commit, state }, payload) {
+  async getPackedOrders ({ commit, dispatch, state }, payload) {
     // Show loader only when new query and not the infinite scroll
     if (payload.viewIndex === 0) emitter.emit("presentLoader");
     let resp;
@@ -627,7 +631,8 @@ const actions: ActionTree<OrderState , RootState> ={
         const total = resp.data.grouped?.orderId?.ngroups;
 
         if(payload.viewIndex && payload.viewIndex > 0) orders = state.packed.list.concat(orders)
-        commit(types.ORDER_PACKED_UPDATED, { orders, total })
+        const packedOrders = await dispatch("fetchGiftCardActivationDetails", { isDetailsPage: false, currentOrders: orders })
+        commit(types.ORDER_PACKED_UPDATED, { orders: packedOrders, total })
         if (payload.viewIndex === 0) emitter.emit("dismissLoader");
       } else {
         commit(types.ORDER_PACKED_UPDATED, { orders: {}, total: 0 })
@@ -730,6 +735,73 @@ const actions: ActionTree<OrderState , RootState> ={
     }
 
     return resp;
+  },
+
+  async fetchGiftCardActivationDetails({ commit }, { isDetailsPage, currentOrders }) {
+    const orders = JSON.parse(JSON.stringify(currentOrders));
+    const orderIds = [] as any;
+    let giftCardActivations = [] as any;
+
+    if(isDetailsPage) {
+      orderIds.push(orders[0].orderId);
+    } else {
+      orders.map((order: any) => {
+        order.parts.map((part: any) => {
+          part.items.map((currentItem: any) => {
+            if(currentItem.productTypeId === 'GIFT_CARD' && !orderIds.includes(currentItem.orderId)) {
+              orderIds.push(order.orderId);
+            }
+          })
+        })
+      })
+    }
+    if(!orderIds.length) return orders;
+
+    try {
+      const resp = await UtilService.fetchGiftCardFulfillmentInfo({
+        entityName: "GiftCardFulfillment",
+        inputFields: {
+          orderId: orderIds,
+          orderId_op: "in"
+        },
+        fieldList: ["amount", "cardNumber", "fulfillmentDate", "orderId", "orderItemSeqId"],
+        viewSize: 250
+      })
+
+      if(!hasError(resp)) {
+        giftCardActivations = resp.data.docs
+      } else {
+        throw resp.data
+      }
+    } catch(error) {
+      logger.error(error)
+    }
+
+    if(giftCardActivations.length) {
+      if(isDetailsPage) {
+        orders[0].part.items.map((currentItem: any) => {
+          const activationRecord = giftCardActivations.find((card: any) => card.orderId === currentItem.orderId && card.orderItemSeqId === currentItem.orderItemSeqId)
+          if(activationRecord?.cardNumber) {
+            currentItem.isGCActivated = true;
+            currentItem.gcInfo = activationRecord
+          }
+        })
+      } else {
+        orders.map((order: any) => {
+          order.parts.map((part: any) => {
+            part.items.map((item: any) => {
+              const activationRecord = giftCardActivations.find((card: any) => card.orderId === order.orderId && card.orderItemSeqId === item.orderItemSeqId)
+              if(activationRecord?.cardNumber) {
+                item.isGCActivated = true;
+                item.gcInfo = activationRecord
+              }
+            })
+          })
+        })
+      }
+    }
+
+    return isDetailsPage ? orders[0] : orders
   },
 
   async deliverShipment ({ state, dispatch, commit }, order) {
@@ -1456,6 +1528,58 @@ const actions: ActionTree<OrderState , RootState> ={
     commit(types.ORDER_CURRENT_UPDATED, {order})
     return shipGroups;
   },
+  async updateCurrentItemGCActivationDetails({ commit, state }, { item, orderId, isDetailsPage }) {
+    let gcInfo = {};
+    let isGCActivated = false;
+
+    try {
+      const resp = await UtilService.fetchGiftCardFulfillmentInfo({
+        entityName: "GiftCardFulfillment",
+        inputFields: {
+          orderId: orderId,
+          orderItemSeqId: item.orderItemSeqId
+        },
+        fieldList: ["amount", "cardNumber", "fulfillmentDate", "orderId", "orderItemSeqId"]
+      })
+
+      if(!hasError(resp)) {
+        isGCActivated = true;
+        gcInfo = resp.data.docs[0];
+      } else {
+        throw resp.data
+      }
+    } catch(error) {
+      logger.error(error)
+    }
+
+    if(!isGCActivated) return;
+    
+    if(isDetailsPage) {
+      const order = JSON.parse(JSON.stringify(state.current));
+      
+      order.part.items?.map((currentItem: any) => {
+        if(currentItem.orderId === orderId && currentItem.orderItemSeqId === item.orderItemSeqId) {
+          currentItem.isGCActivated = true;
+          currentItem.gcInfo = gcInfo
+        }
+      })
+      commit(types.ORDER_CURRENT_UPDATED, { order })
+      return;
+    }
+
+    const orders = JSON.parse(JSON.stringify(state.packed.list));
+    orders.map((order: any) => {
+      order.parts.map((part: any) => {
+        part.items.map((currentItem: any) => {
+          if(currentItem.orderId === orderId && currentItem.orderItemSeqId === item.orderItemSeqId) {
+            currentItem.isGCActivated = true;
+            currentItem.gcInfo = gcInfo;
+          }
+        })
+      })
+    })
+    commit(types.ORDER_PACKED_UPDATED, { orders: orders, total: state.packed.total })
+  }
 }
 
 export default actions;
