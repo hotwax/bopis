@@ -1,5 +1,6 @@
 import { api } from '@/adapter';
 import { hasError } from '@/adapter';
+import logger from '@/logger';
 
 const fetchRejectReasons = async (query: any): Promise<any> => {
   return api({
@@ -163,12 +164,66 @@ const fetchStoresInformation = async (payload: any): Promise<any> => {
   });
 }
 
+const fetchGiftCardFulfillmentInfo = async (payload: any): Promise<any> => {
+  return await api({
+    url: 'performFind',
+    method: 'POST',
+    data: payload
+  }) as any
+}
+
+const activateGiftCard = async (payload: any): Promise<any> => {
+  return api({
+    url: "service/createGcFulFillmentRecord",
+    method: "post",
+    data: payload
+  });
+}
+
+const fetchGiftCardItemPriceInfo = async (payload: any): Promise<any> => {
+  // Todo: find a better alternative for fetching unitPrice and currency together
+  let resp = {} as any;
+  const itemPriceInfo = {} as any;
+
+  const params = {
+    inputFields: {
+      orderId: payload.orderId,
+      orderItemSeqId: payload.orderItemSeqId
+    },
+    entityName: "OrderHeaderItemAndRoles",
+    fieldList: ["unitPrice", "currencyUom"],
+    viewSize: 1
+  }
+
+  try {
+    resp = await api({
+      url: "performFind",
+      method: "post",
+      data: params
+    });
+
+    if(!hasError(resp)) {
+      itemPriceInfo.unitPrice = resp.data.docs[0].unitPrice
+      itemPriceInfo.currencyUom = resp.data.docs[0].currencyUom
+    } else {
+      throw resp.data;
+    }
+  } catch(error: any) {
+    logger.error(error);
+  }
+
+  return itemPriceInfo;
+}
+
 export const UtilService = {
+  activateGiftCard,
   createEnumeration,
   createProductStoreSetting,
   fetchEnumerations,
   fetchFacilities,
   fetchFacilityTypeInformation,
+  fetchGiftCardFulfillmentInfo,
+  fetchGiftCardItemPriceInfo,
   fetchJobInformation,
   fetchPartyInformation,
   fetchPaymentMethodTypeDesc,
