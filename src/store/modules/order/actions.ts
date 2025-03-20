@@ -631,8 +631,8 @@ const actions: ActionTree<OrderState , RootState> ={
         const total = resp.data.grouped?.orderId?.ngroups;
 
         const packedOrders = await OrderService.fetchGiftCardActivationDetails({ isDetailsPage: false, currentOrders: orders })
-        if(payload.viewIndex && payload.viewIndex > 0) orders = state.packed.list.concat(orders)
-        commit(types.ORDER_PACKED_UPDATED, { orders: packedOrders, total })
+        if(payload.viewIndex && payload.viewIndex > 0) orders = state.packed.list.concat(packedOrders)
+        commit(types.ORDER_PACKED_UPDATED, { orders: orders, total })
         if (payload.viewIndex === 0) emitter.emit("dismissLoader");
       } else {
         commit(types.ORDER_PACKED_UPDATED, { orders: {}, total: 0 })
