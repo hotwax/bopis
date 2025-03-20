@@ -5,6 +5,7 @@ import store from '@/store';
 import { formatPhoneNumber, showToast } from '@/utils';
 import logger from '@/logger';
 import { cogOutline } from 'ionicons/icons';
+import { UtilService } from "@/services/UtilService";
 
 const getOpenOrders = async (payload: any): Promise <any> => {
   return api({
@@ -363,8 +364,76 @@ const cancelItem = async (payload: any): Promise<any> => {
   });
 }
 
+const fetchGiftCardActivationDetails = async ({ isDetailsPage, currentOrders }: any): Promise<any> => {
+  const orders = JSON.parse(JSON.stringify(currentOrders));
+  const orderIds = [] as any;
+  let giftCardActivations = [] as any;
+
+  if(isDetailsPage) {
+    orderIds.push(orders[0].orderId);
+  } else {
+    orders.map((order: any) => {
+      order.parts.map((part: any) => {
+        part.items.map((currentItem: any) => {
+          if(currentItem.productTypeId === 'GIFT_CARD' && !orderIds.includes(currentItem.orderId)) {
+            orderIds.push(order.orderId);
+          }
+        })
+      })
+    })
+  }
+  if(!orderIds.length) return orders;
+
+  try {
+    const resp = await UtilService.fetchGiftCardFulfillmentInfo({
+      entityName: "GiftCardFulfillment",
+      inputFields: {
+        orderId: orderIds,
+        orderId_op: "in"
+      },
+      fieldList: ["amount", "cardNumber", "fulfillmentDate", "orderId", "orderItemSeqId"],
+      viewSize: 250
+    })
+
+    if(!hasError(resp)) {
+      giftCardActivations = resp.data.docs
+    } else {
+      throw resp.data
+    }
+  } catch(error) {
+    logger.error(error)
+  }
+
+  if(giftCardActivations.length) {
+    if(isDetailsPage) {
+      orders[0].part.items.map((currentItem: any) => {
+        const activationRecord = giftCardActivations.find((card: any) => card.orderId === currentItem.orderId && card.orderItemSeqId === currentItem.orderItemSeqId)
+        if(activationRecord?.cardNumber) {
+          currentItem.isGCActivated = true;
+          currentItem.gcInfo = activationRecord
+        }
+      })
+    } else {
+      orders.map((order: any) => {
+        order.parts.map((part: any) => {
+          part.items.map((item: any) => {
+            const activationRecord = giftCardActivations.find((card: any) => card.orderId === order.orderId && card.orderItemSeqId === item.orderItemSeqId)
+            if(activationRecord?.cardNumber) {
+              item.isGCActivated = true;
+              item.gcInfo = activationRecord
+            }
+          })
+        })
+      })
+    }
+  }
+
+  return isDetailsPage ? orders[0] : orders
+}
+
 export const OrderService = {
   cancelItem,
+  fetchGiftCardActivationDetails,
   fetchOrderItems,
   fetchOrderPaymentPreferences,
   fetchTrackingCodes,
