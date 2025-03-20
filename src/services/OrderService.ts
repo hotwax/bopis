@@ -364,8 +364,8 @@ const cancelItem = async (payload: any): Promise<any> => {
   });
 }
 
-const updateGiftCardActivationDetails = (item: any, giftCardActivations: any, orderId?: string) => {
-  const activationRecord = giftCardActivations.find((card: any) => {
+const updateGiftCardActivationDetails = (item: any, giftCardActivationInfo: any, orderId?: string) => {
+  const activationRecord = giftCardActivationInfo.find((card: any) => {
     return (orderId ? card.orderId === orderId : card.orderId === item.orderId) && card.orderItemSeqId === item.orderItemSeqId;
   })
 
@@ -380,7 +380,7 @@ const updateGiftCardActivationDetails = (item: any, giftCardActivations: any, or
 const fetchGiftCardActivationDetails = async ({ isDetailsPage, currentOrders }: any): Promise<any> => {
   let orders = JSON.parse(JSON.stringify(currentOrders));
   const orderIds = [] as any;
-  let giftCardActivations = [] as any;
+  let giftCardActivationInfo = [] as any;
 
   if(isDetailsPage) {
     orderIds.push(orders[0].orderId);
@@ -409,7 +409,7 @@ const fetchGiftCardActivationDetails = async ({ isDetailsPage, currentOrders }: 
     })
 
     if(!hasError(resp)) {
-      giftCardActivations = resp.data.docs
+      giftCardActivationInfo = resp.data.docs
     } else {
       throw resp.data
     }
@@ -417,16 +417,16 @@ const fetchGiftCardActivationDetails = async ({ isDetailsPage, currentOrders }: 
     logger.error(error)
   }
 
-  if(giftCardActivations.length) {
+  if(giftCardActivationInfo.length) {
     if(isDetailsPage) {
       orders[0].part.items = orders[0].part.items.map((item: any) => {
-        return updateGiftCardActivationDetails(item, giftCardActivations);
+        return updateGiftCardActivationDetails(item, giftCardActivationInfo);
       })
     } else {
       orders = orders.map((order: any) => {
         order.parts = order.parts.map((part: any) => {
           part.items = part.items.map((item: any) => {
-            return updateGiftCardActivationDetails(item, giftCardActivations, order.orderId);
+            return updateGiftCardActivationDetails(item, giftCardActivationInfo, order.orderId);
           })
           return part
         })
