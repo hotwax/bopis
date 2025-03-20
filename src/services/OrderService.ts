@@ -365,8 +365,8 @@ const cancelItem = async (payload: any): Promise<any> => {
 }
 
 const updateGiftCardActivationDetails = (item: any, giftCardActivationInfo: any, orderId?: string) => {
-  const activationRecord = giftCardActivationInfo.find((card: any) => {
-    return (orderId ? card.orderId === orderId : card.orderId === item.orderId) && card.orderItemSeqId === item.orderItemSeqId;
+  const activationRecord = giftCardActivationInfo.find((activationInfo: any) => {
+    return (orderId ? activationInfo.orderId === orderId : activationInfo.orderId === item.orderId) && activationInfo.orderItemSeqId === item.orderItemSeqId;
   })
 
   if(activationRecord?.cardNumber) {
