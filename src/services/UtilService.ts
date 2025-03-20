@@ -190,8 +190,8 @@ const fetchGiftCardItemPriceInfo = async (payload: any): Promise<any> => {
       orderId: payload.orderId,
       orderItemSeqId: payload.orderItemSeqId
     },
-    entityName: "OrderItem",
-    fieldList: ["unitPrice"],
+    entityName: "OrderHeaderItemAndRoles",
+    fieldList: ["unitPrice", "currencyUom"],
     viewSize: 1
   }
 
@@ -204,26 +204,7 @@ const fetchGiftCardItemPriceInfo = async (payload: any): Promise<any> => {
 
     if(!hasError(resp)) {
       itemPriceInfo.unitPrice = resp.data.docs[0].unitPrice
-
-      resp = await api({
-        url: "performFind",
-        method: "post",
-        data: {
-          inputFields: {
-            orderId: payload.orderId,
-            orderItemSeqId: payload.orderItemSeqId
-          },
-          entityName: "OrderHeader",
-          fieldList: ["currencyUom"],
-          viewSize: 1
-        }
-      });
-
-      if(!hasError(resp)) {
-        itemPriceInfo.currencyUom = resp.data.docs[0].currencyUom
-      } else {
-        throw resp.data;
-      }
+      itemPriceInfo.currencyUom = resp.data.docs[0].currencyUom
     } else {
       throw resp.data;
     }
