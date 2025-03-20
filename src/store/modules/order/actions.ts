@@ -553,7 +553,7 @@ const actions: ActionTree<OrderState , RootState> ={
     commit(types.ORDER_CURRENT_UPDATED, { order })
   },
 
-  async getPackedOrders ({ commit, dispatch, state }, payload) {
+  async getPackedOrders ({ commit, state }, payload) {
     // Show loader only when new query and not the infinite scroll
     if (payload.viewIndex === 0) emitter.emit("presentLoader");
     let resp;

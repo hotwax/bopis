@@ -364,8 +364,21 @@ const cancelItem = async (payload: any): Promise<any> => {
   });
 }
 
+const updateGiftCardActivationDetails = (item: any, giftCardActivations: any, orderId?: string) => {
+  const activationRecord = giftCardActivations.find((card: any) => {
+    return (orderId ? card.orderId === orderId : card.orderId === item.orderId) && card.orderItemSeqId === item.orderItemSeqId;
+  })
+
+  if(activationRecord?.cardNumber) {
+    item.isGCActivated = true;
+    item.gcInfo = activationRecord;
+  }
+
+  return item;
+}
+
 const fetchGiftCardActivationDetails = async ({ isDetailsPage, currentOrders }: any): Promise<any> => {
-  const orders = JSON.parse(JSON.stringify(currentOrders));
+  let orders = JSON.parse(JSON.stringify(currentOrders));
   const orderIds = [] as any;
   let giftCardActivations = [] as any;
 
@@ -406,24 +419,18 @@ const fetchGiftCardActivationDetails = async ({ isDetailsPage, currentOrders }: 
 
   if(giftCardActivations.length) {
     if(isDetailsPage) {
-      orders[0].part.items.map((currentItem: any) => {
-        const activationRecord = giftCardActivations.find((card: any) => card.orderId === currentItem.orderId && card.orderItemSeqId === currentItem.orderItemSeqId)
-        if(activationRecord?.cardNumber) {
-          currentItem.isGCActivated = true;
-          currentItem.gcInfo = activationRecord
-        }
+      orders[0].part.items = orders[0].part.items.map((item: any) => {
+        return updateGiftCardActivationDetails(item, giftCardActivations);
       })
     } else {
-      orders.map((order: any) => {
-        order.parts.map((part: any) => {
-          part.items.map((item: any) => {
-            const activationRecord = giftCardActivations.find((card: any) => card.orderId === order.orderId && card.orderItemSeqId === item.orderItemSeqId)
-            if(activationRecord?.cardNumber) {
-              item.isGCActivated = true;
-              item.gcInfo = activationRecord
-            }
+      orders = orders.map((order: any) => {
+        order.parts = order.parts.map((part: any) => {
+          part.items = part.items.map((item: any) => {
+            return updateGiftCardActivationDetails(item, giftCardActivations, order.orderId);
           })
+          return part
         })
+        return order
       })
     }
   }
