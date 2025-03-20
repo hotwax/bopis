@@ -1502,14 +1502,16 @@ const actions: ActionTree<OrderState , RootState> ={
 
     const orders = JSON.parse(JSON.stringify(state.packed.list));
     orders.map((order: any) => {
-      order.parts.map((part: any) => {
-        part.items.map((currentItem: any) => {
-          if(currentItem.orderId === orderId && currentItem.orderItemSeqId === item.orderItemSeqId) {
-            currentItem.isGCActivated = true;
-            currentItem.gcInfo = gcInfo;
-          }
+      if(order.orderId === orderId) {
+        order.parts.map((part: any) => {
+          part.items.map((currentItem: any) => {
+            if(currentItem.orderItemSeqId === item.orderItemSeqId) {
+              currentItem.isGCActivated = true;
+              currentItem.gcInfo = gcInfo;
+            }
+          })
         })
-      })
+      }
     })
     commit(types.ORDER_PACKED_UPDATED, { orders: orders, total: state.packed.total })
   }
