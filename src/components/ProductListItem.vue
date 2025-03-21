@@ -21,7 +21,7 @@
         <ion-icon color="medium" slot="icon-only" :icon="cubeOutline" />
       </ion-button>
 
-      <ion-button color="medium" fill="clear" size="small" v-if="item.productTypeId === 'GIFT_CARD'" @click.stop="openGiftCardActivationModal(item)">
+      <ion-button color="medium" fill="clear" size="small" v-if="orderType === 'packed' && item.productTypeId === 'GIFT_CARD'" @click.stop="openGiftCardActivationModal(item)">
         <ion-icon slot="icon-only" :icon="item.isGCActivated ? gift : giftOutline"/>
       </ion-button>
       
@@ -87,7 +87,7 @@ export default defineComponent({
       showKitComponents: false
     }
   },
-  props: ['item', 'isShipToStoreOrder', 'orderId'],
+  props: ['item', 'isShipToStoreOrder', 'orderId', 'orderType'],
   computed: {
     ...mapGetters({
       getProduct: 'product/getProduct',
