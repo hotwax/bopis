@@ -98,7 +98,7 @@
               </ion-label>
             </ion-item>
 
-            <ProductListItem v-for="item in order.part.items" :key="item.productId" :item="item"/>
+            <ProductListItem v-for="item in order.part.items" :key="item.productId" :item="item" :orderId="order.orderId" orderType="packed"/>
 
             <ion-item v-if="order.customer.phoneNumber">
               <ion-icon :icon="callOutline" slot="start" />

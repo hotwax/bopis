@@ -5,6 +5,7 @@ import store from '@/store';
 import { formatPhoneNumber, showToast } from '@/utils';
 import logger from '@/logger';
 import { cogOutline } from 'ionicons/icons';
+import { UtilService } from "@/services/UtilService";
 
 const getOpenOrders = async (payload: any): Promise <any> => {
   return api({
@@ -363,8 +364,83 @@ const cancelItem = async (payload: any): Promise<any> => {
   });
 }
 
+const updateGiftCardActivationDetails = (item: any, giftCardActivationInfo: any, orderId?: string) => {
+  const activationRecord = giftCardActivationInfo.find((activationInfo: any) => {
+    return (orderId ? activationInfo.orderId === orderId : activationInfo.orderId === item.orderId) && activationInfo.orderItemSeqId === item.orderItemSeqId;
+  })
+
+  if(activationRecord?.cardNumber) {
+    item.isGCActivated = true;
+    item.gcInfo = activationRecord;
+  }
+
+  return item;
+}
+
+const fetchGiftCardActivationDetails = async ({ isDetailsPage, currentOrders }: any): Promise<any> => {
+  let orders = JSON.parse(JSON.stringify(currentOrders));
+  const orderIds = [] as any;
+  let giftCardActivationInfo = [] as any;
+
+  if(isDetailsPage) {
+    orderIds.push(orders[0].orderId);
+  } else {
+    orders.map((order: any) => {
+      order.parts.map((part: any) => {
+        part.items.map((currentItem: any) => {
+          if(currentItem.productTypeId === 'GIFT_CARD' && !orderIds.includes(currentItem.orderId)) {
+            orderIds.push(order.orderId);
+          }
+        })
+      })
+    })
+  }
+  if(!orderIds.length) return orders;
+
+  try {
+    const resp = await UtilService.fetchGiftCardFulfillmentInfo({
+      entityName: "GiftCardFulfillment",
+      inputFields: {
+        orderId: orderIds,
+        orderId_op: "in"
+      },
+      fieldList: ["amount", "cardNumber", "fulfillmentDate", "orderId", "orderItemSeqId"],
+      viewSize: orderIds.length
+    })
+
+    if(!hasError(resp)) {
+      giftCardActivationInfo = resp.data.docs
+    } else {
+      throw resp.data
+    }
+  } catch(error) {
+    logger.error(error)
+  }
+
+  if(giftCardActivationInfo.length) {
+    if(isDetailsPage) {
+      orders[0].part.items = orders[0].part.items.map((item: any) => {
+        return updateGiftCardActivationDetails(item, giftCardActivationInfo);
+      })
+    } else {
+      orders = orders.map((order: any) => {
+        order.parts = order.parts.map((part: any) => {
+          part.items = part.items.map((item: any) => {
+            return updateGiftCardActivationDetails(item, giftCardActivationInfo, order.orderId);
+          })
+          return part
+        })
+        return order
+      })
+    }
+  }
+
+  return isDetailsPage ? orders[0] : orders
+}
+
 export const OrderService = {
   cancelItem,
+  fetchGiftCardActivationDetails,
   fetchOrderItems,
   fetchOrderPaymentPreferences,
   fetchTrackingCodes,

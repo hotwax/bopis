@@ -157,6 +157,8 @@ const actions: ActionTree<UserState, RootState> = {
     this.dispatch("util/clearFacilities", {})
     this.dispatch("util/clearEnumerations", {})
     this.dispatch('order/clearOrders')
+    this.dispatch("util/clearCurrentFacilityLatLon", {})
+    this.dispatch("util/clearStoresInformation", {})
     commit(types.USER_END_SESSION)
     resetPermissions();
     resetConfig();

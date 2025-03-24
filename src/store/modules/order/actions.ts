@@ -10,7 +10,7 @@ import emitter from '@/event-bus'
 import store from "@/store";
 import { prepareOrderQuery } from "@/utils/solrHelper";
 import { getOrderCategory, removeKitComponents } from '@/utils/order'
-
+import { UtilService } from "@/services/UtilService";
 import logger from "@/logger";
 
 
@@ -396,6 +396,10 @@ const actions: ActionTree<OrderState , RootState> ={
       logger.error(err)
     }
 
+    if(orderDetails.orderType === 'packed') {
+      order = await OrderService.fetchGiftCardActivationDetails({ isDetailsPage: true, currentOrders: [order] });
+    }
+
     await dispatch('updateCurrent', { order })
   },
 
@@ -626,8 +630,9 @@ const actions: ActionTree<OrderState , RootState> ={
 
         const total = resp.data.grouped?.orderId?.ngroups;
 
-        if(payload.viewIndex && payload.viewIndex > 0) orders = state.packed.list.concat(orders)
-        commit(types.ORDER_PACKED_UPDATED, { orders, total })
+        const packedOrders = await OrderService.fetchGiftCardActivationDetails({ isDetailsPage: false, currentOrders: orders })
+        orders = payload.viewIndex && payload.viewIndex > 0 ? state.packed.list.concat(packedOrders) : packedOrders
+        commit(types.ORDER_PACKED_UPDATED, { orders: orders, total })
         if (payload.viewIndex === 0) emitter.emit("dismissLoader");
       } else {
         commit(types.ORDER_PACKED_UPDATED, { orders: {}, total: 0 })
@@ -1456,6 +1461,60 @@ const actions: ActionTree<OrderState , RootState> ={
     commit(types.ORDER_CURRENT_UPDATED, {order})
     return shipGroups;
   },
+  async updateCurrentItemGCActivationDetails({ commit, state }, { item, orderId, isDetailsPage }) {
+    let gcInfo = {};
+    let isGCActivated = false;
+
+    try {
+      const resp = await UtilService.fetchGiftCardFulfillmentInfo({
+        entityName: "GiftCardFulfillment",
+        inputFields: {
+          orderId: orderId,
+          orderItemSeqId: item.orderItemSeqId
+        },
+        fieldList: ["amount", "cardNumber", "fulfillmentDate", "orderId", "orderItemSeqId"]
+      })
+
+      if(!hasError(resp)) {
+        isGCActivated = true;
+        gcInfo = resp.data.docs[0];
+      } else {
+        throw resp.data
+      }
+    } catch(error) {
+      logger.error(error)
+    }
+
+    if(!isGCActivated) return;
+    
+    if(isDetailsPage) {
+      const order = JSON.parse(JSON.stringify(state.current));
+      
+      order.part.items?.map((currentItem: any) => {
+        if(currentItem.orderId === orderId && currentItem.orderItemSeqId === item.orderItemSeqId) {
+          currentItem.isGCActivated = true;
+          currentItem.gcInfo = gcInfo
+        }
+      })
+      commit(types.ORDER_CURRENT_UPDATED, { order })
+      return;
+    }
+
+    const orders = JSON.parse(JSON.stringify(state.packed.list));
+    orders.map((order: any) => {
+      if(order.orderId === orderId) {
+        order.parts.map((part: any) => {
+          part.items.map((currentItem: any) => {
+            if(currentItem.orderItemSeqId === item.orderItemSeqId) {
+              currentItem.isGCActivated = true;
+              currentItem.gcInfo = gcInfo;
+            }
+          })
+        })
+      }
+    })
+    commit(types.ORDER_PACKED_UPDATED, { orders: orders, total: state.packed.total })
+  }
 }
 
 export default actions;

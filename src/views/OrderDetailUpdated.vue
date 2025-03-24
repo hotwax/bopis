@@ -121,6 +121,10 @@
                     <ion-icon color="medium" slot="icon-only" :icon="cubeOutline" />
                   </ion-button>
 
+                  <ion-button :disabled="order.handovered || order.shipped || order.cancelled || hasCancelledItems" v-if="orderType === 'packed' && getProduct(item.productId).productTypeId === 'GIFT_CARD'" color="medium" fill="clear" size="small" @click.stop="openGiftCardActivationModal(item)">
+                    <ion-icon slot="icon-only" :icon="item.isGCActivated ? gift : giftOutline"/>
+                  </ion-button>
+
                   <!-- Show kit components -->
                   <ion-button v-if="isKit(item)" fill="clear" size="small" @click.stop="fetchKitComponents(item, order)">
                     <ion-icon v-if="item.showKitComponents" color="medium" slot="icon-only" :icon="chevronUpOutline"/>
@@ -364,6 +368,7 @@ import {
   checkmarkCircleOutline,
   checkmarkDoneOutline,
   cubeOutline,
+  gift,
   giftOutline,
   informationCircleOutline,
   locateOutline,
@@ -405,6 +410,7 @@ import ReportAnIssuePopover from "@/components/ReportAnIssuePopover.vue";
 import { UserService } from "@/services/UserService";
 import ConfirmCancelModal from "@/components/ConfirmCancelModal.vue";
 import { UtilService } from "@/services/UtilService";
+import GiftCardActivationModal from "@/components/GiftCardActivationModal.vue";
 
 export default defineComponent({
   name: "OrderDetail",
@@ -1274,6 +1280,19 @@ export default defineComponent({
         });
       return alert.present();
     },
+    async openGiftCardActivationModal(item: any) {
+      const modal = await modalController.create({
+        component: GiftCardActivationModal,
+        componentProps: { item, orderId: this.orderId }
+      })
+      
+      modal.onDidDismiss().then((result: any) => {
+        if(result.data?.isGCActivated) {
+          this.store.dispatch("order/updateCurrentItemGCActivationDetails", { item, orderId: this.orderId, isDetailsPage: true })
+        }
+      })
+      modal.present();
+    }
   },
   async mounted() {
     emitter.emit("presentLoader")
@@ -1325,6 +1344,7 @@ export default defineComponent({
       getColorByDesc,
       getOrderStatus,
       getProductIdentificationValue,
+      gift,
       giftOutline,
       getFeature,
       hasPermission,
