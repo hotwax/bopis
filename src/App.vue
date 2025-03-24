@@ -28,7 +28,7 @@ export default defineComponent({
     }
   },
   methods: {
-    async presentLoader(options = { message: '', backdropDismiss: true }) {
+    async presentLoader(options = { message: '', backdropDismiss: false }) {
       // When having a custom message remove already existing loader
       if(options.message && this.loader) this.dismissLoader();
 
@@ -36,9 +36,9 @@ export default defineComponent({
       if (!this.loader) {
         this.loader = await loadingController
           .create({
-            message: options.message ? translate(options.message) : translate("Click the backdrop to dismiss."),
+            message: options.message ? translate(options.message) : (options.backdropDismiss ? translate("Click the backdrop to dismiss.") : translate("Loading...")),
             translucent: true,
-            backdropDismiss: options.backdropDismiss
+            backdropDismiss: options.backdropDismiss || false
           });
       }
       this.loader.present();
@@ -84,9 +84,9 @@ export default defineComponent({
     // creating the loader on mounted as loadingController is taking too much time to create initially
     this.loader = await loadingController
       .create({
-        message: translate("Click the backdrop to dismiss."),
+        message: translate("Loading"),
         translucent: true,
-        backdropDismiss: true
+        backdropDismiss: false
       });
     emitter.on('presentLoader', this.presentLoader);
     emitter.on('dismissLoader', this.dismissLoader);
