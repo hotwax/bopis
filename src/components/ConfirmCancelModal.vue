@@ -12,7 +12,7 @@
   <ion-content>
     <ion-list>
       <ion-list-header>{{ translate("Summary") }}</ion-list-header>
-      <ion-item v-for="(item, index) in cancelledItems" :key="index">
+      <ion-item v-for="(item, index) in cancelledItems" :key="index"  :lines="index === cancelledItems.length - 1 ? 'full' : 'inset'">
         <ion-thumbnail slot="start">
           <DxpShopifyImg :src="getProduct(item.productId).mainImageUrl" size="small" />
         </ion-thumbnail>
