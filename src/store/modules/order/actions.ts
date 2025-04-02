@@ -396,7 +396,7 @@ const actions: ActionTree<OrderState , RootState> ={
       logger.error(err)
     }
 
-    if(orderDetails.orderType !== 'open') {
+    if(orderDetails.orderType !== "open") {
       order = await OrderService.fetchGiftCardActivationDetails({ isDetailsPage: true, currentOrders: [order] });
     }
 
