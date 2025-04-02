@@ -396,7 +396,7 @@ const actions: ActionTree<OrderState , RootState> ={
       logger.error(err)
     }
 
-    if(orderDetails.orderType === 'packed') {
+    if(orderDetails.orderType !== 'open') {
       order = await OrderService.fetchGiftCardActivationDetails({ isDetailsPage: true, currentOrders: [order] });
     }
 
@@ -720,8 +720,9 @@ const actions: ActionTree<OrderState , RootState> ={
         })
 
         const total = resp.data.grouped?.orderId?.ngroups;
-
-        if(payload.viewIndex && payload.viewIndex > 0) orders = state.completed.list.concat(orders)
+        
+        const completedOrders = await OrderService.fetchGiftCardActivationDetails({ isDetailsPage: false, currentOrders: orders })
+        orders = payload.viewIndex && payload.viewIndex > 0 ? state.completed.list.concat(completedOrders) : completedOrders
         commit(types.ORDER_COMPLETED_UPDATED, { orders, total })
         if (payload.viewIndex === 0) emitter.emit("dismissLoader");
       } else {
