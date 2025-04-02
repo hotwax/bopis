@@ -106,7 +106,7 @@ export default defineComponent({
       activationCode: ""
     }
   },
-  props: ["item", "orderId"],
+  props: ["item", "orderId", "customerId"],
   async mounted() {
     this.isLoading = true;
     this.itemPriceInfo = await UtilService.fetchGiftCardItemPriceInfo({ orderId: this.orderId, orderItemSeqId: this.item.orderItemSeqId })
@@ -147,7 +147,7 @@ export default defineComponent({
           amount: this.itemPriceInfo.unitPrice,
           typeEnumId: "GC_ACTIVATE",
           cardNumber: this.activationCode.trim(),
-          partyId: this.userProfile.partyId
+          partyId: this.customerId
         })
         
         if(!hasError(resp)) {
