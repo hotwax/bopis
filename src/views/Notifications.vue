@@ -114,7 +114,7 @@ main {
 
   main > ion-list {
     max-width: 50ch;
-    width: 100%;
+    flex: 1;
   }
 }
 </style>
