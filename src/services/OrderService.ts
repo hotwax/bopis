@@ -405,7 +405,7 @@ const fetchGiftCardActivationDetails = async ({ isDetailsPage, currentOrders }: 
         orderId_op: "in"
       },
       fieldList: ["amount", "cardNumber", "fulfillmentDate", "orderId", "orderItemSeqId"],
-      viewSize: orderIds.length
+      viewSize: 250
     })
 
     if(!hasError(resp)) {
