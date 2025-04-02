@@ -21,7 +21,7 @@
         <ion-icon color="medium" slot="icon-only" :icon="cubeOutline" />
       </ion-button>
 
-      <ion-button color="medium" fill="clear" size="small" v-if="orderType === 'packed' && item.productTypeId === 'GIFT_CARD'" @click.stop="openGiftCardActivationModal(item)">
+      <ion-button color="medium" fill="clear" size="small" v-if="(orderType === 'packed' || orderType === 'completed') && item.productTypeId === 'GIFT_CARD'" @click.stop="openGiftCardActivationModal(item)">
         <ion-icon slot="icon-only" :icon="item.isGCActivated ? gift : giftOutline"/>
       </ion-button>
       
@@ -87,7 +87,7 @@ export default defineComponent({
       showKitComponents: false
     }
   },
-  props: ['item', 'isShipToStoreOrder', 'orderId', 'orderType'],
+  props: ['item', 'isShipToStoreOrder', 'orderId', 'orderType', 'customerId'],
   computed: {
     ...mapGetters({
       getProduct: 'product/getProduct',
@@ -120,7 +120,7 @@ export default defineComponent({
     async openGiftCardActivationModal(item: any) {
       const modal = await modalController.create({
         component: GiftCardActivationModal,
-        componentProps: { item, orderId: this.orderId }
+        componentProps: { item, orderId: this.orderId, customerId: this.customerId }
       })
       modal.onDidDismiss().then((result: any) => {
         if(result.data?.isGCActivated) {
