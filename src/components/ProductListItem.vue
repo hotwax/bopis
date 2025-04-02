@@ -124,7 +124,7 @@ export default defineComponent({
       })
       modal.onDidDismiss().then((result: any) => {
         if(result.data?.isGCActivated) {
-          this.store.dispatch("order/updateCurrentItemGCActivationDetails", { item, orderId: this.orderId, isDetailsPage: false })
+          this.store.dispatch("order/updateCurrentItemGCActivationDetails", { item, orderId: this.orderId, orderType: this.orderType, isDetailsPage: false })
         }
       })
       modal.present();
