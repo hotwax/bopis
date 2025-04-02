@@ -1462,7 +1462,7 @@ const actions: ActionTree<OrderState , RootState> ={
     commit(types.ORDER_CURRENT_UPDATED, {order})
     return shipGroups;
   },
-  async updateCurrentItemGCActivationDetails({ commit, state }, { item, orderId, isDetailsPage }) {
+  async updateCurrentItemGCActivationDetails({ commit, state }, { item, orderId, orderType, isDetailsPage }) {
     let gcInfo = {};
     let isGCActivated = false;
 
@@ -1501,7 +1501,7 @@ const actions: ActionTree<OrderState , RootState> ={
       return;
     }
 
-    const orders = JSON.parse(JSON.stringify(state.packed.list));
+    const orders = orderType === "packed" ? JSON.parse(JSON.stringify(state.packed.list)) : JSON.parse(JSON.stringify(state.completed.list));
     orders.map((order: any) => {
       if(order.orderId === orderId) {
         order.parts.map((part: any) => {
@@ -1514,7 +1514,7 @@ const actions: ActionTree<OrderState , RootState> ={
         })
       }
     })
-    commit(types.ORDER_PACKED_UPDATED, { orders: orders, total: state.packed.total })
+    orderType === "packed" ? commit(types.ORDER_PACKED_UPDATED, { orders: orders, total: state.packed.total }) : commit(types.ORDER_COMPLETED_UPDATED, { orders: orders, total: state.completed.total })
   }
 }
 
