@@ -290,6 +290,7 @@
                   <ion-label class="ion-text-wrap">
                     <h2>{{ getProductIdentificationValue(productIdentificationPref.primaryId, getProduct(item.productId)) ? getProductIdentificationValue(productIdentificationPref.primaryId, getProduct(item.productId)) : getProduct(item.productId).productName }}</h2>
                     <p class="ion-text-wrap">{{ getProductIdentificationValue(productIdentificationPref.secondaryId, getProduct(item.productId)) }}</p>
+                    <ion-badge class="kit-badge" color="dark" v-if="isKit(item)">{{ translate("Kit") }}</ion-badge>
                   </ion-label>
 
                   <div slot="end">
@@ -302,6 +303,10 @@
                     </div>
                     <ion-button v-else fill="clear" @click.stop="fetchProductStock(item.productId, shipGroup.shipGroupSeqId)">
                       <ion-icon color="medium" slot="icon-only" :icon="cubeOutline" />
+                    </ion-button>
+                    <ion-button slot="end" v-if="isKit(item)" fill="clear" size="small" @click.stop="fetchKitComponents(item, order, true)">
+                      <ion-icon v-if="item.showKitComponents" color="medium" slot="icon-only" :icon="chevronUpOutline"/>
+                      <ion-icon v-else color="medium" slot="icon-only" :icon="listOutline"/>
                     </ion-button>
                   </div>
                 </ion-item>
