@@ -129,17 +129,17 @@ const actions: ActionTree<ProductState, RootState> = {
 
   async getProductInformation ({ dispatch }, { orders }) {
     let productIds: any = new Set();
-    orders.map((order: any) => {
-      order.parts.reduce((productIds: Set<any>, part: any) => {
-        part.items.map((item: any) => {
-          productIds.add(item.productId);
-        })
-        return productIds;
-      }, productIds);
-    });
+    orders.forEach((order: any) => {
+      order.doclist.docs.forEach((item: any) => {
+        if (item.productId) {
+          productIds.add(item.productId)
+        }
+      })
+    })
+
     productIds = [...productIds]
     if (productIds.length) {
-      dispatch('fetchProducts', { productIds })
+      await dispatch('fetchProducts', { productIds })
     }
   },
 
