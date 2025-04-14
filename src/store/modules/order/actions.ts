@@ -449,6 +449,11 @@ const actions: ActionTree<OrderState , RootState> ={
     try {
       resp = await OrderService.getOrderDetails(orderQueryPayload)
       if (resp.status === 200 && !hasError(resp) && resp.data.grouped?.orderId?.ngroups > 0) {
+        const productIds = resp.data.grouped.orderId.groups.flatMap(
+          (order: any) => order.doclist.docs.map((item: any) => item.productId)
+        );
+        await this.dispatch('product/fetchProducts', { productIds });
+
         let orders = resp.data.grouped?.orderId?.groups.map((order: any) => {
           const orderItem = order.doclist.docs[0]
           return {
@@ -514,8 +519,6 @@ const actions: ActionTree<OrderState , RootState> ={
 
         // creating order part to render the items correctly on UI
         orders = Object.keys(orders).length ? orders.flatMap((order: any) => order.parts.map((part: any) => ({ ...order, part }))) : [];
-
-        this.dispatch('product/getProductInformation', { orders })
         currentOrder = orders[0]
       } else {
         throw resp.data;
@@ -1404,6 +1407,7 @@ const actions: ActionTree<OrderState , RootState> ={
       if (resp.status === 200 && !hasError(resp) && resp.data.grouped?.shipGroupSeqId.matches > 0) {
         total = resp.data.grouped.shipGroupSeqId.ngroups
         shipGroups = resp.data.grouped.shipGroupSeqId.groups
+        await this.dispatch('product/getProductInformation', { orders: shipGroups })
       } else {
         throw resp.data
       }
@@ -1417,7 +1421,7 @@ const actions: ActionTree<OrderState , RootState> ={
 
       return reservedShipGroup ? {
         ...shipGroup,
-        items: reservedShipGroupForOrder.doclist.docs,
+        items: removeKitComponents([{items: reservedShipGroupForOrder.doclist.docs}])[0]?.items,
         carrierPartyId: reservedShipGroup.carrierPartyId,
         shipmentId: reservedShipGroup.shipmentId,
         category: getOrderCategory({ ...reservedShipGroupForOrder.doclist.docs[0], ...shipGroup.items[0] }) // Passing shipGroup item information as we need to derive the order status and for that we need some properties those are available on ORDER doc
@@ -1454,9 +1458,6 @@ const actions: ActionTree<OrderState , RootState> ={
     } catch (err) {
       console.error('Failed to fetch information for ship groups', err)
     }
-
-    this.dispatch('product/getProductInformation', { orders: [{ parts: shipGroups }] })
-
     order['shipGroups'] = shipGroups
 
     commit(types.ORDER_CURRENT_UPDATED, {order})
