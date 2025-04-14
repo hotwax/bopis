@@ -67,7 +67,7 @@ const actions: ActionTree<UtilState, RootState> = {
             "parentEnumTypeId": ["REPORT_AN_ISSUE", "RPRT_NO_VAR_LOG"],
             "parentEnumTypeId_op": "in"
           },
-          "fieldList": ["enumId", "description"],
+          "fieldList": ["enumId", "description", "sequenceNum"],
           "entityName": "EnumTypeChildAndEnum",
           "distinct": "Y",
           "viewSize": 100,
