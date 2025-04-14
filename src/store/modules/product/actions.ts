@@ -129,10 +129,10 @@ const actions: ActionTree<ProductState, RootState> = {
 
   async getProductInformation ({ dispatch }, { orders }) {
     let productIds: any = new Set();
-    orders.forEach((list: any) => {
-      list.doclist.docs.forEach((order: any) => {
-        if (order.productId) {
-          productIds.add(order.productId)
+    orders.forEach((order: any) => {
+      order.doclist.docs.forEach((item: any) => {
+        if (item.productId) {
+          productIds.add(item.productId)
         }
       })
     })
