@@ -12,8 +12,9 @@ import emitter from "@/event-bus"
 import { mapGetters, useStore } from 'vuex';
 import { initialise, resetConfig } from '@/adapter'
 import { useRouter } from 'vue-router';
-import { translate, useProductIdentificationStore } from "@hotwax/dxp-components";
+import { initialiseFirebaseApp, translate, useProductIdentificationStore } from "@hotwax/dxp-components";
 import logger from '@/logger'
+import { addNotification, storeClientRegistrationToken } from '@/utils/firebase';
 
 export default defineComponent({
   name: 'App',
@@ -24,7 +25,9 @@ export default defineComponent({
   data() {
     return {
       loader: null as any,
-      maxAge: process.env.VUE_APP_CACHE_MAX_AGE ? parseInt(process.env.VUE_APP_CACHE_MAX_AGE) : 0
+      maxAge: process.env.VUE_APP_CACHE_MAX_AGE ? parseInt(process.env.VUE_APP_CACHE_MAX_AGE) : 0,
+      appFirebaseConfig: JSON.parse(process.env.VUE_APP_FIREBASE_CONFIG),
+      appFirebaseVapidKey: process.env.VUE_APP_FIREBASE_VAPID_KEY,
     }
   },
   methods: {
@@ -61,7 +64,8 @@ export default defineComponent({
     ...mapGetters({
       userToken: 'user/getUserToken',
       instanceUrl: 'user/getInstanceUrl',
-      currentEComStore: 'user/getCurrentEComStore'
+      currentEComStore: 'user/getCurrentEComStore',
+      allNotificationPrefs: 'user/getAllNotificationPrefs'
     })
   },
   created() {
@@ -97,6 +101,17 @@ export default defineComponent({
       // Get product identification from api using dxp-component
       await useProductIdentificationStore().getIdentificationPref(this.currentEComStore?.productStoreId)
         .catch((error) => logger.error(error));
+
+      // check if firebase configurations are there.
+      if (this.appFirebaseConfig && this.appFirebaseConfig.apiKey && this.allNotificationPrefs?.length) {
+        // initialising and connecting firebase app for notification support
+        await initialiseFirebaseApp(
+          this.appFirebaseConfig,
+          this.appFirebaseVapidKey,
+          storeClientRegistrationToken,
+          addNotification,
+        )
+      }
     }
   },
   unmounted() {
