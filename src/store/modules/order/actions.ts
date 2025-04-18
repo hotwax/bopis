@@ -513,7 +513,9 @@ const actions: ActionTree<OrderState , RootState> ={
               return ids;
             }, [])) : "",
             picklistId: orderItem.picklistId,
-            shipGroupSeqId: orderItem.shipGroupSeqId
+            isPicked: orderItem.isPicked,
+            picklistBinId: orderItem.picklistBinId,
+            shipGroupSeqId: orderItem.shipGroupSeqId,
           }
         })
 
