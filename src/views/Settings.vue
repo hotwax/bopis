@@ -22,7 +22,7 @@
             </ion-card-header>
           </ion-item>
           <ion-button color="danger" @click="logout()">{{ translate("Logout") }}</ion-button>
-          <ion-button :class="{ 'hide-in-standalone': !hasPermission(Actions.APP_PWA_STANDALONE_ACCESS) }" fill="outline" @click="goToLaunchpad()">
+          <ion-button :class="{ 'pwa-hidden': !hasPermission(Actions.APP_PWA_STANDALONE_ACCESS) }" fill="outline" @click="goToLaunchpad()">
             {{ translate("Go to Launchpad") }}
             <ion-icon slot="end" :icon="openOutline" />
           </ion-button>
@@ -586,7 +586,7 @@ export default defineComponent({
   }
   /* Added conditional hiding in standalone mode that respects user permissions */
   @media (display-mode: standalone) {
-    .hide-in-standalone {
+    .pwa-hidden {
       display: none;
     }
   }
