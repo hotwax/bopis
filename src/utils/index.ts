@@ -109,4 +109,13 @@ const formatCurrency = (amount: any, code: string) => {
   return `${currentSymbol[code] || code} ${amount || 0}`
 }
 
-export { copyToClipboard, showToast, handleDateTimeInput, getFeature, formatPhoneNumber, getCurrentFacilityId, getColorByDesc, formatCurrency }
+const hasWebcamAccess = async () => {
+  try {
+    await navigator.mediaDevices.getUserMedia({ video: true });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+export { copyToClipboard, showToast, handleDateTimeInput, hasWebcamAccess, getFeature, formatPhoneNumber, getCurrentFacilityId, getColorByDesc, formatCurrency }

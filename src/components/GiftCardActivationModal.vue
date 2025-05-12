@@ -34,6 +34,17 @@
         </ion-label>
         <ion-label slot="end">{{ formatCurrency(itemPriceInfo.unitPrice, itemPriceInfo.currencyUom) }}</ion-label>
       </ion-item>
+
+      <div class="ion-margin" v-if="!item.isGCActivated">
+        <ion-button expand="block" fill="outline" @click="isCameraEnabled ? stopScan() : scan()">
+          <ion-icon slot="start" :icon="isCameraEnabled ? stopOutline : cameraOutline" />
+          {{ translate(isCameraEnabled ? "Stop" : "Scan") }}
+        </ion-button>
+        <StreamBarcodeReader class="scanning-preview"
+          v-if="isCameraEnabled"
+          @decode="onDecode"
+        />
+      </div>
     </ion-list>
   </ion-content>
 
@@ -66,13 +77,14 @@ import {
 } from "@ionic/vue";
 import { computed, defineComponent } from "vue";
 import { mapGetters, useStore } from "vuex";
-import { cardOutline, closeOutline, giftOutline, saveOutline } from "ionicons/icons";
+import { cameraOutline, cardOutline, closeOutline, giftOutline, saveOutline, stopOutline } from "ionicons/icons";
 import { getProductIdentificationValue, translate, useProductIdentificationStore } from '@hotwax/dxp-components'
 import { UtilService } from "@/services/UtilService";
-import { formatCurrency, showToast } from '@/utils';
+import { formatCurrency, hasWebcamAccess, showToast } from '@/utils';
 import { hasError } from '@/adapter'
 import logger from "@/logger";
 import { DateTime } from 'luxon';
+import { StreamBarcodeReader } from "vue-barcode-reader";
 
 export default defineComponent({
   name: "GiftCardActivationModal",
@@ -91,7 +103,8 @@ export default defineComponent({
     IonNote,
     IonSpinner,
     IonTitle,
-    IonToolbar
+    IonToolbar,
+    StreamBarcodeReader
   },
   computed: {
     ...mapGetters({
@@ -103,7 +116,8 @@ export default defineComponent({
     return {
       isLoading: false,
       itemPriceInfo: {} as any,
-      activationCode: ""
+      activationCode: "",
+      isCameraEnabled: false
     }
   },
   props: ["item", "orderId", "customerId"],
@@ -163,6 +177,21 @@ export default defineComponent({
     },
     getCreatedDateTime() {
       return DateTime.fromMillis(this.item.gcInfo.fulfillmentDate).toFormat("dd MMMM yyyy hh:mm a ZZZZ");
+    },
+    async scan() {
+      if (!(await hasWebcamAccess())) {
+        showToast(translate("Camera access not allowed, please check permissons."));
+        return;
+      } 
+
+      this.isCameraEnabled = true;
+    },
+    stopScan() {
+      this.isCameraEnabled = false
+    },
+    onDecode(result: any) {
+      if(result) this.activationCode = result
+      this.isCameraEnabled = false;
     }
   },
   setup() {
@@ -171,6 +200,7 @@ export default defineComponent({
     let productIdentificationPref = computed(() => productIdentificationStore.getProductIdentificationPref)
 
     return {
+      cameraOutline,
       cardOutline,
       closeOutline,
       formatCurrency,
@@ -178,9 +208,17 @@ export default defineComponent({
       giftOutline,
       productIdentificationPref,
       saveOutline,
+      stopOutline,
       store,
       translate
     };
   },
 });
 </script>
+
+<style scoped>
+.scanning-preview {
+  justify-self: center;
+  max-width: 360px;
+}
+</style>
