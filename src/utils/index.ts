@@ -117,4 +117,5 @@ const hasWebcamAccess = async () => {
     return false;
   }
 }
+
 export { copyToClipboard, showToast, handleDateTimeInput, hasWebcamAccess, getFeature, formatPhoneNumber, getCurrentFacilityId, getColorByDesc, formatCurrency }
