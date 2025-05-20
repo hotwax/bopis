@@ -84,6 +84,9 @@ const actions: ActionTree<UserState, RootState> = {
       }, []);
       // TODO Use a separate API for getting facilities, this should handle user like admin accessing the app
       const currentEComStore = await UserService.getCurrentEComStore(token, getCurrentFacilityId());
+
+      updateToken(token)
+
       await useUserStore().setEComStorePreference(currentEComStore);
       /*  ---- Guard clauses ends here --- */
 
@@ -91,7 +94,6 @@ const actions: ActionTree<UserState, RootState> = {
       if (userProfile.userTimeZone) {
         Settings.defaultZone = userProfile.userTimeZone;
       }
-      updateToken(token)
 
       // TODO user single mutation
       commit(types.USER_INFO_UPDATED, userProfile);
@@ -224,9 +226,8 @@ const actions: ActionTree<UserState, RootState> = {
         "productStoreId": this.state.user.currentEComStore.productStoreId,
         "settingTypeEnumId": "BOPIS_PART_ODR_REJ"
       },
-      "filterByDate": 'Y',
       "entityName": "ProductStoreSetting",
-      "fieldList": ["productStoreId", "settingTypeEnumId", "settingValue", "fromDate"],
+      "fieldList": ["productStoreId", "settingTypeEnumId", "settingValue"],
       "viewSize": 1
     } as any
 
@@ -260,13 +261,12 @@ const actions: ActionTree<UserState, RootState> = {
         }
       }
 
-      if (!payload.fromDate) {
+      if (!payload.settingTypeEnumId) {
         //Create Product Store Setting
         payload = {
           ...payload, 
           "productStoreId": this.state.user.currentEComStore.productStoreId,
-          "settingTypeEnumId": "BOPIS_PART_ODR_REJ",
-          "fromDate": DateTime.now().toMillis()
+          "settingTypeEnumId": "BOPIS_PART_ODR_REJ"
         }
         resp = await UserService.createPartialOrderRejectionConfig(payload) as any
       } else {
@@ -352,9 +352,8 @@ const actions: ActionTree<UserState, RootState> = {
         "settingTypeEnumId": Object.keys(productStoreSettings),
         "settingTypeEnumId_op": "in"
       },
-      "filterByDate": 'Y',
       "entityName": "ProductStoreSetting",
-      "fieldList": ["settingTypeEnumId", "settingValue", "fromDate"]
+      "fieldList": ["settingTypeEnumId", "settingValue"]
     }
 
     try {
@@ -377,8 +376,6 @@ const actions: ActionTree<UserState, RootState> = {
   },
 
   async createProductStoreSetting({ commit }, enumeration) {
-    const fromDate = Date.now()
-
     try {
       if(!await UtilService.isEnumExists(enumeration.enumId)) {
         const resp = await UtilService.createEnumeration({
@@ -394,18 +391,18 @@ const actions: ActionTree<UserState, RootState> = {
       }
 
       const params = {
-        fromDate,
         "productStoreId": this.state.user.currentEComStore.productStoreId,
         "settingTypeEnumId": enumeration.enumId,
         "settingValue": "false"
       }
 
       await UtilService.createProductStoreSetting(params) as any
+      return true;
     } catch(err) {
       logger.error(err)
     }
 
-    return fromDate;
+    return false;
   },
 
   async setProductStoreSetting({ commit, dispatch, state }, payload) {
@@ -419,23 +416,18 @@ const actions: ActionTree<UserState, RootState> = {
       return;
     }
 
-    let fromDate;
-
     try {
       let resp = await UtilService.getProductStoreSettings({
         "inputFields": {
           "productStoreId": this.state.user.currentEComStore.productStoreId,
           "settingTypeEnumId": payload.enumId
         },
-        "filterByDate": 'Y',
         "entityName": "ProductStoreSetting",
-        "fieldList": ["fromDate"],
+        "fieldList": ["settingTypeEnumId"],
         "viewSize": 1
       }) as any
-      if(!hasError(resp)) {
-        fromDate = resp.data.docs[0]?.fromDate
+      if(!hasError(resp) && resp.data.docs[0]?.settingTypeEnumId) {
         const params = {
-          "fromDate": fromDate,
           "productStoreId": eComStoreId,
           "settingTypeEnumId": payload.enumId,
           "settingValue": `${payload.value}`
