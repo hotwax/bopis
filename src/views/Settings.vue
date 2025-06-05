@@ -412,9 +412,8 @@ export default defineComponent({
             "productStoreId": this.currentEComStore?.productStoreId,
             settingTypeEnumId
           },
-          "filterByDate": 'Y',
           "entityName": "ProductStoreSetting",
-          "fieldList": ["settingTypeEnumId", "settingValue", "fromDate"],
+          "fieldList": ["settingTypeEnumId", "settingValue"],
           "viewSize": 5
         } as any
 
@@ -446,7 +445,6 @@ export default defineComponent({
     },
     async updateRerouteFulfillmentConfiguration(config: any, value: any) {
       const params = {
-        "fromDate": config.fromDate,
         "productStoreId": this.currentEComStore?.productStoreId,
         "settingTypeEnumId": config.settingTypeEnumId,
         "settingValue": value
