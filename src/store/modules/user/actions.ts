@@ -35,7 +35,10 @@ const actions: ActionTree<UserState, RootState> = {
  */
   async login ({ commit, dispatch, getters }, payload) {
     try {
-      const {token, oms} = payload;
+      const {token, oms, omsRedirectionUrl} = payload;
+      console.log('login payload', payload);
+      console.log('omsRedirectionUrl', omsRedirectionUrl);
+      console.log('oms', oms);
       dispatch("setUserInstanceUrl", oms);
 
       // Getting the permissions list from server
@@ -46,7 +49,7 @@ const actions: ActionTree<UserState, RootState> = {
 
       const serverPermissions = await UserService.getUserPermissions({
         permissionIds: [...new Set(serverPermissionsFromRules)]
-      }, token);
+      }, omsRedirectionUrl, token);
       const appPermissions = prepareAppPermissions(serverPermissions);
 
 
@@ -65,6 +68,11 @@ const actions: ActionTree<UserState, RootState> = {
         }
       }
 
+      console.log("omsRedirectionUrl ---- Chinmay: ", omsRedirectionUrl);
+      if (omsRedirectionUrl) {
+        dispatch("setOmsRedirectionUrl", omsRedirectionUrl)
+      }
+      
       const userProfile = await UserService.getUserProfile(token);
 
       //fetching user facilities
@@ -84,6 +92,8 @@ const actions: ActionTree<UserState, RootState> = {
       }, []);
       // TODO Use a separate API for getting facilities, this should handle user like admin accessing the app
       const currentEComStore = await UserService.getCurrentEComStore(token, getCurrentFacilityId());
+
+      
 
       updateToken(token)
 
@@ -162,6 +172,7 @@ const actions: ActionTree<UserState, RootState> = {
     this.dispatch("util/clearCurrentFacilityLatLon", {})
     this.dispatch("util/clearStoresInformation", {})
     commit(types.USER_END_SESSION)
+    dispatch("setOmsRedirectionUrl", "")
     resetPermissions();
     resetConfig();
 
@@ -177,6 +188,10 @@ const actions: ActionTree<UserState, RootState> = {
 
     emitter.emit('dismissLoader')
     return redirectionUrl;
+  },
+
+  setOmsRedirectionUrl({ commit }, payload) {
+    commit(types.USER_OMS_REDIRECTION_URL_UPDATED, payload)
   },
 
   /**
