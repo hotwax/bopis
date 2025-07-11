@@ -81,7 +81,8 @@ export default defineComponent({
         queueTask: (payload: any) => {
           emitter.emit("queueTask", payload);
         }
-      }
+      },
+      systemType: "MOQUI"
     })
   },
   async mounted() {
