@@ -1,5 +1,6 @@
 import {
   api,
+  apiClient,
   client,
   getConfig,
   getNotificationEnumIds,
@@ -27,6 +28,7 @@ import {
 
 export {
   api,
+  apiClient,
   client,
   getConfig,
   getNotificationEnumIds,

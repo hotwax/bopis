@@ -45,6 +45,9 @@ const mutations: MutationTree <UserState> = {
     },
     [types.USER_BOPIS_PRODUCT_STORE_SETTINGS_UPDATED] (state, payload) {
         state.bopisProductStoreSettings = payload
+    },
+    [types.USER_OMS_REDIRECTION_URL_UPDATED](state, payload) {
+    state.omsRedirectionUrl = payload;
     }
     
 }

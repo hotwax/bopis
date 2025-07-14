@@ -11,4 +11,5 @@ export default interface UserState {
     hasUnreadNotifications: boolean;
     allNotificationPrefs: any;
     bopisProductStoreSettings: any;
+    omsRedirectionUrl: string;
 }
