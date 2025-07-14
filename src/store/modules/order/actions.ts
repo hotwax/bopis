@@ -116,8 +116,8 @@ const actions: ActionTree<OrderState , RootState> ={
 
     const orderQueryPayload = prepareOrderQuery({
       ...payload,
+      docType: 'ORDER',
       shipmentMethodTypeId: !store.state.user.bopisProductStoreSettings['SHOW_SHIPPING_ORDERS'] ? 'STOREPICKUP' : '',
-      '-shipmentStatusId': '(SHIPMENT_PACKED OR SHIPMENT_SHIPPED)',
       '-fulfillmentStatus': '(Cancelled OR Rejected)',
       orderStatusId: 'ORDER_APPROVED',
       orderTypeId: 'SALES_ORDER'
@@ -406,7 +406,6 @@ const actions: ActionTree<OrderState , RootState> ={
   async getOrderDetail({ dispatch }, { payload, orderType }) {
     if(orderType === 'open') {
       payload['orderStatusId'] = "ORDER_APPROVED"
-      payload['-shipmentStatusId'] = "(SHIPMENT_PACKED OR SHIPMENT_SHIPPED)"
       payload['-fulfillmentStatus'] = '(Cancelled OR Rejected)'
     } else if(orderType === 'packed') {
       payload['shipmentStatusId'] = "SHIPMENT_PACKED"
