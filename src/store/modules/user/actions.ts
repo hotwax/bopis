@@ -68,7 +68,6 @@ const actions: ActionTree<UserState, RootState> = {
         }
       }
 
-      console.log("omsRedirectionUrl ---- Chinmay: ", omsRedirectionUrl);
       if (omsRedirectionUrl) {
         dispatch("setOmsRedirectionUrl", omsRedirectionUrl)
       }
