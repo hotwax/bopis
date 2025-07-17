@@ -71,7 +71,9 @@
               <ion-button :disabled="!hasPermission(Actions.APP_ORDER_UPDATE)" fill="clear" @click.stop="readyForPickup(order, order.part)">
                 {{ order.part.shipmentMethodEnum?.shipmentMethodEnumId === 'STOREPICKUP' ? translate("Ready for pickup") : translate("Ready to ship") }}
               </ion-button>
-              <div></div>
+              <ion-button color="danger" :disabled="!hasPermission(Actions.APP_ORDER_UPDATE)" fill="clear" @click.stop="openRejectOrderModal(order)">
+               {{ order.part.shipmentMethodEnum?.shipmentMethodEnumId === 'STOREPICKUP' && translate("Reject")}}
+             </ion-button>
               <ion-button v-if="getBopisProductStoreSettings('PRINT_PICKLISTS')" slot="end" fill="clear" @click.stop="printPicklist(order, order.part)">
                 <ion-icon :icon="printOutline" slot="icon-only" />
               </ion-button>
@@ -216,6 +218,7 @@ import { OrderService } from "@/services/OrderService";
 import { UserService } from "@/services/UserService";
 import { Actions, hasPermission } from '@/authorization'
 import logger from "@/logger";
+import RejectOrderModalList from "@/components/RejectOrderModalList.vue";
 
 export default defineComponent({
   name: 'Orders',
@@ -593,6 +596,16 @@ export default defineComponent({
         emitter.emit("dismissLoader");
         return;
       }
+    },
+    async openRejectOrderModal(order:any){
+      const orderProps = order
+      const rejectOrderModal = await modalController.create({
+        component:RejectOrderModalList,
+        componentProps: {
+          orderProps, 
+        }
+      })
+      return rejectOrderModal.present()
     }
   },
   ionViewWillEnter () {
@@ -612,7 +625,7 @@ export default defineComponent({
     const store = useStore();
     const segmentSelected = ref('open');
     const userStore = useUserStore()
-    let currentFacility: any = computed(() => userStore.getCurrentFacility) 
+    let currentFacility: any = computed(() => userStore.getCurrentFacility)
     
     return {
       Actions,
