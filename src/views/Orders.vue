@@ -697,6 +697,10 @@ ion-item {
 .border-top :last-child {
   justify-self: end;
 }
+.reprint-icon{
+  display:flex;
+  justify-content: end;
+}
 
 .metadata {
   display: flex;
