@@ -155,6 +155,11 @@
                 {{ translate("Copy") }}
               </ion-button>
             </ion-item>
+            <div class="border-top">
+                <ion-button v-if="getBopisProductStoreSettings('PRINT_PACKING_SLIPS')" fill="clear" slot="end" @click.stop="printCustomerLetter(order)">
+                  {{ translate('Print Customer Letter') }}
+                </ion-button>
+             </div>
           </ion-card>
         </div>
       </div>
@@ -216,6 +221,7 @@ import { OrderService } from "@/services/OrderService";
 import { UserService } from "@/services/UserService";
 import { Actions, hasPermission } from '@/authorization'
 import logger from "@/logger";
+import { UtilService } from "@/services/UtilService";
 
 export default defineComponent({
   name: 'Orders',
@@ -285,6 +291,39 @@ export default defineComponent({
     timeFromNow (time: any) {
       const timeDiff = DateTime.fromISO(time).diff(DateTime.local());
       return DateTime.local().plus(timeDiff).toRelative();
+    },
+    async printCustomerLetter(order: any) {
+      const completeOrderId = order?.orderId
+      const shipGroupSeqId = order?.shipGroupSeqId
+      const completeOrderShipId = await UtilService.fetchShipmentIdForOrder(shipGroupSeqId,completeOrderId)
+
+      if(completeOrderShipId){
+        try {
+          // Get packing slip from the server
+          const response: any = await api({
+            method: 'get',
+            url: 'PackingSlip.pdf',
+            params: {
+              shipmentId: completeOrderShipId
+            },
+            responseType: "blob"
+          })
+
+          if (hasError(response)) {
+            showToast(translate("Failed to load packing slip"))
+            return;
+          }
+
+          // Generate local file URL for the blob received
+          const pdfUrl = window.URL.createObjectURL(response.data);
+          // Open the file in new tab
+          (window as any).open(pdfUrl, "_blank").focus();
+
+        } catch(err) {
+          showToast(translate("Failed to load packing slip"))
+          logger.error(err)
+        }
+      }
     },
     async printPackingSlip(order: any) {
 
