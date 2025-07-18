@@ -155,9 +155,13 @@
                 {{ translate("Copy") }}
               </ion-button>
             </ion-item>
+<<<<<<< HEAD
              <div class="border-top">
               <div></div>
               <div></div>
+=======
+             <div class="border-top reprint-icon">
+>>>>>>> origin/bopis/complete-order-print#558
                 <ion-button v-if="getBopisProductStoreSettings('PRINT_PACKING_SLIPS')" fill="clear" slot="end" @click.stop="rePrintPackingSlip(order)">
                   <ion-icon slot="icon-only" :icon="printOutline"/> 
                 </ion-button>
@@ -696,6 +700,10 @@ ion-item {
 
 .border-top :last-child {
   justify-self: end;
+}
+.reprint-icon{
+  display:flex;
+  justify-content: end;
 }
 
 .metadata {
