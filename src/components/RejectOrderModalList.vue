@@ -17,7 +17,7 @@
       <span>{{ translate('Partial rejection is disabled.') }}</span>
     </div>
 
-    <div v-for="item in orderProps.part.items" :key="item.orderItemSeqId">
+    <div v-for="item in orderProps?.part?.items" :key="item.orderItemSeqId">
       <ion-item lines="none">
         <ion-thumbnail slot="start">
           <DxpShopifyImg :src="getProduct(item.productId).mainImageUrl" size="small" />
@@ -89,7 +89,6 @@ export default defineComponent({
     DxpShopifyImg
   },
   props: {
-    // orderProps: Object || {}
      orderProps: {
     type: Object as () => {
       orderId: string;
@@ -118,19 +117,33 @@ export default defineComponent({
       const config = this.partialOrderRejectionConfig?.settingValue;
       return !!(config && JSON.parse(config));
     },
-
     showRejectionWarning(): boolean {
-      const hasRejectedItems = this.orderProps?.part?.items?.some((item: any) => !!item.rejectReasonId);
-      return !this.isPartialRejectionEnabled && hasRejectedItems;
-    },
+  const hasRejectedItems = !!this.orderProps?.part?.items?.some((item: any) => !!item.rejectReasonId);
+  return !this.isPartialRejectionEnabled && hasRejectedItems;
+}
+,
+    // showRejectionWarning(): boolean {
+    //   const hasRejectedItems = this.orderProps?.part?.items?.some((item: any) => !!item.rejectReasonId);
+    //   return !this.isPartialRejectionEnabled && hasRejectedItems;
+    // },
+canConfirm(): boolean {
+  const items = this.orderProps?.part?.items;
 
-    canConfirm(): boolean {
-      if (this.isPartialRejectionEnabled) {
-        return this.orderProps?.part?.items?.some((item: any) => !!item.rejectReasonId);
-      } else {
-        return this.orderProps?.part?.items?.every((item: any) => !!item.rejectReasonId);
-      }
-    }
+  if (!items) return false;
+
+  if (this.isPartialRejectionEnabled) {
+    return items.some((item: any) => !!item.rejectReasonId);
+  } else {
+    return items.every((item: any) => !!item.rejectReasonId);
+  }
+}
+    // canConfirm(): boolean {
+    //   if (this.isPartialRejectionEnabled) {
+    //     return this.orderProps?.part?.items?.some((item: any) => !!item.rejectReasonId);
+    //   } else {
+    //     return this.orderProps?.part?.items?.every((item: any) => !!item.rejectReasonId);
+    //   }
+    // }
   },
   methods: {
    onReasonChange(event: any, selectedItem: any) {
@@ -167,22 +180,22 @@ export default defineComponent({
           {
             text: translate('Reject'),
             handler: async () => {
-              const updatedItems = this.orderProps.part.items.map((item: any) => ({
+              const updatedItems = (this.orderProps?.part?.items ?? []).map((item: any) => ({
                 ...item,
                 reason: item.rejectReasonId
               }));
 
-              const part = { ...this.orderProps.part, items: updatedItems };
+              const part = { ...this.orderProps?.part, items: updatedItems };
 
               const resp = await this.store.dispatch('order/setUnfillableOrderOrItem', {
-                orderId: this.orderProps.orderId,
+                orderId: this.orderProps?.orderId,
                 part
               });
 
               if (resp) {
                 const updatedOrder = {
                   ...this.orderProps,
-                  part: { ...this.orderProps.part, items: [] },
+                  part: { ...this.orderProps?.part, items: [] },
                   rejected: true
                 };
                 await this.store.dispatch('order/updateCurrent', { order: updatedOrder });
