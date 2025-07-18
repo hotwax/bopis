@@ -156,10 +156,8 @@
               </ion-button>
             </ion-item>
             <div class="border-top">
-              <div></div>
-              <div></div>
-                <ion-button v-if="getBopisProductStoreSettings('PRINT_PACKING_SLIPS')" fill="clear" slot="end" @click.stop="rePrintPackingSlip(order)">
-                  <ion-icon slot="icon-only" :icon="printOutline"/> 
+                <ion-button v-if="getBopisProductStoreSettings('PRINT_PACKING_SLIPS')" fill="clear" slot="end" @click.stop="printCustomerLetter(order)">
+                  {{ translate('Print Customer Letter') }}
                 </ion-button>
              </div>
           </ion-card>
@@ -294,37 +292,37 @@ export default defineComponent({
       const timeDiff = DateTime.fromISO(time).diff(DateTime.local());
       return DateTime.local().plus(timeDiff).toRelative();
     },
-    async rePrintPackingSlip(order: any) {
+    async printCustomerLetter(order: any) {
       const completeOrderId = order?.orderId
       const shipGroupSeqId = order?.shipGroupSeqId
       const completeOrderShipId = await UtilService.fetchShipmentIdForOrder(shipGroupSeqId,completeOrderId)
 
       if(completeOrderShipId){
         try {
-            // Get packing slip from the server
-            const response: any = await api({
-              method: 'get',
-              url: 'PackingSlip.pdf',
-              params: {
-                shipmentId: completeOrderShipId
-              },
-              responseType: "blob"
-            })
+          // Get packing slip from the server
+          const response: any = await api({
+            method: 'get',
+            url: 'PackingSlip.pdf',
+            params: {
+              shipmentId: completeOrderShipId
+            },
+            responseType: "blob"
+          })
 
-            if (!response || response.status !== 200 || hasError(response)) {
-              showToast(translate("Failed to load packing slip"))
-              return;
-            }
-
-            // Generate local file URL for the blob received
-            const pdfUrl = window.URL.createObjectURL(response.data);
-            // Open the file in new tab
-            (window as any).open(pdfUrl, "_blank").focus();
-
-          } catch(err) {
+          if (hasError(response)) {
             showToast(translate("Failed to load packing slip"))
-            logger.error(err)
+            return;
           }
+
+          // Generate local file URL for the blob received
+          const pdfUrl = window.URL.createObjectURL(response.data);
+          // Open the file in new tab
+          (window as any).open(pdfUrl, "_blank").focus();
+
+        } catch(err) {
+          showToast(translate("Failed to load packing slip"))
+          logger.error(err)
+        }
       }
     },
     async printPackingSlip(order: any) {
@@ -696,10 +694,6 @@ ion-item {
 
 .border-top :last-child {
   justify-self: end;
-}
-.reprint-icon{
-  display:flex;
-  justify-content: end;
 }
 
 .metadata {
