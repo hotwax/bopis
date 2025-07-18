@@ -12,10 +12,12 @@
 
   <ion-content class="ion-padding">
     <!-- Warning banner if partial rejection is disabled and any item is marked for rejection -->
-    <div class="warning-banner" v-if="showRejectionWarning">
-      <ion-icon :icon="warningOutline" />
-      <span>{{ translate('Partial rejection is disabled.') }}</span>
-    </div>
+    <ion-item v-if="showRejectionWarning" lines="none" class="ion-item-banner ion-margin-vertical">
+      <ion-icon :icon="warningOutline" slot="start" color="danger" />
+      <ion-label class="ion-item-banner">
+        {{ translate('Partial rejection is disabled.') }}
+      </ion-label>
+    </ion-item>
 
     <div v-for="item in orderProps?.part?.items" :key="item.orderItemSeqId">
       <ion-item lines="none">
@@ -219,24 +221,10 @@ export default defineComponent({
 </script>
 
 <style scoped>
-.warning-banner {
-  display: flex;
-  align-items: center;
-  background-color: rgb(253 238 240);
-  color: rgb(238 96 114);
-  padding: 10px;
-  border-radius: 6px;
-  margin-bottom: 1rem;
-  font-weight: 500;
-}
+.ion-item-banner{
+  --background:#ED576B1A;
+  --border-radius: 8px;
 
-.warning-banner span {
-  color: rgb(58 54 55);
-}
-
-.warning-banner ion-icon {
-  margin-right: 8px;
-  font-size: 20px;
 }
 </style>
 

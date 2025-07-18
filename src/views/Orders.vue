@@ -218,7 +218,8 @@ import { OrderService } from "@/services/OrderService";
 import { UserService } from "@/services/UserService";
 import { Actions, hasPermission } from '@/authorization'
 import logger from "@/logger";
-import RejectOrderModalList from "@/components/RejectOrderModalList.vue";
+import RejectOrderModalList from "@/components/RejectOrderItemModal.vue";
+import RejectOrderItemModal from "@/components/RejectOrderItemModal.vue";
 
 export default defineComponent({
   name: 'Orders',
@@ -600,7 +601,7 @@ export default defineComponent({
     async openRejectOrderModal(order:any){
       const orderProps = order
       const rejectOrderModal = await modalController.create({
-        component:RejectOrderModalList,
+        component:RejectOrderItemModal,
         componentProps: {
           orderProps, 
         }
