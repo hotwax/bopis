@@ -155,7 +155,7 @@
                 {{ translate("Copy") }}
               </ion-button>
             </ion-item>
-             <div class="border-top">
+            <div class="border-top">
               <div></div>
               <div></div>
                 <ion-button v-if="getBopisProductStoreSettings('PRINT_PACKING_SLIPS')" fill="clear" slot="end" @click.stop="rePrintPackingSlip(order)">
