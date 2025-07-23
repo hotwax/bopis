@@ -19,7 +19,8 @@ const userModule: Module<UserState, RootState> = {
       firebaseDeviceId: '',
       hasUnreadNotifications: true,
       allNotificationPrefs: [],
-      bopisProductStoreSettings: {}
+      bopisProductStoreSettings: {},
+      omsRedirectionUrl: ""
     },
     getters,
     actions,
