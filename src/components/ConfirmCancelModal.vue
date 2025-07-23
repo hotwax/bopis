@@ -33,27 +33,27 @@
       <ion-item lines="full" v-if="isCancelationSyncJobEnabled && isProcessRefundEnabled">
         <ion-label>
           {{ translate("Estimated time to refund customer on Shopify") }}
-          <p>{{ translate("Showing the next estimated time to sync cancelation to Shopify") }}</p>
+          <p>{{ translate("Showing the next estimated time to sync cancellation to Shopify") }}</p>
         </ion-label>
         <ion-note slot="end">{{ runTimeDiff }}</ion-note>
       </ion-item>
       <ion-item lines="full" v-else-if="isCancelationSyncJobEnabled">
         <ion-label>
-          {{ translate("Estimated time to cancelation on Shopify") }}
-          <p>{{ translate("Cancelation sync to Shopify is enabled. Refund processing is disabled.") }}</p>
+          {{ translate("Estimated time to cancellation on Shopify") }}
+          <p>{{ translate("Cancellation sync to Shopify is enabled. Refund processing is disabled.") }}</p>
         </ion-label>
         <ion-note slot="end">{{ runTimeDiff }}</ion-note>
       </ion-item>
       <ion-item lines="full" v-else>
         <ion-label>
-          {{ translate("Cancelation not syncing to Shopify") }}
-          <p>{{ translate("Cancelation and refund sync to Shopify is not enabled.") }}</p>
+          {{ translate("Cancellation not syncing to Shopify") }}
+          <p>{{ translate("Cancellation and refund sync to Shopify is not enabled.") }}</p>
         </ion-label>
       </ion-item>
     </ion-list>
 
     <ion-button class="ion-margin" color="danger" @click="cancelOrder">
-      {{ translate("Confirm Cancelation") }}
+      {{ translate("Confirm Cancellation") }}
     </ion-button>
   </ion-content>
 </template>
