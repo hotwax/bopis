@@ -1,6 +1,7 @@
 import { api } from '@/adapter';
 import { hasError } from '@/adapter';
 import logger from '@/logger';
+import { getCurrentFacilityId } from '@/utils';
 
 const fetchRejectReasons = async (query: any): Promise<any> => {
   return api({
@@ -215,6 +216,40 @@ const fetchGiftCardItemPriceInfo = async (payload: any): Promise<any> => {
   return itemPriceInfo;
 }
 
+const fetchShipmentIdForOrder = async (shipGroupSeqId: string, orderId: string): Promise<string | null> => {
+  const params = {
+    entityName: "Shipment",
+    inputFields: {
+      primaryOrderId: orderId,
+      shipGroupSeqId: shipGroupSeqId,
+      originFacilityId: getCurrentFacilityId(),
+      statusId: "SHIPMENT_SHIPPED"
+    },
+    fieldList: ["shipmentId","primaryOrderId"],
+    viewSize: 1,
+    distinct: "Y"
+  };
+
+  try {
+    const resp = await api({
+      url: "performFind",
+      method: "get",
+      params
+    }); 
+    if (!hasError(resp)) {
+      const shipment = resp?.data?.docs?.[0];
+      return shipment?.shipmentId ?? null;
+    } else if (resp?.data?.error && resp.data.error !== "No record found") {
+      return Promise.reject(resp.data.error);
+    }
+  } catch (err) {
+    logger.error("Failed to fetch shipmentId for order", err);
+    return Promise.reject(err);
+  }
+
+  return null;
+};
+
 export const UtilService = {
   activateGiftCard,
   createEnumeration,
@@ -236,5 +271,6 @@ export const UtilService = {
   updateProductStoreSetting,
   fetchReservedQuantity,
   fetchCurrentFacilityLatLon,
-  fetchStoresInformation
+  fetchStoresInformation,
+  fetchShipmentIdForOrder
 }
