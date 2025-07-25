@@ -15,7 +15,7 @@
     <ion-item v-if="showRejectionWarning" lines="none" class="ion-item-banner ion-margin-vertical">
       <ion-icon :icon="warningOutline" slot="start" color="danger" />
       <ion-label class="ion-item-banner">
-        {{ translate('Partial rejection is disabled.') }}
+        {{ translate('Partial Order rejection is disabled') }}
       </ion-label>
     </ion-item>
 
@@ -72,7 +72,7 @@ import { DxpShopifyImg, translate, getProductIdentificationValue, useProductIden
 import { isKit } from '@/utils/order';
 
 export default defineComponent({
-  name: 'RejectOrderModalList',
+  name: 'RejectOrderItemModal',
   components: {
     IonButton,
     IonButtons,
@@ -120,8 +120,8 @@ export default defineComponent({
       return !!(config && JSON.parse(config));
     },
     showRejectionWarning(): boolean {
-    const hasRejectedItems = !!this.orderProps?.part?.items?.some((item: any) => !!item.rejectReasonId);
-    return !this.isPartialRejectionEnabled && hasRejectedItems;
+      const hasRejectedItems = !!this.orderProps?.part?.items?.some((item: any) => !!item.rejectReasonId);
+      return !this.isPartialRejectionEnabled && hasRejectedItems;
   },
   canConfirm(): boolean {
     const items = this.orderProps?.part?.items;
@@ -136,18 +136,18 @@ export default defineComponent({
   },
   methods: {
    onReasonChange(event: any, selectedItem: any) {
-        const selectedValue = event.detail.value;
-        const items = this.orderProps?.part?.items;
+      const selectedValue = event.detail.value;
+      const items = this.orderProps?.part?.items;
 
-        if (!this.isPartialRejectionEnabled && items) {
-            items.forEach((item: any) => {
-            item.rejectReasonId = item.orderItemSeqId === selectedItem.orderItemSeqId
-                ? selectedValue
-                : this.rejectEntireOrderReasonId;
-            });
-        } else {
-            selectedItem.rejectReasonId = selectedValue;
-        }
+      if (!this.isPartialRejectionEnabled && items) {
+          items.forEach((item: any) => {
+          item.rejectReasonId = item.orderItemSeqId === selectedItem.orderItemSeqId
+              ? selectedValue
+              : this.rejectEntireOrderReasonId;
+          });
+      } else {
+          selectedItem.rejectReasonId = selectedValue;
+      }
     },      
     closeModal() {
       modalController.dismiss({ dismissed: true });
