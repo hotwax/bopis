@@ -118,7 +118,7 @@
               <ion-button :disabled="!hasPermission(Actions.APP_ORDER_UPDATE)" fill="clear" @click.stop="deliverShipment(order)">
                 {{ order.part.shipmentMethodEnum.shipmentMethodEnumId === 'STOREPICKUP' ? translate("Handover") : translate("Ship") }}
               </ion-button>
-              <ion-button v-if="getBopisProductStoreSettings('PRINT_PACKING_SLIPS')" fill="clear" slot="end" @click.stop="printPackingSlip(order)">
+              <ion-button v-if="getBopisProductStoreSettings('PRINT_PACKING_SLIPS')" fill="clear" slot="end" @click.stop="printPackingSlip(order?.shipmentId)">
                 <ion-icon slot="icon-only" :icon="printOutline" />
               </ion-button>
               <ion-button v-if="order.part.shipmentMethodEnum.shipmentMethodEnumId === 'STOREPICKUP'" fill="clear" slot="end" @click.stop="sendReadyForPickupEmail(order)">
@@ -297,35 +297,11 @@ export default defineComponent({
       const shipGroupSeqId = order?.shipGroupSeqId
       const completeOrderShipId = await UtilService.fetchShipmentIdForOrder(shipGroupSeqId,completeOrderId)
 
-      if(completeOrderShipId){
-        try {
-          // Get packing slip from the server
-          const response: any = await api({
-            method: 'get',
-            url: 'PackingSlip.pdf',
-            params: {
-              shipmentId: completeOrderShipId
-            },
-            responseType: "blob"
-          })
-
-          if (hasError(response)) {
-            showToast(translate("Failed to load packing slip"))
-            return;
-          }
-
-          // Generate local file URL for the blob received
-          const pdfUrl = window.URL.createObjectURL(response.data);
-          // Open the file in new tab
-          (window as any).open(pdfUrl, "_blank").focus();
-
-        } catch(err) {
-          showToast(translate("Failed to load packing slip"))
-          logger.error(err)
-        }
+      if (completeOrderShipId) {
+        await this.printPackingSlip(completeOrderShipId);
       }
     },
-    async printPackingSlip(order: any) {
+    async printPackingSlip(shipmentId: any) {
 
       try {
         // Get packing slip from the server
@@ -333,7 +309,7 @@ export default defineComponent({
           method: 'get',
           url: 'PackingSlip.pdf',
           params: {
-            shipmentId: order.shipmentId
+            shipmentId
           },
           responseType: "blob"
         })
