@@ -118,7 +118,7 @@
               <ion-button :disabled="!hasPermission(Actions.APP_ORDER_UPDATE)" fill="clear" @click.stop="deliverShipment(order)">
                 {{ order.part.shipmentMethodEnum.shipmentMethodEnumId === 'STOREPICKUP' ? translate("Handover") : translate("Ship") }}
               </ion-button>
-              <ion-button v-if="getBopisProductStoreSettings('PRINT_PACKING_SLIPS')" fill="clear" slot="end" @click.stop="printPackingSlip(order)">
+              <ion-button v-if="getBopisProductStoreSettings('PRINT_PACKING_SLIPS')" fill="clear" slot="end" @click.stop="printPackingSlip(order?.shipmentId)">
                 <ion-icon slot="icon-only" :icon="printOutline" />
               </ion-button>
               <ion-button v-if="order.part.shipmentMethodEnum.shipmentMethodEnumId === 'STOREPICKUP'" fill="clear" slot="end" @click.stop="sendReadyForPickupEmail(order)">
@@ -155,6 +155,11 @@
                 {{ translate("Copy") }}
               </ion-button>
             </ion-item>
+            <div class="border-top">
+              <ion-button v-if="getBopisProductStoreSettings('PRINT_PACKING_SLIPS')" fill="clear" slot="end" @click.stop="printCustomerLetter(order)">
+                {{ translate('Print Customer Letter') }}
+              </ion-button>
+            </div>
           </ion-card>
         </div>
       </div>
@@ -216,6 +221,7 @@ import { OrderService } from "@/services/OrderService";
 import { UserService } from "@/services/UserService";
 import { Actions, hasPermission } from '@/authorization'
 import logger from "@/logger";
+import { UtilService } from "@/services/UtilService";
 
 export default defineComponent({
   name: 'Orders',
@@ -286,7 +292,16 @@ export default defineComponent({
       const timeDiff = DateTime.fromISO(time).diff(DateTime.local());
       return DateTime.local().plus(timeDiff).toRelative();
     },
-    async printPackingSlip(order: any) {
+    async printCustomerLetter(order: any) {
+      const orderId = order?.orderId
+      const shipGroupSeqId = order?.shipGroupSeqId
+      const shipmentId = await UtilService.fetchShipmentIdForOrder(shipGroupSeqId,orderId)
+
+      if (shipmentId) {
+        await this.printPackingSlip(shipmentId);
+      }
+    },
+    async printPackingSlip(shipmentId: any) {
 
       try {
         // Get packing slip from the server
@@ -294,7 +309,7 @@ export default defineComponent({
           method: 'get',
           url: 'PackingSlip.pdf',
           params: {
-            shipmentId: order.shipmentId
+            shipmentId
           },
           responseType: "blob"
         })
