@@ -156,10 +156,10 @@
               </ion-button>
             </ion-item>
             <div class="border-top">
-                <ion-button v-if="getBopisProductStoreSettings('PRINT_PACKING_SLIPS')" fill="clear" slot="end" @click.stop="printCustomerLetter(order)">
-                  {{ translate('Print Customer Letter') }}
-                </ion-button>
-             </div>
+              <ion-button v-if="getBopisProductStoreSettings('PRINT_PACKING_SLIPS')" fill="clear" slot="end" @click.stop="printCustomerLetter(order)">
+                {{ translate('Print Customer Letter') }}
+              </ion-button>
+            </div>
           </ion-card>
         </div>
       </div>
@@ -293,12 +293,12 @@ export default defineComponent({
       return DateTime.local().plus(timeDiff).toRelative();
     },
     async printCustomerLetter(order: any) {
-      const completeOrderId = order?.orderId
+      const orderId = order?.orderId
       const shipGroupSeqId = order?.shipGroupSeqId
-      const completeOrderShipId = await UtilService.fetchShipmentIdForOrder(shipGroupSeqId,completeOrderId)
+      const shipmentId = await UtilService.fetchShipmentIdForOrder(shipGroupSeqId,orderId)
 
-      if (completeOrderShipId) {
-        await this.printPackingSlip(completeOrderShipId);
+      if (shipmentId) {
+        await this.printPackingSlip(shipmentId);
       }
     },
     async printPackingSlip(shipmentId: any) {

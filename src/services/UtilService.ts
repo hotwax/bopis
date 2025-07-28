@@ -236,9 +236,9 @@ const fetchShipmentIdForOrder = async (shipGroupSeqId: string, orderId: string):
       method: "get",
       params
     }); 
-    if (!hasError(resp)) {
-      const shipment = resp?.data?.docs?.[0];
-      return shipment?.shipmentId ?? null;
+    if (!hasError(resp) && resp?.data?.docs?.length) {
+      const shipment = resp.data.docs[0];
+      return shipment.shipmentId;
     } else if (resp?.data?.error && resp.data.error !== "No record found") {
       return Promise.reject(resp.data.error);
     }
