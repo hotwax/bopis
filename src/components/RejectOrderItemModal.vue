@@ -1,4 +1,4 @@
- <template>
+<template>
   <ion-header>
     <ion-toolbar>
       <ion-buttons slot="start">
@@ -91,16 +91,16 @@ export default defineComponent({
     DxpShopifyImg
   },
   props: {
-     orderProps: {
-    type: Object as () => {
-      orderId: string;
-      part?: {
-        items?: any[];
-      };
-      [key: string]: any;
-    },
-    required: true
-  }
+    orderProps: {
+      type: Object as () => {
+        orderId: string;
+        part?: {
+          items?: any[];
+        };
+        [key: string]: any;
+      },
+      required: true
+    }
   },
   data() {
     return {
@@ -122,31 +122,31 @@ export default defineComponent({
     showRejectionWarning(): boolean {
       const hasRejectedItems = !!this.orderProps?.part?.items?.some((item: any) => !!item.rejectReasonId);
       return !this.isPartialRejectionEnabled && hasRejectedItems;
-  },
-  canConfirm(): boolean {
-    const items = this.orderProps?.part?.items;
-    if (!items) return false;
+    },
+    canConfirm(): boolean {
+      const items = this.orderProps?.part?.items;
+      if (!items) return false;
 
-    if (this.isPartialRejectionEnabled) {
-      return items.some((item: any) => !!item.rejectReasonId);
-    } else {
-      return items.every((item: any) => !!item.rejectReasonId);
+      if (this.isPartialRejectionEnabled) {
+        return items.some((item: any) => !!item.rejectReasonId);
+      } else {
+        return items.every((item: any) => !!item.rejectReasonId);
+      }
     }
-  }
   },
   methods: {
    onReasonChange(event: any, selectedItem: any) {
-      const selectedValue = event.detail.value;
-      const items = this.orderProps?.part?.items;
+     const selectedValue = event.detail.value;
+     const items = this.orderProps?.part?.items;
 
-      if (!this.isPartialRejectionEnabled && items) {
-          items.forEach((item: any) => {
-          item.rejectReasonId = item.orderItemSeqId === selectedItem.orderItemSeqId
-              ? selectedValue
-              : this.rejectEntireOrderReasonId;
-          });
+     if (!this.isPartialRejectionEnabled && items) {
+       items.forEach((item: any) => {
+         item.rejectReasonId = item.orderItemSeqId === selectedItem.orderItemSeqId
+           ? selectedValue
+           : this.rejectEntireOrderReasonId;
+        });
       } else {
-          selectedItem.rejectReasonId = selectedValue;
+        selectedItem.rejectReasonId = selectedValue;
       }
     },      
     closeModal() {
