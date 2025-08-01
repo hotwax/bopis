@@ -52,7 +52,7 @@
   </ion-content>
 
   <ion-fab vertical="bottom" horizontal="end" slot="fixed">
-    <ion-fab-button @click="readyForPickup()">
+    <ion-fab-button data-testid="assign-picker-modal-button" @click="readyForPickup()">
       <ion-icon :icon="saveOutline" />
     </ion-fab-button>
   </ion-fab>
