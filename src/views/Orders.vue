@@ -38,7 +38,7 @@
                 <p>{{ order.orderName ? order.orderName : order.orderId }}</p>
               </ion-label>
               <div class="metadata">
-                <ion-badge v-if="order.placedDate" color="dark">{{ timeFromNow(order.placedDate) }}</ion-badge>
+                <ion-badge v-if="order.placedDate" color="dark">{{ timeFromNowInMillis(order.placedDate) }}</ion-badge>
                 <ion-badge v-if="order.statusId !== 'ORDER_APPROVED'" color="danger">{{ translate('pending approval') }}</ion-badge>
               </div>
               <!-- TODO: Display the packed date of the orders, currently not getting the packed date from API-->
@@ -78,7 +78,7 @@
             </div>
           </ion-card>
         </div>
-      </div>      
+      </div>       
       <div v-if="segmentSelected === 'packed'">
         <div v-for="(order, index) in getOrdersByPart(packedOrders)" :key="index" v-show="order.parts.length > 0">
           <ion-card button @click.prevent="viewOrder(order, order.part, 'packed')">
@@ -273,10 +273,10 @@ export default defineComponent({
         component: AssignPickerModal,
         componentProps: { order, part, facilityId }
       });
-
       assignPickerModal.onDidDismiss().then(async(result: any) => {
         if(result.data?.selectedPicker) {
-          await this.store.dispatch('order/packShipGroupItems', { order, part, facilityId, selectedPicker: result.data.selectedPicker })
+          await this.createPicklist(order, result.data.selectedPicker);
+          await this.store.dispatch('order/packShipGroupItems', { order, part })
         }
       })
 
@@ -284,6 +284,10 @@ export default defineComponent({
     },
     timeFromNow (time: any) {
       const timeDiff = DateTime.fromISO(time).diff(DateTime.local());
+      return DateTime.local().plus(timeDiff).toRelative();
+    },
+    timeFromNowInMillis (time: any) {
+      const timeDiff = DateTime.fromMillis(time).diff(DateTime.local());
       return DateTime.local().plus(timeDiff).toRelative();
     },
     async printPackingSlip(order: any) {
@@ -408,7 +412,7 @@ export default defineComponent({
               if(!pickup) {
                 this.packShippingOrders(order, part);
               } else {
-                this.store.dispatch('order/packShipGroupItems', {order, part, facilityId: this.currentFacility?.facilityId})
+                this.store.dispatch('order/packShipGroupItems', { order, part })
               }
             }
           }]
@@ -418,8 +422,9 @@ export default defineComponent({
     async packShippingOrders(currentOrder: any, part: any) {
       try {
         const resp = await OrderService.packOrder({
-          'picklistBinId': currentOrder.picklistBinId,
-          'orderId': currentOrder.orderId
+          'shipmentId': currentOrder.shipmentId,
+          'orderId': currentOrder.orderId,
+          'facilityId': part.facilityId
         })
 
         if(!hasError(resp)) {
@@ -562,20 +567,26 @@ export default defineComponent({
     async createPicklist(order: any, selectedPicker: any) {
       let resp;
 
-      const items = order.parts[0].items;
-      const formData = new FormData();
-      formData.append("facilityId", items[0].facilityId);
-      items.map((item: any, index: number) => {
-        formData.append("itemStatusId_o_"+index, "PICKITEM_PENDING")
-        formData.append("pickerIds_o_"+index, selectedPicker)
-        formData.append("picked_o_"+index, item.quantity)
-        Object.keys(item).map((property) => {
-          if(property !== "facilityId") formData.append(property+'_o_'+index, item[property])
-        })
-      });
+      const payload = {
+        packageName: "A", //default package name
+        facilityId: this.currentFacility?.facilityId,
+        shipmentMethodTypeId: order.parts[0]?.items[0]?.shipmentMethodTypeId,
+        statusId: "PICKLIST_ASSIGNED",        
+        pickers: selectedPicker ? [{
+          partyId: selectedPicker,
+          roleTypeId: "WAREHOUSE_PICKER"
+        }] : [],
+        orderItems: order.parts[0]?.items.map((item: { orderId: string, orderItemSeqId: string, shipGroupSeqId: string, productId: string, quantity: number }) => ({
+          orderId: item.orderId,
+          orderItemSeqId: item.orderItemSeqId,
+          shipGroupSeqId: item.shipGroupSeqId,
+          productId: item.productId,
+          quantity: item.quantity
+        }))
+      };      
 
       try {
-        resp = await OrderService.createPicklist(formData);
+        resp = await OrderService.createPicklist(payload);
         if(!hasError(resp)) {
           // generating picklist after creating a new picklist
           await OrderService.printPicklist(resp.data.picklistId)
@@ -583,7 +594,8 @@ export default defineComponent({
           const updatedOrder = orders.find((currentOrder: any) => currentOrder.orderId === order.orderId);
           updatedOrder["isPicked"] = "Y"
           updatedOrder["picklistId"] = resp.data.picklistId
-          updatedOrder["picklistBinId"] = resp.data.picklistBinId
+          updatedOrder["shipmentId"] = resp.data.shipmentIds[0]
+          console.log("Updated Order:", updatedOrder);
           this.store.dispatch("order/updateOpenOrder", { orders, total: orders.length })
         } else {
           throw resp.data;

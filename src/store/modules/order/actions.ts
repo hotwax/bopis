@@ -109,95 +109,96 @@ const actions: ActionTree<OrderState , RootState> ={
     return resp;
   },
 
-  async getOpenOrders({ commit, state }, payload) {
+  async getOpenOrders({ commit, dispatch, state }, params) {
     // Show loader only when new query and not the infinite scroll
-    if (payload.viewIndex === 0) emitter.emit("presentLoader");
+    if (params.viewIndex === 0) emitter.emit("presentLoader");
     let resp;
-
-    const orderQueryPayload = prepareOrderQuery({
-      ...payload,
-      shipmentMethodTypeId: !store.state.user.bopisProductStoreSettings['SHOW_SHIPPING_ORDERS'] ? 'STOREPICKUP' : '',
-      '-shipmentStatusId': '(SHIPMENT_PACKED OR SHIPMENT_SHIPPED)',
-      '-fulfillmentStatus': '(Cancelled OR Rejected)',
+    console.log("Payload: ", params);
+    params = {
+      keyword: params.queryString || '',
+      originFacilityId: params.facilityId,
       orderStatusId: 'ORDER_APPROVED',
-      orderTypeId: 'SALES_ORDER'
-    })
+      shipmentStatusId: 'SHIPMENT_INPUT,SHIPMENT_PACKED,SHIPMENT_SHIPPED',
+      shipmentStatusId_op: 'in',
+      shipmentStatusId_not: 'Y',
+      limit: '500',
+      pageIndex: params.viewIndex
+    } as any;
 
     try {
-      resp = await OrderService.getOpenOrders(orderQueryPayload)
-      if (resp.status === 200 && !hasError(resp) && resp.data.grouped?.orderId?.ngroups > 0) {
+      resp = await OrderService.getOpenOrders(params)
+      if (resp.status === 200 && !hasError(resp) && resp?.data?.orders.length > 0) {
 
+        const orderIds = resp.data.orders.map((order: any) => order.orderId);
         const productIds = [] as any;
-        resp.data.grouped?.orderId?.groups.forEach((order: any) => {
-          productIds.push(...order.doclist.docs.map((item: any) => item.productId));
+        resp.data.orders.forEach((order: any) => {
+          productIds.push(...order.items.map((item: any) => item.productId));
         });
         await this.dispatch('product/fetchProducts', { productIds });
 
-        let orders = resp.data.grouped?.orderId?.groups.map((order: any) => {
-          const orderItem = order.doclist.docs[0]
+        // Fetch pickers information for all orderIds in bulk
+        const pickers = await dispatch("fetchPickersInformation", orderIds);
+
+        let orders = resp.data.orders.map((order: any) => {
+          const pickersInfo = pickers[order.orderId] || { pickers: "", pickerIds: [] };
           return {
-            orderId: orderItem.orderId,
-            orderName: orderItem.orderName,
+            orderId: order.orderId,
+            orderName: order.orderName,
             customer: {
-              partyId: orderItem.customerId,
-              name: orderItem.customerName
+              partyId: order.customerId,
+              name: order.customerName
             },
-            statusId: orderItem.orderStatusId,
-            parts: removeKitComponents(order.doclist.docs.reduce((arr: Array<any>, item: any) => {
-              const currentOrderPart = arr.find((orderPart: any) => orderPart.orderPartSeqId === item.shipGroupSeqId)
+            statusId: order.orderStatusId,
+            parts: removeKitComponents(order.items.reduce((arr: Array<any>, item: any) => {
+              const currentOrderPart = arr.find((orderPart) => orderPart.orderPartSeqId === item.shipGroupSeqId);
               if (!currentOrderPart) {
                 arr.push({
                   orderPartSeqId: item.shipGroupSeqId,
                   shipmentMethodEnum: {
                     shipmentMethodEnumId: item.shipmentMethodTypeId,
-                    shipmentMethodEnumDesc: item.shipmentMethodTypeDesc
                   },
                   items: [{
                     shipGroupSeqId: item.shipGroupSeqId,
-                    orderId: orderItem.orderId,
+                    orderId: order.orderId,
                     orderItemSeqId: item.orderItemSeqId,
                     productId: item.productId,
                     facilityId: item.facilityId,
-                    quantity: item.itemQuantity,
-                    inventoryItemId: item.inventoryItemId,
+                    quantity: item.quantity,
                     showKitComponents: false
                   }]
-                })
+                });
               } else {
                 currentOrderPart.items.push({
                   shipGroupSeqId: item.shipGroupSeqId,
-                  orderId: orderItem.orderId,
+                  orderId: order.orderId,
                   orderItemSeqId: item.orderItemSeqId,
                   productId: item.productId,
                   facilityId: item.facilityId,
-                  quantity: item.itemQuantity,
-                  inventoryItemId: item.inventoryItemId,
+                  quantity: item.quantity,
                   showKitComponents: false
-                })
+                });
               }
 
-              return arr
+              return arr;
             }, [])),
-            placedDate: orderItem.orderDate,
-            shippingInstructions: orderItem.shippingInstructions,
-            shipGroupSeqId: orderItem.shipGroupSeqId,
-            isPicked: orderItem.isPicked,
-            pickers: orderItem.pickers ? (orderItem.pickers.reduce((names: any, picker: string) => {
-              names.push(picker.split('/')[1]);
-              return names;
-            }, [])).join(', ') : "",
-            pickerIds: orderItem.pickers ? (orderItem.pickers.reduce((ids: any, picker: string) => {
-              ids.push(picker.split('/')[0]);
-              return ids;
-            }, [])) : "",
-            picklistId: orderItem.picklistId,
-            picklistBinId: orderItem.picklistBinId
-          }
-        })
+            placedDate: order.orderDate,
+            shippingInstructions: order.shippingInstructions,
+            shipGroupSeqId: order.items[0]?.shipGroupSeqId || null,
+            isPicked: order.picklistId ? "Y" : "N",
+            picklistId: order.picklistId,
+            shipmentId: order.shipmentId,
+            facilityId: order.facilityId,
+            pickers: pickersInfo.pickers,
+            pickerIds: pickersInfo.pickerIds
+            // Removed isPicked, pickers, pickerIds, picklistBinId as per new response
+          };
+      });
+
+      console.log("\n\n --Chinmay: --\n\n", orders);
 
         const total = resp.data.grouped?.orderId?.ngroups;
 
-        if(payload.viewIndex && payload.viewIndex > 0) orders = state.open.list.concat(orders)
+        if(params.viewIndex && params.viewIndex > 0) orders = state.open.list.concat(orders)
         commit(types.ORDER_OPEN_UPDATED, { orders, total })
         emitter.emit("dismissLoader");
       } else {
@@ -211,6 +212,68 @@ const actions: ActionTree<OrderState , RootState> ={
     }
 
     return resp;
+  },
+
+  async fetchPickersInformation({ commit }, orderIds: any) {
+    const payload = {
+      primaryOrderId: orderIds.join(','),
+      primaryOrderId_op: 'in',
+      shipmentMethodTypeId: 'STOREPICKUP',
+      originalFacilityId: getCurrentFacilityId(),
+      statusId: 'SHIPMENT_INPUT',
+      statusId_op: 'equals',
+      statusId_not: 'Y',
+      pageIndex: 0,
+      pageSize: orderIds.length
+    }
+    try {
+      console.log("Fetching pickers information for orders: ", orderIds);
+      const resp = await OrderService.fetchPicklists(payload);
+      if (!hasError(resp)) {
+        const shipments = resp.data;
+
+        // Build a map of orderId -> { pickers, pickerIds }
+        const pickersMap = {} as any;
+
+        shipments.forEach((shipment: any) => {
+          const orderId = shipment.primaryOrderId || shipment.order?.orderId;
+          const shipmentId = shipment.shipmentId;
+          const allRoles = shipment.picklistShipment.flatMap((picklistShipment: any) =>
+            (picklistShipment.picklist?.roles ?? []).filter((role: any) => !role.thruDate)
+          );
+
+          const pickers = allRoles.length
+            ? allRoles
+                .map((role: any) => {
+                  if (role?.person) {
+                    return `${role.person.firstName} ${role.person.lastName}`;
+                  } else if (role?.partyGroup) {
+                    return role.partyGroup.groupName;
+                  }
+                  return null;
+                })
+                .filter(Boolean)
+                .join(", ")
+            : "";
+
+        const pickerIds = allRoles.map((role: any) => role.partyId);
+
+        pickersMap[orderId] = {
+          shipmentId,
+          pickers,
+          pickerIds
+        };
+      });
+      console.log("\n\n Pickers Map: ", pickersMap);
+      return pickersMap;
+
+    } else {
+      throw resp.data;
+    }
+  } catch (err) {
+    logger.error('Failed to fetch picklists', err);
+    return {};
+  }
   },
 
   async fetchAdditionalOrderInformation({ dispatch }, orderDetails) {
@@ -400,141 +463,155 @@ const actions: ActionTree<OrderState , RootState> ={
       order = await OrderService.fetchGiftCardActivationDetails({ isDetailsPage: true, currentOrders: [order] });
     }
 
+
     await dispatch('updateCurrent', { order })
   },
 
   async getOrderDetail({ dispatch }, { payload, orderType }) {
-    if(orderType === 'open') {
-      payload['orderStatusId'] = "ORDER_APPROVED"
-      payload['-shipmentStatusId'] = "(SHIPMENT_PACKED OR SHIPMENT_SHIPPED)"
-      payload['-fulfillmentStatus'] = '(Cancelled OR Rejected)'
-    } else if(orderType === 'packed') {
-      payload['shipmentStatusId'] = "SHIPMENT_PACKED"
-      payload['-fulfillmentStatus'] = '(Cancelled OR Rejected)'
-    } else if(orderType === 'completed') {
-      payload['orderItemStatusId'] = "ITEM_COMPLETED"
-      payload['docType'] = "ORDER"
-    } else {
-      dispatch('updateCurrent', { order: {} })
-      return;
-    }
-
-    // const current = state.current as any
-    // const orders = JSON.parse(JSON.stringify(state.open.list)) as any
-    // // As one order can have multiple parts thus checking orderId and partSeq as well before making any api call
-    // if(current.orderId === payload.orderId && current.orderType === orderType && current.part?.orderPartSeqId === payload.orderPartSeqId) {
-    //   await this.dispatch('product/getProductInformation', { orders: [ current ] })
-    //   // TODO: if we can store additional order information and just fetch shipGroup info as it was previously
-    //   await dispatch("fetchAdditionalOrderInformation", current)
-    //   return current
-    // }
-    // if(orders.length) {
-    //   const order = orders.find((order: any) => {
-    //     return order.orderId === payload.orderId;
-    //   })
-    //   if(order) {
-    //     await dispatch("fetchAdditionalOrderInformation", order)
-    //     return order;
-    //   }
-    // }
-
-    const orderQueryPayload = prepareOrderQuery({
-      ...payload,
-      shipmentMethodTypeId: !store.state.user.bopisProductStoreSettings['SHOW_SHIPPING_ORDERS'] ? 'STOREPICKUP' : '',
-      orderTypeId: 'SALES_ORDER'
-    })
-    
+    const orderId = payload.orderId;
     let resp;
     let currentOrder = {};
+    let order= {} as any;
     try {
-      resp = await OrderService.getOrderDetails(orderQueryPayload)
-      if (resp.status === 200 && !hasError(resp) && resp.data.grouped?.orderId?.ngroups > 0) {
-        const productIds = resp.data.grouped.orderId.groups.flatMap(
-          (order: any) => order.doclist.docs.map((item: any) => item.productId)
+      // Fetch order details from new API
+      resp = await OrderService.fetchOrderDetails(orderId);
+      if (resp.status === 200 && !hasError(resp) && resp.data) {
+        const data = resp.data.orderDetail;
+
+        // Fetch products for items in all ship groups
+        const productIds = data.shipGroups.flatMap((group: any) =>
+          group.items.map((item: any) => item.productId)
         );
         await this.dispatch('product/fetchProducts', { productIds });
 
-        let orders = resp.data.grouped?.orderId?.groups.map((order: any) => {
-          const orderItem = order.doclist.docs[0]
-          return {
-            orderId: orderItem.orderId,
-            orderName: orderItem.orderName,
-            shipmentId: orderItem.shipmentId,
-            customer: {
-              partyId: orderItem.customerId || orderItem.customerPartyId,
-              name: orderItem.customerName || orderItem.customerPartyName
-            },
-            statusId: orderItem.orderStatusId,
-            parts: removeKitComponents(order.doclist.docs.reduce((arr: Array<any>, item: any) => {
-              const currentOrderPart = arr.find((orderPart: any) => orderPart.orderPartSeqId === item.shipGroupSeqId)
-              if (!currentOrderPart) {
-                arr.push({
-                  orderPartSeqId: item.shipGroupSeqId,
-                  shipmentMethodEnum: {
-                    shipmentMethodEnumId: item.shipmentMethodTypeId,
-                    shipmentMethodEnumDesc: item.shipmentMethodTypeDesc
-                  },
-                  items: [{
-                    orderItemSeqId: item.orderItemSeqId,
-                    productId: item.productId,
-                    facilityId: item.facilityId,
-                    quantity: item.itemQuantity || item.quantity,
-                    showKitComponents: false,
-                    shipGroupSeqId: item.shipGroupSeqId,
-                    orderId: orderItem.orderId,
-                    inventoryItemId: item.inventoryItemId
-                  }]
-                })
-              } else {
-                currentOrderPart.items.push({
-                  orderItemSeqId: item.orderItemSeqId,
-                  productId: item.productId,
-                  facilityId: item.facilityId,
-                  quantity: item.itemQuantity || item.quantity,
-                  showKitComponents: false,
-                  shipGroupSeqId: item.shipGroupSeqId,
-                  orderId: orderItem.orderId,
-                  inventoryItemId: item.inventoryItemId
-                })
-              }
+        // Prepare order map using fields from API response
+        
+        order = {
+          orderId: data.orderId,
+          orderName: data.orderName,
+          currencyUom: data.currencyUom,
+          shipmentId: data.shipGroups?.[0]?.shipmentId || null,
+          statusId: data.orderStatusId,
+          orderType,
+          customer: {
+            partyId: data.partyId,
+            name: `${data.customerFirstName || ""} ${data.customerLastName || ""}`.trim(),
+          },
+          placedDate: data.orderDate,
+          entryDate: data.entryDate,
+          shippingInstructions: data.shippingInstructions,
+          picklistId: null,
+          isPicked: false,
+          pickerIds: [],
+          pickers: "",
+          picklistBinId: data.picklistBinId,
+          shipGroupSeqId: null,
+          billingAddress: data.billingAddress || {},
+          billingEmail: data.billingEmail,
+          billingPhone: data.billingPhone,
+          shopifyOrderId: data.orderExternalId,
+          orderAttributes:
+            data.attributes?.reduce((acc: any, attr: any) => {
+              acc[attr.attrName.toLowerCase()] = attr.attrValue;
+              return acc;
+            }, {}) || {},
+          approvedDate: data.statuses?.find((status: any) => status.statusId === "ORDER_APPROVED")?.statusDatetime,
+          completedDate: data.statuses?.find((status: any) => status.statusId === "ORDER_COMPLETED")?.statusDatetime,
+          orderPayments:
+            data.paymentPreferences?.map((payment: any) => ({
+              amount: payment.maxAmount,
+              methodTypeId: payment.paymentMethodTypeId,
+              methodDesc: payment.paymentMethodTypeDesc,
+              paymentStatus: payment.statusId,
+              paymentStatusDesc: payment.statusDesc,
+            })) || [],
+        };
 
-              return arr
-            }, [])),
-            placedDate: orderItem.orderDate,
-            entryDate: orderItem.entryDate,
-            shippingInstructions: orderItem.shippingInstructions,
-            orderType: orderType,
-            pickers: orderItem.pickers ? (orderItem.pickers.reduce((names: any, picker: string) => {
-              names.push(picker.split('/')[1]);
-              return names;
-            }, [])).join(', ') : "",
-            pickerIds: orderItem.pickers ? (orderItem.pickers.reduce((ids: any, picker: string) => {
-              ids.push(picker.split('/')[0]);
-              return ids;
-            }, [])) : "",
-            picklistId: orderItem.picklistId,
-            isPicked: orderItem.isPicked,
-            picklistBinId: orderItem.picklistBinId,
-            shipGroupSeqId: orderItem.shipGroupSeqId,
-          }
-        })
+    const parts = [];
+    for (const shipGroup of data.shipGroups || []) {
+      const items =
+        shipGroup.items?.map((item: any) => ({
+          orderItemSeqId: item.orderItemSeqId,
+          productId: item.productId,
+          facilityId: item.facilityId,
+          quantity: item.quantity,
+          showKitComponents: false,
+          shipGroupSeqId: item.shipGroupSeqId,
+          orderId: item.orderId,
+          inventoryItemId: item.inventoryItemId,
+        })) || [];
 
-        // creating order part to render the items correctly on UI
-        orders = Object.keys(orders).length ? orders.flatMap((order: any) => order.parts.map((part: any) => ({ ...order, part }))) : [];
-        currentOrder = orders[0]
+      parts.push({
+        orderPartSeqId: shipGroup.shipGroupSeqId,
+        shipmentMethodEnum: {
+          shipmentMethodEnumId: shipGroup.shipmentMethodTypeId,
+        },
+        items,
+      });
+    }
+
+    order.parts = parts;
+
+    const currentFacilityId = getCurrentFacilityId();
+
+    const currentShipGroup = (data.shipGroups || []).find((shipGroup: any) => {
+      const isStorePickup = shipGroup.shipmentMethodTypeId === "STOREPICKUP";
+      const isFacilityMatch = shipGroup.facilityId === currentFacilityId;
+
+      if (!(isStorePickup && isFacilityMatch)) return false;
+
+      if (orderType === "open") {
+        return shipGroup.shipmentStatusId === "SHIPMENT_APPROVED" || !shipGroup.shipmentId;
+      }
+
+      if (orderType === "packed") {
+        return shipGroup.shipmentStatusId === "SHIPMENT_PACKED";
+      }
+
+      if (orderType === "completed") {
+        return shipGroup.shipmentStatusId === "SHIPMENT_SHIPPED";
+      }
+      return false;
+    });
+
+    if (currentShipGroup) {
+      const currentShipGroupSeqId = currentShipGroup.shipGroupSeqId;
+      const currentPart = parts.find(p => p.orderPartSeqId === currentShipGroupSeqId);
+
+      order.part = currentPart;
+      order.picklistId = currentShipGroup.picklistId || null;
+      order.isPicked = !!currentShipGroup.picklistId;
+      order.pickerIds = currentShipGroup.pickerId ? [currentShipGroup.pickerId] : [];
+      order.pickers = currentShipGroup.pickerFirstName
+        ? `${currentShipGroup.pickerFirstName} ${currentShipGroup.pickerLastName}`
+        : "";
+      order.shipGroupSeqId = currentShipGroup.shipGroupSeqId;
+    }
+
+    
+        // If gift card activation details needed for non-open orders
+        if (orderType !== "open") {
+          const enrichedOrder = await OrderService.fetchGiftCardActivationDetails({
+            isDetailsPage: true,
+            currentOrders: [order]
+          });
+          console.log("Enriched Orders: ", enrichedOrder);
+          currentOrder = enrichedOrder;
+        } else {
+          currentOrder = order;
+        }
+        // Update current order in store
+        await dispatch('updateCurrent', { order: currentOrder });
       } else {
         throw resp.data;
       }
     } catch (err) {
-      logger.error(err)
+      logger.error(err);
     }
-
-    await dispatch("fetchAdditionalOrderInformation", currentOrder)
   },
-  
-  async updateCurrent ({ commit, dispatch }, payload) {
+
+  async updateCurrent ({ commit }, payload) {
     commit(types.ORDER_CURRENT_UPDATED, { order: payload.order })
-    await dispatch('fetchShipGroupForOrder');
   },
 
   // This action is added mainly to toggle the showKitComponent property for item from the order detail page
@@ -799,60 +876,21 @@ const actions: ActionTree<OrderState , RootState> ={
   async packShipGroupItems ({ state, dispatch, commit }, payload) {
     emitter.emit("presentLoader")
 
-    if (store.state.user.bopisProductStoreSettings['ENABLE_TRACKING'] && payload.order.isPicked !== 'Y') {
-      let resp;
-
-      const items = payload.order.parts[0].items;
-      const formData = new FormData();
-      formData.append("facilityId", items[0].facilityId);
-      items.map((item: any, index: number) => {
-        formData.append("itemStatusId_o_"+index, "PICKITEM_PENDING")
-        formData.append("pickerIds_o_"+index, payload.selectedPicker)
-        formData.append("picked_o_"+index, item.quantity)
-        Object.keys(item).map((property) => {
-          if(property !== "facilityId") formData.append(property+'_o_'+index, item[property])
-        })
-      });
-      
-      try {
-        resp = await OrderService.createPicklist(formData);
-        if (resp.status !== 200 || hasError(resp) || !(resp.data.picklistId && resp.data.picklistBinId)) {
-          showToast(translate('Something went wrong. Picklist can not be created.'));
-          emitter.emit("dismissLoader");
-          return;
-        }
-      } catch (err) {
-        showToast(translate('Something went wrong. Picklist can not be created.'));
-        emitter.emit("dismissLoader");
-        return;
-      }
-    }
-
     const params = {
       orderId: payload.order.orderId,
-      setPackedOnly: 'Y',
-      dimensionUomId: 'WT_kg',
-      shipmentBoxTypeId: 'YOURPACKNG',
-      weight: '1',
-      weightUomId: 'WT_kg',
-      facilityId: payload.facilityId,
-      shipGroupSeqId: payload.part.orderPartSeqId
+      facilityId: payload.order.facilityId,
+      shipmentId: payload.order.shipmentId
     }
     
     let resp;
 
     try {
-      resp = await OrderService.quickShipEntireShipGroup(params)
-      if (resp.status === 200 && !hasError(resp) && resp.data._EVENT_MESSAGE_) {
-        /* To display the button label as per the shipmentMethodTypeId, this will only used on orders segment.
-          Because we get the shipmentMethodTypeId on items level in wms-orders API.
-          As we already get shipmentMethodTypeId on order level in readytoshiporders API hence we will not use this method on packed orders segment.
-        */
+      resp = await OrderService.packOrder(params)
+      if (resp.status === 200 && !hasError(resp)) {        
         const shipmentMethodTypeId = payload.part?.shipmentMethodEnum?.shipmentMethodEnumId
         if (shipmentMethodTypeId !== 'STOREPICKUP') {
           // TODO: find a better way to get the shipmentId
-          const shipmentId = resp.data.shipmentId ? resp.data.shipmentId : resp.data._EVENT_MESSAGE_.match(/\d+/g)[0]
-          await dispatch('packDeliveryItems', shipmentId).then((data) => {
+          await dispatch('packDeliveryItems', { orderId: payload.order.orderId, shipmentId: payload.order.shipmentId }).then((data) => {
             if (!hasError(data) && !data.data._EVENT_MESSAGE_) {
               showToast(translate("Something went wrong"))
             } else if(state.open.list.length) {
@@ -1461,8 +1499,9 @@ const actions: ActionTree<OrderState , RootState> ={
       console.error('Failed to fetch information for ship groups', err)
     }
     order['shipGroups'] = shipGroups
-
+    console.log('\n\n ------------------shipGroups ', order, ' ------------------ \n\n');
     commit(types.ORDER_CURRENT_UPDATED, {order})
+
     return shipGroups;
   },
   async updateCurrentItemGCActivationDetails({ commit, state }, { item, orderId, orderType, isDetailsPage }) {
