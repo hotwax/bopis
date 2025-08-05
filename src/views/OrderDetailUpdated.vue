@@ -481,21 +481,15 @@ export default defineComponent({
       await this.store.dispatch('stock/fetchStock', { productId })
       this.store.dispatch('order/updateOrderItemFetchingStatus', { productId, shipGroupSeqId })
     },
-    async assignPicker(order: any, part: any, facilityId: any) {
+    async assignPickerNew(order: any, part: any, facilityId: any) {
       const assignPickerModal = await modalController.create({
         component: AssignPickerModal,
         componentProps: { order, part, facilityId }
       });
-
       assignPickerModal.onDidDismiss().then(async(result: any) => {
-        if(result.data.selectedPicker) {
-          const selectedPicker = result.data.picker
-          this.pickers = selectedPicker
-          this.picklistDate = DateTime.now().toMillis()
-          this.order.pickers = selectedPicker.name
-          this.order.pickerIds = [selectedPicker.id]
-          await this.store.dispatch('order/packShipGroupItems', { order, part, facilityId, selectedPicker: result.data.selectedPicker })
-          this.prepareOrderTimeline();
+        if(result.data?.selectedPicker) {
+          await this.createPicklist(order, result.data.selectedPicker);
+          await this.store.dispatch('order/packShipGroupItemsNew', { order, part })
         }
       })
 
@@ -580,7 +574,6 @@ export default defineComponent({
             rejectReason: item.rejectReason || this.rejectEntireOrderReasonId,
             facilityId: item.facilityId,
             orderItemSeqId: item.orderItemSeqId,
-            shipmentMethodTypeId: order.part.shipmentMethodEnum.shipmentMethodEnumId,
             quantity: parseInt(item.quantity),
             ...(order.part.shipmentMethodEnum.shipmentMethodEnumId === "STOREPICKUP" && ({"naFacilityId": "PICKUP_REJECTED"})),
           }
@@ -652,10 +645,10 @@ export default defineComponent({
       return cancelOrderConfirmModal.present();
     },
     async readyForPickup(order: any, part: any) {
-      if(this.getBopisProductStoreSettings('ENABLE_TRACKING') && order.isPicked !== 'Y') return this.assignPicker(order, part, this.currentFacility?.facilityId);
-      const pickup = part?.shipmentMethodEnum?.shipmentMethodEnumId === 'STOREPICKUP';
+      if(this.getBopisProductStoreSettings('ENABLE_TRACKING') && order.isPicked !== 'Y') return this.assignPickerNew(order, part, this.currentFacility?.facilityId);
+      const pickup = part.shipmentMethodEnum?.shipmentMethodEnumId === 'STOREPICKUP';
       const header = pickup ? translate('Ready for pickup') : translate('Ready to ship');
-      const message = pickup ? translate('An email notification will be sent to that their order is ready for pickup. This order will also be moved to the packed orders tab.', { customerName: order.customer.name, space: '<br/><br/>' }) : '';
+      const message = pickup ? translate('An email notification will be sent to that their order is ready for pickup. This order will also be moved to the packed orders tab.', { customerName: order.customer.name, space: '<br/><br/>'}) : '';
 
       const alert = await alertController
         .create({
@@ -664,26 +657,25 @@ export default defineComponent({
           buttons: [{
             text: translate('Cancel'),
             role: 'cancel'
-          }, {
+          },{
             text: header,
-            handler: async () => {
+            handler: () => {
               if(!pickup) {
-                await this.packShippingOrders(order, part);
+                this.packShippingOrders(order, part);
               } else {
-                await this.store.dispatch('order/packShipGroupItems', {order, part, facilityId: this.currentFacility?.facilityId})
+                this.store.dispatch('order/packShipGroupItemsNew', { order, part })
               }
-              // Update order timeline once the order is marked as ready for pickup
-              this.prepareOrderTimeline();
             }
           }]
         });
       return alert.present();
     },
     async packShippingOrders(currentOrder: any, part: any) {
-      try {
+      try {    
         const resp = await OrderService.packOrder({
-          'picklistBinId': currentOrder.picklistBinId,
-          'orderId': currentOrder.orderId
+          'shipmentId': currentOrder.shipmentId,
+          'orderId': currentOrder.orderId,
+          'facilityId': getCurrentFacilityId()
         })
 
         if(!hasError(resp)) {
@@ -705,36 +697,15 @@ export default defineComponent({
       await this.store.dispatch('util/fetchCancelReasons');
     },
     async printPackingSlip(order: any) {
-      try {
-        // Get packing slip from the server
-        const response: any = await api({
-          method: 'get',
-          url: 'PackingSlip.pdf',
-          params: {
-            shipmentId: order.shipmentId
-          },
-          responseType: "blob"
-        })
-
-        if (!response || response.status !== 200 || hasError(response)) {
-          showToast(translate("Failed to load packing slip"))
-          return;
-        }
-
-        // Generate local file URL for the blob received
-        const pdfUrl = window.URL.createObjectURL(response.data);
-        // Open the file in new tab
-        try {
-          (window as any).open(pdfUrl, "_blank").focus();
-        }
-        catch {
-          showToast(translate('Unable to open as browser is blocking pop-ups.', {documentName: 'packing slip'}));
-        }
-
-      } catch(err) {
-        showToast(translate("Failed to load packing slip"))
-        logger.error(err)
+      // if the request to print packing slip is not yet completed, then clicking multiple times on the button
+      // should not do anything
+      if(order.isGeneratingPackingSlip) {
+        return;
       }
+
+      order.isGeneratingPackingSlip = true;
+      await OrderService.printPackingSlip([order.shipmentId]);
+      order.isGeneratingPackingSlip = false;
     },
     async printShippingLabelAndPackingSlip(order: any) {
       await OrderService.printShippingLabelAndPackingSlip(order.shipmentId)
@@ -883,7 +854,7 @@ export default defineComponent({
           logger.error(error)
           return;
         }
-        await this.createPicklist(order, "_NA_", "Default");
+        await this.createPicklist(order, "_NA_");
         this.pickers = ["Default"]
         this.picklistDate = DateTime.now().toMillis()
         this.prepareOrderTimeline();
@@ -897,7 +868,7 @@ export default defineComponent({
 
       assignPickerModal.onDidDismiss().then(async(result: any) => {
         if(result.data?.selectedPicker) {
-          await this.createPicklist(order, result.data.selectedPicker, result.data.picker)
+          await this.createPicklist(order, result.data.selectedPicker)
           this.pickers = result.data.picker
           this.picklistDate = DateTime.now().toMillis()
           this.prepareOrderTimeline();
@@ -906,31 +877,37 @@ export default defineComponent({
 
       return assignPickerModal.present();
     },
-    async createPicklist(order: any, selectedPicker: any, picker: any) {
+    async createPicklist(order: any, selectedPicker: any) {
       let resp;
 
-      const items = order.part.items;
-      const formData = new FormData();
-      formData.append("facilityId", items[0].facilityId);
-      items.map((item: any, index: number) => {
-        formData.append("itemStatusId_o_"+index, "PICKITEM_PENDING")
-        formData.append("pickerIds_o_"+index, selectedPicker)
-        formData.append("picked_o_"+index, item.quantity)
-        Object.keys(item).map((property) => {
-          if(property !== "facilityId") formData.append(property+'_o_'+index, item[property])
-        })
-      });
+      const payload = {
+        packageName: "A", //default package name
+        facilityId: this.currentFacility?.facilityId,
+        shipmentMethodTypeId: order.parts[0]?.items[0]?.shipmentMethodTypeId,
+        statusId: "PICKLIST_ASSIGNED",        
+        pickers: selectedPicker ? [{
+          partyId: selectedPicker,
+          roleTypeId: "WAREHOUSE_PICKER"
+        }] : [],
+        orderItems: order.parts[0]?.items.map((item: { orderId: string, orderItemSeqId: string, shipGroupSeqId: string, productId: string, quantity: number }) => ({
+          orderId: item.orderId,
+          orderItemSeqId: item.orderItemSeqId,
+          shipGroupSeqId: item.shipGroupSeqId,
+          productId: item.productId,
+          quantity: item.quantity
+        }))
+      };      
 
       try {
-        resp = await OrderService.createPicklist(formData);
+        resp = await OrderService.createPicklist(payload);
         if(!hasError(resp)) {
           // generating picklist after creating a new picklist
           await OrderService.printPicklist(resp.data.picklistId)
-          order["isPicked"] = "Y"
-          order["pickers"] = picker.name
-          order["picklistId"] = resp.data.picklistId
-          order["picklistBinId"] = resp.data.picklistBinId
-          this.store.dispatch('order/updateCurrent', { order })
+          this.order["isPicked"] = "Y"
+          this.order["picklistId"] = resp.data.picklistId
+          this.order["shipmentId"] = resp.data.shipmentIds[0]
+          console.log("Updated Order:", this.order);
+          this.store.dispatch("order/updateCurrentOrderInfo", this.order)
         } else {
           throw resp.data;
         }
