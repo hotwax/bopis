@@ -88,7 +88,7 @@
                 <p>{{ order.orderName ? order.orderName : order.orderId }}</p>
                 <p v-if="getBopisProductStoreSettings('ENABLE_TRACKING')">{{ order.pickers ? translate("Picked by", { pickers: order.pickers }) : translate("No picker assigned.") }}</p>
               </ion-label>
-              <ion-badge v-if="order.placedDate" color="dark" slot="end">{{ timeFromNow(order.placedDate) }}</ion-badge>
+              <ion-badge v-if="order.placedDate" color="dark" slot="end">{{ timeFromNowInMillis(order.placedDate) }}</ion-badge>
             </ion-item>
 
             <ion-item v-if="order.shippingInstructions" color="light" lines="none">
@@ -286,35 +286,20 @@ export default defineComponent({
       const timeDiff = DateTime.fromISO(time).diff(DateTime.local());
       return DateTime.local().plus(timeDiff).toRelative();
     },
+    timeFromNowInMillis (time: any) {
+      const timeDiff = DateTime.fromMillis(time).diff(DateTime.local());
+      return DateTime.local().plus(timeDiff).toRelative();
+    },
     async printPackingSlip(order: any) {
-
-      try {
-        // Get packing slip from the server
-        const response: any = await api({
-          method: 'get',
-          url: 'PackingSlip.pdf',
-          params: {
-            shipmentId: order.shipmentId
-          },
-          responseType: "blob"
-        })
-
-        if (!response || response.status !== 200 || hasError(response)) {
-          showToast(translate("Failed to load packing slip"))
-          return;
-        }
-
-        // Generate local file URL for the blob received
-        const pdfUrl = window.URL.createObjectURL(response.data);
-        // Open the file in new tab
-        (window as any).open(pdfUrl, "_blank").focus();
-
-      } catch(err) {
-        showToast(translate("Failed to load packing slip"))
-        logger.error(err)
+      // if the request to print packing slip is not yet completed, then clicking multiple times on the button
+      // should not do anything
+      if(order.isGeneratingPackingSlip) {
+        return;
       }
 
-
+      order.isGeneratingPackingSlip = true;
+      await OrderService.printPackingSlip([order.shipmentId]);
+      order.isGeneratingPackingSlip = false;
     },
     async refreshOrders(event: any) {
       if(this.segmentSelected === 'open') {

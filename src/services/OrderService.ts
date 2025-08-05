@@ -2,7 +2,7 @@ import { apiClient, hasError } from '@/adapter';
 import emitter from '@/event-bus';
 import { translate } from '@hotwax/dxp-components';
 import store from '@/store';
-import { formatPhoneNumber, showToast } from '@/utils';
+import { formatPhoneNumber, getCurrentFacilityId, showToast } from '@/utils';
 import logger from '@/logger';
 import { cogOutline } from 'ionicons/icons';
 import { UtilService } from "@/services/UtilService";
@@ -85,6 +85,32 @@ const getPackedOrders = async (payload: any): Promise <any> => {
     },
     data: payload
   });
+}
+
+const findPackedShipments = async (params: any): Promise <any>  => {
+  const omstoken = store.getters['user/getUserToken'];
+  const baseURL = store.getters['user/getBaseUrl'];
+
+  params = {
+    statusId: 'SHIPMENT_PACKED',
+    originFacilityId: getCurrentFacilityId(),
+    shipmentMethodTypeIds: 'STOREPICKUP',
+    shipmentTypeId: 'SALES_SHIPMENT',
+    keyword: params.keyword,
+    pageSize: 100,
+    pageIndex: params.viewIndex || 0
+  } as any
+
+  return await apiClient({
+    url: `/poorti/shipments`,
+    method: "GET",
+    baseURL,
+    headers: {
+      "Authorization": "Bearer " + omstoken,
+      "Content-Type": "application/json"
+    },
+    params
+  }) as any;
 }
 
 const getCompletedOrders = async (payload: any): Promise <any> => {
@@ -242,6 +268,47 @@ const printPicklist = async (picklistId: string): Promise<any> => {
   } catch (err) {
     showToast(translate('Failed to print picklist'))
     logger.error("Failed to print picklist", err)
+  }
+}
+
+const printPackingSlip = async (shipmentIds: Array<string>): Promise<any> => {
+  try {
+    const maargUrl = store.getters['user/getMaargUrl'];
+    const omstoken = store.getters['user/getUserToken'];
+
+    // Get packing slip from the server
+    const resp = await apiClient({
+      url: "fop/apps/pdf/PrintPackingSlip",
+      method: "GET",
+      baseURL: maargUrl,
+      headers: {
+        "Authorization": "Bearer " + omstoken,
+        "Content-Type": "application/json"
+      },
+      params: {
+        shipmentId: shipmentIds
+      },
+      responseType: "blob"
+    });
+
+
+    if (!resp || resp.status !== 200 || hasError(resp)) {
+      throw resp.data
+    }
+
+    // Generate local file URL for the blob received
+    const pdfUrl = window.URL.createObjectURL(resp.data);
+    // Open the file in new tab
+    try {
+      (window as any).open(pdfUrl, "_blank").focus();
+    }
+    catch {
+      showToast(translate('Unable to open as browser is blocking pop-ups.', {documentName: 'packing slip'}), { icon: cogOutline });
+    }
+
+  } catch (err) {
+    showToast(translate('Failed to print packing slip'))
+    logger.error("Failed to load packing slip", err)
   }
 }
 
@@ -521,6 +588,22 @@ const packOrder = async (payload: any): Promise<any> => {
   })
 }
 
+const shipOrder = async (payload: any): Promise<any> => {
+  const omstoken = store.getters['user/getUserToken'];
+  const baseURL = store.getters['user/getBaseUrl'];
+
+  return apiClient({
+    url: `/poorti/shipments/${payload.shipmentId}/ship`,
+    method: "POST",
+    baseURL,
+    headers: {
+      "Authorization": "Bearer " + omstoken,
+      "Content-Type": "application/json"
+    },
+    data: payload,
+  });
+}
+
 const performFind = async (payload: any): Promise<any> => {
   const baseURL = store.getters['user/getOmsBaseUrl'];
   const omstoken = store.getters['user/getUserToken'];
@@ -636,6 +719,7 @@ export const OrderService = {
   getOrderDetails,
   getCompletedOrders,
   getPackedOrders,
+  findPackedShipments,
   getOrderItemRejectionHistory,
   quickShipEntireShipGroup,
   rejectItem,
@@ -648,7 +732,9 @@ export const OrderService = {
   getCustomerContactDetails,
   getShippingPhoneNumber,
   packOrder,
+  shipOrder,
   performFind,
   printPicklist,
+  printPackingSlip,
   printShippingLabelAndPackingSlip
 }
