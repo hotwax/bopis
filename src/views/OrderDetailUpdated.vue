@@ -89,7 +89,7 @@
                       <ion-label>{{ getRejectionReasonDescription(item.rejectReason) }}</ion-label>
                       <ion-icon :icon="caretDownOutline"/>
                     </ion-chip>
-                    <ion-chip v-else-if="isEntierOrderRejectionEnabled(order)" outline color="danger" @click.stop="openRejectReasonPopover($event, item, order)">
+                    <ion-chip v-else-if="isEntireOrderRejectionEnabled(order)" outline color="danger" @click.stop="openRejectReasonPopover($event, item, order)">
                       <ion-label>{{ getRejectionReasonDescription(rejectEntireOrderReasonId) ? getRejectionReasonDescription(rejectEntireOrderReasonId) : translate("Reject to avoid order split (no variance)") }}</ion-label>
                       <ion-icon :icon="caretDownOutline"/>
                     </ion-chip>
@@ -150,7 +150,7 @@
                       <p class="overline">{{ getProductIdentificationValue(productIdentificationPref.secondaryId, getProduct(productComponent.productIdTo)) }}</p>
                       {{ getProductIdentificationValue(productIdentificationPref.primaryId, getProduct(productComponent.productIdTo)) ? getProductIdentificationValue(productIdentificationPref.primaryId, getProduct(productComponent.productIdTo)) : productComponent.productIdTo }}
                     </ion-label>
-                    <ion-checkbox slot="end" aria-label="Rejection Reason kit component" v-if="item.rejectReason || isEntierOrderRejectionEnabled(order)" :checked="item.rejectedComponents?.includes(productComponent.productIdTo)" @ionChange="rejectKitComponent(order, item, productComponent.productIdTo)" color="danger"/>
+                    <ion-checkbox slot="end" aria-label="Rejection Reason kit component" v-if="item.rejectReason || isEntireOrderRejectionEnabled(order)" :checked="item.rejectedComponents?.includes(productComponent.productIdTo)" @ionChange="rejectKitComponent(order, item, productComponent.productIdTo)" color="danger"/>
                   </ion-item>
                 </template>
               </div>
@@ -398,7 +398,7 @@ import { Actions, hasPermission } from '@/authorization'
 import OrderItemRejHistoryModal from '@/components/OrderItemRejHistoryModal.vue';
 import AssignPickerModal from "@/views/AssignPickerModal.vue";
 import EditPickerModal from "@/components/EditPickerModal.vue";
-import { copyToClipboard, formatCurrency, getColorByDesc, getFeature, showToast } from '@/utils'
+import { copyToClipboard, formatCurrency, getColorByDesc, getCurrentFacilityId, getFeature, showToast } from '@/utils'
 import { DateTime } from "luxon";
 import { api, hasError } from '@/adapter';
 import { OrderService } from "@/services/OrderService";
@@ -569,52 +569,41 @@ export default defineComponent({
       }
 
       let order = JSON.parse(JSON.stringify(this.order))
-
-      // https://blog.devgenius.io/using-async-await-in-a-foreach-loop-you-cant-c174b31999bd
-      // The forEach, map, reduce loops are not built to work with asynchronous callback functions.
-      // It doesn't wait for the promise of an iteration to be resolved before it goes on to the next iteration.
-      // We could use either the for…of the loop or the for(let i = 0;….)
+      const isEntireOrderRejection = this.isEntireOrderRejectionEnabled(order);
+      const rejectToFacilityId = order.part.shipmentMethodEnum.shipmentMethodEnumId === "STOREPICKUP" ? "PICKUP_REJECTED" : null;
+      const itemsToReject: any[] = [];
+      
       for (const item of order.part.items) {
-        let params = {} as any;
-        if(this.isEntierOrderRejectionEnabled(order)) {
-          params = {
-            ...payload,
-            rejectReason: item.rejectReason || this.rejectEntireOrderReasonId,
-            facilityId: item.facilityId,
-            orderItemSeqId: item.orderItemSeqId,
-            shipmentMethodTypeId: order.part.shipmentMethodEnum.shipmentMethodEnumId,
-            quantity: parseInt(item.quantity),
-            ...(order.part.shipmentMethodEnum.shipmentMethodEnumId === "STOREPICKUP" && ({"naFacilityId": "PICKUP_REJECTED"})),
-          }
-        } else if(item.rejectReason) {
-          params = {
-            ...payload,
-            rejectReason: item.rejectReason || this.rejectEntireOrderReasonId,
-            facilityId: item.facilityId,
-            orderItemSeqId: item.orderItemSeqId,
-            shipmentMethodTypeId: order.part.shipmentMethodEnum.shipmentMethodEnumId,
-            quantity: parseInt(item.quantity),
-            ...(order.part.shipmentMethodEnum.shipmentMethodEnumId === "STOREPICKUP" && ({"naFacilityId": "PICKUP_REJECTED"})),
-          }
-        }
+        const shouldReject = isEntireOrderRejection || item.rejectReason;
 
-        if(Object.keys(params).length) {
-          // If the item is a kit, then pass the rejectedComponents with the item on rejection
-          if(isKit(item)) {
-            params["rejectedComponents"] = item.rejectedComponents
+        if (shouldReject) {
+          itemsToReject.push({
+            orderItemSeqId: item.orderItemSeqId,
+            quantity: parseInt(item.quantity),
+            updateQOH: false, // Could be true if QOH needs to be updated on rejection
+            rejectionReasonId: item.rejectReason || this.rejectEntireOrderReasonId,
+            kitComponents: isKit(item) ? item.rejectedComponents || [] : []
+          });
+        }
+      }
+      if (itemsToReject.length > 0) {
+        const payload = {
+          orderId: order.orderId,
+          rejectToFacilityId,
+          items: itemsToReject
+        };
+        try {
+          const resp = await OrderService.rejectOrderItems({ payload });
+
+          if (!hasError(resp)) {
+            // Remove rejected items from the part.items
+            const rejectedSeqIds = new Set(itemsToReject.map(i => i.orderItemSeqId));
+            order.part.items = order.part.items.filter(
+              (item: any) => !rejectedSeqIds.has(item.orderItemSeqId)
+            );
           }
-          try {
-            const resp = await OrderService.rejectOrderItem({ payload: params });
-  
-            if(!hasError(resp)) {
-              order["part"] = {
-                ...order.part,
-                items: order.part.items.filter((orderItem: any) => !(orderItem.orderItemSeqId === item.orderItemSeqId && orderItem.productId === item.productId))
-              }
-            }
-          } catch(err) {
-            logger.error(`Something went wrong while rejecting order item ${item.productId}/${item.orderItemSeqId}`)
-          }
+        } catch (err) {
+          logger.error("Something went wrong while rejecting order items:", err);
         }
       }
 
@@ -835,7 +824,7 @@ export default defineComponent({
       const reason = this.cancelReasons?.find((reason: any) => reason.enumId === cancelReasonId)
       return reason?.enumDescription ? reason.enumDescription : reason?.enumId;
     },
-    isEntierOrderRejectionEnabled(order: any) {
+    isEntireOrderRejectionEnabled(order: any) {
       return (!this.partialOrderRejectionConfig || !this.partialOrderRejectionConfig.settingValue || !JSON.parse(this.partialOrderRejectionConfig.settingValue)) && this.hasRejectedItems
     },
     async removeRejectionReason(ev: Event, item: any, order: any) {

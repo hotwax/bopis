@@ -191,6 +191,22 @@ const rejectOrderItem = async (payload: any): Promise <any> => {
   });
 }
 
+const rejectOrderItems = async (payload: any): Promise <any> => {
+  const baseURL = store.getters['user/getBaseUrl'];
+  const omstoken = store.getters['user/getUserToken'];
+
+  return apiClient({
+    url: "rejectOrderItems",
+    method: "post",
+    baseURL,
+    headers: {
+      "Authorization": "Bearer " + omstoken,
+      "Content-Type": "application/json"
+    },
+    data: payload
+  });
+}
+
 const createPicklist = async (query: any): Promise <any> => {
   const baseURL = store.getters['user/getOmsBaseUrl'];
   const omstoken = store.getters['user/getUserToken'];
@@ -537,10 +553,10 @@ const performFind = async (payload: any): Promise<any> => {
 }
 
 const cancelItem = async (payload: any): Promise<any> => {
-  const baseURL = store.getters['user/getOmsBaseUrl'];
+  const baseURL = store.getters['user/getBaseUrl'];
   const omstoken = store.getters['user/getUserToken'];
   return apiClient({
-    url: "cancelOrderItem",
+    url: `oms/orders/${payload.orderId}/items/${payload.orderItemSeqId}/cancel`,
     method: "post",
     baseURL,
     headers: {
@@ -640,6 +656,7 @@ export const OrderService = {
   quickShipEntireShipGroup,
   rejectItem,
   rejectOrderItem,
+  rejectOrderItems,
   updateShipment,
   createPicklist,
   sendPickupScheduledNotification,

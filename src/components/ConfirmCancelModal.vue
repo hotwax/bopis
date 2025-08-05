@@ -140,16 +140,15 @@ export default defineComponent({
       emitter.emit("presentLoader");
       let isCancelled = true
       for (const item of this.cancelledItems) {
-        const params = {
+        const payload = {
           orderId: this.currentOrder.orderId,
           orderItemSeqId: item.orderItemSeqId,
           shipGroupSeqId: item.shipGroupSeqId,
-          cancelQuantity: item.quantity ? parseInt(item.quantity) : 1,
-          [`irm_${item.orderItemSeqId}`]: item.cancelReason
+          reason: item.cancelReason
         }
 
         try {
-          const resp = await OrderService.cancelItem(params);
+          const resp = await OrderService.cancelItem(payload);
 
           if(hasError(resp)) {
             throw resp.data
@@ -172,7 +171,7 @@ export default defineComponent({
         // This is done because when cancelling some of the order items the shipment is marked as approved, resulting in removing the order from packed tab
         // but we need the order to be displayed in packed tab as it still has some items as reserved status
         if(isCancelled) {
-          await this.store.dispatch("order/packDeliveryItems", this.currentOrder.shipmentId)
+          await this.store.dispatch("order/packDeliveryItems", { orderId: this.currentOrder.orderId, shipmentId: this.currentOrder.shipmentId })
         }
       }
 
