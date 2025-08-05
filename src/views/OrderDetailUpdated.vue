@@ -236,8 +236,8 @@
                   <ion-item lines="none">
                     <ion-label class="ion-text-wrap">
                       <p class="overline">{{ orderPayment.methodTypeId }}</p>
-                      <ion-label>{{ translate(getPaymentMethodDesc(orderPayment.methodTypeId)) || orderPayment.methodTypeId }}</ion-label>
-                      <ion-note :color="getColorByDesc(getStatusDesc(orderPayment.paymentStatus))">{{ translate(getStatusDesc(orderPayment.paymentStatus)) }}</ion-note>
+                      <ion-label>{{ translate(orderPayment.methodDesc) || orderPayment.methodTypeId }}</ion-label>
+                      <ion-note :color="getColorByDesc(orderPayment.paymentStatusDesc)">{{ translate(orderPayment.paymentStatusDesc) }}</ion-note>
                     </ion-label>
                     <div slot="end" class="ion-text-end">
                       <ion-badge v-if="order.orderPayments.length > 1 && index === 0" color="dark">{{ translate("Latest") }}</ion-badge>
@@ -398,7 +398,7 @@ import { Actions, hasPermission } from '@/authorization'
 import OrderItemRejHistoryModal from '@/components/OrderItemRejHistoryModal.vue';
 import AssignPickerModal from "@/views/AssignPickerModal.vue";
 import EditPickerModal from "@/components/EditPickerModal.vue";
-import { copyToClipboard, formatCurrency, getColorByDesc, getFeature, showToast } from '@/utils'
+import { copyToClipboard, formatCurrency, getColorByDesc, getCurrentFacilityId, getFeature, showToast } from '@/utils'
 import { DateTime } from "luxon";
 import { api, hasError } from '@/adapter';
 import { OrderService } from "@/services/OrderService";
@@ -558,8 +558,6 @@ export default defineComponent({
         orderPartSeqId
       }
       await this.store.dispatch("order/getOrderDetail", { payload, orderType })
-      await this.store.dispatch("order/fetchPaymentDetail")
-      await this.store.dispatch("order/getShippingPhoneNumber")
     },
     async rejectOrder() {
       emitter.emit("presentLoader");
