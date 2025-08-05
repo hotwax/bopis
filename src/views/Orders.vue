@@ -136,7 +136,7 @@
                 <h1>{{ order.customer.name }}</h1>
                 <p>{{ order.orderName ? order.orderName : order.orderId }}</p>
               </ion-label>
-              <ion-badge v-if="order.placedDate" color="dark" slot="end">{{ timeFromNow(order.placedDate) }}</ion-badge>
+              <ion-badge v-if="order.placedDate" color="dark" slot="end">{{ timeFromNowInMillis(order.placedDate) }}</ion-badge>
             </ion-item>
 
             <ProductListItem v-for="item in order.part.items" :key="item.productId" :item="item" :orderId="order.orderId" :customerId="order.customer.partyId" orderType="completed"/>
@@ -284,6 +284,10 @@ export default defineComponent({
     },
     timeFromNow (time: any) {
       const timeDiff = DateTime.fromISO(time).diff(DateTime.local());
+      return DateTime.local().plus(timeDiff).toRelative();
+    },
+    timeFromNowInMillis (time: any) {
+      const timeDiff = DateTime.fromMillis(time).diff(DateTime.local());
       return DateTime.local().plus(timeDiff).toRelative();
     },
     async printPackingSlip(order: any) {
