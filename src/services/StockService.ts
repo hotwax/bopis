@@ -17,12 +17,12 @@ const checkInventory = async (query: any): Promise <any>  => {
   });
 }
 
-const getInventoryAvailableByFacility = async (query: any): Promise <any> => {
-  const baseURL = store.getters['user/getOmsBaseUrl'];
+const checkShippingInventory = async (query: any): Promise <any>  => {
+  const baseURL = store.getters['user/getBaseUrl'];
   const omstoken = store.getters['user/getUserToken'];
 
   return apiClient({
-    url: "service/getInventoryAvailableByFacility",
+    url: "ofbiz-oms-usl/checkShippingInventory", 
     method: "post",
     baseURL,
     headers: {
@@ -33,7 +33,23 @@ const getInventoryAvailableByFacility = async (query: any): Promise <any> => {
   });
 }
 
-const fetchInventoryCount = async (payload: any ): Promise<any> => {
+const getInventoryAvailableByFacility = async (params: any): Promise <any> => {
+  const baseURL = store.getters['user/getBaseUrl'];
+  const omstoken = store.getters['user/getUserToken'];
+
+  return apiClient({
+    url: "poorti/getInventoryAvailableByFacility",
+    method: "get",
+    baseURL,
+    headers: {
+      "Authorization": "Bearer " + omstoken,
+      "Content-Type": "application/json"
+    },
+    params
+  });
+}
+
+const fetchProductInventory = async (payload: any ): Promise<any> => {
   const baseURL = store.getters['user/getOmsBaseUrl'];
   const omstoken = store.getters['user/getUserToken'];
 
@@ -51,6 +67,7 @@ const fetchInventoryCount = async (payload: any ): Promise<any> => {
 
 export const StockService = {
   checkInventory,
+  checkShippingInventory,
   getInventoryAvailableByFacility,
-  fetchInventoryCount
+  fetchProductInventory
 }

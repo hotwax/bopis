@@ -60,7 +60,7 @@
               <ion-list v-if="selectedSegment === 'inStore'">
                 <ion-item>
                   <ion-label class="ion-text-wrap">{{ translate("Quantity on hand")}}</ion-label>
-                  <ion-note slot="end">{{ getProductStock(currentVariant.productId).quantityOnHandTotal ?? '0' }}</ion-note>
+                  <ion-note slot="end">{{ getInventoryInformation(currentVariant.productId).quantityOnHand ?? '0' }}</ion-note>
                 </ion-item>
                 <ion-item>
                   <ion-label class="ion-text-wrap">{{ translate("Safety stock")}}</ion-label>
@@ -211,10 +211,10 @@ export default defineComponent({
     ...mapGetters({
       product: "product/getCurrent",
       currency: 'user/getCurrency',
-      getProductStock: 'stock/getProductStock',
       getInventoryInformation: 'stock/getInventoryInformation',
       orders: 'order/getOrders',
       getProduct: 'product/getProduct',
+      currentEComStore: 'user/getCurrentEComStore',
     }),
   },
   async beforeMount() {
@@ -269,42 +269,46 @@ export default defineComponent({
       this.currentVariant = variant || this.product.variants[0];
       await this.checkInventory();
       await this.getOrderDetails();
-      await this.store.dispatch('stock/fetchStock', { productId: this.currentVariant.productId })
-      await this.store.dispatch('stock/fetchInventoryCount', { productId: this.currentVariant.productId });
-      await this.store.dispatch('stock/fetchReservedQuantity', { productId: this.currentVariant.productId });
+      await this.store.dispatch('stock/fetchProductInventory', { productId: this.currentVariant.productId })
+      // await this.store.dispatch('stock/fetchInventoryCount', { productId: this.currentVariant.productId });
+      // await this.store.dispatch('stock/fetchReservedQuantity', { productId: this.currentVariant.productId });
     },
     async checkInventory() {
       this.currentStoreInventory = this.otherStoresInventory = this.warehouseInventory = 0
       this.otherStoresInventoryDetails = []
 
       try {
-        const resp: any = await StockService.checkInventory({
-          "filters": { 
-            "productId": this.currentVariant.productId,
-            "facilityTypeId_fld0_value": 'WAREHOUSE',
-            "facilityTypeId_fld0_op": 'equals',
-            "facilityTypeId_fld0_grp": '1',
-            "facilityTypeId_fld1_value": 'RETAIL_STORE',
-            "facilityTypeId_fld1_op": 'equals',
-            "facilityTypeId_fld1_grp": '2'
-          },
-          "fieldsToSelect": ["productId", "atp", "facilityName", "facilityId", "facilityTypeId"],
+        const resp: any = await StockService.checkShippingInventory({
+          productStoreId: this.currentEComStore.productStoreId,
+          productIds: this.currentVariant.productId,
         });
 
-        if (resp.status === 200 && !hasError(resp) && resp.data.docs.length) {
-          resp.data.docs.map((storeInventory: any) => {
-            if(storeInventory.atp) {
-              const isCurrentStore = storeInventory.facilityId === this.currentFacility?.facilityId;
-              if (isCurrentStore) this.currentStoreInventory = storeInventory.atp;
-              if (storeInventory.facilityTypeId === 'WAREHOUSE') {
-                this.warehouseInventory += storeInventory.atp
-              } else if (!isCurrentStore) {
-                // Only add to list if it is not a current store
-                this.otherStoresInventoryDetails.push({ facilityName: storeInventory.facilityName, stock: storeInventory.atp, facilityId: storeInventory.facilityId })
-                this.otherStoresInventory += storeInventory.atp
+        if (resp.status === 200 && !hasError(resp)) {          
+          const resultList = resp.data.resultList || [];
+      
+          resultList.forEach((productInventory: any) => {
+            (productInventory.facilities || []).forEach((storeInventory: any) => {
+              const atp = storeInventory.atp;
+              if (atp) {
+                const isCurrentStore = storeInventory.facilityId === this.currentFacility?.facilityId;
+                if (isCurrentStore) {
+                  this.currentStoreInventory = atp;
+                }
+
+                if (storeInventory.facilityTypeId === 'WAREHOUSE') {
+                  this.warehouseInventory += atp;
+                } else if (!isCurrentStore) {
+                  // Only add to list if it is not a current store
+                  this.otherStoresInventoryDetails.push({
+                    facilityName: storeInventory.facilityName || storeInventory.facilityId,
+                    stock: atp,
+                    facilityId: storeInventory.facilityId
+                  });
+                  this.otherStoresInventory += atp;
+                }
               }
-            }
-          })
+            });
+          });
         }
       } catch (error) {
         logger.error(error)

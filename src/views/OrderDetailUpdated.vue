@@ -111,13 +111,13 @@
 
                   <!-- Fetch Stock -->
                   <ion-spinner v-if="item.isFetchingStock" color="medium" name="crescent" />
-                  <div v-else-if="getProductStock(item.productId).quantityOnHandTotal >= 0" class="atp-info">
-                    <ion-note slot="end"> {{ translate("on hand", { count: getProductStock(item.productId).quantityOnHandTotal ?? '0' }) }} </ion-note>
+                  <div v-else-if="getInventoryInformation(item.productId).quantityOnHand >= 0" class="atp-info">
+                    <ion-note slot="end"> {{ translate("on hand", { count: getInventoryInformation(item.productId).quantityOnHand ?? '0' }) }} </ion-note>
                     <ion-button fill="clear" @click.stop="openInventoryDetailPopover($event, item)">
                       <ion-icon slot="icon-only" :icon="informationCircleOutline" color="medium" />
                     </ion-button>
                   </div>
-                  <ion-button v-else fill="clear" @click.stop="fetchProductStock(item.productId, order.shipGroupSeqId)">
+                  <ion-button v-else fill="clear" @click.stop="fetchProductInventory(item.productId, order.shipGroupSeqId)">
                     <ion-icon color="medium" slot="icon-only" :icon="cubeOutline" />
                   </ion-button>
 
@@ -295,13 +295,13 @@
 
                   <div slot="end">
                     <ion-spinner v-if="item.isFetchingStock" color="medium" name="crescent" />
-                    <div v-else-if="getProductStock(item.productId).quantityOnHandTotal >= 0" class="atp-info">
-                      <ion-note slot="end"> {{ translate("on hand", { count: getProductStock(item.productId).quantityOnHandTotal ?? '0' }) }} </ion-note>
+                    <div v-else-if="getInventoryInformation(item.productId).quantityOnHand >= 0" class="atp-info">
+                      <ion-note slot="end"> {{ translate("on hand", { count: getInventoryInformation(item.productId).quantityOnHand ?? '0' }) }} </ion-note>
                       <ion-button fill="clear" @click.stop="openInventoryDetailPopover($event, item)">
                         <ion-icon slot="icon-only" :icon="informationCircleOutline" color="medium" />
                       </ion-button>
                     </div>
-                    <ion-button v-else fill="clear" @click.stop="fetchProductStock(item.productId, shipGroup.shipGroupSeqId)">
+                    <ion-button v-else fill="clear" @click.stop="fetchProductInventory(item.productId, shipGroup.shipGroupSeqId)">
                       <ion-icon color="medium" slot="icon-only" :icon="cubeOutline" />
                     </ion-button>
                   </div>
@@ -463,6 +463,7 @@ export default defineComponent({
       getPaymentMethodDesc: 'util/getPaymentMethodDesc',
       getStatusDesc: 'util/getStatusDesc',
       getProduct: 'product/getProduct',
+      getInventoryInformation: 'stock/getInventoryInformation',
       getProductStock: 'stock/getProductStock',
       getfacilityTypeDesc: 'util/getFacilityTypeDesc',
       getPartyName: 'util/getPartyName',
@@ -476,9 +477,9 @@ export default defineComponent({
   },
   props: ['orderType', 'orderId', 'orderPartSeqId'],
   methods: {
-    async fetchProductStock(productId: string, shipGroupSeqId: any) {
+    async fetchProductInventory(productId: string, shipGroupSeqId: any) {
       this.store.dispatch('order/updateOrderItemFetchingStatus', { productId, shipGroupSeqId })
-      await this.store.dispatch('stock/fetchStock', { productId })
+      await this.store.dispatch('stock/fetchProductInventory', { productId })
       this.store.dispatch('order/updateOrderItemFetchingStatus', { productId, shipGroupSeqId })
     },
     async assignPicker(order: any, part: any, facilityId: any) {
