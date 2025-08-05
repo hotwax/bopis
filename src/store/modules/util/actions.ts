@@ -28,7 +28,7 @@ const actions: ActionTree<UtilState, RootState> = {
           pageSize: 20, // keeping view size 20 as considering that we will have max 20 reasons
         ...payload
       }
-      resp = await UtilService.fetchRejectReasonsNew(payload);
+      resp = await UtilService.fetchRejectReasons(payload);
     } else {
       payload = {
           enumerationGroupId: "BOPIS_REJ_RSN_GRP",
