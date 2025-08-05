@@ -155,6 +155,11 @@
                 {{ translate("Copy") }}
               </ion-button>
             </ion-item>
+            <div class="border-top">
+              <ion-button v-if="getBopisProductStoreSettings('PRINT_PACKING_SLIPS')" fill="clear" slot="end" @click.stop="printPackingSlip(order)">
+                {{ translate('Print Customer Letter') }}
+              </ion-button>
+            </div>
           </ion-card>
         </div>
       </div>
