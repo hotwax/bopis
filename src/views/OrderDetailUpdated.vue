@@ -583,11 +583,14 @@ export default defineComponent({
             facilityId: item.facilityId,
             updateQOH: false, // Could be true if QOH needs to be updated on rejection
             rejectionReasonId: item.rejectReason || this.rejectEntireOrderReasonId,
+            rejectReason: item.rejectReason || this.rejectEntireOrderReasonId,
+            shipmentMethodTypeId: order.part.shipmentMethodEnum.shipmentMethodEnumId,
+            ...(order.part.shipmentMethodEnum.shipmentMethodEnumId === "STOREPICKUP" && ({"naFacilityId": "PICKUP_REJECTED"})),
             kitComponents: isKit(item) ? item.rejectedComponents || [] : []
           });
         }
       }
-      if (itemsToReject.length > 0) {
+      if (itemsToReject.length) {
         const payload = {
           orderId: order.orderId,
           rejectToFacilityId,
