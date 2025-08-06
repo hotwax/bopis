@@ -35,7 +35,7 @@
             <ion-item lines="none">
               <ion-label class="ion-text-wrap">
                 <h1>{{ order.customer.name }}</h1>
-                <p>{{ order.orderName ? order.orderName : order.orderId }}</p>
+                <p data-testid="order-name-tag">{{ order.orderName ? order.orderName : order.orderId }}</p>
               </ion-label>
               <div class="metadata">
                 <ion-badge v-if="order.placedDate" color="dark">{{ timeFromNow(order.placedDate) }}</ion-badge>
@@ -85,7 +85,7 @@
             <ion-item lines="none">
               <ion-label class="ion-text-wrap">
                 <h1>{{ order.customer.name }}</h1>
-                <p>{{ order.orderName ? order.orderName : order.orderId }}</p>
+                <p data-testid="order-name-tag">{{ order.orderName ? order.orderName : order.orderId }}</p>
                 <p v-if="getBopisProductStoreSettings('ENABLE_TRACKING')">{{ order.pickers ? translate("Picked by", { pickers: order.pickers }) : translate("No picker assigned.") }}</p>
               </ion-label>
               <ion-badge v-if="order.placedDate" color="dark" slot="end">{{ timeFromNow(order.placedDate) }}</ion-badge>
@@ -134,7 +134,7 @@
             <ion-item lines="none">
               <ion-label class="ion-text-wrap">
                 <h1>{{ order.customer.name }}</h1>
-                <p>{{ order.orderName ? order.orderName : order.orderId }}</p>
+                <p data-testid="order-name-tag">{{ order.orderName ? order.orderName : order.orderId }}</p>
               </ion-label>
               <ion-badge v-if="order.placedDate" color="dark" slot="end">{{ timeFromNow(order.placedDate) }}</ion-badge>
             </ion-item>

@@ -50,8 +50,8 @@
           <ion-item lines="none">
             <ion-icon slot="start" :icon="ticketOutline" />
             <ion-label>
-              <h1>{{ order.orderName }}</h1>
-              <p>{{ order.orderId }}</p>
+              <h1 data-testid="order-name-tag">{{ order.orderName }}</h1>
+              <p data-testid="order-id-tag">{{ order.orderId }}</p>
             </ion-label>
             <ion-chip data-testid="edit-picker-chip" :disabled="!hasPermission(Actions.APP_ORDER_UPDATE)" v-if="order.pickers && (orderType === 'open' || orderType === 'packed') && getBopisProductStoreSettings('ENABLE_TRACKING')" outline slot="end" @click="editPicker(order)">
               <ion-icon :icon="personOutline"/>
@@ -84,8 +84,8 @@
                 <div class="product-metadata" slot="end">
                   <!-- Order item rejection flow -->
                   <template v-if="orderType === 'open' && !(order.readyToHandover || order.readyToShip)">
-                    <ion-chip v-if="item.rejectReason" outline color="danger" @click.stop="openRejectReasonPopover($event, item, order)">
-                      <ion-icon :icon="closeCircleOutline" @click.stop="removeRejectionReason($event, item, order)"/>
+                    <ion-chip data-testid="change-rejection-reason-chip" v-if="item.rejectReason" outline color="danger" @click.stop="openRejectReasonPopover($event, item, order)">
+                      <ion-icon data-testid="void-rejection-reason-icon" :icon="closeCircleOutline" @click.stop="removeRejectionReason($event, item, order)"/>
                       <ion-label>{{ getRejectionReasonDescription(item.rejectReason) }}</ion-label>
                       <ion-icon :icon="caretDownOutline"/>
                     </ion-chip>
@@ -93,18 +93,18 @@
                       <ion-label>{{ getRejectionReasonDescription(rejectEntireOrderReasonId) ? getRejectionReasonDescription(rejectEntireOrderReasonId) : translate("Reject to avoid order split (no variance)") }}</ion-label>
                       <ion-icon :icon="caretDownOutline"/>
                     </ion-chip>
-                    <ion-button v-else slot="end" color="danger" fill="clear" size="small" @click.stop="openRejectReasonPopover($event, item, order)">
+                    <ion-button  data-testid="select-rejected-item-button"  v-else slot="end" color="danger" fill="clear" size="small" @click.stop="openRejectReasonPopover($event, item, order)">
                       <ion-icon slot="icon-only" :icon="trashOutline"/>
                     </ion-button>
                   </template>
                   <!-- Order item calcelation flow -->
                   <template v-else-if="orderType === 'packed' && !(order.handovered || order.shipped)">
-                    <ion-chip v-if="item.cancelReason" outline color="danger" @click.stop="openCancelReasonPopover($event, item, order)">
-                      <ion-icon :icon="closeCircleOutline" @click.stop="removeCancellationReason($event, item, order)"/>
+                    <ion-chip data-testid="change-cancel-reason-chip" v-if="item.cancelReason" outline color="danger" @click.stop="openCancelReasonPopover($event, item, order)">
+                      <ion-icon data-testid="void-cancel-reason-icon" :icon="closeCircleOutline" @click.stop="removeCancellationReason($event, item, order)"/>
                       <ion-label>{{ getCancelReasonDescription(item.cancelReason) }}</ion-label>
                       <ion-icon :icon="caretDownOutline"/>
                     </ion-chip>
-                    <ion-button data-testid="cancel-items-button" v-else slot="end" color="danger" fill="clear" size="small" @click.stop="openCancelReasonPopover($event, item, order)">
+                    <ion-button data-testid="select-cancel-item-button" v-else slot="end" color="danger" fill="clear" size="small" @click.stop="openCancelReasonPopover($event, item, order)">
                       {{ translate("Cancel") }}
                     </ion-button>
                   </template>
@@ -194,7 +194,7 @@
               <ion-icon slot="start" :icon="checkmarkDoneOutline"/>
               {{ order.part?.shipmentMethodEnum?.shipmentMethodEnumId === 'STOREPICKUP' ? translate("Handover") : translate("Ship") }}
             </ion-button>
-            <ion-button data-testid="cancel-item-button" color="danger" size="default" :disabled="!hasPermission(Actions.APP_ORDER_UPDATE) || order.handovered || order.shipped || order.cancelled || !hasCancelledItems" expand="block" fill="outline" @click="cancelOrder(order)">
+            <ion-button data-testid="submit-cancel-items-button" color="danger" size="default" :disabled="!hasPermission(Actions.APP_ORDER_UPDATE) || order.handovered || order.shipped || order.cancelled || !hasCancelledItems" expand="block" fill="outline" @click="cancelOrder(order)">
               {{ translate("Cancel items") }}
             </ion-button>
           </ion-item>

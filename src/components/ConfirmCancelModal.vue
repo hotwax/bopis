@@ -52,7 +52,7 @@
       </ion-item>
     </ion-list>
 
-    <ion-button class="ion-margin" color="danger" @click="cancelOrder">
+    <ion-button data-testid="confirm-cancellation-button" class="ion-margin" color="danger" @click="cancelOrder">
       {{ translate("Confirm Cancelation") }}
     </ion-button>
   </ion-content>
