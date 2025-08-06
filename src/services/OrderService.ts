@@ -1,4 +1,4 @@
-import { apiClient, hasError } from '@/adapter';
+import { api, apiClient, hasError } from '@/adapter';
 import emitter from '@/event-bus';
 import { translate } from '@hotwax/dxp-components';
 import store from '@/store';
@@ -8,34 +8,19 @@ import { cogOutline } from 'ionicons/icons';
 import { UtilService } from "@/services/UtilService";
 
 const getOpenOrders = async (payload: any): Promise <any> => {
-  const omstoken = store.getters['user/getUserToken'];
-  const baseURL = store.getters['user/getBaseUrl'];
 
-  return apiClient({
+  return api({
     url: "oms/orders/storePickup",
     method: "get",
-    baseURL,
-    headers: {
-      "Authorization": "Bearer " + omstoken,
-      "Content-Type": "application/json"
-    },
     data: payload
   });
 }
 
 const fetchOrderDetails = async (orderId: string): Promise<any> => {
-  console.log("fetchOrderDetails orderId", orderId);
-  const omstoken = store.getters['user/getUserToken'];
-  const baseURL = store.getters['user/getBaseUrl'];
 
-  return apiClient({
+  return api({
     url: `oms/orders/${orderId}/details`,
     method: "get",
-    baseURL,
-    headers: {
-      "Authorization": "Bearer " + omstoken,
-      "Content-Type": "application/json"
-    }
   });
 }
 
@@ -56,33 +41,17 @@ const fetchOrderItems = async (payload: any): Promise <any> => {
 }
 
 const getOrderDetails = async (payload: any): Promise <any> => {
-  const baseURL = store.getters['user/getBaseUrl'];
-  const omstoken = store.getters['user/getUserToken'];
-
-  return await apiClient({
+  return await api({
     url: `oms/orders/${payload.orderId}`,
     method: "GET",
-    baseURL,
-    headers: {
-      "Authorization": "Bearer " + omstoken,
-      "Content-Type": "application/json"
-    },
     data: payload
   });
 }
 
 const fetchPicklists = async (payload: any): Promise <any>  => {
-  const omstoken = store.getters['user/getUserToken'];
-  const baseURL = store.getters['user/getBaseUrl'];
-
-  return apiClient({
+  return api({
     url: `poorti/shipmentPicklists`,
     method: "GET",
-    baseURL,
-    headers: {
-      "Authorization": "Bearer " + omstoken,
-      "Content-Type": "application/json"
-    },
     params: payload
   });
 }
@@ -224,17 +193,9 @@ const rejectOrderItem = async (payload: any): Promise <any> => {
 }
 
 const createPicklist = async (payload: any): Promise <any> => {
-  const baseURL = store.getters['user/getBaseUrl'];
-  const omstoken = store.getters['user/getUserToken'];
-
-  return apiClient({
+  return api({
     url: `/poorti/createOrderFulfillmentWave`,
     method: "POST",
-    baseURL,
-    headers: {
-      "Authorization": "Bearer " + omstoken,
-      "Content-Type": "application/json"
-    },
     data: payload
   });
 }
@@ -277,8 +238,6 @@ const printPicklist = async (picklistId: string): Promise<any> => {
 }
 
 const sendPickupScheduledNotification = async (payload: any): Promise <any> => {
-const baseURL = store.getters['user/getBaseUrl'];
-  const omstoken = store.getters['user/getUserToken'];
   payload = {
     "emailType": "READY_FOR_PICKUP",
     ...payload
@@ -286,11 +245,6 @@ const baseURL = store.getters['user/getBaseUrl'];
   return apiClient({
     url: "oms/orders/pickupScheduledNotification",
     method: "post",
-    baseURL,
-    headers: {
-      "Authorization": "Bearer " + omstoken,
-      "Content-Type": "application/json"
-    },
     data: payload
   });
 }
@@ -540,18 +494,10 @@ const fetchTrackingCodes = async (shipmentIds: Array<string>): Promise<any> => {
   return shipmentTrackingCodes;
 }
 
-const packOrder = async (payload: any): Promise<any> => {
-  const baseURL = store.getters['user/getBaseUrl'];
-  const omstoken = store.getters['user/getUserToken'];  
-
-  return await apiClient({
+const packOrder = async (payload: any): Promise<any> => {  
+  return await api({
     url: `poorti/shipments/${payload.shipmentId}/pack`,
     method: "POST",
-    baseURL,
-    headers: {
-      "Authorization": "Bearer " + omstoken,
-      "Content-Type": "application/json"
-    },
     data: payload,
   });
 }

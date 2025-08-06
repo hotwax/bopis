@@ -558,8 +558,6 @@ export default defineComponent({
         orderPartSeqId
       }
       await this.store.dispatch("order/getOrderDetail", { payload, orderType })
-      await this.store.dispatch("order/fetchPaymentDetail")
-      await this.store.dispatch("order/getShippingPhoneNumber")
     },
     async rejectOrder() {
       emitter.emit("presentLoader");

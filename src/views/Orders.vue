@@ -38,8 +38,8 @@
                 <p>{{ order.orderName ? order.orderName : order.orderId }}</p>
               </ion-label>
               <div class="metadata">
-                <ion-badge v-if="order.placedDate" color="dark">{{ timeFromNowInMillis(order.placedDate) }}</ion-badge>
-                <ion-badge v-if="order.statusId !== 'ORDER_APPROVED'" color="danger">{{ translate('pending approval') }}</ion-badge>
+                <ion-badge v-if="order.orderDate" color="dark">{{ timeFromNowInMillis(order.orderDate) }}</ion-badge>
+                <ion-badge v-if="order.orderStatusId !== 'ORDER_APPROVED'" color="danger">{{ translate('pending approval') }}</ion-badge>
               </div>
               <!-- TODO: Display the packed date of the orders, currently not getting the packed date from API-->
             </ion-item>
@@ -88,7 +88,7 @@
                 <p>{{ order.orderName ? order.orderName : order.orderId }}</p>
                 <p v-if="getBopisProductStoreSettings('ENABLE_TRACKING')">{{ order.pickers ? translate("Picked by", { pickers: order.pickers }) : translate("No picker assigned.") }}</p>
               </ion-label>
-              <ion-badge v-if="order.placedDate" color="dark" slot="end">{{ timeFromNow(order.placedDate) }}</ion-badge>
+              <ion-badge v-if="order.orderDate" color="dark" slot="end">{{ timeFromNow(order.orderDate) }}</ion-badge>
             </ion-item>
 
             <ion-item v-if="order.shippingInstructions" color="light" lines="none">
@@ -136,7 +136,7 @@
                 <h1>{{ order.customer.name }}</h1>
                 <p>{{ order.orderName ? order.orderName : order.orderId }}</p>
               </ion-label>
-              <ion-badge v-if="order.placedDate" color="dark" slot="end">{{ timeFromNow(order.placedDate) }}</ion-badge>
+              <ion-badge v-if="order.orderDate" color="dark" slot="end">{{ timeFromNow(order.orderDate) }}</ion-badge>
             </ion-item>
 
             <ProductListItem v-for="item in order.part.items" :key="item.productId" :item="item" :orderId="order.orderId" :customerId="order.customer.partyId" orderType="completed"/>
@@ -595,7 +595,6 @@ export default defineComponent({
           updatedOrder["isPicked"] = "Y"
           updatedOrder["picklistId"] = resp.data.picklistId
           updatedOrder["shipmentId"] = resp.data.shipmentIds[0]
-          console.log("Updated Order:", updatedOrder);
           this.store.dispatch("order/updateOpenOrder", { orders, total: orders.length })
         } else {
           throw resp.data;

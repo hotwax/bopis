@@ -9,7 +9,7 @@ import { translate } from "@hotwax/dxp-components";
 import emitter from '@/event-bus'
 import store from "@/store";
 import { prepareOrderQuery } from "@/utils/solrHelper";
-import { getOrderCategory, removeKitComponents } from '@/utils/order'
+import { getOrderCategory } from '@/utils/order'
 import { UtilService } from "@/services/UtilService";
 import logger from "@/logger";
 
@@ -113,7 +113,6 @@ const actions: ActionTree<OrderState , RootState> ={
     // Show loader only when new query and not the infinite scroll
     if (params.viewIndex === 0) emitter.emit("presentLoader");
     let resp;
-    console.log("Payload: ", params);
     params = {
       keyword: params.queryString || '',
       originFacilityId: params.facilityId,
@@ -121,7 +120,7 @@ const actions: ActionTree<OrderState , RootState> ={
       shipmentStatusId: 'SHIPMENT_INPUT,SHIPMENT_PACKED,SHIPMENT_SHIPPED',
       shipmentStatusId_op: 'in',
       shipmentStatusId_not: 'Y',
-      limit: '500',
+      limit: process.env.VUE_APP_VIEW_SIZE,
       pageIndex: params.viewIndex
     } as any;
 
@@ -149,7 +148,7 @@ const actions: ActionTree<OrderState , RootState> ={
               name: order.customerName
             },
             statusId: order.orderStatusId,
-            parts: removeKitComponents(order.items.reduce((arr: Array<any>, item: any) => {
+            parts: (order.items.reduce((arr: Array<any>, item: any) => {
               const currentOrderPart = arr.find((orderPart) => orderPart.orderPartSeqId === item.shipGroupSeqId);
               if (!currentOrderPart) {
                 arr.push({
@@ -194,7 +193,6 @@ const actions: ActionTree<OrderState , RootState> ={
           };
       });
 
-      console.log("\n\n --Chinmay: --\n\n", orders);
 
         const total = resp.data.grouped?.orderId?.ngroups;
 
@@ -227,7 +225,6 @@ const actions: ActionTree<OrderState , RootState> ={
       pageSize: orderIds.length
     }
     try {
-      console.log("Fetching pickers information for orders: ", orderIds);
       const resp = await OrderService.fetchPicklists(payload);
       if (!hasError(resp)) {
         const shipments = resp.data;
@@ -264,7 +261,6 @@ const actions: ActionTree<OrderState , RootState> ={
           pickerIds
         };
       });
-      console.log("\n\n Pickers Map: ", pickersMap);
       return pickersMap;
 
     } else {
@@ -487,28 +483,17 @@ const actions: ActionTree<OrderState , RootState> ={
         // Prepare order map using fields from API response
         
         order = {
-          orderId: data.orderId,
-          orderName: data.orderName,
-          currencyUom: data.currencyUom,
           shipmentId: data.shipGroups?.[0]?.shipmentId || null,
           statusId: data.orderStatusId,
-          orderType,
           customer: {
             partyId: data.partyId,
             name: `${data.customerFirstName || ""} ${data.customerLastName || ""}`.trim(),
           },
-          placedDate: data.orderDate,
-          entryDate: data.entryDate,
-          shippingInstructions: data.shippingInstructions,
           picklistId: null,
           isPicked: false,
           pickerIds: [],
-          pickers: "",
-          picklistBinId: data.picklistBinId,
+          pickers: "",          
           shipGroupSeqId: null,
-          billingAddress: data.billingAddress || {},
-          billingEmail: data.billingEmail,
-          billingPhone: data.billingPhone,
           shopifyOrderId: data.orderExternalId,
           orderAttributes:
             data.attributes?.reduce((acc: any, attr: any) => {
@@ -525,20 +510,15 @@ const actions: ActionTree<OrderState , RootState> ={
               paymentStatus: payment.statusId,
               paymentStatusDesc: payment.statusDesc,
             })) || [],
+          ...data  
         };
 
     const parts = [];
     for (const shipGroup of data.shipGroups || []) {
       const items =
         shipGroup.items?.map((item: any) => ({
-          orderItemSeqId: item.orderItemSeqId,
-          productId: item.productId,
-          facilityId: item.facilityId,
-          quantity: item.quantity,
+          ...item,
           showKitComponents: false,
-          shipGroupSeqId: item.shipGroupSeqId,
-          orderId: item.orderId,
-          inventoryItemId: item.inventoryItemId,
         })) || [];
 
       parts.push({
@@ -595,7 +575,6 @@ const actions: ActionTree<OrderState , RootState> ={
             isDetailsPage: true,
             currentOrders: [order]
           });
-          console.log("Enriched Orders: ", enrichedOrder);
           currentOrder = enrichedOrder;
         } else {
           currentOrder = order;
@@ -668,7 +647,7 @@ const actions: ActionTree<OrderState , RootState> ={
               name: orderItem.customerName,
             },
             statusId: orderItem.orderStatusId,
-            parts: removeKitComponents(order.doclist.docs.reduce((arr: Array<any>, item: any) => {
+            parts: (order.doclist.docs.reduce((arr: Array<any>, item: any) => {
               const currentOrderPart = arr.find((orderPart: any) => orderPart.orderPartSeqId === item.shipGroupSeqId)
               if (!currentOrderPart) {
                 arr.push({
@@ -760,7 +739,7 @@ const actions: ActionTree<OrderState , RootState> ={
               name: orderItem.customerPartyName,
             },
             statusId: orderItem.orderStatusId,
-            parts: removeKitComponents(order.doclist.docs.reduce((arr: Array<any>, item: any) => {
+            parts: (order.doclist.docs.reduce((arr: Array<any>, item: any) => {
               const currentOrderPart = arr.find((orderPart: any) => orderPart.orderPartSeqId === item.shipGroupSeqId)
               if (!currentOrderPart) {
                 arr.push({
@@ -1461,7 +1440,7 @@ const actions: ActionTree<OrderState , RootState> ={
 
       return reservedShipGroup ? {
         ...shipGroup,
-        items: removeKitComponents([{items: reservedShipGroupForOrder.doclist.docs}])[0]?.items,
+        items: ([{items: reservedShipGroupForOrder.doclist.docs}])[0]?.items,
         carrierPartyId: reservedShipGroup.carrierPartyId,
         shipmentId: reservedShipGroup.shipmentId,
         category: getOrderCategory({ ...reservedShipGroupForOrder.doclist.docs[0], ...shipGroup.items[0] }) // Passing shipGroup item information as we need to derive the order status and for that we need some properties those are available on ORDER doc
@@ -1499,7 +1478,6 @@ const actions: ActionTree<OrderState , RootState> ={
       console.error('Failed to fetch information for ship groups', err)
     }
     order['shipGroups'] = shipGroups
-    console.log('\n\n ------------------shipGroups ', order, ' ------------------ \n\n');
     commit(types.ORDER_CURRENT_UPDATED, {order})
 
     return shipGroups;

@@ -120,9 +120,6 @@ const getProductStoreSettings = async (payload: any): Promise<any> => {
   const baseURL = store.getters['user/getOmsBaseUrl'];
   const omstoken = store.getters['user/getUserToken'];
 
-  console.log('getProductStoreSettings', payload);
-  console.log('baseURL', baseURL);
-
   return apiClient({
     url: "performFind",
     method: "post",
