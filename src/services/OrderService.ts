@@ -111,6 +111,14 @@ const rejectOrderItem = async (payload: any): Promise <any> => {
   });
 }
 
+const rejectOrderItems = async (payload: any): Promise <any> => {
+  return api({
+    url: "rejectOrderItems",
+    method: "post",
+    data: payload
+  });
+}
+
 const createPicklist = async (query: any): Promise <any> => {
   const baseURL = store.getters['user/getBaseUrl'];
   return api({
@@ -453,6 +461,7 @@ export const OrderService = {
   quickShipEntireShipGroup,
   rejectItem,
   rejectOrderItem,
+  rejectOrderItems,
   updateShipment,
   createPicklist,
   sendPickupScheduledNotification,
