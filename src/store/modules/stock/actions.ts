@@ -25,8 +25,7 @@ const actions: ActionTree<StockState, RootState> = {
         includeReservations: true
       }
       
-      const resp: any = await StockService.getInventoryAvailableByFacility(params);
-      console.log("resp", resp);
+      const resp: any = await StockService.getInventoryAvailableByFacility(params);      
       if (!hasError(resp) && resp.data) {
         const payload = {
           minimumStock: resp.data.minimumStock,
