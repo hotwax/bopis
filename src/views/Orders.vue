@@ -15,7 +15,7 @@
 
       <div>
         <ion-searchbar data-testid="order-searchbar" @ionFocus="selectSearchBarText($event)" v-model="queryString" @keyup.enter="queryString = $event.target.value; searchOrders()" :placeholder="translate('Search Orders')" />
-        <ion-segment data-testid="order-segments" v-model="segmentSelected" @ionChange="segmentChanged">
+        <ion-segment v-model="segmentSelected" @ionChange="segmentChanged">
           <ion-segment-button data-testid="open-segment-button" value="open">
             <ion-label>{{ translate("Open") }}</ion-label>
           </ion-segment-button>
@@ -31,7 +31,7 @@
     <ion-content ref="contentRef" :scroll-events="true" @ionScroll="enableScrolling()">
       <div v-if="segmentSelected === 'open'">
         <div v-for="(order, index) in getOrdersByPart(orders)" :key="index" v-show="order.parts.length > 0">
-          <ion-card data-testid="open-order-card" button @click.prevent="viewOrder(order, order.part, 'open')">
+          <ion-card data-testid="order-card" button @click.prevent="viewOrder(order, order.part, 'open')">
             <ion-item lines="none">
               <ion-label class="ion-text-wrap">
                 <h1>{{ order.customer.name }}</h1>
@@ -81,7 +81,7 @@
       </div>      
       <div v-if="segmentSelected === 'packed'">
         <div v-for="(order, index) in getOrdersByPart(packedOrders)" :key="index" v-show="order.parts.length > 0">
-          <ion-card data-testid="packed-order-card"  button @click.prevent="viewOrder(order, order.part, 'packed')">
+          <ion-card data-testid="order-card"  button @click.prevent="viewOrder(order, order.part, 'packed')">
             <ion-item lines="none">
               <ion-label class="ion-text-wrap">
                 <h1>{{ order.customer.name }}</h1>
@@ -115,13 +115,13 @@
               </ion-button>
             </ion-item>
             <div class="border-top">
-              <ion-button data-testid="packed-handover-button" :disabled="!hasPermission(Actions.APP_ORDER_UPDATE)" fill="clear" @click.stop="deliverShipment(order)">
+              <ion-button data-testid="handover-button" :disabled="!hasPermission(Actions.APP_ORDER_UPDATE)" fill="clear" @click.stop="deliverShipment(order)">
                 {{ order.part.shipmentMethodEnum.shipmentMethodEnumId === 'STOREPICKUP' ? translate("Handover") : translate("Ship") }}
               </ion-button>
-              <ion-button data-testid="packed-print-packing-slip-button" v-if="getBopisProductStoreSettings('PRINT_PACKING_SLIPS')" fill="clear" slot="end" @click.stop="printPackingSlip(order)">
+              <ion-button data-testid="packing-slip-button" v-if="getBopisProductStoreSettings('PRINT_PACKING_SLIPS')" fill="clear" slot="end" @click.stop="printPackingSlip(order)">
                 <ion-icon slot="icon-only" :icon="printOutline" />
               </ion-button>
-              <ion-button data-testid="packed-sendmail-button" v-if="order.part.shipmentMethodEnum.shipmentMethodEnumId === 'STOREPICKUP'" fill="clear" slot="end" @click.stop="sendReadyForPickupEmail(order)">
+              <ion-button data-testid="resendmail-button" v-if="order.part.shipmentMethodEnum.shipmentMethodEnumId === 'STOREPICKUP'" fill="clear" slot="end" @click.stop="sendReadyForPickupEmail(order)">
                 <ion-icon slot="icon-only" :icon="mailOutline" />
               </ion-button>
             </div>
@@ -130,7 +130,7 @@
       </div>
       <div v-if="segmentSelected === 'completed'">
         <div v-for="(order, index) in getOrdersByPart(completedOrders)" :key="index" v-show="order.parts.length > 0">
-          <ion-card data-testid="completed-order-card" button @click.prevent="viewOrder(order, order.part, 'completed')">
+          <ion-card data-testid="order-card" button @click.prevent="viewOrder(order, order.part, 'completed')">
             <ion-item lines="none">
               <ion-label class="ion-text-wrap">
                 <h1>{{ order.customer.name }}</h1>

@@ -1,20 +1,20 @@
 <template>
-  <ion-page>
+  <ion-page data-testid="order-details-page">
     <ion-header>
       <ion-toolbar>
         <ion-back-button default-href="/" slot="start" />
         <ion-title>{{ translate("Order details") }}</ion-title>
         <ion-buttons slot="end">
-          <ion-button v-if="orderType === 'packed' && order.part?.shipmentMethodEnum?.shipmentMethodEnumId === 'STOREPICKUP'" :disabled="!order?.orderId || !hasPermission(Actions.APP_ORDER_UPDATE) || order.handovered || order.shipped" @click="sendReadyForPickupEmail(order)">
+          <ion-button data-testid="resendmail-button" v-if="orderType === 'packed' && order.part?.shipmentMethodEnum?.shipmentMethodEnumId === 'STOREPICKUP'" :disabled="!order?.orderId || !hasPermission(Actions.APP_ORDER_UPDATE) || order.handovered || order.shipped" @click="sendReadyForPickupEmail(order)">
             <ion-icon slot="icon-only" :icon="mailOutline" />
           </ion-button>
-          <ion-button :disabled="!order?.orderId" @click="openOrderItemRejHistoryModal()">
+          <ion-button data-testid="rejection-history-button" :disabled="!order?.orderId" @click="openOrderItemRejHistoryModal()">
             <ion-icon slot="icon-only" :icon="timeOutline" />
           </ion-button>
-          <ion-button v-if="orderType === 'open' && getBopisProductStoreSettings('PRINT_PICKLISTS')" :disabled="!order?.orderId || !hasPermission(Actions.APP_ORDER_UPDATE) || order.handovered || order.shipped || !order.part?.items?.length"  @click="printPicklist(order, order.part)">
+          <ion-button data-testid="print-picklist-button" v-if="orderType === 'open' && getBopisProductStoreSettings('PRINT_PICKLISTS')" :disabled="!order?.orderId || !hasPermission(Actions.APP_ORDER_UPDATE) || order.handovered || order.shipped || !order.part?.items?.length"  @click="printPicklist(order, order.part)">
             <ion-icon slot="icon-only" :icon="printOutline" />
           </ion-button>
-          <ion-button v-else-if="orderType === 'packed' && getBopisProductStoreSettings('PRINT_PACKING_SLIPS')" :class="order.part?.shipmentMethodEnum?.shipmentMethodEnumId !== 'STOREPICKUP' ? 'ion-hide-md-up' : ''" :disabled="!order?.orderId || !hasPermission(Actions.APP_ORDER_UPDATE) || order.handovered || order.shipped || !order.part?.items?.length" @click="order.part?.shipmentMethodEnum?.shipmentMethodEnumId === 'STOREPICKUP' ? printPackingSlip(order) : printShippingLabelAndPackingSlip(order)">
+          <ion-button data-testid="packing-slip-button" v-else-if="orderType === 'packed' && getBopisProductStoreSettings('PRINT_PACKING_SLIPS')" :class="order.part?.shipmentMethodEnum?.shipmentMethodEnumId !== 'STOREPICKUP' ? 'ion-hide-md-up' : ''" :disabled="!order?.orderId || !hasPermission(Actions.APP_ORDER_UPDATE) || order.handovered || order.shipped || !order.part?.items?.length" @click="order.part?.shipmentMethodEnum?.shipmentMethodEnumId === 'STOREPICKUP' ? printPackingSlip(order) : printShippingLabelAndPackingSlip(order)">
             <ion-icon slot="icon-only" :icon="printOutline" />
           </ion-button>
         </ion-buttons>
@@ -53,7 +53,7 @@
               <h1>{{ order.orderName }}</h1>
               <p>{{ order.orderId }}</p>
             </ion-label>
-            <ion-chip :disabled="!hasPermission(Actions.APP_ORDER_UPDATE)" v-if="order.pickers && (orderType === 'open' || orderType === 'packed') && getBopisProductStoreSettings('ENABLE_TRACKING')" outline slot="end" @click="editPicker(order)">
+            <ion-chip data-testid="edit-picker-chip" :disabled="!hasPermission(Actions.APP_ORDER_UPDATE)" v-if="order.pickers && (orderType === 'open' || orderType === 'packed') && getBopisProductStoreSettings('ENABLE_TRACKING')" outline slot="end" @click="editPicker(order)">
               <ion-icon :icon="personOutline"/>
               <ion-label>{{ order.pickers }}</ion-label>
             </ion-chip>
@@ -62,11 +62,11 @@
            <!-- Order Status -->
           <ion-item v-if="order.readyToHandover || order.readyToShip" color="light" lines="none">
             <ion-icon :icon="checkmarkCircleOutline" color="success" slot="start" />
-            <ion-label class="ion-text-wrap">{{ order.readyToHandover ? translate("Order is now ready to handover.") : translate("Order is now ready to be shipped.") }}</ion-label>
+            <ion-label data-testid="ready-handover-label" class="ion-text-wrap">{{ order.readyToHandover ? translate("Order is now ready to handover.") : translate("Order is now ready to be shipped.") }}</ion-label>
           </ion-item>
           <ion-item v-if="order.handovered || order.shipped" color="light" lines="none">
             <ion-icon :icon="checkmarkCircleOutline" color="success" slot="start" />
-            <ion-label class="ion-text-wrap">{{ order.handovered ? translate("Order is successfully handed over to customer.") : translate("Order is successfully shipped.") }}</ion-label>
+            <ion-label data-testid="handed-over-success-label" class="ion-text-wrap">{{ order.handovered ? translate("Order is successfully handed over to customer.") : translate("Order is successfully shipped.") }}</ion-label>
           </ion-item>
 
           <ion-card>
@@ -104,7 +104,7 @@
                       <ion-label>{{ getCancelReasonDescription(item.cancelReason) }}</ion-label>
                       <ion-icon :icon="caretDownOutline"/>
                     </ion-chip>
-                    <ion-button v-else slot="end" color="danger" fill="clear" size="small" @click.stop="openCancelReasonPopover($event, item, order)">
+                    <ion-button data-testid="cancel-items-button" v-else slot="end" color="danger" fill="clear" size="small" @click.stop="openCancelReasonPopover($event, item, order)">
                       {{ translate("Cancel") }}
                     </ion-button>
                   </template>
@@ -117,11 +117,11 @@
                       <ion-icon slot="icon-only" :icon="informationCircleOutline" color="medium" />
                     </ion-button>
                   </div>
-                  <ion-button v-else fill="clear" @click.stop="fetchProductStock(item.productId, order.shipGroupSeqId)">
+                  <ion-button  data-testid="qoh-button" v-else fill="clear" @click.stop="fetchProductStock(item.productId, order.shipGroupSeqId)">
                     <ion-icon color="medium" slot="icon-only" :icon="cubeOutline" />
                   </ion-button>
 
-                  <ion-button :disabled="order.handovered || order.shipped || order.cancelled || hasCancelledItems" v-if="(orderType === 'packed' || orderType === 'completed') && getProduct(item.productId).productTypeId === 'GIFT_CARD'" color="medium" fill="clear" size="small" @click.stop="openGiftCardActivationModal(item)">
+                  <ion-button data-testid="gift-card-activation-button" :disabled="order.handovered || order.shipped || order.cancelled || hasCancelledItems" v-if="(orderType === 'packed' || orderType === 'completed') && getProduct(item.productId).productTypeId === 'GIFT_CARD'" color="medium" fill="clear" size="small" @click.stop="openGiftCardActivationModal(item)">
                     <ion-icon slot="icon-only" :icon="item.isGCActivated ? gift : giftOutline"/>
                   </ion-button>
 
@@ -181,20 +181,20 @@
           </template>
 
           <ion-item lines="none" v-if="orderType === 'open' && order.part?.items?.length">
-            <ion-button size="default" :disabled="!hasPermission(Actions.APP_ORDER_UPDATE) || order.readyToHandover || order.readyToShip || order.rejected || hasRejectedItems" @click="readyForPickup(order, order.part)">
+            <ion-button data-testid="ready-pickup-button" size="default" :disabled="!hasPermission(Actions.APP_ORDER_UPDATE) || order.readyToHandover || order.readyToShip || order.rejected || hasRejectedItems" @click="readyForPickup(order, order.part)">
               <ion-icon slot="start" :icon="bagCheckOutline"/>
               {{ order?.part?.shipmentMethodEnum?.shipmentMethodEnumId === 'STOREPICKUP' ? translate("Ready for pickup") : translate("Ready to ship") }}
             </ion-button>
-            <ion-button size="default" :disabled="!hasPermission(Actions.APP_ORDER_UPDATE) || order.readyToHandover || order.readyToShip || order.rejected || !hasRejectedItems" color="danger" fill="outline" @click="rejectOrder()">
+            <ion-button data-testid="submit-rejected-items-button" size="default" :disabled="!hasPermission(Actions.APP_ORDER_UPDATE) || order.readyToHandover || order.readyToShip || order.rejected || !hasRejectedItems" color="danger" fill="outline" @click="rejectOrder()">
               {{ translate("Reject Items") }}
             </ion-button>
           </ion-item>
           <ion-item lines="none" v-else-if="orderType === 'packed' && order.part?.items?.length" class="ion-hide-md-down">
-            <ion-button size="default" :disabled="!hasPermission(Actions.APP_ORDER_UPDATE) || order.handovered || order.shipped || order.cancelled || hasCancelledItems" expand="block" @click="deliverShipment(order)">
+            <ion-button data-testid="handover-button" size="default" :disabled="!hasPermission(Actions.APP_ORDER_UPDATE) || order.handovered || order.shipped || order.cancelled || hasCancelledItems" expand="block" @click="deliverShipment(order)">
               <ion-icon slot="start" :icon="checkmarkDoneOutline"/>
               {{ order.part?.shipmentMethodEnum?.shipmentMethodEnumId === 'STOREPICKUP' ? translate("Handover") : translate("Ship") }}
             </ion-button>
-            <ion-button color="danger" size="default" :disabled="!hasPermission(Actions.APP_ORDER_UPDATE) || order.handovered || order.shipped || order.cancelled || !hasCancelledItems" expand="block" fill="outline" @click="cancelOrder(order)">
+            <ion-button data-testid="cancel-item-button" color="danger" size="default" :disabled="!hasPermission(Actions.APP_ORDER_UPDATE) || order.handovered || order.shipped || order.cancelled || !hasCancelledItems" expand="block" fill="outline" @click="cancelOrder(order)">
               {{ translate("Cancel items") }}
             </ion-button>
           </ion-item>
