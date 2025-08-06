@@ -196,7 +196,7 @@ const rejectOrderItems = async (payload: any): Promise <any> => {
   const omstoken = store.getters['user/getUserToken'];
 
   return apiClient({
-    url: "rejectOrderItems",
+    url: "poorti/rejectOrderItems",
     method: "post",
     baseURL,
     headers: {
