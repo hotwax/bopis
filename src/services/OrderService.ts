@@ -1,4 +1,4 @@
-import { apiClient, hasError } from '@/adapter';
+import { api, apiClient, hasError } from '@/adapter';
 import emitter from '@/event-bus';
 import { translate } from '@hotwax/dxp-components';
 import store from '@/store';
@@ -192,17 +192,9 @@ const rejectOrderItem = async (payload: any): Promise <any> => {
 }
 
 const rejectOrderItems = async (payload: any): Promise <any> => {
-  const baseURL = store.getters['user/getBaseUrl'];
-  const omstoken = store.getters['user/getUserToken'];
-
-  return apiClient({
+  return api({
     url: "poorti/rejectOrderItems",
     method: "post",
-    baseURL,
-    headers: {
-      "Authorization": "Bearer " + omstoken,
-      "Content-Type": "application/json"
-    },
     data: payload
   });
 }
@@ -552,17 +544,10 @@ const performFind = async (payload: any): Promise<any> => {
   });
 }
 
-const cancelItem = async (payload: any): Promise<any> => {
-  const baseURL = store.getters['user/getBaseUrl'];
-  const omstoken = store.getters['user/getUserToken'];
-  return apiClient({
-    url: `oms/orders/${payload.orderId}/items/${payload.orderItemSeqId}/cancel`,
+const cancelOrder = async (payload: any): Promise<any> => {
+  return api({
+    url: `oms/orders/${payload.orderId}/cancel`,
     method: "post",
-    baseURL,
-    headers: {
-      "Authorization": "Bearer " + omstoken,
-      "Content-Type": "application/json"
-    },
     data: payload
   });
 }
@@ -642,7 +627,7 @@ const fetchGiftCardActivationDetails = async ({ isDetailsPage, currentOrders }: 
 }
 
 export const OrderService = {
-  cancelItem,
+  cancelOrder,
   fetchGiftCardActivationDetails,
   fetchOrderItems,
   fetchOrderPaymentPreferences,

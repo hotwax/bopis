@@ -138,41 +138,45 @@ export default defineComponent({
     },
     async cancelOrder() {
       emitter.emit("presentLoader");
-      let isCancelled = true
-      for (const item of this.cancelledItems) {
-        const payload = {
-          orderId: this.currentOrder.orderId,
-          orderItemSeqId: item.orderItemSeqId,
-          shipGroupSeqId: item.shipGroupSeqId,
-          reason: item.cancelReason
+
+      const itemsPayload = this.cancelledItems.map((item: any) => ({
+        orderItemSeqId: item.orderItemSeqId,
+        shipGroupSeqId: item.shipGroupSeqId,
+        reason: item.cancelReason,
+        comment: item.comment || ''
+      }));
+
+      const payload = {
+        orderId: this.currentOrder.orderId,
+        items: itemsPayload
+      };
+
+      let cancelledResponse;
+      let isCancelled = true;
+
+      try {
+        cancelledResponse = await OrderService.cancelOrder(payload);
+
+        if (hasError(cancelledResponse)) {
+          throw cancelledResponse.data;
         }
 
-        try {
-          const resp = await OrderService.cancelItem(payload);
-
-          if(hasError(resp)) {
-            throw resp.data
-          } else {
-            this.currentOrder["part"] = {
-              ...this.currentOrder.part,
-              items: this.currentOrder.part.items.filter((orderItem: any) => !(orderItem.orderItemSeqId === item.orderItemSeqId && orderItem.productId === item.productId))
-            }
-          }
-        } catch(err) {
-          isCancelled = false
-        }
+        // Remove the cancelled items from the order details page
+        const cancelledItemSeqIds = new Set(itemsPayload.map(item => item.orderItemSeqId));
+        this.currentOrder["part"] = {
+          ...this.currentOrder.part,
+          items: this.currentOrder.part.items.filter(
+            (orderItem: any) => !cancelledItemSeqIds.has(orderItem.orderItemSeqId)
+          )
+        };
+      } catch (err) {
+        console.error("Error cancelling order items", err);
+        isCancelled = false;
       }
-      
-      // If all the items are cancelled then marking the whole order as cancelled
-      if(!this.currentOrder.part.items.length) {
+
+      // If all the items are cancelled then mark the whole order as cancelled
+      if (!this.currentOrder.part.items.length) {
         this.currentOrder.cancelled = true;
-      } else {
-        // If we have only cancelled some order items and the cancelation is completd then changing the shipment status to packed
-        // This is done because when cancelling some of the order items the shipment is marked as approved, resulting in removing the order from packed tab
-        // but we need the order to be displayed in packed tab as it still has some items as reserved status
-        if(isCancelled) {
-          await this.store.dispatch("order/packDeliveryItems", { orderId: this.currentOrder.orderId, shipmentId: this.currentOrder.shipmentId })
-        }
       }
 
       await this.store.dispatch("order/updateCurrent", { order: this.currentOrder });
