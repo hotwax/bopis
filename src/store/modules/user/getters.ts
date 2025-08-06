@@ -16,7 +16,6 @@ const getters: GetterTree <UserState, RootState> = {
     },
     getOmsBaseUrl (state) {
     const url = state.omsRedirectionUrl
-    console.log('getOmsBaseUrl', url);
     return url.startsWith('http') ? url.includes('/api') ? url : `${url}/api/` : `https://${url}.hotwax.io/api/`;
     },
     getUserToken (state) {

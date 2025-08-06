@@ -1,8 +1,8 @@
-import { apiClient, hasError } from '@/adapter';
+import { api, apiClient, hasError } from '@/adapter';
 import emitter from '@/event-bus';
 import { translate } from '@hotwax/dxp-components';
 import store from '@/store';
-import { formatPhoneNumber, showToast } from '@/utils';
+import { formatPhoneNumber, getCurrentFacilityId, showToast } from '@/utils';
 import logger from '@/logger';
 import { cogOutline } from 'ionicons/icons';
 import { UtilService } from "@/services/UtilService";
@@ -85,6 +85,24 @@ const getPackedOrders = async (payload: any): Promise <any> => {
     },
     data: payload
   });
+}
+
+const findCompletedShipments = async (params:any): Promise <any>  => {
+  params = {
+    statusId: 'SHIPMENT_SHIPPED',
+    originFacilityId: getCurrentFacilityId(),
+    shipmentMethodTypeIds: 'STOREPICKUP',
+    shipmentTypeId: 'SALES_SHIPMENT',
+    keyword: params.keyword,
+    pageSize: 100,
+    pageIndex: params.viewIndex || 0
+  } as any
+
+  return await api({
+    url: `/poorti/shipments`,
+    method: "GET",
+    params
+  }) as any;
 }
 
 const getCompletedOrders = async (payload: any): Promise <any> => {
@@ -635,6 +653,7 @@ export const OrderService = {
   getOpenOrders,
   getOrderDetails,
   getCompletedOrders,
+  findCompletedShipments,
   getPackedOrders,
   getOrderItemRejectionHistory,
   quickShipEntireShipGroup,
