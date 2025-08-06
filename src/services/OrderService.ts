@@ -1,4 +1,4 @@
-import { apiClient, hasError } from '@/adapter';
+import { api, apiClient, hasError } from '@/adapter';
 import emitter from '@/event-bus';
 import { translate } from '@hotwax/dxp-components';
 import store from '@/store';
@@ -88,9 +88,6 @@ const getPackedOrders = async (payload: any): Promise <any> => {
 }
 
 const findCompletedShipments = async (params:any): Promise <any>  => {
-  const omstoken = store.getters['user/getUserToken'];
-  const baseURL = store.getters['user/getBaseUrl'];
-
   params = {
     statusId: 'SHIPMENT_SHIPPED',
     originFacilityId: getCurrentFacilityId(),
@@ -101,14 +98,9 @@ const findCompletedShipments = async (params:any): Promise <any>  => {
     pageIndex: params.viewIndex || 0
   } as any
 
-  return await apiClient({
+  return await api({
     url: `/poorti/shipments`,
     method: "GET",
-    baseURL,
-    headers: {
-      "Authorization": "Bearer " + omstoken,
-      "Content-Type": "application/json"
-    },
     params
   }) as any;
 }
