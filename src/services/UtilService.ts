@@ -1,21 +1,13 @@
-import { apiClient } from '@/adapter';
+import { api, apiClient } from '@/adapter';
 import { hasError } from '@/adapter';
 import store from '@/store';
 import logger from '@/logger';
 
 const fetchRejectReasons = async (query: any): Promise<any> => {
-  const omstoken = store.getters['user/getUserToken'];
-  const baseURL = store.getters['user/getBaseUrl'];
-
-  return apiClient({
+  return api({
     url: `/admin/enums`,
     method: "GET",
-    baseURL,
-    headers: {
-      "Authorization": "Bearer " + omstoken,
-      "Content-Type": "application/json"
-    },
-    params: query,
+    params: query
   });
 }
 
@@ -23,31 +15,18 @@ const fetchRejectReasonsByEnumerationGroup = async (payload: any): Promise<any> 
   const omstoken = store.getters['user/getUserToken'];
   const baseURL = store.getters['user/getBaseUrl'];
 
-  return apiClient({
+  return api({
     url: `/admin/enumGroups/${payload.enumerationGroupId}/members`,
     method: "GET",
-    baseURL,
-    headers: {
-      "Authorization": "Bearer " + omstoken,
-      "Content-Type": "application/json"
-    },
-    params: payload,
+    params: payload
   });
 }
 
 const fetchCancelReasons = async (payload: any): Promise<any> => {
-  const omstoken = store.getters['user/getUserToken'];
-  const baseURL = store.getters['user/getBaseUrl'];
-
-  return apiClient({
+  return api({
     url: `/admin/enumGroups/${payload.enumerationGroupId}/members`,
     method: "GET",
-    baseURL,
-    headers: {
-      "Authorization": "Bearer " + omstoken,
-      "Content-Type": "application/json"
-    },
-    params: payload,
+    params: payload
   });
 }
 
