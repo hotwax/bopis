@@ -112,7 +112,7 @@ const actions: ActionTree<OrderState , RootState> ={
   async getOpenOrders({ commit, dispatch, state }, params) {
     // Show loader only when new query and not the infinite scroll
     if (params.viewIndex === 0) emitter.emit("presentLoader");
-    let resp;
+
     params = {
       keyword: params.queryString || '',
       originFacilityId: params.facilityId,
@@ -125,91 +125,57 @@ const actions: ActionTree<OrderState , RootState> ={
     } as any;
 
     try {
-      resp = await OrderService.getOpenOrders(params)
+      const resp = await OrderService.getOpenOrders(params);
+
       if (resp.status === 200 && !hasError(resp) && resp?.data?.orders.length > 0) {
+        const ordersResp = resp.data.orders;
 
-        const orderIds = resp.data.orders.map((order: any) => order.orderId);
-        const productIds = [] as any;
-        resp.data.orders.forEach((order: any) => {
-          productIds.push(...order.items.map((item: any) => item.productId));
-        });
-        await this.dispatch('product/fetchProducts', { productIds });
+        // Collect all orderIds and productIds
+        const orderIds = ordersResp.map((order: any) => order.orderId);
+        const productIds = ordersResp.flatMap((order: any) => 
+          order.shipGroups.flatMap((group: any) => group.items.map((item: any) => item.productId))
+        );
 
-        // Fetch pickers information for all orderIds in bulk
-        const pickers = await dispatch("fetchPickersInformation", orderIds);
+        await dispatch('product/fetchProducts', { productIds });
 
-        let orders = resp.data.orders.map((order: any) => {
-          const pickersInfo = pickers[order.orderId] || { pickers: "", pickerIds: [] };
+        let orders = ordersResp.map((order: any) => {
+          // Add showKitComponents to each item in shipGroups
+          const shipGroups = order.shipGroups.map((group: any) => ({
+            ...group,
+            items: group.items.map((item: any) => ({
+              ...item,
+              showKitComponents: false
+            }))
+          }));
+
           return {
-            orderId: order.orderId,
-            orderName: order.orderName,
-            customer: {
-              partyId: order.customerId,
-              name: order.customerName
-            },
-            statusId: order.orderStatusId,
-            parts: (order.items.reduce((arr: Array<any>, item: any) => {
-              const currentOrderPart = arr.find((orderPart) => orderPart.orderPartSeqId === item.shipGroupSeqId);
-              if (!currentOrderPart) {
-                arr.push({
-                  orderPartSeqId: item.shipGroupSeqId,
-                  shipmentMethodEnum: {
-                    shipmentMethodEnumId: item.shipmentMethodTypeId,
-                  },
-                  items: [{
-                    shipGroupSeqId: item.shipGroupSeqId,
-                    orderId: order.orderId,
-                    orderItemSeqId: item.orderItemSeqId,
-                    productId: item.productId,
-                    facilityId: item.facilityId,
-                    quantity: item.quantity,
-                    showKitComponents: false
-                  }]
-                });
-              } else {
-                currentOrderPart.items.push({
-                  shipGroupSeqId: item.shipGroupSeqId,
-                  orderId: order.orderId,
-                  orderItemSeqId: item.orderItemSeqId,
-                  productId: item.productId,
-                  facilityId: item.facilityId,
-                  quantity: item.quantity,
-                  showKitComponents: false
-                });
-              }
-
-              return arr;
-            }, [])),
-            placedDate: order.orderDate,
-            shippingInstructions: order.shippingInstructions,
-            shipGroupSeqId: order.items[0]?.shipGroupSeqId || null,
+            ...order,
+            shipGroups,
             isPicked: order.picklistId ? "Y" : "N",
-            picklistId: order.picklistId,
-            shipmentId: order.shipmentId,
-            facilityId: order.facilityId,
-            pickers: pickersInfo.pickers,
-            pickerIds: pickersInfo.pickerIds
-            // Removed isPicked, pickers, pickerIds, picklistBinId as per new response
           };
-      });
+        });
 
+        const total = resp.data.ordersCount;
 
-        const total = resp.data.grouped?.orderId?.ngroups;
+        if (params.viewIndex && params.viewIndex > 0) {
+          orders = state.open.list.concat(orders);
+        }
 
-        if(params.viewIndex && params.viewIndex > 0) orders = state.open.list.concat(orders)
-        commit(types.ORDER_OPEN_UPDATED, { orders, total })
+        commit(types.ORDER_OPEN_UPDATED, { orders, total });
         emitter.emit("dismissLoader");
       } else {
-        commit(types.ORDER_OPEN_UPDATED, { orders: {}, total: 0 })
-        showToast(translate("Orders Not Found"))
+        commit(types.ORDER_OPEN_UPDATED, { orders: {}, total: 0 });
+        showToast(translate("Orders Not Found"));
       }
-      emitter.emit("dismissLoader");
-    } catch(err) {
-      logger.error(err)
-      showToast(translate("Something went wrong"))
-    }
 
-    return resp;
+      emitter.emit("dismissLoader");
+      return resp;
+
+    } catch (err) {
+      logger.error(err);
+      emitter.emit("dismissLoader");
+      showToast(translate("Something went wrong"));
+    }
   },
 
   async fetchPickersInformation({ commit }, orderIds: any) {

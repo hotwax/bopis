@@ -655,7 +655,7 @@ export default defineComponent({
       if(this.getBopisProductStoreSettings('ENABLE_TRACKING') && order.isPicked !== 'Y') return this.assignPicker(order, part, this.currentFacility?.facilityId);
       const pickup = part?.shipmentMethodEnum?.shipmentMethodEnumId === 'STOREPICKUP';
       const header = pickup ? translate('Ready for pickup') : translate('Ready to ship');
-      const message = pickup ? translate('An email notification will be sent to that their order is ready for pickup. This order will also be moved to the packed orders tab.', { customerName: order.customer.name, space: '<br/><br/>' }) : '';
+      const message = pickup ? translate('An email notification will be sent to that their order is ready for pickup. This order will also be moved to the packed orders tab.', { customerName: order.customerName, space: '<br/><br/>' }) : '';
 
       const alert = await alertController
         .create({
@@ -1251,7 +1251,7 @@ export default defineComponent({
     },
     async sendReadyForPickupEmail(order: any) {
       const header = translate("Resend email")
-      const message = translate("An email notification will be sent to that their order is ready for pickup.", { customerName: order.customer.name });
+      const message = translate("An email notification will be sent to that their order is ready for pickup.", { customerName: order.customerName });
 
       const alert = await alertController
         .create({
@@ -1282,7 +1282,7 @@ export default defineComponent({
     async openGiftCardActivationModal(item: any) {
       const modal = await modalController.create({
         component: GiftCardActivationModal,
-        componentProps: { item, orderId: this.orderId, customerId: this.order.customer.partyId }
+        componentProps: { item, orderId: this.orderId, customerId: this.order.customerId }
       })
       
       modal.onDidDismiss().then((result: any) => {
