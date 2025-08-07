@@ -136,7 +136,7 @@ const actions: ActionTree<OrderState , RootState> ={
           order.shipGroups.flatMap((group: any) => group.items.map((item: any) => item.productId))
         );
 
-        await dispatch('product/fetchProducts', { productIds });
+        await this.dispatch('product/fetchProducts', { productIds });
 
         let orders = ordersResp.map((order: any) => {
           // Add showKitComponents to each item in shipGroups
@@ -221,11 +221,7 @@ const actions: ActionTree<OrderState , RootState> ={
 
         const pickerIds = allRoles.map((role: any) => role.partyId);
 
-        pickersMap[orderId] = {
-          shipmentId,
-          pickers,
-          pickerIds
-        };
+        pickersMap[orderId] = { shipmentId, pickers, pickerIds };
       });
       return pickersMap;
 

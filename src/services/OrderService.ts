@@ -242,7 +242,7 @@ const sendPickupScheduledNotification = async (payload: any): Promise <any> => {
     "emailType": "READY_FOR_PICKUP",
     ...payload
   }
-  return apiClient({
+  return api({
     url: "oms/orders/pickupScheduledNotification",
     method: "post",
     data: payload
