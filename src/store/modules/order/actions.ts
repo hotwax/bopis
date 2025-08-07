@@ -120,7 +120,7 @@ const actions: ActionTree<OrderState , RootState> ={
       shipmentStatusId: 'SHIPMENT_INPUT,SHIPMENT_PACKED,SHIPMENT_SHIPPED',
       shipmentStatusId_op: 'in',
       shipmentStatusId_not: 'Y',
-      limit: process.env.VUE_APP_VIEW_SIZE,
+      pageSize: process.env.VUE_APP_VIEW_SIZE,
       pageIndex: params.viewIndex
     } as any;
 
