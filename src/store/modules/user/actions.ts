@@ -36,9 +36,6 @@ const actions: ActionTree<UserState, RootState> = {
   async login ({ commit, dispatch, getters }, payload) {
     try {
       const {token, oms, omsRedirectionUrl} = payload;
-      console.log('login payload', payload);
-      console.log('omsRedirectionUrl', omsRedirectionUrl);
-      console.log('oms', oms);
       dispatch("setUserInstanceUrl", oms);
 
       // Getting the permissions list from server
