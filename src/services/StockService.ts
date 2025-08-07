@@ -26,7 +26,7 @@ const checkShippingInventory = async (query: any): Promise <any>  => {
 }
 
 const getInventoryAvailableByFacility = async (params: any): Promise <any> => {
-  return apiClient({
+  return api({
     url: "poorti/getInventoryAvailableByFacility",
     method: "get",
     params
