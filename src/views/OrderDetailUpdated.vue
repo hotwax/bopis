@@ -481,7 +481,7 @@ export default defineComponent({
       await this.store.dispatch('stock/fetchStock', { productId })
       this.store.dispatch('order/updateOrderItemFetchingStatus', { productId, shipGroupSeqId })
     },
-    async assignPickerNew(order: any, part: any, facilityId: any) {
+    async assignPicker(order: any, part: any, facilityId: any) {
       const assignPickerModal = await modalController.create({
         component: AssignPickerModal,
         componentProps: { order, part, facilityId }
@@ -489,7 +489,7 @@ export default defineComponent({
       assignPickerModal.onDidDismiss().then(async(result: any) => {
         if(result.data?.selectedPicker) {
           await this.createPicklist(order, result.data.selectedPicker);
-          await this.store.dispatch('order/packShipGroupItemsNew', { order, part })
+          await this.store.dispatch('order/packShipGroupItems', { order, part })
         }
       })
 
@@ -645,7 +645,7 @@ export default defineComponent({
       return cancelOrderConfirmModal.present();
     },
     async readyForPickup(order: any, part: any) {
-      if(this.getBopisProductStoreSettings('ENABLE_TRACKING') && order.isPicked !== 'Y') return this.assignPickerNew(order, part, this.currentFacility?.facilityId);
+      if(this.getBopisProductStoreSettings('ENABLE_TRACKING') && order.isPicked !== 'Y') return this.assignPicker(order, part, this.currentFacility?.facilityId);
       const pickup = part.shipmentMethodEnum?.shipmentMethodEnumId === 'STOREPICKUP';
       const header = pickup ? translate('Ready for pickup') : translate('Ready to ship');
       const message = pickup ? translate('An email notification will be sent to that their order is ready for pickup. This order will also be moved to the packed orders tab.', { customerName: order.customer.name, space: '<br/><br/>'}) : '';
@@ -663,7 +663,7 @@ export default defineComponent({
               if(!pickup) {
                 this.packShippingOrders(order, part);
               } else {
-                this.store.dispatch('order/packShipGroupItemsNew', { order, part })
+                this.store.dispatch('order/packShipGroupItems', { order, part })
               }
             }
           }]
