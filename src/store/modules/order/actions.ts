@@ -427,128 +427,88 @@ const actions: ActionTree<OrderState , RootState> ={
 
   async getOrderDetail({ dispatch }, { payload, orderType }) {
     const orderId = payload.orderId;
-    let resp;
     let currentOrder = {};
-    let order= {} as any;
+
     try {
-      // Fetch order details from new API
-      resp = await OrderService.fetchOrderDetails(orderId);
-      if (resp.status === 200 && !hasError(resp) && resp.data) {
-        const data = resp.data.orderDetail;
+    const resp = await OrderService.fetchOrderDetails(orderId);
 
-        // Fetch products for items in all ship groups
-        const productIds = data.shipGroups.flatMap((group: any) =>
-          group.items.map((item: any) => item.productId)
-        );
-        await this.dispatch('product/fetchProducts', { productIds });
+    if (resp.status === 200 && !hasError(resp) && resp.data) {
+      const data = resp.data.orderDetail;
+      // Fetch products used in shipGroups
+      const productIds = data.shipGroups.flatMap((group: any) =>
+        group.items.map((item: any) => item.productId)
+      );
+      await this.dispatch('product/fetchProducts', { productIds });
 
-        // Prepare order map using fields from API response
-        
-        order = {
-          shipmentId: data.shipGroups?.[0]?.shipmentId || null,
-          statusId: data.orderStatusId,
-          customer: {
-            partyId: data.partyId,
-            name: `${data.customerFirstName || ""} ${data.customerLastName || ""}`.trim(),
-          },
-          picklistId: null,
-          isPicked: false,
-          pickerIds: [],
-          pickers: "",          
-          shipGroupSeqId: null,
-          shopifyOrderId: data.orderExternalId,
-          orderAttributes:
-            data.attributes?.reduce((acc: any, attr: any) => {
-              acc[attr.attrName.toLowerCase()] = attr.attrValue;
-              return acc;
-            }, {}) || {},
-          approvedDate: data.statuses?.find((status: any) => status.statusId === "ORDER_APPROVED")?.statusDatetime,
-          completedDate: data.statuses?.find((status: any) => status.statusId === "ORDER_COMPLETED")?.statusDatetime,
-          orderPayments:
-            data.paymentPreferences?.map((payment: any) => ({
-              amount: payment.maxAmount,
-              methodTypeId: payment.paymentMethodTypeId,
-              methodDesc: payment.paymentMethodTypeDesc,
-              paymentStatus: payment.statusId,
-              paymentStatusDesc: payment.statusDesc,
-            })) || [],
-          ...data  
-        };
-
-    const parts = [];
-    for (const shipGroup of data.shipGroups || []) {
-      const items =
-        shipGroup.items?.map((item: any) => ({
+      // Add showKitComponents to each item in shipGroups
+      const shipGroups = data.shipGroups.map((group: any) => ({
+        ...group,
+        items: group.items.map((item: any) => ({
           ...item,
-          showKitComponents: false,
-        })) || [];
+          showKitComponents: false
+        }))
+      }));
 
-      parts.push({
-        orderPartSeqId: shipGroup.shipGroupSeqId,
-        shipmentMethodEnum: {
-          shipmentMethodEnumId: shipGroup.shipmentMethodTypeId,
-        },
-        items,
-      });
-    }
+      const order = {
+        ...data,
+        shipGroups,
+        statusId: data.orderStatusId,
+        customerId: data.partyId,
+        customerName: (`${data.customerFirstName || ""} ${data.customerLastName || ""}`).trim(),
+        shopifyOrderId: data.orderExternalId,
+        approvedDate: data.statuses?.find((status: any) => status.statusId === "ORDER_APPROVED")?.statusDatetime,
+        completedDate: data.statuses?.find((status: any) => status.statusId === "ORDER_COMPLETED")?.statusDatetime,        
+      };
 
-    order.parts = parts;
+      // Assign currentShipGroup and related fields
+      const currentFacilityId = getCurrentFacilityId();
+      const currentShipGroup = data.shipGroups.find((shipGroup: any) => {
+        const isStorePickup = shipGroup.shipmentMethodTypeId === "STOREPICKUP";
+        const isFacilityMatch = shipGroup.facilityId === currentFacilityId;
 
-    const currentFacilityId = getCurrentFacilityId();
-
-    const currentShipGroup = (data.shipGroups || []).find((shipGroup: any) => {
-      const isStorePickup = shipGroup.shipmentMethodTypeId === "STOREPICKUP";
-      const isFacilityMatch = shipGroup.facilityId === currentFacilityId;
-
-      if (!(isStorePickup && isFacilityMatch)) return false;
-
-      if (orderType === "open") {
-        return shipGroup.shipmentStatusId === "SHIPMENT_APPROVED" || !shipGroup.shipmentId;
-      }
-
-      if (orderType === "packed") {
-        return shipGroup.shipmentStatusId === "SHIPMENT_PACKED";
-      }
-
-      if (orderType === "completed") {
-        return shipGroup.shipmentStatusId === "SHIPMENT_SHIPPED";
-      }
-      return false;
-    });
-
-    if (currentShipGroup) {
-      const currentShipGroupSeqId = currentShipGroup.shipGroupSeqId;
-      const currentPart = parts.find(p => p.orderPartSeqId === currentShipGroupSeqId);
-
-      order.part = currentPart;
-      order.picklistId = currentShipGroup.picklistId || null;
-      order.isPicked = !!currentShipGroup.picklistId;
-      order.pickerIds = currentShipGroup.pickerId ? [currentShipGroup.pickerId] : [];
-      order.pickers = currentShipGroup.pickerFirstName
-        ? `${currentShipGroup.pickerFirstName} ${currentShipGroup.pickerLastName}`
-        : "";
-      order.shipGroupSeqId = currentShipGroup.shipGroupSeqId;
-    }
-
-    
-        // If gift card activation details needed for non-open orders
-        if (orderType !== "open") {
-          const enrichedOrder = await OrderService.fetchGiftCardActivationDetails({
-            isDetailsPage: true,
-            currentOrders: [order]
-          });
-          currentOrder = enrichedOrder;
-        } else {
-          currentOrder = order;
+        if (!(isStorePickup && isFacilityMatch)) return false;
+        if (orderType === "open") {
+          return shipGroup.shipmentStatusId === "SHIPMENT_APPROVED" || !shipGroup.shipmentId;
         }
-        // Update current order in store
-        await dispatch('updateCurrent', { order: currentOrder });
-      } else {
-        throw resp.data;
+        if (orderType === "packed") {
+          return shipGroup.shipmentStatusId === "SHIPMENT_PACKED";
+        }
+        if (orderType === "completed") {
+          return shipGroup.shipmentStatusId === "SHIPMENT_SHIPPED";
+        }
+        return false;
+      });
+
+      if (currentShipGroup) {
+        order.shipGroup = currentShipGroup;
+        order.picklistId = currentShipGroup.picklistId || null;
+        order.isPicked = !!currentShipGroup.picklistId;
+        order.pickerIds = currentShipGroup.pickerId ? [currentShipGroup.pickerId] : [];
+        order.pickers = currentShipGroup.pickerFirstName ? `${currentShipGroup.pickerFirstName} ${currentShipGroup.pickerLastName}` : "";
+        order.shipGroupSeqId = currentShipGroup.shipGroupSeqId;
       }
-    } catch (err) {
-      logger.error(err);
+
+      // If gift card activation details needed for non-open orders
+      if (orderType !== "open") {
+        const enrichedOrder = await OrderService.fetchGiftCardActivationDetails({
+          isDetailsPage: true,
+          currentOrders: [order]
+        });
+        currentOrder = enrichedOrder;
+      } else {
+        currentOrder = order;
+      }
+
+      console.log("Hello currentOrder: ", currentOrder);
+
+      await dispatch('updateCurrent', { order: currentOrder });
+
+    } else {
+      throw resp.data;
     }
+  } catch (err) {
+    logger.error(err);
+  }
   },
 
   async updateCurrent ({ commit }, payload) {
