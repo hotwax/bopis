@@ -30,7 +30,7 @@
     </ion-header>
     <ion-content ref="contentRef" :scroll-events="true" @ionScroll="enableScrolling()">
       <div v-if="segmentSelected === 'open'">
-        <div v-for="(order, index) in getOrdersByPart(orders)" :key="index" v-show="order.shipGroups.length > 0">
+        <div v-for="(order, index) in getOrdersByPart" :key="index" v-show="order.shipGroups.length > 0">
           <ion-card button @click.prevent="viewOrder(order, order.shipGroup, 'open')">
             <ion-item lines="none">
               <ion-label class="ion-text-wrap">
@@ -66,7 +66,7 @@
         </div>
       </div>       
       <div v-if="segmentSelected === 'packed'">
-        <div v-for="(order, index) in getOrdersByPart(packedOrders)" :key="index" v-show="order.parts.length > 0">
+        <div v-for="(order, index) in getOrdersByPart" :key="index" v-show="order.parts.length > 0">
           <ion-card button @click.prevent="viewOrder(order, order.part, 'packed')">
             <ion-item lines="none">
               <ion-label class="ion-text-wrap">
@@ -115,7 +115,7 @@
         </div>
       </div>
       <div v-if="segmentSelected === 'completed'">
-        <div v-for="(order, index) in getOrdersByPart(completedOrders)" :key="index" v-show="order.parts.length > 0">
+        <div v-for="(order, index) in getOrdersByPart" :key="index" v-show="order.parts.length > 0">
           <ion-card button @click.prevent="viewOrder(order, order.part, 'completed')">
             <ion-item lines="none">
               <ion-label class="ion-text-wrap">
@@ -245,7 +245,10 @@ export default defineComponent({
       unreadNotificationsStatus: 'user/getUnreadNotificationsStatus',
       getBopisProductStoreSettings: 'user/getBopisProductStoreSettings',
       getProductStock: 'stock/getProductStock',
-    })
+    }),
+    getOrdersByPart() {
+      return Object.keys((this as any).orders).length ? (this as any).orders.flatMap((order: any) => order.shipGroups.map((shipGroup: any) => ({ ...order, shipGroup: { ...shipGroup, ...order.shipGroup } }))) : [];
+    }
   },
   data() {
     return {
@@ -380,7 +383,7 @@ export default defineComponent({
       }
     },
     async readyForPickup (order: any, shipGroup: any) {
-      if(this.getBopisProductStoreSettings('ENABLE_TRACKING') && order.isPicked !== 'Y') return this.assignPicker(order, shipGroup, this.currentFacility?.facilityId);
+      if(this.getBopisProductStoreSettings('ENABLE_TRACKING') && !shipGroup.picklistId) return this.assignPicker(order, shipGroup, this.currentFacility?.facilityId);
       const pickup = shipGroup.shipmentMethodTypeId === 'STOREPICKUP';
       const header = pickup ? translate('Ready for pickup') : translate('Ready to ship');
       const message = pickup ? translate('An email notification will be sent to that their order is ready for pickup. This order will also be moved to the packed orders tab.', { customerName: order.customerName, space: '<br/><br/>'}) : '';
@@ -502,9 +505,6 @@ export default defineComponent({
         });
       return alert.present();
     },
-    getOrdersByPart(orders: Array<any>) {
-      return Object.keys(orders).length ? orders.flatMap((order: any) => order.shipGroups.map((shipGroup: any) => ({ ...order, shipGroup }))) : [];
-    },
     viewShipToStoreOrders() {
       this.$router.push({ path: '/ship-to-store-orders' })
     },
@@ -513,8 +513,8 @@ export default defineComponent({
       this.$router.push({ path: '/notifications' })
     },
     async printPicklist(order: any, shipGroup: any) {
-      if(order.isPicked === 'Y') {
-        await OrderService.printPicklist(order.picklistId)
+      if(shipGroup.picklistId) {
+        await OrderService.printPicklist(shipGroup.picklistId)
         return;
       }
 

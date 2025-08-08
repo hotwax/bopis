@@ -652,7 +652,7 @@ export default defineComponent({
       return cancelOrderConfirmModal.present();
     },
     async readyForPickup(order: any, shipGroup: any) {
-      if(this.getBopisProductStoreSettings('ENABLE_TRACKING') && order.isPicked !== 'Y') return this.assignPicker(order, shipGroup, this.currentFacility?.facilityId);
+      if(this.getBopisProductStoreSettings('ENABLE_TRACKING') && !shipGroup.picklistId) return this.assignPicker(order, shipGroup, this.currentFacility?.facilityId);
       const pickup = shipGroup.shipmentMethodTypeId === 'STOREPICKUP';
       const header = pickup ? translate('Ready for pickup') : translate('Ready to ship');
       const message = pickup ? translate('An email notification will be sent to that their order is ready for pickup. This order will also be moved to the packed orders tab.', { customerName: order.customerName, space: '<br/><br/>' }) : '';
@@ -863,7 +863,7 @@ export default defineComponent({
       this.store.dispatch("order/updateCurrent", { order })
     },
     async printPicklist(order: any, shipGroup: any) {
-      if(order.isPicked === 'Y') {
+      if(shipGroup.picklistId) {
         await OrderService.printPicklist(order.picklistId)
         return;
       }
