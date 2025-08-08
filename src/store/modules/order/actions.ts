@@ -558,98 +558,91 @@ const actions: ActionTree<OrderState , RootState> ={
     commit(types.ORDER_CURRENT_UPDATED, { order })
   },
 
-  async getPackedOrders ({ commit, state }, payload) {
+  async getPackedOrders ({ commit, dispatch, state }, params) {
     // Show loader only when new query and not the infinite scroll
-    if (payload.viewIndex === 0) emitter.emit("presentLoader");
+    if (params.viewIndex === 0) emitter.emit("presentLoader");
     let resp;
-    const orderQueryPayload = prepareOrderQuery({
-      ...payload,
-      shipmentMethodTypeId: !store.state.user.bopisProductStoreSettings['SHOW_SHIPPING_ORDERS'] ? 'STOREPICKUP' : '',
-      shipmentStatusId: "SHIPMENT_PACKED",
-      orderTypeId: 'SALES_ORDER',
-      '-fulfillmentStatus': '(Cancelled OR Rejected)',
-    })
 
+    params = {
+      keyword: params.queryString || '',
+      ...params
+    }
     try {
-      resp = await OrderService.getPackedOrders(orderQueryPayload)
-      if (resp.status === 200 && resp.data.grouped?.orderId?.ngroups > 0 && !hasError(resp)) {
+      resp = await OrderService.findPackedShipments(params)
+      if (resp.status === 200 && resp.data.shipments && !hasError(resp)) {
+
+
+        const shipments = resp.data.shipments;
         const productIds = [] as any;
-        resp.data.grouped?.orderId?.groups.forEach((order: any) => {
-          productIds.push(...order.doclist.docs.map((item: any) => item.productId));
+        const orderIds = shipments.map((shipment: any) => shipment.orderId);
+
+        const pickers = await dispatch("fetchPickersInformation", orderIds);
+
+        // Prepare orders from shipment response
+        let orders = shipments.map((shipment: any) => {
+          
+          productIds.push(...shipment.items.map((item: any) => item.productId));
+
+          const pickersInfo = pickers[shipment.orderId] || { pickers: "", pickerIds: [] };
+          
+          const parts = [{
+            orderPartSeqId: shipment.primaryShipGroupSeqId,
+            shipmentMethodEnum: {
+              shipmentMethodEnumId: shipment.shipmentMethodTypeId,
+            },
+            items: shipment.items.map((item: any) => ({
+              orderItemSeqId: item.orderItemSeqId,
+              productId: item.productId,
+              facilityId: shipment.originFacilityId,
+              showKitComponents: false
+            }))
+          }];
+
+          return {
+            orderId: shipment.orderId,
+            orderName: shipment.orderName,
+            shipmentId: shipment.shipmentId,
+            customer: {
+              partyId: shipment.partyId,
+              name: `${shipment.firstName || ''} ${shipment.lastName || ''}`.trim()
+            },
+            statusId: shipment.orderStatusId,
+            shippingInstructions: shipment.handlingInstructions,           
+            picklistId: shipment.picklistId,
+            pickers: pickersInfo.pickers,
+            pickerIds: pickersInfo.pickerIds,
+            shipGroupSeqId: shipment.primaryShipGroupSeqId,
+            parts: removeKitComponents(parts)
+          }
         });
+
         await this.dispatch('product/fetchProducts', { productIds });
 
-        let orders = resp?.data?.grouped?.orderId?.groups.map((order: any) => {
-          const orderItem = order.doclist.docs[0]
-          return {
-            orderId: orderItem.orderId,
-            orderName: orderItem.orderName,
-            shipmentId: orderItem.shipmentId,
+        const total = shipments.length;
+        const packedOrders = await OrderService.fetchGiftCardActivationDetails({
+          isDetailsPage: false,
+          currentOrders: orders
+        });
 
-            customer: {
-              partyId: orderItem.customerId,
-              name: orderItem.customerName,
-            },
-            statusId: orderItem.orderStatusId,
-            parts: removeKitComponents(order.doclist.docs.reduce((arr: Array<any>, item: any) => {
-              const currentOrderPart = arr.find((orderPart: any) => orderPart.orderPartSeqId === item.shipGroupSeqId)
-              if (!currentOrderPart) {
-                arr.push({
-                  orderPartSeqId: item.shipGroupSeqId,
-                  shipmentMethodEnum: {
-                    shipmentMethodEnumId: item.shipmentMethodTypeId,
-                    shipmentMethodEnumDesc: item.shipmentMethodTypeDesc
-                  },
-                  items: [{
-                    orderItemSeqId: item.orderItemSeqId,
-                    productId: item.productId,
-                    facilityId: item.facilityId,
-                    showKitComponents: false
-                  }]
-                })
-              } else {
-                currentOrderPart.items.push({
-                  orderItemSeqId: item.orderItemSeqId,
-                  productId: item.productId,
-                  facilityId: item.facilityId,
-                  showKitComponents: false
-                })
-              }
+        orders = params.viewIndex && params.viewIndex > 0
+          ? state.packed.list.concat(packedOrders)
+          : packedOrders;
 
-              return arr
-            }, [])),
-            placedDate: orderItem.orderDate,
-            shippingInstructions: orderItem.shippingInstructions,
-            pickers: orderItem.pickers ? (orderItem.pickers.reduce((names: any, picker: string) => {
-              names.push(picker.split('/')[1]);
-              return names;
-            }, [])).join(', ') : "",
-            pickerIds: orderItem.pickers ? (orderItem.pickers.reduce((ids: any, picker: string) => {
-              ids.push(picker.split('/')[0]);
-              return ids;
-            }, [])) : "",
-            picklistId: orderItem.picklistId,
-            shipGroupSeqId: orderItem.shipGroupSeqId
-          }
-        })
+        commit(types.ORDER_PACKED_UPDATED, { orders, total });
 
-        const total = resp.data.grouped?.orderId?.ngroups;
-
-        const packedOrders = await OrderService.fetchGiftCardActivationDetails({ isDetailsPage: false, currentOrders: orders })
-        orders = payload.viewIndex && payload.viewIndex > 0 ? state.packed.list.concat(packedOrders) : packedOrders
-        commit(types.ORDER_PACKED_UPDATED, { orders: orders, total })
-        if (payload.viewIndex === 0) emitter.emit("dismissLoader");
+        if (params.viewIndex === 0) emitter.emit("dismissLoader");
       } else {
-        commit(types.ORDER_PACKED_UPDATED, { orders: {}, total: 0 })
-        showToast(translate("Orders Not Found"))
+        commit(types.ORDER_PACKED_UPDATED, { orders: {}, total: 0 });
+        showToast(translate("Orders Not Found"));
       }
-      emitter.emit("dismissLoader");
-    } catch(err) {
-      logger.error(err)
-      showToast(translate("Something went wrong"))
-    }
 
-    return resp;
+      emitter.emit("dismissLoader");
+      return resp;
+    } catch (err) {
+      logger.error(err);
+      showToast(translate("Something went wrong"));
+      emitter.emit("dismissLoader");
+    }
   },
 
   async getCompletedOrders ({ commit, state }, payload) {
@@ -743,17 +736,16 @@ const actions: ActionTree<OrderState , RootState> ={
     return resp;
   },
 
-  async deliverShipment ({ state, dispatch, commit }, order) {
+  async deliverShipmentNew ({ state, dispatch, commit }, order) {
     emitter.emit("presentLoader");
     const params = {
       shipmentId: order.shipmentId,
-      statusId: 'SHIPMENT_SHIPPED'
     }
 
     let resp;
 
     try {
-      resp = await OrderService.updateShipment(params)
+      resp = await OrderService.shipOrder(params)
       if (resp.status === 200 && !hasError(resp)) {
         // Remove order from the list if action is successful
         const orderIndex = state.packed.list.findIndex((packedOrder: any) => {
@@ -788,12 +780,12 @@ const actions: ActionTree<OrderState , RootState> ={
     return resp;
   },
 
-  async packDeliveryItems ({ commit }, shipmentId) {
-    const params = {
-      shipmentId: shipmentId,
-      statusId: 'SHIPMENT_PACKED'
+  async packDeliveryItems ({ commit }, params) {
+    params = {
+      facilityId: getCurrentFacilityId(),
+      ...params
     }
-    return await OrderService.updateShipment(params)
+    return await OrderService.packOrder(params)
   },
 
   async packShipGroupItems ({ state, dispatch, commit }, payload) {
