@@ -87,7 +87,7 @@ export default defineComponent({
       showKitComponents: false
     }
   },
-  props: ['item', 'isShipToStoreOrder', 'orderId', 'orderType', 'customerId'],
+  props: ['item', 'isShipToStoreOrder', 'orderId', 'orderType', 'customerId', 'currencyUom'],
   computed: {
     ...mapGetters({
       getProduct: 'product/getProduct',
@@ -120,7 +120,7 @@ export default defineComponent({
     async openGiftCardActivationModal(item: any) {
       const modal = await modalController.create({
         component: GiftCardActivationModal,
-        componentProps: { item, orderId: this.orderId, customerId: this.customerId }
+        componentProps: { item, orderId: this.orderId, customerId: this.customerId, currencyUom: this.currencyUom }
       })
       modal.onDidDismiss().then((result: any) => {
         if(result.data?.isGCActivated) {

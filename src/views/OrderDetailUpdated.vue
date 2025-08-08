@@ -1284,7 +1284,7 @@ export default defineComponent({
     async openGiftCardActivationModal(item: any) {
       const modal = await modalController.create({
         component: GiftCardActivationModal,
-        componentProps: { item, orderId: this.orderId, customerId: this.order.customer.partyId }
+        componentProps: { item, orderId: this.orderId, customerId: this.order.customerId, currencyUom: this.order.currencyUom }
       })
       
       modal.onDidDismiss().then((result: any) => {
