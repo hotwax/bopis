@@ -5,16 +5,16 @@
         <ion-back-button default-href="/" slot="start" />
         <ion-title>{{ translate("Order details") }}</ion-title>
         <ion-buttons slot="end">
-          <ion-button v-if="orderType === 'packed' && order.part?.shipmentMethodEnum?.shipmentMethodEnumId === 'STOREPICKUP'" :disabled="!order?.orderId || !hasPermission(Actions.APP_ORDER_UPDATE) || order.handovered || order.shipped" @click="sendReadyForPickupEmail(order)">
+          <ion-button v-if="orderType === 'packed' && order.shipGroup.shipmentMethodTypeId === 'STOREPICKUP'" :disabled="!order?.orderId || !hasPermission(Actions.APP_ORDER_UPDATE) || order.handovered || order.shipped" @click="sendReadyForPickupEmail(order)">
             <ion-icon slot="icon-only" :icon="mailOutline" />
           </ion-button>
           <ion-button :disabled="!order?.orderId" @click="openOrderItemRejHistoryModal()">
             <ion-icon slot="icon-only" :icon="timeOutline" />
           </ion-button>
-          <ion-button v-if="orderType === 'open' && getBopisProductStoreSettings('PRINT_PICKLISTS')" :disabled="!order?.orderId || !hasPermission(Actions.APP_ORDER_UPDATE) || order.handovered || order.shipped || !order.part?.items?.length"  @click="printPicklist(order, order.part)">
+          <ion-button v-if="orderType === 'open' && getBopisProductStoreSettings('PRINT_PICKLISTS')" :disabled="!order?.orderId || !hasPermission(Actions.APP_ORDER_UPDATE) || order.handovered || order.shipped || !order.shipGroup?.items?.length"  @click="printPicklist(order, order.shipGroup)">
             <ion-icon slot="icon-only" :icon="printOutline" />
           </ion-button>
-          <ion-button v-else-if="orderType === 'packed' && getBopisProductStoreSettings('PRINT_PACKING_SLIPS')" :class="order.part?.shipmentMethodEnum?.shipmentMethodEnumId !== 'STOREPICKUP' ? 'ion-hide-md-up' : ''" :disabled="!order?.orderId || !hasPermission(Actions.APP_ORDER_UPDATE) || order.handovered || order.shipped || !order.part?.items?.length" @click="order.part?.shipmentMethodEnum?.shipmentMethodEnumId === 'STOREPICKUP' ? printPackingSlip(order) : printShippingLabelAndPackingSlip(order)">
+          <ion-button v-else-if="orderType === 'packed' && getBopisProductStoreSettings('PRINT_PACKING_SLIPS')" :class="order.shipGroup.shipmentMethodTypeId !== 'STOREPICKUP' ? 'ion-hide-md-up' : ''" :disabled="!order?.orderId || !hasPermission(Actions.APP_ORDER_UPDATE) || order.handovered || order.shipped || !order.shipGroup?.items?.length" @click="order.shipGroup.shipmentMethodTypeId === 'STOREPICKUP' ? printPackingSlip(order) : printShippingLabelAndPackingSlip(order)">
             <ion-icon slot="icon-only" :icon="printOutline" />
           </ion-button>
         </ion-buttons>
@@ -70,7 +70,7 @@
           </ion-item>
 
           <ion-card>
-            <div v-for="(item, index) in order.part?.items" :key="index" class="order-item">
+            <div v-for="(item, index) in order.shipGroup?.items" :key="index" class="order-item">
               <ion-item class="product-info" lines="none">
                 <ion-thumbnail slot="start">
                   <DxpShopifyImg :src="getProduct(item.productId).mainImageUrl" size="small" />
@@ -156,8 +156,8 @@
               </div>
             </div>
           </ion-card>
-          <p v-if="!order.part?.items?.length && orderType === 'open'" class="empty-state">{{ translate("All order items are rejected") }}</p>
-          <p v-if="!order.part?.items?.length && orderType === 'packed'" class="empty-state">{{ translate("All order items are cancelled") }}</p>
+          <p v-if="!order.shipGroup?.items?.length && orderType === 'open'" class="empty-state">{{ translate("All order items are rejected") }}</p>
+          <p v-if="!order.shipGroup?.items?.length && orderType === 'packed'" class="empty-state">{{ translate("All order items are cancelled") }}</p>
 
           <template v-if="orderType === 'packed'">
             <ion-item lines="none" v-if="isCancelationSyncJobEnabled && isProcessRefundEnabled">
@@ -180,19 +180,19 @@
             </ion-item>
           </template>
 
-          <ion-item lines="none" v-if="orderType === 'open' && order.part?.items?.length">
-            <ion-button size="default" :disabled="!hasPermission(Actions.APP_ORDER_UPDATE) || order.readyToHandover || order.readyToShip || order.rejected || hasRejectedItems" @click="readyForPickup(order, order.part)">
+          <ion-item lines="none" v-if="orderType === 'open' && order.shipGroup?.items?.length">
+            <ion-button size="default" :disabled="!hasPermission(Actions.APP_ORDER_UPDATE) || order.readyToHandover || order.readyToShip || order.rejected || hasRejectedItems" @click="readyForPickup(order, order.shipGroup)">
               <ion-icon slot="start" :icon="bagCheckOutline"/>
-              {{ order?.part?.shipmentMethodEnum?.shipmentMethodEnumId === 'STOREPICKUP' ? translate("Ready for pickup") : translate("Ready to ship") }}
+              {{ order?.shipGroup.shipmentMethodTypeId === 'STOREPICKUP' ? translate("Ready for pickup") : translate("Ready to ship") }}
             </ion-button>
             <ion-button size="default" :disabled="!hasPermission(Actions.APP_ORDER_UPDATE) || order.readyToHandover || order.readyToShip || order.rejected || !hasRejectedItems" color="danger" fill="outline" @click="rejectOrder()">
               {{ translate("Reject Items") }}
             </ion-button>
           </ion-item>
-          <ion-item lines="none" v-else-if="orderType === 'packed' && order.part?.items?.length" class="ion-hide-md-down">
+          <ion-item lines="none" v-else-if="orderType === 'packed' && order.shipGroup?.items?.length" class="ion-hide-md-down">
             <ion-button size="default" :disabled="!hasPermission(Actions.APP_ORDER_UPDATE) || order.handovered || order.shipped || order.cancelled || hasCancelledItems" expand="block" @click="deliverShipment(order)">
               <ion-icon slot="start" :icon="checkmarkDoneOutline"/>
-              {{ order.part?.shipmentMethodEnum?.shipmentMethodEnumId === 'STOREPICKUP' ? translate("Handover") : translate("Ship") }}
+              {{ order.shipGroup.shipmentMethodTypeId === 'STOREPICKUP' ? translate("Handover") : translate("Ship") }}
             </ion-button>
             <ion-button color="danger" size="default" :disabled="!hasPermission(Actions.APP_ORDER_UPDATE) || order.handovered || order.shipped || order.cancelled || !hasCancelledItems" expand="block" fill="outline" @click="cancelOrder(order)">
               {{ translate("Cancel items") }}
@@ -231,17 +231,17 @@
               <ion-card-header>
                 <ion-card-title>{{ translate("Payment") }}</ion-card-title>
               </ion-card-header>
-              <div v-if="order.orderPayments?.length">
-                <ion-list v-for="(orderPayment, index) in order.orderPayments" :key="index">
+              <div v-if="order.paymentPreferences?.length">
+                <ion-list v-for="(orderPaymentPreference, index) in order.paymentPreferences" :key="index">
                   <ion-item lines="none">
                     <ion-label class="ion-text-wrap">
-                      <p class="overline">{{ orderPayment.methodTypeId }}</p>
-                      <ion-label>{{ translate(getPaymentMethodDesc(orderPayment.methodTypeId)) || orderPayment.methodTypeId }}</ion-label>
-                      <ion-note :color="getColorByDesc(getStatusDesc(orderPayment.paymentStatus))">{{ translate(getStatusDesc(orderPayment.paymentStatus)) }}</ion-note>
+                      <p class="overline">{{ orderPaymentPreference.paymentMethodTypeId }}</p>
+                      <ion-label>{{ translate(orderPaymentPreference.paymentMethodTypeDesc) || orderPaymentPreference.paymentMethodTypeId }}</ion-label>
+                      <ion-note :color="getColorByDesc(orderPaymentPreference.statusDesc)">{{ translate(orderPaymentPreference.statusDesc) }}</ion-note>
                     </ion-label>
                     <div slot="end" class="ion-text-end">
-                      <ion-badge v-if="order.orderPayments.length > 1 && index === 0" color="dark">{{ translate("Latest") }}</ion-badge>
-                      <ion-label slot="end">{{ formatCurrency(orderPayment.amount, order.currencyUom) }}</ion-label>
+                      <ion-badge v-if="order.paymentPreferences.length > 1 && index === 0" color="dark">{{ translate("Latest") }}</ion-badge>
+                      <ion-label slot="end">{{ formatCurrency(orderPaymentPreference.maxAmount, order.currencyUom) }}</ion-label>
                     </div>
                   </ion-item>
                 </ion-list>
@@ -255,12 +255,12 @@
 
         <!-- Other shipments info -->
         <div class="other-shipments">
-          <ion-item lines="none" v-if="order.shipGroups?.filter((group: any) => group.shipGroupSeqId !== order.part.orderPartSeqId)?.length">
+          <ion-item lines="none" v-if="order.shipGroups?.filter((group: any) => group.shipGroupSeqId !== order.shipGroup.shipGroupSeqId)?.length">
             <ion-label>{{ translate("Other shipments in this order") }}</ion-label>
           </ion-item>
           <div class="ion-padding">
             <template v-for="shipGroup in order.shipGroups" :key="shipGroup.shipmentId">
-              <ion-card v-if="shipGroup.shipGroupSeqId !== order.part.orderPartSeqId">
+              <ion-card v-if="shipGroup.shipGroupSeqId !== order.shipGroup.shipGroupSeqId">
                 <ion-card-header>
                   <div>
                     <ion-card-subtitle class="overline">{{ getfacilityTypeDesc(shipGroup.facilityTypeId) }}</ion-card-subtitle>
@@ -313,8 +313,8 @@
       </main>
 
       <ion-fab v-if="orderType === 'open' && order?.orderId" class="ion-hide-md-up" vertical="bottom" horizontal="end" slot="fixed" >
-        <ion-fab-button :disabled="!hasPermission(Actions.APP_ORDER_UPDATE) || order.readyToHandover || order.readyToShip || order.rejected" @click="readyForPickup(order, order.part)">
-          <ion-icon :icon="order.part?.shipmentMethodEnum?.shipmentMethodEnumId === 'STOREPICKUP' ? bagHandleOutline : giftOutline" />
+        <ion-fab-button :disabled="!hasPermission(Actions.APP_ORDER_UPDATE) || order.readyToHandover || order.readyToShip || order.rejected" @click="readyForPickup(order, order.shipGroup)">
+          <ion-icon :icon="order.shipGroup.shipmentMethodTypeId === 'STOREPICKUP' ? bagHandleOutline : giftOutline" />
         </ion-fab-button>
       </ion-fab>
       <ion-fab v-else-if="orderType === 'packed' && order?.orderId" class="ion-hide-md-up" vertical="bottom" horizontal="end" slot="fixed" >
@@ -474,17 +474,17 @@ export default defineComponent({
       getEnumDescription: "util/getEnumDescription"
     })
   },
-  props: ['orderType', 'orderId', 'orderPartSeqId'],
+  props: ['orderType', 'orderId', 'shipGroupSeqId'],
   methods: {
     async fetchProductStock(productId: string, shipGroupSeqId: any) {
       this.store.dispatch('order/updateOrderItemFetchingStatus', { productId, shipGroupSeqId })
       await this.store.dispatch('stock/fetchStock', { productId })
       this.store.dispatch('order/updateOrderItemFetchingStatus', { productId, shipGroupSeqId })
     },
-    async assignPicker(order: any, part: any, facilityId: any) {
+    async assignPicker(order: any, shipGroup: any, facilityId: any) {
       const assignPickerModal = await modalController.create({
         component: AssignPickerModal,
-        componentProps: { order, part, facilityId }
+        componentProps: { order, shipGroup, facilityId }
       });
 
       assignPickerModal.onDidDismiss().then(async(result: any) => {
@@ -494,7 +494,7 @@ export default defineComponent({
           this.picklistDate = DateTime.now().toMillis()
           this.order.pickers = selectedPicker.name
           this.order.pickerIds = [selectedPicker.id]
-          await this.store.dispatch('order/packShipGroupItems', { order, part, facilityId, selectedPicker: result.data.selectedPicker })
+          await this.store.dispatch('order/packShipGroupItems', { order, shipGroup, facilityId, selectedPicker: result.data.selectedPicker })
           this.prepareOrderTimeline();
         }
       })
@@ -519,7 +519,7 @@ export default defineComponent({
       return editPickerModal.present();
     },
     async deliverShipment(order: any) {
-      const pickup = order.part?.shipmentMethodEnum?.shipmentMethodEnumId === 'STOREPICKUP';
+      const pickup = order.shipGroup.shipmentMethodTypeId === 'STOREPICKUP';
       const header = pickup ? translate("Handover") : translate("Ship");
       const message = pickup ? translate("Verify that the items in the package are valid and the customer has received their order. Once the order is handed over to the customer it cannot be undone.", { space: '<br/><br/>' }) : '';
 
@@ -551,15 +551,13 @@ export default defineComponent({
       });
       return orderItemRejHistoryModal.present();
     },
-    async getOrderDetail(orderId: any, orderPartSeqId: any, orderType: any) {
+    async getOrderDetail(orderId: any, shipGroupSeqId: any, orderType: any) {
       const payload = {
         facilityId: this.currentFacility?.facilityId,
         orderId,
-        orderPartSeqId
+        shipGroupSeqId
       }
       await this.store.dispatch("order/getOrderDetail", { payload, orderType })
-      await this.store.dispatch("order/fetchPaymentDetail")
-      await this.store.dispatch("order/getShippingPhoneNumber")
     },
     async rejectOrder() {
       emitter.emit("presentLoader");
@@ -574,7 +572,7 @@ export default defineComponent({
       // The forEach, map, reduce loops are not built to work with asynchronous callback functions.
       // It doesn't wait for the promise of an iteration to be resolved before it goes on to the next iteration.
       // We could use either the for…of the loop or the for(let i = 0;….)
-      for (const item of order.part.items) {
+      for (const item of order.shipGroup.items) {
         let params = {} as any;
         if(this.isEntierOrderRejectionEnabled(order)) {
           params = {
@@ -582,9 +580,9 @@ export default defineComponent({
             rejectReason: item.rejectReason || this.rejectEntireOrderReasonId,
             facilityId: item.facilityId,
             orderItemSeqId: item.orderItemSeqId,
-            shipmentMethodTypeId: order.part.shipmentMethodEnum.shipmentMethodEnumId,
+            shipmentMethodTypeId: order.shipGroups.shipmentMethodTypeId,
             quantity: parseInt(item.quantity),
-            ...(order.part.shipmentMethodEnum.shipmentMethodEnumId === "STOREPICKUP" && ({"naFacilityId": "PICKUP_REJECTED"})),
+            ...(order.shipGroup.shipmentMethodTypeId === "STOREPICKUP" && ({"naFacilityId": "PICKUP_REJECTED"})),
           }
         } else if(item.rejectReason) {
           params = {
@@ -592,9 +590,9 @@ export default defineComponent({
             rejectReason: item.rejectReason || this.rejectEntireOrderReasonId,
             facilityId: item.facilityId,
             orderItemSeqId: item.orderItemSeqId,
-            shipmentMethodTypeId: order.part.shipmentMethodEnum.shipmentMethodEnumId,
+            shipmentMethodTypeId: order.shipGroup.shipmentMethodTypeId,
             quantity: parseInt(item.quantity),
-            ...(order.part.shipmentMethodEnum.shipmentMethodEnumId === "STOREPICKUP" && ({"naFacilityId": "PICKUP_REJECTED"})),
+            ...(order.shipGroup.shipmentMethodTypeId === "STOREPICKUP" && ({"naFacilityId": "PICKUP_REJECTED"})),
           }
         }
 
@@ -607,9 +605,9 @@ export default defineComponent({
             const resp = await OrderService.rejectOrderItem({ payload: params });
   
             if(!hasError(resp)) {
-              order["part"] = {
-                ...order.part,
-                items: order.part.items.filter((orderItem: any) => !(orderItem.orderItemSeqId === item.orderItemSeqId && orderItem.productId === item.productId))
+              order["shipGroup"] = {
+                ...order.shipGroup,
+                items: order.shipGroup.items.filter((orderItem: any) => !(orderItem.orderItemSeqId === item.orderItemSeqId && orderItem.productId === item.productId))
               }
             }
           } catch(err) {
@@ -619,13 +617,13 @@ export default defineComponent({
       }
 
       // If all the items are rejected then marking the whole order as rejected
-      if(!order.part.items.length) order.rejected = true;
+      if(!order.shipGroup.items.length) order.rejected = true;
 
       await this.store.dispatch("order/updateCurrent", { order });
-      this.hasRejectedItems = this.order.part.items.some((item: any) => item.rejectReason);
+      this.hasRejectedItems = this.order.shipGroup.items.some((item: any) => item.rejectReason);
 
       // We are only preparing the complete timeline for the store pickup order
-      if(this.order.part?.shipmentMethodEnum?.shipmentMethodEnumId === "STOREPICKUP") {
+      if(this.order.shipGroup.shipmentMethodTypeId === "STOREPICKUP") {
         this.prepareOrderTimeline();
       }
 
@@ -644,20 +642,20 @@ export default defineComponent({
       });
 
       cancelOrderConfirmModal.onDidDismiss().then(() => {
-        this.hasCancelledItems = this.order.part.items.some((item: any) => item.cancelReason);
+        this.hasCancelledItems = this.order.shipGroup.items.some((item: any) => item.cancelReason);
         // We are only preparing the complete timeline for the store pickup order
-        if(this.order.part?.shipmentMethodEnum?.shipmentMethodEnumId === "STOREPICKUP") {
+        if(this.order.shipGroup.shipmentMethodTypeId === "STOREPICKUP") {
           this.prepareOrderTimeline();
         }
       })
 
       return cancelOrderConfirmModal.present();
     },
-    async readyForPickup(order: any, part: any) {
-      if(this.getBopisProductStoreSettings('ENABLE_TRACKING') && order.isPicked !== 'Y') return this.assignPicker(order, part, this.currentFacility?.facilityId);
-      const pickup = part?.shipmentMethodEnum?.shipmentMethodEnumId === 'STOREPICKUP';
+    async readyForPickup(order: any, shipGroup: any) {
+      if(this.getBopisProductStoreSettings('ENABLE_TRACKING') && !shipGroup.picklistId) return this.assignPicker(order, shipGroup, this.currentFacility?.facilityId);
+      const pickup = shipGroup.shipmentMethodTypeId === 'STOREPICKUP';
       const header = pickup ? translate('Ready for pickup') : translate('Ready to ship');
-      const message = pickup ? translate('An email notification will be sent to that their order is ready for pickup. This order will also be moved to the packed orders tab.', { customerName: order.customer.name, space: '<br/><br/>' }) : '';
+      const message = pickup ? translate('An email notification will be sent to that their order is ready for pickup. This order will also be moved to the packed orders tab.', { customerName: order.customerName, space: '<br/><br/>' }) : '';
 
       const alert = await alertController
         .create({
@@ -670,9 +668,9 @@ export default defineComponent({
             text: header,
             handler: async () => {
               if(!pickup) {
-                await this.packShippingOrders(order, part);
+                await this.packShippingOrders(order, shipGroup);
               } else {
-                await this.store.dispatch('order/packShipGroupItems', {order, part, facilityId: this.currentFacility?.facilityId})
+                await this.store.dispatch('order/packShipGroupItems', {order, shipGroup, facilityId: this.currentFacility?.facilityId})
               }
               // Update order timeline once the order is marked as ready for pickup
               this.prepareOrderTimeline();
@@ -681,7 +679,7 @@ export default defineComponent({
         });
       return alert.present();
     },
-    async packShippingOrders(currentOrder: any, part: any) {
+    async packShippingOrders(currentOrder: any, shipGroup: any) {
       try {
         const resp = await OrderService.packOrder({
           'picklistBinId': currentOrder.picklistBinId,
@@ -691,7 +689,7 @@ export default defineComponent({
         if(!hasError(resp)) {
           showToast(translate("Order packed and ready for delivery"));
           this.store.dispatch("order/updateCurrent", { order: { ...currentOrder, readyToShip: true } }) 
-          this.store.dispatch("order/removeOpenOrder", { order: currentOrder, part })
+          this.store.dispatch("order/removeOpenOrder", { order: currentOrder, shipGroup })
         } else {
           throw resp.data;
         }
@@ -841,12 +839,12 @@ export default defineComponent({
     async removeRejectionReason(ev: Event, item: any, order: any) {
       delete item["rejectedComponents"];
       item.rejectReason = "";
-      this.hasRejectedItems = order.part.items.some((item: any) => item.rejectReason);
+      this.hasRejectedItems = order.shipGroup.items.some((item: any) => item.rejectReason);
       this.store.dispatch("order/updateCurrent", { order })
     },
     async removeCancellationReason(ev: Event, item: any, order: any) {
       item.cancelReason = "";
-      this.hasCancelledItems = order.part.items.some((item: any) => item.cancelReason);
+      this.hasCancelledItems = order.shipGroup.items.some((item: any) => item.cancelReason);
       this.store.dispatch("order/updateCurrent", { order })
     },
     rejectKitComponent(order: any, item: any, componentProductId: string) {
@@ -857,15 +855,15 @@ export default defineComponent({
         rejectedComponents.push(componentProductId);
       }
       item.rejectedComponents = rejectedComponents;
-      order.part.items.map((orderItem: any) => {
+      order.shipGroup.items.map((orderItem: any) => {
         if (orderItem.orderItemSeqId === item.orderItemSeqId) {
           orderItem.rejectedComponents = rejectedComponents;
         }
       })
       this.store.dispatch("order/updateCurrent", { order })
     },
-    async printPicklist(order: any, part: any) {
-      if(order.isPicked === 'Y') {
+    async printPicklist(order: any, shipGroup: any) {
+      if(shipGroup.picklistId) {
         await OrderService.printPicklist(order.picklistId)
         return;
       }
@@ -894,7 +892,7 @@ export default defineComponent({
 
       const assignPickerModal = await modalController.create({
         component: AssignPickerModal,
-        componentProps: { order, part, facilityId: this.currentFacility.facilityId }
+        componentProps: { order, shipGroup, facilityId: this.currentFacility.facilityId }
       });
 
       assignPickerModal.onDidDismiss().then(async(result: any) => {
@@ -911,7 +909,7 @@ export default defineComponent({
     async createPicklist(order: any, selectedPicker: any, picker: any) {
       let resp;
 
-      const items = order.part.items;
+      const items = order.shipGroup.items;
       const formData = new FormData();
       formData.append("facilityId", items[0].facilityId);
       items.map((item: any, index: number) => {
@@ -1076,7 +1074,7 @@ export default defineComponent({
       this.orderStatus = this.getOrderStatus({
         ...this.order,
         ...paramsToUpdate
-      }, this.order.part, orderRouteSegment, this.orderType)
+      }, this.order.shipGroup, orderRouteSegment, this.orderType)
 
       let orderChangeHistory = await this.fetchOrderChangeHistory();
       const orderPickupEmailCommnicationEvent = await this.fetchOrderCommunicationEvent();
@@ -1187,7 +1185,7 @@ export default defineComponent({
       // Add order completed date to timeline, if we do not have order completed date then check for orderType
       if(this.order.completedDate || this.orderType === "completed") {
         timeline.push({
-          label: this.order.part.shipmentMethodEnum.shipmentMethodEnumId === "STOREPICKUP" ? "Picked up" : "Order completed",
+          label: this.order.shipGroup.shipmentMethodTypeId === "STOREPICKUP" ? "Picked up" : "Order completed",
           id: "completedDate",
           value: this.order.completedDate ? this.order.completedDate : undefined,
           icon: checkmarkDoneOutline,
@@ -1217,7 +1215,7 @@ export default defineComponent({
         const resp = await OrderService.performFind({
           inputFields: {
             orderId: this.order.orderId,
-            shipGroupSeqId: this.order.part.orderPartSeqId
+            shipGroupSeqId: this.order.shipGroup.shipGroupSeqId
           },
           fieldList: ["orderId", "shipGroupSeqId", "shipmentId", "shipmentStatusId", "trackingIdNumber"],
           viewSize: 50,
@@ -1253,7 +1251,7 @@ export default defineComponent({
     },
     async sendReadyForPickupEmail(order: any) {
       const header = translate("Resend email")
-      const message = translate("An email notification will be sent to that their order is ready for pickup.", { customerName: order.customer.name });
+      const message = translate("An email notification will be sent to that their order is ready for pickup.", { customerName: order.customerName });
 
       const alert = await alertController
         .create({
@@ -1297,7 +1295,7 @@ export default defineComponent({
   },
   async mounted() {
     emitter.emit("presentLoader")
-    await this.getOrderDetail(this.orderId, this.orderPartSeqId, this.orderType);
+    await this.getOrderDetail(this.orderId, this.shipGroupSeqId, this.orderType);
 
     // fetch rejection reasons only when we get the orders information
     if(this.order.orderId) {
@@ -1306,9 +1304,9 @@ export default defineComponent({
 
     if(this.orderType === "packed") {
       this.fetchJobs();
-      this.hasCancelledItems = this.order.part?.items.some((item: any) => item.cancelReason);
+      this.hasCancelledItems = this.order.shipGroup?.items.some((item: any) => item.cancelReason);
     } else if(this.orderType === "open") {
-      this.hasRejectedItems = this.order.part?.items.some((item: any) => item.rejectReason);
+      this.hasRejectedItems = this.order.shipGroup?.items.some((item: any) => item.rejectReason);
     }
 
     await this.prepareOrderTimeline();
