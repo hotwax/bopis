@@ -4,11 +4,8 @@ import RootState from '@/store/RootState'
 import StockState from './StockState'
 import * as types from './mutation-types'
 import { hasError } from '@/adapter'
-import { showToast, getCurrentFacilityId } from '@/utils'
-import { translate } from "@hotwax/dxp-components";
+import { getCurrentFacilityId } from '@/utils'
 import logger from '@/logger'
-import { prepareOrderQuery } from "@/utils/solrHelper";
-import { UtilService } from '@/services/UtilService';
 
 
 const actions: ActionTree<StockState, RootState> = {
@@ -21,8 +18,7 @@ const actions: ActionTree<StockState, RootState> = {
     try {
      const params = {
         productId: productId,
-        facilityId: facilityId,
-        includeReservations: true
+        facilityId: facilityId
       }
       
       const resp: any = await StockService.getInventoryAvailableByFacility(params);      

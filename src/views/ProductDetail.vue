@@ -269,9 +269,7 @@ export default defineComponent({
       this.currentVariant = variant || this.product.variants[0];
       await this.checkInventory();
       await this.getOrderDetails();
-      await this.store.dispatch('stock/fetchProductInventory', { productId: this.currentVariant.productId })
-      // await this.store.dispatch('stock/fetchInventoryCount', { productId: this.currentVariant.productId });
-      // await this.store.dispatch('stock/fetchReservedQuantity', { productId: this.currentVariant.productId });
+      await this.store.dispatch('stock/fetchProductInventory', { productId: this.currentVariant.productId });
     },
     async checkInventory() {
       this.currentStoreInventory = this.otherStoresInventory = this.warehouseInventory = 0
@@ -288,23 +286,18 @@ export default defineComponent({
       
           resultList.forEach((productInventory: any) => {
             (productInventory.facilities || []).forEach((storeInventory: any) => {
-              const atp = storeInventory.atp;
-              if (atp) {
+              if (storeInventory.atp) {
                 const isCurrentStore = storeInventory.facilityId === this.currentFacility?.facilityId;
                 if (isCurrentStore) {
-                  this.currentStoreInventory = atp;
+                  this.currentStoreInventory = storeInventory.atp;
                 }
 
                 if (storeInventory.facilityTypeId === 'WAREHOUSE') {
-                  this.warehouseInventory += atp;
+                  this.warehouseInventory += storeInventory.atp;
                 } else if (!isCurrentStore) {
                   // Only add to list if it is not a current store
-                  this.otherStoresInventoryDetails.push({
-                    facilityName: storeInventory.facilityName || storeInventory.facilityId,
-                    stock: atp,
-                    facilityId: storeInventory.facilityId
-                  });
-                  this.otherStoresInventory += atp;
+                  this.otherStoresInventoryDetails.push({ facilityName: storeInventory.facilityName || storeInventory.facilityId, stock: storeInventory.atp, facilityId: storeInventory.facilityId });
+                  this.otherStoresInventory += storeInventory.atp;
                 }
               }
             });

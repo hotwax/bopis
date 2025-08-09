@@ -52,21 +52,13 @@ export default defineComponent({
   computed: {
     ...mapGetters({
       product: "product/getCurrent",
-      // getProductStock: 'stock/getProductStock',
       getInventoryInformation: 'stock/getInventoryInformation',
     })   
   },
   async beforeMount () {
     const productId = this.item?.productId;
     await this.store.dispatch('stock/fetchProductInventory', { productId });
-    // this.fetchReservedQuantity( this.item.productId );
   },
-  methods: {
-    // async fetchReservedQuantity(productId: any){
-    //   await this.store.dispatch('stock/fetchReservedQuantity', { productId });
-    // },
-  },
-
   setup () {
     const store = useStore();
     return {
