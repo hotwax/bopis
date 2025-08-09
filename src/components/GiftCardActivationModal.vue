@@ -32,7 +32,7 @@
           {{ getProductIdentificationValue(productIdentificationPref.primaryId, getProduct(item.productId)) ? getProductIdentificationValue(productIdentificationPref.primaryId, getProduct(item.productId)) : item.productName }}
           <p>{{ getProductIdentificationValue(productIdentificationPref.secondaryId, getProduct(item.productId)) }}</p>
         </ion-label>
-        <ion-label slot="end">{{ formatCurrency(itemPriceInfo.unitPrice, itemPriceInfo.currencyUom) }}</ion-label>
+        <ion-label slot="end">{{ formatCurrency(item.unitPrice, currencyUom) }}</ion-label>
       </ion-item>
 
       <div class="ion-margin" v-if="!item.isGCActivated">
@@ -115,17 +115,11 @@ export default defineComponent({
   data() {
     return {
       isLoading: false,
-      itemPriceInfo: {} as any,
       activationCode: "",
       isCameraEnabled: false
     }
   },
-  props: ["item", "orderId", "customerId"],
-  async mounted() {
-    this.isLoading = true;
-    this.itemPriceInfo = await UtilService.fetchGiftCardItemPriceInfo({ orderId: this.orderId, orderItemSeqId: this.item.orderItemSeqId })
-    this.isLoading = false;
-  },
+  props: ["item", "orderId", "customerId", "currencyUom"],
   methods: {
     closeModal(payload = {}) {
       modalController.dismiss({ dismissed: true, ...payload })
@@ -158,10 +152,11 @@ export default defineComponent({
         const resp = await UtilService.activateGiftCard({
           orderId: this.orderId,
           orderItemSeqId: this.item.orderItemSeqId,
-          amount: this.itemPriceInfo.unitPrice,
+          amount: this.item.unitPrice,
           typeEnumId: "GC_ACTIVATE",
           cardNumber: this.activationCode.trim(),
-          partyId: this.customerId
+          partyId: this.customerId,
+          fulfillmentDate: Date.now()
         })
         
         if(!hasError(resp)) {

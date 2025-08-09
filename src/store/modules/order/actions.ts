@@ -1410,17 +1410,13 @@ const actions: ActionTree<OrderState , RootState> ={
 
     try {
       const resp = await UtilService.fetchGiftCardFulfillmentInfo({
-        entityName: "GiftCardFulfillment",
-        inputFields: {
           orderId: orderId,
-          orderItemSeqId: item.orderItemSeqId
-        },
-        fieldList: ["amount", "cardNumber", "fulfillmentDate", "orderId", "orderItemSeqId"]
-      })
+          orderItemSeqId: item.orderItemSeqId        
+      })      
 
       if(!hasError(resp)) {
         isGCActivated = true;
-        gcInfo = resp.data.docs[0];
+        gcInfo = resp.data[0];
       } else {
         throw resp.data
       }
@@ -1433,7 +1429,7 @@ const actions: ActionTree<OrderState , RootState> ={
     if(isDetailsPage) {
       const order = JSON.parse(JSON.stringify(state.current));
       
-      order.part.items?.map((currentItem: any) => {
+      order.shipGroup.items?.map((currentItem: any) => {
         if(currentItem.orderId === orderId && currentItem.orderItemSeqId === item.orderItemSeqId) {
           currentItem.isGCActivated = true;
           currentItem.gcInfo = gcInfo
@@ -1446,13 +1442,11 @@ const actions: ActionTree<OrderState , RootState> ={
     const orders = orderType === "packed" ? JSON.parse(JSON.stringify(state.packed.list)) : JSON.parse(JSON.stringify(state.completed.list));
     orders.map((order: any) => {
       if(order.orderId === orderId) {
-        order.parts.map((part: any) => {
-          part.items.map((currentItem: any) => {
+        order.items.map((currentItem: any) => {
             if(currentItem.orderItemSeqId === item.orderItemSeqId) {
               currentItem.isGCActivated = true;
               currentItem.gcInfo = gcInfo;
-            }
-          })
+            }          
         })
       }
     })
