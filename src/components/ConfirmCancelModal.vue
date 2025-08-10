@@ -123,7 +123,7 @@ export default defineComponent({
   },
   mounted() {
     this.currentOrder = JSON.parse(JSON.stringify(this.order))
-    this.cancelledItems = this.currentOrder.part.items.filter((item: any) => item.cancelReason)
+    this.cancelledItems = this.currentOrder.shipGroup.items.filter((item: any) => item.cancelReason)
     this.orderTotal = this.cancelledItems.reduce((total: any, item: any) => this.getProduct(item.productId).LIST_PRICE_PURCHASE_USD_STORE_GROUP_price + total, 0)
     const timeDiff = DateTime.fromMillis(this.cancelJobNextRunTime).diff(DateTime.local());
     this.runTimeDiff = DateTime.local().plus(timeDiff).toRelative();
@@ -163,9 +163,9 @@ export default defineComponent({
 
         // Remove the cancelled items from the order details page
         const cancelledItemSeqIds = new Set(itemsPayload.map(item => item.orderItemSeqId));
-        this.currentOrder["part"] = {
-          ...this.currentOrder.part,
-          items: this.currentOrder.part.items.filter(
+        this.currentOrder["shipGroup"] = {
+          ...this.currentOrder.shipGroup,
+          items: this.currentOrder.shipGroup.items.filter(
             (orderItem: any) => !cancelledItemSeqIds.has(orderItem.orderItemSeqId)
           )
         };
@@ -175,7 +175,7 @@ export default defineComponent({
       }
 
       // If all the items are cancelled then mark the whole order as cancelled
-      if (!this.currentOrder.part.items.length) {
+      if (!this.currentOrder.shipGroup.items.length) {
         this.currentOrder.cancelled = true;
       }
 

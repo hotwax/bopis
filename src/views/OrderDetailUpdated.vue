@@ -588,12 +588,12 @@ export default defineComponent({
           items: itemsToReject
         };
         try {
-          const resp = await OrderService.rejectOrderItems({ payload });
+          const resp = await OrderService.rejectOrderItems(payload);
 
           if (!hasError(resp)) {
-            // Remove rejected items from the part.items
+            // Remove rejected items from the shipGroup.items
             const rejectedSeqIds = new Set(itemsToReject.map(item => item.orderItemSeqId));
-            order.part.items = order.part.items.filter(
+            order.shipGroup.items = order.shipGroup.items.filter(
               (item: any) => !rejectedSeqIds.has(item.orderItemSeqId)
             );
           }
