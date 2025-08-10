@@ -12,7 +12,11 @@ const getters: GetterTree <UserState, RootState> = {
     getBaseUrl (state) {
         let baseURL = process.env.VUE_APP_BASE_URL;
         if (!baseURL) baseURL = state.instanceUrl;
-        return baseURL.startsWith('http') ? baseURL.includes('/api') ? baseURL : `${baseURL}/api/` : `https://${baseURL}.hotwax.io/api/`;
+        return baseURL.startsWith("http") ? `${baseURL}/rest/s1/` : `https://${baseURL}.hotwax.io/rest/s1/`;
+    },
+    getOmsBaseUrl (state) {
+    const url = state.omsRedirectionUrl
+    return url.startsWith('http') ? url.includes('/api') ? url : `${url}/api/` : `https://${url}.hotwax.io/api/`;
     },
     getUserToken (state) {
         return state.token

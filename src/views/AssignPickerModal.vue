@@ -112,7 +112,7 @@ export default defineComponent({
     IonInfiniteScroll,
     IonInfiniteScrollContent
   },
-  props: ['order', 'part', 'facilityId'],
+  props: ['order', 'shipGroup', 'facilityId'],
   data () {
     return {
       selectedPicker: '',
