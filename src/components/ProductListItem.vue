@@ -11,13 +11,13 @@
     <!-- Only show stock if its not a ship to store order -->
     <div class="show-kit-components" slot="end" v-if="!isShipToStoreOrder">
       <ion-spinner v-if="isFetchingStock" color="medium" name="crescent" />
-      <div v-else-if="getProductStock(item.productId).quantityOnHandTotal >= 0" class="atp-info">
-        <ion-note slot="end"> {{ translate("on hand", { count: getProductStock(item.productId).quantityOnHandTotal ?? '0' }) }} </ion-note>
+      <div v-else-if="getInventoryInformation(item.productId).quantityOnHand >= 0" class="atp-info">
+        <ion-note slot="end"> {{ translate("on hand", { count: getInventoryInformation(item.productId).quantityOnHand ?? '0' }) }} </ion-note>
         <ion-button fill="clear" @click.stop="openInventoryDetailPopover($event)">
           <ion-icon slot="icon-only" :icon="informationCircleOutline" color="medium" />
         </ion-button>
       </div>
-      <ion-button v-else fill="clear" @click.stop="fetchProductStock(item.productId)">
+      <ion-button v-else fill="clear" @click.stop="fetchProductInventory(item.productId)">
         <ion-icon color="medium" slot="icon-only" :icon="cubeOutline" />
       </ion-button>
 
@@ -87,12 +87,12 @@ export default defineComponent({
       showKitComponents: false
     }
   },
-  props: ['item', 'isShipToStoreOrder', 'orderId', 'orderType', 'customerId'],
+  props: ['item', 'isShipToStoreOrder', 'orderId', 'orderType', 'customerId', 'currencyUom'],
   computed: {
     ...mapGetters({
       getProduct: 'product/getProduct',
       product: "product/getCurrent",
-      getProductStock: 'stock/getProductStock',
+      getInventoryInformation: 'stock/getInventoryInformation',
     })
   },
   methods: {
@@ -100,9 +100,9 @@ export default defineComponent({
       this.store.dispatch('product/fetchProductComponents', { productId: orderItem.productId })
       this.showKitComponents = !this.showKitComponents
     },
-    async fetchProductStock(productId: string) {
+    async fetchProductInventory(productId: string) {
       this.isFetchingStock = true
-      await this.store.dispatch('stock/fetchStock', { productId });
+      await this.store.dispatch('stock/fetchProductInventory', { productId });
       this.isFetchingStock = false
     },
     async openInventoryDetailPopover(Event: any){
@@ -120,7 +120,7 @@ export default defineComponent({
     async openGiftCardActivationModal(item: any) {
       const modal = await modalController.create({
         component: GiftCardActivationModal,
-        componentProps: { item, orderId: this.orderId, customerId: this.customerId }
+        componentProps: { item, orderId: this.orderId, customerId: this.customerId, currencyUom: this.currencyUom }
       })
       modal.onDidDismiss().then((result: any) => {
         if(result.data?.isGCActivated) {
