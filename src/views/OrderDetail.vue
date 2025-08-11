@@ -56,7 +56,7 @@
               <ion-label>
                 {{ order?.customer?.name }}
               </ion-label>
-              <ion-badge slot="end" v-if="order?.placedDate">{{ timeFromNow(order.placedDate) }}</ion-badge>
+              <ion-badge slot="end" v-if="order?.placedDate">{{ timeFromNow(order.orderDate) }}</ion-badge>
             </ion-item>
           </ion-list>
           <ion-item v-if="customerEmail" lines="none">

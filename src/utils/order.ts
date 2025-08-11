@@ -95,38 +95,9 @@ const isKit = (item: any) => {
   return product && product.productTypeId === 'MARKETING_PKG_PICK';
 }
 
-const removeKitComponents = (parts: any) => {
-  const kitItemSeqIds = new Set();
-
-  // Process and update parts
-  const updatedParts = parts.map((part: any) => {
-    const updatedItems = [] as any;
-
-    part.items.forEach((item: any) => {
-      const product = store.getters['product/getProduct'](item.productId);
-      if (product && product.productTypeId === "MARKETING_PKG_PICK") {
-        kitItemSeqIds.add(item.orderItemSeqId);
-      }
-    });
-
-    //In current implementation kit product and component product will have the same orderItemSeqId
-    part.items.forEach((item: any) => {
-      const product = store.getters['product/getProduct'](item.productId);
-      if ((product && product.productTypeId === "MARKETING_PKG_PICK") || !kitItemSeqIds.has(item.orderItemSeqId)) {
-        item["productTypeId"] = product ? product.productTypeId : null;
-        updatedItems.push(item);
-      }
-    });
-
-    return { ...part, items: updatedItems };
-  });
-
-  return updatedParts;
-};
-
-const getOrderStatus = (order: any, part: any, orderRouteSegment: any, orderType: string) => {
-  if(order.statusId === "ORDER_COMPLETED" || orderType === "completed") {
-    return part.shipmentMethodEnum.shipmentMethodEnumId === "STOREPICKUP" ? "Picked up" : "Completed"
+const getOrderStatus = (order: any, shipGroup: any, orderRouteSegment: any, orderType: string) => {
+  if(order.orderStatusId === "ORDER_COMPLETED" || orderType === "completed") {
+    return shipGroup?.shipmentMethodTypeId === "STOREPICKUP" ? "Picked up" : "Completed"
   }
 
   if(orderRouteSegment?.length) {
@@ -139,6 +110,5 @@ const getOrderStatus = (order: any, part: any, orderRouteSegment: any, orderType
 export {
   getOrderCategory,
   getOrderStatus,
-  isKit,
-  removeKitComponents
+  isKit
 }

@@ -30,16 +30,16 @@
     </ion-header>
     <ion-content ref="contentRef" :scroll-events="true" @ionScroll="enableScrolling()">
       <div v-if="segmentSelected === 'open'">
-        <div v-for="(order, index) in getOrdersByPart(orders)" :key="index" v-show="order.parts.length > 0">
-          <ion-card button @click.prevent="viewOrder(order, order.part, 'open')">
+        <div v-for="(order, index) in getOrdersByPart" :key="index" v-show="order.shipGroups.length > 0">
+          <ion-card button @click.prevent="viewOrder(order, order.shipGroupshipGroupSeqId, 'open')">
             <ion-item lines="none">
               <ion-label class="ion-text-wrap">
-                <h1>{{ order.customer.name }}</h1>
+                <h1>{{ order.customerName }}</h1>
                 <p>{{ order.orderName ? order.orderName : order.orderId }}</p>
               </ion-label>
               <div class="metadata">
-                <ion-badge v-if="order.placedDate" color="dark">{{ timeFromNow(order.placedDate) }}</ion-badge>
-                <ion-badge v-if="order.statusId !== 'ORDER_APPROVED'" color="danger">{{ translate('pending approval') }}</ion-badge>
+                <ion-badge v-if="order.orderDate" color="dark">{{ timeFromNowInMillis(order.orderDate) }}</ion-badge>
+                <ion-badge v-if="order.orderStatusId !== 'ORDER_APPROVED'" color="danger">{{ translate('pending approval') }}</ion-badge>
               </div>
               <!-- TODO: Display the packed date of the orders, currently not getting the packed date from API-->
             </ion-item>
@@ -51,44 +51,30 @@
               </ion-label>
             </ion-item>
 
-            <ProductListItem v-for="item in order.part.items" :key="item.productId" :item="item" />
-
-            <ion-item v-if="order.customer.phoneNumber">
-              <ion-icon :icon="callOutline" slot="start" />
-              <ion-label>{{ order.customer.phoneNumber }}</ion-label>
-              <ion-button fill="outline" slot="end" color="medium" @click.stop="copyToClipboard(order.customer.phoneNumber)">
-                {{ translate("Copy") }}
-              </ion-button>
-            </ion-item>
-            <ion-item lines="full" v-if="order.customer.email">
-              <ion-icon :icon="mailOutline" slot="start" />
-              <ion-label>{{ order.customer.email }}</ion-label>
-              <ion-button fill="outline" slot="end" color="medium" @click.stop="copyToClipboard(order.customer.email)">
-                {{ translate("Copy") }}
-              </ion-button>
-            </ion-item>
+            <ProductListItem v-for="item in order.shipGroup.items" :key="item.productId" :item="item" />
+                        
             <div class="border-top">
-              <ion-button :disabled="!hasPermission(Actions.APP_ORDER_UPDATE)" fill="clear" @click.stop="readyForPickup(order, order.part)">
-                {{ order.part.shipmentMethodEnum?.shipmentMethodEnumId === 'STOREPICKUP' ? translate("Ready for pickup") : translate("Ready to ship") }}
+              <ion-button :disabled="!hasPermission(Actions.APP_ORDER_UPDATE)" fill="clear" @click.stop="readyForPickup(order, order.shipGroup)">
+                {{ order.shipGroup?.shipmentMethodTypeId === 'STOREPICKUP' ? translate("Ready for pickup") : translate("Ready to ship") }}
               </ion-button>
               <div></div>
-              <ion-button v-if="getBopisProductStoreSettings('PRINT_PICKLISTS')" slot="end" fill="clear" @click.stop="printPicklist(order, order.part)">
+              <ion-button v-if="getBopisProductStoreSettings('PRINT_PICKLISTS')" slot="end" fill="clear" @click.stop="printPicklist(order, order.shipGroup)">
                 <ion-icon :icon="printOutline" slot="icon-only" />
               </ion-button>
             </div>
           </ion-card>
         </div>
-      </div>      
+      </div>       
       <div v-if="segmentSelected === 'packed'">
-        <div v-for="(order, index) in getOrdersByPart(packedOrders)" :key="index" v-show="order.parts.length > 0">
-          <ion-card button @click.prevent="viewOrder(order, order.part, 'packed')">
+        <div v-for="(order, index) in getOrdersByPart" :key="index" v-show="order.parts.length > 0">
+          <ion-card button @click.prevent="viewOrder(order, order.primaryShipGroupSeqId, 'packed')">
             <ion-item lines="none">
               <ion-label class="ion-text-wrap">
-                <h1>{{ order.customer.name }}</h1>
+                <h1>{{ order.customerName }}</h1>
                 <p>{{ order.orderName ? order.orderName : order.orderId }}</p>
                 <p v-if="getBopisProductStoreSettings('ENABLE_TRACKING')">{{ order.pickers ? translate("Picked by", { pickers: order.pickers }) : translate("No picker assigned.") }}</p>
               </ion-label>
-              <ion-badge v-if="order.placedDate" color="dark" slot="end">{{ timeFromNow(order.placedDate) }}</ion-badge>
+              <ion-badge v-if="order.orderDate" color="dark" slot="end">{{ timeFromNow(order.orderDate) }}</ion-badge>
             </ion-item>
 
             <ion-item v-if="order.shippingInstructions" color="light" lines="none">
@@ -129,34 +115,21 @@
         </div>
       </div>
       <div v-if="segmentSelected === 'completed'">
-        <div v-for="(order, index) in getOrdersByPart(completedOrders)" :key="index" v-show="order.parts.length > 0">
-          <ion-card button @click.prevent="viewOrder(order, order.part, 'completed')">
+        <div v-for="(order, index) in completedOrders" :key="index" v-show="order.items.length > 0">
+          <ion-card button @click.prevent="viewOrder(order, order.primaryShipGroupSeqId, 'completed')">
             <ion-item lines="none">
               <ion-label class="ion-text-wrap">
-                <h1>{{ order.customer.name }}</h1>
+                <h1>{{ order.customerName }}</h1>
                 <p>{{ order.orderName ? order.orderName : order.orderId }}</p>
               </ion-label>
-              <ion-badge v-if="order.placedDate" color="dark" slot="end">{{ timeFromNowInMillis(order.placedDate) }}</ion-badge>
+              <ion-badge v-if="order.orderDate" color="dark" slot="end">{{ timeFromNowInMillis(order.orderDate) }}</ion-badge>
             </ion-item>
 
-            <ProductListItem v-for="item in order.part.items" :key="item.productId" :item="item" :orderId="order.orderId" :customerId="order.customer.partyId" orderType="completed"/>
-
-            <ion-item v-if="order.customer.phoneNumber">
-              <ion-icon :icon="callOutline" slot="start" />
-              <ion-label>{{ order.customer.phoneNumber }}</ion-label>
-              <ion-button fill="outline" slot="end" color="medium" @click.stop="copyToClipboard(order.customer.phoneNumber)">
-                {{ translate("Copy") }}
-              </ion-button>
-            </ion-item>
-            <ion-item lines="full" v-if="order.customer.email">
-              <ion-icon :icon="mailOutline" slot="start" />
-              <ion-label>{{ order.customer.email }}</ion-label>
-              <ion-button fill="outline" slot="end" color="medium" @click.stop="copyToClipboard(order.customer.email)">
-                {{ translate("Copy") }}
-              </ion-button>
-            </ion-item>
+            <ProductListItem v-for="item in order.items" :key="item.productId" :item="item" :orderId="order.orderId" :customerId="order.customerId" orderType="completed"/>
+            
           </ion-card>
         </div>
+      </div>
       </div>
       <ion-refresher slot="fixed" @ionRefresh="refreshOrders($event)">
         <ion-refresher-content pullingIcon="crescent" refreshingSpinner="crescent" />
@@ -259,7 +232,10 @@ export default defineComponent({
       unreadNotificationsStatus: 'user/getUnreadNotificationsStatus',
       getBopisProductStoreSettings: 'user/getBopisProductStoreSettings',
       getProductStock: 'stock/getProductStock',
-    })
+    }),
+    getOrdersByPart() {
+      return Object.keys((this as any).orders).length ? (this as any).orders.flatMap((order: any) => order.shipGroups.map((shipGroup: any) => ({ ...order, shipGroup: { ...shipGroup, ...order.shipGroup } }))) : [];
+    }
   },
   data() {
     return {
@@ -268,15 +244,15 @@ export default defineComponent({
     }
   },
   methods: {
-    async assignPicker(order: any, part: any, facilityId: any) {
+    async assignPicker(order: any, shipGroup: any, facilityId: any) {
       const assignPickerModal = await modalController.create({
         component: AssignPickerModal,
-        componentProps: { order, part, facilityId }
+        componentProps: { order, shipGroup, facilityId }
       });
-
       assignPickerModal.onDidDismiss().then(async(result: any) => {
         if(result.data?.selectedPicker) {
-          await this.store.dispatch('order/packShipGroupItems', { order, part, facilityId, selectedPicker: result.data.selectedPicker })
+          await this.createPicklist(order, result.data.selectedPicker);
+          await this.store.dispatch('order/packShipGroupItems', { order, shipGroup })
         }
       })
 
@@ -329,12 +305,12 @@ export default defineComponent({
         this.getCompletedOrders().then(() => { event.target.complete() });
       }
     },
-    async viewOrder(order: any, part: any, orderType: any) {
+    async viewOrder(order: any, shipGroupSeqId: any, orderType: any) {
       // TODO: find a better approach to handle the case that when in open segment we can click on
       // order card to route on the order details page but not in the packed segment
       order['orderType'] = orderType
       await this.store.dispatch('order/updateCurrent', { order }).then(() => {
-        this.$router.push({ path: `/orderdetail/${orderType}/${order.orderId}/${part.orderPartSeqId}` })
+        this.$router.push({ path: `/orderdetail/${orderType}/${order.orderId}/${shipGroupSeqId}` })
       })
     },
     async getPickupOrders (vSize?: any, vIndex?: any) {
@@ -393,11 +369,11 @@ export default defineComponent({
        });
       }
     },
-    async readyForPickup (order: any, part: any) {
-      if(this.getBopisProductStoreSettings('ENABLE_TRACKING') && order.isPicked !== 'Y') return this.assignPicker(order, part, this.currentFacility?.facilityId);
-      const pickup = part.shipmentMethodEnum?.shipmentMethodEnumId === 'STOREPICKUP';
+    async readyForPickup (order: any, shipGroup: any) {
+      if(this.getBopisProductStoreSettings('ENABLE_TRACKING') && !shipGroup.picklistId) return this.assignPicker(order, shipGroup, this.currentFacility?.facilityId);
+      const pickup = shipGroup.shipmentMethodTypeId === 'STOREPICKUP';
       const header = pickup ? translate('Ready for pickup') : translate('Ready to ship');
-      const message = pickup ? translate('An email notification will be sent to that their order is ready for pickup. This order will also be moved to the packed orders tab.', { customerName: order.customer.name, space: '<br/><br/>'}) : '';
+      const message = pickup ? translate('An email notification will be sent to that their order is ready for pickup. This order will also be moved to the packed orders tab.', { customerName: order.customerName, space: '<br/><br/>'}) : '';
 
       const alert = await alertController
         .create({
@@ -410,25 +386,26 @@ export default defineComponent({
             text: header,
             handler: () => {
               if(!pickup) {
-                this.packShippingOrders(order, part);
+                this.packShippingOrders(order, shipGroup);
               } else {
-                this.store.dispatch('order/packShipGroupItems', {order, part, facilityId: this.currentFacility?.facilityId})
+                this.store.dispatch('order/packShipGroupItems', { order, shipGroup })
               }
             }
           }]
         });
       return alert.present();
     },
-    async packShippingOrders(currentOrder: any, part: any) {
+    async packShippingOrders(currentOrder: any, shipGroup: any) {
       try {
         const resp = await OrderService.packOrder({
-          'picklistBinId': currentOrder.picklistBinId,
-          'orderId': currentOrder.orderId
+          'shipmentId': currentOrder.shipmentId,
+          'orderId': currentOrder.orderId,
+          'facilityId': shipGroup.facilityId
         })
 
         if(!hasError(resp)) {
           showToast(translate("Order packed and ready for delivery"));
-          this.store.dispatch("order/removeOpenOrder", { order: currentOrder, part })
+          this.store.dispatch("order/removeOpenOrder", { order: currentOrder, shipGroup })
         } else {
           throw resp.data;
         }
@@ -441,12 +418,12 @@ export default defineComponent({
       await this.store.dispatch('order/deliverShipment', order)
       .then((resp) => {
         if(!hasError(resp)) {
-          showToast(translate('Order delivered to', {customerName: order.customer.name}))
+          showToast(translate('Order delivered to', {customerName: order.customerName}))
 
           // We are collecting the product IDs of the order items and then fetching stock information
           // for each product ID if it is available for updated inventory.
-          const productIds = [...new Set(order.parts.reduce((productId: any, part: any) => {
-            const ids = part.items.map((item: any) => item.productId)
+          const productIds = [...new Set(order.shipGroups.reduce((productId: any, shipGroup: any) => {
+            const ids = shipGroup.items.map((item: any) => item.productId)
             return productId.concat(ids)
           }, []))]
 
@@ -487,7 +464,7 @@ export default defineComponent({
     },
     async sendReadyForPickupEmail(order: any) {
       const header = translate('Resend email')
-      const message = translate('An email notification will be sent to that their order is ready for pickup.', { customerName: order.customer.name });
+      const message = translate('An email notification will be sent to that their order is ready for pickup.', { customerName: order.customerName });
 
       const alert = await alertController
         .create({
@@ -515,9 +492,6 @@ export default defineComponent({
         });
       return alert.present();
     },
-    getOrdersByPart(orders: Array<any>) {
-      return Object.keys(orders).length ? orders.flatMap((order: any) => order.parts.map((part: any) => ({ ...order, part }))) : [];
-    },
     viewShipToStoreOrders() {
       this.$router.push({ path: '/ship-to-store-orders' })
     },
@@ -525,9 +499,9 @@ export default defineComponent({
       this.store.dispatch('user/setUnreadNotificationsStatus', false)
       this.$router.push({ path: '/notifications' })
     },
-    async printPicklist(order: any, part: any) {
-      if(order.isPicked === 'Y') {
-        await OrderService.printPicklist(order.picklistId)
+    async printPicklist(order: any, shipGroup: any) {
+      if(shipGroup.picklistId) {
+        await OrderService.printPicklist(shipGroup.picklistId)
         return;
       }
 
@@ -552,7 +526,7 @@ export default defineComponent({
 
       const assignPickerModal = await modalController.create({
         component: AssignPickerModal,
-        componentProps: { order, part, facilityId: this.currentFacility.facilityId }
+        componentProps: { order, shipGroup, facilityId: this.currentFacility.facilityId }
       });
 
       assignPickerModal.onDidDismiss().then(async(result: any) => {
@@ -566,20 +540,26 @@ export default defineComponent({
     async createPicklist(order: any, selectedPicker: any) {
       let resp;
 
-      const items = order.parts[0].items;
-      const formData = new FormData();
-      formData.append("facilityId", items[0].facilityId);
-      items.map((item: any, index: number) => {
-        formData.append("itemStatusId_o_"+index, "PICKITEM_PENDING")
-        formData.append("pickerIds_o_"+index, selectedPicker)
-        formData.append("picked_o_"+index, item.quantity)
-        Object.keys(item).map((property) => {
-          if(property !== "facilityId") formData.append(property+'_o_'+index, item[property])
-        })
-      });
+      const payload = {
+        packageName: "A", //default package name
+        facilityId: this.currentFacility?.facilityId,
+        shipmentMethodTypeId: order.shipGroups[0]?.shipmentMethodTypeId,
+        statusId: "PICKLIST_ASSIGNED",        
+        pickers: selectedPicker ? [{
+          partyId: selectedPicker,
+          roleTypeId: "WAREHOUSE_PICKER"
+        }] : [],
+        orderItems: order.shipGroups[0]?.items.map((item: { orderId: string, orderItemSeqId: string, shipGroupSeqId: string, productId: string, quantity: number }) => ({
+          orderId: item.orderId,
+          orderItemSeqId: item.orderItemSeqId,
+          shipGroupSeqId: item.shipGroupSeqId,
+          productId: item.productId,
+          quantity: item.quantity
+        }))
+      };      
 
       try {
-        resp = await OrderService.createPicklist(formData);
+        resp = await OrderService.createPicklist(payload);
         if(!hasError(resp)) {
           // generating picklist after creating a new picklist
           await OrderService.printPicklist(resp.data.picklistId)
@@ -587,7 +567,7 @@ export default defineComponent({
           const updatedOrder = orders.find((currentOrder: any) => currentOrder.orderId === order.orderId);
           updatedOrder["isPicked"] = "Y"
           updatedOrder["picklistId"] = resp.data.picklistId
-          updatedOrder["picklistBinId"] = resp.data.picklistBinId
+          updatedOrder["shipmentId"] = resp.data.shipmentIds[0]
           this.store.dispatch("order/updateOpenOrder", { orders, total: orders.length })
         } else {
           throw resp.data;
