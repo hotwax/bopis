@@ -849,10 +849,10 @@ const actions: ActionTree<OrderState , RootState> ={
   },
 
   // TODO: handle the unfillable items count
-  async setUnfillableOrderOrItem ({ dispatch }, payload) {
+  async rejectItems ({ dispatch }, payload) {
     emitter.emit("presentLoader");
     return await dispatch("rejectOrderItems", payload).then((resp) => {
-      const refreshPickupOrders = resp.find((response: any) => !(response.data._ERROR_MESSAGE_ || response.data._ERROR_MESSAGE_LIST_))
+      const refreshPickupOrders = resp.find((response: any) => response.data);
       if (refreshPickupOrders) {
         showToast(translate('All items were rejected from the order') + ' ' + payload.orderId);
       } else {
@@ -864,7 +864,7 @@ const actions: ActionTree<OrderState , RootState> ={
   },
 
   async rejectOrderItems ({ commit }, order) {
-    const itemsToReject = order.part.items
+    const itemsToReject = order.shipGroup.items    
     .map((item: any) => ({
       ...item,
       updateQOH: false,
@@ -878,11 +878,11 @@ const actions: ActionTree<OrderState , RootState> ={
       items: itemsToReject
     }
     try {
-      const response = await OrderService.rejectOrderItems({ payload: payload });
+      const response = await OrderService.rejectOrderItems(payload);
       return [response];
     } catch (err) {
       logger.error(err)
-      return [err]
+      return err
     }
   },
 
