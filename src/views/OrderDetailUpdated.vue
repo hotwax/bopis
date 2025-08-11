@@ -569,52 +569,48 @@ export default defineComponent({
       }
 
       let order = JSON.parse(JSON.stringify(this.order))
-
-      // https://blog.devgenius.io/using-async-await-in-a-foreach-loop-you-cant-c174b31999bd
-      // The forEach, map, reduce loops are not built to work with asynchronous callback functions.
-      // It doesn't wait for the promise of an iteration to be resolved before it goes on to the next iteration.
-      // We could use either the for…of the loop or the for(let i = 0;….)
+      const isEntireOrderRejection = this.isEntierOrderRejectionEnabled(order);
+      const rejectToFacilityId = order.part.shipmentMethodEnum.shipmentMethodEnumId === "STOREPICKUP" ? "PICKUP_REJECTED" : null;
+      const itemsToReject: any[] = [];
+      const rejectedSeqIds = new Set();
+      
       for (const item of order.part.items) {
-        let params = {} as any;
-        if(this.isEntierOrderRejectionEnabled(order)) {
-          params = {
-            ...payload,
-            rejectReason: item.rejectReason || this.rejectEntireOrderReasonId,
-            facilityId: item.facilityId,
-            orderItemSeqId: item.orderItemSeqId,
-            shipmentMethodTypeId: order.part.shipmentMethodEnum.shipmentMethodEnumId,
-            quantity: parseInt(item.quantity),
-            ...(order.part.shipmentMethodEnum.shipmentMethodEnumId === "STOREPICKUP" && ({"naFacilityId": "PICKUP_REJECTED"})),
-          }
-        } else if(item.rejectReason) {
-          params = {
-            ...payload,
-            rejectReason: item.rejectReason || this.rejectEntireOrderReasonId,
-            facilityId: item.facilityId,
-            orderItemSeqId: item.orderItemSeqId,
-            shipmentMethodTypeId: order.part.shipmentMethodEnum.shipmentMethodEnumId,
-            quantity: parseInt(item.quantity),
-            ...(order.part.shipmentMethodEnum.shipmentMethodEnumId === "STOREPICKUP" && ({"naFacilityId": "PICKUP_REJECTED"})),
-          }
-        }
+        const shouldReject = isEntireOrderRejection || item.rejectReason;
 
-        if(Object.keys(params).length) {
-          // If the item is a kit, then pass the rejectedComponents with the item on rejection
-          if(isKit(item)) {
-            params["rejectedComponents"] = item.rejectedComponents
+        if (shouldReject) {
+          itemsToReject.push({
+            orderItemSeqId: item.orderItemSeqId,
+            quantity: parseInt(item.quantity),
+            facilityId: item.facilityId,
+            updateQOH: false, // Could be true if QOH needs to be updated on rejection
+            rejectionReasonId: item.rejectReason || this.rejectEntireOrderReasonId,
+            rejectReason: item.rejectReason || this.rejectEntireOrderReasonId,
+            shipmentMethodTypeId: order.part.shipmentMethodEnum.shipmentMethodEnumId,
+            ...(order.part.shipmentMethodEnum.shipmentMethodEnumId === "STOREPICKUP" && ({"naFacilityId": "PICKUP_REJECTED"})),
+            kitComponents: isKit(item) ? item.rejectedComponents || [] : []
+          });
+
+          rejectedSeqIds.add(item.orderItemSeqId);
+        }
+      }
+      if (itemsToReject.length) {
+        const payload = {
+          orderId: order.orderId,
+          rejectToFacilityId,
+          items: itemsToReject,
+          notify: true
+        };
+        try {
+          const resp = await OrderService.rejectOrderItems({ payload });
+
+          if (!hasError(resp)) {
+            // Remove rejected items from the part.items
+            order.part.items = order.part.items.filter(
+              (item: any) => !rejectedSeqIds.has(item.orderItemSeqId)
+            );
           }
-          try {
-            const resp = await OrderService.rejectOrderItem({ payload: params });
-  
-            if(!hasError(resp)) {
-              order["part"] = {
-                ...order.part,
-                items: order.part.items.filter((orderItem: any) => !(orderItem.orderItemSeqId === item.orderItemSeqId && orderItem.productId === item.productId))
-              }
-            }
-          } catch(err) {
-            logger.error(`Something went wrong while rejecting order item ${item.productId}/${item.orderItemSeqId}`)
-          }
+        } catch (err) {
+          logger.error("Something went wrong while rejecting order items:", err);
         }
       }
 
