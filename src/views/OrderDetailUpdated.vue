@@ -481,28 +481,8 @@ export default defineComponent({
       this.store.dispatch('order/updateOrderItemFetchingStatus', { productId, shipGroupSeqId })
       await this.store.dispatch('stock/fetchProductInventory', { productId })
       this.store.dispatch('order/updateOrderItemFetchingStatus', { productId, shipGroupSeqId })
-    },
+    },    
     async assignPicker(order: any, shipGroup: any, facilityId: any) {
-      const assignPickerModal = await modalController.create({
-        component: AssignPickerModal,
-        componentProps: { order, shipGroup, facilityId }
-      });
-
-      assignPickerModal.onDidDismiss().then(async(result: any) => {
-        if(result.data.selectedPicker) {
-          const selectedPicker = result.data.picker
-          this.pickers = selectedPicker
-          this.picklistDate = DateTime.now().toMillis()
-          this.order.pickers = selectedPicker.name
-          this.order.pickerIds = [selectedPicker.id]
-          await this.store.dispatch('order/packShipGroupItems', { order, shipGroup, facilityId, selectedPicker: result.data.selectedPicker })
-          this.prepareOrderTimeline();
-        }
-      })
-
-      return assignPickerModal.present();
-    },
-    async assignPickerNew(order: any, shipGroup: any, facilityId: any) {
       const assignPickerModal = await modalController.create({
         component: AssignPickerModal,
         componentProps: { order, shipGroup, facilityId }
@@ -510,7 +490,7 @@ export default defineComponent({
       assignPickerModal.onDidDismiss().then(async(result: any) => {
         if(result.data?.selectedPicker) {
           await this.createPicklist(order, result.data.selectedPicker);
-          await this.store.dispatch('order/packShipGroupItemsNew', { order, shipGroup })
+          await this.store.dispatch('order/packShipGroupItems', { order, shipGroup })
         }
       })
 
@@ -668,7 +648,7 @@ export default defineComponent({
     },
 
     async readyForPickup(order: any, shipGroup: any) {
-      if(this.getBopisProductStoreSettings('ENABLE_TRACKING') && !shipGroup.picklistId) return this.assignPickerNew(order, shipGroup, this.currentFacility?.facilityId);
+      if(this.getBopisProductStoreSettings('ENABLE_TRACKING') && !shipGroup.picklistId) return this.assignPicker(order, shipGroup, this.currentFacility?.facilityId);
       const pickup = shipGroup?.shipmentMethodTypeId === 'STOREPICKUP';
       const header = pickup ? translate('Ready for pickup') : translate('Ready to ship');
       const message = pickup ? translate('An email notification will be sent to that their order is ready for pickup. This order will also be moved to the packed orders tab.', { customerName: order.customerName, space: '<br/><br/>'}) : '';
@@ -682,11 +662,11 @@ export default defineComponent({
             role: 'cancel'
           },{
             text: header,
-            handler: () => {
+            handler: async () => {
               if(!pickup) {
-                this.packShippingOrders(order, shipGroup);
+                await this.packShippingOrders(order, shipGroup);
               } else {
-                this.store.dispatch('order/packShipGroupItems', { order, shipGroup })
+                await this.store.dispatch('order/packShipGroupItems', { order, shipGroup })
               }
             }
           }]
@@ -728,11 +708,11 @@ export default defineComponent({
       }
 
       order.isGeneratingPackingSlip = true;
-      await OrderService.printPackingSlip([order.shipmentId]);
+      await OrderService.printPackingSlip([order.shipGroup.shipmentId]);
       order.isGeneratingPackingSlip = false;
     },
     async printShippingLabelAndPackingSlip(order: any) {
-      await OrderService.printShippingLabelAndPackingSlip(order.shipmentId)
+      await OrderService.printShippingLabelAndPackingSlip(order.shipGroup.shipmentId)
     },
     async openInventoryDetailPopover(Event: any, item: any){
       const popover = await popoverController.create({
@@ -929,7 +909,6 @@ export default defineComponent({
           await OrderService.printPicklist(resp.data.picklistId)
           this.order["picklistId"] = resp.data.picklistId
           this.order["shipmentId"] = resp.data.shipmentIds[0]
-          console.log("Updated Order:", this.order);
           this.store.dispatch("order/updateCurrentOrderInfo", this.order)
         } else {
           throw resp.data;
