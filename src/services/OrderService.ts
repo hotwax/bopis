@@ -219,19 +219,11 @@ const createPicklist = async (payload: any): Promise <any> => {
 }
 
 const printPicklist = async (picklistId: string): Promise<any> => {
-  const maargUrl = store.getters['user/getMaargUrl'];
-  const omstoken = store.getters['user/getUserToken'];
-
   try {
 
     const resp = await apiClient({
       url: "fop/apps/pdf/PrintPicklist",
       method: "GET",
-      baseURL: maargUrl,
-      headers: {
-        "Authorization": "Bearer " + omstoken,
-        "Content-Type": "application/json"
-      },
       responseType: "blob",
       params: { picklistId }
     });
@@ -257,18 +249,9 @@ const printPicklist = async (picklistId: string): Promise<any> => {
 
 const printPackingSlip = async (shipmentIds: Array<string>): Promise<any> => {
   try {
-    const maargUrl = store.getters['user/getMaargUrl'];
-    const omstoken = store.getters['user/getUserToken'];
-
-    // Get packing slip from the server
     const resp = await apiClient({
       url: "fop/apps/pdf/PrintPackingSlip",
       method: "GET",
-      baseURL: maargUrl,
-      headers: {
-        "Authorization": "Bearer " + omstoken,
-        "Content-Type": "application/json"
-      },
       params: {
         shipmentId: shipmentIds
       },
@@ -276,7 +259,7 @@ const printPackingSlip = async (shipmentIds: Array<string>): Promise<any> => {
     });
 
 
-    if (!resp || resp.status !== 200 || hasError(resp)) {
+    if (hasError(resp) && !resp.data) {
       throw resp.data
     }
 

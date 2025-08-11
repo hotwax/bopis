@@ -544,7 +544,7 @@ const actions: ActionTree<OrderState , RootState> ={
     }
     try {
       resp = await OrderService.findPackedShipments(params)
-      if (resp.status === 200 && resp.data.shipments && !hasError(resp)) {
+      if (!hasError(resp) && resp.data.shipments) {
         const shipments = resp.data.shipments;
         const productIds = [] as any;
         const orderIds = shipments.map((shipment: any) => shipment.orderId);
@@ -695,7 +695,7 @@ const actions: ActionTree<OrderState , RootState> ={
 
     try {
       resp = await OrderService.shipOrder(params)
-      if (resp.status === 200 && !hasError(resp)) {
+      if (!hasError(resp)) {
         // Remove order from the list if action is successful
         const orderIndex = state.packed.list.findIndex((packedOrder: any) => {
           return packedOrder.orderId === order.orderId && order.primaryShipGroupSeqId === packedOrder.primaryShipGroupSeqId;
@@ -736,8 +736,7 @@ const actions: ActionTree<OrderState , RootState> ={
 
     try {
       resp = await OrderService.shipOrder(params)
-      if (resp.status === 200 && !hasError(resp)) {
-        // Remove order from the list if action is successful
+      if (!hasError(resp)) {        // Remove order from the list if action is successful
         const orderIndex = state.packed.list.findIndex((packedOrder: any) => {
           return packedOrder.orderId === order.orderId && order.shipGroup.shipGroupSeqId === packedOrder.primaryShipGroupSeqId;
         });
