@@ -572,6 +572,7 @@ export default defineComponent({
       const isEntireOrderRejection = this.isEntierOrderRejectionEnabled(order);
       const rejectToFacilityId = order.part.shipmentMethodEnum.shipmentMethodEnumId === "STOREPICKUP" ? "PICKUP_REJECTED" : null;
       const itemsToReject: any[] = [];
+      const rejectedSeqIds = new Set();
       
       for (const item of order.part.items) {
         const shouldReject = isEntireOrderRejection || item.rejectReason;
@@ -588,6 +589,8 @@ export default defineComponent({
             ...(order.part.shipmentMethodEnum.shipmentMethodEnumId === "STOREPICKUP" && ({"naFacilityId": "PICKUP_REJECTED"})),
             kitComponents: isKit(item) ? item.rejectedComponents || [] : []
           });
+
+          rejectedSeqIds.add(item.orderItemSeqId);
         }
       }
       if (itemsToReject.length) {
@@ -602,7 +605,6 @@ export default defineComponent({
 
           if (!hasError(resp)) {
             // Remove rejected items from the part.items
-            const rejectedSeqIds = new Set(itemsToReject.map(i => i.orderItemSeqId));
             order.part.items = order.part.items.filter(
               (item: any) => !rejectedSeqIds.has(item.orderItemSeqId)
             );
