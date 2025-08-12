@@ -187,8 +187,6 @@ export default defineComponent({
                   rejected: true
                 };
 
-                console.log("Updated order: ", updatedOrder);
-
                 await this.store.dispatch('order/updateCurrent', { order: updatedOrder });
                 this.closeModal();
               }

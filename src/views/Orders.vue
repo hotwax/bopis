@@ -68,15 +68,15 @@
         </div>
       </div>       
       <div v-if="segmentSelected === 'packed'">
-        <div v-for="(order, index) in getOrdersByPart" :key="index" v-show="order.parts.length > 0">
-          <ion-card button @click.prevent="viewOrder(order, order.part, 'packed')">
+        <div v-for="(order, index) in packedOrders" :key="index" v-show="order.items.length > 0">
+          <ion-card button @click.prevent="viewOrder(order, order.primaryShipGroupSeqId, 'packed')">
             <ion-item lines="none">
               <ion-label class="ion-text-wrap">
                 <h1>{{ order.customerName }}</h1>
                 <p>{{ order.orderName ? order.orderName : order.orderId }}</p>
                 <p v-if="getBopisProductStoreSettings('ENABLE_TRACKING')">{{ order.pickers ? translate("Picked by", { pickers: order.pickers }) : translate("No picker assigned.") }}</p>
               </ion-label>
-              <ion-badge v-if="order.orderDate" color="dark" slot="end">{{ timeFromNow(order.orderDate) }}</ion-badge>
+              <ion-badge v-if="order.orderDate" color="dark" slot="end">{{ timeFromNowInMillis(order.orderDate) }}</ion-badge>
             </ion-item>
 
             <ion-item v-if="order.shippingInstructions" color="light" lines="none">
@@ -86,30 +86,15 @@
               </ion-label>
             </ion-item>
 
-            <ProductListItem v-for="item in order.part.items" :key="item.productId" :item="item" :orderId="order.orderId" :customerId="order.customer.partyId" orderType="packed"/>
-
-            <ion-item v-if="order.customer.phoneNumber">
-              <ion-icon :icon="callOutline" slot="start" />
-              <ion-label>{{ order.customer.phoneNumber }}</ion-label>
-              <ion-button fill="outline" slot="end" color="medium" @click.stop="copyToClipboard(order.customer.phoneNumber)">
-                {{ translate("Copy") }}
-              </ion-button>
-            </ion-item>
-            <ion-item lines="full" v-if="order.customer.email">
-              <ion-icon :icon="mailOutline" slot="start" />
-              <ion-label>{{ order.customer.email }}</ion-label>
-              <ion-button fill="outline" slot="end" color="medium" @click.stop="copyToClipboard(order.customer.email)">
-                {{ translate("Copy") }}
-              </ion-button>
-            </ion-item>
+            <ProductListItem v-for="item in order.items" :key="item.productId" :item="item" :orderId="order.orderId" :customerId="order.customerId" :currencyUom="order.currencyUom" orderType="packed"/>
             <div class="border-top">
               <ion-button :disabled="!hasPermission(Actions.APP_ORDER_UPDATE)" fill="clear" @click.stop="deliverShipment(order)">
-                {{ order.part.shipmentMethodEnum.shipmentMethodEnumId === 'STOREPICKUP' ? translate("Handover") : translate("Ship") }}
+                {{ order.shipmentMethodTypeId === 'STOREPICKUP' ? translate("Handover") : translate("Ship") }}
               </ion-button>
               <ion-button v-if="getBopisProductStoreSettings('PRINT_PACKING_SLIPS')" fill="clear" slot="end" @click.stop="printPackingSlip(order)">
                 <ion-icon slot="icon-only" :icon="printOutline" />
               </ion-button>
-              <ion-button v-if="order.part.shipmentMethodEnum.shipmentMethodEnumId === 'STOREPICKUP'" fill="clear" slot="end" @click.stop="sendReadyForPickupEmail(order)">
+              <ion-button v-if="order.shipmentMethodTypeId === 'STOREPICKUP'" fill="clear" slot="end" @click.stop="sendReadyForPickupEmail(order)">
                 <ion-icon slot="icon-only" :icon="mailOutline" />
               </ion-button>
             </div>
@@ -143,6 +128,11 @@
                 {{ translate("Copy") }}
               </ion-button>
             </ion-item>
+            <div class="border-top">
+              <ion-button v-if="getBopisProductStoreSettings('PRINT_PACKING_SLIPS')" fill="clear" slot="end" @click.stop="printPackingSlip(order)">
+                {{ translate('Print Customer Letter') }}
+              </ion-button>
+            </div>
           </ion-card>
         </div>
       </div>
@@ -284,34 +274,15 @@ export default defineComponent({
       return DateTime.local().plus(timeDiff).toRelative();
     },
     async printPackingSlip(order: any) {
-
-      try {
-        // Get packing slip from the server
-        const response: any = await api({
-          method: 'get',
-          url: 'PackingSlip.pdf',
-          params: {
-            shipmentId: order.shipmentId
-          },
-          responseType: "blob"
-        })
-
-        if (!response || response.status !== 200 || hasError(response)) {
-          showToast(translate("Failed to load packing slip"))
-          return;
-        }
-
-        // Generate local file URL for the blob received
-        const pdfUrl = window.URL.createObjectURL(response.data);
-        // Open the file in new tab
-        (window as any).open(pdfUrl, "_blank").focus();
-
-      } catch(err) {
-        showToast(translate("Failed to load packing slip"))
-        logger.error(err)
+      // if the request to print packing slip is not yet completed, then clicking multiple times on the button
+      // should not do anything
+      if(order.isGeneratingPackingSlip) {
+        return;
       }
 
-
+      order.isGeneratingPackingSlip = true;
+      await OrderService.printPackingSlip([order.shipmentId]);
+      order.isGeneratingPackingSlip = false;
     },
     async refreshOrders(event: any) {
       if(this.segmentSelected === 'open') {
