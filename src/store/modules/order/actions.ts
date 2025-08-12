@@ -604,7 +604,7 @@ const actions: ActionTree<OrderState , RootState> ={
     try {
       const resp = await OrderService.findCompletedShipments(params);
 
-      if (resp.status === 200 && resp.data?.shipments?.length > 0 && !hasError(resp)) {
+      if (!hasError(resp) && resp.data.shipments) {
         const shipments = resp.data.shipments;
         const productIds = [] as any;
         const orderIds = shipments.map((shipment: any) => shipment.orderId);
@@ -617,35 +617,13 @@ const actions: ActionTree<OrderState , RootState> ={
           productIds.push(...shipment.items.map((item: any) => item.productId));
 
           const pickersInfo = pickers[shipment.orderId] || { pickers: "", pickerIds: [] };
-
-          const parts = [{
-            orderPartSeqId: shipment.primaryShipGroupSeqId,
-            shipmentMethodEnum: {
-              shipmentMethodEnumId: shipment.shipmentMethodTypeId,
-              shipmentMethodEnumDesc: shipment.shipmentMethodTypeId // Optional: map to human-readable label
-            },
-            items: shipment.items.map((item: any) => ({
-              orderItemSeqId: item.orderItemSeqId,
-              productId: item.productId,
-              facilityId: shipment.originFacilityId,
-              showKitComponents: false
-            }))
-          }];
-
+          
           return {
-            orderId: shipment.orderId,
-            orderName: shipment.orderName,
-            customer: {
-              partyId: shipment.partyId,
-              name: `${shipment.firstName || ''} ${shipment.lastName || ''}`.trim()
-            },
-            statusId: shipment.orderStatusId,
-            placedDate: shipment.orderDate,
-            shipGroupSeqId: shipment.primaryShipGroupSeqId,
+            ...shipment,
+            customerId: shipment.partyId,
+            customerName: `${shipment.firstName || ''} ${shipment.lastName || ''}`.trim(),            
             pickers: pickersInfo.pickers,
-            pickerIds: pickersInfo.pickerIds,
-            picklistId: shipment.picklistId,
-            parts: parts
+            pickerIds: pickersInfo.pickerIds
           };
         });
 
@@ -657,9 +635,7 @@ const actions: ActionTree<OrderState , RootState> ={
           currentOrders: orders
         });
 
-        orders = params.viewIndex && params.viewIndex > 0
-          ? state.completed.list.concat(completedOrders)
-          : completedOrders;
+        orders = params.viewIndex && params.viewIndex > 0 ? state.completed.list.concat(completedOrders) : completedOrders;
 
         commit(types.ORDER_COMPLETED_UPDATED, { orders, total });
         if (params.viewIndex === 0) emitter.emit("dismissLoader");

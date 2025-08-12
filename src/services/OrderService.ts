@@ -113,7 +113,7 @@ const findCompletedShipments = async (params:any): Promise <any>  => {
     shipmentMethodTypeIds: 'STOREPICKUP',
     shipmentTypeId: 'SALES_SHIPMENT',
     keyword: params.keyword,
-    pageSize: 100,
+    pageSize: process.env.VUE_APP_VIEW_SIZE,
     pageIndex: params.viewIndex || 0
   } as any
 
