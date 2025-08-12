@@ -104,7 +104,7 @@
                       <ion-label>{{ getCancelReasonDescription(item.cancelReason) }}</ion-label>
                       <ion-icon :icon="caretDownOutline"/>
                     </ion-chip>
-                    <ion-button v-else slot="end" color="danger" fill="clear" size="small" @click.stop="openCancelReasonPopover($event, item, order)">
+                    <ion-button v-else slot="end" color="danger" fill="clear" size="small" :disabled="!hasPermission(Actions.APP_CANCEL_BOPIS_ORDER)" @click.stop="openCancelReasonPopover($event, item, order)">
                       {{ translate("Cancel") }}
                     </ion-button>
                   </template>
@@ -194,7 +194,7 @@
               <ion-icon slot="start" :icon="checkmarkDoneOutline"/>
               {{ order.part?.shipmentMethodEnum?.shipmentMethodEnumId === 'STOREPICKUP' ? translate("Handover") : translate("Ship") }}
             </ion-button>
-            <ion-button color="danger" size="default" :disabled="!hasPermission(Actions.APP_ORDER_UPDATE) || order.handovered || order.shipped || order.cancelled || !hasCancelledItems" expand="block" fill="outline" @click="cancelOrder(order)">
+            <ion-button color="danger" size="default" :disabled="!hasPermission(Actions.APP_ORDER_UPDATE)||!hasPermission(Actions.APP_CANCEL_BOPIS_ORDER) || order.handovered || order.shipped || order.cancelled || !hasCancelledItems" expand="block" fill="outline" @click="cancelOrder(order)">
               {{ translate("Cancel items") }}
             </ion-button>
           </ion-item>
