@@ -725,7 +725,7 @@ const actions: ActionTree<OrderState , RootState> ={
     return resp;
   },
 
-  async deliverShipmentDetailView ({ state, dispatch, commit }, order) {
+  async deliverShipmentFromDetail ({ state, dispatch, commit }, order) {
     emitter.emit("presentLoader");
 
     const params = {
