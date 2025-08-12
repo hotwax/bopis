@@ -201,9 +201,9 @@ const actions: ActionTree<OrderState , RootState> ={
         shipments.forEach((shipment: any) => {
           const orderId = shipment.primaryOrderId || shipment.order?.orderId;
           const shipmentId = shipment.shipmentId;
-          const allRoles = shipment.picklistShipment.flatMap((picklistShipment: any) =>
+          const allRoles = shipment.picklistShipment?.flatMap((picklistShipment: any) =>
             (picklistShipment.picklist?.roles ?? []).filter((role: any) => !role.thruDate)
-          );
+          ) || [];
 
           const pickers = allRoles.length
             ? allRoles
@@ -219,12 +219,11 @@ const actions: ActionTree<OrderState , RootState> ={
                 .join(", ")
             : "";
 
-        const pickerIds = allRoles.map((role: any) => role.partyId);
+          const pickerIds = allRoles.map((role: any) => role.partyId);
 
-        pickersMap[orderId] = { shipmentId, pickers, pickerIds };
-      });
+          pickersMap[orderId] = { shipmentId, pickers, pickerIds };
+        });
       return pickersMap;
-
     } else {
       throw resp.data;
     }
@@ -499,8 +498,6 @@ const actions: ActionTree<OrderState , RootState> ={
         currentOrder = order;
       }
 
-      console.log("Hello currentOrder: ", currentOrder);
-
       await dispatch('updateCurrent', { order: currentOrder });
 
     } else {
@@ -536,98 +533,64 @@ const actions: ActionTree<OrderState , RootState> ={
     commit(types.ORDER_CURRENT_UPDATED, { order })
   },
 
-  async getPackedOrders ({ commit, state }, payload) {
+  async getPackedOrders ({ commit, dispatch, state }, params) {
     // Show loader only when new query and not the infinite scroll
-    if (payload.viewIndex === 0) emitter.emit("presentLoader");
+    if (params.viewIndex === 0) emitter.emit("presentLoader");
     let resp;
-    const orderQueryPayload = prepareOrderQuery({
-      ...payload,
-      shipmentMethodTypeId: !store.state.user.bopisProductStoreSettings['SHOW_SHIPPING_ORDERS'] ? 'STOREPICKUP' : '',
-      shipmentStatusId: "SHIPMENT_PACKED",
-      orderTypeId: 'SALES_ORDER',
-      '-fulfillmentStatus': '(Cancelled OR Rejected)',
-    })
 
+    params = {
+      keyword: params.queryString || '',
+      ...params
+    }
     try {
-      resp = await OrderService.getPackedOrders(orderQueryPayload)
-      if (resp.status === 200 && resp.data.grouped?.orderId?.ngroups > 0 && !hasError(resp)) {
+      resp = await OrderService.findPackedShipments(params)
+      if (!hasError(resp) && resp.data.shipments) {
+        const shipments = resp.data.shipments;
         const productIds = [] as any;
-        resp.data.grouped?.orderId?.groups.forEach((order: any) => {
-          productIds.push(...order.doclist.docs.map((item: any) => item.productId));
+        const orderIds = shipments.map((shipment: any) => shipment.orderId);
+
+        const pickers = await dispatch("fetchPickersInformation", orderIds);
+
+        // Prepare orders from shipment response
+        let orders = shipments.map((shipment: any) => {
+          productIds.push(...shipment.items.map((item: any) => item.productId));
+
+          const pickersInfo = pickers[shipment.orderId] || { pickers: "", pickerIds: [] };
+
+          return {
+            ...shipment,
+            customerId: shipment.partyId,
+            customerName: `${shipment.firstName || ''} ${shipment.lastName || ''}`.trim(),            
+            pickers: pickersInfo.pickers,
+            pickerIds: pickersInfo.pickerIds
+          };
         });
+
         await this.dispatch('product/fetchProducts', { productIds });
 
-        let orders = resp?.data?.grouped?.orderId?.groups.map((order: any) => {
-          const orderItem = order.doclist.docs[0]
-          return {
-            orderId: orderItem.orderId,
-            orderName: orderItem.orderName,
-            shipmentId: orderItem.shipmentId,
+        const total = shipments.length;
+        const packedOrders = await OrderService.fetchGiftCardActivationDetails({
+          isDetailsPage: false,
+          currentOrders: orders
+        });
 
-            customer: {
-              partyId: orderItem.customerId,
-              name: orderItem.customerName,
-            },
-            statusId: orderItem.orderStatusId,
-            parts: (order.doclist.docs.reduce((arr: Array<any>, item: any) => {
-              const currentOrderPart = arr.find((orderPart: any) => orderPart.orderPartSeqId === item.shipGroupSeqId)
-              if (!currentOrderPart) {
-                arr.push({
-                  orderPartSeqId: item.shipGroupSeqId,
-                  shipmentMethodEnum: {
-                    shipmentMethodEnumId: item.shipmentMethodTypeId,
-                    shipmentMethodEnumDesc: item.shipmentMethodTypeDesc
-                  },
-                  items: [{
-                    orderItemSeqId: item.orderItemSeqId,
-                    productId: item.productId,
-                    facilityId: item.facilityId,
-                    showKitComponents: false
-                  }]
-                })
-              } else {
-                currentOrderPart.items.push({
-                  orderItemSeqId: item.orderItemSeqId,
-                  productId: item.productId,
-                  facilityId: item.facilityId,
-                  showKitComponents: false
-                })
-              }
+        orders = params.viewIndex && params.viewIndex > 0 ? state.packed.list.concat(packedOrders) : packedOrders;
 
-              return arr
-            }, [])),
-            placedDate: orderItem.orderDate,
-            shippingInstructions: orderItem.shippingInstructions,
-            pickers: orderItem.pickers ? (orderItem.pickers.reduce((names: any, picker: string) => {
-              names.push(picker.split('/')[1]);
-              return names;
-            }, [])).join(', ') : "",
-            pickerIds: orderItem.pickers ? (orderItem.pickers.reduce((ids: any, picker: string) => {
-              ids.push(picker.split('/')[0]);
-              return ids;
-            }, [])) : "",
-            picklistId: orderItem.picklistId,
-            shipGroupSeqId: orderItem.shipGroupSeqId
-          }
-        })
+        commit(types.ORDER_PACKED_UPDATED, { orders, total });
 
-        const total = resp.data.grouped?.orderId?.ngroups;
-
-        const packedOrders = await OrderService.fetchGiftCardActivationDetails({ isDetailsPage: false, currentOrders: orders })
-        orders = payload.viewIndex && payload.viewIndex > 0 ? state.packed.list.concat(packedOrders) : packedOrders
-        commit(types.ORDER_PACKED_UPDATED, { orders: orders, total })
-        if (payload.viewIndex === 0) emitter.emit("dismissLoader");
+        if (params.viewIndex === 0) emitter.emit("dismissLoader");
       } else {
-        commit(types.ORDER_PACKED_UPDATED, { orders: {}, total: 0 })
-        showToast(translate("Orders Not Found"))
+        commit(types.ORDER_PACKED_UPDATED, { orders: {}, total: 0 });
+        showToast(translate("Orders Not Found"));
       }
-      emitter.emit("dismissLoader");
-    } catch(err) {
-      logger.error(err)
-      showToast(translate("Something went wrong"))
-    }
 
-    return resp;
+      emitter.emit("dismissLoader");
+      return resp;
+    } catch (err) {
+      logger.error(err);
+      showToast(translate("Something went wrong"));
+      emitter.emit("dismissLoader");
+    }
   },
 
   async getCompletedOrders ({ commit, state }, payload) {
@@ -723,30 +686,26 @@ const actions: ActionTree<OrderState , RootState> ={
 
   async deliverShipment ({ state, dispatch, commit }, order) {
     emitter.emit("presentLoader");
+
     const params = {
       shipmentId: order.shipmentId,
-      statusId: 'SHIPMENT_SHIPPED'
     }
 
     let resp;
 
     try {
-      resp = await OrderService.updateShipment(params)
-      if (resp.status === 200 && !hasError(resp)) {
+      resp = await OrderService.shipOrder(params)
+      if (!hasError(resp)) {
         // Remove order from the list if action is successful
         const orderIndex = state.packed.list.findIndex((packedOrder: any) => {
-          return packedOrder.orderId === order.orderId && order.parts.some((part: any) => {
-            return packedOrder.parts.some((packedOrderPart: any) => {
-              return part.orderPartSeqId === packedOrderPart.orderPartSeqId;
-            })
-          });
+          return packedOrder.orderId === order.orderId && order.primaryShipGroupSeqId === packedOrder.primaryShipGroupSeqId;
         });
         if (orderIndex > -1) {
           state.packed.list.splice(orderIndex, 1);
           commit(types.ORDER_PACKED_UPDATED, { orders: state.packed.list, total: state.packed.total -1 })
         }
 
-        if(order.part.shipmentMethodEnum.shipmentMethodEnumId === 'STOREPICKUP'){
+        if(order.shipmentMethodTypeId === 'STOREPICKUP'){
           order = { ...order, handovered: true }
         } else {
           order = { ...order, shipped: true }
@@ -766,12 +725,52 @@ const actions: ActionTree<OrderState , RootState> ={
     return resp;
   },
 
-  async packDeliveryItems ({ commit }, shipmentId) {
+  async deliverShipmentFromDetail ({ state, dispatch, commit }, order) {
+    emitter.emit("presentLoader");
+
     const params = {
-      shipmentId: shipmentId,
-      statusId: 'SHIPMENT_PACKED'
+      shipmentId: order.shipGroup.shipmentId,
     }
-    return await OrderService.updateShipment(params)
+
+    let resp;
+
+    try {
+      resp = await OrderService.shipOrder(params)
+      if (!hasError(resp)) {        // Remove order from the list if action is successful
+        const orderIndex = state.packed.list.findIndex((packedOrder: any) => {
+          return packedOrder.orderId === order.orderId && order.shipGroup.shipGroupSeqId === packedOrder.primaryShipGroupSeqId;
+        });
+        if (orderIndex > -1) {
+          state.packed.list.splice(orderIndex, 1);
+          commit(types.ORDER_PACKED_UPDATED, { orders: state.packed.list, total: state.packed.total -1 })
+        }
+
+        if(order.shipGroup.shipmentMethodTypeId === 'STOREPICKUP'){
+          order = { ...order, handovered: true }
+        } else {
+          order = { ...order, shipped: true }
+        }
+
+        dispatch('updateCurrent', { order })
+      } else {
+        showToast(translate("Something went wrong"))
+      }
+      emitter.emit("dismissLoader")
+    } catch(err) {
+      logger.error(err)
+      showToast(translate("Something went wrong"))
+    }
+
+    emitter.emit("dismissLoader")
+    return resp;
+  },
+
+  async packDeliveryItems ({ commit }, params) {
+    params = {
+      facilityId: getCurrentFacilityId(),
+      ...params
+    }
+    return await OrderService.packOrder(params)
   },
 
   async packShipGroupItems ({ state, dispatch, commit }, payload) {
@@ -779,8 +778,8 @@ const actions: ActionTree<OrderState , RootState> ={
 
     const params = {
       orderId: payload.order.orderId,
-      facilityId: payload.order.facilityId,
-      shipmentId: payload.order.shipmentId
+      facilityId: payload.shipGroup.facilityId,
+      shipmentId: payload.shipGroup.shipmentId
     }
     
     let resp;
@@ -788,17 +787,17 @@ const actions: ActionTree<OrderState , RootState> ={
     try {
       resp = await OrderService.packOrder(params)
       if (resp.status === 200 && !hasError(resp)) {        
-        const shipmentMethodTypeId = payload.part?.shipmentMethodEnum?.shipmentMethodEnumId
+        const shipmentMethodTypeId = payload.shipGroup?.shipmentMethodTypeId
         if (shipmentMethodTypeId !== 'STOREPICKUP') {
           // TODO: find a better way to get the shipmentId
-          await dispatch('packDeliveryItems', { orderId: payload.order.orderId, shipmentId: payload.order.shipmentId }).then((data) => {
+          await dispatch('packDeliveryItems', { orderId: payload.order.orderId, shipmentId: payload.shipGroup.shipmentId }).then((data) => {
             if (!hasError(data) && !data.data._EVENT_MESSAGE_) {
               showToast(translate("Something went wrong"))
             } else if(state.open.list.length) {
               // Remove order from the list if action is successful
               const orderIndex = state.open.list.findIndex((order: any) => {
-                return order.orderId === payload.order.orderId && order.parts.some((part: any) => {
-                  return part.orderPartSeqId === payload.part.orderPartSeqId;
+                return order.orderId === payload.order.orderId && order.shipGroups.some((shipGroup: any) => {
+                  return shipGroup.shipGroupSeqId === payload.shipGroup.shipGroupSeqId;
                 });
               });
               if (orderIndex > -1) {
@@ -812,9 +811,9 @@ const actions: ActionTree<OrderState , RootState> ={
         }
 
         // Adding readyToHandover or readyToShip because we need to show the user that the order has moved to the packed tab
-        if(payload.order.part.shipmentMethodEnum.shipmentMethodEnumId === 'STOREPICKUP'){
+        if(payload.order.shipGroup.shipmentMethodTypeId === 'STOREPICKUP') {
           payload.order = { ...payload.order, readyToHandover: true }
-        }else {
+        } else {
           payload.order = { ...payload.order, readyToShip: true }
         }
         await dispatch('updateCurrent', { order : payload.order })

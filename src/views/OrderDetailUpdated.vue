@@ -528,7 +528,7 @@ export default defineComponent({
           }, {
             text: translate(header),
             handler: async () => {
-              await this.store.dispatch('order/deliverShipment', order).then((resp: any) => {
+              await this.store.dispatch('order/deliverShipmentFromDetail', order).then((resp: any) => {
                 if(!hasError(resp)) {
                   // Update order timeline once the order is completed
                   // Sending statusId explicitly as we do not fetch the order info again on handover
