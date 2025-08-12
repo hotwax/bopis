@@ -95,7 +95,7 @@ const findPackedShipments = async (params: any): Promise <any>  => {
     shipmentMethodTypeIds: 'STOREPICKUP',
     shipmentTypeId: 'SALES_SHIPMENT',
     keyword: params.keyword,
-    pageSize: 100,
+    pageSize: process.env.VUE_APP_VIEW_SIZE,
     pageIndex: params.viewIndex || 0
   } as any
 
@@ -221,15 +221,15 @@ const createPicklist = async (payload: any): Promise <any> => {
 const printPicklist = async (picklistId: string): Promise<any> => {
   try {
 
-    const resp = await apiClient({
+    const resp = await api({
       url: "fop/apps/pdf/PrintPicklist",
       method: "GET",
       responseType: "blob",
       params: { picklistId }
     });
     
-    if (!resp || resp.status !== 200 || hasError(resp)) {
-      throw resp.data;
+    if (!resp || hasError(resp)) {
+      throw resp?.data;
     }
   
     // Generate local file URL for the blob received
@@ -249,7 +249,7 @@ const printPicklist = async (picklistId: string): Promise<any> => {
 
 const printPackingSlip = async (shipmentIds: Array<string>): Promise<any> => {
   try {
-    const resp = await apiClient({
+    const resp = await api({
       url: "fop/apps/pdf/PrintPackingSlip",
       method: "GET",
       params: {
@@ -259,8 +259,8 @@ const printPackingSlip = async (shipmentIds: Array<string>): Promise<any> => {
     });
 
 
-    if (hasError(resp) && !resp.data) {
-      throw resp.data
+    if (!resp || hasError(resp)) {
+      throw resp?.data
     }
 
     // Generate local file URL for the blob received
