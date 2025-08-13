@@ -31,7 +31,7 @@
     <ion-content ref="contentRef" :scroll-events="true" @ionScroll="enableScrolling()">
       <div v-if="segmentSelected === 'open'">
         <div v-for="(order, index) in getOrdersByPart" :key="index" v-show="order.shipGroups.length > 0">
-          <ion-card button @click.prevent="viewOrder(order, order.shipGroup, 'open')">
+          <ion-card button @click.prevent="viewOrder(order, order.shipGroupSeqId, 'open')">
             <ion-item lines="none">
               <ion-label class="ion-text-wrap">
                 <h1>{{ order.customerName }}</h1>
@@ -100,32 +100,17 @@
         </div>
       </div>
       <div v-if="segmentSelected === 'completed'">
-        <div v-for="(order, index) in getOrdersByPart" :key="index" v-show="order.parts.length > 0">
-          <ion-card button @click.prevent="viewOrder(order, order.part, 'completed')">
+        <div v-for="(order, index) in completedOrders" :key="index" v-show="order.items.length > 0">
+          <ion-card button @click.prevent="viewOrder(order, order.primaryShipGroupSeqId, 'completed')">
             <ion-item lines="none">
               <ion-label class="ion-text-wrap">
-                <h1>{{ order.customer.name }}</h1>
+                <h1>{{ order.customerName }}</h1>
                 <p>{{ order.orderName ? order.orderName : order.orderId }}</p>
               </ion-label>
-              <ion-badge v-if="order.orderDate" color="dark" slot="end">{{ timeFromNow(order.orderDate) }}</ion-badge>
+              <ion-badge v-if="order.orderDate" color="dark" slot="end">{{ timeFromNowInMillis(order.orderDate) }}</ion-badge>
             </ion-item>
 
-            <ProductListItem v-for="item in order.part.items" :key="item.productId" :item="item" :orderId="order.orderId" :customerId="order.customer.partyId" orderType="completed"/>
-
-            <ion-item v-if="order.customer.phoneNumber">
-              <ion-icon :icon="callOutline" slot="start" />
-              <ion-label>{{ order.customer.phoneNumber }}</ion-label>
-              <ion-button fill="outline" slot="end" color="medium" @click.stop="copyToClipboard(order.customer.phoneNumber)">
-                {{ translate("Copy") }}
-              </ion-button>
-            </ion-item>
-            <ion-item lines="full" v-if="order.customer.email">
-              <ion-icon :icon="mailOutline" slot="start" />
-              <ion-label>{{ order.customer.email }}</ion-label>
-              <ion-button fill="outline" slot="end" color="medium" @click.stop="copyToClipboard(order.customer.email)">
-                {{ translate("Copy") }}
-              </ion-button>
-            </ion-item>
+            <ProductListItem v-for="item in order.items" :key="item.productId" :item="item" :orderId="order.orderId" :customerId="order.customerId" orderType="completed"/>          
             <div class="border-top">
               <ion-button v-if="getBopisProductStoreSettings('PRINT_PACKING_SLIPS')" fill="clear" slot="end" @click.stop="printPackingSlip(order)">
                 {{ translate('Print Customer Letter') }}
@@ -133,7 +118,7 @@
             </div>
           </ion-card>
         </div>
-      </div>
+      </div>      
       <ion-refresher slot="fixed" @ionRefresh="refreshOrders($event)">
         <ion-refresher-content pullingIcon="crescent" refreshingSpinner="crescent" />
       </ion-refresher>
@@ -289,12 +274,12 @@ export default defineComponent({
         this.getCompletedOrders().then(() => { event.target.complete() });
       }
     },
-    async viewOrder(order: any, shipGroup: any, orderType: any) {
+    async viewOrder(order: any, shipGroupSeqId: any, orderType: any) {
       // TODO: find a better approach to handle the case that when in open segment we can click on
       // order card to route on the order details page but not in the packed segment
       order['orderType'] = orderType
       await this.store.dispatch('order/updateCurrent', { order }).then(() => {
-        this.$router.push({ path: `/orderdetail/${orderType}/${order.orderId}/${shipGroup.shipGroupSeqId}` })
+        this.$router.push({ path: `/orderdetail/${orderType}/${order.orderId}/${shipGroupSeqId}` })
       })
     },
     async getPickupOrders (vSize?: any, vIndex?: any) {

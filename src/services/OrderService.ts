@@ -101,7 +101,25 @@ const findPackedShipments = async (params: any): Promise <any>  => {
 
   return await api({
     url: `/poorti/shipments`,
-    method: "GET",    
+    method: "GET",
+    params
+  }) as any;
+}
+
+const findCompletedShipments = async (params:any): Promise <any>  => {
+  params = {
+    statusId: 'SHIPMENT_SHIPPED',
+    originFacilityId: getCurrentFacilityId(),
+    shipmentMethodTypeIds: 'STOREPICKUP',
+    shipmentTypeId: 'SALES_SHIPMENT',
+    keyword: params.keyword,
+    pageSize: process.env.VUE_APP_VIEW_SIZE,
+    pageIndex: params.viewIndex || 0
+  } as any
+
+  return await api({
+    url: `/poorti/shipments`,
+    method: "GET",
     params
   }) as any;
 }
@@ -658,6 +676,7 @@ export const OrderService = {
   fetchOrderDetails,
   fetchPicklists,
   getCompletedOrders,
+  findCompletedShipments,
   getPackedOrders,
   findPackedShipments,
   getOrderItemRejectionHistory,

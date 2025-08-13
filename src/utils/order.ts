@@ -95,9 +95,9 @@ const isKit = (item: any) => {
   return product && product.productTypeId === 'MARKETING_PKG_PICK';
 }
 
-const getOrderStatus = (order: any, part: any, orderRouteSegment: any, orderType: string) => {
+const getOrderStatus = (order: any, shipGroup: any, orderRouteSegment: any, orderType: string) => {
   if(order.orderStatusId === "ORDER_COMPLETED" || orderType === "completed") {
-    return part.shipmentMethodEnum.shipmentMethodEnumId === "STOREPICKUP" ? "Picked up" : "Completed"
+    return shipGroup?.shipmentMethodTypeId === "STOREPICKUP" ? "Picked up" : "Completed"
   }
 
   if(orderRouteSegment?.length) {
