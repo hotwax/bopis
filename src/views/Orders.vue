@@ -31,7 +31,7 @@
     <ion-content ref="contentRef" :scroll-events="true" @ionScroll="enableScrolling()">
       <div v-if="segmentSelected === 'open'">
         <div v-for="(order, index) in getOrdersByPart" :key="index" v-show="order.shipGroups.length > 0">
-          <ion-card button @click.prevent="viewOrder(order, order.shipGroupshipGroupSeqId, 'open')">
+          <ion-card button @click.prevent="viewOrder(order, order.shipGroupSeqId, 'open')">
             <ion-item lines="none">
               <ion-label class="ion-text-wrap">
                 <h1>{{ order.customerName }}</h1>
