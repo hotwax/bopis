@@ -1,8 +1,8 @@
 <template>
   <ion-header data-testid="giftcard-activation-modal-header">
     <ion-toolbar>
-      <ion-buttons data-testid="giftcard-activation-close-button" slot="start">
-        <ion-button @click="closeModal()">
+      <ion-buttons slot="start">
+        <ion-button data-testid="giftcard-activation-close-button" @click="closeModal()">
           <ion-icon slot="icon-only" :icon="closeOutline" />
         </ion-button>
       </ion-buttons>
