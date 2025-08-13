@@ -12,9 +12,6 @@ const fetchRejectReasons = async (query: any): Promise<any> => {
 }
 
 const fetchRejectReasonsByEnumerationGroup = async (payload: any): Promise<any> => {
-  const omstoken = store.getters['user/getUserToken'];
-  const baseURL = store.getters['user/getBaseUrl'];
-
   return api({
     url: `/admin/enumGroups/${payload.enumerationGroupId}/members`,
     method: "GET",
