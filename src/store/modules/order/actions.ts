@@ -629,7 +629,7 @@ const actions: ActionTree<OrderState , RootState> ={
 
         await this.dispatch('product/fetchProducts', { productIds });
 
-        const total = shipments.length;
+        const total = resp.data.shipmentCount;
         const completedOrders = await OrderService.fetchGiftCardActivationDetails({
           isDetailsPage: false,
           currentOrders: orders
