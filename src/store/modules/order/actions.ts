@@ -4,6 +4,7 @@ import RootState from '@/store/RootState'
 import OrderState from './OrderState'
 import * as types from './mutation-types'
 import { showToast, getCurrentFacilityId } from "@/utils";
+import { isKit} from '@/utils/order'
 import { hasError } from '@/adapter'
 import { translate } from "@hotwax/dxp-components";
 import emitter from '@/event-bus'
@@ -816,10 +817,10 @@ const actions: ActionTree<OrderState , RootState> ={
   },
 
   // TODO: handle the unfillable items count
-  async setUnfillableOrderOrItem ({ dispatch }, payload) {
+  async rejectItems ({ dispatch }, payload) {
     emitter.emit("presentLoader");
     return await dispatch("rejectOrderItems", payload).then((resp) => {
-      const refreshPickupOrders = resp.find((response: any) => !(response.data._ERROR_MESSAGE_ || response.data._ERROR_MESSAGE_LIST_))
+      const refreshPickupOrders = resp.find((response: any) => response.data);
       if (refreshPickupOrders) {
         showToast(translate('All items were rejected from the order') + ' ' + payload.orderId);
       } else {
@@ -831,29 +832,26 @@ const actions: ActionTree<OrderState , RootState> ={
   },
 
   async rejectOrderItems ({ commit }, order) {
-    const payload = {
-      'orderId': order.orderId
-    }
-    const responses = [] as any;
+    const itemsToReject = order.shipGroup.items    
+    .map((item: any) => ({
+      ...item,
+      updateQOH: false,
+      rejectionReasonId: item.reason,
+      kitComponents: isKit(item) ? item.rejectedComponents || [] : []
+    }));
 
-    // https://blog.devgenius.io/using-async-await-in-a-foreach-loop-you-cant-c174b31999bd
-    // The forEach, map, reduce loops are not built to work with asynchronous callback functions.
-    // It doesn't wait for the promise of an iteration to be resolved before it goes on to the next iteration.
-    // We could use either the for…of the loop or the for(let i = 0;….)
-    for (const item of order.part.items) {
-      const params = {
-        ...payload,
-        'rejectReason': item.reason,
-        'facilityId': item.facilityId,
-        'orderItemSeqId': item.orderItemSeqId,
-        'shipmentMethodTypeId': order.part.shipmentMethodEnum.shipmentMethodEnumId,
-        'quantity': parseInt(item.quantity),
-        ...(order.part.shipmentMethodEnum.shipmentMethodEnumId === "STOREPICKUP" && ({"naFacilityId": "PICKUP_REJECTED"})),
-      }
-      const resp = await OrderService.rejectOrderItem({'payload': params});
-      responses.push(resp);
+    const payload = {
+      orderId: order.orderId,
+      rejectToFacilityId: 'PICKUP_REJECTED',
+      items: itemsToReject
     }
-    return responses;
+    try {
+      const response = await OrderService.rejectOrderItems(payload);
+      return [response];
+    } catch (err) {
+      logger.error(err)
+      return err
+    }
   },
 
   async getShipToStoreIncomingOrders({ commit, state }, payload) {

@@ -98,11 +98,11 @@ export default defineComponent({
           }, {
             text: translate('Reject'),
             handler: () => {
-              const part = { ...this.order.part, items: this.order.part.items.map((item: any) => ({ ...item, reason: this.rejectReasonId })) };
-              this.store.dispatch('order/setUnfillableOrderOrItem', { orderId: this.order.orderId, part }).then((resp) => {
+              const shipGroup = { ...this.order.shipGroup, items: this.order.shipGroup.items.map((item: any) => ({ ...item, reason: this.rejectReasonId })) };
+              this.store.dispatch('order/rejectItems', { orderId: this.order.orderId, shipGroup }).then((resp) => {
                 if (resp) {
                   // Mark current order as rejected
-                  const order = { ...this.order, part: { ...this.order.part, items: [] }, rejected: true };
+                  const order = { ...this.order, shipGroup: { ...this.order.shipGroup, items: [] }, rejected: true };
 
                   this.store.dispatch('order/updateCurrent', { order })
                 }

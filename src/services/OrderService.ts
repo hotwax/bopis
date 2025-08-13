@@ -228,6 +228,14 @@ const rejectOrderItem = async (payload: any): Promise <any> => {
   });
 }
 
+const rejectOrderItems = async (payload: any): Promise <any> => {
+  return api({
+    url: "poorti/rejectOrderItems",
+    method: "post",
+    data: payload
+  });
+}
+
 const createPicklist = async (payload: any): Promise <any> => {
   return api({
     url: `/poorti/createOrderFulfillmentWave`,
@@ -585,17 +593,10 @@ const performFind = async (payload: any): Promise<any> => {
   });
 }
 
-const cancelItem = async (payload: any): Promise<any> => {
-  const baseURL = store.getters['user/getOmsBaseUrl'];
-  const omstoken = store.getters['user/getUserToken'];
-  return apiClient({
-    url: "cancelOrderItem",
+const cancelOrder = async (payload: any): Promise<any> => {
+  return api({
+    url: `oms/orders/${payload.orderId}/cancel`,
     method: "post",
-    baseURL,
-    headers: {
-      "Authorization": "Bearer " + omstoken,
-      "Content-Type": "application/json"
-    },
     data: payload
   });
 }
@@ -665,7 +666,7 @@ const fetchGiftCardActivationDetails = async ({ isDetailsPage, currentOrders }: 
 }
 
 export const OrderService = {
-  cancelItem,
+  cancelOrder,
   fetchGiftCardActivationDetails,
   fetchOrderItems,
   fetchOrderPaymentPreferences,
@@ -683,6 +684,7 @@ export const OrderService = {
   quickShipEntireShipGroup,
   rejectItem,
   rejectOrderItem,
+  rejectOrderItems,
   updateShipment,
   createPicklist,
   sendPickupScheduledNotification,

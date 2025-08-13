@@ -4,20 +4,27 @@ import store from '@/store';
 import logger from '@/logger';
 
 const fetchRejectReasons = async (query: any): Promise<any> => {
-  const baseURL = store.getters['user/getOmsBaseUrl'];
-  const omstoken = store.getters['user/getUserToken'];
+  return api({
+    url: `/admin/enums`,
+    method: "GET",
+    params: query
+  });
+}
 
-  return apiClient({
-    url: "performFind",
-    method: "get",
-    baseURL,
-    headers: {
-      "Authorization": "Bearer " + omstoken,
-      "Content-Type": "application/json"
-    },  
-    params: query,
-    cache: true
-  })
+const fetchRejectReasonsByEnumerationGroup = async (payload: any): Promise<any> => {
+  return api({
+    url: `/admin/enumGroups/${payload.enumerationGroupId}/members`,
+    method: "GET",
+    params: payload
+  });
+}
+
+const fetchCancelReasons = async (payload: any): Promise<any> => {
+  return api({
+    url: `/admin/enumGroups/${payload.enumerationGroupId}/members`,
+    method: "GET",
+    params: payload
+  });
 }
 
 const fetchPaymentMethodTypeDesc = async (query: any): Promise <any>  => {
@@ -97,22 +104,6 @@ const fetchPartyInformation = async (query: any): Promise<any> => {
       "Content-Type": "application/json"
     },
     params: query
-  });
-}
-
-const fetchReservedQuantity = async (query: any): Promise <any>  => {
-  const baseURL = store.getters['user/getOmsBaseUrl'];
-  const omstoken = store.getters['user/getUserToken'];
-
-  return apiClient({
-    url: "solr-query", 
-    method: "post",
-    baseURL,
-    headers: {
-      "Authorization": "Bearer " + omstoken,
-      "Content-Type": "application/json"
-    },
-    data: query
   });
 }
 
@@ -337,13 +328,14 @@ export const UtilService = {
   fetchPartyInformation,
   fetchPaymentMethodTypeDesc,
   fetchRejectReasons,
+  fetchRejectReasonsByEnumerationGroup,
+  fetchCancelReasons,
   fetchStatusDesc,
   getProcessRefundStatus,
   getProductStoreSettings,
   isEnumExists,
   resetPicker,
   updateProductStoreSetting,
-  fetchReservedQuantity,
   fetchCurrentFacilityLatLon,
   fetchStoresInformation
 }

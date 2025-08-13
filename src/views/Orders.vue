@@ -58,6 +58,9 @@
                 {{ order.shipGroup?.shipmentMethodTypeId === 'STOREPICKUP' ? translate("Ready for pickup") : translate("Ready to ship") }}
               </ion-button>
               <div></div>
+              <ion-button v-if="order.shipGroup.shipmentMethodTypeId === 'STOREPICKUP'" color="danger" :disabled="!hasPermission(Actions.APP_ORDER_UPDATE)" fill="clear" @click.stop="openRejectOrderModal(order)">
+               {{ translate("Reject")}}
+              </ion-button>
               <ion-button v-if="getBopisProductStoreSettings('PRINT_PICKLISTS')" slot="end" fill="clear" @click.stop="printPicklist(order, order.shipGroup)">
                 <ion-icon :icon="printOutline" slot="icon-only" />
               </ion-button>
@@ -177,6 +180,7 @@ import { OrderService } from "@/services/OrderService";
 import { UserService } from "@/services/UserService";
 import { Actions, hasPermission } from '@/authorization'
 import logger from "@/logger";
+import RejectOrderItemModal from "@/components/RejectOrderItemModal.vue";
 
 export default defineComponent({
   name: 'Orders',
@@ -546,6 +550,16 @@ export default defineComponent({
         emitter.emit("dismissLoader");
         return;
       }
+    },
+  async openRejectOrderModal(order:any){
+      const orderProps = order
+      const rejectOrderModal = await modalController.create({
+        component:RejectOrderItemModal,
+        componentProps: {
+          orderProps, 
+        }
+      })
+      return rejectOrderModal.present()
     }
   },
   ionViewWillEnter () {
