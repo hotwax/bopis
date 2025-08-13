@@ -17,7 +17,7 @@
           <ion-icon slot="icon-only" :icon="informationCircleOutline" color="medium" />
         </ion-button>
       </div>
-      <ion-button v-else fill="clear" @click.stop="fetchProductStock(item.productId)">
+      <ion-button  data-testid="qoh-button" v-else fill="clear" @click.stop="fetchProductStock(item.productId)">
         <ion-icon color="medium" slot="icon-only" :icon="cubeOutline" />
       </ion-button>
 
