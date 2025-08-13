@@ -1,5 +1,5 @@
 <template>
-  <ion-header>
+  <ion-header data-testid="edit-picker-modal-header">
     <ion-toolbar>
       <ion-buttons slot="start">
         <ion-button @click="closeModal"> 
@@ -24,7 +24,7 @@
       <div v-else>
         <ion-radio-group :value="selectedPicker?.id">
           <ion-item v-for="(picker, index) in availablePickers" :key="index" @click="updateSelectedPicker(picker.id)">
-            <ion-radio :value="picker.id">
+            <ion-radio data-testid="edit-picker-radio" :value="picker.id">
               <ion-label>
                 {{ picker.name }}
                 <p>{{ picker.id }}</p>
@@ -49,7 +49,7 @@
   </ion-content>
 
   <ion-fab vertical="bottom" horizontal="end" slot="fixed">
-    <ion-fab-button :disabled="isPickerAlreadySelected()" @click="confirmSave()">
+    <ion-fab-button data-testid="edit-picker-save-button" :disabled="isPickerAlreadySelected()" @click="confirmSave()">
       <ion-icon :icon="saveOutline" />
     </ion-fab-button>
   </ion-fab>

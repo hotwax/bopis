@@ -7,7 +7,7 @@
           <ion-button data-testid="notifications-button" @click="viewNotifications()">
             <ion-icon slot="icon-only" :icon="notificationsOutline" :color="(unreadNotificationsStatus && notifications.length) ? 'primary' : ''" />
           </ion-button>
-          <ion-button data-testid="ship-to-store-button" @click="viewShipToStoreOrders()">
+          <ion-button @click="viewShipToStoreOrders()">
             <ion-icon slot="icon-only" :icon="trailSignOutline" />
           </ion-button>
         </ion-buttons>
