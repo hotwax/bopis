@@ -1,23 +1,30 @@
-import { apiClient } from '@/adapter';
+import { api, apiClient } from '@/adapter';
 import { hasError } from '@/adapter';
 import store from '@/store';
 import logger from '@/logger';
 
 const fetchRejectReasons = async (query: any): Promise<any> => {
-  const baseURL = store.getters['user/getOmsBaseUrl'];
-  const omstoken = store.getters['user/getUserToken'];
+  return api({
+    url: `/admin/enums`,
+    method: "GET",
+    params: query
+  });
+}
 
-  return apiClient({
-    url: "performFind",
-    method: "get",
-    baseURL,
-    headers: {
-      "Authorization": "Bearer " + omstoken,
-      "Content-Type": "application/json"
-    },  
-    params: query,
-    cache: true
-  })
+const fetchRejectReasonsByEnumerationGroup = async (payload: any): Promise<any> => {
+  return api({
+    url: `/admin/enumGroups/${payload.enumerationGroupId}/members`,
+    method: "GET",
+    params: payload
+  });
+}
+
+const fetchCancelReasons = async (payload: any): Promise<any> => {
+  return api({
+    url: `/admin/enumGroups/${payload.enumerationGroupId}/members`,
+    method: "GET",
+    params: payload
+  });
 }
 
 const fetchPaymentMethodTypeDesc = async (query: any): Promise <any>  => {
@@ -100,28 +107,9 @@ const fetchPartyInformation = async (query: any): Promise<any> => {
   });
 }
 
-const fetchReservedQuantity = async (query: any): Promise <any>  => {
-  const baseURL = store.getters['user/getOmsBaseUrl'];
-  const omstoken = store.getters['user/getUserToken'];
-
-  return apiClient({
-    url: "solr-query", 
-    method: "post",
-    baseURL,
-    headers: {
-      "Authorization": "Bearer " + omstoken,
-      "Content-Type": "application/json"
-    },
-    data: query
-  });
-}
-
 const getProductStoreSettings = async (payload: any): Promise<any> => {
   const baseURL = store.getters['user/getOmsBaseUrl'];
   const omstoken = store.getters['user/getUserToken'];
-
-  console.log('getProductStoreSettings', payload);
-  console.log('baseURL', baseURL);
 
   return apiClient({
     url: "performFind",
@@ -312,78 +300,20 @@ const fetchStoresInformation = async (payload: any): Promise<any> => {
   });
 }
 
-const fetchGiftCardFulfillmentInfo = async (payload: any): Promise<any> => {
-  const baseURL = store.getters['user/getOmsBaseUrl'];
-  const omstoken = store.getters['user/getUserToken'];
-
-  return await apiClient({
-    url: 'performFind',
-    method: 'POST',
-    baseURL,
-    headers: {
-      "Authorization": "Bearer " + omstoken,
-      "Content-Type": "application/json"
-    },
-    data: payload
+const fetchGiftCardFulfillmentInfo = async (params: any): Promise<any> => {
+  return await api({
+    url: 'poorti/giftCardFulfillments',
+    method: 'GET',
+    params
   }) as any
 }
 
 const activateGiftCard = async (payload: any): Promise<any> => {
-  const baseURL = store.getters['user/getOmsBaseUrl'];
-  const omstoken = store.getters['user/getUserToken'];
-
-  return apiClient({
-    url: "service/createGcFulFillmentRecord",
+  return api({
+    url: "poorti/giftCardFulfillments",
     method: "post",
-    baseURL,
-    headers: {
-      "Authorization": "Bearer " + omstoken,
-      "Content-Type": "application/json"
-    },
     data: payload
   });
-}
-
-const fetchGiftCardItemPriceInfo = async (payload: any): Promise<any> => {
-  // Todo: find a better alternative for fetching unitPrice and currency together
-  let resp = {} as any;
-  const itemPriceInfo = {} as any;
-
-  const params = {
-    inputFields: {
-      orderId: payload.orderId,
-      orderItemSeqId: payload.orderItemSeqId
-    },
-    entityName: "OrderHeaderItemAndRoles",
-    fieldList: ["unitPrice", "currencyUom"],
-    viewSize: 1
-  }
-  const baseURL = store.getters['user/getOmsBaseUrl'];
-  const omstoken = store.getters['user/getUserToken'];
-
-  try {
-    resp = await apiClient({
-      url: "performFind",
-      method: "post",
-      baseURL,
-      headers: {
-        "Authorization": "Bearer " + omstoken,
-        "Content-Type": "application/json"
-      },
-      data: params
-    });
-
-    if(!hasError(resp)) {
-      itemPriceInfo.unitPrice = resp.data.docs[0].unitPrice
-      itemPriceInfo.currencyUom = resp.data.docs[0].currencyUom
-    } else {
-      throw resp.data;
-    }
-  } catch(error: any) {
-    logger.error(error);
-  }
-
-  return itemPriceInfo;
 }
 
 export const UtilService = {
@@ -394,18 +324,18 @@ export const UtilService = {
   fetchFacilities,
   fetchFacilityTypeInformation,
   fetchGiftCardFulfillmentInfo,
-  fetchGiftCardItemPriceInfo,
   fetchJobInformation,
   fetchPartyInformation,
   fetchPaymentMethodTypeDesc,
   fetchRejectReasons,
+  fetchRejectReasonsByEnumerationGroup,
+  fetchCancelReasons,
   fetchStatusDesc,
   getProcessRefundStatus,
   getProductStoreSettings,
   isEnumExists,
   resetPicker,
   updateProductStoreSetting,
-  fetchReservedQuantity,
   fetchCurrentFacilityLatLon,
   fetchStoresInformation
 }

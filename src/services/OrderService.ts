@@ -1,25 +1,26 @@
-import { apiClient, hasError } from '@/adapter';
+import { api, apiClient, hasError } from '@/adapter';
 import emitter from '@/event-bus';
 import { translate } from '@hotwax/dxp-components';
 import store from '@/store';
-import { formatPhoneNumber, showToast } from '@/utils';
+import { formatPhoneNumber, getCurrentFacilityId, showToast } from '@/utils';
 import logger from '@/logger';
 import { cogOutline } from 'ionicons/icons';
 import { UtilService } from "@/services/UtilService";
 
 const getOpenOrders = async (payload: any): Promise <any> => {
-  const baseURL = store.getters['user/getOmsBaseUrl'];
-  const omstoken = store.getters['user/getUserToken'];
 
-  return apiClient({
-    url: "solr-query",
-    method: "post",
-    baseURL,
-    headers: {
-      "Authorization": "Bearer " + omstoken,
-      "Content-Type": "application/json"
-    },
+  return api({
+    url: "oms/orders/storePickup",
+    method: "get",
     data: payload
+  });
+}
+
+const fetchOrderDetails = async (orderId: string): Promise<any> => {
+
+  return api({
+    url: `oms/orders/${orderId}/details`,
+    method: "get",
   });
 }
 
@@ -40,18 +41,18 @@ const fetchOrderItems = async (payload: any): Promise <any> => {
 }
 
 const getOrderDetails = async (payload: any): Promise <any> => {
-  const baseURL = store.getters['user/getOmsBaseUrl'];
-  const omstoken = store.getters['user/getUserToken'];
-
-  return apiClient({
-    url: "solr-query",
-    method: "post",
-    baseURL,
-    headers: {
-      "Authorization": "Bearer " + omstoken,
-      "Content-Type": "application/json"
-    },
+  return await api({
+    url: `oms/orders/${payload.orderId}`,
+    method: "GET",
     data: payload
+  });
+}
+
+const fetchPicklists = async (payload: any): Promise <any>  => {
+  return api({
+    url: `poorti/shipmentPicklists`,
+    method: "GET",
+    params: payload
   });
 }
 
@@ -85,6 +86,42 @@ const getPackedOrders = async (payload: any): Promise <any> => {
     },
     data: payload
   });
+}
+
+const findPackedShipments = async (params: any): Promise <any>  => {
+  params = {
+    statusId: 'SHIPMENT_PACKED',
+    originFacilityId: getCurrentFacilityId(),
+    shipmentMethodTypeIds: 'STOREPICKUP',
+    shipmentTypeId: 'SALES_SHIPMENT',
+    keyword: params.keyword,
+    pageSize: process.env.VUE_APP_VIEW_SIZE,
+    pageIndex: params.viewIndex || 0
+  } as any
+
+  return await api({
+    url: `/poorti/shipments`,
+    method: "GET",
+    params
+  }) as any;
+}
+
+const findCompletedShipments = async (params:any): Promise <any>  => {
+  params = {
+    statusId: 'SHIPMENT_SHIPPED',
+    originFacilityId: getCurrentFacilityId(),
+    shipmentMethodTypeIds: 'STOREPICKUP',
+    shipmentTypeId: 'SALES_SHIPMENT',
+    keyword: params.keyword,
+    pageSize: process.env.VUE_APP_VIEW_SIZE,
+    pageIndex: params.viewIndex || 0
+  } as any
+
+  return await api({
+    url: `/poorti/shipments`,
+    method: "GET",
+    params
+  }) as any;
 }
 
 const getCompletedOrders = async (payload: any): Promise <any> => {
@@ -191,45 +228,36 @@ const rejectOrderItem = async (payload: any): Promise <any> => {
   });
 }
 
-const createPicklist = async (query: any): Promise <any> => {
-  const baseURL = store.getters['user/getOmsBaseUrl'];
-  const omstoken = store.getters['user/getUserToken'];
-
-  return apiClient({
-    url: "createPicklist",
+const rejectOrderItems = async (payload: any): Promise <any> => {
+  return api({
+    url: "poorti/rejectOrderItems",
     method: "post",
-    headers: {
-      "Authorization": "Bearer " + omstoken,
-      "Content-Type": "multipart/form-data"
-    },
-    baseURL,
-    data: query
+    data: payload
+  });
+}
+
+const createPicklist = async (payload: any): Promise <any> => {
+  return api({
+    url: `/poorti/createOrderFulfillmentWave`,
+    method: "POST",
+    data: payload
   });
 }
 
 const printPicklist = async (picklistId: string): Promise<any> => {
-  const baseURL = store.getters['user/getOmsBaseUrl'];
-  const omstoken = store.getters['user/getUserToken'];
-
   try {
-    // Get picklist from the server
-    const resp: any = await apiClient({
-      method: 'get',
-      url: 'PrintPicklist.pdf',
-      baseURL,
-      headers: {
-        "Authorization": "Bearer " + omstoken,
-      },
-      params: {
-        picklistId
-      },
-      responseType: "blob"
-    })
 
-    if (!resp || resp.status !== 200 || hasError(resp)) {
-      throw resp.data;
+    const resp = await api({
+      url: "fop/apps/pdf/PrintPicklist",
+      method: "GET",
+      responseType: "blob",
+      params: { picklistId }
+    });
+    
+    if (!resp || hasError(resp)) {
+      throw resp?.data;
     }
-
+  
     // Generate local file URL for the blob received
     const pdfUrl = window.URL.createObjectURL(resp.data);
     // Open the file in new tab
@@ -245,17 +273,46 @@ const printPicklist = async (picklistId: string): Promise<any> => {
   }
 }
 
+const printPackingSlip = async (shipmentIds: Array<string>): Promise<any> => {
+  try {
+    const resp = await api({
+      url: "fop/apps/pdf/PrintPackingSlip",
+      method: "GET",
+      params: {
+        shipmentId: shipmentIds
+      },
+      responseType: "blob"
+    });
+
+
+    if (!resp || hasError(resp)) {
+      throw resp?.data
+    }
+
+    // Generate local file URL for the blob received
+    const pdfUrl = window.URL.createObjectURL(resp.data);
+    // Open the file in new tab
+    try {
+      (window as any).open(pdfUrl, "_blank").focus();
+    }
+    catch {
+      showToast(translate('Unable to open as browser is blocking pop-ups.', {documentName: 'packing slip'}), { icon: cogOutline });
+    }
+
+  } catch (err) {
+    showToast(translate('Failed to print packing slip'))
+    logger.error("Failed to load packing slip", err)
+  }
+}
+
 const sendPickupScheduledNotification = async (payload: any): Promise <any> => {
-  const baseURL = store.getters['user/getOmsBaseUrl'];
-  const omstoken = store.getters['user/getUserToken'];
-  return apiClient({
-    url: "service/sendPickupScheduledNotification",
+  payload = {
+    "emailType": "READY_FOR_PICKUP",
+    ...payload
+  }
+  return api({
+    url: "oms/orders/pickupScheduledNotification",
     method: "post",
-    baseURL,
-    headers: {
-      "Authorization": "Bearer " + omstoken,
-      "Content-Type": "application/json"
-    },
     data: payload
   });
 }
@@ -505,20 +562,20 @@ const fetchTrackingCodes = async (shipmentIds: Array<string>): Promise<any> => {
   return shipmentTrackingCodes;
 }
 
-const packOrder = async (payload: any): Promise<any> => {
-  const baseURL = store.getters['user/getOmsBaseUrl'];
-  const omstoken = store.getters['user/getUserToken'];
+const packOrder = async (payload: any): Promise<any> => {  
+  return await api({
+    url: `poorti/shipments/${payload.shipmentId}/pack`,
+    method: "POST",
+    data: payload,
+  });
+}
 
-  return apiClient({
-    url: "/service/packStoreFulfillmentOrder",
-    method: "post",
-    baseURL,
-    headers: {
-      "Authorization": "Bearer " + omstoken,
-      "Content-Type": "application/json"
-    },
+const shipOrder = async (payload: any): Promise<any> => {
+  return api({
+    url: `/poorti/shipments/${payload.shipmentId}/ship`,
+    method: "POST",
     data: payload
-  })
+  });
 }
 
 const performFind = async (payload: any): Promise<any> => {
@@ -536,17 +593,10 @@ const performFind = async (payload: any): Promise<any> => {
   });
 }
 
-const cancelItem = async (payload: any): Promise<any> => {
-  const baseURL = store.getters['user/getOmsBaseUrl'];
-  const omstoken = store.getters['user/getUserToken'];
-  return apiClient({
-    url: "cancelOrderItem",
+const cancelOrder = async (payload: any): Promise<any> => {
+  return api({
+    url: `oms/orders/${payload.orderId}/cancel`,
     method: "post",
-    baseURL,
-    headers: {
-      "Authorization": "Bearer " + omstoken,
-      "Content-Type": "application/json"
-    },
     data: payload
   });
 }
@@ -573,12 +623,10 @@ const fetchGiftCardActivationDetails = async ({ isDetailsPage, currentOrders }: 
     orderIds.push(orders[0].orderId);
   } else {
     orders.map((order: any) => {
-      order.parts.map((part: any) => {
-        part.items.map((currentItem: any) => {
+      order.items.map((currentItem: any) => {
           if(currentItem.productTypeId === 'GIFT_CARD' && !orderIds.includes(currentItem.orderId)) {
             orderIds.push(order.orderId);
-          }
-        })
+          }        
       })
     })
   }
@@ -586,17 +634,12 @@ const fetchGiftCardActivationDetails = async ({ isDetailsPage, currentOrders }: 
 
   try {
     const resp = await UtilService.fetchGiftCardFulfillmentInfo({
-      entityName: "GiftCardFulfillment",
-      inputFields: {
-        orderId: orderIds,
-        orderId_op: "in"
-      },
-      fieldList: ["amount", "cardNumber", "fulfillmentDate", "orderId", "orderItemSeqId"],
-      viewSize: 250
-    })
+          orderId: orderIds,
+          orderId_op: "in"
+      })
 
     if(!hasError(resp)) {
-      giftCardActivationInfo = resp.data.docs
+      giftCardActivationInfo = resp.data
     } else {
       throw resp.data
     }
@@ -606,18 +649,15 @@ const fetchGiftCardActivationDetails = async ({ isDetailsPage, currentOrders }: 
 
   if(giftCardActivationInfo.length) {
     if(isDetailsPage) {
-      orders[0].part.items = orders[0].part.items.map((item: any) => {
+      orders[0].shipGroup.items = orders[0].shipGroup.items.map((item: any) => {
         return updateGiftCardActivationDetails(item, giftCardActivationInfo);
       })
     } else {
       orders = orders.map((order: any) => {
-        order.parts = order.parts.map((part: any) => {
-          part.items = part.items.map((item: any) => {
+        order.items = order.items.map((item: any) => {
             return updateGiftCardActivationDetails(item, giftCardActivationInfo, order.orderId);
           })
-          return part
-        })
-        return order
+          return order
       })
     }
   }
@@ -626,7 +666,7 @@ const fetchGiftCardActivationDetails = async ({ isDetailsPage, currentOrders }: 
 }
 
 export const OrderService = {
-  cancelItem,
+  cancelOrder,
   fetchGiftCardActivationDetails,
   fetchOrderItems,
   fetchOrderPaymentPreferences,
@@ -634,12 +674,17 @@ export const OrderService = {
   findOrderShipGroup,
   getOpenOrders,
   getOrderDetails,
+  fetchOrderDetails,
+  fetchPicklists,
   getCompletedOrders,
+  findCompletedShipments,
   getPackedOrders,
+  findPackedShipments,
   getOrderItemRejectionHistory,
   quickShipEntireShipGroup,
   rejectItem,
   rejectOrderItem,
+  rejectOrderItems,
   updateShipment,
   createPicklist,
   sendPickupScheduledNotification,
@@ -648,7 +693,9 @@ export const OrderService = {
   getCustomerContactDetails,
   getShippingPhoneNumber,
   packOrder,
+  shipOrder,
   performFind,
   printPicklist,
+  printPackingSlip,
   printShippingLabelAndPackingSlip
 }

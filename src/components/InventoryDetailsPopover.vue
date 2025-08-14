@@ -4,7 +4,7 @@
       <ion-list-header>{{ translate("Inventory computation")}}</ion-list-header>
       <ion-item>
         <ion-label class="ion-text-wrap">{{ translate("Quantity on hand")}}</ion-label>
-        <ion-note slot="end">{{ getProductStock(item.productId).quantityOnHandTotal ?? '0' }}</ion-note>
+        <ion-note slot="end">{{ getInventoryInformation(item.productId).quantityOnHand ?? '0' }}</ion-note>
       </ion-item>
       <ion-item>
         <ion-label class="ion-text-wrap">{{ translate("Safety stock")}}</ion-label>
@@ -52,21 +52,13 @@ export default defineComponent({
   computed: {
     ...mapGetters({
       product: "product/getCurrent",
-      getProductStock: 'stock/getProductStock',
       getInventoryInformation: 'stock/getInventoryInformation',
     })   
   },
   async beforeMount () {
     const productId = this.item?.productId;
-    await this.store.dispatch('stock/fetchInventoryCount', { productId });
-    this.fetchReservedQuantity( this.item.productId );
+    await this.store.dispatch('stock/fetchProductInventory', { productId });
   },
-  methods: {
-    async fetchReservedQuantity(productId: any){
-      await this.store.dispatch('stock/fetchReservedQuantity', { productId });
-    },
-  },
-
   setup () {
     const store = useStore();
     return {
