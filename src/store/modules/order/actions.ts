@@ -157,7 +157,7 @@ const actions: ActionTree<OrderState , RootState> ={
 
         const total = resp.data.ordersCount;
 
-        if (params.viewIndex && params.viewIndex > 0) {
+        if (params.pageIndex && params.pageIndex > 0) {
           orders = state.open.list.concat(orders);
         }
 
