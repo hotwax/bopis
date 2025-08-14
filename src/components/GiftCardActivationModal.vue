@@ -1,8 +1,8 @@
 <template>
-  <ion-header>
+  <ion-header data-testid="giftcard-activation-modal-header">
     <ion-toolbar>
       <ion-buttons slot="start">
-        <ion-button @click="closeModal()">
+        <ion-button data-testid="giftcard-activation-close-button" @click="closeModal()">
           <ion-icon slot="icon-only" :icon="closeOutline" />
         </ion-button>
       </ion-buttons>
@@ -17,12 +17,12 @@
     </div>
     <ion-list v-else>
       <ion-item lines="none" v-if="!item.isGCActivated">
-        <ion-input :label="translate('Activation code')" :placeholder="translate('serial number')" :helper-text="translate('Scan or enter the unique code on the gift card')" v-model="activationCode" />
+        <ion-input data-testid="giftcard-activation-input" :label="translate('Activation code')" :placeholder="translate('serial number')" :helper-text="translate('Scan or enter the unique code on the gift card')" v-model="activationCode" />
       </ion-item>
 
       <ion-item v-else>
         <ion-icon :icon="cardOutline" slot="start" />
-        <ion-label>{{ item.gcInfo.cardNumber }}</ion-label>
+        <ion-label data-testid="giftcard-activation-label">{{ item.gcInfo.cardNumber }}</ion-label>
         <ion-note slot="end">{{ getCreatedDateTime() }}</ion-note>
       </ion-item>
 
@@ -49,7 +49,7 @@
   </ion-content>
 
   <ion-fab v-if="!item.isGCActivated" vertical="bottom" horizontal="end" slot="fixed">
-    <ion-fab-button @click="confirmSave()">
+    <ion-fab-button data-testid="giftcard-activation-save-button" @click="confirmSave()">
       <ion-icon :icon="cardOutline" />
     </ion-fab-button>
   </ion-fab>
