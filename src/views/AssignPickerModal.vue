@@ -1,5 +1,5 @@
 <template>
-  <ion-header>
+  <ion-header data-testid="assign-picker-modal-header">
     <ion-toolbar>
       <ion-buttons slot="start">
         <ion-button @click="closeModal"> 
@@ -24,7 +24,7 @@
       <div>
         <ion-radio-group v-model="selectedPicker">
           <ion-item v-for="(picker, index) in availablePickers" :key="index">
-            <ion-radio :value="picker.id">{{ picker.name }}</ion-radio>
+            <ion-radio data-testid="assign-picker-radio" :value="picker.id">{{ picker.name }}</ion-radio>
           </ion-item>
         </ion-radio-group>
       </div>
@@ -52,7 +52,7 @@
   </ion-content>
 
   <ion-fab vertical="bottom" horizontal="end" slot="fixed">
-    <ion-fab-button @click="readyForPickup()">
+    <ion-fab-button data-testid="assign-picker-save-button" @click="readyForPickup()">
       <ion-icon :icon="saveOutline" />
     </ion-fab-button>
   </ion-fab>

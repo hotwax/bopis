@@ -4,7 +4,7 @@
       <ion-toolbar>
         <ion-title>{{ currentFacility?.facilityName }}</ion-title>
         <ion-buttons slot="end">
-          <ion-button @click="viewNotifications()">
+          <ion-button data-testid="notifications-button" @click="viewNotifications()">
             <ion-icon slot="icon-only" :icon="notificationsOutline" :color="(unreadNotificationsStatus && notifications.length) ? 'primary' : ''" />
           </ion-button>
           <ion-button @click="viewShipToStoreOrders()">
@@ -14,15 +14,15 @@
       </ion-toolbar>
 
       <div>
-        <ion-searchbar @ionFocus="selectSearchBarText($event)" v-model="queryString" @keyup.enter="queryString = $event.target.value; searchOrders()" :placeholder="translate('Search Orders')" />
+        <ion-searchbar data-testid="order-searchbar" @ionFocus="selectSearchBarText($event)" v-model="queryString" @keyup.enter="queryString = $event.target.value; searchOrders()" :placeholder="translate('Search Orders')" />
         <ion-segment v-model="segmentSelected" @ionChange="segmentChanged">
-          <ion-segment-button value="open">
+          <ion-segment-button data-testid="open-segment-button" value="open">
             <ion-label>{{ translate("Open") }}</ion-label>
           </ion-segment-button>
-          <ion-segment-button value="packed">
+          <ion-segment-button data-testid="packed-segment-button" value="packed">
             <ion-label>{{ translate("Packed") }}</ion-label>
           </ion-segment-button>
-          <ion-segment-button value="completed">
+          <ion-segment-button data-testid="completed-segment-button" value="completed">
             <ion-label>{{ translate("Completed") }}</ion-label>
           </ion-segment-button>
         </ion-segment>
@@ -30,12 +30,13 @@
     </ion-header>
     <ion-content ref="contentRef" :scroll-events="true" @ionScroll="enableScrolling()">
       <div v-if="segmentSelected === 'open'">
+
         <div v-for="(order, index) in getOrdersByPart" :key="index" v-show="order.shipGroups.length > 0">
-          <ion-card button @click.prevent="viewOrder(order, order.shipGroupSeqId, 'open')">
+          <ion-card data-testid="order-card" button @click.prevent="viewOrder(order, order.shipGroupSeqId, 'open')">
             <ion-item lines="none">
               <ion-label class="ion-text-wrap">
                 <h1>{{ order.customerName }}</h1>
-                <p>{{ order.orderName ? order.orderName : order.orderId }}</p>
+                <p data-testid="order-name-tag">{{ order.orderName ? order.orderName : order.orderId }}</p>
               </ion-label>
               <div class="metadata">
                 <ion-badge v-if="order.orderDate" color="dark">{{ timeFromNowInMillis(order.orderDate) }}</ion-badge>
@@ -54,14 +55,15 @@
             <ProductListItem v-for="item in order.shipGroup.items" :key="item.productId" :item="item" />
                         
             <div class="border-top">
-              <ion-button :disabled="!hasPermission(Actions.APP_ORDER_UPDATE)" fill="clear" @click.stop="readyForPickup(order, order.shipGroup)">
+              <ion-button :data-testid="order.part.shipmentMethodEnum?.shipmentMethodEnumId === 'STOREPICKUP' ? 'ready-pickup-button' : 'ready-ship-button'" :disabled="!hasPermission(Actions.APP_ORDER_UPDATE)" fill="clear" @click.stop="readyForPickup(order, order.shipGroup)">
                 {{ order.shipGroup?.shipmentMethodTypeId === 'STOREPICKUP' ? translate("Ready for pickup") : translate("Ready to ship") }}
               </ion-button>
               <div></div>
               <ion-button v-if="order.shipGroup.shipmentMethodTypeId === 'STOREPICKUP'" color="danger" :disabled="!hasPermission(Actions.APP_ORDER_UPDATE)" fill="clear" @click.stop="openRejectOrderModal(order)">
                {{ translate("Reject")}}
               </ion-button>
-              <ion-button v-if="getBopisProductStoreSettings('PRINT_PICKLISTS')" slot="end" fill="clear" @click.stop="printPicklist(order, order.shipGroup)">
+              <ion-button data-testid="print-picklist-button" v-if="getBopisProductStoreSettings('PRINT_PICKLISTS')" slot="end" fill="clear" @click.stop="printPicklist(order, order.shipGroup)">
+
                 <ion-icon :icon="printOutline" slot="icon-only" />
               </ion-button>
             </div>
@@ -70,11 +72,11 @@
       </div>       
       <div v-if="segmentSelected === 'packed'">
         <div v-for="(order, index) in packedOrders" :key="index" v-show="order.items.length > 0">
-          <ion-card button @click.prevent="viewOrder(order, order.primaryShipGroupSeqId, 'packed')">
+          <ion-card data-testid="order-card" button @click.prevent="viewOrder(order, order.primaryShipGroupSeqId, 'packed')">
             <ion-item lines="none">
               <ion-label class="ion-text-wrap">
                 <h1>{{ order.customerName }}</h1>
-                <p>{{ order.orderName ? order.orderName : order.orderId }}</p>
+                <p data-testid="order-name-tag">{{ order.orderName ? order.orderName : order.orderId }}</p>
                 <p v-if="getBopisProductStoreSettings('ENABLE_TRACKING')">{{ order.pickers ? translate("Picked by", { pickers: order.pickers }) : translate("No picker assigned.") }}</p>
               </ion-label>
               <ion-badge v-if="order.orderDate" color="dark" slot="end">{{ timeFromNowInMillis(order.orderDate) }}</ion-badge>
@@ -89,13 +91,15 @@
 
             <ProductListItem v-for="item in order.items" :key="item.productId" :item="item" :orderId="order.orderId" :customerId="order.customerId" :currencyUom="order.currencyUom" orderType="packed"/>
             <div class="border-top">
-              <ion-button :disabled="!hasPermission(Actions.APP_ORDER_UPDATE)" fill="clear" @click.stop="deliverShipment(order)">
+
+              <ion-button data-testid="handover-button" :disabled="!hasPermission(Actions.APP_ORDER_UPDATE)" fill="clear" @click.stop="deliverShipment(order)">
                 {{ order.shipmentMethodTypeId === 'STOREPICKUP' ? translate("Handover") : translate("Ship") }}
               </ion-button>
-              <ion-button v-if="getBopisProductStoreSettings('PRINT_PACKING_SLIPS')" fill="clear" slot="end" @click.stop="printPackingSlip(order)">
+              <ion-button data-testid="packing-slip-button" v-if="getBopisProductStoreSettings('PRINT_PACKING_SLIPS')" fill="clear" slot="end" @click.stop="printPackingSlip(order)">
                 <ion-icon slot="icon-only" :icon="printOutline" />
               </ion-button>
-              <ion-button v-if="order.shipmentMethodTypeId === 'STOREPICKUP'" fill="clear" slot="end" @click.stop="sendReadyForPickupEmail(order)">
+
+              <ion-button data-testid="resend-email-button" v-if="order.shipmentMethodTypeId === 'STOREPICKUP'" fill="clear" slot="end" @click.stop="sendReadyForPickupEmail(order)">
                 <ion-icon slot="icon-only" :icon="mailOutline" />
               </ion-button>
             </div>
@@ -104,11 +108,11 @@
       </div>
       <div v-if="segmentSelected === 'completed'">
         <div v-for="(order, index) in completedOrders" :key="index" v-show="order.items.length > 0">
-          <ion-card button @click.prevent="viewOrder(order, order.primaryShipGroupSeqId, 'completed')">
+          <ion-card data-testid="order-card" button @click.prevent="viewOrder(order, order.primaryShipGroupSeqId, 'completed')">
             <ion-item lines="none">
               <ion-label class="ion-text-wrap">
                 <h1>{{ order.customerName }}</h1>
-                <p>{{ order.orderName ? order.orderName : order.orderId }}</p>
+                <p data-testid="order-name-tag">{{ order.orderName ? order.orderName : order.orderId }}</p>
               </ion-label>
               <ion-badge v-if="order.orderDate" color="dark" slot="end">{{ timeFromNowInMillis(order.orderDate) }}</ion-badge>
             </ion-item>

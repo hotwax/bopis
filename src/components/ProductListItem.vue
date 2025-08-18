@@ -17,11 +17,11 @@
           <ion-icon slot="icon-only" :icon="informationCircleOutline" color="medium" />
         </ion-button>
       </div>
-      <ion-button v-else fill="clear" @click.stop="fetchProductInventory(item.productId)">
+      <ion-button data-testid="qoh-button" v-else fill="clear" @click.stop="fetchProductInventory(item.productId)">
         <ion-icon color="medium" slot="icon-only" :icon="cubeOutline" />
       </ion-button>
 
-      <ion-button color="medium" fill="clear" size="small" v-if="(orderType === 'packed' || orderType === 'completed') && item.productTypeId === 'GIFT_CARD'" @click.stop="openGiftCardActivationModal(item)">
+      <ion-button data-testid="gift-card-activation-button" color="medium" fill="clear" size="small" v-if="(orderType === 'packed' || orderType === 'completed') && item.productTypeId === 'GIFT_CARD'" @click.stop="openGiftCardActivationModal(item)">
         <ion-icon slot="icon-only" :icon="item.isGCActivated ? gift : giftOutline"/>
       </ion-button>
       
