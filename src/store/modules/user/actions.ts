@@ -76,7 +76,7 @@ const actions: ActionTree<UserState, RootState> = {
       const facilities = await useUserStore().getUserFacilities(userProfile?.partyId, "OMS_FULFILLMENT", isAdminUser)
       if(!facilities.length) throw "Unable to login. User is not associated with any facility"
 
-      await useUserStore().getFacilityPreference('SELECTED_FACILITY')
+      await useUserStore().getFacilityPreference('SELECTED_FACILITY', userProfile.userId)
     
       userProfile.facilities = facilities;
 
