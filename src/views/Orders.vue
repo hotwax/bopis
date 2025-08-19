@@ -31,7 +31,7 @@
     <ion-content ref="contentRef" :scroll-events="true" @ionScroll="enableScrolling()">
       <div v-if="segmentSelected === 'open'">
 
-        <div v-for="(order, index) in getOrdersByPart" :key="index" v-show="order.shipGroups.length > 0">
+        <div v-for="(order, index) in getOrdersByPart(orders)" :key="index" v-show="order.shipGroups.length > 0">
           <ion-card data-testid="order-card" button @click.prevent="viewOrder(order, order.shipGroupSeqId, 'open')">
             <ion-item lines="none">
               <ion-label class="ion-text-wrap">
@@ -228,10 +228,8 @@ export default defineComponent({
       unreadNotificationsStatus: 'user/getUnreadNotificationsStatus',
       getBopisProductStoreSettings: 'user/getBopisProductStoreSettings',
       getProductStock: 'stock/getProductStock',
-    }),
-    getOrdersByPart() {
-      return Object.keys((this as any).orders).length ? (this as any).orders.flatMap((order: any) => order.shipGroups.map((shipGroup: any) => ({ ...order, shipGroup: { ...shipGroup, ...order.shipGroup } }))) : [];
-    }
+      order: "order/getCurrent"
+    })
   },
   data() {
     return {
@@ -469,6 +467,9 @@ export default defineComponent({
         });
       return alert.present();
     },
+    getOrdersByPart(orders: Array<any>) {
+      return Object.keys(orders).length ? orders.flatMap((order: any) => order.shipGroups.map((shipGroup: any) => ({ ...order, shipGroup }))) : [];
+    },
     viewShipToStoreOrders() {
       this.$router.push({ path: '/ship-to-store-orders' })
     },
@@ -515,18 +516,18 @@ export default defineComponent({
       return assignPickerModal.present();
     },
     async createPicklist(order: any, selectedPicker: any) {
-      let resp;
+      let resp: any;
 
       const payload = {
         packageName: "A", //default package name
         facilityId: this.currentFacility?.facilityId,
-        shipmentMethodTypeId: order.shipGroups[0]?.shipmentMethodTypeId,
+        shipmentMethodTypeId: order.shipGroup.shipmentMethodTypeId,
         statusId: "PICKLIST_ASSIGNED",        
         pickers: selectedPicker ? [{
           partyId: selectedPicker,
           roleTypeId: "WAREHOUSE_PICKER"
         }] : [],
-        orderItems: order.shipGroups[0]?.items.map((item: { orderId: string, orderItemSeqId: string, shipGroupSeqId: string, productId: string, quantity: number }) => ({
+        orderItems: order.shipGroup.items.map((item: { orderId: string, orderItemSeqId: string, shipGroupSeqId: string, productId: string, quantity: number }) => ({
           orderId: item.orderId,
           orderItemSeqId: item.orderItemSeqId,
           shipGroupSeqId: item.shipGroupSeqId,
@@ -541,11 +542,22 @@ export default defineComponent({
           // generating picklist after creating a new picklist
           await OrderService.printPicklist(resp.data.picklistId)
           const orders = JSON.parse(JSON.stringify(this.orders))
-          const updatedOrder = orders.find((currentOrder: any) => currentOrder.orderId === order.orderId);
-          updatedOrder["isPicked"] = "Y"
-          updatedOrder["picklistId"] = resp.data.picklistId
-          updatedOrder["shipmentId"] = resp.data.shipmentIds[0]
-          this.store.dispatch("order/updateOpenOrder", { orders, total: orders.length })
+          const orderIndex = orders.findIndex((o: any) => o.orderId === order.orderId);
+          let orderShipGroups = orders[orderIndex].shipGroups || [];
+          orderShipGroups = orderShipGroups.map((shipGroup: any) => {
+            if(shipGroup.shipGroupSeqId === order.shipGroup.shipGroupSeqId) {
+              return { ...shipGroup, picklistId: resp.data.picklistId, shipmentId: resp.data.shipmentIds?.[0] }
+            }
+            return shipGroup;
+          });
+          
+          orders[orderIndex] = {
+            ...orders[orderIndex],
+            shipGroups: orderShipGroups
+          };
+
+          await this.store.dispatch("order/updateOpenOrder", { orders, total: orders.length })
+
         } else {
           throw resp.data;
         }
@@ -569,6 +581,8 @@ export default defineComponent({
   ionViewWillEnter () {
     this.isScrollingEnabled = false;
     this.queryString = '';
+
+    this.segmentSelected = this.order?.orderType || "open"
 
     if(this.segmentSelected === 'open') {
       this.getPickupOrders()

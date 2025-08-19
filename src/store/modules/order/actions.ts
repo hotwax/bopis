@@ -427,7 +427,7 @@ const actions: ActionTree<OrderState , RootState> ={
 
   async getOrderDetail({ dispatch }, { payload, orderType }) {
     const orderId = payload.orderId;
-    let currentOrder = {};
+    let currentOrder = {} as any;
 
     try {
     const resp = await OrderService.fetchOrderDetails(orderId);
@@ -499,7 +499,12 @@ const actions: ActionTree<OrderState , RootState> ={
         currentOrder = order;
       }
 
-      await dispatch('updateCurrent', { order: currentOrder });
+      if (!order.shipGroup) {
+        currentOrder.orderId = null;
+      }
+
+
+      await dispatch('updateCurrent', { order: { ...currentOrder, orderType } });
 
     } else {
       throw resp.data;

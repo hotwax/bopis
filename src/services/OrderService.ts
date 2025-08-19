@@ -246,10 +246,17 @@ const createPicklist = async (payload: any): Promise <any> => {
 
 const printPicklist = async (picklistId: string): Promise<any> => {
   try {
+    const baseURL = store.getters['user/getMaargUrl'];
+    const omstoken = store.getters['user/getUserToken'];
 
-    const resp = await api({
-      url: "fop/apps/pdf/PrintPicklist",
+    const resp = await apiClient({
+      url: "/fop/apps/pdf/PrintPicklist",
       method: "GET",
+      baseURL,
+      headers: {
+        "Authorization": "Bearer " + omstoken,
+        "Content-Type": "application/json"
+      },
       responseType: "blob",
       params: { picklistId }
     });

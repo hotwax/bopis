@@ -18,6 +18,10 @@ const getters: GetterTree <UserState, RootState> = {
     const url = state.omsRedirectionUrl
     return url.startsWith('http') ? url.includes('/api') ? url : `${url}/api/` : `https://${url}.hotwax.io/api/`;
     },
+    getMaargUrl (state) {
+        const url = state.instanceUrl;
+        return url.startsWith("http") ? `${url}` : `https://${url}.hotwax.io`;
+    },
     getUserToken (state) {
         return state.token
     },
