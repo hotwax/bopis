@@ -7,12 +7,12 @@ import logger from '@/logger';
 import { cogOutline } from 'ionicons/icons';
 import { UtilService } from "@/services/UtilService";
 
-const getOpenOrders = async (payload: any): Promise <any> => {
+const getOpenOrders = async (params: any): Promise <any> => {
 
   return api({
-    url: "oms/orders/storePickup",
+    url: "oms/orders/pickup",
     method: "get",
-    data: payload
+    params
   });
 }
 
@@ -246,10 +246,17 @@ const createPicklist = async (payload: any): Promise <any> => {
 
 const printPicklist = async (picklistId: string): Promise<any> => {
   try {
+    const baseURL = store.getters['user/getMaargUrl'];
+    const omstoken = store.getters['user/getUserToken'];
 
-    const resp = await api({
-      url: "fop/apps/pdf/PrintPicklist",
+    const resp = await apiClient({
+      url: "/fop/apps/pdf/PrintPicklist",
       method: "GET",
+      baseURL,
+      headers: {
+        "Authorization": "Bearer " + omstoken,
+        "Content-Type": "application/json"
+      },
       responseType: "blob",
       params: { picklistId }
     });
@@ -595,7 +602,7 @@ const performFind = async (payload: any): Promise<any> => {
 
 const cancelOrder = async (payload: any): Promise<any> => {
   return api({
-    url: `oms/orders/${payload.orderId}/cancel`,
+    url: `oms/orders/${payload.orderId}/items/cancel`,
     method: "post",
     data: payload
   });

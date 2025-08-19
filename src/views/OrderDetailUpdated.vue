@@ -211,7 +211,7 @@
                 </ion-item>
                 <ion-item>
                   <ion-icon :icon="callOutline" slot="start" />
-                  <ion-label>{{ order.billingPhone || "-" }}</ion-label>
+                  <ion-label>{{ order.billingPhone.contactNumber || "-" }}</ion-label>
                 </ion-item>
                 <ion-item lines="none">
                   <ion-icon :icon="cashOutline" slot="start" />
@@ -827,8 +827,9 @@ export default defineComponent({
       this.store.dispatch("order/updateCurrent", { order })
     },
     async printPicklist(order: any, shipGroup: any) {
+      // shipGroup.picklistId is copied over to order.picklistId in getOrderDetail function
       if(shipGroup.picklistId) {
-        await OrderService.printPicklist(order.picklistId)
+        await OrderService.printPicklist(shipGroup.picklistId)
         return;
       }
 
@@ -896,8 +897,8 @@ export default defineComponent({
         if(!hasError(resp)) {
           // generating picklist after creating a new picklist
           await OrderService.printPicklist(resp.data.picklistId)
-          this.order["picklistId"] = resp.data.picklistId
-          this.order["shipmentId"] = resp.data.shipmentIds[0]
+          this.order.shipGroup.picklistId = resp.data.picklistId
+          this.order.shipGroup.shipmentId = resp.data.shipmentIds[0]
           this.store.dispatch("order/updateCurrentOrderInfo", this.order)
         } else {
           throw resp.data;
