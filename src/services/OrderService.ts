@@ -7,12 +7,12 @@ import logger from '@/logger';
 import { cogOutline } from 'ionicons/icons';
 import { UtilService } from "@/services/UtilService";
 
-const getOpenOrders = async (payload: any): Promise <any> => {
+const getOpenOrders = async (params: any): Promise <any> => {
 
   return api({
-    url: "oms/orders/storePickup",
+    url: "oms/orders/pickup",
     method: "get",
-    data: payload
+    params
   });
 }
 
@@ -595,7 +595,7 @@ const performFind = async (payload: any): Promise<any> => {
 
 const cancelOrder = async (payload: any): Promise<any> => {
   return api({
-    url: `oms/orders/${payload.orderId}/cancel`,
+    url: `oms/orders/${payload.orderId}/items/cancel`,
     method: "post",
     data: payload
   });

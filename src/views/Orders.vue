@@ -55,7 +55,7 @@
             <ProductListItem v-for="item in order.shipGroup.items" :key="item.productId" :item="item" />
                         
             <div class="border-top">
-              <ion-button :data-testid="order.part.shipmentMethodEnum?.shipmentMethodEnumId === 'STOREPICKUP' ? 'ready-pickup-button' : 'ready-ship-button'" :disabled="!hasPermission(Actions.APP_ORDER_UPDATE)" fill="clear" @click.stop="readyForPickup(order, order.shipGroup)">
+              <ion-button :data-testid="order.shipGroup.shipmentMethodTypeId === 'STOREPICKUP' ? 'ready-pickup-button' : 'ready-ship-button'" :disabled="!hasPermission(Actions.APP_ORDER_UPDATE)" fill="clear" @click.stop="readyForPickup(order, order.shipGroup)">
                 {{ order.shipGroup?.shipmentMethodTypeId === 'STOREPICKUP' ? translate("Ready for pickup") : translate("Ready to ship") }}
               </ion-button>
               <div></div>

@@ -116,7 +116,7 @@ const actions: ActionTree<OrderState , RootState> ={
 
     params = {
       keyword: params.queryString || '',
-      originFacilityId: params.facilityId,
+      facilityId: params.facilityId,
       orderStatusId: 'ORDER_APPROVED',
       shipmentStatusId: 'SHIPMENT_INPUT,SHIPMENT_PACKED,SHIPMENT_SHIPPED',
       shipmentStatusId_op: 'in',
