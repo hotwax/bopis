@@ -116,7 +116,7 @@ const actions: ActionTree<OrderState , RootState> ={
 
     params = {
       keyword: params.queryString || '',
-      originFacilityId: params.facilityId,
+      facilityId: params.facilityId,
       orderStatusId: 'ORDER_APPROVED',
       shipmentStatusId: 'SHIPMENT_INPUT,SHIPMENT_PACKED,SHIPMENT_SHIPPED',
       shipmentStatusId_op: 'in',
@@ -427,7 +427,7 @@ const actions: ActionTree<OrderState , RootState> ={
 
   async getOrderDetail({ dispatch }, { payload, orderType }) {
     const orderId = payload.orderId;
-    let currentOrder = {};
+    let currentOrder = {} as any;
 
     try {
     const resp = await OrderService.fetchOrderDetails(orderId);
@@ -498,6 +498,11 @@ const actions: ActionTree<OrderState , RootState> ={
       } else {
         currentOrder = order;
       }
+
+      if (!order.shipGroup) {
+        currentOrder.orderId = null;
+      }
+
 
       await dispatch('updateCurrent', { order: { ...currentOrder, orderType } });
 
