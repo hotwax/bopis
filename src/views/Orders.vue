@@ -228,6 +228,7 @@ export default defineComponent({
       unreadNotificationsStatus: 'user/getUnreadNotificationsStatus',
       getBopisProductStoreSettings: 'user/getBopisProductStoreSettings',
       getProductStock: 'stock/getProductStock',
+      order: "order/getCurrent"
     }),
     getOrdersByPart() {
       return Object.keys((this as any).orders).length ? (this as any).orders.flatMap((order: any) => order.shipGroups.map((shipGroup: any) => ({ ...order, shipGroup: { ...shipGroup, ...order.shipGroup } }))) : [];
@@ -569,6 +570,8 @@ export default defineComponent({
   ionViewWillEnter () {
     this.isScrollingEnabled = false;
     this.queryString = '';
+
+    this.segmentSelected = this.order?.orderType || "open"
 
     if(this.segmentSelected === 'open') {
       this.getPickupOrders()

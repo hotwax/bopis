@@ -499,7 +499,7 @@ const actions: ActionTree<OrderState , RootState> ={
         currentOrder = order;
       }
 
-      await dispatch('updateCurrent', { order: currentOrder });
+      await dispatch('updateCurrent', { order: { ...currentOrder, orderType } });
 
     } else {
       throw resp.data;
