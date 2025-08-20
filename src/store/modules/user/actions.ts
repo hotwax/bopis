@@ -93,6 +93,8 @@ const actions: ActionTree<UserState, RootState> = {
 
       updateToken(token)
 
+      // The setEComStorePreference method requires userId, Hence setting userProfile in the following line
+      commit(types.USER_INFO_UPDATED, userProfile);
       await useUserStore().setEComStorePreference(currentEComStore);
       /*  ---- Guard clauses ends here --- */
 
@@ -102,7 +104,6 @@ const actions: ActionTree<UserState, RootState> = {
       }
 
       // TODO user single mutation
-      commit(types.USER_INFO_UPDATED, userProfile);
       commit(types.USER_CURRENT_ECOM_STORE_UPDATED, currentEComStore)
       commit(types.USER_PERMISSIONS_UPDATED, appPermissions);
       commit(types.USER_TOKEN_CHANGED, { newToken: token })
