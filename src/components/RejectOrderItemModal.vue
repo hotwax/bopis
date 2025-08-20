@@ -174,20 +174,7 @@ export default defineComponent({
               });
               if (resp) {
                 // Update matching shipGroup in shipGroups list
-                const updatedShipGroups = (this.orderProps?.shipGroups ?? []).map((group: any) =>
-                  group.shipGroupSeqId === shipGroup.shipGroupSeqId
-                    ? { ...group, items: [] }
-                    : group
-                );
-
-                const updatedOrder = {
-                  ...this.orderProps,
-                  shipGroup: { ...shipGroup, items: [] },
-                  shipGroups: updatedShipGroups,
-                  rejected: true
-                };
-
-                await this.store.dispatch('order/updateCurrent', { order: updatedOrder });
+                this.store.dispatch("order/removeOpenOrder", { order: this.orderProps, shipGroup })                
                 this.closeModal();
               }
             }

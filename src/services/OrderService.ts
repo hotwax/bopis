@@ -19,7 +19,7 @@ const getOpenOrders = async (params: any): Promise <any> => {
 const fetchOrderDetails = async (orderId: string): Promise<any> => {
 
   return api({
-    url: `oms/orders/${orderId}/details`,
+    url: `oms/orders/${orderId}`,
     method: "get",
   });
 }
@@ -282,9 +282,17 @@ const printPicklist = async (picklistId: string): Promise<any> => {
 
 const printPackingSlip = async (shipmentIds: Array<string>): Promise<any> => {
   try {
-    const resp = await api({
+    const baseURL = store.getters['user/getMaargUrl'];
+    const omstoken = store.getters['user/getUserToken'];
+
+    const resp = await apiClient({
       url: "fop/apps/pdf/PrintPackingSlip",
+      baseURL,
       method: "GET",
+      headers: {
+        "Authorization": "Bearer " + omstoken,
+        "Content-Type": "application/json"
+      },
       params: {
         shipmentId: shipmentIds
       },
