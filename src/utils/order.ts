@@ -95,6 +95,29 @@ const isKit = (item: any) => {
   return product && product.productTypeId === 'MARKETING_PKG_PICK';
 }
 
+const removeKitComponents = (items: any) => {
+  const kitItemSeqIds = new Set();
+  const itemsWithoutKitComponents = [] as any;
+
+  items.forEach((item:any) => {
+    if (item.productTypeId === "MARKETING_PKG_PICK") {
+      kitItemSeqIds.add(item.orderItemSeqId);
+    }
+  })
+  
+  //In current implementation kit product and component product will have the same orderItemSeqId
+  items.forEach((item: any) => {
+    const alreadyExists = itemsWithoutKitComponents.some(
+      (itm: any) => itm.orderItemSeqId === item.orderItemSeqId
+    );
+
+    if ((item.productTypeId === "MARKETING_PKG_PICK" || !kitItemSeqIds.has(item.orderItemSeqId)) && !alreadyExists) {
+      itemsWithoutKitComponents.push(item);
+    }
+  });
+  return itemsWithoutKitComponents;
+}
+
 const getOrderStatus = (order: any, shipGroup: any, orderRouteSegment: any, orderType: string) => {
   if(order.orderStatusId === "ORDER_COMPLETED" || orderType === "completed") {
     return shipGroup?.shipmentMethodTypeId === "STOREPICKUP" ? "Picked up" : "Completed"
@@ -110,5 +133,6 @@ const getOrderStatus = (order: any, shipGroup: any, orderRouteSegment: any, orde
 export {
   getOrderCategory,
   getOrderStatus,
-  isKit
+  isKit,
+  removeKitComponents
 }

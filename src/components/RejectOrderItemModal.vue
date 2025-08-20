@@ -69,6 +69,7 @@ import { defineComponent, computed } from 'vue';
 import { mapGetters, useStore } from 'vuex';
 import { DxpShopifyImg, translate, getProductIdentificationValue, useProductIdentificationStore } from '@hotwax/dxp-components';
 import { isKit } from '@/utils/order';
+import { getCurrentFacilityId } from '@/utils'
 export default defineComponent({
   name: 'RejectOrderItemModal',
   components: {
@@ -173,23 +174,9 @@ export default defineComponent({
                 shipGroup
               });
               if (resp) {
-                // Update matching shipGroup in shipGroups list
-                const updatedShipGroups = (this.orderProps?.shipGroups ?? []).map((group: any) =>
-                  group.shipGroupSeqId === shipGroup.shipGroupSeqId
-                    ? { ...group, items: [] }
-                    : group
-                );
-
-                const updatedOrder = {
-                  ...this.orderProps,
-                  shipGroup: { ...shipGroup, items: [] },
-                  shipGroups: updatedShipGroups,
-                  rejected: true
-                };
-
-                await this.store.dispatch('order/updateCurrent', { order: updatedOrder });
-                this.closeModal();
+                await this.store.dispatch("order/getOpenOrders", { viewSize: process.env.VUE_APP_VIEW_SIZE, viewIndex: 0, queryString: '', facilityId: getCurrentFacilityId() });
               }
+              this.closeModal();              
             }
           }
         ]

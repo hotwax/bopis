@@ -4,7 +4,7 @@ import RootState from '@/store/RootState'
 import OrderState from './OrderState'
 import * as types from './mutation-types'
 import { showToast, getCurrentFacilityId } from "@/utils";
-import { isKit} from '@/utils/order'
+import { isKit, removeKitComponents } from '@/utils/order'
 import { hasError } from '@/adapter'
 import { translate } from "@hotwax/dxp-components";
 import emitter from '@/event-bus'
@@ -443,7 +443,7 @@ const actions: ActionTree<OrderState , RootState> ={
       // Add showKitComponents to each item in shipGroups
       const shipGroups = data.shipGroups.map((group: any) => ({
         ...group,
-        items: group.items.map((item: any) => ({
+        items: removeKitComponents(group.items).map((item: any) => ({
           ...item,
           showKitComponents: false
         }))
@@ -462,7 +462,7 @@ const actions: ActionTree<OrderState , RootState> ={
 
       // Assign currentShipGroup and related fields
       const currentFacilityId = getCurrentFacilityId();
-      const currentShipGroup = data.shipGroups.find((shipGroup: any) => {
+      const currentShipGroup = order.shipGroups.find((shipGroup: any) => {
         const isStorePickup = shipGroup.shipmentMethodTypeId === "STOREPICKUP";
         const isFacilityMatch = shipGroup.facilityId === currentFacilityId;
 
@@ -565,6 +565,7 @@ const actions: ActionTree<OrderState , RootState> ={
 
           return {
             ...shipment,
+            items: removeKitComponents(shipment.items),
             customerId: shipment.partyId,
             customerName: `${shipment.firstName || ''} ${shipment.lastName || ''}`.trim(),            
             pickers: pickersInfo.pickers,
@@ -626,6 +627,7 @@ const actions: ActionTree<OrderState , RootState> ={
           
           return {
             ...shipment,
+            items: removeKitComponents(shipment.items),
             customerId: shipment.partyId,
             customerName: `${shipment.firstName || ''} ${shipment.lastName || ''}`.trim(),            
             pickers: pickersInfo.pickers,
@@ -810,8 +812,8 @@ const actions: ActionTree<OrderState , RootState> ={
     const orders = JSON.parse(JSON.stringify(state.open.list));
 
     const orderIndex = orders.findIndex((order: any) => {
-      return order.orderId === payload.order.orderId && order.parts.some((part: any) => {
-        return part.orderPartSeqId === payload.part.orderPartSeqId;
+      return order.orderId === payload.order.orderId && order.shipGroups.some((shipGroup: any) => {
+        return shipGroup.shipGroupSeqId === payload.shipGroup.shipGroupSeqId;
       });
     });
 

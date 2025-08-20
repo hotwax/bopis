@@ -32,7 +32,7 @@
       <div v-if="segmentSelected === 'open'">
 
         <div v-for="(order, index) in getOrdersByPart(orders)" :key="index" v-show="order.shipGroups.length > 0">
-          <ion-card data-testid="order-card" button @click.prevent="viewOrder(order, order.shipGroupSeqId, 'open')">
+          <ion-card data-testid="order-card" button @click.prevent="viewOrder(order, order.shipGroup.shipGroupSeqId, 'open')">
             <ion-item lines="none">
               <ion-label class="ion-text-wrap">
                 <h1>{{ order.customerName }}</h1>
@@ -246,7 +246,9 @@ export default defineComponent({
       assignPickerModal.onDidDismiss().then(async(result: any) => {
         if(result.data?.selectedPicker) {
           await this.createPicklist(order, result.data.selectedPicker);
-          await this.store.dispatch('order/packShipGroupItems', { order, shipGroup })
+          const updatedOrder  = this.orders.find((ord: any) => ord.orderId === order.orderId);
+          const updatedShipGroup = updatedOrder.shipGroups.find((sg: any) => sg.shipGroupSeqId === shipGroup.shipGroupSeqId);
+          await this.store.dispatch('order/packShipGroupItems', { order: updatedOrder, shipGroup: updatedShipGroup })
         }
       })
 
@@ -550,9 +552,11 @@ export default defineComponent({
             }
             return shipGroup;
           });
-          
+          order.shipGroup = { ...order.shipGroup, picklistId: resp.data.picklistId, shipmentId: resp.data.shipmentIds?.[0] };
+
           orders[orderIndex] = {
             ...orders[orderIndex],
+            shipGroup: order.shipGroup,
             shipGroups: orderShipGroups
           };
 
