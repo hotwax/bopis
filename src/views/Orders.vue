@@ -361,11 +361,14 @@ export default defineComponent({
             role: 'cancel'
           },{
             text: header,
-            handler: () => {
+            handler: async () => {
               if(!pickup) {
                 this.packShippingOrders(order, shipGroup);
               } else {
-                this.store.dispatch('order/packShipGroupItems', { order, shipGroup })
+                if (!shipGroup.shipmentId) {
+                  await this.printPicklist(order, shipGroup)
+                }
+                await this.store.dispatch('order/packShipGroupItems', { order, shipGroup })
               }
             }
           }]
