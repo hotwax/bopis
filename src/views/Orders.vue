@@ -365,10 +365,12 @@ export default defineComponent({
               if(!pickup) {
                 this.packShippingOrders(order, shipGroup);
               } else {
+                let orderIndex;
                 if (!shipGroup.shipmentId) {
                   await this.printPicklist(order, shipGroup)
+                  orderIndex = this.orders.findIndex((o: any) => o.orderId === order.orderId);
                 }
-                await this.store.dispatch('order/packShipGroupItems', { order, shipGroup })
+                await this.store.dispatch('order/packShipGroupItems', { order: orderIndex >= 0 ? this.orders[orderIndex] : order, shipGroup: orderIndex >= 0 ? this.orders[orderIndex].shipGroup : shipGroup })
               }
             }
           }]
