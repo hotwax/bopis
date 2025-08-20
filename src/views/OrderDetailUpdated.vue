@@ -573,6 +573,7 @@ export default defineComponent({
           itemsToReject.push({
             orderItemSeqId: item.orderItemSeqId,
             quantity: parseInt(item.quantity),
+            maySplit: 'Y',
             updateQOH: false, // Could be true if QOH needs to be updated on rejection
             rejectionReasonId: item.rejectReason || this.rejectEntireOrderReasonId,
             kitComponents: isKit(item) ? item.rejectedComponents || [] : []

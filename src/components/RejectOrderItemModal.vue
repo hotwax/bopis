@@ -164,10 +164,13 @@ export default defineComponent({
           {
             text: translate('Reject'),
             handler: async () => {
-              const updatedItems = (this.orderProps?.shipGroup?.items ?? []).map((item: any) => ({
-                ...item,
-                reason: item.rejectReasonId
-              }));
+              const updatedItems = (this.orderProps?.shipGroup?.items ?? [])
+                .filter((item: any) => item.rejectReasonId)
+                .map((item: any) => ({
+                  ...item,
+                  maySplit: 'Y',
+                  reason: item.rejectReasonId
+                }));
               const shipGroup = { ...this.orderProps?.shipGroup, items: updatedItems };
               const resp = await this.store.dispatch('order/rejectItems', {
                 orderId: this.orderProps?.orderId,
