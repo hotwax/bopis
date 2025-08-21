@@ -179,17 +179,15 @@ const actions: ActionTree<OrderState , RootState> ={
     }
   },
 
-  async fetchPickersInformation({ commit }, orderIds: any) {
+  async fetchPickersInformation({ commit }, { shipmentIds, shipmentStatusId }) {
     const payload = {
-      primaryOrderId: orderIds.join(','),
-      primaryOrderId_op: 'in',
+      shipmentId: shipmentIds.join(','),
+      shipmentId_op: 'in',
       shipmentMethodTypeId: 'STOREPICKUP',
       originalFacilityId: getCurrentFacilityId(),
-      statusId: 'SHIPMENT_INPUT',
-      statusId_op: 'equals',
-      statusId_not: 'Y',
+      statusId: shipmentStatusId,
       pageIndex: 0,
-      pageSize: orderIds.length
+      pageSize: shipmentIds.length
     }
     try {
       const resp = await OrderService.fetchPicklists(payload);
@@ -440,14 +438,19 @@ const actions: ActionTree<OrderState , RootState> ={
       );
       await this.dispatch('product/fetchProducts', { productIds });
 
-      // Add showKitComponents to each item in shipGroups
-      const shipGroups = data.shipGroups.map((group: any) => ({
-        ...group,
-        items: removeKitComponents(group.items).map((item: any) => ({
-          ...item,
-          showKitComponents: false
-        }))
-      }));
+      // Add showKitComponents to each item in shipGroups and remove cancelled items
+      const shipGroups = data.shipGroups.map((group: any) => {
+        const validItems = group.items.filter(
+          (item: any) => item.itemStatusId !== 'ITEM_CANCELLED'
+        );
+        return {
+          ...group,
+          items: removeKitComponents(validItems).map((item: any) => ({
+            ...item,
+            showKitComponents: false
+          }))
+        };
+      });
 
       const order = {
         ...data,
@@ -484,7 +487,7 @@ const actions: ActionTree<OrderState , RootState> ={
         order.picklistId = currentShipGroup.picklistId || null;
         order.isPicked = !!currentShipGroup.picklistId;
         order.pickerIds = currentShipGroup.pickerId ? [currentShipGroup.pickerId] : [];
-        order.pickers = currentShipGroup.pickerFirstName ? `${currentShipGroup.pickerFirstName} ${currentShipGroup.pickerLastName}` : "";
+        order.pickers = currentShipGroup.pickerGroupName ? currentShipGroup.pickerGroupName : currentShipGroup.pickerFirstName ? `${currentShipGroup.pickerFirstName} ${currentShipGroup.pickerLastName}` : '';
         order.shipGroupSeqId = currentShipGroup.shipGroupSeqId;
       }
 
@@ -553,9 +556,10 @@ const actions: ActionTree<OrderState , RootState> ={
       if (!hasError(resp) && resp.data.shipments) {
         const shipments = resp.data.shipments;
         const productIds = [] as any;
-        const orderIds = shipments.map((shipment: any) => shipment.orderId);
+        const shipmentIds = shipments.map((shipment: any) => shipment.shipmentId);
 
-        const pickers = await dispatch("fetchPickersInformation", orderIds);
+        const pickers = await dispatch("fetchPickersInformation", { shipmentIds, shipmentStatusId: 'SHIPMENT_PACKED' });
+
 
         // Prepare orders from shipment response
         let orders = shipments.map((shipment: any) => {
@@ -614,10 +618,10 @@ const actions: ActionTree<OrderState , RootState> ={
       if (!hasError(resp) && resp.data.shipments) {
         const shipments = resp.data.shipments;
         const productIds = [] as any;
-        const orderIds = shipments.map((shipment: any) => shipment.orderId);
+        const shipmentIds = shipments.map((shipment: any) => shipment.shipmentId);
 
         // Fetch pickers info
-        const pickers = await dispatch("fetchPickersInformation", orderIds);
+        const pickers = await dispatch("fetchPickersInformation", { shipmentIds, shipmentStatusId: 'SHIPMENT_SHIPPED' });
 
         // Map each shipment into the desired structure
         let orders = shipments.map((shipment: any) => {
@@ -829,7 +833,7 @@ const actions: ActionTree<OrderState , RootState> ={
     return await dispatch("rejectOrderItems", payload).then((resp) => {
       const refreshPickupOrders = resp.find((response: any) => response.data);
       if (refreshPickupOrders) {
-        showToast(translate('All items were rejected from the order') + ' ' + payload.orderId);
+        showToast(translate(payload.isEntireOrderRejected ? 'All items were rejected from the order' : 'Some items were rejected from the order') + ' ' + (payload.orderName ? payload.orderName : payload.orderId));
       } else {
         showToast(translate('Something went wrong'));
       }
