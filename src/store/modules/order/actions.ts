@@ -835,11 +835,7 @@ const actions: ActionTree<OrderState , RootState> ={
     return await dispatch("rejectOrderItems", payload).then((resp) => {
       const refreshPickupOrders = resp.find((response: any) => response.data);
       if (refreshPickupOrders) {
-        if (payload.isEntireOrderRejected) {
-          showToast(translate('All items were rejected from the order') + ' ' + (payload.orderName ? payload.orderName : payload.orderId));
-        } else {
-          showToast(translate('Some items were rejected from the order') + ' ' + (payload.orderName ? payload.orderName : payload.orderId));
-        }
+        showToast(translate(payload.isEntireOrderRejected ? 'All items were rejected from the order' : 'Some items were rejected from the order') + ' ' + (payload.orderName ? payload.orderName : payload.orderId));
       } else {
         showToast(translate('Something went wrong'));
       }
