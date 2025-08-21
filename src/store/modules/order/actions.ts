@@ -487,7 +487,7 @@ const actions: ActionTree<OrderState , RootState> ={
         order.picklistId = currentShipGroup.picklistId || null;
         order.isPicked = !!currentShipGroup.picklistId;
         order.pickerIds = currentShipGroup.pickerId ? [currentShipGroup.pickerId] : [];
-        order.pickers = currentShipGroup.pickerFirstName ? `${currentShipGroup.pickerFirstName} ${currentShipGroup.pickerLastName}` : currentShipGroup.pickerGroupName ? currentShipGroup.pickerGroupName : '';
+        order.pickers = currentShipGroup.pickerGroupName ? currentShipGroup.pickerGroupName : currentShipGroup.pickerFirstName ? `${currentShipGroup.pickerFirstName} ${currentShipGroup.pickerLastName}` : '';
         order.shipGroupSeqId = currentShipGroup.shipGroupSeqId;
       }
 
@@ -559,7 +559,6 @@ const actions: ActionTree<OrderState , RootState> ={
         const shipmentIds = shipments.map((shipment: any) => shipment.shipmentId);
 
         const pickers = await dispatch("fetchPickersInformation", { shipmentIds, shipmentStatusId: 'SHIPMENT_PACKED' });
-        console.log("Pickers: ", pickers);
 
 
         // Prepare orders from shipment response
@@ -623,7 +622,6 @@ const actions: ActionTree<OrderState , RootState> ={
 
         // Fetch pickers info
         const pickers = await dispatch("fetchPickersInformation", { shipmentIds, shipmentStatusId: 'SHIPMENT_SHIPPED' });
-        console.log("Pickers: ", pickers);
 
         // Map each shipment into the desired structure
         let orders = shipments.map((shipment: any) => {

@@ -211,7 +211,7 @@
                 </ion-item>
                 <ion-item>
                   <ion-icon :icon="callOutline" slot="start" />
-                  <ion-label>{{ order.billingPhone?.contactNumber || "-" }}</ion-label>
+                  <ion-label>{{ ("+" + order.billingPhone?.countryCode + "-" + order.billingPhone?.areaCode + "-" + order.billingPhone?.contactNumber) || "-" }}</ion-label>
                 </ion-item>
                 <ion-item lines="none">
                   <ion-icon :icon="cashOutline" slot="start" />
