@@ -34,7 +34,23 @@
         <h1>{{ translate('OMS') }}</h1>
       </div>
       <section>
-        <DxpOmsInstanceNavigator />
+        <ion-card>
+          <ion-card-header>
+            <ion-card-subtitle>
+              {{ translate("OMS instance") }}
+            </ion-card-subtitle>
+            <ion-card-title>
+              {{ oms }}
+            </ion-card-title>
+          </ion-card-header>
+          <ion-card-content>
+            {{ translate("This is the name of the OMS you are connected to right now. Make sure that you are connected to the right instance before proceeding.") }}
+          </ion-card-content>
+          <ion-button :disabled="!omsRedirectionUrl || !omsToken" @click="goToOms(omsToken, omsRedirectionUrl)" fill="clear">
+            {{ translate("Go to OMS") }}
+            <ion-icon slot="end" :icon="openOutline" />
+          </ion-button>
+        </ion-card>
         <DxpFacilitySwitcher @updateFacility="updateFacility" />
         <ion-card>
           <ion-card-header>
@@ -210,7 +226,7 @@ import { DateTime } from 'luxon';
 import { UserService } from '@/services/UserService'
 import { showToast } from '@/utils';
 import { hasError, removeClientRegistrationToken, subscribeTopic, unsubscribeTopic } from '@/adapter'
-import { initialiseFirebaseApp, translate, useUserStore } from "@hotwax/dxp-components";
+import { goToOms, initialiseFirebaseApp, translate, useUserStore } from "@hotwax/dxp-components";
 import { Actions, hasPermission } from '@/authorization'
 import { addNotification, generateTopicName, isFcmConfigured, storeClientRegistrationToken } from "@/utils/firebase";
 import emitter from "@/event-bus"
@@ -266,7 +282,10 @@ export default defineComponent({
       firebaseDeviceId: 'user/getFirebaseDeviceId',
       notificationPrefs: 'user/getNotificationPrefs',
       allNotificationPrefs: 'user/getAllNotificationPrefs',
-      getBopisProductStoreSettings: "user/getBopisProductStoreSettings"
+      getBopisProductStoreSettings: "user/getBopisProductStoreSettings",
+      oms: "user/getInstanceUrl",
+      omsRedirectionUrl: "user/getOmsBaseUrl",
+      omsToken: "user/getUserToken"
     })
   },
   mounted() {
@@ -548,6 +567,7 @@ export default defineComponent({
       Actions,
       currentFacility,
       ellipsisVertical,
+      goToOms,
       hasPermission,
       personCircleOutline,
       router,
