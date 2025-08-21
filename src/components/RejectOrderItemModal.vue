@@ -93,6 +93,7 @@ export default defineComponent({
     orderProps: {
       type: Object as () => {
         orderId: string;
+        orderName: string;
         shipGroup?: {
           shipGroupSeqId: string;
           items?: any[];
@@ -174,7 +175,9 @@ export default defineComponent({
               const shipGroup = { ...this.orderProps?.shipGroup, items: updatedItems };
               const resp = await this.store.dispatch('order/rejectItems', {
                 orderId: this.orderProps?.orderId,
-                shipGroup
+                orderName: this.orderProps?.orderName,
+                shipGroup,
+                isEntireOrderRejected: (this.orderProps?.shipGroup?.items?.length === updatedItems.length)
               });
               if (resp) {
                 await this.store.dispatch("order/getOpenOrders", { viewSize: process.env.VUE_APP_VIEW_SIZE, viewIndex: 0, queryString: '', facilityId: getCurrentFacilityId() });
