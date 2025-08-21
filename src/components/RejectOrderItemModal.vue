@@ -1,5 +1,5 @@
 <template>
-  <ion-header>
+  <ion-header data-testid="reject-order-modal-header">
     <ion-toolbar>
       <ion-buttons slot="start">
         <ion-button @click="closeModal">
@@ -32,13 +32,13 @@
           <ion-badge color="dark" v-if="isKit(item)">{{ translate("Kit") }}</ion-badge>
         </ion-label>
 
-        <ion-select slot="end" placeholder="Reason" interface="popover" v-model="item.rejectReasonId" @ionChange="onReasonChange($event, item)">
-          <ion-select-option v-for="reason in rejectReasons" :key="reason.enumId" :value="reason.enumId">{{ reason.description }}</ion-select-option>
+        <ion-select data-testid="rejection-reason-modal-button" slot="end" placeholder="Reason" interface="popover" v-model="item.rejectReasonId" @ionChange="onReasonChange($event, item)">
+          <ion-select-option data-testid="select-rejection-reason-option" v-for="reason in rejectReasons" :key="reason.enumId" :value="reason.enumId">{{ reason.description }}</ion-select-option>
         </ion-select>
       </ion-item>
     </div>
     <ion-fab vertical="bottom" horizontal="end" slot="fixed">
-      <ion-fab-button color="danger" :disabled="!canConfirm" @click="confirmSave">
+      <ion-fab-button data-testid="reject-modal-button" color="danger" :disabled="!canConfirm" @click="confirmSave">
         <ion-icon :icon="trashOutline" />
       </ion-fab-button>
     </ion-fab>
