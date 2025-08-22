@@ -1,47 +1,5 @@
 import store from "@/store"
 
-const orderCategoryParameters = {
-  'Open': {
-    'shipmentStatusId': {
-      'value': '*',
-      'OP': 'NOT',
-    },
-    'fulfillmentStatus': {
-      'value': ['Cancelled', 'Rejected'],
-      'OP': 'NOT'
-    },
-    'orderStatusId': {
-      'value': 'ORDER_APPROVED'
-    },
-    'orderTypeId': {
-      'value': 'SALES_ORDER'
-    }
-  },
-  'Packed': {
-    'shipmentStatusId': {
-      'value': 'SHIPMENT_PACKED',
-    },
-    'orderTypeId': {
-      'value': 'SALES_ORDER'
-    },
-    'fulfillmentStatus': {
-      'value': ['Cancelled', 'Rejected'],
-      'OP': 'NOT'
-    },
-  },
-  'Completed': {
-    'orderItemStatusId': {
-      'value': 'ITEM_COMPLETED'
-    },
-    'orderTypeId': {
-      'value': 'SALES_ORDER'
-    },
-    'docType': {
-      'value': 'ORDER'
-    }
-  }
-} as any
-
 const handleParameterMatching = (orderVal: any, parameterVal: any, operation?: string) => {
   // considering params will always be an Array for ORing and ANDing
   if (operation === 'OR') {
@@ -62,32 +20,19 @@ const handleParameterMatching = (orderVal: any, parameterVal: any, operation?: s
   }
 }
 
-const getOrderCategory = (order: any) => {
-
-  if(!store.state.user.bopisProductStoreSettings['SHOW_SHIPPING_ORDERS']) {
-    orderCategoryParameters["Open"]["shipmentMethodTypeId"] = { value: "STOREPICKUP" }
-    orderCategoryParameters["Packed"]["shipmentMethodTypeId"] = { value: "STOREPICKUP" }
-    orderCategoryParameters["Completed"]["shipmentMethodTypeId"] = { value: "STOREPICKUP" }
+const getOrderCategory = (shipGroup: any) => {
+  // Determine category based on shipmentStatusId
+  let category = '';
+  if (shipGroup.shipmentStatusId === 'SHIPMENT_PACKED') {
+    category = 'Packed';
+  } else if (shipGroup.shipmentStatusId === 'SHIPMENT_SHIPPED') {
+    category = 'Completed';
+  } else if (shipGroup.shipmentStatusId === 'SHIPMENT_APPROVED' || (shipGroup.shipmentStatusId === null && shipGroup.parentFacilityTypeId !== 'VIRTUAL_FACILITY')) {
+    category = 'Open';
+  } else if (!shipGroup.shipmentStatusId || shipGroup.shipmentStatusId === 'SHIPMENT_INPUT') {
+    category = '';
   }
-
-  const orderCategoryParameterEntries = Object.entries(orderCategoryParameters)
-  let result = ''
-  // using find, as once any of the category is matched then return from here;
-  orderCategoryParameterEntries.find((entry: any) => {
-    const [category, parameters] = entry
-    const paramKeys = Object.keys(parameters)
-    // used every as to check against each filtering property
-    
-    // Added check for property value *, as we will add * as value when operator NOT is defined and also for * values we do not want to check for property existence directly on order
-    const isMatched = paramKeys.every((key: string) => (parameters[key].value === "*" || Object.prototype.hasOwnProperty.call(order, key)) && handleParameterMatching(order[key], parameters[key].value, parameters[key]['OP']))
-
-    // return the value when all params matched for an order
-    if (isMatched) {
-      result = category;
-      return result;
-    }
-  })
-  return result;
+  return category;
 }
 
 const isKit = (item: any) => {

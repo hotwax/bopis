@@ -444,20 +444,9 @@ const actions: ActionTree<OrderState , RootState> ={
           (item: any) => item.itemStatusId !== 'ITEM_CANCELLED'
         ) : group.items;
 
-        // Determine category based on shipmentStatusId
-        let category = '';
-        if (group.shipmentStatusId === 'SHIPMENT_PACKED') {
-          category = 'Packed';
-        } else if (group.shipmentStatusId === 'SHIPMENT_SHIPPED') {
-          category = 'Completed';
-        } else if (group.shipmentStatusId === 'SHIPMENT_APPROVED' || (group.shipmentStatusId === null && group.parentFacilityTypeId !== 'VIRTUAL_FACILITY')) {
-          category = 'Open';
-        } else if (!group.shipmentStatusId || group.shipmentStatusId === 'SHIPMENT_INPUT') {
-          category = '';
-        }
         return {
           ...group,
-          category,
+          category: getOrderCategory(group),
           items: removeKitComponents(validItems).map((item: any) => ({
             ...item,
             showKitComponents: false

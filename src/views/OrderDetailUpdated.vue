@@ -211,13 +211,7 @@
                 </ion-item>
                 <ion-item>
                   <ion-icon :icon="callOutline" slot="start" />
-                  <ion-label>
-                      {{
-                        order.billingPhone?.countryCode && order.billingPhone?.areaCode && order.billingPhone?.contactNumber
-                          ? "+" + order.billingPhone.countryCode + "-" + order.billingPhone.areaCode + "-" + order.billingPhone.contactNumber
-                          : "-"
-                      }}
-                  </ion-label>
+                  <ion-label>{{ formatPhoneNumber(order.billingPhone?.countryCode, order.billingPhone?.areaCode, order.billingPhone?.contactNumber) || '-' }}</ion-label>
                 </ion-item>
                 <ion-item lines="none">
                   <ion-icon :icon="cashOutline" slot="start" />
@@ -404,7 +398,7 @@ import { Actions, hasPermission } from '@/authorization'
 import OrderItemRejHistoryModal from '@/components/OrderItemRejHistoryModal.vue';
 import AssignPickerModal from "@/views/AssignPickerModal.vue";
 import EditPickerModal from "@/components/EditPickerModal.vue";
-import { copyToClipboard, formatCurrency, getColorByDesc, getCurrentFacilityId, getFeature, showToast } from '@/utils'
+import { copyToClipboard, formatCurrency, formatPhoneNumber, getColorByDesc, getCurrentFacilityId, getFeature, showToast } from '@/utils'
 import { DateTime } from "luxon";
 import { api, hasError } from '@/adapter';
 import { OrderService } from "@/services/OrderService";
@@ -1319,6 +1313,7 @@ export default defineComponent({
       currentFacility,
       downloadOutline,
       formatCurrency,
+      formatPhoneNumber,
       getColorByDesc,
       getOrderStatus,
       getProductIdentificationValue,
