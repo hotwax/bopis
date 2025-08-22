@@ -27,7 +27,7 @@ const getOrderCategory = (shipGroup: any) => {
     category = 'Packed';
   } else if (shipGroup.shipmentStatusId === 'SHIPMENT_SHIPPED') {
     category = 'Completed';
-  } else if (shipGroup.shipmentStatusId === 'SHIPMENT_APPROVED' || (shipGroup.shipmentStatusId === null && shipGroup.parentFacilityTypeId !== 'VIRTUAL_FACILITY')) {
+  } else if (shipGroup.shipmentStatusId === 'SHIPMENT_APPROVED' || (!shipGroup.shipmentStatusId && shipGroup.parentFacilityTypeId !== 'VIRTUAL_FACILITY')) {
     category = 'Open';
   } else if (!shipGroup.shipmentStatusId || shipGroup.shipmentStatusId === 'SHIPMENT_INPUT') {
     category = '';
