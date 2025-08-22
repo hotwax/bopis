@@ -211,7 +211,13 @@
                 </ion-item>
                 <ion-item>
                   <ion-icon :icon="callOutline" slot="start" />
-                  <ion-label>{{ ("+" + order.billingPhone?.countryCode + "-" + order.billingPhone?.areaCode + "-" + order.billingPhone?.contactNumber) || "-" }}</ion-label>
+                  <ion-label>
+                      {{
+                        order.billingPhone?.countryCode && order.billingPhone?.areaCode && order.billingPhone?.contactNumber
+                          ? "+" + order.billingPhone.countryCode + "-" + order.billingPhone.areaCode + "-" + order.billingPhone.contactNumber
+                          : "-"
+                      }}
+                  </ion-label>
                 </ion-item>
                 <ion-item lines="none">
                   <ion-icon :icon="cashOutline" slot="start" />
@@ -263,7 +269,7 @@
               <ion-card v-if="shipGroup.shipGroupSeqId !== order.shipGroup.shipGroupSeqId">
                 <ion-card-header>
                   <div>
-                    <ion-card-subtitle class="overline">{{ getfacilityTypeDesc(shipGroup.facilityTypeId) }}</ion-card-subtitle>
+                    <ion-card-subtitle class="overline">{{ shipGroup.facilityTypeDescription }}</ion-card-subtitle>
                     <ion-card-title>{{ shipGroup.facilityName }}</ion-card-title>
                     {{ shipGroup.shipGroupSeqId }}
                   </div>
