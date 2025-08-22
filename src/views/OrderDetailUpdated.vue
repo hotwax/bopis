@@ -71,7 +71,7 @@
 
           <ion-card>
             <div v-for="(item, index) in order.shipGroup?.items" :key="index" class="order-item">
-              <ion-item data-testid="detail-page-ion-items" class="product-info" lines="none">
+              <ion-item data-testid="detail-page-item" class="product-info" lines="none">
                 <ion-thumbnail slot="start">
                   <DxpShopifyImg :src="getProduct(item.productId).mainImageUrl" size="small" />
                 </ion-thumbnail>
