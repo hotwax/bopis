@@ -440,11 +440,13 @@ const actions: ActionTree<OrderState , RootState> ={
 
       // Add showKitComponents to each item in shipGroups and remove cancelled items
       const shipGroups = data.shipGroups.map((group: any) => {
-        const validItems = group.items.filter(
+        const validItems = group.shipmentMethodTypeId === 'STOREPICKUP' ? group.items.filter(
           (item: any) => item.itemStatusId !== 'ITEM_CANCELLED'
-        );
+        ) : group.items;
+
         return {
           ...group,
+          category: getOrderCategory(group),
           items: removeKitComponents(validItems).map((item: any) => ({
             ...item,
             showKitComponents: false
