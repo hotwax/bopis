@@ -120,7 +120,7 @@
 
       <section>
         <DxpProductIdentifier />
-        <DxpTimeZoneSwitcher @timeZoneUpdated="timeZoneUpdated" />
+        <TimeZoneSwitcher @timeZoneUpdated="timeZoneUpdated" />
         <DxpLanguageSwitcher />
 
         <ion-card>
@@ -232,6 +232,7 @@ import { addNotification, generateTopicName, isFcmConfigured, storeClientRegistr
 import emitter from "@/event-bus"
 import logger from '@/logger';
 import EditShipmentMethodModal from '@/components/EditShipmentMethodModal.vue';
+import TimeZoneSwitcher from "@/components/TimeZoneSwitcher.vue"
 
 export default defineComponent({
   name: 'Settings',
@@ -253,7 +254,8 @@ export default defineComponent({
     IonTitle,
     IonToggle, 
     IonToolbar,
-    Image
+    Image,
+    TimeZoneSwitcher
   },
   data(){
     return {

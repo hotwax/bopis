@@ -118,4 +118,9 @@ const hasWebcamAccess = async () => {
   }
 }
 
-export { copyToClipboard, showToast, handleDateTimeInput, hasWebcamAccess, getFeature, formatPhoneNumber, getCurrentFacilityId, getColorByDesc, formatCurrency }
+// TimeZone format = 04:16 PM EDT
+const getCurrentTime = (zone: string, format = 't ZZZZ') => {
+  return DateTime.now().setZone(zone).toFormat(format)
+}
+
+export { copyToClipboard, getCurrentTime, showToast, handleDateTimeInput, hasWebcamAccess, getFeature, formatPhoneNumber, getCurrentFacilityId, getColorByDesc, formatCurrency }
