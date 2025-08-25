@@ -123,4 +123,8 @@ const getCurrentTime = (zone: string, format = 't ZZZZ') => {
   return DateTime.now().setZone(zone).toFormat(format)
 }
 
-export { copyToClipboard, getCurrentTime, showToast, handleDateTimeInput, hasWebcamAccess, getFeature, formatPhoneNumber, getCurrentFacilityId, getColorByDesc, formatCurrency }
+const getPickerName = (pickerGroupName: string, pickerFirstName: string, pickerLastName: string) => {
+  return pickerGroupName ? pickerGroupName : pickerFirstName ? `${pickerFirstName} ${pickerLastName ? pickerLastName : ''}`.trim() : '';
+}
+
+export { copyToClipboard, getCurrentTime, showToast, handleDateTimeInput, hasWebcamAccess, getFeature, formatPhoneNumber, getCurrentFacilityId, getColorByDesc, formatCurrency, getPickerName }

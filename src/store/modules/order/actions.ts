@@ -3,7 +3,7 @@ import { ActionTree } from 'vuex'
 import RootState from '@/store/RootState'
 import OrderState from './OrderState'
 import * as types from './mutation-types'
-import { showToast, getCurrentFacilityId } from "@/utils";
+import { showToast, getCurrentFacilityId, getPickerName } from "@/utils";
 import { isKit, removeKitComponents } from '@/utils/order'
 import { hasError } from '@/adapter'
 import { translate } from "@hotwax/dxp-components";
@@ -489,7 +489,7 @@ const actions: ActionTree<OrderState , RootState> ={
         order.picklistId = currentShipGroup.picklistId || null;
         order.isPicked = !!currentShipGroup.picklistId;
         order.pickerIds = currentShipGroup.pickerId ? [currentShipGroup.pickerId] : [];
-        order.pickers = currentShipGroup.pickerGroupName ? currentShipGroup.pickerGroupName : currentShipGroup.pickerFirstName ? `${currentShipGroup.pickerFirstName} ${currentShipGroup.pickerLastName ? currentShipGroup.pickerLastName : ''}` : '';
+        order.pickers = getPickerName(currentShipGroup.pickerGroupName, currentShipGroup.pickerFirstName, currentShipGroup.pickerLastName);
         order.shipGroupSeqId = currentShipGroup.shipGroupSeqId;
       }
 

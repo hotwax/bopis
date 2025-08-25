@@ -103,14 +103,14 @@
                       <ion-label>{{ getRejectionReasonDescription(item.rejectReason) }}</ion-label>
                       <ion-icon :icon="caretDownOutline"/>
                     </ion-chip>
-                    <ion-chip v-else-if="isEntireOrderRejectionEnabled(order)" outline color="danger" @click.stop="openRejectReasonPopover($event, item, order)">             
+                    <ion-chip v-else-if="isEntireOrderRejectionEnabled(order)" outline color="danger" @click.stop="openRejectReasonPopover($event, item, order)">
                       <ion-label>{{ getRejectionReasonDescription(rejectEntireOrderReasonId) ? getRejectionReasonDescription(rejectEntireOrderReasonId) : translate("Reject to avoid order split (no variance)") }}</ion-label>
                       <ion-icon :icon="caretDownOutline"/>
                     </ion-chip>
                     <ion-button data-testid="select-rejected-item-button" v-else slot="end" color="danger" fill="clear" size="small" @click.stop="openRejectReasonPopover($event, item, order)">
                       <ion-icon slot="icon-only" :icon="trashOutline"/>
                     </ion-button>
-                  </template>                  
+                  </template>
 
                   <!-- Fetch Stock -->
                   <ion-spinner v-if="item.isFetchingStock" color="medium" name="crescent" />
