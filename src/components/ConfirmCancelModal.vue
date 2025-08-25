@@ -22,7 +22,7 @@
           <p class="ion-text-wrap">{{ getCancelReasonDescription(item.cancelReason) }}</p>
           <ion-badge color="dark" v-if="isKit(item)">{{ translate("Kit") }}</ion-badge>
         </ion-label>
-        <ion-note slot="end">{{ getProduct(item.productId).LIST_PRICE_PURCHASE_USD_STORE_GROUP_price ? formatCurrency(getProduct(item.productId).LIST_PRICE_PURCHASE_USD_STORE_GROUP_price, order.currencyUom) : "" }}</ion-note>
+        <ion-note slot="end">{{ item.unitPrice ? formatCurrency(item.unitPrice, order.currencyUom) : "" }}</ion-note>
       </ion-item>
 
       <ion-item lines="full">

@@ -652,7 +652,8 @@ const fetchGiftCardActivationDetails = async ({ isDetailsPage, currentOrders }: 
   try {
     const resp = await UtilService.fetchGiftCardFulfillmentInfo({
           orderId: orderIds,
-          orderId_op: "in"
+          orderId_op: "in",
+          pageSize: 250 // The default pageSize < 10 and can cause issues with large gitCardFulfillment records, Hence setting to 250
       })
 
     if(!hasError(resp)) {
