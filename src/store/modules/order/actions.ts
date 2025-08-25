@@ -208,7 +208,7 @@ const actions: ActionTree<OrderState , RootState> ={
             ? allRoles
                 .map((role: any) => {
                   if (role?.person) {
-                    return `${role.person.firstName} ${role.person.lastName}`;
+                    return `${role.person.firstName} ${role.person.lastName ? role.person.lastName : ''}`;
                   } else if (role?.partyGroup) {
                     return role.partyGroup.groupName;
                   }
@@ -489,7 +489,7 @@ const actions: ActionTree<OrderState , RootState> ={
         order.picklistId = currentShipGroup.picklistId || null;
         order.isPicked = !!currentShipGroup.picklistId;
         order.pickerIds = currentShipGroup.pickerId ? [currentShipGroup.pickerId] : [];
-        order.pickers = currentShipGroup.pickerGroupName ? currentShipGroup.pickerGroupName : currentShipGroup.pickerFirstName ? `${currentShipGroup.pickerFirstName} ${currentShipGroup.pickerLastName}` : '';
+        order.pickers = currentShipGroup.pickerGroupName ? currentShipGroup.pickerGroupName : currentShipGroup.pickerFirstName ? `${currentShipGroup.pickerFirstName} ${currentShipGroup.pickerLastName ? currentShipGroup.pickerLastName : ''}` : '';
         order.shipGroupSeqId = currentShipGroup.shipGroupSeqId;
       }
 
