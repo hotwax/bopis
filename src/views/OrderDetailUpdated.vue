@@ -1293,7 +1293,8 @@ export default defineComponent({
     if(this.orderType === "open" || this.orderType === "packed") {
       this.fetchJobs();
       this.hasCancelledItems = this.order.shipGroup?.items.some((item: any) => item.cancelReason);
-    } else if(this.orderType === "open") {
+    }
+    if(this.orderType === "open") {
       this.hasRejectedItems = this.order.shipGroup?.items.some((item: any) => item.rejectReason);
     }
 
