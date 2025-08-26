@@ -565,19 +565,24 @@ const actions: ActionTree<OrderState , RootState> ={
 
         // Prepare orders from shipment response
         let orders = shipments.map((shipment: any) => {
-          productIds.push(...shipment.items.map((item: any) => item.productId));
+          // Filter out cancelled items
+          const validItems = shipment.items.filter((item: any) => item.orderItemStatusId !== 'ITEM_CANCELLED');
+          // Skip this shipment if no valid items are left
+          if (validItems.length === 0) return null;
+
+          productIds.push(...validItems.map((item: any) => item.productId));
 
           const pickersInfo = pickers[shipment.orderId] || { pickers: "", pickerIds: [] };
 
           return {
             ...shipment,
-            items: removeKitComponents(shipment.items),
+            items: removeKitComponents(validItems),
             customerId: shipment.partyId,
-            customerName: `${shipment.firstName || ''} ${shipment.lastName || ''}`.trim(),            
+            customerName: `${shipment.firstName || ''} ${shipment.lastName || ''}`.trim(),
             pickers: pickersInfo.pickers,
             pickerIds: pickersInfo.pickerIds
           };
-        });
+        }).filter((order: any) => order !== null); // Remove shipments with no items i.e. the case where all the items within the shipment are cancelled
 
         await this.dispatch('product/fetchProducts', { productIds });
 
@@ -627,19 +632,24 @@ const actions: ActionTree<OrderState , RootState> ={
 
         // Map each shipment into the desired structure
         let orders = shipments.map((shipment: any) => {
-          productIds.push(...shipment.items.map((item: any) => item.productId));
+          // Filter out cancelled items
+          const validItems = shipment.items.filter((item: any) => item.orderItemStatusId !== 'ITEM_CANCELLED');
+          // Skip this shipment if no valid items are left
+          if (validItems.length === 0) return null;
+
+          productIds.push(...validItems.map((item: any) => item.productId));
 
           const pickersInfo = pickers[shipment.orderId] || { pickers: "", pickerIds: [] };
-          
+
           return {
             ...shipment,
-            items: removeKitComponents(shipment.items),
+            items: removeKitComponents(validItems),
             customerId: shipment.partyId,
-            customerName: `${shipment.firstName || ''} ${shipment.lastName || ''}`.trim(),            
+            customerName: `${shipment.firstName || ''} ${shipment.lastName || ''}`.trim(),
             pickers: pickersInfo.pickers,
             pickerIds: pickersInfo.pickerIds
           };
-        });
+        }).filter((order: any) => order !== null); // Remove shipments with no items i.e. the case where all the items within the shipment are cancelled
 
         await this.dispatch('product/fetchProducts', { productIds });
 
