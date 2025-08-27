@@ -335,7 +335,7 @@ export default defineComponent({
       // clear facility lat lon and stores information state when facility changes
       this.store.dispatch("util/clearCurrentFacilityLatLon", {})
       this.store.dispatch("util/clearStoresInformation", {})
-      this.store.dispatch("util/clearDeviceIdFromState", {})
+      this.store.dispatch("util/clearDeviceId", {})
 
       this.store.dispatch('user/logout', { isUserUnauthorised: false }).then((redirectionUrl) => {
         // if not having redirection url then redirect the user to launchpad

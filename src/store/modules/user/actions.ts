@@ -485,7 +485,7 @@ const actions: ActionTree<UserState, RootState> = {
     commit(types.USER_UNREAD_NOTIFICATIONS_STATUS_UPDATED, true)
   },
 
-  clearDeviceIdFromState({ commit }) {
+  clearDeviceId({ commit }) {
     commit(types.USER_FIREBASE_DEVICEID_UPDATED, '')
   },
 
