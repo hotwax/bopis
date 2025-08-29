@@ -83,14 +83,14 @@
 
                 <div class="product-metadata" slot="end">
                   <!-- Cancellation flow -->
-                  <template v-if="((orderType === 'open' && hasPermission(Actions.APP_OPEN_CANCEL_BOPIS_ORDER)) || (orderType === 'packed' && hasPermission(Actions.APP_PACKED_CANCEL_BOPIS_ORDER))) && !(order.handovered || order.shipped)">
+                  <template v-if="((orderType === 'open' && hasPermission(Actions.APP_OPEN_CANCEL_BOPIS_ORDER))) && !(order.handovered || order.shipped)">
                     <ion-chip data-testid="change-cancel-reason-chip" v-if="item.cancelReason" outline color="danger" @click.stop="openCancelReasonPopover($event, item, order)">
                       <ion-icon data-testid="void-cancel-reason-icon" :icon="closeCircleOutline" @click.stop="removeCancellationReason($event, item, order)"/>
                       <ion-label>{{ getCancelReasonDescription(item.cancelReason) }}</ion-label>
                       <ion-icon :icon="caretDownOutline"/>
                     </ion-chip>
 
-                    <ion-button data-testid="select-cancel-item-button" v-else slot="end" color="danger" fill="clear" size="small" :disabled="(orderType === 'open' && !hasPermission(Actions.APP_OPEN_CANCEL_BOPIS_ORDER)) || (orderType === 'packed' && !hasPermission(Actions.APP_PACKED_CANCEL_BOPIS_ORDER))" @click.stop="openCancelReasonPopover($event, item, order)">
+                    <ion-button data-testid="select-cancel-item-button" v-else slot="end" color="danger" fill="clear" size="small" :disabled="orderType === 'open' && !hasPermission(Actions.APP_OPEN_CANCEL_BOPIS_ORDER)" @click.stop="openCancelReasonPopover($event, item, order)">
                       {{ translate("Cancel") }}
                     </ion-button>
 
@@ -161,27 +161,6 @@
           </ion-card>
           <p v-if="!order.shipGroup?.items?.length && orderType === 'open'" class="empty-state">{{ translate("All order items are rejected") }}</p>
           <p v-if="!order.shipGroup?.items?.length && orderType === 'packed'" class="empty-state">{{ translate("All order items are cancelled") }}</p>
-
-          <template v-if="orderType === 'packed'">
-            <ion-item lines="none" v-if="isCancelationSyncJobEnabled && isProcessRefundEnabled">
-              <ion-icon slot="start" :icon="checkmarkDoneOutline"/>
-              <ion-label>
-                {{ translate("Cancelation and refund sync to Shopify is enabled.") }}
-              </ion-label>
-            </ion-item>
-            <ion-item lines="none" v-else-if="isCancelationSyncJobEnabled">
-              <ion-icon slot="start" :icon="warningOutline"/>
-              <ion-label>
-                {{ translate("Cancelation sync to Shopify is enabled. Refund processing is disabled.") }}
-              </ion-label>
-            </ion-item>
-            <ion-item lines="none" v-else>
-              <ion-icon slot="start" :icon="closeOutline"/>
-              <ion-label>
-                {{ translate("Cancelation and refund sync to Shopify is not enabled.") }}
-              </ion-label>
-            </ion-item>
-          </template>
 
           <ion-item lines="none" v-if="orderType === 'open' && order.shipGroup?.items?.length">
             <ion-button data-testid="ready-pickup-button" size="default" :disabled="!hasPermission(Actions.APP_ORDER_UPDATE) || order.readyToHandover || order.readyToShip || order.rejected || hasRejectedItems || order.cancelled || hasCancelledItems" @click="readyForPickup(order, order.shipGroup)">

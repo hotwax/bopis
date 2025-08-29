@@ -100,6 +100,10 @@
               <ion-button data-testid="packing-slip-button" v-if="getBopisProductStoreSettings('PRINT_PACKING_SLIPS')" fill="clear" slot="end" @click.stop="printPackingSlip(order)">
                 <ion-icon slot="icon-only" :icon="printOutline" />
               </ion-button>
+              <div></div>
+              <ion-button v-if="order.shipmentMethodTypeId === 'STOREPICKUP'" color="danger" :disabled="!hasPermission(Actions.APP_ORDER_UPDATE)" fill="clear" @click.stop="unpackOrder(order)">
+               {{ translate("Unpack")}}
+              </ion-button>
 
               <ion-button data-testid="resend-email-button" v-if="order.shipmentMethodTypeId === 'STOREPICKUP'" fill="clear" slot="end" @click.stop="sendReadyForPickupEmail(order)">
                 <ion-icon slot="icon-only" :icon="mailOutline" />
@@ -427,6 +431,36 @@ export default defineComponent({
       });
 
       return alert.present();
+    },
+    async unpackOrder(order: any) {
+      const unpackOrderAlert = await alertController
+        .create({
+           header: translate("Unpack"),
+           message: translate("Unpacking this order will send it back to 'Open' and it will have to be repacked."),
+           buttons: [{
+            role: "cancel",
+            text: translate("Cancel"),
+          }, {
+            text: translate("Unpack"),
+            handler: async () => {
+              try {
+                const resp = await OrderService.unpackOrder({shipmentId: order.shipmentId})
+
+                if(resp.status == 200 && !hasError(resp)) {
+                  showToast(translate('Order unpacked successfully'))
+                  // TODO: handle the case of data not updated correctly
+                  this.store.dispatch("order/removePackedOrder", { order })
+                } else {
+                  throw resp.data
+                }
+              } catch(err) {
+                logger.error('Failed to unpack the order', err)
+                showToast(translate('Failed to unpack the order'))
+              }
+            }
+          }]
+        });
+      return unpackOrderAlert.present();
     },
     async packShippingOrders(currentOrder: any, shipGroup: any) {
       try {

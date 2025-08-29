@@ -565,11 +565,17 @@ const actions: ActionTree<OrderState , RootState> ={
 
         // Prepare orders from shipment response
         let orders = shipments.map((shipment: any) => {
+<<<<<<< Updated upstream
           // Filter out cancelled items
           const validItems = shipment.items.filter((item: any) => item.orderItemStatusId !== 'ITEM_CANCELLED');
           // Skip this shipment if no valid items are left
           if (validItems.length === 0) return null;
 
+=======
+          const validItems = shipment.items.filter(
+            (item: any) => item.orderItemStatusId !== 'ITEM_CANCELLED'
+          );
+>>>>>>> Stashed changes
           productIds.push(...validItems.map((item: any) => item.productId));
 
           const pickersInfo = pickers[shipment.orderId] || { pickers: "", pickerIds: [] };
@@ -632,11 +638,17 @@ const actions: ActionTree<OrderState , RootState> ={
 
         // Map each shipment into the desired structure
         let orders = shipments.map((shipment: any) => {
+<<<<<<< Updated upstream
           // Filter out cancelled items
           const validItems = shipment.items.filter((item: any) => item.orderItemStatusId !== 'ITEM_CANCELLED');
           // Skip this shipment if no valid items are left
           if (validItems.length === 0) return null;
 
+=======
+          const validItems = shipment.items.filter(
+            (item: any) => item.orderItemStatusId !== 'ITEM_CANCELLED'
+          );
+>>>>>>> Stashed changes
           productIds.push(...validItems.map((item: any) => item.productId));
 
           const pickersInfo = pickers[shipment.orderId] || { pickers: "", pickerIds: [] };
@@ -836,6 +848,19 @@ const actions: ActionTree<OrderState , RootState> ={
     if (orderIndex > -1) {
       orders.splice(orderIndex, 1);
       commit(types.ORDER_OPEN_UPDATED, { orders, total: state.open.total -1 })
+    }
+  },
+
+    removePackedOrder({ commit, state }, payload) {
+    const orders = JSON.parse(JSON.stringify(state.packed.list));
+
+    const orderIndex = orders.findIndex((order: any) => {
+      return order.orderId === payload.order.orderId && order.shipmentId === payload.order.shipmentId;
+    });
+
+    if (orderIndex > -1) {
+      orders.splice(orderIndex, 1);
+      commit(types.ORDER_PACKED_UPDATED, { orders, total: state.packed.total -1 })
     }
   },
 

@@ -587,6 +587,14 @@ const packOrder = async (payload: any): Promise<any> => {
   });
 }
 
+const unpackOrder = async (payload: any): Promise<any> => {
+  return await api({
+    url: `poorti/shipments/${payload.shipmentId}/unpack`,
+    method: "POST",
+    data: payload,
+  });
+}
+
 const shipOrder = async (payload: any): Promise<any> => {
   return api({
     url: `/poorti/shipments/${payload.shipmentId}/ship`,
@@ -617,6 +625,8 @@ const cancelOrder = async (payload: any): Promise<any> => {
     data: payload
   });
 }
+
+
 
 const updateGiftCardActivationDetails = (item: any, giftCardActivationInfo: any, orderId?: string) => {
   const activationRecord = giftCardActivationInfo.find((activationInfo: any) => {
@@ -685,35 +695,36 @@ const fetchGiftCardActivationDetails = async ({ isDetailsPage, currentOrders }: 
 
 export const OrderService = {
   cancelOrder,
+  createPicklist,
   fetchGiftCardActivationDetails,
+  fetchOrderDetails,
   fetchOrderItems,
   fetchOrderPaymentPreferences,
+  fetchPicklists,
   fetchTrackingCodes,
+  findCompletedShipments,
   findOrderShipGroup,
+  findPackedShipments,
+  getCompletedOrders,
+  getCustomerContactDetails,
   getOpenOrders,
   getOrderDetails,
-  fetchOrderDetails,
-  fetchPicklists,
-  getCompletedOrders,
-  findCompletedShipments,
-  getPackedOrders,
-  findPackedShipments,
   getOrderItemRejectionHistory,
+  getPackedOrders,
+  getShipmentItems,
+  getShipToStoreOrders,
+  getShippingPhoneNumber,
+  packOrder,
+  performFind,
+  printPackingSlip,
+  printPicklist,
+  printShippingLabelAndPackingSlip,
   quickShipEntireShipGroup,
   rejectItem,
   rejectOrderItem,
   rejectOrderItems,
-  updateShipment,
-  createPicklist,
   sendPickupScheduledNotification,
-  getShipToStoreOrders,
-  getShipmentItems,
-  getCustomerContactDetails,
-  getShippingPhoneNumber,
-  packOrder,
   shipOrder,
-  performFind,
-  printPicklist,
-  printPackingSlip,
-  printShippingLabelAndPackingSlip
+  unpackOrder,
+  updateShipment
 }
