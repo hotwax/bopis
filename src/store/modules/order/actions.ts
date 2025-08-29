@@ -838,19 +838,6 @@ const actions: ActionTree<OrderState , RootState> ={
     }
   },
 
-    removePackedOrder({ commit, state }, payload) {
-    const orders = JSON.parse(JSON.stringify(state.packed.list));
-
-    const orderIndex = orders.findIndex((order: any) => {
-      return order.orderId === payload.order.orderId && order.shipmentId === payload.order.shipmentId;
-    });
-
-    if (orderIndex > -1) {
-      orders.splice(orderIndex, 1);
-      commit(types.ORDER_PACKED_UPDATED, { orders, total: state.packed.total -1 })
-    }
-  },
-
   // TODO: handle the unfillable items count
   async rejectItems ({ dispatch }, payload) {
     emitter.emit("presentLoader");

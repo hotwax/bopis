@@ -587,14 +587,6 @@ const packOrder = async (payload: any): Promise<any> => {
   });
 }
 
-const unpackOrder = async (payload: any): Promise<any> => {
-  return await api({
-    url: `poorti/shipments/${payload.shipmentId}/unpack`,
-    method: "POST",
-    data: payload,
-  });
-}
-
 const shipOrder = async (payload: any): Promise<any> => {
   return api({
     url: `/poorti/shipments/${payload.shipmentId}/ship`,
@@ -725,6 +717,5 @@ export const OrderService = {
   rejectOrderItems,
   sendPickupScheduledNotification,
   shipOrder,
-  unpackOrder,
   updateShipment
 }

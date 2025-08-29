@@ -159,6 +159,27 @@
           <p v-if="!order.shipGroup?.items?.length && orderType === 'open'" class="empty-state">{{ translate("All order items are rejected") }}</p>
           <p v-if="!order.shipGroup?.items?.length && orderType === 'packed'" class="empty-state">{{ translate("All order items are cancelled") }}</p>
 
+          <template v-if="orderType === 'packed'">
+            <ion-item lines="none" v-if="isCancelationSyncJobEnabled && isProcessRefundEnabled">
+              <ion-icon slot="start" :icon="checkmarkDoneOutline"/>
+              <ion-label>
+                {{ translate("Cancelation and refund sync to Shopify is enabled.") }}
+              </ion-label>
+            </ion-item>
+            <ion-item lines="none" v-else-if="isCancelationSyncJobEnabled">
+              <ion-icon slot="start" :icon="warningOutline"/>
+              <ion-label>
+                {{ translate("Cancelation sync to Shopify is enabled. Refund processing is disabled.") }}
+              </ion-label>
+            </ion-item>
+            <ion-item lines="none" v-else>
+              <ion-icon slot="start" :icon="closeOutline"/>
+              <ion-label>
+                {{ translate("Cancelation and refund sync to Shopify is not enabled.") }}
+              </ion-label>
+            </ion-item>
+          </template>
+
           <ion-item lines="none" v-if="orderType === 'open' && order.shipGroup?.items?.length">
             <ion-button data-testid="ready-pickup-button" size="default" :disabled="!hasPermission(Actions.APP_ORDER_UPDATE) || order.readyToHandover || order.readyToShip || order.rejected || hasRejectedItems" @click="readyForPickup(order, order.shipGroup)">
               <ion-icon slot="start" :icon="bagCheckOutline"/>
