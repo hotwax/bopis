@@ -577,7 +577,7 @@ const actions: ActionTree<OrderState , RootState> ={
             ...shipment,
             items: removeKitComponents(validItems),
             customerId: shipment.partyId,
-            customerName: `${shipment.firstName || ''} ${shipment.lastName || ''}`.trim(),
+            customerName: `${shipment.firstName || ''} ${shipment.lastName || ''}`.trim(),            
             pickers: pickersInfo.pickers,
             pickerIds: pickersInfo.pickerIds
           };
@@ -644,7 +644,7 @@ const actions: ActionTree<OrderState , RootState> ={
             ...shipment,
             items: removeKitComponents(validItems),
             customerId: shipment.partyId,
-            customerName: `${shipment.firstName || ''} ${shipment.lastName || ''}`.trim(),
+            customerName: `${shipment.firstName || ''} ${shipment.lastName || ''}`.trim(),            
             pickers: pickersInfo.pickers,
             pickerIds: pickersInfo.pickerIds
           };
