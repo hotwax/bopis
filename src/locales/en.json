@@ -10,7 +10,6 @@
   "An email notification will be sent to that their order is ready for pickup. This order will also be moved to the packed orders tab.": "An email notification will be sent to { customerName } that their order is ready for pickup.{ space } This order will also be moved to the packed orders tab.",
   "An email notification will be sent to that their order is ready for pickup.": "An email notification will be sent to { customerName } that their order is ready for pickup.",
   "Approved for fulfillment": "Approved for fulfillment",
-  "Are you sure you want to cancel this order?": "Are you sure you want to cancel this order?",
   "Are you sure you want to change the time zone to?": "Are you sure you want to change the time zone to?",
   "Are you sure you want to update the notification preferences?": "Are you sure you want to update the notification preferences?",
   "Arrived": "Arrived",

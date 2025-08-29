@@ -82,22 +82,8 @@
                 </ion-label>
 
                 <div class="product-metadata" slot="end">
-                  <!-- Cancellation flow -->
-                  <template v-if="((orderType === 'open' && hasPermission(Actions.APP_OPEN_CANCEL_BOPIS_ORDER)) || (orderType === 'packed' && hasPermission(Actions.APP_PACKED_CANCEL_BOPIS_ORDER))) && !(order.handovered || order.shipped)">
-                    <ion-chip data-testid="change-cancel-reason-chip" v-if="item.cancelReason" outline color="danger" @click.stop="openCancelReasonPopover($event, item, order)">
-                      <ion-icon data-testid="void-cancel-reason-icon" :icon="closeCircleOutline" @click.stop="removeCancellationReason($event, item, order)"/>
-                      <ion-label>{{ getCancelReasonDescription(item.cancelReason) }}</ion-label>
-                      <ion-icon :icon="caretDownOutline"/>
-                    </ion-chip>
-
-                    <ion-button data-testid="select-cancel-item-button" v-else slot="end" color="danger" fill="clear" size="small" :disabled="(orderType === 'open' && !hasPermission(Actions.APP_OPEN_CANCEL_BOPIS_ORDER)) || (orderType === 'packed' && !hasPermission(Actions.APP_PACKED_CANCEL_BOPIS_ORDER))" @click.stop="openCancelReasonPopover($event, item, order)">
-                      {{ translate("Cancel") }}
-                    </ion-button>
-
-                  </template>
-
-                  <!-- Rejection flow -->
-                  <template v-else-if="orderType === 'open' && !(order.readyToHandover || order.readyToShip)">
+                  <!-- Order item rejection flow -->
+                  <template v-if="orderType === 'open' && !(order.readyToHandover || order.readyToShip)">
                     <ion-chip data-testid="change-rejection-reason-chip" v-if="item.rejectReason" outline color="danger" @click.stop="openRejectReasonPopover($event, item, order)">
                       <ion-icon data-testid="void-rejection-reason-icon" :icon="closeCircleOutline" @click.stop="removeRejectionReason($event, item, order)"/>
                       <ion-label>{{ getRejectionReasonDescription(item.rejectReason) }}</ion-label>
@@ -109,6 +95,17 @@
                     </ion-chip>
                     <ion-button data-testid="select-rejected-item-button" v-else slot="end" color="danger" fill="clear" size="small" @click.stop="openRejectReasonPopover($event, item, order)">
                       <ion-icon slot="icon-only" :icon="trashOutline"/>
+                    </ion-button>
+                  </template>
+                  <!-- Order item calcelation flow -->
+                  <template v-else-if="orderType === 'packed' && !(order.handovered || order.shipped)">
+                    <ion-chip data-testid="change-cancel-reason-chip" v-if="item.cancelReason" outline color="danger" @click.stop="openCancelReasonPopover($event, item, order)">
+                      <ion-icon data-testid="void-cancel-reason-icon" :icon="closeCircleOutline" @click.stop="removeCancellationReason($event, item, order)"/>
+                      <ion-label>{{ getCancelReasonDescription(item.cancelReason) }}</ion-label>
+                      <ion-icon :icon="caretDownOutline"/>
+                    </ion-chip>
+                    <ion-button data-testid="select-cancel-item-button" v-else slot="end" color="danger" fill="clear" size="small" :disabled="!hasPermission(Actions.APP_CANCEL_BOPIS_ORDER)" @click.stop="openCancelReasonPopover($event, item, order)">
+                      {{ translate("Cancel") }}
                     </ion-button>
                   </template>
 
@@ -184,23 +181,20 @@
           </template>
 
           <ion-item lines="none" v-if="orderType === 'open' && order.shipGroup?.items?.length">
-            <ion-button data-testid="ready-pickup-button" size="default" :disabled="!hasPermission(Actions.APP_ORDER_UPDATE) || order.readyToHandover || order.readyToShip || order.rejected || hasRejectedItems || order.cancelled || hasCancelledItems" @click="readyForPickup(order, order.shipGroup)">
+            <ion-button data-testid="ready-pickup-button" size="default" :disabled="!hasPermission(Actions.APP_ORDER_UPDATE) || order.readyToHandover || order.readyToShip || order.rejected || hasRejectedItems" @click="readyForPickup(order, order.shipGroup)">
               <ion-icon slot="start" :icon="bagCheckOutline"/>
               {{ order?.shipGroup.shipmentMethodTypeId === 'STOREPICKUP' ? translate("Ready for pickup") : translate("Ready to ship") }}
             </ion-button>
-            <ion-button data-testid="submit-rejected-items-button" size="default" v-if="!hasPermission(Actions.APP_OPEN_CANCEL_BOPIS_ORDER)" :disabled="!hasPermission(Actions.APP_ORDER_UPDATE) || order.readyToHandover || order.readyToShip || order.rejected || !hasRejectedItems" color="danger" fill="outline" @click="rejectOrder()">
+            <ion-button data-testid="submit-rejected-items-button" size="default" :disabled="!hasPermission(Actions.APP_ORDER_UPDATE) || order.readyToHandover || order.readyToShip || order.rejected || !hasRejectedItems" color="danger" fill="outline" @click="rejectOrder()">
               {{ translate("Reject Items") }}
-            </ion-button>
-            <ion-button data-testid="submit-rejected-items-button" size="default" v-else :disabled="!hasPermission(Actions.APP_ORDER_UPDATE) || order.readyToHandover || order.readyToShip || order.cancelled || !hasCancelledItems" color="danger" fill="outline" @click="cancelOrder(order)">
-              {{ translate("Cancel") }}
-            </ion-button>
+            </ion-button>            
           </ion-item>
           <ion-item lines="none" v-else-if="orderType === 'packed' && order.shipGroup?.items?.length" class="ion-hide-md-down">
             <ion-button data-testid="handover-button" size="default" :disabled="!hasPermission(Actions.APP_ORDER_UPDATE) || order.handovered || order.shipped || order.cancelled || hasCancelledItems" expand="block" @click="deliverShipment(order)">
               <ion-icon slot="start" :icon="checkmarkDoneOutline"/>
               {{ order.shipGroup.shipmentMethodTypeId === 'STOREPICKUP' ? translate("Handover") : translate("Ship") }}
             </ion-button>
-            <ion-button data-testid="submit-cancel-items-button" color="danger" size="default" :disabled="!hasPermission(Actions.APP_ORDER_UPDATE)||!hasPermission(Actions.APP_PACKED_CANCEL_BOPIS_ORDER) || order.handovered || order.shipped || order.cancelled || !hasCancelledItems" expand="block" fill="outline" @click="cancelOrder(order)">
+            <ion-button data-testid="submit-cancel-items-button" color="danger" size="default" :disabled="!hasPermission(Actions.APP_ORDER_UPDATE)||!hasPermission(Actions.APP_CANCEL_BOPIS_ORDER) || order.handovered || order.shipped || order.cancelled || !hasCancelledItems" expand="block" fill="outline" @click="cancelOrder(order)">
               {{ translate("Cancel items") }}
             </ion-button>
           </ion-item>
@@ -1284,13 +1278,10 @@ export default defineComponent({
 
     // fetch rejection reasons only when we get the orders information
     if(this.order.orderId) {
-      if (this.orderType === "open") {
-        await this.fetchRejectReasons();
-      }
-      await this.fetchCancelReasons();
+      this.orderType === "open" ? await this.fetchRejectReasons() : await this.fetchCancelReasons();
     }
 
-    if(this.orderType === "open" || this.orderType === "packed") {
+    if(this.orderType === "packed") {
       this.fetchJobs();
       this.hasCancelledItems = this.order.shipGroup?.items.some((item: any) => item.cancelReason);
     }
