@@ -9,7 +9,6 @@
   "An email notification will be sent to that their order is ready for pickup. This order will also be moved to the packed orders tab.": "{ customerName }様宛に注文の受け取り準備が完了したことをお知らするメールが送信されます。{ space } この注文は「梱包済み注文」タブに移動されます.",
   "An email notification will be sent to that their order is ready for pickup.": "{ customerName }様宛に注文の受け取り準備が完了したことをお知らするメールが送信されます。",
   "Approved for fulfillment": "Approved for fulfillment",
-  "Are you sure you want to cancel this order?": "この注文をキャンセルしてもよろしいですか?",
   "Are you sure you want to change the time zone to?": "タイムゾーンを変更してもよろしいですか？",
   "Are you sure you want to update the notification preferences?": "通知設定を更新してもよろしいですか？",
   "Arrived": "到着",
