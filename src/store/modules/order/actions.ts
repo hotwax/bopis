@@ -564,18 +564,11 @@ const actions: ActionTree<OrderState , RootState> ={
 
 
         // Prepare orders from shipment response
-        let orders = shipments.map((shipment: any) => {
-<<<<<<< Updated upstream
-          // Filter out cancelled items
+        let orders = shipments.map((shipment: any) => {          // Filter out cancelled items
           const validItems = shipment.items.filter((item: any) => item.orderItemStatusId !== 'ITEM_CANCELLED');
           // Skip this shipment if no valid items are left
           if (validItems.length === 0) return null;
 
-=======
-          const validItems = shipment.items.filter(
-            (item: any) => item.orderItemStatusId !== 'ITEM_CANCELLED'
-          );
->>>>>>> Stashed changes
           productIds.push(...validItems.map((item: any) => item.productId));
 
           const pickersInfo = pickers[shipment.orderId] || { pickers: "", pickerIds: [] };
@@ -638,17 +631,11 @@ const actions: ActionTree<OrderState , RootState> ={
 
         // Map each shipment into the desired structure
         let orders = shipments.map((shipment: any) => {
-<<<<<<< Updated upstream
           // Filter out cancelled items
           const validItems = shipment.items.filter((item: any) => item.orderItemStatusId !== 'ITEM_CANCELLED');
           // Skip this shipment if no valid items are left
           if (validItems.length === 0) return null;
 
-=======
-          const validItems = shipment.items.filter(
-            (item: any) => item.orderItemStatusId !== 'ITEM_CANCELLED'
-          );
->>>>>>> Stashed changes
           productIds.push(...validItems.map((item: any) => item.productId));
 
           const pickersInfo = pickers[shipment.orderId] || { pickers: "", pickerIds: [] };
