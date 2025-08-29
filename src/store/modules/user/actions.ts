@@ -316,12 +316,12 @@ const actions: ActionTree<UserState, RootState> = {
 
     try {
       resp = await getNotificationEnumIds(process.env.VUE_APP_NOTIF_ENUM_TYPE_ID)
-      enumerationResp = resp.docs
-      resp = await getNotificationUserPrefTypeIds(process.env.VUE_APP_NOTIF_APP_ID, state.current.userLoginId, {
-        "userPrefTypeId": getCurrentFacilityId(),
-        "userPrefTypeId_op": "contains"
+      enumerationResp = resp
+      resp = await getNotificationUserPrefTypeIds(process.env.VUE_APP_NOTIF_APP_ID, state.current.userId, {
+        "topic": getCurrentFacilityId(),
+        "topic_op": "contains"
       })
-      userPrefIds = resp.docs.map((userPref: any) => userPref.userPrefTypeId)
+      userPrefIds = resp.map((userPref: any) => userPref.topic)
     } catch (error) {
       logger.error(error)
     } finally {
@@ -342,11 +342,11 @@ const actions: ActionTree<UserState, RootState> = {
     let allNotificationPrefs = [];
 
     try {
-      const resp = await getNotificationUserPrefTypeIds(process.env.VUE_APP_NOTIF_APP_ID, state.current.userLoginId, {
-        "userPrefTypeId": getCurrentFacilityId(),
-        "userPrefTypeId_op": "contains"
+      const resp = await getNotificationUserPrefTypeIds(process.env.VUE_APP_NOTIF_APP_ID, state.current.userId, {
+        "topic": getCurrentFacilityId(),
+        "topic_op": "contains"
       })
-      allNotificationPrefs = resp.docs
+      allNotificationPrefs = resp
     } catch(error) {
       logger.error(error)
     }
@@ -482,8 +482,11 @@ const actions: ActionTree<UserState, RootState> = {
   clearNotificationState({ commit }) {
     commit(types.USER_NOTIFICATIONS_UPDATED, [])
     commit(types.USER_NOTIFICATIONS_PREFERENCES_UPDATED, [])
-    commit(types.USER_FIREBASE_DEVICEID_UPDATED, '')
     commit(types.USER_UNREAD_NOTIFICATIONS_STATUS_UPDATED, true)
+  },
+
+  clearDeviceId({ commit }) {
+    commit(types.USER_FIREBASE_DEVICEID_UPDATED, '')
   },
 
   setUnreadNotificationsStatus({ commit }, payload) {
