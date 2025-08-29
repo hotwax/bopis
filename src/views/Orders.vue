@@ -58,15 +58,9 @@
               <ion-button :data-testid="order.shipGroup.shipmentMethodTypeId === 'STOREPICKUP' ? 'ready-pickup-button' : 'ready-ship-button'" :disabled="!hasPermission(Actions.APP_ORDER_UPDATE)" fill="clear" @click.stop="readyForPickup(order, order.shipGroup)">
                 {{ order.shipGroup?.shipmentMethodTypeId === 'STOREPICKUP' ? translate("Ready for pickup") : translate("Ready to ship") }}
               </ion-button>
-              <div></div>              
-              <ion-button data-testid="listpage-reject-button" v-if="order.shipGroup.shipmentMethodTypeId === 'STOREPICKUP' && hasPermission(Actions.APP_OPEN_CANCEL_BOPIS_ORDER)" color="danger" :disabled="!hasPermission(Actions.APP_ORDER_UPDATE) || !hasPermission(Actions.APP_OPEN_CANCEL_BOPIS_ORDER)" fill="clear" @click.stop="cancelOrder(order, order.shipGroup)">
-               {{ translate("Cancel")}}
-              </ion-button>
-              <ion-button data-testid="listpage-reject-button" v-else-if="order.shipGroup.shipmentMethodTypeId === 'STOREPICKUP'" color="danger" :disabled="!hasPermission(Actions.APP_ORDER_UPDATE)" fill="clear" @click.stop="openRejectOrderModal(order)">
-               {{ translate("Reject")}}
-              </ion-button>
-              <ion-button data-testid="print-picklist-button" v-if="getBopisProductStoreSettings('PRINT_PICKLISTS')" slot="end" fill="clear" @click.stop="printPicklist(order, order.shipGroup)">
-                <ion-icon :icon="printOutline" slot="icon-only" />
+              <div></div>
+              <ion-button data-testid="listpage-reject-button" v-if="order.shipGroup.shipmentMethodTypeId === 'STOREPICKUP'" color="danger" :disabled="!hasPermission(Actions.APP_ORDER_UPDATE)" fill="clear" @click.stop="openRejectOrderModal(order)">
+                {{ translate("Reject") }}
               </ion-button>
             </div>
           </ion-card>
@@ -382,85 +376,6 @@ export default defineComponent({
           }]
         });
       return alert.present();
-    },
-    async cancelOrder(order: any, shipGroup: any) {
-      const alert = await alertController.create({
-        header: translate('Cancel'),
-        message: translate('Are you sure you want to cancel this order?'),
-        buttons: [
-          {
-            text: translate('No'),
-            role: 'cancel'
-          },
-          {
-            text: translate('Yes'),
-            handler: async () => {
-              emitter.emit("presentLoader");
-
-              const itemsPayload = (shipGroup.items || []).map((item: any) => ({
-                orderItemSeqId: item.orderItemSeqId,
-                shipGroupSeqId: shipGroup.shipGroupSeqId,
-                reason: 'OTHER_REASON',
-                comment: 'Cancelled from BOPIS open orders tab'
-              }));
-
-              const payload = {
-                orderId: order.orderId,
-                items: itemsPayload
-              };
-
-              try {
-                const response = await OrderService.cancelOrder(payload);
-
-                if (hasError(response)) {
-                  throw response.data;
-                }
-
-                // Remove the order from UI after successful cancellation
-                await this.store.dispatch("order/removeOpenOrder", { order, shipGroup });
-
-              } catch (err) {
-                console.error("Error cancelling order", err);
-                // Optional: show toast or error message
-              } finally {
-                emitter.emit("dismissLoader");
-              }
-            }
-          }
-        ]
-      });
-
-      return alert.present();
-    },
-    async unpackOrder(order: any) {
-      const unpackOrderAlert = await alertController
-        .create({
-           header: translate("Unpack"),
-           message: translate("Unpacking this order will send it back to 'Open' and it will have to be repacked."),
-           buttons: [{
-            role: "cancel",
-            text: translate("Cancel"),
-          }, {
-            text: translate("Unpack"),
-            handler: async () => {
-              try {
-                const resp = await OrderService.unpackOrder({shipmentId: order.shipmentId})
-
-                if(resp.status == 200 && !hasError(resp)) {
-                  showToast(translate('Order unpacked successfully'))
-                  // TODO: handle the case of data not updated correctly
-                  this.store.dispatch("order/removePackedOrder", { order })
-                } else {
-                  throw resp.data
-                }
-              } catch(err) {
-                logger.error('Failed to unpack the order', err)
-                showToast(translate('Failed to unpack the order'))
-              }
-            }
-          }]
-        });
-      return unpackOrderAlert.present();
     },
     async packShippingOrders(currentOrder: any, shipGroup: any) {
       try {

@@ -10,7 +10,6 @@
   "An email notification will be sent to that their order is ready for pickup. This order will also be moved to the packed orders tab.": "Se enviará una notificación por correo electrónico a {customerName} de que su pedido está listo para recoger.{ space } Este pedido también se moverá a la pestaña de pedidos empacados.",
   "An email notification will be sent to that their order is ready for pickup.": "Se enviará una notificación por correo electrónico a {customerName} de que su pedido está listo para recoger.",
   "Approved for fulfillment": "Approved for fulfillment",
-  "Are you sure you want to cancel this order?": "¿Estás segura de que deseas cancelar este pedido?",
   "Are you sure you want to change the time zone to?": "¿Estás seguro de que quieres cambiar la zona horaria a?",
   "Are you sure you want to update the notification preferences?": "¿Estás seguro de que deseas actualizar las preferencias de notificación?",
   "Arrived": "Llegó",
