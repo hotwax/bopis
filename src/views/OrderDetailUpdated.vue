@@ -163,19 +163,19 @@
             <ion-item lines="none" v-if="isCancelationSyncJobEnabled && isProcessRefundEnabled">
               <ion-icon slot="start" :icon="checkmarkDoneOutline"/>
               <ion-label>
-                {{ translate("Cancelation and refund sync to Shopify is enabled.") }}
+                {{ translate("Cancellation and refund sync to Shopify is enabled.") }}
               </ion-label>
             </ion-item>
             <ion-item lines="none" v-else-if="isCancelationSyncJobEnabled">
               <ion-icon slot="start" :icon="warningOutline"/>
               <ion-label>
-                {{ translate("Cancelation sync to Shopify is enabled. Refund processing is disabled.") }}
+                {{ translate("Cancellation sync to Shopify is enabled. Refund processing is disabled.") }}
               </ion-label>
             </ion-item>
             <ion-item lines="none" v-else>
               <ion-icon slot="start" :icon="closeOutline"/>
               <ion-label>
-                {{ translate("Cancelation and refund sync to Shopify is not enabled.") }}
+                {{ translate("Cancellation and refund sync to Shopify is not enabled.") }}
               </ion-label>
             </ion-item>
           </template>
@@ -564,7 +564,7 @@ export default defineComponent({
 
       let order = JSON.parse(JSON.stringify(this.order))
       const isEntireOrderRejection = this.isEntireOrderRejectionEnabled(order);
-      const rejectToFacilityId = order.shipGroup.shipmentMethodTypeId === "STOREPICKUP" ? "PICKUP_REJECTED" : null;
+      const rejectToFacilityId = order.shipGroup.shipmentMethodTypeId === "STOREPICKUP" ? "PICKUP_REJECTED" : "REJECTED_ITM_PARKING";
       const itemsToReject: any[] = [];
       
       for (const item of order.shipGroup.items) {
