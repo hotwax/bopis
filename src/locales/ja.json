@@ -107,6 +107,7 @@
   "monday": "Monday",
   "More": "もっと見る",
   "New notification received.": "新しい通知を受信しました。",
+  "No": "いいえ",
   "No facilities found": "No facilities found",
   "No items found": "アイテムが見つかりませんでした",
   "No inventory details found": "在庫の詳細が見つかりません",
@@ -172,8 +173,9 @@
   "Picking": "Picking",
   "pieces in stock": "在庫あり",
   "Please enter a activation code.": "Please enter a activation code.",
-  "Print picklists": "Print picklists",
   "Primary": "Primary",
+  "Print picklists": "Print picklists",
+  "Print customer letter": "顧客レターを印刷する",
   "Product details": "商品詳細",
   "Product not found": "商品が見つかりません",
   "Products not found": "商品が見つかりません",
@@ -276,6 +278,7 @@
   "unit": "{ item }個",
   "Verify that the items in the package are valid and the customer has received their order. Once the order is handed over to the customer it cannot be undone.": "Verify that the items in the package are valid and the customer has received their order.{ space }Once the order is handed over to the customer it cannot be undone.",
   "View shipping orders along with pickup orders.": "店舗受取の注文と一緒に配送注文を表示します",
+  "Yes": "はい",
   "You do not have permission to access this page": "このページにアクセスする権限がありません",
   "Zipcode": "郵便番号"
 }

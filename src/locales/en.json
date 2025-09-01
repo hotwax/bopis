@@ -112,6 +112,7 @@
   "monday": "Monday",
   "More": "More",
   "New notification received.": "New notification received.",
+  "No": "No",
   "No facilities found": "No facilities found",
   "No items found": "No items found",
   "No inventory details found": "No inventory details found",
@@ -179,8 +180,9 @@
   "Picking": "Picking",
   "pieces in stock": "pieces in stock",
   "Please enter a activation code.": "Please enter a activation code.",
-  "Print picklists": "Print picklists",
   "Primary": "Primary",
+  "Print picklists": "Print picklists",
+  "Print customer letter": "Print customer letter",
   "Product details": "Product details",
   "Product not found": "Product not found",
   "Products not found": "Products not found",
@@ -286,6 +288,7 @@
   "Update notification preferences": "Update notification preferences",
   "Verify that the items in the package are valid and the customer has received their order. Once the order is handed over to the customer it cannot be undone.": "Verify that the items in the package are valid and the customer has received their order.{ space }Once the order is handed over to the customer it cannot be undone.",
   "View shipping orders along with pickup orders.": "View shipping orders along with pickup orders.",
+  "Yes": "Yes",
   "You do not have permission to access this page": "You do not have permission to access this page",
   "Zipcode": "Zipcode"
 }

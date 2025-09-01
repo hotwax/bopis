@@ -131,6 +131,8 @@ export default defineComponent({
   },
 
   async ionViewWillEnter() {
+    // Clearing the current order as to correctly display the selected segment when moving to list page
+    this.store.dispatch("order/updateCurrent", { order: {}})
     this.isScrollingEnabled = false;
     this.queryString = this.products.queryString;
     this.getProducts();

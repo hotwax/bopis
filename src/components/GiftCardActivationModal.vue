@@ -1,8 +1,8 @@
 <template>
-  <ion-header>
+  <ion-header data-testid="giftcard-activation-modal-header">
     <ion-toolbar>
       <ion-buttons slot="start">
-        <ion-button @click="closeModal()">
+        <ion-button data-testid="giftcard-activation-close-button" @click="closeModal()">
           <ion-icon slot="icon-only" :icon="closeOutline" />
         </ion-button>
       </ion-buttons>
@@ -17,12 +17,12 @@
     </div>
     <ion-list v-else>
       <ion-item lines="none" v-if="!item.isGCActivated">
-        <ion-input :label="translate('Activation code')" :placeholder="translate('serial number')" :helper-text="translate('Scan or enter the unique code on the gift card')" v-model="activationCode" />
+        <ion-input data-testid="giftcard-activation-input" :label="translate('Activation code')" :placeholder="translate('serial number')" :helper-text="translate('Scan or enter the unique code on the gift card')" v-model="activationCode" />
       </ion-item>
 
       <ion-item v-else>
         <ion-icon :icon="cardOutline" slot="start" />
-        <ion-label>{{ item.gcInfo.cardNumber }}</ion-label>
+        <ion-label data-testid="giftcard-activation-label">{{ item.gcInfo.cardNumber }}</ion-label>
         <ion-note slot="end">{{ getCreatedDateTime() }}</ion-note>
       </ion-item>
 
@@ -32,7 +32,7 @@
           {{ getProductIdentificationValue(productIdentificationPref.primaryId, getProduct(item.productId)) ? getProductIdentificationValue(productIdentificationPref.primaryId, getProduct(item.productId)) : item.productName }}
           <p>{{ getProductIdentificationValue(productIdentificationPref.secondaryId, getProduct(item.productId)) }}</p>
         </ion-label>
-        <ion-label slot="end">{{ formatCurrency(itemPriceInfo.unitPrice, itemPriceInfo.currencyUom) }}</ion-label>
+        <ion-label slot="end">{{ formatCurrency(item.unitPrice, currencyUom) }}</ion-label>
       </ion-item>
 
       <div class="ion-margin" v-if="!item.isGCActivated">
@@ -49,7 +49,7 @@
   </ion-content>
 
   <ion-fab v-if="!item.isGCActivated" vertical="bottom" horizontal="end" slot="fixed">
-    <ion-fab-button @click="confirmSave()">
+    <ion-fab-button data-testid="giftcard-activation-save-button" @click="confirmSave()">
       <ion-icon :icon="cardOutline" />
     </ion-fab-button>
   </ion-fab>
@@ -115,17 +115,11 @@ export default defineComponent({
   data() {
     return {
       isLoading: false,
-      itemPriceInfo: {} as any,
       activationCode: "",
       isCameraEnabled: false
     }
   },
-  props: ["item", "orderId", "customerId"],
-  async mounted() {
-    this.isLoading = true;
-    this.itemPriceInfo = await UtilService.fetchGiftCardItemPriceInfo({ orderId: this.orderId, orderItemSeqId: this.item.orderItemSeqId })
-    this.isLoading = false;
-  },
+  props: ["item", "orderId", "customerId", "currencyUom"],
   methods: {
     closeModal(payload = {}) {
       modalController.dismiss({ dismissed: true, ...payload })
@@ -158,10 +152,11 @@ export default defineComponent({
         const resp = await UtilService.activateGiftCard({
           orderId: this.orderId,
           orderItemSeqId: this.item.orderItemSeqId,
-          amount: this.itemPriceInfo.unitPrice,
+          amount: this.item.unitPrice,
           typeEnumId: "GC_ACTIVATE",
           cardNumber: this.activationCode.trim(),
-          partyId: this.customerId
+          partyId: this.customerId,
+          fulfillmentDate: Date.now()
         })
         
         if(!hasError(resp)) {

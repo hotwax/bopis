@@ -17,8 +17,8 @@
             is added on sides from ion-item and ion-padding-vertical to compensate the removed
             vertical padding -->
             <ion-card-header class="ion-no-padding ion-padding-vertical">
-              <ion-card-subtitle>{{ userProfile?.userLoginId }}</ion-card-subtitle>
-              <ion-card-title>{{ userProfile?.partyName }}</ion-card-title>
+              <ion-card-subtitle>{{ userProfile?.userId }}</ion-card-subtitle>
+              <ion-card-title>{{ userProfile?.userFullName }}</ion-card-title>
             </ion-card-header>
           </ion-item>
           <ion-button color="danger" @click="logout()">{{ translate("Logout") }}</ion-button>
@@ -34,7 +34,23 @@
         <h1>{{ translate('OMS') }}</h1>
       </div>
       <section>
-        <DxpOmsInstanceNavigator />
+        <ion-card>
+          <ion-card-header>
+            <ion-card-subtitle>
+              {{ translate("OMS instance") }}
+            </ion-card-subtitle>
+            <ion-card-title>
+              {{ oms }}
+            </ion-card-title>
+          </ion-card-header>
+          <ion-card-content>
+            {{ translate("This is the name of the OMS you are connected to right now. Make sure that you are connected to the right instance before proceeding.") }}
+          </ion-card-content>
+          <ion-button :disabled="!omsRedirectionUrl || !omsToken" @click="goToOms(omsToken, omsRedirectionUrl)" fill="clear">
+            {{ translate("Go to OMS") }}
+            <ion-icon slot="end" :icon="openOutline" />
+          </ion-button>
+        </ion-card>
         <DxpFacilitySwitcher @updateFacility="updateFacility" />
         <ion-card>
           <ion-card-header>
@@ -104,10 +120,10 @@
 
       <section>
         <DxpProductIdentifier />
-        <DxpTimeZoneSwitcher @timeZoneUpdated="timeZoneUpdated" />
+        <TimeZoneSwitcher @timeZoneUpdated="timeZoneUpdated" />
         <DxpLanguageSwitcher />
 
-        <ion-card>
+        <!-- <ion-card>
           <ion-card-header>
             <ion-card-title>
               {{ translate("Shipping orders") }}
@@ -115,11 +131,11 @@
           </ion-card-header>
           <ion-card-content>
             {{ translate('View shipping orders along with pickup orders.') }}
-          </ion-card-content>
-          <ion-item lines="none" :disabled="!hasPermission(Actions.APP_SHOW_SHIPPING_ORD_PREF_UPDATE)">
+          </ion-card-content> -->
+          <!-- <ion-item lines="none" :disabled="!hasPermission(Actions.APP_SHOW_SHIPPING_ORD_PREF_UPDATE)">
             <ion-toggle label-placement="start" :checked="getBopisProductStoreSettings('SHOW_SHIPPING_ORDERS')" @click.prevent="setBopisProductStoreSettings($event, 'SHOW_SHIPPING_ORDERS')">{{ translate("Show shipping orders") }}</ion-toggle>
-          </ion-item>
-        </ion-card>
+          </ion-item> -->
+        <!-- </ion-card> -->
 
         <ion-card>
           <ion-card-header>
@@ -210,12 +226,13 @@ import { DateTime } from 'luxon';
 import { UserService } from '@/services/UserService'
 import { showToast } from '@/utils';
 import { hasError, removeClientRegistrationToken, subscribeTopic, unsubscribeTopic } from '@/adapter'
-import { initialiseFirebaseApp, translate, useUserStore } from "@hotwax/dxp-components";
+import { goToOms, initialiseFirebaseApp, translate, useUserStore } from "@hotwax/dxp-components";
 import { Actions, hasPermission } from '@/authorization'
 import { addNotification, generateTopicName, isFcmConfigured, storeClientRegistrationToken } from "@/utils/firebase";
 import emitter from "@/event-bus"
 import logger from '@/logger';
 import EditShipmentMethodModal from '@/components/EditShipmentMethodModal.vue';
+import TimeZoneSwitcher from "@/components/TimeZoneSwitcher.vue"
 
 export default defineComponent({
   name: 'Settings',
@@ -237,7 +254,8 @@ export default defineComponent({
     IonTitle,
     IonToggle, 
     IonToolbar,
-    Image
+    Image,
+    TimeZoneSwitcher
   },
   data(){
     return {
@@ -266,13 +284,18 @@ export default defineComponent({
       firebaseDeviceId: 'user/getFirebaseDeviceId',
       notificationPrefs: 'user/getNotificationPrefs',
       allNotificationPrefs: 'user/getAllNotificationPrefs',
-      getBopisProductStoreSettings: "user/getBopisProductStoreSettings"
+      getBopisProductStoreSettings: "user/getBopisProductStoreSettings",
+      oms: "user/getInstanceUrl",
+      omsRedirectionUrl: "user/getOmsBaseUrl",
+      omsToken: "user/getUserToken"
     })
   },
   mounted() {
     this.appVersion = this.appInfo.branch ? (this.appInfo.branch + "-" + this.appInfo.revision) : this.appInfo.tag;
   },
   async ionViewWillEnter() {
+    // Clearing the current order as to correctly display the selected segment when moving to list page
+    this.store.dispatch("order/updateCurrent", { order: {}})
     // Only fetch configuration when environment mapping exists
     if (Object.keys(this.rerouteFulfillmentConfigMapping).length > 0) {
       this.fetchCarriers()
@@ -312,6 +335,7 @@ export default defineComponent({
       // clear facility lat lon and stores information state when facility changes
       this.store.dispatch("util/clearCurrentFacilityLatLon", {})
       this.store.dispatch("util/clearStoresInformation", {})
+      this.store.dispatch("util/clearDeviceId", {})
 
       this.store.dispatch('user/logout', { isUserUnauthorised: false }).then((redirectionUrl) => {
         // if not having redirection url then redirect the user to launchpad
@@ -546,6 +570,7 @@ export default defineComponent({
       Actions,
       currentFacility,
       ellipsisVertical,
+      goToOms,
       hasPermission,
       personCircleOutline,
       router,
