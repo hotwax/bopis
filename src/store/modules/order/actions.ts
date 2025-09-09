@@ -547,13 +547,15 @@ const actions: ActionTree<OrderState , RootState> ={
 
         const pickers = await dispatch("fetchPickersInformation", { shipmentIds, shipmentStatusId: 'SHIPMENT_PACKED' });
 
-
+        let total = resp.data.shipmentCount;
         // Prepare orders from shipment response
         let orders = shipments.map((shipment: any) => {          // Filter out cancelled items
           const validItems = shipment.items.filter((item: any) => item.orderItemStatusId !== 'ITEM_CANCELLED');
           // Skip this shipment if no valid items are left
-          if (validItems.length === 0) return null;
-
+          if (validItems.length === 0) {
+            total -= 1;
+            return null;
+          }
           productIds.push(...validItems.map((item: any) => item.productId));
 
           const pickersInfo = pickers[shipment.orderId] || { pickers: "", pickerIds: [] };
@@ -570,7 +572,6 @@ const actions: ActionTree<OrderState , RootState> ={
 
         await this.dispatch('product/fetchProducts', { productIds });
 
-        const total = resp.data.shipmentCount;
         const packedOrders = await OrderService.fetchGiftCardActivationDetails({
           isDetailsPage: false,
           currentOrders: orders
@@ -614,12 +615,16 @@ const actions: ActionTree<OrderState , RootState> ={
         // Fetch pickers info
         const pickers = await dispatch("fetchPickersInformation", { shipmentIds, shipmentStatusId: 'SHIPMENT_SHIPPED' });
 
+        let total = resp.data.shipmentCount;
         // Map each shipment into the desired structure
         let orders = shipments.map((shipment: any) => {
           // Filter out cancelled items
           const validItems = shipment.items.filter((item: any) => item.orderItemStatusId !== 'ITEM_CANCELLED');
           // Skip this shipment if no valid items are left
-          if (validItems.length === 0) return null;
+          if (validItems.length === 0) {
+            total -= 1;
+            return null;
+          }
 
           productIds.push(...validItems.map((item: any) => item.productId));
 
@@ -633,11 +638,10 @@ const actions: ActionTree<OrderState , RootState> ={
             pickers: pickersInfo.pickers,
             pickerIds: pickersInfo.pickerIds
           };
-        }).filter((order: any) => order !== null); // Remove shipments with no items i.e. the case where all the items within the shipment are cancelled
+        });
 
         await this.dispatch('product/fetchProducts', { productIds });
 
-        const total = resp.data.shipmentCount;
         const completedOrders = await OrderService.fetchGiftCardActivationDetails({
           isDetailsPage: false,
           currentOrders: orders
