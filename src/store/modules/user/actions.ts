@@ -99,8 +99,8 @@ const actions: ActionTree<UserState, RootState> = {
       /*  ---- Guard clauses ends here --- */
 
       setPermissions(appPermissions);
-      if (userProfile.timeZone) {
-        Settings.defaultZone = userProfile.timeZone;
+      if (userProfile.userTimeZone) {
+        Settings.defaultZone = userProfile.userTimeZone;
       }
 
       // TODO user single mutation
@@ -225,9 +225,9 @@ const actions: ActionTree<UserState, RootState> = {
    */
   async setUserTimeZone ( { state, commit }, timeZoneId) {
     const current: any = state.current;
-    current.timeZone = timeZoneId;
+    current.userTimeZone = timeZoneId;
     commit(types.USER_INFO_UPDATED, current);
-    Settings.defaultZone = current.timeZone;
+    Settings.defaultZone = current.userTimeZone;
   },
 
 

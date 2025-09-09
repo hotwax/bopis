@@ -467,22 +467,7 @@ const actions: ActionTree<OrderState , RootState> ={
 
       // Assign currentShipGroup and related fields
       const currentFacilityId = getCurrentFacilityId();
-      const currentShipGroup = order.shipGroups.find((shipGroup: any) => {
-        const isStorePickup = shipGroup.shipmentMethodTypeId === "STOREPICKUP";
-        const isFacilityMatch = shipGroup.facilityId === currentFacilityId;
-
-        if (!(isStorePickup && isFacilityMatch)) return false;
-        if (orderType === "open") {
-          return shipGroup.shipmentStatusId === "SHIPMENT_APPROVED" || !shipGroup.shipmentId;
-        }
-        if (orderType === "packed") {
-          return shipGroup.shipmentStatusId === "SHIPMENT_PACKED";
-        }
-        if (orderType === "completed") {
-          return shipGroup.shipmentStatusId === "SHIPMENT_SHIPPED";
-        }
-        return false;
-      });
+      const currentShipGroup = order.shipGroups.find((shipGroup: any) => shipGroup.shipGroupSeqId === payload.shipGroupSeqId && shipGroup.shipmentMethodTypeId === "STOREPICKUP" && shipGroup.facilityId === currentFacilityId);
 
       if (currentShipGroup) {
         order.shipGroup = currentShipGroup;

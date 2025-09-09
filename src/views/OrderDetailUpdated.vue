@@ -183,7 +183,7 @@
           <ion-item lines="none" v-if="orderType === 'open' && order.shipGroup?.items?.length">
             <ion-button data-testid="ready-pickup-button" size="default" :disabled="!hasPermission(Actions.APP_ORDER_UPDATE) || order.readyToHandover || order.readyToShip || order.rejected || hasRejectedItems" @click="readyForPickup(order, order.shipGroup)">
               <ion-icon slot="start" :icon="bagCheckOutline"/>
-              {{ order?.shipGroup.shipmentMethodTypeId === 'STOREPICKUP' ? translate("Ready for pickup") : translate("Ready to ship") }}
+              {{ order?.shipGroup.shipmentMethodTypeId === 'STOREPICKUP' ? translate(`Ready for pickup: ${order.shipGroup.shipGroupSeqId}`) : translate("Ready to ship") }}
             </ion-button>
             <ion-button data-testid="submit-rejected-items-button" size="default" :disabled="!hasPermission(Actions.APP_ORDER_UPDATE) || order.readyToHandover || order.readyToShip || order.rejected || !hasRejectedItems" color="danger" fill="outline" @click="rejectOrder()">
               {{ translate("Reject Items") }}
@@ -882,13 +882,13 @@ export default defineComponent({
       const payload = {
         packageName: "A", //default package name
         facilityId: this.currentFacility?.facilityId,
-        shipmentMethodTypeId: order.shipGroups[0].shipmentMethodTypeId,
+        shipmentMethodTypeId: order.shipGroup.shipmentMethodTypeId,
         statusId: "PICKLIST_ASSIGNED",        
         pickers: selectedPicker ? [{
           partyId: selectedPicker,
           roleTypeId: "WAREHOUSE_PICKER"
         }] : [],
-        orderItems: order.shipGroups[0]?.items.map((item: { orderId: string, orderItemSeqId: string, shipGroupSeqId: string, productId: string, quantity: number }) => ({
+        orderItems: order.shipGroup?.items.map((item: { orderId: string, orderItemSeqId: string, shipGroupSeqId: string, productId: string, quantity: number }) => ({
           orderId: item.orderId,
           orderItemSeqId: item.orderItemSeqId,
           shipGroupSeqId: item.shipGroupSeqId,
