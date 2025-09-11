@@ -36,7 +36,7 @@ import { dxpComponents } from '@hotwax/dxp-components'
 import localeMessages from './locales';
 import { login, logout, loader } from '@/utils/user';
 import { addNotification, storeClientRegistrationToken } from '@/utils/firebase';
-import { getConfig, fetchGoodIdentificationTypes, getProductIdentificationPref, getUserFacilities, getUserPreference, initialise, setProductIdentificationPref, setUserLocale, getAvailableTimeZones, setUserPreference } from '@/adapter';
+import { getConfig, fetchGoodIdentificationTypes, getProductIdentificationPref, getUserFacilities, getUserPreference, initialise, setProductIdentificationPref, setUserLocale, getAvailableTimeZones, setUserTimeZone, setUserPreference } from '@/adapter';
 import logger from './logger';
 
 const app = createApp(App)
@@ -73,6 +73,7 @@ const app = createApp(App)
     storeClientRegistrationToken,
     getAvailableTimeZones,
     hasPermission,
+    setUserTimeZone,
     getUserFacilities,
     setUserPreference,
     getUserPreference
@@ -90,7 +91,7 @@ app.config.globalProperties.$filters = {
     // TODO Make default format configurable and from environment variables
     const userProfile = store.getters['user/getUserProfile'];
     // TODO Fix this setDefault should set the default timezone instead of getting it everytiem and setting the tz
-    return DateTime.fromISO(value, { zone: 'utc' }).setZone(userProfile.timeZone).toFormat(outFormat ? outFormat : 'MM-dd-yyyy')  
+    return DateTime.fromISO(value, { zone: 'utc' }).setZone(userProfile.userTimeZone).toFormat(outFormat ? outFormat : 'MM-dd-yyyy')  
   },
   getIdentificationId(identifications: any, id: string) {
     let  externalId = ''

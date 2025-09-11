@@ -62,6 +62,9 @@
               <ion-button data-testid="listpage-reject-button" v-if="order.shipGroup.shipmentMethodTypeId === 'STOREPICKUP'" color="danger" :disabled="!hasPermission(Actions.APP_ORDER_UPDATE)" fill="clear" @click.stop="openRejectOrderModal(order)">
                 {{ translate("Reject") }}
               </ion-button>
+              <ion-button v-if="getBopisProductStoreSettings('PRINT_PICKLISTS')" slot="end" fill="clear" @click.stop="printPicklist(order, order.shipGroup)">
+                  <ion-icon :icon="printOutline" slot="icon-only" />
+              </ion-button>
             </div>
           </ion-card>
         </div>

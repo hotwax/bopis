@@ -467,22 +467,7 @@ const actions: ActionTree<OrderState , RootState> ={
 
       // Assign currentShipGroup and related fields
       const currentFacilityId = getCurrentFacilityId();
-      const currentShipGroup = order.shipGroups.find((shipGroup: any) => {
-        const isStorePickup = shipGroup.shipmentMethodTypeId === "STOREPICKUP";
-        const isFacilityMatch = shipGroup.facilityId === currentFacilityId;
-
-        if (!(isStorePickup && isFacilityMatch)) return false;
-        if (orderType === "open") {
-          return shipGroup.shipmentStatusId === "SHIPMENT_APPROVED" || !shipGroup.shipmentId;
-        }
-        if (orderType === "packed") {
-          return shipGroup.shipmentStatusId === "SHIPMENT_PACKED";
-        }
-        if (orderType === "completed") {
-          return shipGroup.shipmentStatusId === "SHIPMENT_SHIPPED";
-        }
-        return false;
-      });
+      const currentShipGroup = order.shipGroups.find((shipGroup: any) => shipGroup.shipGroupSeqId === payload.shipGroupSeqId && shipGroup.shipmentMethodTypeId === "STOREPICKUP" && shipGroup.facilityId === currentFacilityId);
 
       if (currentShipGroup) {
         order.shipGroup = currentShipGroup;
@@ -562,13 +547,16 @@ const actions: ActionTree<OrderState , RootState> ={
 
         const pickers = await dispatch("fetchPickersInformation", { shipmentIds, shipmentStatusId: 'SHIPMENT_PACKED' });
 
-
+        let total = resp.data.shipmentCount;
         // Prepare orders from shipment response
-        let orders = shipments.map((shipment: any) => {          // Filter out cancelled items
+        let orders = shipments.map((shipment: any) => {
+          // Filter out cancelled items, Skip this shipment if no valid items are left
+          // TODO: This should be handled at the backend, as it's not valid to have cancelled items in a packed shipment. Remove this check once backend is fixed.
           const validItems = shipment.items.filter((item: any) => item.orderItemStatusId !== 'ITEM_CANCELLED');
-          // Skip this shipment if no valid items are left
-          if (validItems.length === 0) return null;
-
+          if (validItems.length === 0) {
+            total -= 1;
+            return null;
+          }
           productIds.push(...validItems.map((item: any) => item.productId));
 
           const pickersInfo = pickers[shipment.orderId] || { pickers: "", pickerIds: [] };
@@ -585,7 +573,6 @@ const actions: ActionTree<OrderState , RootState> ={
 
         await this.dispatch('product/fetchProducts', { productIds });
 
-        const total = resp.data.shipmentCount;
         const packedOrders = await OrderService.fetchGiftCardActivationDetails({
           isDetailsPage: false,
           currentOrders: orders
@@ -629,12 +616,17 @@ const actions: ActionTree<OrderState , RootState> ={
         // Fetch pickers info
         const pickers = await dispatch("fetchPickersInformation", { shipmentIds, shipmentStatusId: 'SHIPMENT_SHIPPED' });
 
+        let total = resp.data.shipmentCount;
         // Map each shipment into the desired structure
         let orders = shipments.map((shipment: any) => {
-          // Filter out cancelled items
+          // Filter out cancelled items, Skip this shipment if no valid items are left
+          // TODO: This should be handled at the backend, as it's not valid to have cancelled items in a packed shipment. Remove this check once backend is fixed.
           const validItems = shipment.items.filter((item: any) => item.orderItemStatusId !== 'ITEM_CANCELLED');
           // Skip this shipment if no valid items are left
-          if (validItems.length === 0) return null;
+          if (validItems.length === 0) {
+            total -= 1;
+            return null;
+          }
 
           productIds.push(...validItems.map((item: any) => item.productId));
 
@@ -652,7 +644,6 @@ const actions: ActionTree<OrderState , RootState> ={
 
         await this.dispatch('product/fetchProducts', { productIds });
 
-        const total = resp.data.shipmentCount;
         const completedOrders = await OrderService.fetchGiftCardActivationDetails({
           isDetailsPage: false,
           currentOrders: orders
