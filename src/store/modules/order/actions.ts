@@ -549,9 +549,10 @@ const actions: ActionTree<OrderState , RootState> ={
 
         let total = resp.data.shipmentCount;
         // Prepare orders from shipment response
-        let orders = shipments.map((shipment: any) => {          // Filter out cancelled items
+        let orders = shipments.map((shipment: any) => {
+          // Filter out cancelled items, Skip this shipment if no valid items are left
+          // TODO: This should be handled at the backend, as it's not valid to have cancelled items in a packed shipment. Remove this check once backend is fixed.
           const validItems = shipment.items.filter((item: any) => item.orderItemStatusId !== 'ITEM_CANCELLED');
-          // Skip this shipment if no valid items are left
           if (validItems.length === 0) {
             total -= 1;
             return null;
@@ -618,7 +619,8 @@ const actions: ActionTree<OrderState , RootState> ={
         let total = resp.data.shipmentCount;
         // Map each shipment into the desired structure
         let orders = shipments.map((shipment: any) => {
-          // Filter out cancelled items
+          // Filter out cancelled items, Skip this shipment if no valid items are left
+          // TODO: This should be handled at the backend, as it's not valid to have cancelled items in a packed shipment. Remove this check once backend is fixed.
           const validItems = shipment.items.filter((item: any) => item.orderItemStatusId !== 'ITEM_CANCELLED');
           // Skip this shipment if no valid items are left
           if (validItems.length === 0) {
