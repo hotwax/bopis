@@ -596,6 +596,10 @@ export default defineComponent({
             order.shipGroup.items = order.shipGroup.items.filter(
               (item: any) => !rejectedSeqIds.has(item.orderItemSeqId)
             );
+            
+            const toastMessage = isEntireOrderRejection ? `All items were rejected from the order ${order.orderName ?? order.orderId}` : `${itemsToReject.length} item(s) were rejected from the order ${order.orderName ?? order.orderId}`;
+
+            showToast(toastMessage);
           }
         } catch (err) {
           logger.error("Something went wrong while rejecting order items:", err);
