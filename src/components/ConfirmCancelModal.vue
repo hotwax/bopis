@@ -161,7 +161,7 @@ export default defineComponent({
           throw cancelledResponse.data;
         }
 
-        const toastMessage = this.currentOrder.shipGroup.items.length === itemsPayload.length ? 'All items have been cancelled.' : `${itemsPayload.length} item(s) have been cancelled successfully.`;
+        const toastMessage = this.currentOrder.shipGroup.items.length === itemsPayload.length ? 'All items have been cancelled.' : `${itemsPayload.length} item(s) have been cancelled.`;
 
         showToast(toastMessage);
 
