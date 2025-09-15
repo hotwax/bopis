@@ -780,27 +780,7 @@ const actions: ActionTree<OrderState , RootState> ={
       resp = await OrderService.packOrder(params)
       if (resp.status === 200 && !hasError(resp)) {        
         const shipmentMethodTypeId = payload.shipGroup?.shipmentMethodTypeId
-        if (shipmentMethodTypeId !== 'STOREPICKUP') {
-          // TODO: find a better way to get the shipmentId
-          await dispatch('packDeliveryItems', { orderId: payload.order.orderId, shipmentId: payload.shipGroup.shipmentId }).then((data) => {
-            if (!hasError(data) && !data.data._EVENT_MESSAGE_) {
-              showToast(translate("Something went wrong"))
-            } else if(state.open.list.length) {
-              // Remove order from the list if action is successful
-              const orderIndex = state.open.list.findIndex((order: any) => {
-                return order.orderId === payload.order.orderId && order.shipGroups.some((shipGroup: any) => {
-                  return shipGroup.shipGroupSeqId === payload.shipGroup.shipGroupSeqId;
-                });
-              });
-              if (orderIndex > -1) {
-                state.open.list.splice(orderIndex, 1);
-                commit(types.ORDER_OPEN_UPDATED, { orders: state.open.list, total: state.open.total -1 })
-              }
-            }
-          })
-        } else {
           dispatch("removeOpenOrder", payload)
-        }
 
         // Adding readyToHandover or readyToShip because we need to show the user that the order has moved to the packed tab
         if(payload.order.shipGroup.shipmentMethodTypeId === 'STOREPICKUP') {
