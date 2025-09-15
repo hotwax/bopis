@@ -192,7 +192,6 @@ const actions: ActionTree<OrderState , RootState> ={
     const payload = {
       shipmentId: shipmentIds.join(','),
       shipmentId_op: 'in',
-      shipmentMethodTypeId: 'STOREPICKUP',
       originalFacilityId: getCurrentFacilityId(),
       statusId: shipmentStatusId,
       pageIndex: 0,
@@ -476,7 +475,7 @@ const actions: ActionTree<OrderState , RootState> ={
 
       // Assign currentShipGroup and related fields
       const currentFacilityId = getCurrentFacilityId();
-      const currentShipGroup = order.shipGroups.find((shipGroup: any) => shipGroup.shipGroupSeqId === payload.shipGroupSeqId && shipGroup.shipmentMethodTypeId === "STOREPICKUP" && shipGroup.facilityId === currentFacilityId);
+      const currentShipGroup = order.shipGroups.find((shipGroup: any) => shipGroup.shipGroupSeqId === payload.shipGroupSeqId && shipGroup.facilityId === currentFacilityId);
 
       if (currentShipGroup) {
         order.shipGroup = currentShipGroup;
