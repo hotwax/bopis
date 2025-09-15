@@ -654,14 +654,10 @@ export default defineComponent({
           },{
             text: header,
             handler: async () => {
-              if(!pickup) {
-                await this.packShippingOrders(order, shipGroup);
-              } else {
                 if (!shipGroup.shipmentId) {
                   await this.printPicklist(order, shipGroup)
                 }
-                await this.store.dispatch('order/packShipGroupItems', { order, shipGroup })
-              }
+                await this.store.dispatch('order/packShipGroupItems', { order, shipGroup })              
             }
           }]
         });
