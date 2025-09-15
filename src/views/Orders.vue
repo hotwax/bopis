@@ -361,6 +361,7 @@ export default defineComponent({
           },{
             text: header,
             handler: async () => {
+              // Remove if part, single flow
               if(!pickup) {
                 this.packShippingOrders(order, shipGroup);
               } else {

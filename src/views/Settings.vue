@@ -123,7 +123,7 @@
         <DxpTimeZoneSwitcher @timeZoneUpdated="timeZoneUpdated" />
         <DxpLanguageSwitcher />
 
-        <!-- <ion-card>
+        <ion-card>
           <ion-card-header>
             <ion-card-title>
               {{ translate("Shipping orders") }}
@@ -131,11 +131,11 @@
           </ion-card-header>
           <ion-card-content>
             {{ translate('View shipping orders along with pickup orders.') }}
-          </ion-card-content> -->
-          <!-- <ion-item lines="none" :disabled="!hasPermission(Actions.APP_SHOW_SHIPPING_ORD_PREF_UPDATE)">
+          </ion-card-content>
+          <ion-item lines="none" :disabled="!hasPermission(Actions.APP_SHOW_SHIPPING_ORD_PREF_UPDATE)">
             <ion-toggle label-placement="start" :checked="getBopisProductStoreSettings('SHOW_SHIPPING_ORDERS')" @click.prevent="setBopisProductStoreSettings($event, 'SHOW_SHIPPING_ORDERS')">{{ translate("Show shipping orders") }}</ion-toggle>
-          </ion-item> -->
-        <!-- </ion-card> -->
+          </ion-item>
+        </ion-card>
 
         <ion-card>
           <ion-card-header>

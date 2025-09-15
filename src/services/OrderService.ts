@@ -92,13 +92,19 @@ const findPackedShipments = async (params: any): Promise <any>  => {
   params = {
     statusId: 'SHIPMENT_PACKED',
     originFacilityId: getCurrentFacilityId(),
-    shipmentMethodTypeIds: 'STOREPICKUP',
     shipmentTypeId: 'SALES_SHIPMENT',
     keyword: params.keyword,
     orderBy: '-orderDate',
     pageSize: process.env.VUE_APP_VIEW_SIZE,
     pageIndex: params.viewIndex || 0
   } as any
+
+  if(!store.state.user.bopisProductStoreSettings['SHOW_SHIPPING_ORDERS']) {
+    params = {
+      shipmentMethodTypeIds: 'STOREPICKUP',
+      ...params
+    }
+  }
 
   return await api({
     url: `/poorti/shipments`,
@@ -111,13 +117,19 @@ const findCompletedShipments = async (params:any): Promise <any>  => {
   params = {
     statusId: 'SHIPMENT_SHIPPED',
     originFacilityId: getCurrentFacilityId(),
-    shipmentMethodTypeIds: 'STOREPICKUP',
     shipmentTypeId: 'SALES_SHIPMENT',
     keyword: params.keyword,
     orderBy: '-orderDate',
     pageSize: process.env.VUE_APP_VIEW_SIZE,
     pageIndex: params.viewIndex || 0
   } as any
+
+  if(!store.state.user.bopisProductStoreSettings['SHOW_SHIPPING_ORDERS']) {
+    params = {
+      shipmentMethodTypeIds: 'STOREPICKUP',
+      ...params
+    }
+  }
 
   return await api({
     url: `/poorti/shipments`,

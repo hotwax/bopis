@@ -120,10 +120,19 @@ const actions: ActionTree<OrderState , RootState> ={
       orderStatusId: 'ORDER_APPROVED',
       shipmentStatusId: 'SHIPMENT_INPUT,SHIPMENT_PACKED,SHIPMENT_SHIPPED',
       shipmentStatusId_op: 'in',
-      shipmentStatusId_not: 'Y',
+      shipmentStatusId_not: 'Y',    
       pageSize: process.env.VUE_APP_VIEW_SIZE,
       pageIndex: params.viewIndex
     } as any;
+
+    if(store.state.user.bopisProductStoreSettings['SHOW_SHIPPING_ORDERS']) {
+      params = {
+        shipmentMethodTypeId: 'STOREPICKUP',
+        shipmentMethodTypeId_op: 'equals',
+        shipmentMethodTypeId_not: 'Y',
+        ...params
+      }
+    }
 
     try {
       const resp = await OrderService.getOpenOrders(params);
