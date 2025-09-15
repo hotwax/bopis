@@ -100,10 +100,7 @@ const findPackedShipments = async (params: any): Promise <any>  => {
   } as any
 
   if(!store.state.user.bopisProductStoreSettings['SHOW_SHIPPING_ORDERS']) {
-    params = {
-      shipmentMethodTypeIds: 'STOREPICKUP',
-      ...params
-    }
+    params.shipmentMethodTypeIds = 'STOREPICKUP'
   }
 
   return await api({
@@ -125,10 +122,7 @@ const findCompletedShipments = async (params:any): Promise <any>  => {
   } as any
 
   if(!store.state.user.bopisProductStoreSettings['SHOW_SHIPPING_ORDERS']) {
-    params = {
-      shipmentMethodTypeIds: 'STOREPICKUP',
-      ...params
-    }
+    params.shipmentMethodTypeIds = 'STOREPICKUP'
   }
 
   return await api({
