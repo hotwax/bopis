@@ -82,7 +82,7 @@ import { mapGetters, useStore } from "vuex"
 import { OrderService } from "@/services/OrderService";
 import { getProductIdentificationValue, translate, useProductIdentificationStore } from "@hotwax/dxp-components";
 import { isKit } from "@/utils/order"
-import { formatCurrency } from "@/utils";
+import { formatCurrency, showToast } from "@/utils";
 import { hasError } from "@hotwax/oms-api";
 import { DateTime } from "luxon";
 import emitter from "@/event-bus";
@@ -160,6 +160,9 @@ export default defineComponent({
         if (hasError(cancelledResponse)) {
           throw cancelledResponse.data;
         }
+
+        const toastMessage = this.currentOrder.shipGroup.items.length === itemsPayload.length ? translate('All items have been cancelled.') : translate('items have been cancelled.', { count: itemsPayload.length });
+        showToast(toastMessage);
 
         // Remove the cancelled items from the order details page
         const cancelledItemSeqIds = new Set(itemsPayload.map(item => item.orderItemSeqId));
