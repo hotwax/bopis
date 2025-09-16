@@ -228,7 +228,7 @@ const actions: ActionTree<OrderState , RootState> ={
 
           const pickerIds = allRoles.map((role: any) => role.partyId);
 
-          pickersMap[orderId] = { shipmentId, pickers, pickerIds };
+          pickersMap[shipmentId] = { shipmentId, pickers, pickerIds };
         });
       return pickersMap;
     } else {
@@ -567,7 +567,7 @@ const actions: ActionTree<OrderState , RootState> ={
           }
           productIds.push(...validItems.map((item: any) => item.productId));
 
-          const pickersInfo = pickers[shipment.orderId] || { pickers: "", pickerIds: [] };
+          const pickersInfo = pickers[shipment.shipmentId] || { pickers: "", pickerIds: [] };
 
           return {
             ...shipment,
@@ -638,7 +638,7 @@ const actions: ActionTree<OrderState , RootState> ={
 
           productIds.push(...validItems.map((item: any) => item.productId));
 
-          const pickersInfo = pickers[shipment.orderId] || { pickers: "", pickerIds: [] };
+          const pickersInfo = pickers[shipment.shipmentId] || { pickers: "", pickerIds: [] };
 
           return {
             ...shipment,
