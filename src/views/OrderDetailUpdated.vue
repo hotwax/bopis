@@ -597,7 +597,7 @@ export default defineComponent({
               (item: any) => !rejectedSeqIds.has(item.orderItemSeqId)
             );
             
-            const toastMessage = isEntireOrderRejection ? translate('All items were rejected from the order {orderId}.', { orderId: order.orderName ?? order.orderId }) : translate('{count} items were rejected from the order {orderId}.', { count: itemsToReject.length, orderId: order.orderName ?? order.orderId });
+            const toastMessage = isEntireOrderRejection ? translate('All items were rejected from the order.', { orderId: order.orderName ?? order.orderId }) : translate('items were rejected from the order.', { count: itemsToReject.length, orderId: order.orderName ?? order.orderId });
             showToast(toastMessage);
           }
         } catch (err) {
