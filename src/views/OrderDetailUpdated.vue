@@ -871,8 +871,8 @@ export default defineComponent({
           await this.createPicklist(order, result.data.selectedPicker)
           this.pickers = result.data.picker
           this.picklistDate = DateTime.now().toMillis()
-          this.prepareOrderTimeline();
           await this.getOrderDetail(this.orderId, this.shipGroupSeqId, this.orderType);
+          this.prepareOrderTimeline();
         }
       })
 
