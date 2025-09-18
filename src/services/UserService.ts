@@ -40,6 +40,27 @@ const getUserProfile = async (token: any): Promise<any> => {
   }
 }
 
+const fetchOmsInstanceName = async (token: any): Promise<any> => {
+  const baseURL = store.getters['user/getBaseUrl'];
+  try {
+    const resp = await client({
+      url: "admin/checkLoginOptions",
+      method: "get",
+      baseURL,
+      headers: {
+        "Authorization":  "Bearer " + token,
+        "Content-Type": "application/json"
+      }
+    });
+    if(hasError(resp)) { 
+      return Promise.reject("Error getting oms instance name: " + JSON.stringify(resp.data)); 
+    }
+    return Promise.resolve(resp.data?.omsInstanceName)
+  } catch(error: any) {
+    return Promise.reject(error)
+  }
+}
+
 const getCurrentEComStore = async (token: any, facilityId: any): Promise<any> => {
 
   // If the facilityId is not provided, it may be case of user not associated with any facility or the logout
@@ -263,6 +284,7 @@ const ensurePartyRole = async (payload: any): Promise <any> => {
 
 export const UserService = {
     ensurePartyRole,
+    fetchOmsInstanceName,
     login,
     getCurrentEComStore,
     getRerouteFulfillmentConfig,

@@ -70,6 +70,8 @@ const actions: ActionTree<UserState, RootState> = {
       }
       
       const userProfile = await UserService.getUserProfile(token);
+      //TODO: Add support in launchpad to call maarg's checkLoginOptions API to get the omsInstanceName and pass it to apps.
+      userProfile.omsInstanceName = await UserService.fetchOmsInstanceName(token)
 
       //fetching user facilities
       const isAdminUser = appPermissions.some((appPermission: any) => appPermission?.action === "APP_STOREFULFILLMENT_ADMIN" );
