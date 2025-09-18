@@ -471,7 +471,7 @@ export default defineComponent({
       getBopisProductStoreSettings: 'user/getBopisProductStoreSettings',
       rejectReasons: 'util/getRejectReasons',
       cancelReasons: 'util/getCancelReasons',
-      currentEComStore: 'user/getCurrentEComStore',
+      currentProductStore: 'user/getCurrentProductStore',
       getFacilityName: "util/getFacilityName",
       getEnumDescription: "util/getEnumDescription"
     })
@@ -922,7 +922,7 @@ export default defineComponent({
           statusId_op: "in",
           systemJobEnumId: "JOB_UL_CNCLD_ORD",
           systemJobEnumId_op: "equals",
-          productStoreId: this.currentEComStore?.productStoreId,
+          productStoreId: this.currentProductStore?.productStoreId,
         },
         orderBy: "runTime DESC",
         noConditionFind: "Y",
@@ -950,7 +950,7 @@ export default defineComponent({
       try {
         const params = {
           inputFields: {
-            productStoreId: this.currentEComStore?.productStoreId,
+            productStoreId: this.currentProductStore?.productStoreId,
             productStoreId_op: "equals"
           },
           entityName: "ShopifyConfig",

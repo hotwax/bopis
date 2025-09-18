@@ -214,7 +214,7 @@ export default defineComponent({
       getInventoryInformation: 'stock/getInventoryInformation',
       orders: 'order/getOrders',
       getProduct: 'product/getProduct',
-      currentEComStore: 'user/getCurrentEComStore',
+      currentProductStore: 'user/getCurrentProductStore',
     }),
   },
   async beforeMount() {
@@ -277,7 +277,7 @@ export default defineComponent({
 
       try {
         const resp: any = await StockService.checkShippingInventory({
-          productStoreId: this.currentEComStore.productStoreId,
+          productStoreId: this.currentProductStore.productStoreId,
           productIds: this.currentVariant.productId,
         });
 

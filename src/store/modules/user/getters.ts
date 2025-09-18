@@ -33,13 +33,13 @@ const getters: GetterTree <UserState, RootState> = {
         return baseUrl ? baseUrl : state.instanceUrl;
     },
     getCurrency (state) {
-        return state.currentEComStore.defaultCurrencyUomId ? state.currentEComStore.defaultCurrencyUomId : 'USD';
+        return state.currentProductStore.defaultCurrencyUomId ? state.currentProductStore.defaultCurrencyUomId : 'USD';
     },
     getUserPermissions (state) {
         return state.permissions;
     },
-    getCurrentEComStore(state) {
-        return state.currentEComStore;
+    getCurrentProductStore(state) {
+        return state.currentProductStore;
     },
     getPartialOrderRejectionConfig(state) {
         return state.partialOrderRejectionConfig;
