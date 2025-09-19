@@ -279,7 +279,7 @@ export default defineComponent({
   computed: {
     ...mapGetters({
       userProfile: 'user/getUserProfile',
-      currentEComStore: 'user/getCurrentEComStore',
+      currentProductStore: 'user/getCurrentProductStore',
       partialOrderRejectionConfig: 'user/getPartialOrderRejectionConfig',
       firebaseDeviceId: 'user/getFirebaseDeviceId',
       notificationPrefs: 'user/getNotificationPrefs',
@@ -312,10 +312,10 @@ export default defineComponent({
   },
   methods: {
     async updateFacility(facility: any) {
-      const previousEComStoreId = this.currentEComStore.productStoreId
+      const previousProductStoreId = this.currentProductStore.productStoreId
       await this.store.dispatch('user/setFacility', facility?.facilityId);
       await this.store.dispatch('user/fetchNotificationPreferences')
-      if(Object.keys(this.rerouteFulfillmentConfigMapping).length > 0 && previousEComStoreId !== this.currentEComStore.productStoreId) {
+      if(Object.keys(this.rerouteFulfillmentConfigMapping).length > 0 && previousProductStoreId !== this.currentProductStore.productStoreId) {
         this.getAvailableShipmentMethods();
         this.getRerouteFulfillmentConfiguration();
       }
@@ -413,7 +413,7 @@ export default defineComponent({
       try {
         const resp = await UserService.getRerouteFulfillmentConfig({
           "inputFields": {
-            "productStoreId": this.currentEComStore?.productStoreId,
+            "productStoreId": this.currentProductStore?.productStoreId,
             "shipmentMethodTypeId": "STOREPICKUP",
             "shipmentMethodTypeId_op": "notEqual"
           },
@@ -433,7 +433,7 @@ export default defineComponent({
       try {
         const payload = {
           "inputFields": {
-            "productStoreId": this.currentEComStore?.productStoreId,
+            "productStoreId": this.currentProductStore?.productStoreId,
             settingTypeEnumId
           },
           "entityName": "ProductStoreSetting",
@@ -469,7 +469,7 @@ export default defineComponent({
     },
     async updateRerouteFulfillmentConfiguration(config: any, value: any) {
       const params = {
-        "productStoreId": this.currentEComStore?.productStoreId,
+        "productStoreId": this.currentProductStore?.productStoreId,
         "settingTypeEnumId": config.settingTypeEnumId,
         "settingValue": value
       }

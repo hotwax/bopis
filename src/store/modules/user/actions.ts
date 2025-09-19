@@ -87,15 +87,15 @@ const actions: ActionTree<UserState, RootState> = {
         return uniqueFacilities
       }, []);
       // TODO Use a separate API for getting facilities, this should handle user like admin accessing the app
-      const currentEComStore = await UserService.getCurrentEComStore(token, getCurrentFacilityId());
+      const currentProductStore = await UserService.getCurrentProductStore(token, getCurrentFacilityId());
 
       
 
       updateToken(token)
 
-      // The setEComStorePreference method requires userId, Hence setting userProfile in the following line
+      // The setProductStorePreference method requires userId, Hence setting userProfile in the following line
       commit(types.USER_INFO_UPDATED, userProfile);
-      await useUserStore().setEComStorePreference(currentEComStore);
+      await useUserStore().setEComStorePreference(currentProductStore);
       /*  ---- Guard clauses ends here --- */
 
       setPermissions(appPermissions);
@@ -104,12 +104,12 @@ const actions: ActionTree<UserState, RootState> = {
       }
 
       // TODO user single mutation
-      commit(types.USER_CURRENT_ECOM_STORE_UPDATED, currentEComStore)
+      commit(types.USER_CURRENT_PRODUCT_STORE_UPDATED, currentProductStore)
       commit(types.USER_PERMISSIONS_UPDATED, appPermissions);
       commit(types.USER_TOKEN_CHANGED, { newToken: token })
 
       // Get product identification from api using dxp-component
-      await useProductIdentificationStore().getIdentificationPref(currentEComStore?.productStoreId)
+      await useProductIdentificationStore().getIdentificationPref(currentProductStore?.productStoreId)
 
       //fetching partial order rejection config for BOPIS orders
       await dispatch("getPartialOrderRejectionConfig");
@@ -199,17 +199,17 @@ const actions: ActionTree<UserState, RootState> = {
     // clearing the orders state whenever changing the facility
     dispatch("order/clearOrders", null, {root: true})
     dispatch("product/clearProducts", null, {root: true})
-    const previousEComStore = await useUserStore().getCurrentEComStore as any
-    // fetching the eComStore for updated facility
-    const eComStore = await UserService.getCurrentEComStore(token, facilityId);
+    const previousProductStore = await useUserStore().getCurrentEComStore as any
+    // fetching the ProductStore for updated facility
+    const productStore = await UserService.getCurrentProductStore(token, facilityId);
 
-    if(previousEComStore.productStoreId !== eComStore.productStoreId) {
-      await useUserStore().setEComStorePreference(eComStore);
-      commit(types.USER_CURRENT_ECOM_STORE_UPDATED, eComStore)
+    if(previousProductStore.productStoreId !== productStore.productStoreId) {
+      await useUserStore().setEComStorePreference(productStore);
+      commit(types.USER_CURRENT_PRODUCT_STORE_UPDATED, productStore)
       //fetching partial order rejection config for BOPIS orders aftering updating facility
       await dispatch("getPartialOrderRejectionConfig");
       await dispatch("fetchBopisProductStoreSettings");
-      await useProductIdentificationStore().getIdentificationPref(eComStore?.productStoreId)
+      await useProductIdentificationStore().getIdentificationPref(productStore?.productStoreId)
     }
   },
   /**
@@ -235,7 +235,7 @@ const actions: ActionTree<UserState, RootState> = {
     let config = {};
     const params = {
       "inputFields": {
-        "productStoreId": this.state.user.currentEComStore.productStoreId,
+        "productStoreId": this.state.user.currentProductStore.productStoreId,
         "settingTypeEnumId": "BOPIS_PART_ODR_REJ"
       },
       "entityName": "ProductStoreSetting",
@@ -277,7 +277,7 @@ const actions: ActionTree<UserState, RootState> = {
         //Create Product Store Setting
         payload = {
           ...payload, 
-          "productStoreId": this.state.user.currentEComStore.productStoreId,
+          "productStoreId": this.state.user.currentProductStore.productStoreId,
           "settingTypeEnumId": "BOPIS_PART_ODR_REJ"
         }
         resp = await UserService.createPartialOrderRejectionConfig(payload) as any
@@ -360,7 +360,7 @@ const actions: ActionTree<UserState, RootState> = {
 
     const payload = {
       "inputFields": {
-        "productStoreId": this.state.user.currentEComStore.productStoreId,
+        "productStoreId": this.state.user.currentProductStore.productStoreId,
         "settingTypeEnumId": Object.keys(productStoreSettings),
         "settingTypeEnumId_op": "in"
       },
@@ -403,7 +403,7 @@ const actions: ActionTree<UserState, RootState> = {
       }
 
       const params = {
-        "productStoreId": this.state.user.currentEComStore.productStoreId,
+        "productStoreId": this.state.user.currentProductStore.productStoreId,
         "settingTypeEnumId": enumeration.enumId,
         "settingValue": "false"
       }
@@ -420,10 +420,10 @@ const actions: ActionTree<UserState, RootState> = {
   async setProductStoreSetting({ commit, dispatch, state }, payload) {
     const productStoreSettings = JSON.parse(process.env.VUE_APP_PRODUCT_STORE_SETTING_ENUMS);
     let prefValue = state.bopisProductStoreSettings[payload.enumId]
-    const eComStoreId = this.state.user.currentEComStore.productStoreId;
+    const productStoreId = this.state.user.currentProductStore.productStoreId;
 
     // when selecting none as ecom store, not updating the pref as it's not possible to save pref with empty productStoreId
-    if(!eComStoreId) {
+    if(!productStoreId) {
       showToast(translate("Unable to update product store setting."))
       return;
     }
@@ -431,7 +431,7 @@ const actions: ActionTree<UserState, RootState> = {
     try {
       let resp = await UtilService.getProductStoreSettings({
         "inputFields": {
-          "productStoreId": this.state.user.currentEComStore.productStoreId,
+          "productStoreId": this.state.user.currentProductStore.productStoreId,
           "settingTypeEnumId": payload.enumId
         },
         "entityName": "ProductStoreSetting",
@@ -440,7 +440,7 @@ const actions: ActionTree<UserState, RootState> = {
       }) as any
       if(!hasError(resp) && resp.data.docs[0]?.settingTypeEnumId) {
         const params = {
-          "productStoreId": eComStoreId,
+          "productStoreId": productStoreId,
           "settingTypeEnumId": payload.enumId,
           "settingValue": `${payload.value}`
         }

@@ -11,7 +11,7 @@ const userModule: Module<UserState, RootState> = {
       token: '',
       current: {},
       instanceUrl: '',
-      currentEComStore: {},
+      currentProductStore: {},
       partialOrderRejectionConfig: {},
       permissions: [],
       notifications: [],

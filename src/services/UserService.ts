@@ -40,7 +40,7 @@ const getUserProfile = async (token: any): Promise<any> => {
   }
 }
 
-const getCurrentEComStore = async (token: any, facilityId: any): Promise<any> => {
+const getCurrentProductStore = async (token: any, facilityId: any): Promise<any> => {
 
   // If the facilityId is not provided, it may be case of user not associated with any facility or the logout
   if (!facilityId) {
@@ -264,7 +264,7 @@ const ensurePartyRole = async (payload: any): Promise <any> => {
 export const UserService = {
     ensurePartyRole,
     login,
-    getCurrentEComStore,
+    getCurrentProductStore,
     getRerouteFulfillmentConfig,
     getUserPermissions,
     getUserProfile,

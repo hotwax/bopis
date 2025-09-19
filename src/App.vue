@@ -64,7 +64,7 @@ export default defineComponent({
     ...mapGetters({
       userToken: 'user/getUserToken',
       instanceUrl: 'user/getInstanceUrl',
-      currentEComStore: 'user/getCurrentEComStore',
+      currentProductStore: 'user/getCurrentProductStore',
       allNotificationPrefs: 'user/getAllNotificationPrefs'
     })
   },
@@ -100,7 +100,7 @@ export default defineComponent({
     // token is available which results in api failure as unauthenticated, thus making logout call and then login call again and so on.
     if(this.userToken) {
       // Get product identification from api using dxp-component
-      await useProductIdentificationStore().getIdentificationPref(this.currentEComStore?.productStoreId)
+      await useProductIdentificationStore().getIdentificationPref(this.currentProductStore?.productStoreId)
         .catch((error) => logger.error(error));
 
       // check if firebase configurations are there.

@@ -3,7 +3,7 @@ export default interface UserState {
     current: any;
     instanceUrl: string;
     permissions: any;
-    currentEComStore: any;
+    currentProductStore: any;
     partialOrderRejectionConfig: any
     notifications: any;
     notificationPrefs: any;
