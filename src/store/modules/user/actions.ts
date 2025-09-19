@@ -104,7 +104,7 @@ const actions: ActionTree<UserState, RootState> = {
       }
 
       // TODO user single mutation
-      commit(types.USER_CURRENT_ECOM_STORE_UPDATED, currentProductStore)
+      commit(types.USER_CURRENT_PRODUCT_STORE_UPDATED, currentProductStore)
       commit(types.USER_PERMISSIONS_UPDATED, appPermissions);
       commit(types.USER_TOKEN_CHANGED, { newToken: token })
 
@@ -205,7 +205,7 @@ const actions: ActionTree<UserState, RootState> = {
 
     if(previousProductStore.productStoreId !== productStore.productStoreId) {
       await useUserStore().setEComStorePreference(productStore);
-      commit(types.USER_CURRENT_ECOM_STORE_UPDATED, productStore)
+      commit(types.USER_CURRENT_PRODUCT_STORE_UPDATED, productStore)
       //fetching partial order rejection config for BOPIS orders aftering updating facility
       await dispatch("getPartialOrderRejectionConfig");
       await dispatch("fetchBopisProductStoreSettings");
