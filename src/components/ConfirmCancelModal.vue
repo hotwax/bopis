@@ -161,7 +161,7 @@ export default defineComponent({
           throw cancelledResponse.data;
         }
 
-        const toastMessage = this.currentOrder.shipGroup.items.length === itemsPayload.length ? translate('All items have been cancelled.') : translate('some items have been cancelled.');
+        const toastMessage = this.currentOrder.shipGroup.items.length === itemsPayload.length ? translate('All items have been cancelled.') : translate('Some items have been cancelled.');
         showToast(toastMessage);
 
         // Remove the cancelled items from the order details page

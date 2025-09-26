@@ -93,7 +93,7 @@
                       <ion-label>{{ getRejectionReasonDescription(rejectEntireOrderReasonId) ? getRejectionReasonDescription(rejectEntireOrderReasonId) : translate("Reject to avoid order split (no variance)") }}</ion-label>
                       <ion-icon :icon="caretDownOutline"/>
                     </ion-chip>
-                    <ion-button data-testid="select-rejected-item-button" v-else slot="end" color="danger" fill="clear" size="small" @click.stop="openRejectReasonPopover($event, item, order)">
+                    <ion-button data-testid="select-rejected-item-button" v-else slot="end" color="danger" fill="clear" size="small" :disabled="isOrderIneligible(order.shipGroup)" @click.stop="openRejectReasonPopover($event, item, order)">
                       <ion-icon slot="icon-only" :icon="trashOutline"/>
                     </ion-button>
                   </template>
@@ -104,7 +104,7 @@
                       <ion-label>{{ getCancelReasonDescription(item.cancelReason) }}</ion-label>
                       <ion-icon :icon="caretDownOutline"/>
                     </ion-chip>
-                    <ion-button data-testid="select-cancel-item-button" v-else slot="end" color="danger" fill="clear" size="small" :disabled="!hasPermission(Actions.APP_CANCEL_BOPIS_ORDER)" @click.stop="openCancelReasonPopover($event, item, order)">
+                    <ion-button data-testid="select-cancel-item-button" v-else slot="end" color="danger" fill="clear" size="small" :disabled="!hasPermission(Actions.APP_CANCEL_BOPIS_ORDER) || isOrderIneligible(order.shipGroup)" @click.stop="openCancelReasonPopover($event, item, order)">
                       {{ translate("Cancel") }}
                     </ion-button>
                   </template>
@@ -181,7 +181,7 @@
           </template>
 
           <ion-item lines="none" v-if="orderType === 'open' && order.shipGroup?.items?.length">
-            <ion-button data-testid="ready-pickup-button" size="default" :disabled="!hasPermission(Actions.APP_ORDER_UPDATE) || order.readyToHandover || order.readyToShip || order.rejected || hasRejectedItems" @click="readyForPickup(order, order.shipGroup)">
+            <ion-button data-testid="ready-pickup-button" size="default" :disabled="!hasPermission(Actions.APP_ORDER_UPDATE) || order.readyToHandover || order.readyToShip || order.rejected || hasRejectedItems || isOrderIneligible(order.shipGroup)" @click="readyForPickup(order, order.shipGroup)">
               <ion-icon slot="start" :icon="bagCheckOutline"/>
               {{ order?.shipGroup.shipmentMethodTypeId === 'STOREPICKUP' ? translate("Ready for pickup") : translate("Ready to ship") }}
             </ion-button>
@@ -190,7 +190,7 @@
             </ion-button>            
           </ion-item>
           <ion-item lines="none" v-else-if="orderType === 'packed' && order.shipGroup?.items?.length" class="ion-hide-md-down">
-            <ion-button data-testid="handover-button" size="default" :disabled="!hasPermission(Actions.APP_ORDER_UPDATE) || order.handovered || order.shipped || order.cancelled || hasCancelledItems" expand="block" @click="deliverShipment(order)">
+            <ion-button data-testid="handover-button" size="default" :disabled="!hasPermission(Actions.APP_ORDER_UPDATE) || order.handovered || order.shipped || order.cancelled || hasCancelledItems || isOrderIneligible(order.shipGroup)" expand="block" @click="deliverShipment(order)">
               <ion-icon slot="start" :icon="checkmarkDoneOutline"/>
               {{ order.shipGroup.shipmentMethodTypeId === 'STOREPICKUP' ? translate("Handover") : translate("Ship") }}
             </ion-button>
@@ -478,6 +478,13 @@ export default defineComponent({
   },
   props: ['orderType', 'orderId', 'shipGroupSeqId'],
   methods: {
+    isOrderIneligible (shipGroup: any) {
+      if (this.$props.orderType === 'open') {
+        return ["SHIPMENT_INPUT", "SHIPMENT_PACKED", "SHIPMENT_SHIPPED"].includes(shipGroup.shipmentStatusId)
+      } else if (this.$props.orderType === 'packed') {
+        return  shipGroup.shipmentStatusId !== 'SHIPMENT_PACKED'
+      }
+    },
     async fetchProductInventory(productId: string, shipGroupSeqId: any) {
       this.store.dispatch('order/updateOrderItemFetchingStatus', { productId, shipGroupSeqId })
       await this.store.dispatch('stock/fetchProductInventory', { productId })
@@ -598,7 +605,7 @@ export default defineComponent({
               (item: any) => !rejectedSeqIds.has(item.orderItemSeqId)
             );
             
-            const toastMessage = order.shipGroup.items.length === 0 ? translate('All items were rejected from the order.', { orderId: order.orderName ?? order.orderId }) : translate('some items were rejected from the order.', { orderId: order.orderName ?? order.orderId });
+            const toastMessage = order.shipGroup.items.length === 0 ? translate('All items were rejected from the order.', { orderId: order.orderName ?? order.orderId }) : translate('Some items were rejected from the order.', { orderId: order.orderName ?? order.orderId });
             showToast(toastMessage);
           }
         } catch (err) {
