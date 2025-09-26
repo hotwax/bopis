@@ -446,6 +446,8 @@ const actions: ActionTree<OrderState , RootState> ={
       );
       await this.dispatch('product/fetchProducts', { productIds });
 
+      const sortedPaymentPreference = [...data.paymentPreferences].sort((a: any, b: any) => (b.createdDate || 0) - (a.createdDate || 0));
+
       // Add showKitComponents to each item in shipGroups and remove cancelled items
       const shipGroups = data.shipGroups.map((group: any) => {
         const validItems = group.shipmentMethodTypeId === 'STOREPICKUP' ? group.items.filter(
@@ -470,7 +472,8 @@ const actions: ActionTree<OrderState , RootState> ={
         customerName: (`${data.customerFirstName || ""} ${data.customerLastName || ""}`).trim(),
         shopifyOrderId: data.orderExternalId,
         approvedDate: data.statuses?.find((status: any) => status.statusId === "ORDER_APPROVED")?.statusDatetime,
-        completedDate: data.statuses?.find((status: any) => status.statusId === "ORDER_COMPLETED")?.statusDatetime,        
+        completedDate: data.statuses?.find((status: any) => status.statusId === "ORDER_COMPLETED")?.statusDatetime,
+        paymentPreferences: sortedPaymentPreference
       };
 
       // Assign currentShipGroup and related fields
