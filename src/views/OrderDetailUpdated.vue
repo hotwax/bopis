@@ -479,11 +479,13 @@ export default defineComponent({
   props: ['orderType', 'orderId', 'shipGroupSeqId'],
   methods: {
     isOrderIneligible (shipGroup: any) {
-      if (this.$props.orderType === 'open') {
+      if (this.orderType === 'open') {
         return ["SHIPMENT_INPUT", "SHIPMENT_PACKED", "SHIPMENT_SHIPPED"].includes(shipGroup.shipmentStatusId)
-      } else if (this.$props.orderType === 'packed') {
+      }
+      if (this.orderType === 'packed') {
         return  shipGroup.shipmentStatusId !== 'SHIPMENT_PACKED'
       }
+      return false;
     },
     async fetchProductInventory(productId: string, shipGroupSeqId: any) {
       this.store.dispatch('order/updateOrderItemFetchingStatus', { productId, shipGroupSeqId })
