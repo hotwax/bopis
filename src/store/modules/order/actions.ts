@@ -479,11 +479,11 @@ const actions: ActionTree<OrderState , RootState> ={
 
       if (currentShipGroup) {
         if (currentShipGroup.shipmentMethodTypeId === 'STOREPICKUP') {
-          order.readyToHandover = currentShipGroup.category === "Packed" ? true : false
-          order.handovered = currentShipGroup.category === "Completed" ? true : false
+          order.readyToHandover = currentShipGroup.category === "Packed"
+          order.handovered = currentShipGroup.category === "Completed"
         } else {
-          order.readyToShip = currentShipGroup.category === "Packed" ? true : false
-          order.shipped = currentShipGroup.category === "Completed" ? true : false
+          order.readyToShip = currentShipGroup.category === "Packed"
+          order.shipped = currentShipGroup.category === "Completed"
         }
         order.shipGroup = currentShipGroup;
         order.picklistId = currentShipGroup.picklistId || null;
