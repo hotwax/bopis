@@ -237,10 +237,9 @@
                     <ion-label class="ion-text-wrap">
                       <p class="overline">{{ orderPaymentPreference.paymentMethodTypeId }}</p>
                       <ion-label>{{ translate(orderPaymentPreference.paymentMethodTypeDesc) || orderPaymentPreference.paymentMethodTypeId }}</ion-label>
-                      <ion-note :color="getColorByDesc(orderPaymentPreference.statusDesc)">{{ translate(orderPaymentPreference.statusDesc) }}</ion-note>
+                      <ion-note :color="getColorByDesc(orderPaymentPreference.statusDesc)">{{ translate(orderPaymentPreference.statusDesc) }} {{ translate("at") }} : {{ DateTime.fromMillis(orderPaymentPreference.createdDate).toFormat("d LLL yyyy, h:mm a") }}</ion-note>
                     </ion-label>
                     <div slot="end" class="ion-text-end">
-                      <ion-badge v-if="order.paymentPreferences.length > 1 && index === 0" color="dark">{{ translate("Latest") }}</ion-badge>
                       <ion-label slot="end">{{ formatCurrency(orderPaymentPreference.maxAmount, order.currencyUom) }}</ion-label>
                     </div>
                   </ion-item>
@@ -1348,7 +1347,8 @@ export default defineComponent({
       mailOutline,
       sendOutline,
       translate,
-      trashOutline
+      trashOutline,
+      DateTime
     };
   }
 });
