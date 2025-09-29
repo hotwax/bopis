@@ -534,6 +534,7 @@ export default defineComponent({
                 if(!hasError(resp)) {
                   // Update order timeline once the order is completed
                   // Sending statusId explicitly as we do not fetch the order info again on handover
+                  this.getOrderDetail(this.orderId, this.shipGroupSeqId, this.orderType);
                   this.prepareOrderTimeline({ statusId: "ORDER_COMPLETED" });
                 }
               })
@@ -598,7 +599,7 @@ export default defineComponent({
               (item: any) => !rejectedSeqIds.has(item.orderItemSeqId)
             );
             
-            const toastMessage = order.shipGroup.items.length === 0 ? translate('All items were rejected from the order.', { orderId: order.orderName ?? order.orderId }) : translate('some items were rejected from the order.', { orderId: order.orderName ?? order.orderId });
+            const toastMessage = order.shipGroup.items.length === 0 ? translate('All items were rejected from the order.', { orderId: order.orderName ?? order.orderId }) : translate('Some items were rejected from the order.', { orderId: order.orderName ?? order.orderId });
             showToast(toastMessage);
           }
         } catch (err) {
