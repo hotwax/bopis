@@ -60,11 +60,11 @@
           </ion-item>
 
            <!-- Order Status -->
-          <ion-item v-if="order.readyToHandover || order.readyToShip" color="light" lines="none">
+          <ion-item v-if="orderType === 'open' && ( order.readyToHandover || order.readyToShip )" color="light" lines="none">
             <ion-icon :icon="checkmarkCircleOutline" color="success" slot="start" />
             <ion-label data-testid="ready-handover-label" class="ion-text-wrap">{{ order.readyToHandover ? translate("Order is now ready to handover.") : translate("Order is now ready to be shipped.") }}</ion-label>
           </ion-item>
-          <ion-item v-if="order.handovered || order.shipped" color="light" lines="none">
+          <ion-item v-if="orderType === 'packed' && ( order.handovered || order.shipped )" color="light" lines="none">
             <ion-icon :icon="checkmarkCircleOutline" color="success" slot="start" />
             <ion-label data-testid="handed-over-success-label" class="ion-text-wrap">{{ order.handovered ? translate("Order is successfully handed over to customer.") : translate("Order is successfully shipped.") }}</ion-label>
           </ion-item>
