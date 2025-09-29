@@ -237,7 +237,7 @@
                     <ion-label class="ion-text-wrap">
                       <p class="overline">{{ orderPaymentPreference.paymentMethodTypeId }}</p>
                       <ion-label>{{ translate(orderPaymentPreference.paymentMethodTypeDesc) || orderPaymentPreference.paymentMethodTypeId }}</ion-label>
-                      <ion-note :color="getColorByDesc(orderPaymentPreference.statusDesc)">{{ translate(orderPaymentPreference.statusDesc) }} at : {{ DateTime.fromMillis(orderPaymentPreference.createdDate).toFormat("yyyy-MM-dd'T'HH:mm:ss") }}</ion-note>
+                      <ion-note :color="getColorByDesc(orderPaymentPreference.statusDesc)">{{ translate(orderPaymentPreference.statusDesc) }} at : {{ DateTime.fromMillis(orderPaymentPreference.createdDate).toFormat("d LLL yyyy, h:mm a") }}</ion-note>
                     </ion-label>
                     <div slot="end" class="ion-text-end">
                       <ion-label slot="end">{{ formatCurrency(orderPaymentPreference.maxAmount, order.currencyUom) }}</ion-label>
