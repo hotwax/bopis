@@ -46,7 +46,7 @@
           <ion-card-content>
             {{ translate("This is the name of the OMS you are connected to right now. Make sure that you are connected to the right instance before proceeding.") }}
           </ion-card-content>
-          <ion-button :disabled="!omsRedirectionUrl || !omsToken" @click="goToOms(omsToken, omsRedirectionUrl)" fill="clear">
+          <ion-button @click="goToOms(omsToken, omsUrl)" fill="clear">
             {{ translate("Go to OMS") }}
             <ion-icon slot="end" :icon="openOutline" />
           </ion-button>
@@ -284,7 +284,7 @@ export default defineComponent({
       allNotificationPrefs: 'user/getAllNotificationPrefs',
       getBopisProductStoreSettings: "user/getBopisProductStoreSettings",
       oms: "user/getInstanceUrl",
-      omsRedirectionUrl: "user/getOmsBaseUrl",
+      omsUrl: "user/getBaseUrl",
       omsToken: "user/getUserToken"
     })
   },

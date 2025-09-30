@@ -13,7 +13,7 @@ import {
   logout,
   resetConfig,
   storeClientRegistrationToken,
-  updateInstanceUrl,
+  updateUrls,
   updateToken
 } from '@/adapter'
 import { DateTime, Settings } from 'luxon';
@@ -35,8 +35,8 @@ const actions: ActionTree<UserState, RootState> = {
  */
   async login ({ commit, dispatch, getters }, payload) {
     try {
-      const {token, oms, omsRedirectionUrl} = payload;
-      dispatch("setUserInstanceUrl", oms);
+      const {token, oms, maarg} = payload;
+      dispatch("setOmsUrls", { oms, maarg });
 
       // Getting the permissions list from server
       const permissionId = process.env.VUE_APP_PERMISSION_ID;
@@ -46,7 +46,7 @@ const actions: ActionTree<UserState, RootState> = {
 
       const serverPermissions = await UserService.getUserPermissions({
         permissionIds: [...new Set(serverPermissionsFromRules)]
-      }, omsRedirectionUrl, token);
+      }, token);
       const appPermissions = prepareAppPermissions(serverPermissions);
 
 
@@ -63,10 +63,6 @@ const actions: ActionTree<UserState, RootState> = {
           logger.error("error", permissionError);
           return Promise.reject(new Error(permissionError));
         }
-      }
-
-      if (omsRedirectionUrl) {
-        dispatch("setOmsRedirectionUrl", omsRedirectionUrl)
       }
       
       const userProfile = await UserService.getUserProfile(token);
@@ -171,7 +167,6 @@ const actions: ActionTree<UserState, RootState> = {
     this.dispatch("util/clearCurrentFacilityLatLon", {})
     this.dispatch("util/clearStoresInformation", {})
     commit(types.USER_END_SESSION)
-    dispatch("setOmsRedirectionUrl", "")
     resetPermissions();
     resetConfig();
 
@@ -187,10 +182,6 @@ const actions: ActionTree<UserState, RootState> = {
 
     emitter.emit('dismissLoader')
     return redirectionUrl;
-  },
-
-  setOmsRedirectionUrl({ commit }, payload) {
-    commit(types.USER_OMS_REDIRECTION_URL_UPDATED, payload)
   },
 
   /**
@@ -217,10 +208,16 @@ const actions: ActionTree<UserState, RootState> = {
   /**
    * Set User Instance Url
    */
-   setUserInstanceUrl ({ commit }, instanceUrl){
+  setUserInstanceUrl ({ commit }, instanceUrl){
     commit(types.USER_INSTANCE_URL_UPDATED, instanceUrl)
-    updateInstanceUrl(instanceUrl)
-   },
+  },
+
+  // Set Instance Urls
+  setOmsUrls({ commit }, payload) {
+    commit(types.USER_INSTANCE_URL_UPDATED, payload.oms)
+    commit(types.USER_MAARG_UPDATED, payload.maarg)
+    updateUrls(payload.oms, payload.maarg)
+  },
   
   /**
    * Update user timeZone

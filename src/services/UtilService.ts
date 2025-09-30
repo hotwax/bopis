@@ -1,11 +1,9 @@
 import { api, apiClient } from '@/adapter';
 import { hasError } from '@/adapter';
-import store from '@/store';
-import logger from '@/logger';
 
 const fetchRejectReasons = async (query: any): Promise<any> => {
   return api({
-    url: `/admin/enums`,
+    url: "/admin/enums",
     method: "GET",
     params: query
   });
@@ -28,162 +26,91 @@ const fetchCancelReasons = async (payload: any): Promise<any> => {
 }
 
 const fetchPaymentMethodTypeDesc = async (query: any): Promise <any>  => {
-  const baseURL = store.getters['user/getOmsBaseUrl'];
-  const omstoken = store.getters['user/getUserToken'];
-
-  return apiClient({
+  return api({
     url: "performFind",
     method: "get",
-    baseURL,
-    headers: {
-      "Authorization": "Bearer " + omstoken,
-      "Content-Type": "application/json"
-    },
-    params: query
+    params: query,
+    systemType: "OFBIZ"
   });
 }
 
 const fetchStatusDesc = async (query: any): Promise <any>  => {
-  const baseURL = store.getters['user/getOmsBaseUrl'];
-  const omstoken = store.getters['user/getUserToken'];
-
-  return apiClient({
+  return api({
     url: "performFind",
     method: "get",
-    baseURL,
-    headers: {
-      "Authorization": "Bearer " + omstoken,
-      "Content-Type": "application/json"
-    },
-    params: query
+    params: query,
+    systemType: "OFBIZ"
   });
 }
 
 const resetPicker = async (payload: any): Promise<any> => {
-  const baseURL = store.getters['user/getOmsBaseUrl'];
-  const omstoken = store.getters['user/getUserToken'];
-
-  return apiClient({
+  return api({
     url: "/service/resetPicker",
     method: "post",
-    baseURL,
-    headers: {
-      "Authorization": "Bearer " + omstoken,
-      "Content-Type": "application/json"
-    },
-    data: payload
+    data: payload,
+    systemType: "OFBIZ"
   })
 }
 
 const fetchFacilityTypeInformation = async (query: any): Promise<any> => {
-  const baseURL = store.getters['user/getOmsBaseUrl'];
-  const omstoken = store.getters['user/getUserToken'];
-
-  return apiClient({
+  return api({
     url: "performFind",
     method: "get",
-    baseURL,
-    headers: {
-      "Authorization": "Bearer " + omstoken,
-      "Content-Type": "application/json"
-    },
-    params: query
+    params: query,
+    systemType: "OFBIZ"
   });
 }
 
 const fetchPartyInformation = async (query: any): Promise<any> => {
-  const baseURL = store.getters['user/getOmsBaseUrl'];
-  const omstoken = store.getters['user/getUserToken'];
-
-  return apiClient({
+  return api({
     url: "performFind",
     method: "get",
-    baseURL,
-    headers: {
-      "Authorization": "Bearer " + omstoken,
-      "Content-Type": "application/json"
-    },
-    params: query
+    params: query,
+    systemType: "OFBIZ"
   });
 }
 
 const getProductStoreSettings = async (payload: any): Promise<any> => {
-  const baseURL = store.getters['user/getOmsBaseUrl'];
-  const omstoken = store.getters['user/getUserToken'];
-
-  return apiClient({
+  return api({
     url: "performFind",
     method: "post",
-    baseURL,
-    headers: {
-      "Authorization": "Bearer " + omstoken,
-      "Content-Type": "application/json"
-    },
-    data: payload
+    data: payload,
+    systemType: "OFBIZ"
   });
 }
 
 const createProductStoreSetting = async (payload: any): Promise<any> => {
-  const baseURL = store.getters['user/getOmsBaseUrl'];
-  const omstoken = store.getters['user/getUserToken'];
-
-  return apiClient({
+  return api({
     url: "service/createProductStoreSetting",
     method: "post",
-    baseURL,
-    headers: {
-      "Authorization": "Bearer " + omstoken,
-      "Content-Type": "application/json"
-    },
-    data: payload
+    data: payload,
+    systemType: "OFBIZ"
   });
 }
 
 const updateProductStoreSetting = async (payload: any): Promise<any> => {
-  const baseURL = store.getters['user/getOmsBaseUrl'];
-  const omstoken = store.getters['user/getUserToken'];
-
-  return apiClient({
+  return api({
     url: "service/updateProductStoreSetting",
     method: "post",
-    baseURL,
-    headers: {
-      "Authorization": "Bearer " + omstoken,
-      "Content-Type": "application/json"
-    },
-    data: payload
+    data: payload,
+    systemType: "OFBIZ"
   });
 }
 
 const createEnumeration = async (payload: any): Promise<any> => {
-  const baseURL = store.getters['user/getOmsBaseUrl'];
-  const omstoken = store.getters['user/getUserToken'];
-
-  return apiClient({
+  return api({
     url: "/service/createEnumeration",
     method: "post",
-    baseURL,
-    headers: {
-      "Authorization": "Bearer " + omstoken,
-      "Content-Type": "application/json"
-    },
-    data: payload
+    data: payload,
+    systemType: "OFBIZ"
   })
 }
 
 const isEnumExists = async (enumId: string): Promise<any> => {
-  const baseURL = store.getters['user/getOmsBaseUrl'];
-  const omstoken = store.getters['user/getUserToken'];
-
   try {
-    const resp = await apiClient({
+    const resp = await api({
       url: 'performFind',
       method: 'POST',
-      baseURL,
-      headers: {
-        "Authorization": "Bearer " + omstoken,
-        "Content-Type": "application/json"
-      },
       data: {
         entityName: "Enumeration",
         inputFields: {
@@ -192,7 +119,8 @@ const isEnumExists = async (enumId: string): Promise<any> => {
         viewSize: 1,
         fieldList: ["enumId"],
         noConditionFind: 'Y'
-      }
+      },
+      systemType: "OFBIZ"
     }) as any
 
     if (!hasError(resp) && resp.data.docs.length) {
@@ -205,98 +133,56 @@ const isEnumExists = async (enumId: string): Promise<any> => {
 }
 
 const fetchJobInformation = async (payload: any): Promise <any>  => {
-  const baseURL = store.getters['user/getOmsBaseUrl'];
-  const omstoken = store.getters['user/getUserToken'];
-
-  return apiClient({
+  return api({
     url: "/findJobs",
     method: "get",
-    baseURL,
-    headers: {
-      "Authorization": "Bearer " + omstoken,
-      "Content-Type": "application/json"
-    },
-    params: payload
+    params: payload,
+    systemType: "OFBIZ"
   });
 }
 
 const getProcessRefundStatus = async (payload: any): Promise<any> => {
-  const baseURL = store.getters['user/getOmsBaseUrl'];
-  const omstoken = store.getters['user/getUserToken'];
-
-  return apiClient({
+  return api({
     url: "performFind",
     method: "post",
-    baseURL,
-    headers: {
-      "Authorization": "Bearer " + omstoken,
-      "Content-Type": "application/json"
-    },
-    data: payload
+    data: payload,
+    systemType: "OFBIZ"
   });
 }
 
 const fetchFacilities = async (payload: any): Promise<any> => {
-  const baseURL = store.getters['user/getOmsBaseUrl'];
-  const omstoken = store.getters['user/getUserToken'];
-
-  return apiClient({
+  return api({
     url: "performFind",
     method: "post",
-    baseURL,
-    headers: {
-      "Authorization": "Bearer " + omstoken,
-      "Content-Type": "application/json"
-    },
-    data: payload
+    data: payload,
+    systemType: "OFBIZ"
   });
 }
 
 const fetchEnumerations = async (payload: any): Promise<any> => {
-  const baseURL = store.getters['user/getOmsBaseUrl'];
-  const omstoken = store.getters['user/getUserToken'];
-
-  return apiClient({
+  return api({
     url: "performFind",
     method: "post",
-    baseURL,
-    headers: {
-      "Authorization": "Bearer " + omstoken,
-      "Content-Type": "application/json"
-    },
-    data: payload
+    data: payload,
+    systemType: "OFBIZ"
   });
 }
 
 const fetchCurrentFacilityLatLon = async (payload: any): Promise<any> => {
-  const baseURL = store.getters['user/getOmsBaseUrl'];
-  const omstoken = store.getters['user/getUserToken'];
-
-  return apiClient({
+  return api({
     url: "performFind",
     method: "post",
-    baseURL,
-    headers: {
-      "Authorization": "Bearer " + omstoken,
-      "Content-Type": "application/json"
-    },
-    data: payload
+    data: payload,
+    systemType: "OFBIZ"
   });
 }
 
 const fetchStoresInformation = async (payload: any): Promise<any> => {
-  const baseURL = store.getters['user/getOmsBaseUrl'];
-  const omstoken = store.getters['user/getUserToken'];
-
-  return apiClient({
+  return api({
     url: "storeLookup",
     method: "post",
-    baseURL,
-    headers: {
-      "Authorization": "Bearer " + omstoken,
-      "Content-Type": "application/json"
-    },
-    data: payload
+    data: payload,
+    systemType: "OFBIZ"
   });
 }
 

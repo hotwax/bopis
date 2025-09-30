@@ -1,19 +1,14 @@
-import { apiClient, client, hasError } from '@/adapter';
+import { api, apiClient, client, hasError } from '@/adapter';
 
 import store from '@/store';
 
 const login = async (username: string, password: string): Promise <any> => {
-  const baseURL = store.getters['user/getOmsBaseUrl'];
-  const omstoken = store.getters['user/getUserToken'];
+  const baseURL = store.getters['user/getBaseUrl'];
 
   return apiClient({
     url: "login", 
     method: "post",
     baseURL,
-    headers: {
-      "Authorization": "Bearer " + omstoken,
-      "Content-Type": "application/json"
-    },
     data: {
       'USERNAME': username, 
       'PASSWORD': password
@@ -22,7 +17,7 @@ const login = async (username: string, password: string): Promise <any> => {
 }
 
 const getUserProfile = async (token: any): Promise<any> => {
-  const baseURL = store.getters['user/getBaseUrl'];
+  const baseURL = store.getters['user/getMaargUrl'];
   try {
     const resp = await client({
       url: "admin/user/profile",
@@ -41,7 +36,7 @@ const getUserProfile = async (token: any): Promise<any> => {
 }
 
 const fetchOmsInstanceName = async (token: any): Promise<any> => {
-  const baseURL = store.getters['user/getBaseUrl'];
+  const baseURL = store.getters['user/getMaargUrl'];
   try {
     const resp = await client({
       url: "admin/checkLoginOptions",
@@ -68,7 +63,6 @@ const getCurrentEComStore = async (token: any, facilityId: any): Promise<any> =>
     return Promise.resolve({});
   }
 
-  const baseURL = store.getters['user/getOmsBaseUrl'];
   try {
     const data = {
       "inputFields": {
@@ -81,16 +75,12 @@ const getCurrentEComStore = async (token: any, facilityId: any): Promise<any> =>
       "filterByDate": "Y"
     }
     
-    const resp = await client({
+    const resp = await api({
       url: "performFind",
       method: "post",
       data,
-      baseURL,
-      headers: {
-        "Authorization":  "Bearer " + token,
-        "Content-Type": "application/json"
-      }
-    });
+      systemType: "OFBIZ"
+    }) as any;
     if (hasError(resp)) {
       throw resp.data;
     }
@@ -101,84 +91,54 @@ const getCurrentEComStore = async (token: any, facilityId: any): Promise<any> =>
   }
 }
 const getRerouteFulfillmentConfig = async (payload: any): Promise<any> => {
-  const baseURL = store.getters['user/getOmsBaseUrl'];
-  const omstoken = store.getters['user/getUserToken'];
-  return apiClient({
+  return api({
     url: "performFind",
     method: "get",
-    baseURL,
-    headers: {
-      "Authorization": "Bearer " + omstoken,
-      "Content-Type": "application/json"
-    },
     params: payload,
+    systemType: "OFBIZ"
   });
 }
 
 const updateRerouteFulfillmentConfig = async (payload: any): Promise<any> => {
-  const baseURL = store.getters['user/getOmsBaseUrl'];
-  const omstoken = store.getters['user/getUserToken'];
-  return apiClient({
+  return api({
     url: "service/updateProductStoreSetting",
     method: "post",
-    baseURL,
-    headers: {
-      "Authorization": "Bearer " + omstoken,
-      "Content-Type": "application/json"
-    },
-    data: payload
+    data: payload,
+    systemType: "OFBIZ"
   });
 }
 
 const getPartialOrderRejectionConfig = async (payload: any): Promise<any> => {
-  const baseURL = store.getters['user/getOmsBaseUrl'];
-  const omstoken = store.getters['user/getUserToken'];
-  return apiClient({
+  return api({
     url: "performFind",
     method: "get",
-    baseURL,
-    headers: {
-      "Authorization": "Bearer " + omstoken,
-      "Content-Type": "application/json"
-    },
     params: payload,
+    systemType: "OFBIZ"
   });
 }
 
 const createPartialOrderRejectionConfig = async (payload: any): Promise<any> => {
-  const baseURL = store.getters['user/getOmsBaseUrl'];
-  const omstoken = store.getters['user/getUserToken'];
-  return apiClient({
+  return api({
     url: "service/createProductStoreSetting",
     method: "post",
-    baseURL,
-    headers: {
-      "Authorization": "Bearer " + omstoken,
-      "Content-Type": "application/json"
-    },
-    data: payload
+    data: payload,
+    systemType: "OFBIZ"
   });
 }
 
 const updatePartialOrderRejectionConfig = async (payload: any): Promise<any> => {
-  const baseURL = store.getters['user/getOmsBaseUrl'];
-  const omstoken = store.getters['user/getUserToken'];
-
-  return apiClient({
+  return api({
     url: "service/updateProductStoreSetting",
     method: "post",
-    baseURL,
-    headers: {
-      "Authorization": "Bearer " + omstoken,
-      "Content-Type": "application/json"
-    },
-    data: payload
+    data: payload,
+    systemType: "OFBIZ"
   });
 }
 
-const getUserPermissions = async (payload: any, url: string, token: any): Promise<any> => {
+const getUserPermissions = async (payload: any, token: any): Promise<any> => {
   // Currently, making this request in ofbiz
-  const baseURL = url.startsWith('http') ? url.includes('/api') ? url : `${url}/api/` : `https://${url}.hotwax.io/api/`;
+  const baseURL = store.getters['user/getBaseUrl'];
+
   let serverPermissions = [] as any;
 
   // If the server specific permission list doesn't exist, getting server permissions will be of no use
@@ -267,7 +227,7 @@ const getUserPermissions = async (payload: any, url: string, token: any): Promis
 }
 
 const ensurePartyRole = async (payload: any): Promise <any> => {
-  const baseURL = store.getters['user/getOmsBaseUrl'];
+  const baseURL = store.getters['user/getBaseUrl'];
   const omstoken = store.getters['user/getUserToken'];
 
   return apiClient({
