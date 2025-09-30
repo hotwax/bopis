@@ -10,27 +10,25 @@ const getters: GetterTree <UserState, RootState> = {
         return state.token && state.current
     },
     getBaseUrl (state) {
-        let baseURL = process.env.VUE_APP_BASE_URL;
-        if (!baseURL) baseURL = state.instanceUrl;
-        return baseURL.startsWith("http") ? `${baseURL}/rest/s1/` : `https://${baseURL}.hotwax.io/rest/s1/`;
+        const url = state.instanceUrl
+        return url.startsWith('http') ? url.includes('/api') ? url : `${url}/api/` : `https://${url}.hotwax.io/api/`;
     },
-    getOmsBaseUrl (state) {
-    const url = state.omsRedirectionUrl
-    return url.startsWith('http') ? url.includes('/api') ? url : `${url}/api/` : `https://${url}.hotwax.io/api/`;
+    getMaarg(state) {
+        return state.maarg
     },
     getMaargUrl (state) {
-        const url = state.instanceUrl;
-        return url.startsWith("http") ? `${url}` : `https://${url}.hotwax.io`;
+        const url = state.maarg;
+        return url.startsWith('http') ? url.includes('/rest/s1') ? url : `${url}/rest/s1/` : `https://${url}.hotwax.io/rest/s1/`;
+    },
+    getInstanceUrl (state) {
+        const baseUrl = process.env.VUE_APP_BASE_URL;
+        return baseUrl ? baseUrl : state.instanceUrl;
     },
     getUserToken (state) {
         return state.token
     },
     getUserProfile (state) {
         return state.current
-    },
-    getInstanceUrl (state) {
-        const baseUrl = process.env.VUE_APP_BASE_URL;
-        return baseUrl ? baseUrl : state.instanceUrl;
     },
     getCurrency (state) {
         return state.currentEComStore.defaultCurrencyUomId ? state.currentEComStore.defaultCurrencyUomId : 'USD';

@@ -1,19 +1,11 @@
-import { api, apiClient } from '@/adapter';
-import store from '@/store';
+import { api } from '@/adapter';
 
 const checkInventory = async (query: any): Promise <any>  => {
-  const baseURL = store.getters['user/getOmsBaseUrl'];
-  const omstoken = store.getters['user/getUserToken'];
-
-  return apiClient({
+  return api({
     url: "checkInventory", 
     method: "post",
-    baseURL,
-    headers: {
-      "Authorization": "Bearer " + omstoken,
-      "Content-Type": "application/json"
-    },
-    data: query
+    data: query,
+    systemType: "OFBIZ"
   });
 }
 
@@ -34,18 +26,11 @@ const getInventoryAvailableByFacility = async (params: any): Promise <any> => {
 }
 
 const fetchProductInventory = async (payload: any ): Promise<any> => {
-  const baseURL = store.getters['user/getOmsBaseUrl'];
-  const omstoken = store.getters['user/getUserToken'];
-
-  return apiClient({
+  return api({
     url: 'performFind',
-    method: 'post',
-    baseURL,
-    headers: {
-      "Authorization": "Bearer " + omstoken,
-      "Content-Type": "application/json"
-    },  
-    data: payload
+    method: 'post', 
+    data: payload,
+    systemType: "OFBIZ"
   });
 }
 

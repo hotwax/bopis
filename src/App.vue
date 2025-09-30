@@ -65,13 +65,15 @@ export default defineComponent({
       userToken: 'user/getUserToken',
       instanceUrl: 'user/getInstanceUrl',
       currentEComStore: 'user/getCurrentEComStore',
-      allNotificationPrefs: 'user/getAllNotificationPrefs'
+      allNotificationPrefs: 'user/getAllNotificationPrefs',
+      maarg: "user/getMaarg"
     })
   },
   created() {
     initialise({
       token: this.userToken,
-      instanceUrl: this.instanceUrl,
+      oms: this.instanceUrl,
+      maarg: this.maarg,
       cacheMaxAge: this.maxAge,
       events: {
         unauthorised: this.unauthorised,

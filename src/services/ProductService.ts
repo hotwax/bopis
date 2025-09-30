@@ -1,55 +1,36 @@
-import { apiClient } from '@/adapter';
-import store from '@/store';
+import { api } from '@/adapter';
 
 const fetchProducts = async (query: any): Promise <any>  => {
-  const baseURL = store.getters['user/getOmsBaseUrl'];
-  const omstoken = store.getters['user/getUserToken'];
-
-  return apiClient({
+  return api({
    // TODO: We can replace this with any API
     url: "searchProducts", 
     method: "post",
-    baseURL,
-    headers: {
-      "Authorization": "Bearer " + omstoken,
-      "Content-Type": "application/json"
-    },
     data: query,
-    cache: true
+    cache: true,
+    systemType: "OFBIZ"
   });
 }
-const findProducts = async (query: any): Promise <any>  => {
-  const baseURL = store.getters['user/getOmsBaseUrl'];
-  const omstoken = store.getters['user/getUserToken'];
 
-  return apiClient({
+const findProducts = async (query: any): Promise <any>  => {
+  return api({
    // TODO: We can replace this with any API
     url: "searchProducts",
     method: "post",
-    baseURL,
-    headers: {
-      "Authorization": "Bearer " + omstoken,
-      "Content-Type": "application/json"
-    },
     data: query,
-    cache: true
+    cache: true,
+    systemType: "OFBIZ"
   });
 }
-const fetchProductComponents = async (params: any): Promise<any> => {
-  const baseURL = store.getters['user/getOmsBaseUrl'];
-  const omstoken = store.getters['user/getUserToken'];
 
-  return await apiClient({
+const fetchProductComponents = async (params: any): Promise<any> => {
+  return await api({
     url: "performFind",
     method: "get",
-    baseURL,
-    headers: {
-      "Authorization": "Bearer " + omstoken,
-      "Content-Type": "application/json"
-    },
-    params
+    params,
+    systemType: "OFBIZ"
   })
 }
+
 export const ProductService = {
   fetchProducts,
   findProducts,

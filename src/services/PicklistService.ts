@@ -1,23 +1,13 @@
-import { apiClient } from '@/adapter';
-import store from '@/store';
+import { api } from '@/adapter';
 
 const getAvailablePickers = async (query: any): Promise <any> => {
-  const baseURL = store.getters['user/getOmsBaseUrl'];
-  const omstoken = store.getters['user/getUserToken'];
-
-  return apiClient({
+  return api({
     url: "solr-query",
     method: "post",
-    baseURL,
-    headers: {
-      "Authorization": "Bearer " + omstoken,
-      "Content-Type": "application/json"
-    },
-    data: query
+    data: query,
+    systemType: "OFBIZ"
   });
 }
-
-
 
 export const PicklistService = {
   getAvailablePickers
