@@ -1171,66 +1171,6 @@ const actions: ActionTree<OrderState , RootState> ={
     commit(types.ORDER_CURRENT_UPDATED, { order: {} });
   },
 
-  async fetchPaymentDetail({ commit, state }) {
-    const order = JSON.parse(JSON.stringify(state.current));
-
-    // if order already contains payment status don't fetch the information again
-    if(order.paymentStatus) {
-      return;
-    }
-
-    try {
-      const params = {
-        "entityName": "OrderPaymentPreference",
-        "inputFields": {
-          "orderId": order.orderId,
-        },
-        "fieldList": ["orderId", "paymentMethodTypeId", "statusId"],
-        "distinct": "Y"
-      }
-
-      const resp = await OrderService.fetchOrderPaymentPreferences(params);
-  
-      if (!hasError(resp)) {
-        const orderPaymentPreferences = resp?.data?.docs;
-  
-        if (orderPaymentPreferences.length > 0) {
-          const paymentMethodTypeIds = orderPaymentPreferences.map((orderPaymentPreference: any) => orderPaymentPreference.paymentMethodTypeId);
-          if (paymentMethodTypeIds.length > 0) {
-            this.dispatch('util/fetchPaymentMethodTypeDesc', paymentMethodTypeIds);
-          }
-  
-          const statusIds = orderPaymentPreferences.map((orderPaymentPreference: any) => orderPaymentPreference.statusId);
-          if (statusIds.length > 0) {
-            this.dispatch('util/fetchStatusDesc', statusIds);
-          }
-  
-          order.orderPaymentPreferences = orderPaymentPreferences;
-          commit(types.ORDER_CURRENT_UPDATED, { order });
-        }
-      } else {
-        throw resp.data
-      }
-    } catch (err) {
-      logger.error("Error in fetching payment detail.", err);
-    }
-  },
-
-  async getShippingPhoneNumber({ commit, state }) {
-    let order = JSON.parse(JSON.stringify(state.current))
-
-    try {
-      const contactNumber = await OrderService.getShippingPhoneNumber(order.orderId);
-      order = {
-        ...order,
-        contactNumber
-      }
-    } catch (err) {
-      logger.error("Error in fetching customer phone number for current order", err);
-    }
-    commit(types.ORDER_CURRENT_UPDATED, { order });
-  },
-
   async fetchShipGroupForOrder({ dispatch, state }) {
     const order = JSON.parse(JSON.stringify(state.current))
 

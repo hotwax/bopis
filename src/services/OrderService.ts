@@ -56,22 +56,6 @@ const fetchPicklists = async (payload: any): Promise <any>  => {
   });
 }
 
-const getCustomerContactDetails = async (orderId: any): Promise <any>  => {
-  const baseURL = store.getters['user/getOmsBaseUrl'];
-  const omstoken = store.getters['user/getUserToken'];
-
-  return apiClient({
-    url: `orders/${orderId}`,
-    method: "get",
-    baseURL,
-    headers: {
-      "Authorization": "Bearer " + omstoken,
-      "Content-Type": "application/json"
-    },
-    cache: true
-  });
-}
-
 const getPackedOrders = async (payload: any): Promise <any> => {
   const baseURL = store.getters['user/getOmsBaseUrl'];
   const omstoken = store.getters['user/getUserToken'];
@@ -170,62 +154,6 @@ const quickShipEntireShipGroup = async (payload: any): Promise <any> => {
 
   return apiClient({
     url: "quickShipEntireShipGroup",
-    method: "post",
-    baseURL,
-    headers: {
-      "Authorization": "Bearer " + omstoken,
-      "Content-Type": "application/json"
-    },
-    data: payload
-  });
-}
-
-const rejectItem = async (payload: any): Promise<any> => {
-  emitter.emit("presentLoader");
-  let resp = '' as any;
-  const baseURL = store.getters['user/getOmsBaseUrl'];
-  const omstoken = store.getters['user/getUserToken'];
-
-  try {
-    const params = {
-      'orderId': payload.orderId,
-      'rejectReason': payload.item.reason,
-      'facilityId': payload.item.facilityId,
-      'orderItemSeqId': payload.item.orderItemSeqId,
-      'shipmentMethodTypeId': payload.shipmentMethodEnumId,
-      'quantity': parseInt(payload.item.quantity),
-      ...(payload.shipmentMethodEnumId === "STOREPICKUP" && ({ "naFacilityId": "PICKUP_REJECTED" })),
-    }
-
-    resp = await apiClient({
-      url: "rejectOrderItem",
-      method: "post",
-      baseURL,
-      headers: {
-        "Authorization": "Bearer " + omstoken,
-        "Content-Type": "application/json"
-      },
-      data: { 'payload': params }
-    });
-
-    if (!hasError(resp)) {
-      showToast(translate('Item has been rejected successfully.'));
-    } else {
-      showToast(translate('Something went wrong'));
-    }
-  } catch (error) {
-    logger.error(error);
-  }
-  emitter.emit("dismissLoader");
-  return resp;
-}
-
-const rejectOrderItem = async (payload: any): Promise <any> => {
-  const baseURL = store.getters['user/getOmsBaseUrl'];
-  const omstoken = store.getters['user/getUserToken'];
-
-  return apiClient({
-    url: "rejectOrderItem",
     method: "post",
     baseURL,
     headers: {
@@ -468,66 +396,6 @@ const printShippingLabelAndPackingSlip = async (shipmentIds: Array<string>): Pro
   }
 }
 
-const getShippingPhoneNumber = async (orderId: string): Promise<any> => {
-  let phoneNumber = '' as any
-  const baseURL = store.getters['user/getOmsBaseUrl'];
-  const omstoken = store.getters['user/getUserToken'];
-
-  try {
-    let resp: any = await apiClient({
-      url: "performFind",
-      method: "get",
-      baseURL,
-      headers: {
-        "Authorization": "Bearer " + omstoken,
-        "Content-Type": "application/json"
-      },
-      params: {
-        "entityName": "OrderContactMech",
-        "inputFields": {
-          orderId,
-          "contactMechPurposeTypeId": "PHONE_SHIPPING"
-        },
-        "fieldList": ["orderId", "contactMechPurposeTypeId", "contactMechId"],
-        "viewSize": 1
-      }
-    })
-
-    if (!hasError(resp)) {
-      const contactMechId = resp.data.docs[0].contactMechId
-      resp = await apiClient({
-        url: "performFind",
-        method: "get",
-        baseURL,
-        headers: {
-         "Authorization": "Bearer " + omstoken,
-          "Content-Type": "application/json"
-        },
-        params: {
-          "entityName": "TelecomNumber",
-          "inputFields": {
-            contactMechId,
-          },
-          "fieldList": ["contactNumber", "countryCode", "areaCode", "contactMechId"],
-          "viewSize": 1
-        }
-      })
-
-      if (!hasError(resp)) {
-        const { contactNumber, countryCode, areaCode } =  resp.data.docs[0]
-        phoneNumber = formatPhoneNumber(countryCode, areaCode, contactNumber)
-      } else {
-        throw resp.data
-      }
-    } else {
-      throw resp.data
-    }
-  } catch (err) {
-    logger.error('Failed to fetch customer phone number', err)
-  }
-  return phoneNumber
-}
-
 const findOrderShipGroup = async (query: any): Promise<any> => {
   const baseURL = store.getters['user/getOmsBaseUrl'];
   const omstoken = store.getters['user/getUserToken'];
@@ -702,22 +570,18 @@ export const OrderService = {
   findOrderShipGroup,
   findPackedShipments,
   getCompletedOrders,
-  getCustomerContactDetails,
   getOpenOrders,
   getOrderDetails,
   getOrderItemRejectionHistory,
   getPackedOrders,
   getShipmentItems,
   getShipToStoreOrders,
-  getShippingPhoneNumber,
   packOrder,
   performFind,
   printPackingSlip,
   printPicklist,
   printShippingLabelAndPackingSlip,
   quickShipEntireShipGroup,
-  rejectItem,
-  rejectOrderItem,
   rejectOrderItems,
   sendPickupScheduledNotification,
   shipOrder,
