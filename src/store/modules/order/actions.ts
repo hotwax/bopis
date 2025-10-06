@@ -212,19 +212,18 @@ const actions: ActionTree<OrderState , RootState> ={
             (picklistShipment.picklist?.roles ?? []).filter((role: any) => !role.thruDate)
           ) || [];
 
-          const pickers = allRoles.length
-            ? allRoles
-                .map((role: any) => {
-                  if (role?.person) {
-                    return `${role.person.firstName} ${role.person.lastName ? role.person.lastName : ''}`;
-                  } else if (role?.partyGroup) {
-                    return role.partyGroup.groupName;
-                  }
-                  return null;
-                })
-                .filter(Boolean)
-                .join(", ")
-            : "";
+          const pickers = allRoles
+              .map((role: any) => 
+                role?.partyGroup?.groupName?.trim() ||
+                [role?.person?.firstName, role?.person?.lastName]
+                  .filter(Boolean)
+                  .join(" ")
+                  .trim() ||
+                role?.partyId ||
+                null
+              )
+              .filter(Boolean)
+              .join(", ");
 
           const pickerIds = allRoles.map((role: any) => role.partyId);
 
@@ -576,7 +575,7 @@ const actions: ActionTree<OrderState , RootState> ={
             return null;
           }
           productIds.push(...validItems.map((item: any) => item.productId));
-
+          
           const pickersInfo = pickers[shipment.shipmentId] || { pickers: "", pickerIds: [] };
 
           return {

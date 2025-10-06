@@ -24,7 +24,10 @@
       <div>
         <ion-radio-group v-model="selectedPicker">
           <ion-item v-for="(picker, index) in availablePickers" :key="index">
-            <ion-radio data-testid="assign-picker-radio" :value="picker.id">{{ picker.name }}</ion-radio>
+            <ion-radio data-testid="assign-picker-radio" :value="picker.id">
+              {{ picker.name }}
+              <p>{{ picker.id }}</p>
+            </ion-radio>
           </ion-item>
         </ion-radio-group>
       </div>
