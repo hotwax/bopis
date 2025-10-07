@@ -197,7 +197,7 @@ const getUserPermissions = async (payload: any, url: string, token: any): Promis
         viewSize,
         permissionIds: payload.permissionIds
       }
-      resp = await client({
+      resp = await apiClient({
         url: "getPermissions",
         method: "post",
         baseURL,
@@ -215,7 +215,7 @@ const getUserPermissions = async (payload: any, url: string, token: any): Promis
           // We need to get all the remaining permissions
           const apiCallsNeeded = Math.floor(remainingPermissions / viewSize) + ( remainingPermissions % viewSize != 0 ? 1 : 0);
           const responses = await Promise.all([...Array(apiCallsNeeded).keys()].map(async (index: any) => {
-            const response = await client({
+            const response = await apiClient({
               url: "getPermissions",
               method: "post",
               baseURL,
