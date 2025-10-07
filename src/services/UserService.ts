@@ -262,6 +262,12 @@ const getUserPermissions = async (payload: any, url: string, token: any): Promis
       }
       return serverPermissions;
     } catch(error: any) {
+      // TODO: added this to handle the flow on 401, need to remove this once we move to support of passing systemType at endpoint level
+      if(error.response.status === 401) {
+        store.dispatch("user/logout", { isUserUnauthorised: true });
+        const redirectUrl = window.location.origin + '/login'
+        window.location.href = `${process.env.VUE_APP_LOGIN_URL}?redirectUrl=${redirectUrl}`
+      }
       return Promise.reject(error);
     }
 }
