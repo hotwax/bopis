@@ -81,7 +81,7 @@ const getCurrentEComStore = async (token: any, facilityId: any): Promise<any> =>
       "filterByDate": "Y"
     }
     
-    const resp = await client({
+    const resp = await apiClient({
       url: "performFind",
       method: "post",
       data,
