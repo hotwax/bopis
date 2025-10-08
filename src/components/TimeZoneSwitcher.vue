@@ -42,7 +42,7 @@
 
     <ion-content>
       <div>
-        <ion-radio-group value="rd" v-model="timeZoneId">
+        <ion-radio-group v-model="timeZoneId">
           <ion-list v-if="showBrowserTimeZone">
             <ion-list-header>{{ translate("Browser time zone") }}</ion-list-header>
             <ion-item>
@@ -82,7 +82,7 @@
       </div>
 
       <ion-fab vertical="bottom" horizontal="end" slot="fixed">
-        <ion-fab-button :disabled="!currentTimeZoneId" @click="setUserTimeZone">
+        <ion-fab-button :disabled="!timeZoneId || timeZoneId === currentTimeZoneId" @click="setUserTimeZone">
           <ion-icon :icon="saveOutline" />
         </ion-fab-button>
       </ion-fab>
