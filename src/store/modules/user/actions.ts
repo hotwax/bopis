@@ -101,8 +101,8 @@ const actions: ActionTree<UserState, RootState> = {
       /*  ---- Guard clauses ends here --- */
 
       setPermissions(appPermissions);
-      if (userProfile.userTimeZone) {
-        Settings.defaultZone = userProfile.userTimeZone;
+      if (userProfile.timeZone) {
+        Settings.defaultZone = userProfile.timeZone;
       }
 
       // TODO user single mutation
@@ -227,9 +227,17 @@ const actions: ActionTree<UserState, RootState> = {
    */
   async setUserTimeZone ( { state, commit }, timeZoneId) {
     const current: any = state.current;
-    current.userTimeZone = timeZoneId;
-    commit(types.USER_INFO_UPDATED, current);
-    Settings.defaultZone = current.userTimeZone;
+    try {
+      await UserService.setUserTimeZone(({ userId: current.userId, timeZone: timeZoneId }));
+      current.timeZone = timeZoneId;
+      commit(types.USER_INFO_UPDATED, current);
+      Settings.defaultZone = current.timeZone;
+      showToast(translate("Time zone updated successfully"));
+    } catch(err) {
+      logger.error(err)
+      showToast(translate("Failed to update time zone"));
+    }
+
   },
 
 

@@ -1,4 +1,4 @@
-import { apiClient, client, hasError } from '@/adapter';
+import { api, apiClient, client, hasError } from '@/adapter';
 
 import store from '@/store';
 
@@ -37,6 +37,23 @@ const getUserProfile = async (token: any): Promise<any> => {
     return Promise.resolve(resp.data)
   } catch(error: any) {
     return Promise.reject(error)
+  }
+}
+
+async function setUserTimeZone(payload: any): Promise<any> {
+  try {
+    const resp = await api({
+      url: "admin/user/profile",
+      method: "POST",
+      data: payload,
+    }) as any;
+    return Promise.resolve(resp.data);
+  } catch (error: any) {
+    return Promise.reject({
+      code: "error",
+      message: "Failed to set user time zone",
+      serverResponse: error
+    });
   }
 }
 
@@ -299,5 +316,6 @@ export const UserService = {
     updateRerouteFulfillmentConfig,
     getPartialOrderRejectionConfig,
     createPartialOrderRejectionConfig,
-    updatePartialOrderRejectionConfig
+    updatePartialOrderRejectionConfig,
+    setUserTimeZone
 }
