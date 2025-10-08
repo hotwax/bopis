@@ -1277,10 +1277,11 @@ export default defineComponent({
     emitter.emit("presentLoader")
     await this.getOrderDetail(this.orderId, this.shipGroupSeqId, this.orderType);
 
-    // fetch rejection reasons only when we get the orders information
-    if(this.order.orderId) {
-      this.orderType === "open" ? await this.fetchRejectReasons() : await this.fetchCancelReasons();
-    }
+    // Removed condition of order type and fetched both rejection and cancellation reasons
+    // as when fetching conditionally the rejection reasons are not fetched correctly resulting in wrong
+    // rejection history being displayed
+    await this.fetchRejectReasons()
+    await this.fetchCancelReasons()
 
     if(this.orderType === "packed") {
       this.fetchJobs();
