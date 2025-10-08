@@ -118,8 +118,13 @@ const hasWebcamAccess = async () => {
   }
 }
 
+// TimeZone format = 04:16 PM EDT
+const getCurrentTime = (zone: string, format = 't ZZZZ') => {
+  return DateTime.now().setZone(zone).toFormat(format)
+}
+
 const getPickerName = (pickerGroupName: string, pickerFirstName: string, pickerLastName: string) => {
   return pickerGroupName ? pickerGroupName : pickerFirstName ? `${pickerFirstName} ${pickerLastName ? pickerLastName : ''}`.trim() : '';
 }
 
-export { copyToClipboard, showToast, handleDateTimeInput, hasWebcamAccess, getFeature, formatPhoneNumber, getCurrentFacilityId, getColorByDesc, formatCurrency, getPickerName }
+export { copyToClipboard, getCurrentTime, showToast, handleDateTimeInput, hasWebcamAccess, getFeature, formatPhoneNumber, getCurrentFacilityId, getColorByDesc, formatCurrency, getPickerName }

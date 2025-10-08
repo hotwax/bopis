@@ -120,7 +120,7 @@
 
       <section>
         <DxpProductIdentifier />
-        <DxpTimeZoneSwitcher @timeZoneUpdated="timeZoneUpdated" />
+        <TimeZoneSwitcher @timeZoneUpdated="timeZoneUpdated" />
         <DxpLanguageSwitcher />
 
         <ion-card>
@@ -226,12 +226,13 @@ import { DateTime } from 'luxon';
 import { UserService } from '@/services/UserService'
 import { showToast } from '@/utils';
 import { hasError, removeClientRegistrationToken, subscribeTopic, unsubscribeTopic } from '@/adapter'
-import { DxpTimeZoneSwitcher, goToOms, initialiseFirebaseApp, translate, useUserStore } from "@hotwax/dxp-components";
+import { goToOms, initialiseFirebaseApp, translate, useUserStore } from "@hotwax/dxp-components";
 import { Actions, hasPermission } from '@/authorization'
 import { addNotification, generateTopicName, isFcmConfigured, storeClientRegistrationToken } from "@/utils/firebase";
 import emitter from "@/event-bus"
 import logger from '@/logger';
 import EditShipmentMethodModal from '@/components/EditShipmentMethodModal.vue';
+import TimeZoneSwitcher from "@/components/TimeZoneSwitcher.vue"
 
 export default defineComponent({
   name: 'Settings',
@@ -253,7 +254,8 @@ export default defineComponent({
     IonTitle,
     IonToggle, 
     IonToolbar,
-    Image
+    Image,
+    TimeZoneSwitcher
   },
   data(){
     return {
