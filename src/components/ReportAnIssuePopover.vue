@@ -2,7 +2,7 @@
   <ion-content>
     <ion-list v-if="reasonType === 'reject'">
       <ion-item data-testid="select-rejection-reason-button" v-for="reason in rejectReasons" :key="reason.enumId" @click="updateIssue(reason.enumId)" button>
-        {{ reason.description ? translate(reason.description) : reason.enumDescription ? translate(reason.enumDescription) : reason.enumId  }}
+        {{ reason.enumDescription ? translate(reason.enumDescription) : reason.description ? translate(reason.description) : reason.enumId  }}
       </ion-item>
     </ion-list>
     <ion-list v-else>
