@@ -93,7 +93,7 @@ export default defineComponent({
     },
     getRejectReasonDescription(rejectReasonEnumId: string) {
       const reason = this.rejectReasons.find((reason: any) => reason.enumId === rejectReasonEnumId)
-      return reason?.description ? reason.description : reason?.enumDescription;
+      return reason?.enumDescription ? reason.enumDescription : reason?.description;
     },
     getTime(time: number) {
       return time ? DateTime.fromMillis(time).toLocaleString(DateTime.DATETIME_MED) : ''
