@@ -32,7 +32,7 @@
           <ion-label v-else>
             {{ translate("Select a carrier to see the linked shipment methods") }}
           </ion-label>
-          <ion-button v-if="carrierPartyId" @click="openShippingMethodDocumentReference()" fill="clear" color="medium" slot="end">
+          <ion-button size="default" v-if="carrierPartyId" @click="openShippingMethodDocumentReference()" fill="clear" color="medium" slot="end">
             <ion-icon slot="icon-only" :icon="informationCircleOutline" />
           </ion-button>
         </template>

@@ -13,19 +13,19 @@
       <ion-spinner v-if="isFetchingStock" color="medium" name="crescent" />
       <div v-else-if="getInventoryInformation(item.productId).quantityOnHand >= 0" class="atp-info">
         <ion-note slot="end"> {{ translate("on hand", { count: getInventoryInformation(item.productId).quantityOnHand ?? '0' }) }} </ion-note>
-        <ion-button fill="clear" @click.stop="openInventoryDetailPopover($event)">
+        <ion-button size="default" fill="clear" @click.stop="openInventoryDetailPopover($event)">
           <ion-icon slot="icon-only" :icon="informationCircleOutline" color="medium" />
         </ion-button>
       </div>
-      <ion-button data-testid="qoh-button" v-else fill="clear" @click.stop="fetchProductInventory(item.productId)">
+      <ion-button size="default" data-testid="qoh-button" v-else fill="clear" @click.stop="fetchProductInventory(item.productId)">
         <ion-icon color="medium" slot="icon-only" :icon="cubeOutline" />
       </ion-button>
 
-      <ion-button data-testid="gift-card-activation-button" color="medium" fill="clear" size="small" v-if="(orderType === 'packed' || orderType === 'completed') && item.productTypeId === 'GIFT_CARD'" @click.stop="openGiftCardActivationModal(item)">
+      <ion-button data-testid="gift-card-activation-button" color="medium" fill="clear" size="default" v-if="(orderType === 'packed' || orderType === 'completed') && item.productTypeId === 'GIFT_CARD'" @click.stop="openGiftCardActivationModal(item)">
         <ion-icon slot="icon-only" :icon="item.isGCActivated ? gift : giftOutline"/>
       </ion-button>
       
-      <ion-button v-if="isKit(item)" fill="clear" size="small" @click.stop="fetchKitComponents(item)">
+      <ion-button v-if="isKit(item)" fill="clear" size="default" @click.stop="fetchKitComponents(item)">
         <ion-icon v-if="showKitComponents" color="medium" slot="icon-only" :icon="chevronUpOutline"/>
         <ion-icon v-else color="medium" slot="icon-only" :icon="listOutline"/>
       </ion-button>
