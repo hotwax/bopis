@@ -93,7 +93,7 @@
                       <ion-label>{{ getRejectionReasonDescription(rejectEntireOrderReasonId) ? getRejectionReasonDescription(rejectEntireOrderReasonId) : translate("Reject to avoid order split (no variance)") }}</ion-label>
                       <ion-icon :icon="caretDownOutline"/>
                     </ion-chip>
-                    <ion-button data-testid="select-rejected-item-button" v-else slot="end" color="danger" fill="clear" size="small" @click.stop="openRejectReasonPopover($event, item, order)">
+                    <ion-button data-testid="select-rejected-item-button" v-else slot="end" color="danger" fill="clear" size="default" @click.stop="openRejectReasonPopover($event, item, order)">
                       <ion-icon slot="icon-only" :icon="trashOutline"/>
                     </ion-button>
                   </template>
@@ -113,20 +113,20 @@
                   <ion-spinner v-if="item.isFetchingStock" color="medium" name="crescent" />
                   <div v-else-if="getInventoryInformation(item.productId).quantityOnHand >= 0" class="atp-info">
                     <ion-note slot="end"> {{ translate("on hand", { count: getInventoryInformation(item.productId).quantityOnHand ?? '0' }) }} </ion-note>
-                    <ion-button fill="clear" @click.stop="openInventoryDetailPopover($event, item)">
+                    <ion-button size="default" fill="clear" @click.stop="openInventoryDetailPopover($event, item)">
                       <ion-icon slot="icon-only" :icon="informationCircleOutline" color="medium" />
                     </ion-button>
                   </div>
-                  <ion-button data-testid="qoh-button" v-else fill="clear" @click.stop="fetchProductInventory(item.productId, order.shipGroupSeqId)">
+                  <ion-button size="default" data-testid="qoh-button" v-else fill="clear" @click.stop="fetchProductInventory(item.productId, order.shipGroupSeqId)">
                     <ion-icon color="medium" slot="icon-only" :icon="cubeOutline" />
                   </ion-button>
 
-                  <ion-button data-testid="gift-card-activation-button" :disabled="order.handovered || order.shipped || order.cancelled || hasCancelledItems" v-if="(orderType === 'packed' || orderType === 'completed') && getProduct(item.productId).productTypeId === 'GIFT_CARD'" color="medium" fill="clear" size="small" @click.stop="openGiftCardActivationModal(item)">
+                  <ion-button data-testid="gift-card-activation-button" :disabled="order.handovered || order.shipped || order.cancelled || hasCancelledItems" v-if="(orderType === 'packed' || orderType === 'completed') && getProduct(item.productId).productTypeId === 'GIFT_CARD'" color="medium" fill="clear" size="default" @click.stop="openGiftCardActivationModal(item)">
                     <ion-icon slot="icon-only" :icon="item.isGCActivated ? gift : giftOutline"/>
                   </ion-button>
 
                   <!-- Show kit components -->
-                  <ion-button v-if="isKit(item)" fill="clear" size="small" @click.stop="fetchKitComponents(item, order)">
+                  <ion-button v-if="isKit(item)" fill="clear" size="default" @click.stop="fetchKitComponents(item, order)">
                     <ion-icon v-if="item.showKitComponents" color="medium" slot="icon-only" :icon="chevronUpOutline"/>
                     <ion-icon v-else color="medium" slot="icon-only" :icon="listOutline"/>
                   </ion-button>
@@ -296,11 +296,11 @@
                     <ion-spinner v-if="item.isFetchingStock" color="medium" name="crescent" />
                     <div v-else-if="getInventoryInformation(item.productId).quantityOnHand >= 0" class="atp-info">
                       <ion-note slot="end"> {{ translate("on hand", { count: getInventoryInformation(item.productId).quantityOnHand ?? '0' }) }} </ion-note>
-                      <ion-button fill="clear" @click.stop="openInventoryDetailPopover($event, item)">
+                      <ion-button size="default" fill="clear" @click.stop="openInventoryDetailPopover($event, item)">
                         <ion-icon slot="icon-only" :icon="informationCircleOutline" color="medium" />
                       </ion-button>
                     </div>
-                    <ion-button v-else fill="clear" @click.stop="fetchProductInventory(item.productId, shipGroup.shipGroupSeqId)">
+                    <ion-button size="default" v-else fill="clear" @click.stop="fetchProductInventory(item.productId, shipGroup.shipGroupSeqId)">
                       <ion-icon color="medium" slot="icon-only" :icon="cubeOutline" />
                     </ion-button>
                   </div>
