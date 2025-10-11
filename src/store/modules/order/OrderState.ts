@@ -1,7 +1,7 @@
 export default interface OrderState {
-  open: any;
-  orderItemRejectionHistory: [];
-  current: any;
+  open: any;                         // abhi bhi any rakh do
+  orderItemRejectionHistory: any[];  // empty array type safe
+  current: any;                       // any rakh do
   packed: any;
   completed: any;
   shipToStore: any;
