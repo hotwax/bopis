@@ -20,82 +20,120 @@
         </ion-segment>
       </div>    
     </ion-header>
-    <ion-content ref="contentRef" :scroll-events="true" @ionScroll="enableScrolling()">
-      <div v-if="segmentSelected === 'incoming'">
-        <div v-for="(order, index) in incomingOrders" :key="index" v-show="order.items.length">
-          <ion-card button>
-            <ion-item lines="none">
-              <ion-label class="ion-text-wrap">
-                <h1>{{ order.firstName }} {{ order.lastName }}</h1>
-                <p>{{ order.orderName ? order.orderName : order.orderId }}</p>
-              </ion-label>
-              <div class="metadata">
-                <ion-note v-if="order.createdDate">{{ getDateTime(order.createdDate) }}</ion-note>
-              </div>
-            </ion-item>
+   <ion-content ref="contentRef" :scroll-events="true" @ionScroll="enableScrolling()">
 
-            <ProductListItem v-for="item in order.items" :key="item.productId" :item="item" :isShipToStoreOrder=true />
-
-            <div class="border-top">
-              <ion-button :disabled="!hasPermission(Actions.APP_ORDER_UPDATE)" fill="clear" @click.stop="confirmScheduleOrderForPickup(order)">
-                {{ translate("Arrived") }}
-              </ion-button>
-            </div>
-          </ion-card>
-        </div>
-      </div>      
-      <div v-if="segmentSelected === 'readyForPickup'">
-        <div v-for="(order, index) in readyForPickupOrders" :key="index" v-show="order.items.length">
-          <ion-card button>
-            <ion-item lines="none">
-              <ion-label class="ion-text-wrap">
-                <h1>{{ order.firstName }} {{ order.lastName }}</h1>
-                <p>{{ order.orderName ? order.orderName : order.orderId }}</p>
-              </ion-label>
-              <div class="metadata">
-                <ion-note v-if="order.createdDate">{{ getDateTime(order.createdDate) }}</ion-note>
-              </div>
-            </ion-item>
-
-            <ProductListItem v-for="item in order.items" :key="item.productId" :item="item" :isShipToStoreOrder=true />
-
-            <div class="border-top">
-              <ion-button :disabled="!hasPermission(Actions.APP_ORDER_UPDATE)" fill="clear" @click.stop="confirmHandoverOrder(order.shipmentId)">
-                {{ translate("Handover") }}
-              </ion-button>
-              <ion-button fill="clear" slot="end" @click="sendReadyForPickupEmail(order)">
-                <ion-icon slot="icon-only" :icon="mailOutline" />
-              </ion-button>
-            </div>
-          </ion-card>
-        </div>
+  <!-- Incoming Orders Segment -->
+  <div v-if="segmentSelected === 'incoming'">
+    <div v-if="incomingOrders.length === 0 || !incomingOrders.some(order => order.items.length)">
+      <div class="empty-state">
+        <img class="light" src="../assets/images/empty-icon.jpg" alt="No Incoming orders" />
+        <p>No incoming orders available.</p>
       </div>
-      <div v-if="segmentSelected === 'completed'">
-        <div v-for="(order, index) in completedOrders" :key="index" v-show="order.items.length">
-          <ion-card button>
-            <ion-item lines="none">
-              <ion-label class="ion-text-wrap">
-                <h1>{{ order.firstName }} {{ order.lastName }}</h1>
-                <p>{{ order.orderName ? order.orderName : order.orderId }}</p>
-              </ion-label>
-              <div class="metadata">
-                <ion-note v-if="order.createdDate">{{ getDateTime(order.createdDate) }}</ion-note>
-              </div>
-            </ion-item>
+    </div>
+    <div v-else>
+      <div v-for="(order, index) in incomingOrders" :key="index" v-show="order.items.length">
+        <ion-card button>
+          <ion-item lines="none">
+            <ion-label class="ion-text-wrap">
+              <h1>{{ order.firstName }} {{ order.lastName }}</h1>
+              <p>{{ order.orderName ? order.orderName : order.orderId }}</p>
+            </ion-label>
+            <div class="metadata">
+              <ion-note v-if="order.createdDate">{{ getDateTime(order.createdDate) }}</ion-note>
+            </div>
+          </ion-item>
+         
+         
+         
+          <ProductListItem v-for="item in order.items" :key="item.productId" :item="item" :isShipToStoreOrder="true" />
 
-            <ProductListItem v-for="item in order.items" :key="item.productId" :item="item" :isShipToStoreOrder=true />
-          </ion-card>
-        </div>
+          <div class="border-top">
+            <ion-button :disabled="!hasPermission(Actions.APP_ORDER_UPDATE)" fill="clear" @click.stop="confirmScheduleOrderForPickup(order)">
+              {{ translate("Arrived") }}
+            </ion-button>
+          </div>
+        </ion-card>
       </div>
-      <ion-refresher slot="fixed" @ionRefresh="refreshOrders($event)">
-        <ion-refresher-content pullingIcon="crescent" refreshingSpinner="crescent" />
-      </ion-refresher>
-      <ion-infinite-scroll @ionInfinite="loadMoreOrders($event)" threshold="100px" 
-        v-show="(segmentSelected === 'incoming' ? isIncomingOrdersScrollable : segmentSelected === 'readyForPickup' ? isReadyForPickupOrdersScrollable : isCompletedOrdersScrollable)"
-        ref="infiniteScrollRef">
-        <ion-infinite-scroll-content loading-spinner="crescent" :loading-text="translate('Loading')" />
-      </ion-infinite-scroll>
-    </ion-content>
+    </div>
+  </div>
+
+  <!-- Ready For Pickup Segment -->
+  <div v-else-if="segmentSelected === 'readyForPickup'">
+    <div v-if="readyForPickupOrders.length === 0 || !readyForPickupOrders.some(order => order.items.length)">
+      <div class="empty-state">
+        <img class="light" src="../assets/images/empty-icon.jpg" alt="No Ready order for pickups" />
+        <p>No orders ready for pickup.</p>
+      </div>
+    </div>
+    <div v-else>
+      <div v-for="(order, index) in readyForPickupOrders" :key="index" v-show="order.items.length">
+        <ion-card button>
+          <ion-item lines="none">
+            <ion-label class="ion-text-wrap">
+              <h1>{{ order.firstName }} {{ order.lastName }}</h1>
+              <p>{{ order.orderName ? order.orderName : order.orderId }}</p>
+            </ion-label>
+            <div class="metadata">
+              <ion-note v-if="order.createdDate">{{ getDateTime(order.createdDate) }}</ion-note>
+            </div>
+          </ion-item>
+
+          <ProductListItem v-for="item in order.items" :key="item.productId" :item="item" :isShipToStoreOrder="true" />
+
+          <div class="border-top">
+            <ion-button :disabled="!hasPermission(Actions.APP_ORDER_UPDATE)" fill="clear" @click.stop="confirmHandoverOrder(order.shipmentId)">
+              {{ translate("Handover") }}
+            </ion-button>
+            <ion-button fill="clear" slot="end" @click="sendReadyForPickupEmail(order)">
+              <ion-icon slot="icon-only" :icon="mailOutline" />
+            </ion-button>
+          </div>
+        </ion-card>
+      </div>
+    </div>
+  </div>
+
+  <!-- Completed Orders Segment -->
+  <div v-else-if="segmentSelected === 'completed'">
+    <div v-if="completedOrders.length === 0 || !completedOrders.some(order => order.items.length)">
+      <div class="empty-state">
+        <img class="light" src="../assets/images/empty-icon.jpg" alt="No Orders" />
+        <p>No completed orders available.</p>
+      </div>
+    </div>
+    <div v-else>
+      <div v-for="(order, index) in completedOrders" :key="index" v-show="order.items.length">
+        <ion-card button>
+          <ion-item lines="none">
+            <ion-label class="ion-text-wrap">
+              <h1>{{ order.firstName }} {{ order.lastName }}</h1>
+              <p>{{ order.orderName ? order.orderName : order.orderId }}</p>
+            </ion-label>
+            <div class="metadata">
+              <ion-note v-if="order.createdDate">{{ getDateTime(order.createdDate) }}</ion-note>
+            </div>
+          </ion-item>
+
+          <ProductListItem v-for="item in order.items" :key="item.productId" :item="item" :isShipToStoreOrder="true" />
+        </ion-card>
+      </div>
+    </div>
+  </div>
+
+  <!-- Refresher -->
+  <ion-refresher slot="fixed" @ionRefresh="refreshOrders($event)">
+    <ion-refresher-content pullingIcon="crescent" refreshingSpinner="crescent" />
+  </ion-refresher>
+
+  <!-- Infinite Scroll -->
+  <ion-infinite-scroll @ionInfinite="loadMoreOrders($event)" threshold="100px" 
+    v-show="(segmentSelected === 'incoming' ? isIncomingOrdersScrollable : segmentSelected === 'readyForPickup' ? isReadyForPickupOrdersScrollable : isCompletedOrdersScrollable)"
+    ref="infiniteScrollRef">
+    <ion-infinite-scroll-content loading-spinner="crescent" :loading-text="translate('Loading')" />
+  </ion-infinite-scroll>
+
+</ion-content>
+
   </ion-page>
 </template>
 
@@ -470,4 +508,14 @@ export default defineComponent({
     display: flex;
   }
 }
+.empty-state {
+  text-align: center;
+  margin-top: 50px;
+  color: #666;
+}
+.empty-state img {
+  width: 150px;
+  margin-bottom: 20px;
+}
+
 </style>
