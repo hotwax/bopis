@@ -1,8 +1,8 @@
 <template>
-  <ion-header>
+  <ion-header data-testid="giftcard-activation-modal-header">
     <ion-toolbar>
       <ion-buttons slot="start">
-        <ion-button @click="closeModal()">
+        <ion-button data-testid="giftcard-activation-close-button" @click="closeModal()">
           <ion-icon slot="icon-only" :icon="closeOutline" />
         </ion-button>
       </ion-buttons>
@@ -17,12 +17,12 @@
     </div>
     <ion-list v-else>
       <ion-item lines="none" v-if="!item.isGCActivated">
-        <ion-input :label="translate('Activation code')" :placeholder="translate('serial number')" :helper-text="translate('Scan or enter the unique code on the gift card')" v-model="activationCode" />
+        <ion-input data-testid="giftcard-activation-input" :label="translate('Activation code')" :placeholder="translate('serial number')" :helper-text="translate('Scan or enter the unique code on the gift card')" v-model="activationCode" />
       </ion-item>
 
       <ion-item v-else>
         <ion-icon :icon="cardOutline" slot="start" />
-        <ion-label>{{ item.gcInfo.cardNumber }}</ion-label>
+        <ion-label data-testid="giftcard-activation-label">{{ item.gcInfo.cardNumber }}</ion-label>
         <ion-note slot="end">{{ getCreatedDateTime() }}</ion-note>
       </ion-item>
 
@@ -32,13 +32,24 @@
           {{ getProductIdentificationValue(productIdentificationPref.primaryId, getProduct(item.productId)) ? getProductIdentificationValue(productIdentificationPref.primaryId, getProduct(item.productId)) : item.productName }}
           <p>{{ getProductIdentificationValue(productIdentificationPref.secondaryId, getProduct(item.productId)) }}</p>
         </ion-label>
-        <ion-label slot="end">{{ formatCurrency(itemPriceInfo.unitPrice, itemPriceInfo.currencyUom) }}</ion-label>
+        <ion-label slot="end">{{ formatCurrency(item.unitPrice, currencyUom) }}</ion-label>
       </ion-item>
+
+      <div class="ion-margin" v-if="!item.isGCActivated">
+        <ion-button expand="block" fill="outline" @click="isCameraEnabled ? stopScan() : scan()">
+          <ion-icon slot="start" :icon="isCameraEnabled ? stopOutline : cameraOutline" />
+          {{ translate(isCameraEnabled ? "Stop" : "Scan") }}
+        </ion-button>
+        <StreamBarcodeReader class="scanning-preview"
+          v-if="isCameraEnabled"
+          @decode="onDecode"
+        />
+      </div>
     </ion-list>
   </ion-content>
 
   <ion-fab v-if="!item.isGCActivated" vertical="bottom" horizontal="end" slot="fixed">
-    <ion-fab-button @click="confirmSave()">
+    <ion-fab-button data-testid="giftcard-activation-save-button" @click="confirmSave()">
       <ion-icon :icon="cardOutline" />
     </ion-fab-button>
   </ion-fab>
@@ -66,13 +77,14 @@ import {
 } from "@ionic/vue";
 import { computed, defineComponent } from "vue";
 import { mapGetters, useStore } from "vuex";
-import { cardOutline, closeOutline, giftOutline, saveOutline } from "ionicons/icons";
+import { cameraOutline, cardOutline, closeOutline, giftOutline, saveOutline, stopOutline } from "ionicons/icons";
 import { getProductIdentificationValue, translate, useProductIdentificationStore } from '@hotwax/dxp-components'
 import { UtilService } from "@/services/UtilService";
-import { formatCurrency, showToast } from '@/utils';
+import { formatCurrency, hasWebcamAccess, showToast } from '@/utils';
 import { hasError } from '@/adapter'
 import logger from "@/logger";
 import { DateTime } from 'luxon';
+import { StreamBarcodeReader } from "vue-barcode-reader";
 
 export default defineComponent({
   name: "GiftCardActivationModal",
@@ -91,7 +103,8 @@ export default defineComponent({
     IonNote,
     IonSpinner,
     IonTitle,
-    IonToolbar
+    IonToolbar,
+    StreamBarcodeReader
   },
   computed: {
     ...mapGetters({
@@ -102,16 +115,11 @@ export default defineComponent({
   data() {
     return {
       isLoading: false,
-      itemPriceInfo: {} as any,
-      activationCode: ""
+      activationCode: "",
+      isCameraEnabled: false
     }
   },
-  props: ["item", "orderId", "customerId"],
-  async mounted() {
-    this.isLoading = true;
-    this.itemPriceInfo = await UtilService.fetchGiftCardItemPriceInfo({ orderId: this.orderId, orderItemSeqId: this.item.orderItemSeqId })
-    this.isLoading = false;
-  },
+  props: ["item", "orderId", "customerId", "currencyUom"],
   methods: {
     closeModal(payload = {}) {
       modalController.dismiss({ dismissed: true, ...payload })
@@ -144,10 +152,11 @@ export default defineComponent({
         const resp = await UtilService.activateGiftCard({
           orderId: this.orderId,
           orderItemSeqId: this.item.orderItemSeqId,
-          amount: this.itemPriceInfo.unitPrice,
+          amount: this.item.unitPrice,
           typeEnumId: "GC_ACTIVATE",
           cardNumber: this.activationCode.trim(),
-          partyId: this.customerId
+          partyId: this.customerId,
+          fulfillmentDate: Date.now()
         })
         
         if(!hasError(resp)) {
@@ -163,6 +172,21 @@ export default defineComponent({
     },
     getCreatedDateTime() {
       return DateTime.fromMillis(this.item.gcInfo.fulfillmentDate).toFormat("dd MMMM yyyy hh:mm a ZZZZ");
+    },
+    async scan() {
+      if (!(await hasWebcamAccess())) {
+        showToast(translate("Camera access not allowed, please check permissons."));
+        return;
+      } 
+
+      this.isCameraEnabled = true;
+    },
+    stopScan() {
+      this.isCameraEnabled = false
+    },
+    onDecode(result: any) {
+      if(result) this.activationCode = result
+      this.isCameraEnabled = false;
     }
   },
   setup() {
@@ -171,6 +195,7 @@ export default defineComponent({
     let productIdentificationPref = computed(() => productIdentificationStore.getProductIdentificationPref)
 
     return {
+      cameraOutline,
       cardOutline,
       closeOutline,
       formatCurrency,
@@ -178,9 +203,17 @@ export default defineComponent({
       giftOutline,
       productIdentificationPref,
       saveOutline,
+      stopOutline,
       store,
       translate
     };
   },
 });
 </script>
+
+<style scoped>
+.scanning-preview {
+  justify-self: center;
+  max-width: 360px;
+}
+</style>

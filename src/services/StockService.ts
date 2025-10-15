@@ -1,31 +1,57 @@
-import { api } from '@/adapter';
+import { api, apiClient } from '@/adapter';
+import store from '@/store';
 
 const checkInventory = async (query: any): Promise <any>  => {
-  return api({
+  const baseURL = store.getters['user/getOmsBaseUrl'];
+  const omstoken = store.getters['user/getUserToken'];
+
+  return apiClient({
     url: "checkInventory", 
     method: "post",
+    baseURL,
+    headers: {
+      "Authorization": "Bearer " + omstoken,
+      "Content-Type": "application/json"
+    },
     data: query
   });
 }
 
-const getInventoryAvailableByFacility = async (query: any): Promise <any> => {
+const checkShippingInventory = async (query: any): Promise <any>  => {
   return api({
-    url: "service/getInventoryAvailableByFacility",
+    url: "ofbiz-oms-usl/checkShippingInventory", 
     method: "post",
     data: query
   });
 }
 
-const fetchInventoryCount = async (payload: any ): Promise<any> => {
+const getInventoryAvailableByFacility = async (params: any): Promise <any> => {
   return api({
+    url: "poorti/getInventoryAvailableByFacility",
+    method: "get",
+    params
+  });
+}
+
+const fetchProductInventory = async (payload: any ): Promise<any> => {
+  const baseURL = store.getters['user/getOmsBaseUrl'];
+  const omstoken = store.getters['user/getUserToken'];
+
+  return apiClient({
     url: 'performFind',
     method: 'post',
+    baseURL,
+    headers: {
+      "Authorization": "Bearer " + omstoken,
+      "Content-Type": "application/json"
+    },  
     data: payload
   });
 }
 
 export const StockService = {
   checkInventory,
+  checkShippingInventory,
   getInventoryAvailableByFacility,
-  fetchInventoryCount
+  fetchProductInventory
 }

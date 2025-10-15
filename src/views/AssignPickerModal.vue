@@ -1,5 +1,5 @@
 <template>
-  <ion-header>
+  <ion-header data-testid="assign-picker-modal-header">
     <ion-toolbar>
       <ion-buttons slot="start">
         <ion-button @click="closeModal"> 
@@ -24,7 +24,12 @@
       <div>
         <ion-radio-group v-model="selectedPicker">
           <ion-item v-for="(picker, index) in availablePickers" :key="index">
-            <ion-radio :value="picker.id">{{ picker.name }}</ion-radio>
+            <ion-radio data-testid="assign-picker-radio" :value="picker.id">
+              <ion-label>
+                {{ picker.name }}
+                <p>{{ picker.id }}</p>
+              </ion-label>
+            </ion-radio>
           </ion-item>
         </ion-radio-group>
       </div>
@@ -52,7 +57,7 @@
   </ion-content>
 
   <ion-fab vertical="bottom" horizontal="end" slot="fixed">
-    <ion-fab-button @click="readyForPickup()">
+    <ion-fab-button data-testid="assign-picker-save-button" @click="readyForPickup()">
       <ion-icon :icon="saveOutline" />
     </ion-fab-button>
   </ion-fab>
@@ -112,7 +117,7 @@ export default defineComponent({
     IonInfiniteScroll,
     IonInfiniteScrollContent
   },
-  props: ['order', 'part', 'facilityId'],
+  props: ['order', 'shipGroup', 'facilityId'],
   data () {
     return {
       selectedPicker: '',
@@ -187,7 +192,7 @@ export default defineComponent({
             "qf": "firstName lastName groupName partyId externalId",
             "sort": "firstName asc"
           },
-          "filter": ["docType:EMPLOYEE", "statusId:PARTY_ENABLED", "WAREHOUSE_PICKER_role:true"]
+          "filter": ["docType:EMPLOYEE", "statusId:PARTY_ENABLED", "WAREHOUSE_PICKER_role:true", "-partyId:_NA_"]
         }
       }
       let total = 0;

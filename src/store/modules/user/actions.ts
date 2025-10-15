@@ -35,7 +35,7 @@ const actions: ActionTree<UserState, RootState> = {
  */
   async login ({ commit, dispatch, getters }, payload) {
     try {
-      const {token, oms} = payload;
+      const {token, oms, omsRedirectionUrl} = payload;
       dispatch("setUserInstanceUrl", oms);
 
       // Getting the permissions list from server
@@ -46,7 +46,7 @@ const actions: ActionTree<UserState, RootState> = {
 
       const serverPermissions = await UserService.getUserPermissions({
         permissionIds: [...new Set(serverPermissionsFromRules)]
-      }, token);
+      }, omsRedirectionUrl, token);
       const appPermissions = prepareAppPermissions(serverPermissions);
 
 
@@ -65,14 +65,20 @@ const actions: ActionTree<UserState, RootState> = {
         }
       }
 
+      if (omsRedirectionUrl) {
+        dispatch("setOmsRedirectionUrl", omsRedirectionUrl)
+      }
+      
       const userProfile = await UserService.getUserProfile(token);
+      //TODO: Add support in launchpad to call maarg's checkLoginOptions API to get the omsInstanceName and pass it to apps.
+      userProfile.omsInstanceName = await UserService.fetchOmsInstanceName(token)
 
       //fetching user facilities
       const isAdminUser = appPermissions.some((appPermission: any) => appPermission?.action === "APP_STOREFULFILLMENT_ADMIN" );
-      const facilities = await useUserStore().getUserFacilities(userProfile?.partyId, "PICKUP", isAdminUser)
+      const facilities = await useUserStore().getUserFacilities(userProfile?.partyId, "OMS_FULFILLMENT", isAdminUser)
       if(!facilities.length) throw "Unable to login. User is not associated with any facility"
 
-      await useUserStore().getFacilityPreference('SELECTED_FACILITY')
+      await useUserStore().getFacilityPreference('SELECTED_FACILITY', userProfile.userId)
     
       userProfile.facilities = facilities;
 
@@ -84,17 +90,22 @@ const actions: ActionTree<UserState, RootState> = {
       }, []);
       // TODO Use a separate API for getting facilities, this should handle user like admin accessing the app
       const currentEComStore = await UserService.getCurrentEComStore(token, getCurrentFacilityId());
+
+      
+
+      updateToken(token)
+
+      // The setEComStorePreference method requires userId, Hence setting userProfile in the following line
+      commit(types.USER_INFO_UPDATED, userProfile);
       await useUserStore().setEComStorePreference(currentEComStore);
       /*  ---- Guard clauses ends here --- */
 
       setPermissions(appPermissions);
-      if (userProfile.userTimeZone) {
-        Settings.defaultZone = userProfile.userTimeZone;
+      if (userProfile.timeZone) {
+        Settings.defaultZone = userProfile.timeZone;
       }
-      updateToken(token)
 
       // TODO user single mutation
-      commit(types.USER_INFO_UPDATED, userProfile);
       commit(types.USER_CURRENT_ECOM_STORE_UPDATED, currentEComStore)
       commit(types.USER_PERMISSIONS_UPDATED, appPermissions);
       commit(types.USER_TOKEN_CHANGED, { newToken: token })
@@ -160,6 +171,7 @@ const actions: ActionTree<UserState, RootState> = {
     this.dispatch("util/clearCurrentFacilityLatLon", {})
     this.dispatch("util/clearStoresInformation", {})
     commit(types.USER_END_SESSION)
+    dispatch("setOmsRedirectionUrl", "")
     resetPermissions();
     resetConfig();
 
@@ -175,6 +187,10 @@ const actions: ActionTree<UserState, RootState> = {
 
     emitter.emit('dismissLoader')
     return redirectionUrl;
+  },
+
+  setOmsRedirectionUrl({ commit }, payload) {
+    commit(types.USER_OMS_REDIRECTION_URL_UPDATED, payload)
   },
 
   /**
@@ -211,9 +227,17 @@ const actions: ActionTree<UserState, RootState> = {
    */
   async setUserTimeZone ( { state, commit }, timeZoneId) {
     const current: any = state.current;
-    current.userTimeZone = timeZoneId;
-    commit(types.USER_INFO_UPDATED, current);
-    Settings.defaultZone = current.userTimeZone;
+    try {
+      await UserService.setUserTimeZone(({ userId: current.userId, timeZone: timeZoneId }));
+      current.timeZone = timeZoneId;
+      commit(types.USER_INFO_UPDATED, current);
+      Settings.defaultZone = current.timeZone;
+      showToast(translate("Time zone updated successfully"));
+    } catch(err) {
+      logger.error(err)
+      showToast(translate("Failed to update time zone"));
+    }
+
   },
 
 
@@ -224,9 +248,8 @@ const actions: ActionTree<UserState, RootState> = {
         "productStoreId": this.state.user.currentEComStore.productStoreId,
         "settingTypeEnumId": "BOPIS_PART_ODR_REJ"
       },
-      "filterByDate": 'Y',
       "entityName": "ProductStoreSetting",
-      "fieldList": ["productStoreId", "settingTypeEnumId", "settingValue", "fromDate"],
+      "fieldList": ["productStoreId", "settingTypeEnumId", "settingValue"],
       "viewSize": 1
     } as any
 
@@ -260,13 +283,12 @@ const actions: ActionTree<UserState, RootState> = {
         }
       }
 
-      if (!payload.fromDate) {
+      if (!payload.settingTypeEnumId) {
         //Create Product Store Setting
         payload = {
           ...payload, 
           "productStoreId": this.state.user.currentEComStore.productStoreId,
-          "settingTypeEnumId": "BOPIS_PART_ODR_REJ",
-          "fromDate": DateTime.now().toMillis()
+          "settingTypeEnumId": "BOPIS_PART_ODR_REJ"
         }
         resp = await UserService.createPartialOrderRejectionConfig(payload) as any
       } else {
@@ -304,18 +326,18 @@ const actions: ActionTree<UserState, RootState> = {
 
     try {
       resp = await getNotificationEnumIds(process.env.VUE_APP_NOTIF_ENUM_TYPE_ID)
-      enumerationResp = resp.docs
-      resp = await getNotificationUserPrefTypeIds(process.env.VUE_APP_NOTIF_APP_ID, state.current.userLoginId, {
-        "userPrefTypeId": getCurrentFacilityId(),
-        "userPrefTypeId_op": "contains"
+      enumerationResp = resp
+      resp = await getNotificationUserPrefTypeIds(process.env.VUE_APP_NOTIF_APP_ID, state.current.userId, {
+        "topic": getCurrentFacilityId(),
+        "topic_op": "contains"
       })
-      userPrefIds = resp.docs.map((userPref: any) => userPref.userPrefTypeId)
+      userPrefIds = resp.map((userPref: any) => userPref.topic)
     } catch (error) {
       logger.error(error)
     } finally {
       // checking enumerationResp as we want to show disbaled prefs if only getNotificationEnumIds returns
       // data and getNotificationUserPrefTypeIds fails or returns empty response (all disbaled)
-      if (enumerationResp.length) {
+      if (enumerationResp?.length) {
         notificationPreferences = enumerationResp.reduce((notifactionPref: any, pref: any) => {
           const userPrefTypeIdToSearch = generateTopicName(getCurrentFacilityId(), pref.enumId)
           notifactionPref.push({ ...pref, isEnabled: userPrefIds.includes(userPrefTypeIdToSearch) })
@@ -330,11 +352,11 @@ const actions: ActionTree<UserState, RootState> = {
     let allNotificationPrefs = [];
 
     try {
-      const resp = await getNotificationUserPrefTypeIds(process.env.VUE_APP_NOTIF_APP_ID, state.current.userLoginId, {
-        "userPrefTypeId": getCurrentFacilityId(),
-        "userPrefTypeId_op": "contains"
+      const resp = await getNotificationUserPrefTypeIds(process.env.VUE_APP_NOTIF_APP_ID, state.current.userId, {
+        "topic": getCurrentFacilityId(),
+        "topic_op": "contains"
       })
-      allNotificationPrefs = resp.docs
+      allNotificationPrefs = resp
     } catch(error) {
       logger.error(error)
     }
@@ -352,9 +374,8 @@ const actions: ActionTree<UserState, RootState> = {
         "settingTypeEnumId": Object.keys(productStoreSettings),
         "settingTypeEnumId_op": "in"
       },
-      "filterByDate": 'Y',
       "entityName": "ProductStoreSetting",
-      "fieldList": ["settingTypeEnumId", "settingValue", "fromDate"]
+      "fieldList": ["settingTypeEnumId", "settingValue"]
     }
 
     try {
@@ -377,8 +398,6 @@ const actions: ActionTree<UserState, RootState> = {
   },
 
   async createProductStoreSetting({ commit }, enumeration) {
-    const fromDate = Date.now()
-
     try {
       if(!await UtilService.isEnumExists(enumeration.enumId)) {
         const resp = await UtilService.createEnumeration({
@@ -394,18 +413,18 @@ const actions: ActionTree<UserState, RootState> = {
       }
 
       const params = {
-        fromDate,
         "productStoreId": this.state.user.currentEComStore.productStoreId,
         "settingTypeEnumId": enumeration.enumId,
         "settingValue": "false"
       }
 
       await UtilService.createProductStoreSetting(params) as any
+      return true;
     } catch(err) {
       logger.error(err)
     }
 
-    return fromDate;
+    return false;
   },
 
   async setProductStoreSetting({ commit, dispatch, state }, payload) {
@@ -419,23 +438,18 @@ const actions: ActionTree<UserState, RootState> = {
       return;
     }
 
-    let fromDate;
-
     try {
       let resp = await UtilService.getProductStoreSettings({
         "inputFields": {
           "productStoreId": this.state.user.currentEComStore.productStoreId,
           "settingTypeEnumId": payload.enumId
         },
-        "filterByDate": 'Y',
         "entityName": "ProductStoreSetting",
-        "fieldList": ["fromDate"],
+        "fieldList": ["settingTypeEnumId"],
         "viewSize": 1
       }) as any
-      if(!hasError(resp)) {
-        fromDate = resp.data.docs[0]?.fromDate
+      if(!hasError(resp) && resp.data.docs[0]?.settingTypeEnumId) {
         const params = {
-          "fromDate": fromDate,
           "productStoreId": eComStoreId,
           "settingTypeEnumId": payload.enumId,
           "settingValue": `${payload.value}`
@@ -478,8 +492,11 @@ const actions: ActionTree<UserState, RootState> = {
   clearNotificationState({ commit }) {
     commit(types.USER_NOTIFICATIONS_UPDATED, [])
     commit(types.USER_NOTIFICATIONS_PREFERENCES_UPDATED, [])
-    commit(types.USER_FIREBASE_DEVICEID_UPDATED, '')
     commit(types.USER_UNREAD_NOTIFICATIONS_STATUS_UPDATED, true)
+  },
+
+  clearDeviceId({ commit }) {
+    commit(types.USER_FIREBASE_DEVICEID_UPDATED, '')
   },
 
   setUnreadNotificationsStatus({ commit }, payload) {

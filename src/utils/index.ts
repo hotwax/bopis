@@ -109,4 +109,22 @@ const formatCurrency = (amount: any, code: string) => {
   return `${currentSymbol[code] || code} ${amount || 0}`
 }
 
-export { copyToClipboard, showToast, handleDateTimeInput, getFeature, formatPhoneNumber, getCurrentFacilityId, getColorByDesc, formatCurrency }
+const hasWebcamAccess = async () => {
+  try {
+    await navigator.mediaDevices.getUserMedia({ video: true });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+// TimeZone format = 04:16 PM EDT
+const getCurrentTime = (zone: string, format = 't ZZZZ') => {
+  return DateTime.now().setZone(zone).toFormat(format)
+}
+
+const getPickerName = (pickerGroupName: string, pickerFirstName: string, pickerLastName: string) => {
+  return pickerGroupName ? pickerGroupName : pickerFirstName ? `${pickerFirstName} ${pickerLastName ? pickerLastName : ''}`.trim() : '';
+}
+
+export { copyToClipboard, getCurrentTime, showToast, handleDateTimeInput, hasWebcamAccess, getFeature, formatPhoneNumber, getCurrentFacilityId, getColorByDesc, formatCurrency, getPickerName }

@@ -56,7 +56,7 @@
               <ion-label>
                 {{ order?.customer?.name }}
               </ion-label>
-              <ion-badge slot="end" v-if="order?.placedDate">{{ timeFromNow(order.placedDate) }}</ion-badge>
+              <ion-badge slot="end" v-if="order?.placedDate">{{ timeFromNow(order.orderDate) }}</ion-badge>
             </ion-item>
           </ion-list>
           <ion-item v-if="customerEmail" lines="none">
@@ -136,20 +136,20 @@
                     </div>
                     <ion-badge :color="shipGroup.category ? 'primary' : 'medium'">{{ shipGroup.category ? shipGroup.category : translate('Pending allocation') }}</ion-badge>
                   </ion-card-header>
-        
+
                   <ion-item v-if="shipGroup.carrierPartyId">
                     {{ getPartyName(shipGroup.carrierPartyId) }}
                     <ion-label slot="end">{{ shipGroup.trackingCode }}</ion-label>
                     <ion-icon slot="end" :icon="locateOutline" />
                   </ion-item>
-        
+
                   <ion-item v-if="shipGroup.shippingInstructions" color="light" lines="none">
                     <ion-label class="ion-text-wrap">
                       <p class="overline">{{ translate("Handling Instructions") }}</p>
                       <p>{{ shipGroup.shippingInstructions }}</p>
                     </ion-label>
                   </ion-item>
-        
+
                   <ion-item lines="none" v-for="item in shipGroup.items" :key="item">
                     <ion-thumbnail slot="start">
                       <DxpShopifyImg :src="getProduct(item.productId).mainImageUrl" size="small"/>
@@ -262,7 +262,6 @@ import EditPickerModal from "@/components/EditPickerModal.vue";
 import emitter from '@/event-bus'
 import logger from "@/logger";
 import InventoryDetailsPopover from '@/components/InventoryDetailsPopover.vue'
-
 export default defineComponent({
   name: "OrderDetail",
   components: {
@@ -334,13 +333,11 @@ export default defineComponent({
         component: AssignPickerModal,
         componentProps: { order, part, facilityId }
       });
-
       assignPickerModal.onDidDismiss().then(async(result: any) => {
         if(result.data.selectedPicker) {
           await this.store.dispatch('order/packShipGroupItems', { order, part, facilityId, selectedPicker: result.data.selectedPicker })
         }
       })
-
       return assignPickerModal.present();
     },
     async editPicker(order: any) {
@@ -348,7 +345,6 @@ export default defineComponent({
         component: EditPickerModal,
         componentProps: { order }
       });
-
       editPickerModal.onDidDismiss().then((result) => {
         if(result.data?.selectedPicker){
           const selectedPicker = result.data.selectedPicker
@@ -357,7 +353,6 @@ export default defineComponent({
           this.store.dispatch('order/updateCurrent', { order: this.order })
         }
       })
-
       return editPickerModal.present();
     },
     async deliverShipment(order: any) {
@@ -397,7 +392,6 @@ export default defineComponent({
       const pickup = part?.shipmentMethodEnum?.shipmentMethodEnumId === 'STOREPICKUP';
       const header = pickup ? translate('Ready for pickup') : translate('Ready to ship');
       const message = pickup ? translate('An email notification will be sent to that their order is ready for pickup. This order will also be moved to the packed orders tab.', { customerName: order.customer.name, space: '<br/><br/>' }) : '';
-
       const alert = await alertController
         .create({
           header: header,
@@ -424,7 +418,6 @@ export default defineComponent({
           'picklistBinId': currentOrder.picklistBinId,
           'orderId': currentOrder.orderId
         })
-
         if(!hasError(resp)) {
           showToast(translate("Order packed and ready for delivery"));
           this.store.dispatch("order/updateCurrent", { order: { ...currentOrder, readyToShip: true } }) 
@@ -455,12 +448,10 @@ export default defineComponent({
           },
           responseType: "blob"
         })
-
         if (!response || response.status !== 200 || hasError(response)) {
           showToast(translate("Failed to load packing slip"))
           return;
         }
-
         // Generate local file URL for the blob received
         const pdfUrl = window.URL.createObjectURL(response.data);
         // Open the file in new tab
@@ -470,7 +461,6 @@ export default defineComponent({
         catch {
           showToast(translate('Unable to open as browser is blocking pop-ups.', {documentName: 'packing slip'}));
         }
-
       } catch(err) {
         showToast(translate("Failed to load packing slip"))
         logger.error(err)
@@ -489,7 +479,6 @@ export default defineComponent({
     async sendReadyForPickupEmail(order: any) {
       const header = translate('Resend email')
       const message = translate('An email notification will be sent to that their order is ready for pickup.', { customerName: order.customer.name });
-
       const alert = await alertController
         .create({
           header: header,
@@ -532,7 +521,6 @@ export default defineComponent({
   async mounted() {
     emitter.emit("presentLoader")
     await this.getOrderDetail(this.orderId, this.orderPartSeqId, this.orderType);
-
     // fetch customer details and rejection reasons only when we get the orders information
     if(this.order.orderId) {
       await this.getCustomerContactDetails()
@@ -547,7 +535,6 @@ export default defineComponent({
     const productIdentificationStore = useProductIdentificationStore();
     let productIdentificationPref = computed(() => productIdentificationStore.getProductIdentificationPref)
     let currentFacility: any = computed(() => userStore.getCurrentFacility) 
-
     return {
       Actions,
       accessibilityOutline,
@@ -585,14 +572,12 @@ export default defineComponent({
 .border-top {
   border-top: 1px solid #ccc;
 }
-
 ion-card-header {
   display: flex;
   flex-direction: row;
   justify-content: space-between;
   align-items: center;
 }
-
 @media (min-width: 768px) {
   main {
     display: grid;
@@ -602,7 +587,6 @@ ion-card-header {
     margin-inline: auto;
     margin-top: var(--spacer-xl);
   }
-
   aside {
     grid-column: 2;
     grid-row: 1;

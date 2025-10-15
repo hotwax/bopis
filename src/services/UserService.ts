@@ -1,11 +1,19 @@
-import { api, client, hasError } from '@/adapter';
+import { api, apiClient, client, hasError } from '@/adapter';
 
 import store from '@/store';
 
 const login = async (username: string, password: string): Promise <any> => {
-  return api({
+  const baseURL = store.getters['user/getOmsBaseUrl'];
+  const omstoken = store.getters['user/getUserToken'];
+
+  return apiClient({
     url: "login", 
     method: "post",
+    baseURL,
+    headers: {
+      "Authorization": "Bearer " + omstoken,
+      "Content-Type": "application/json"
+    },
     data: {
       'USERNAME': username, 
       'PASSWORD': password
@@ -17,16 +25,54 @@ const getUserProfile = async (token: any): Promise<any> => {
   const baseURL = store.getters['user/getBaseUrl'];
   try {
     const resp = await client({
-      url: "user-profile",
+      url: "admin/user/profile",
       method: "get",
       baseURL,
       headers: {
-        Authorization:  'Bearer ' + token,
-        'Content-Type': 'application/json'
+        "Authorization":  "Bearer " + token,
+        "Content-Type": "application/json"
       }
     });
     if(hasError(resp)) return Promise.reject("Error getting user profile: " + JSON.stringify(resp.data));
     return Promise.resolve(resp.data)
+  } catch(error: any) {
+    return Promise.reject(error)
+  }
+}
+
+async function setUserTimeZone(payload: any): Promise<any> {
+  try {
+    const resp = await api({
+      url: "admin/user/profile",
+      method: "POST",
+      data: payload,
+    }) as any;
+    return Promise.resolve(resp.data);
+  } catch (error: any) {
+    return Promise.reject({
+      code: "error",
+      message: "Failed to set user time zone",
+      serverResponse: error
+    });
+  }
+}
+
+const fetchOmsInstanceName = async (token: any): Promise<any> => {
+  const baseURL = store.getters['user/getBaseUrl'];
+  try {
+    const resp = await client({
+      url: "admin/checkLoginOptions",
+      method: "get",
+      baseURL,
+      headers: {
+        "Authorization":  "Bearer " + token,
+        "Content-Type": "application/json"
+      }
+    });
+    if(hasError(resp)) { 
+      return Promise.reject("Error getting oms instance name: " + JSON.stringify(resp.data)); 
+    }
+    return Promise.resolve(resp.data?.omsInstanceName)
   } catch(error: any) {
     return Promise.reject(error)
   }
@@ -39,7 +85,7 @@ const getCurrentEComStore = async (token: any, facilityId: any): Promise<any> =>
     return Promise.resolve({});
   }
 
-  const baseURL = store.getters['user/getBaseUrl'];
+  const baseURL = store.getters['user/getOmsBaseUrl'];
   try {
     const data = {
       "inputFields": {
@@ -52,14 +98,14 @@ const getCurrentEComStore = async (token: any, facilityId: any): Promise<any> =>
       "filterByDate": "Y"
     }
     
-    const resp = await client({
+    const resp = await apiClient({
       url: "performFind",
       method: "post",
       data,
       baseURL,
       headers: {
-        Authorization:  'Bearer ' + token,
-        'Content-Type': 'application/json'
+        "Authorization":  "Bearer " + token,
+        "Content-Type": "application/json"
       }
     });
     if (hasError(resp)) {
@@ -72,47 +118,84 @@ const getCurrentEComStore = async (token: any, facilityId: any): Promise<any> =>
   }
 }
 const getRerouteFulfillmentConfig = async (payload: any): Promise<any> => {
-  return api({
+  const baseURL = store.getters['user/getOmsBaseUrl'];
+  const omstoken = store.getters['user/getUserToken'];
+  return apiClient({
     url: "performFind",
     method: "get",
+    baseURL,
+    headers: {
+      "Authorization": "Bearer " + omstoken,
+      "Content-Type": "application/json"
+    },
     params: payload,
   });
 }
 
 const updateRerouteFulfillmentConfig = async (payload: any): Promise<any> => {
-  return api({
+  const baseURL = store.getters['user/getOmsBaseUrl'];
+  const omstoken = store.getters['user/getUserToken'];
+  return apiClient({
     url: "service/updateProductStoreSetting",
     method: "post",
+    baseURL,
+    headers: {
+      "Authorization": "Bearer " + omstoken,
+      "Content-Type": "application/json"
+    },
     data: payload
   });
 }
 
 const getPartialOrderRejectionConfig = async (payload: any): Promise<any> => {
-  return api({
+  const baseURL = store.getters['user/getOmsBaseUrl'];
+  const omstoken = store.getters['user/getUserToken'];
+  return apiClient({
     url: "performFind",
     method: "get",
+    baseURL,
+    headers: {
+      "Authorization": "Bearer " + omstoken,
+      "Content-Type": "application/json"
+    },
     params: payload,
   });
 }
 
 const createPartialOrderRejectionConfig = async (payload: any): Promise<any> => {
-  return api({
+  const baseURL = store.getters['user/getOmsBaseUrl'];
+  const omstoken = store.getters['user/getUserToken'];
+  return apiClient({
     url: "service/createProductStoreSetting",
     method: "post",
+    baseURL,
+    headers: {
+      "Authorization": "Bearer " + omstoken,
+      "Content-Type": "application/json"
+    },
     data: payload
   });
 }
 
 const updatePartialOrderRejectionConfig = async (payload: any): Promise<any> => {
-  return api({
+  const baseURL = store.getters['user/getOmsBaseUrl'];
+  const omstoken = store.getters['user/getUserToken'];
+
+  return apiClient({
     url: "service/updateProductStoreSetting",
     method: "post",
+    baseURL,
+    headers: {
+      "Authorization": "Bearer " + omstoken,
+      "Content-Type": "application/json"
+    },
     data: payload
   });
 }
 
-const getUserPermissions = async (payload: any, token: any): Promise<any> => {
-  const baseURL = store.getters['user/getBaseUrl'];
+const getUserPermissions = async (payload: any, url: string, token: any): Promise<any> => {
+  // Currently, making this request in ofbiz
+  const baseURL = url.startsWith('http') ? url.includes('/api') ? url : `${url}/api/` : `https://${url}.hotwax.io/api/`;
   let serverPermissions = [] as any;
 
   // If the server specific permission list doesn't exist, getting server permissions will be of no use
@@ -131,7 +214,7 @@ const getUserPermissions = async (payload: any, token: any): Promise<any> => {
         viewSize,
         permissionIds: payload.permissionIds
       }
-      resp = await client({
+      resp = await apiClient({
         url: "getPermissions",
         method: "post",
         baseURL,
@@ -149,7 +232,7 @@ const getUserPermissions = async (payload: any, token: any): Promise<any> => {
           // We need to get all the remaining permissions
           const apiCallsNeeded = Math.floor(remainingPermissions / viewSize) + ( remainingPermissions % viewSize != 0 ? 1 : 0);
           const responses = await Promise.all([...Array(apiCallsNeeded).keys()].map(async (index: any) => {
-            const response = await client({
+            const response = await apiClient({
               url: "getPermissions",
               method: "post",
               baseURL,
@@ -196,20 +279,35 @@ const getUserPermissions = async (payload: any, token: any): Promise<any> => {
       }
       return serverPermissions;
     } catch(error: any) {
+      // TODO: added this to handle the flow on 401, need to remove this once we move to support of passing systemType at endpoint level
+      if(error?.response?.status === 401) {
+        store.dispatch("user/logout", { isUserUnauthorised: true });
+        const redirectUrl = window.location.origin + '/login'
+        window.location.href = `${process.env.VUE_APP_LOGIN_URL}?redirectUrl=${redirectUrl}`
+      }
       return Promise.reject(error);
     }
 }
 
 const ensurePartyRole = async (payload: any): Promise <any> => {
-  return api({
+  const baseURL = store.getters['user/getOmsBaseUrl'];
+  const omstoken = store.getters['user/getUserToken'];
+
+  return apiClient({
     url: "service/ensurePartyRole",
     method: "post",
+    baseURL,
+    headers: {
+      "Authorization": "Bearer " + omstoken,
+      "Content-Type": "application/json"
+    },
     data: payload
   });
 }
 
 export const UserService = {
     ensurePartyRole,
+    fetchOmsInstanceName,
     login,
     getCurrentEComStore,
     getRerouteFulfillmentConfig,
@@ -218,5 +316,6 @@ export const UserService = {
     updateRerouteFulfillmentConfig,
     getPartialOrderRejectionConfig,
     createPartialOrderRejectionConfig,
-    updatePartialOrderRejectionConfig
+    updatePartialOrderRejectionConfig,
+    setUserTimeZone
 }
