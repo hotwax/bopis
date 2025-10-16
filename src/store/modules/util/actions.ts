@@ -36,7 +36,7 @@ const actions: ActionTree<UtilState, RootState> = {
           ...payload
         }
        resp = await UtilService.fetchRejectReasonsByEnumerationGroup(payload); 
-    }
+      }
 
       if(!hasError(resp) && resp.data) {
         rejectReasons = resp.data

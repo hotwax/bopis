@@ -33,7 +33,7 @@
         </ion-label>
 
         <ion-select data-testid="rejection-reason-modal-button" slot="end" placeholder="Reason" interface="popover" v-model="item.rejectReasonId" @ionChange="onReasonChange($event, item)">
-          <ion-select-option data-testid="select-rejection-reason-option" v-for="reason in rejectReasons" :key="reason.enumId" :value="reason.enumId">{{ reason.description }}</ion-select-option>
+          <ion-select-option data-testid="select-rejection-reason-option" v-for="reason in rejectReasons" :key="reason.enumId" :value="reason.enumId">{{ reason.enumDescription ?? reason.description }}</ion-select-option>
         </ion-select>
       </ion-item>
     </div>

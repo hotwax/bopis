@@ -212,19 +212,18 @@ const actions: ActionTree<OrderState , RootState> ={
             (picklistShipment.picklist?.roles ?? []).filter((role: any) => !role.thruDate)
           ) || [];
 
-          const pickers = allRoles.length
-            ? allRoles
-                .map((role: any) => {
-                  if (role?.person) {
-                    return `${role.person.firstName} ${role.person.lastName ? role.person.lastName : ''}`;
-                  } else if (role?.partyGroup) {
-                    return role.partyGroup.groupName;
-                  }
-                  return null;
-                })
-                .filter(Boolean)
-                .join(", ")
-            : "";
+          const pickers = allRoles
+              .map((role: any) => 
+                role?.partyGroup?.groupName?.trim() ||
+                [role?.person?.firstName, role?.person?.lastName]
+                  .filter(Boolean)
+                  .join(" ")
+                  .trim() ||
+                role?.partyId ||
+                null
+              )
+              .filter(Boolean)
+              .join(", ");
 
           const pickerIds = allRoles.map((role: any) => role.partyId);
 
@@ -450,9 +449,9 @@ const actions: ActionTree<OrderState , RootState> ={
 
       // Add showKitComponents to each item in shipGroups and remove cancelled items
       const shipGroups = data.shipGroups.map((group: any) => {
-        const validItems = group.shipmentMethodTypeId === 'STOREPICKUP' ? group.items.filter(
+        const validItems = group.items.filter(
           (item: any) => item.itemStatusId !== 'ITEM_CANCELLED'
-        ) : group.items;
+        )
 
         return {
           ...group,
@@ -492,7 +491,7 @@ const actions: ActionTree<OrderState , RootState> ={
         order.picklistId = currentShipGroup.picklistId || null;
         order.isPicked = !!currentShipGroup.picklistId;
         order.pickerIds = currentShipGroup.pickerId ? [currentShipGroup.pickerId] : [];
-        order.pickers = getPickerName(currentShipGroup.pickerGroupName, currentShipGroup.pickerFirstName, currentShipGroup.pickerLastName);
+        order.pickers = getPickerName(currentShipGroup.pickerGroupName, currentShipGroup.pickerFirstName, currentShipGroup.pickerLastName) || currentShipGroup.pickerId;
         order.shipGroupSeqId = currentShipGroup.shipGroupSeqId;
       }
 
@@ -576,7 +575,7 @@ const actions: ActionTree<OrderState , RootState> ={
             return null;
           }
           productIds.push(...validItems.map((item: any) => item.productId));
-
+          
           const pickersInfo = pickers[shipment.shipmentId] || { pickers: "", pickerIds: [] };
 
           return {
@@ -737,13 +736,15 @@ const actions: ActionTree<OrderState , RootState> ={
 
     try {
       resp = await OrderService.shipOrder(params)
-      if (!hasError(resp)) {        // Remove order from the list if action is successful
-        const orderIndex = state.packed.list.findIndex((packedOrder: any) => {
-          return packedOrder.orderId === order.orderId && order.shipGroup.shipGroupSeqId === packedOrder.primaryShipGroupSeqId;
-        });
-        if (orderIndex > -1) {
-          state.packed.list.splice(orderIndex, 1);
-          commit(types.ORDER_PACKED_UPDATED, { orders: state.packed.list, total: state.packed.total -1 })
+      if (!hasError(resp)) {     // Remove order from the list if action is successful
+        if (Object.keys(state.packed.list).length) {
+          const orderIndex = state.packed.list.findIndex((packedOrder: any) => {
+            return packedOrder.orderId === order.orderId && order.shipGroup.shipGroupSeqId === packedOrder.primaryShipGroupSeqId;
+          });
+          if (orderIndex > -1) {
+            state.packed.list.splice(orderIndex, 1);
+            commit(types.ORDER_PACKED_UPDATED, { orders: state.packed.list, total: state.packed.total -1 })
+          }
         }
 
         if(order.shipGroup.shipmentMethodTypeId === 'STOREPICKUP'){
@@ -806,16 +807,18 @@ const actions: ActionTree<OrderState , RootState> ={
     } catch(err) {
       logger.error(err)
       showToast(translate("Something went wrong"))
+    } finally {
+      emitter.emit("dismissLoader")
     }
 
     emitter.emit("dismissLoader")
     return resp;
   },
 
-  removeOpenOrder({ commit, state }, payload) {
+  async removeOpenOrder({ commit, state }, payload) {
     const orders = JSON.parse(JSON.stringify(state.open.list));
 
-    const orderIndex = orders.findIndex((order: any) => {
+    const orderIndex = orders?.findIndex((order: any) => {
       return order.orderId === payload.order.orderId && order.shipGroups.some((shipGroup: any) => {
         return shipGroup.shipGroupSeqId === payload.shipGroup.shipGroupSeqId;
       });

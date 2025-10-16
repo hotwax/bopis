@@ -1,4 +1,4 @@
-import { apiClient, client, hasError } from '@/adapter';
+import { api, apiClient, client, hasError } from '@/adapter';
 
 import store from '@/store';
 
@@ -37,6 +37,23 @@ const getUserProfile = async (token: any): Promise<any> => {
     return Promise.resolve(resp.data)
   } catch(error: any) {
     return Promise.reject(error)
+  }
+}
+
+async function setUserTimeZone(payload: any): Promise<any> {
+  try {
+    const resp = await api({
+      url: "admin/user/profile",
+      method: "POST",
+      data: payload,
+    }) as any;
+    return Promise.resolve(resp.data);
+  } catch (error: any) {
+    return Promise.reject({
+      code: "error",
+      message: "Failed to set user time zone",
+      serverResponse: error
+    });
   }
 }
 
@@ -81,7 +98,7 @@ const getCurrentEComStore = async (token: any, facilityId: any): Promise<any> =>
       "filterByDate": "Y"
     }
     
-    const resp = await client({
+    const resp = await apiClient({
       url: "performFind",
       method: "post",
       data,
@@ -197,7 +214,7 @@ const getUserPermissions = async (payload: any, url: string, token: any): Promis
         viewSize,
         permissionIds: payload.permissionIds
       }
-      resp = await client({
+      resp = await apiClient({
         url: "getPermissions",
         method: "post",
         baseURL,
@@ -215,7 +232,7 @@ const getUserPermissions = async (payload: any, url: string, token: any): Promis
           // We need to get all the remaining permissions
           const apiCallsNeeded = Math.floor(remainingPermissions / viewSize) + ( remainingPermissions % viewSize != 0 ? 1 : 0);
           const responses = await Promise.all([...Array(apiCallsNeeded).keys()].map(async (index: any) => {
-            const response = await client({
+            const response = await apiClient({
               url: "getPermissions",
               method: "post",
               baseURL,
@@ -262,6 +279,12 @@ const getUserPermissions = async (payload: any, url: string, token: any): Promis
       }
       return serverPermissions;
     } catch(error: any) {
+      // TODO: added this to handle the flow on 401, need to remove this once we move to support of passing systemType at endpoint level
+      if(error?.response?.status === 401) {
+        store.dispatch("user/logout", { isUserUnauthorised: true });
+        const redirectUrl = window.location.origin + '/login'
+        window.location.href = `${process.env.VUE_APP_LOGIN_URL}?redirectUrl=${redirectUrl}`
+      }
       return Promise.reject(error);
     }
 }
@@ -293,5 +316,6 @@ export const UserService = {
     updateRerouteFulfillmentConfig,
     getPartialOrderRejectionConfig,
     createPartialOrderRejectionConfig,
-    updatePartialOrderRejectionConfig
+    updatePartialOrderRejectionConfig,
+    setUserTimeZone
 }

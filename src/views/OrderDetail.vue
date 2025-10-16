@@ -60,11 +60,11 @@
           </ion-item>
 
            <!-- Order Status -->
-          <ion-item v-if="order.readyToHandover || order.readyToShip" color="light" lines="none">
+          <ion-item v-if="orderType === 'open' && ( order.readyToHandover || order.readyToShip )" color="light" lines="none">
             <ion-icon :icon="checkmarkCircleOutline" color="success" slot="start" />
             <ion-label data-testid="ready-handover-label" class="ion-text-wrap">{{ order.readyToHandover ? translate("Order is now ready to handover.") : translate("Order is now ready to be shipped.") }}</ion-label>
           </ion-item>
-          <ion-item v-if="order.handovered || order.shipped" color="light" lines="none">
+          <ion-item v-if="orderType === 'packed' && ( order.handovered || order.shipped )" color="light" lines="none">
             <ion-icon :icon="checkmarkCircleOutline" color="success" slot="start" />
             <ion-label data-testid="handed-over-success-label" class="ion-text-wrap">{{ order.handovered ? translate("Order is successfully handed over to customer.") : translate("Order is successfully shipped.") }}</ion-label>
           </ion-item>
@@ -93,7 +93,7 @@
                       <ion-label>{{ getRejectionReasonDescription(rejectEntireOrderReasonId) ? getRejectionReasonDescription(rejectEntireOrderReasonId) : translate("Reject to avoid order split (no variance)") }}</ion-label>
                       <ion-icon :icon="caretDownOutline"/>
                     </ion-chip>
-                    <ion-button data-testid="select-rejected-item-button" v-else slot="end" color="danger" fill="clear" size="small" @click.stop="openRejectReasonPopover($event, item, order)">
+                    <ion-button data-testid="select-rejected-item-button" v-else slot="end" color="danger" fill="clear" size="default" @click.stop="openRejectReasonPopover($event, item, order)">
                       <ion-icon slot="icon-only" :icon="trashOutline"/>
                     </ion-button>
                   </template>
@@ -113,20 +113,20 @@
                   <ion-spinner v-if="item.isFetchingStock" color="medium" name="crescent" />
                   <div v-else-if="getInventoryInformation(item.productId).quantityOnHand >= 0" class="atp-info">
                     <ion-note slot="end"> {{ translate("on hand", { count: getInventoryInformation(item.productId).quantityOnHand ?? '0' }) }} </ion-note>
-                    <ion-button fill="clear" @click.stop="openInventoryDetailPopover($event, item)">
+                    <ion-button size="default" fill="clear" @click.stop="openInventoryDetailPopover($event, item)">
                       <ion-icon slot="icon-only" :icon="informationCircleOutline" color="medium" />
                     </ion-button>
                   </div>
-                  <ion-button data-testid="qoh-button" v-else fill="clear" @click.stop="fetchProductInventory(item.productId, order.shipGroupSeqId)">
+                  <ion-button size="default" data-testid="qoh-button" v-else fill="clear" @click.stop="fetchProductInventory(item.productId, order.shipGroupSeqId)">
                     <ion-icon color="medium" slot="icon-only" :icon="cubeOutline" />
                   </ion-button>
 
-                  <ion-button data-testid="gift-card-activation-button" :disabled="order.handovered || order.shipped || order.cancelled || hasCancelledItems" v-if="(orderType === 'packed' || orderType === 'completed') && getProduct(item.productId).productTypeId === 'GIFT_CARD'" color="medium" fill="clear" size="small" @click.stop="openGiftCardActivationModal(item)">
+                  <ion-button data-testid="gift-card-activation-button" :disabled="order.handovered || order.shipped || order.cancelled || hasCancelledItems" v-if="(orderType === 'packed' || orderType === 'completed') && getProduct(item.productId).productTypeId === 'GIFT_CARD'" color="medium" fill="clear" size="default" @click.stop="openGiftCardActivationModal(item)">
                     <ion-icon slot="icon-only" :icon="item.isGCActivated ? gift : giftOutline"/>
                   </ion-button>
 
                   <!-- Show kit components -->
-                  <ion-button v-if="isKit(item)" fill="clear" size="small" @click.stop="fetchKitComponents(item, order)">
+                  <ion-button v-if="isKit(item)" fill="clear" size="default" @click.stop="fetchKitComponents(item, order)">
                     <ion-icon v-if="item.showKitComponents" color="medium" slot="icon-only" :icon="chevronUpOutline"/>
                     <ion-icon v-else color="medium" slot="icon-only" :icon="listOutline"/>
                   </ion-button>
@@ -296,11 +296,11 @@
                     <ion-spinner v-if="item.isFetchingStock" color="medium" name="crescent" />
                     <div v-else-if="getInventoryInformation(item.productId).quantityOnHand >= 0" class="atp-info">
                       <ion-note slot="end"> {{ translate("on hand", { count: getInventoryInformation(item.productId).quantityOnHand ?? '0' }) }} </ion-note>
-                      <ion-button fill="clear" @click.stop="openInventoryDetailPopover($event, item)">
+                      <ion-button size="default" fill="clear" @click.stop="openInventoryDetailPopover($event, item)">
                         <ion-icon slot="icon-only" :icon="informationCircleOutline" color="medium" />
                       </ion-button>
                     </div>
-                    <ion-button v-else fill="clear" @click.stop="fetchProductInventory(item.productId, shipGroup.shipGroupSeqId)">
+                    <ion-button size="default" v-else fill="clear" @click.stop="fetchProductInventory(item.productId, shipGroup.shipGroupSeqId)">
                       <ion-icon color="medium" slot="icon-only" :icon="cubeOutline" />
                     </ion-button>
                   </div>
@@ -1277,10 +1277,11 @@ export default defineComponent({
     emitter.emit("presentLoader")
     await this.getOrderDetail(this.orderId, this.shipGroupSeqId, this.orderType);
 
-    // fetch rejection reasons only when we get the orders information
-    if(this.order.orderId) {
-      this.orderType === "open" ? await this.fetchRejectReasons() : await this.fetchCancelReasons();
-    }
+    // Removed condition of order type and fetched both rejection and cancellation reasons
+    // as when fetching conditionally the rejection reasons are not fetched correctly resulting in wrong
+    // rejection history being displayed
+    await this.fetchRejectReasons()
+    await this.fetchCancelReasons()
 
     if(this.orderType === "packed") {
       this.fetchJobs();
