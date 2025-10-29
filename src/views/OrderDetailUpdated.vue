@@ -209,7 +209,7 @@
               {{ translate("Reject Items") }}
             </ion-button>
 
-    <!-- 3️⃣ Request Transfer Button (THIRD) - NO QOH LOGIC -->
+    <!-- Request Transfer Button (THIRD) - NO QOH LOGIC -->
             <ion-button 
               data-testid="request-transfer-button"
               size="default"
@@ -1305,8 +1305,7 @@ export default defineComponent({
       })
       modal.present();
     },
-    // ✅✅✅ ADD THESE THREE NEW METHODS ✅✅✅
-
+    
 // Check if Request Transfer button should be shown
 canRequestTransfer(order: any): boolean {
   return (
@@ -1371,11 +1370,8 @@ async requestTransfer(order: any) {
   
   emitter.emit("dismissLoader");
 }
-
-// ✅✅✅ END NEW METHODS ✅✅✅
   },
   async mounted() {
-    console.log('🟢 OrderDetailUpdated.vue LOADED');
     emitter.emit("presentLoader")
     await this.getOrderDetail(this.orderId, this.shipGroupSeqId, this.orderType);
 
