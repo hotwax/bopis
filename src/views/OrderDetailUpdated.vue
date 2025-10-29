@@ -181,14 +181,46 @@
           </template>
 
           <ion-item lines="none" v-if="orderType === 'open' && order.shipGroup?.items?.length">
-            <ion-button data-testid="ready-pickup-button" size="default" :disabled="!hasPermission(Actions.APP_ORDER_UPDATE) || order.readyToHandover || order.readyToShip || order.rejected || hasRejectedItems" @click="readyForPickup(order, order.shipGroup)">
+            <ion-button 
+              data-testid="ready-pickup-button" 
+              size="default" 
+              :disabled="!hasPermission(Actions.APP_ORDER_UPDATE) || 
+                        order.readyToHandover || 
+                        order.readyToShip || 
+                        order.rejected || 
+                        hasRejectedItems" 
+              @click="readyForPickup(order, order.shipGroup)">
               <ion-icon slot="start" :icon="bagCheckOutline"/>
               {{ order?.shipGroup.shipmentMethodTypeId === 'STOREPICKUP' ? translate("Ready for pickup") : translate("Ready to ship") }}
             </ion-button>
-            <ion-button data-testid="submit-rejected-items-button" size="default" :disabled="!hasPermission(Actions.APP_ORDER_UPDATE) || order.readyToHandover || order.readyToShip || order.rejected || !hasRejectedItems" color="danger" fill="outline" @click="rejectOrder()">
+    
+    <!-- Reject Items Button -->
+            <ion-button 
+              data-testid="submit-rejected-items-button" 
+              size="default" 
+              :disabled="!hasPermission(Actions.APP_ORDER_UPDATE) || 
+                        order.readyToHandover || 
+                        order.readyToShip || 
+                        order.rejected || 
+                        !hasRejectedItems" 
+              color="danger" 
+              fill="outline" 
+              @click="rejectOrder()">
               {{ translate("Reject Items") }}
-            </ion-button>            
-          </ion-item>
+            </ion-button>
+
+    <!-- 3️⃣ Request Transfer Button (THIRD) - NO QOH LOGIC -->
+            <ion-button 
+              data-testid="request-transfer-button"
+              size="default"
+              color="warning"
+              :disabled="!hasPermission(Actions.APP_ORDER_UPDATE) || !canRequestTransfer(order)"
+              @click="confirmRequestTransfer(order)">
+              <ion-icon slot="start" :icon="swapHorizontalOutline"/>
+              {{ translate("Request Transfer") }}
+            </ion-button>
+          </ion-item> 
+
           <ion-item lines="none" v-else-if="orderType === 'packed' && order.shipGroup?.items?.length" class="ion-hide-md-down">
             <ion-button data-testid="handover-button" size="default" :disabled="!hasPermission(Actions.APP_ORDER_UPDATE) || order.handovered || order.shipped || order.cancelled || hasCancelledItems" expand="block" @click="deliverShipment(order)">
               <ion-icon slot="start" :icon="checkmarkDoneOutline"/>
@@ -380,6 +412,7 @@ import {
   sendOutline,
   bagHandleOutline,
   bagRemoveOutline,
+  swapHorizontalOutline,
   timeOutline,
   ticketOutline,
   bagCheckOutline,
@@ -1271,9 +1304,78 @@ export default defineComponent({
         }
       })
       modal.present();
+    },
+    // ✅✅✅ ADD THESE THREE NEW METHODS ✅✅✅
+
+// Check if Request Transfer button should be shown
+canRequestTransfer(order: any): boolean {
+  return (
+    order?.shipGroup?.shipmentMethodTypeId === 'STOREPICKUP' &&
+    order?.statusId === 'ORDER_APPROVED' &&
+    !order?.shipGroup?.shipmentId &&
+    !order?.readyToHandover &&
+    !order?.readyToShip &&
+    !order?.rejected &&
+    !this.hasRejectedItems
+  );
+},
+// Show confirmation dialog
+async confirmRequestTransfer(order: any) {
+  const header = translate('Convert to Ship-to-Store');
+  const message = translate(
+    'This BOPIS order will be converted to Ship-to-Store. The order will be fulfilled from a warehouse and shipped to this store for customer pickup. Continue?'
+  );
+  
+  const alert = await alertController.create({
+    header: header,
+    message: message,
+    buttons: [
+      {
+        text: translate('Cancel'),
+        role: 'cancel'
+      },
+      {
+        text: translate('Convert'),
+        handler: async () => {
+          await this.requestTransfer(order);
+        }
+      }
+    ]
+  });
+  
+  return alert.present();
+},
+
+// Call Ship-to-Store conversion API
+async requestTransfer(order: any) {
+  emitter.emit("presentLoader");
+  
+  try {
+    const resp = await OrderService.convertToShipToStore({
+      orderId: order.orderId,
+      shipGroupSeqId: order.shipGroup.shipGroupSeqId
+      // orderItemSeqId: order.shipGroup?.items?.[0]?.orderItemSeqId
+    });
+    
+    if (!hasError(resp)) {
+      showToast(translate('Order converted to Ship-to-Store successfully'));
+      this.router.push({ path: '/tabs/orders' });
+    } else {
+      showToast(translate('Failed to convert order to Ship-to-Store'));
+      logger.error('Ship-to-Store conversion failed', resp);
     }
+  } catch (err) {
+    logger.error(err);
+    showToast(translate("Something went wrong"));
+  }
+  
+  emitter.emit("dismissLoader");
+}
+
+// ✅✅✅ END NEW METHODS ✅✅✅
   },
   async mounted() {
+    console.log('🟢 OrderDetailUpdated.vue LOADED');
     emitter.emit("presentLoader")
     await this.getOrderDetail(this.orderId, this.shipGroupSeqId, this.orderType);
 
@@ -1342,6 +1444,7 @@ export default defineComponent({
       router,
       store,
       sunnyOutline,
+      swapHorizontalOutline,
       ticketOutline,
       timeOutline,
       warningOutline,

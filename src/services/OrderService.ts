@@ -340,6 +340,28 @@ const sendPickupScheduledNotification = async (payload: any): Promise <any> => {
   });
 }
 
+const handoverShipToStoreOrder = async (shipmentId: string): Promise<any> => {
+  return api({
+    url: `/poorti/shipments/${shipmentId}/handover-ship-to-store`,
+    method: 'POST'
+  });
+}
+
+const convertToShipToStore = async (payload: any): Promise<any> => {
+  return api({
+    url: `/oms/orders/${payload.orderId}/ship-to-store`,
+    method: 'POST',
+    data: {
+      shipGroupSeqId: payload.shipGroupSeqId,
+    }
+  });
+}
+const receiveShipToStoreShipment = async (shipmentId: string): Promise<any> => {
+  return api({
+    url: `/poorti/shipments/${shipmentId}/receive-ship-to-store`,
+    method: 'POST'
+  });
+}
 const getShipToStoreOrders = async (query: any): Promise<any> => {
   const baseURL = store.getters['user/getOmsBaseUrl'];
   const omstoken = store.getters['user/getUserToken'];
@@ -720,6 +742,9 @@ export const OrderService = {
   rejectOrderItem,
   rejectOrderItems,
   sendPickupScheduledNotification,
+  handoverShipToStoreOrder,
+  convertToShipToStore,
+  receiveShipToStoreShipment,
   shipOrder,
   updateShipment
 }

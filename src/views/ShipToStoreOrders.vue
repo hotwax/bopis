@@ -305,28 +305,51 @@ export default defineComponent({
 
       let resp
       try {
-        resp = await OrderService.updateShipment({
+        // Receive shipment inventory at destination store
+        const receiveResp = await OrderService.receiveShipToStoreShipment(shipmentId);
+
+        if (hasError(receiveResp)) {
+          showToast(translate("Failed to receive shipment inventory"));
+          logger.error('Receive shipment error:', receiveResp);
+          emitter.emit("dismissLoader");
+          return;
+        }
+
+        logger.info(`Successfully received ${receiveResp.data?.receivedItems?.length || 0} items`);
+
+        //Update shipment status to PICKUP_SCHEDULED
+        const statusResp = await OrderService.updateShipment({
           shipmentId: shipmentId,
           statusId: 'PICKUP_SCHEDULED'
-        })
-        if (!hasError(resp)) {
-          resp = await OrderService.sendPickupScheduledNotification({ shipmentId })
-          this.getIncomingOrders()
+        });
 
-          if (!hasError(resp)) showToast(translate('Order marked as ready for pickup, an email notification has been sent to the customer'))
-          else showToast(translate('Order marked as ready for pickup but something went wrong while sending the email notification'))
-        } else {
-          showToast(translate("Something went wrong"))
+        if (hasError(statusResp)) {
+          showToast(translate("Inventory received but failed to update status"));
+          logger.error('Status update error:', statusResp);
+          emitter.emit("dismissLoader");
+          return;
         }
-        emitter.emit("dismissLoader")
+
+        // Send pickup notification email
+        // const emailResp = await OrderService.sendPickupScheduledNotification({ shipmentId });
+
+        // // Refresh the incoming orders list
+        // this.getIncomingOrders();
+
+        // if (!hasError(emailResp)) {
+        //   showToast(translate('Order marked as ready for pickup, an email notification has been sent to the customer'));
+        // } else {
+        //   showToast(translate('Order marked as ready for pickup but something went wrong while sending the email notification'));
+        //   logger.error('Email notification error:', emailResp);
+        // }
+
       } catch (err) {
-        logger.error(err)
-        showToast(translate("Something went wrong"))
+        logger.error('Schedule order for pickup error:', err);
+        showToast(translate("Something went wrong"));
       }
 
-      emitter.emit("dismissLoader")
-      return resp;
-    },
+  emitter.emit("dismissLoader");
+},
     async confirmHandoverOrder(shipmentId: string) {
       const header = translate('Complete order')
       const message = translate('Order will be marked as completed. This action is irreversible.');
@@ -348,31 +371,26 @@ export default defineComponent({
       return alert.present();
     },
     async handoverOrder(shipmentId: string) {
-      emitter.emit("presentLoader");
-      const params = {
-        shipmentId: shipmentId,
-        statusId: 'SHIPMENT_DELIVERED'
-      }
-
-      let resp
-
-      try {
-        resp = await OrderService.updateShipment(params)
-        if (!hasError(resp)) {
-          this.getReadyForPickupOrders()          
-          showToast(translate('Order marked as complete'))
-        } else {
-          showToast(translate("Something went wrong"))
-        }
-        emitter.emit("dismissLoader")
-      } catch (err) {
-        logger.error(err)
-        showToast(translate("Something went wrong"))
-      }
-
-      emitter.emit("dismissLoader")
-      return resp
-    },
+  emitter.emit("presentLoader");
+  
+  try {
+    const resp = await OrderService.handoverShipToStoreOrder(shipmentId);
+    
+    if (!hasError(resp)) {
+      this.getReadyForPickupOrders(); // Refresh
+      showToast(translate('Order handed over successfully'));
+    } else {
+      showToast(translate("Failed to handover order"));
+      logger.error("Handover failed", resp);
+    }
+    
+  } catch (err) {
+    logger.error(err);
+    showToast(translate("Something went wrong"));
+  }
+  
+  emitter.emit("dismissLoader");
+},
 
     async sendReadyForPickupEmail(order: any) {
       const header = translate('Resend email')
