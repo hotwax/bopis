@@ -216,7 +216,7 @@ export default defineComponent({
     },
     enableScrolling() {
       const parentElement = (this as any).$refs.contentRef.$el
-      const scrollEl = parentElement.shadowRoot.querySelector("main[part='scroll']")
+      const scrollEl = parentElement.shadowRoot.querySelector("div[part='scroll']")
       let scrollHeight = scrollEl.scrollHeight, infiniteHeight = (this as any).$refs.infiniteScrollRef.$el.offsetHeight, scrollTop = scrollEl.scrollTop, threshold = 100, height = scrollEl.offsetHeight
       const distanceFromInfinite = scrollHeight - infiniteHeight - scrollTop - threshold - height
       if(distanceFromInfinite < 0) {
@@ -315,6 +315,7 @@ export default defineComponent({
           return;
         }
 
+
         logger.info(`Successfully received ${receiveResp.data?.receivedItems?.length || 0} items`);
 
         //Update shipment status to PICKUP_SCHEDULED
@@ -329,7 +330,9 @@ export default defineComponent({
           emitter.emit("dismissLoader");
           return;
         }
-
+        await this.getIncomingOrders();
+        await this.getReadyForPickupOrders();
+        showToast(translate('Order marked as ready for pickup'));
         // Send pickup notification email
         // const emailResp = await OrderService.sendPickupScheduledNotification({ shipmentId });
 
