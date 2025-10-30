@@ -658,10 +658,16 @@ export default defineComponent({
           },{
             text: header,
             handler: async () => {
+              alert.dismiss();
+              emitter.emit("presentLoader", {message: "Loading...", backdropDismiss: false});
+              try {
                 if (!shipGroup.shipmentId) {
                   await this.printPicklist(order, shipGroup)
                 }
-                await this.store.dispatch('order/packShipGroupItems', { order, shipGroup })              
+                await this.store.dispatch('order/packShipGroupItems', { order, shipGroup })
+              } finally {
+                emitter.emit("dismissLoader");
+              }
             }
           }]
         });
