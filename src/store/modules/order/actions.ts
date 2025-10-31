@@ -776,8 +776,6 @@ const actions: ActionTree<OrderState , RootState> ={
   },
 
   async packShipGroupItems ({ state, dispatch, commit }, payload) {
-    emitter.emit("presentLoader")
-
     const params = {
       orderId: payload.order.orderId,
       facilityId: payload.shipGroup.facilityId,
@@ -811,7 +809,6 @@ const actions: ActionTree<OrderState , RootState> ={
       emitter.emit("dismissLoader")
     }
 
-    emitter.emit("dismissLoader")
     return resp;
   },
 

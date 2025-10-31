@@ -361,13 +361,16 @@ export default defineComponent({
           },{
             text: header,
             handler: async () => {
+              alert.dismiss();
+              emitter.emit("presentLoader", {message: "Loading...", backdropDismiss: false});
               // Remove if part, single flow
-                let orderIndex;
-                if (!shipGroup.shipmentId) {
-                  await this.printPicklist(order, shipGroup)
-                  orderIndex = this.orders.findIndex((o: any) => o.orderId === order.orderId);
-                }
-                await this.store.dispatch('order/packShipGroupItems', { order: orderIndex >= 0 ? this.orders[orderIndex] : order, shipGroup: orderIndex >= 0 ? this.orders[orderIndex].shipGroup : shipGroup })
+              let orderIndex;
+              if (!shipGroup.shipmentId) {
+                await this.printPicklist(order, shipGroup)
+                orderIndex = this.orders.findIndex((o: any) => o.orderId === order.orderId);
+              }
+              await this.store.dispatch('order/packShipGroupItems', { order: orderIndex >= 0 ? this.orders[orderIndex] : order, shipGroup: orderIndex >= 0 ? this.orders[orderIndex].shipGroup : shipGroup })
+              emitter.emit("dismissLoader");
             }
           }]
         });
