@@ -302,8 +302,6 @@ export default defineComponent({
     },
     async scheduleOrderForPickup(shipmentId: string) {
       emitter.emit("presentLoader");
-
-      let resp
       try {
         // Receive shipment inventory at destination store
         const receiveResp = await OrderService.receiveShipToStoreShipment(shipmentId);

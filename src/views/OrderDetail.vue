@@ -1291,18 +1291,21 @@ export default defineComponent({
     },
 
     async confirmRequestTransfer(order: any) {
-      const header = this.translate('Convert to Ship-to-Store');
-      const message = this.translate(
+      const header = translate('Convert to Ship-to-Store');
+      const message = translate(
         'This BOPIS order will be converted to Ship-to-Store. The order will be fulfilled from a warehouse and shipped to this store for customer pickup. Continue?'
       );
 
       const alert = await alertController.create({
         header,
         message,
-        buttons: [
-          { text: this.translate('Cancel'), role: 'cancel' },
-          { text: this.translate('Convert'), handler: async () => await this.requestTransfer(order) }
-        ]
+        buttons: [{ 
+          text: translate('Cancel'), role: 'cancel' 
+        },
+        {
+         text: translate('Convert'), 
+         handler: async () => await this.requestTransfer(order) 
+        }]
       });
 
       return alert.present();
@@ -1316,15 +1319,15 @@ export default defineComponent({
           shipGroupSeqId: order.shipGroup.shipGroupSeqId
         });
         if (!hasError(resp)) {
-          showToast(this.translate('Order converted to Ship-to-Store successfully'));
+          showToast(translate('Order converted to Ship-to-Store successfully'));
           this.router.push({ path: '/tabs/orders' });
         } else {
-          showToast(this.translate('Failed to convert order to Ship-to-Store'));
+          showToast(translate('Failed to convert order to Ship-to-Store'));
           logger.error('Ship-to-Store conversion failed', resp);
         }
       } catch (err) {
         logger.error(err);
-        showToast(this.translate("Something went wrong"));
+        showToast(translate("Something went wrong"));
       }
       emitter.emit("dismissLoader");
     }
