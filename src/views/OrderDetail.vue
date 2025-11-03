@@ -488,11 +488,13 @@ export default defineComponent({
         componentProps: { order, shipGroup, facilityId }
       });
       assignPickerModal.onDidDismiss().then(async(result: any) => {
+        emitter.emit("presentLoader");
         if(result.data?.selectedPicker) {
           await this.createPicklist(order, result.data.selectedPicker);
           await this.store.dispatch('order/packShipGroupItems', { order, shipGroup })
           await this.getOrderDetail(this.orderId, this.shipGroupSeqId, this.orderType);
         }
+        emitter.emit("dismissLoader");
       })
 
       return assignPickerModal.present();
