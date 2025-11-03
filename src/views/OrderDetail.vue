@@ -488,11 +488,13 @@ export default defineComponent({
         componentProps: { order, shipGroup, facilityId }
       });
       assignPickerModal.onDidDismiss().then(async(result: any) => {
+        emitter.emit("presentLoader");
         if(result.data?.selectedPicker) {
           await this.createPicklist(order, result.data.selectedPicker);
           await this.store.dispatch('order/packShipGroupItems', { order, shipGroup })
           await this.getOrderDetail(this.orderId, this.shipGroupSeqId, this.orderType);
         }
+        emitter.emit("dismissLoader");
       })
 
       return assignPickerModal.present();
@@ -658,10 +660,13 @@ export default defineComponent({
           },{
             text: header,
             handler: async () => {
-                if (!shipGroup.shipmentId) {
-                  await this.printPicklist(order, shipGroup)
-                }
-                await this.store.dispatch('order/packShipGroupItems', { order, shipGroup })              
+              alert.dismiss();
+              emitter.emit("presentLoader", {message: "Loading...", backdropDismiss: false});
+              if (!shipGroup.shipmentId) {
+                await this.printPicklist(order, shipGroup)
+              }
+              await this.store.dispatch('order/packShipGroupItems', { order, shipGroup })
+              emitter.emit("dismissLoader");
             }
           }]
         });
