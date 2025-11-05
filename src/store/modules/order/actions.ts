@@ -874,7 +874,6 @@ const actions: ActionTree<OrderState , RootState> ={
     let resp: any
 
     const params = {
-      keyword: payload.queryString || '',
       orderFacilityId: getCurrentFacilityId(),
       orderStatusId: 'ORDER_APPROVED',
       statusId: 'ITEM_APPROVED',
@@ -884,6 +883,9 @@ const actions: ActionTree<OrderState , RootState> ={
       pageSize: payload.viewSize || process.env.VUE_APP_VIEW_SIZE,
       pageIndex: payload.viewIndex || 0
     } as any
+    if(payload.queryString?.length){
+      params.keyword=payload.queryString;
+    }
     let incomingOrders = [] as any
     try {
       resp = await OrderService.getShipToStoreOrders(params)
@@ -936,7 +938,6 @@ const actions: ActionTree<OrderState , RootState> ={
     let resp: any
 
     const params = {
-      keyword: payload.queryString || '',
       shipmentStatusId: "SHIPMENT_SHIPPED",
       shipmentMethodTypeId: "SHIP_TO_STORE",
       orderFacilityId: getCurrentFacilityId(),
@@ -948,6 +949,9 @@ const actions: ActionTree<OrderState , RootState> ={
       distinct: "Y",
     } as any
 
+    if(payload.queryString?.length){
+      params.keyword=payload.queryString;
+    }
 
     let readyForPickupOrders = []
     try {
@@ -999,7 +1003,6 @@ const actions: ActionTree<OrderState , RootState> ={
     let resp: any
 
     const params = {
-      keyword: payload.queryString || '',
       shipmentStatusId: "SHIPMENT_DELIVERED",
       shipmentMethodTypeId: "SHIP_TO_STORE",
       statusId:"ITEM_COMPLETED",
@@ -1012,6 +1015,9 @@ const actions: ActionTree<OrderState , RootState> ={
       distinct: "Y",
     } as any
 
+    if(payload.queryString?.length){
+      params.keyword=payload.queryString;
+    }
  
     let completedOrders = []
     try {

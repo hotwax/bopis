@@ -269,15 +269,19 @@ const sendPickupScheduledNotification = async (payload: any): Promise <any> => {
 }
 
 const handoverShipToStoreOrder = async (shipmentId: string): Promise<any> => {
+  const payload={
+    statusId : 'SHIPMENT_DELIVERED', 
+  }
   return api({
-    url: `/poorti/shipments/${shipmentId}/updateShipment`,
-    method: 'POST'
+    url: `/poorti/shipments/${shipmentId}`,
+    method: 'PUT',
+    data: payload
   });
 }
 
 const convertToShipToStore = async (payload: any): Promise<any> => {
   return api({
-    url: `/oms/orders/${payload.orderId}/ship-to-store`,
+    url: `/oms/orders/${payload.orderId}/shipToStore`,
     method: 'POST',
     data: {
       shipGroupSeqId: payload.shipGroupSeqId,
@@ -288,7 +292,7 @@ const convertToShipToStore = async (payload: any): Promise<any> => {
 const getShipToStoreOrders = async (params: any): Promise<any> => {
 
   return api({
-    url: 'oms/orders/ship-to-store',
+    url: 'oms/orders/shipToStore',
     method: 'GET',
     params
   })
