@@ -26,18 +26,18 @@
           <ion-card button>
             <ion-item lines="none">
               <ion-label class="ion-text-wrap">
-                <h1>{{ order.firstName }} {{ order.lastName }}</h1>
+                <h1>{{ order.customerName }}</h1>
                 <p>{{ order.orderName ? order.orderName : order.orderId }}</p>
               </ion-label>
               <div class="metadata">
-                <ion-note v-if="order.createdDate">{{ getDateTime(order.createdDate) }}</ion-note>
+                <ion-note v-if="order.orderDate">{{ getDateTime(order.orderDate) }}</ion-note>
               </div>
             </ion-item>
 
             <ProductListItem v-for="item in order.items" :key="item.productId" :item="item" :isShipToStoreOrder=true />
 
             <div class="border-top">
-              <ion-button :disabled="!hasPermission(Actions.APP_ORDER_UPDATE)" fill="clear" @click.stop="confirmScheduleOrderForPickup(order)">
+              <ion-button :disabled="!hasPermission(Actions.APP_ORDER_UPDATE)|| !order.shipmentId" fill="clear" @click.stop="confirmScheduleOrderForPickup(order)">
                 {{ translate("Arrived") }}
               </ion-button>
             </div>
@@ -49,7 +49,7 @@
           <ion-card button>
             <ion-item lines="none">
               <ion-label class="ion-text-wrap">
-                <h1>{{ order.firstName }} {{ order.lastName }}</h1>
+                <h1>{{ order.customerName }}</h1>
                 <p>{{ order.orderName ? order.orderName : order.orderId }}</p>
               </ion-label>
               <div class="metadata">
@@ -75,7 +75,7 @@
           <ion-card button>
             <ion-item lines="none">
               <ion-label class="ion-text-wrap">
-                <h1>{{ order.firstName }} {{ order.lastName }}</h1>
+                <h1>{{ order.customerName }}</h1>
                 <p>{{ order.orderName ? order.orderName : order.orderId }}</p>
               </ion-label>
               <div class="metadata">
@@ -302,54 +302,32 @@ export default defineComponent({
     },
     async scheduleOrderForPickup(shipmentId: string) {
       emitter.emit("presentLoader");
+      let resp;
       try {
-        // Receive shipment inventory at destination store
-        const receiveResp = await OrderService.receiveShipToStoreShipment(shipmentId);
+        const payload = {
+          shipmentId: shipmentId
+        };
+        resp = await OrderService.shipOrder(payload);
+        if (!hasError(resp)) {
+          // Send pickup notification email
+          resp = await OrderService.sendPickupScheduledNotification({ shipmentId });
+          // Refresh the incoming orders list
+          this.getIncomingOrders();
 
-        if (hasError(receiveResp)) {
-          showToast(translate("Failed to receive shipment inventory"));
-          logger.error('Receive shipment error:', receiveResp);
-          emitter.emit("dismissLoader");
-          return;
-        }
-
-
-        logger.info(`Successfully received ${receiveResp.data?.receivedItems?.length || 0} items`);
-
-        //Update shipment status to PICKUP_SCHEDULED
-        const statusResp = await OrderService.updateShipment({
-          shipmentId: shipmentId,
-          statusId: 'PICKUP_SCHEDULED'
-        });
-
-        if (hasError(statusResp)) {
-          showToast(translate("Inventory received but failed to update status"));
-          logger.error('Status update error:', statusResp);
-          emitter.emit("dismissLoader");
-          return;
-        }
-        await this.getIncomingOrders();
-        await this.getReadyForPickupOrders();
-        showToast(translate('Order marked as ready for pickup'));
-        // Send pickup notification email
-        // const emailResp = await OrderService.sendPickupScheduledNotification({ shipmentId });
-
-        // // Refresh the incoming orders list
-        // this.getIncomingOrders();
-
-        // if (!hasError(emailResp)) {
-        //   showToast(translate('Order marked as ready for pickup, an email notification has been sent to the customer'));
-        // } else {
-        //   showToast(translate('Order marked as ready for pickup but something went wrong while sending the email notification'));
-        //   logger.error('Email notification error:', emailResp);
-        // }
-
+          if (!hasError(resp)) {
+            showToast(translate('Order marked as ready for pickup, an email notification has been sent to the customer'));
+          } else {
+            showToast(translate('Order marked as ready for pickup but something went wrong while sending the email notification'));
+          }
+        }   
       } catch (err) {
         logger.error('Schedule order for pickup error:', err);
         showToast(translate("Something went wrong"));
+      }finally{
+        emitter.emit("dismissLoader");
       }
 
-  emitter.emit("dismissLoader");
+  return resp;
 },
     async confirmHandoverOrder(shipmentId: string) {
       const header = translate('Complete order')
@@ -395,7 +373,7 @@ export default defineComponent({
 
     async sendReadyForPickupEmail(order: any) {
       const header = translate('Resend email')
-      const message = translate('An email notification will be sent to that their order is ready for pickup.', { customerName: `${order.firstName} ${order.lastName}` })
+      const message = translate('An email notification will be sent to that their order is ready for pickup.', { customerName: order.customerName })
 
       const alert = await alertController
         .create({

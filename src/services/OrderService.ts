@@ -270,7 +270,7 @@ const sendPickupScheduledNotification = async (payload: any): Promise <any> => {
 
 const handoverShipToStoreOrder = async (shipmentId: string): Promise<any> => {
   return api({
-    url: `/poorti/shipments/${shipmentId}/handover-ship-to-store`,
+    url: `/poorti/shipments/${shipmentId}/updateShipment`,
     method: 'POST'
   });
 }
@@ -284,24 +284,13 @@ const convertToShipToStore = async (payload: any): Promise<any> => {
     }
   });
 }
-const receiveShipToStoreShipment = async (shipmentId: string): Promise<any> => {
+
+const getShipToStoreOrders = async (params: any): Promise<any> => {
+
   return api({
-    url: `/poorti/shipments/${shipmentId}/receive-ship-to-store`,
-    method: 'POST'
-  });
-}
-const getShipToStoreOrders = async (query: any): Promise<any> => {
-  const baseURL = store.getters['user/getOmsBaseUrl'];
-  const omstoken = store.getters['user/getUserToken'];
-  return apiClient({
-    url: 'performFind',
-    method: 'POST',
-    baseURL,
-    headers: {
-      "Authorization": "Bearer " + omstoken,
-      "Content-Type": "application/json"
-    },
-    data: query
+    url: 'oms/orders/ship-to-store',
+    method: 'GET',
+    params
   })
 }
 
@@ -608,7 +597,6 @@ export const OrderService = {
   sendPickupScheduledNotification,
   handoverShipToStoreOrder,
   convertToShipToStore,
-  receiveShipToStoreShipment,
   shipOrder,
   updateShipment
 }

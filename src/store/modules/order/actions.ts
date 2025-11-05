@@ -157,7 +157,7 @@ const actions: ActionTree<OrderState , RootState> ={
               showKitComponents: false
             }))
           }));
-
+        
           return {
             ...order,
             shipGroups,
@@ -874,62 +874,38 @@ const actions: ActionTree<OrderState , RootState> ={
     let resp: any
 
     const params = {
-      inputFields: {
-        statusId: "SHIPMENT_SHIPPED",
-        shipmentMethodTypeId: "SHIP_TO_STORE",
-        orderFacilityId: getCurrentFacilityId()
-      },
-      viewSize: payload.viewSize ? payload.viewSize : process.env.VUE_APP_VIEW_SIZE,
-      viewIndex: payload.viewIndex ? payload.viewIndex : 0,
-      entityName: 'ShipmentAndOrderHeader',
-      noConditionFind: "Y",
-      distinct: "Y",
-      fieldList: ['shipmentId', 'firstName', 'createdDate', 'lastName', 'orderName', 'orderId']
+      keyword: payload.queryString || '',
+      orderFacilityId: getCurrentFacilityId(),
+      orderStatusId: 'ORDER_APPROVED',
+      statusId: 'ITEM_APPROVED',
+      shipmentMethodTypeId: 'SHIP_TO_STORE',
+      shipmentStatusId: 'SHIPMENT_INPUT,SHIPMENT_APPROVED,SHIPMENT_PACKED',
+      shipmentStatusId_op: 'in',
+      pageSize: payload.viewSize || process.env.VUE_APP_VIEW_SIZE,
+      pageIndex: payload.viewIndex || 0
     } as any
-
-    if (payload.queryString.length) {
-      params.inputFields = {
-        firstName_value: payload.queryString,
-        firstName_op: 'contains',
-        firstName_ic: 'Y',
-        firstName_grp: '1',
-        lastName_value: payload.queryString,
-        lastName_op: 'contains',
-        lastName_ic: 'Y',
-        lastName_grp: '2',
-        orderName_value: payload.queryString,
-        orderName_op: 'contains',
-        orderName_ic: 'Y',
-        orderName_grp: '3',
-      }
-    }
-
     let incomingOrders = [] as any
     try {
       resp = await OrderService.getShipToStoreOrders(params)
-      let shipments = {} as any
+  
       if (!hasError(resp)) {
-        shipments = resp.data.docs.reduce((shipments: any, shipment: any) => {
-          shipments[shipment.shipmentId] = shipment
-          return shipments
-        }, {})
+        const ordersResp = resp.data.orders;
+      
+        incomingOrders = ordersResp.flatMap((order: any) => {
+          const shipGroups = order.shipGroups||[];
 
-        const shipmentItems = await OrderService.getShipmentItems(Object.keys(shipments))
+          return shipGroups.map((shipGroup: any) => {
+            return {
+              customerName:order.customerName,
+              orderDate:order.orderDate,
+              orderId:order.orderId,
+              orderName: order.orderName,
+              ...shipGroup
+            }
+          })
           
-        if (!shipmentItems?.length) {
-          showToast(translate("Orders Not Found"))
-          return
-        }
-
-        incomingOrders = Object.values(shipmentItems.reduce((shipmentItems: any, shipmentItem: any) => {
-          if (!shipmentItems[shipmentItem.shipmentId]) {
-            shipmentItems[shipmentItem.shipmentId] = { ...shipments[shipmentItem.shipmentId], items: [shipmentItem] }
-          } else {
-            shipmentItems[shipmentItem.shipmentId].items.push(shipmentItem)
-          }
-          return shipmentItems
-        }, {}))
-
+        })
+        
         let productIds: any = new Set();
 
         incomingOrders.map((order: any) => {
@@ -960,62 +936,39 @@ const actions: ActionTree<OrderState , RootState> ={
     let resp: any
 
     const params = {
-      inputFields: {
-        statusId: "PICKUP_SCHEDULED",
-        shipmentMethodTypeId: "SHIP_TO_STORE",
-        orderFacilityId: getCurrentFacilityId()
-      },
+      keyword: payload.queryString || '',
+      shipmentStatusId: "SHIPMENT_SHIPPED",
+      shipmentMethodTypeId: "SHIP_TO_STORE",
+      orderFacilityId: getCurrentFacilityId(),
+      statusId:"ITEM_COMPLETED",
+      orderStatusId:"ORDER_COMPLETED",
       viewSize: payload.viewSize ? payload.viewSize : process.env.VUE_APP_VIEW_SIZE,
       viewIndex: payload.viewIndex ? payload.viewIndex : 0,
-      entityName: 'ShipmentAndOrderHeader',
-      noConditionFind: "Y",
+      shipmentStatusId_op: 'in',
       distinct: "Y",
-      fieldList: ['shipmentId', 'firstName', 'createdDate', 'lastName', 'orderName', 'orderId']
     } as any
 
-    if (payload.queryString.length) {
-      params.inputFields = {
-        firstName_value: payload.queryString,
-        firstName_op: 'contains',
-        firstName_ic: 'Y',
-        firstName_grp: '1',
-        lastName_value: payload.queryString,
-        lastName_op: 'contains',
-        lastName_ic: 'Y',
-        lastName_grp: '2',
-        orderName_value: payload.queryString,
-        orderName_op: 'contains',
-        orderName_ic: 'Y',
-        orderName_grp: '3',
-      }
-    }
 
     let readyForPickupOrders = []
     try {
       resp = await OrderService.getShipToStoreOrders(params)
-      let shipments = {} as any
-      if (!hasError(resp)) {
-        shipments = resp.data.docs.reduce((shipments: any, shipment: any) => {
-          shipments[shipment.shipmentId] = shipment
-          return shipments
-        }, {})
+       if (!hasError(resp) ) {
+        const ordersResp = resp.data.orders;
+        readyForPickupOrders = ordersResp.flatMap((order: any) => {
+          const shipGroups = order.shipGroups||[];
 
-        const shipmentItems = await OrderService.getShipmentItems(Object.keys(shipments))
+          return shipGroups.map((shipGroup: any) => {
+            return {
+              customerName:order.customerName,
+              createdDate:order.orderDate,
+              orderId:order.orderId,
+              orderName: order.orderName,
+              ...shipGroup
+              
+            }
+          })
 
-        if (!shipmentItems?.length) {
-          showToast(translate("Orders Not Found"))
-          return
-        }
-
-        readyForPickupOrders = Object.values(shipmentItems.reduce((shipmentItems: any, shipmentItem: any) => {
-          if (!shipmentItems[shipmentItem.shipmentId]) {
-            shipmentItems[shipmentItem.shipmentId] = { ...shipments[shipmentItem.shipmentId], items: [shipmentItem] }
-          } else {
-            shipmentItems[shipmentItem.shipmentId].items.push(shipmentItem)
-          }
-          return shipmentItems
-        }, {}))
-
+        })
         let productIds: any = new Set();
 
         readyForPickupOrders.map((order: any) => {
@@ -1046,63 +999,40 @@ const actions: ActionTree<OrderState , RootState> ={
     let resp: any
 
     const params = {
-      inputFields: {
-        statusId: "SHIPMENT_DELIVERED",
-        shipmentMethodTypeId: "SHIP_TO_STORE",
-        orderFacilityId: getCurrentFacilityId()
-      },
+      keyword: payload.queryString || '',
+      shipmentStatusId: "SHIPMENT_DELIVERED",
+      shipmentMethodTypeId: "SHIP_TO_STORE",
+      statusId:"ITEM_COMPLETED",
+      orderStatusId:"ORDER_COMPLETED",
+      orderFacilityId: getCurrentFacilityId(),
       viewSize: payload.viewSize ? payload.viewSize : process.env.VUE_APP_VIEW_SIZE,
       viewIndex: payload.viewIndex ? payload.viewIndex : 0,
-      entityName: 'ShipmentAndOrderHeader',
+      shipmentStatusId_op: 'in',
       noConditionFind: "Y",
       distinct: "Y",
-      fieldList: ['shipmentId', 'firstName', 'createdDate', 'lastName', 'orderName', 'orderId']
     } as any
 
-    // enbaling search on first name, last name, and orderId
-    if (payload.queryString.length) {
-      params.inputFields = {
-        firstName_value: payload.queryString,
-        firstName_op: 'contains',
-        firstName_ic: 'Y',
-        firstName_grp: '1',
-        lastName_value: payload.queryString,
-        lastName_op: 'contains',
-        lastName_ic: 'Y',
-        lastName_grp: '2',
-        orderName_value: payload.queryString,
-        orderName_op: 'contains',
-        orderName_ic: 'Y',
-        orderName_grp: '3',
-      }
-    }
-
+ 
     let completedOrders = []
     try {
       resp = await OrderService.getShipToStoreOrders(params)
-      let shipments = {} as any
       if (!hasError(resp)) {
-        shipments = resp.data.docs.reduce((shipments: any, shipment: any) => {
-          shipments[shipment.shipmentId] = shipment
-          return shipments
-        }, {})
+        const ordersResp = resp.data.orders;
+        completedOrders = ordersResp.flatMap((order: any) => {
+          const shipGroups = order.shipGroups||[];
 
-        const shipmentItems = await OrderService.getShipmentItems(Object.keys(shipments))
+          return shipGroups.map((shipGroup: any) => {
+            return {
+              customerName:order.customerName,
+              createdDate:order.orderDate,
+              orderId:order.orderId,
+              orderName: order.orderName,
+              ...shipGroup
+            }
+          })
 
-        if (!shipmentItems?.length) {
-          showToast(translate("Orders Not Found"))
-          return
-        }
-
-        completedOrders = Object.values(shipmentItems.reduce((shipmentItems: any, shipmentItem: any) => {
-          if (!shipmentItems[shipmentItem.shipmentId]) {
-            shipmentItems[shipmentItem.shipmentId] = { ...shipments[shipmentItem.shipmentId], items: [shipmentItem] }
-          } else {
-            shipmentItems[shipmentItem.shipmentId].items.push(shipmentItem)
-          }
-          return shipmentItems
-        }, {}))
-
+        })
+        
         let productIds: any = new Set();
 
         completedOrders.map((order: any) => {
