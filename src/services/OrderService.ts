@@ -556,6 +556,22 @@ const fetchGiftCardActivationDetails = async ({ isDetailsPage, currentOrders }: 
 
   return isDetailsPage ? orders[0] : orders
 }
+const getBillingDetails = async (payload: any): Promise<any> => {
+  return api({
+    url: `/poorti/orders/${payload.orderId}/billing`,
+    method: "GET",
+    data: payload
+  });
+}
+
+const sendPickupNotification = async (payload: any): Promise<any> => {  
+  return await api({
+    url: `oms/orders/pickupScheduledNotification`,
+    method: "POST",
+    data: payload,
+  });
+};
+
 
 export const OrderService = {
   cancelOrder,
@@ -585,5 +601,7 @@ export const OrderService = {
   rejectOrderItems,
   sendPickupScheduledNotification,
   shipOrder,
-  updateShipment
+  updateShipment,
+  getBillingDetails,
+  sendPickupNotification
 }

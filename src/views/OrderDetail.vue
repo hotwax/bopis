@@ -190,7 +190,7 @@
             </ion-button>            
           </ion-item>
           <ion-item lines="none" v-else-if="orderType === 'packed' && order.shipGroup?.items?.length" class="ion-hide-md-down">
-            <ion-button data-testid="handover-button" size="default" :disabled="!hasPermission(Actions.APP_ORDER_UPDATE) || order.handovered || order.shipped || order.cancelled || hasCancelledItems" expand="block" @click="deliverShipment(order)">
+            <ion-button data-testid="handover-button" size="default" :disabled="!hasPermission(Actions.APP_ORDER_UPDATE) || order.handovered || order.shipped || order.cancelled || hasCancelledItems" expand="block" @click.stop="handleHandover(order)">
               <ion-icon slot="start" :icon="checkmarkDoneOutline"/>
               {{ order.shipGroup.shipmentMethodTypeId === 'STOREPICKUP' ? translate("Handover") : translate("Ship") }}
             </ion-button>
@@ -412,6 +412,8 @@ import { UserService } from "@/services/UserService";
 import ConfirmCancelModal from "@/components/ConfirmCancelModal.vue";
 import { UtilService } from "@/services/UtilService";
 import GiftCardActivationModal from "@/components/GiftCardActivationModal.vue";
+import ProofOfDeliveryModal from '@/components/ProofOfDeliveryModal.vue'
+
 
 export default defineComponent({
   name: "OrderDetail",
@@ -1276,7 +1278,23 @@ export default defineComponent({
         }
       })
       modal.present();
+    },
+    async openProofOfDeliveryModal(order:any) {
+          const modal = await modalController.create({
+        component: ProofOfDeliveryModal,
+        componentProps: { order },
+      });
+
+      await modal.present();
+    },
+    handleHandover(order:any) {
+      if (this.getBopisProductStoreSettings('HANDOVER_PROOF')) {
+        this.openProofOfDeliveryModal(order);
+      } else {
+        this.deliverShipment(order);
+      }
     }
+
   },
   async mounted() {
     emitter.emit("presentLoader")
