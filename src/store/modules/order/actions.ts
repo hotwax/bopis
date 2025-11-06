@@ -907,7 +907,6 @@ const actions: ActionTree<OrderState , RootState> ={
           
         })
         
-        console.log("ghjlk;fgjklghjkl",incomingOrders)
         let productIds: any = new Set();
 
         incomingOrders.map((order: any) => {
@@ -972,7 +971,6 @@ const actions: ActionTree<OrderState , RootState> ={
           })
 
         })
-        console.log("ghjlk;fgjklghjkl",readyForPickupOrders)
         let productIds: any = new Set();
 
         readyForPickupOrders.map((order: any) => {
