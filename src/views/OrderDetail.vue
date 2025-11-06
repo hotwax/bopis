@@ -187,6 +187,10 @@
             </ion-button>
             <ion-button data-testid="submit-rejected-items-button" size="default" :disabled="!hasPermission(Actions.APP_ORDER_UPDATE) || order.readyToHandover || order.readyToShip || order.rejected || !hasRejectedItems" color="danger" fill="outline" @click="rejectOrder()">
               {{ translate("Reject Items") }}
+            </ion-button>
+            <ion-button slot="end" fill="outline" data-testid="request-transfer-button" size="default" color="warning" :disabled="!hasPermission(Actions.APP_ORDER_UPDATE) || !canRequestTransfer(order)" @click="confirmRequestTransfer(order)">
+              <ion-icon slot="start" :icon="swapHorizontalOutline"/>
+              {{ translate("Request Transfer") }}
             </ion-button>            
           </ion-item>
           <ion-item lines="none" v-else-if="orderType === 'packed' && order.shipGroup?.items?.length" class="ion-hide-md-down">
@@ -383,6 +387,7 @@ import {
   timeOutline,
   ticketOutline,
   bagCheckOutline,
+  swapHorizontalOutline,
   sunnyOutline,
   downloadOutline,
   trashOutline,
@@ -391,7 +396,8 @@ import {
   caretDownOutline,
   warningOutline,
   personAddOutline,
-  medkitOutline
+  medkitOutline,
+  swapHorizontal
 } from "ionicons/icons";
 import { useRouter } from 'vue-router'
 import { Actions, hasPermission } from '@/authorization'
@@ -1276,8 +1282,62 @@ export default defineComponent({
         }
       })
       modal.present();
+    },
+    canRequestTransfer(order: any): boolean {
+      return (
+        order?.shipGroup?.shipmentMethodTypeId === 'STOREPICKUP' &&
+        order?.statusId === 'ORDER_APPROVED' &&
+        !order?.shipGroup?.shipmentId &&
+        !order?.readyToHandover &&
+        !order?.readyToShip &&
+        !order?.rejected &&
+        !order?.shipGroup?.items?.some((item: any) => item.rejectReason)
+      );
+    },
+
+    async confirmRequestTransfer(order: any) {
+      const header = translate('Convert to Ship-to-Store');
+      const message = translate(
+        'This BOPIS order will be converted to Ship-to-Store. The order will be fulfilled from a warehouse and shipped to this store for customer pickup. Continue?'
+      );
+
+      const alert = await alertController.create({
+        header,
+        message,
+        buttons: [{ 
+          text: translate('Cancel'), role: 'cancel' 
+        },
+        {
+         text: translate('Convert'), 
+         handler: async () => await this.requestTransfer(order) 
+        }]
+      });
+
+      return alert.present();
+    },
+
+    async requestTransfer(order: any) {
+      emitter.emit("presentLoader");
+      try {
+        const resp = await OrderService.convertToShipToStore({
+          orderId: order.orderId,
+          shipGroupSeqId: order.shipGroup.shipGroupSeqId
+        });
+        if (!hasError(resp)) {
+          showToast(translate('Order marked as ship to store'));
+          this.router.push({ path: '/tabs/orders' });
+        } else {
+          showToast(translate('Failed to mark order as ship to store'));
+          logger.error('Ship-to-Store conversion failed', resp);
+        }
+      } catch (err) {
+        logger.error(err);
+        showToast(translate("Something went wrong"));
+      }
+      emitter.emit("dismissLoader");
     }
   },
+
   async mounted() {
     emitter.emit("presentLoader")
     await this.getOrderDetail(this.orderId, this.shipGroupSeqId, this.orderType);
@@ -1313,6 +1373,7 @@ export default defineComponent({
       bagCheckOutline,
       bagHandleOutline,
       bagRemoveOutline,
+      swapHorizontalOutline,
       callOutline,
       caretDownOutline,
       cashOutline,

@@ -26,18 +26,18 @@
           <ion-card button>
             <ion-item lines="none">
               <ion-label class="ion-text-wrap">
-                <h1>{{ order.firstName }} {{ order.lastName }}</h1>
+                <h1>{{ order.customerName }}</h1>
                 <p>{{ order.orderName ? order.orderName : order.orderId }}</p>
               </ion-label>
               <div class="metadata">
-                <ion-note v-if="order.createdDate">{{ getDateTime(order.createdDate) }}</ion-note>
+                <ion-note v-if="order.orderDate">{{ getDateTime(order.orderDate) }}</ion-note>
               </div>
             </ion-item>
 
             <ProductListItem v-for="item in order.items" :key="item.productId" :item="item" :isShipToStoreOrder=true />
 
             <div class="border-top">
-              <ion-button :disabled="!hasPermission(Actions.APP_ORDER_UPDATE)" fill="clear" @click.stop="confirmScheduleOrderForPickup(order)">
+              <ion-button :disabled="!hasPermission(Actions.APP_ORDER_UPDATE)|| order.shipmentStatusId!='SHIPMENT_PACKED'" fill="clear" @click.stop="confirmScheduleOrderForPickup(order)">
                 {{ translate("Arrived") }}
               </ion-button>
             </div>
@@ -49,7 +49,7 @@
           <ion-card button>
             <ion-item lines="none">
               <ion-label class="ion-text-wrap">
-                <h1>{{ order.firstName }} {{ order.lastName }}</h1>
+                <h1>{{ order.customerName }}</h1>
                 <p>{{ order.orderName ? order.orderName : order.orderId }}</p>
               </ion-label>
               <div class="metadata">
@@ -75,7 +75,7 @@
           <ion-card button>
             <ion-item lines="none">
               <ion-label class="ion-text-wrap">
-                <h1>{{ order.firstName }} {{ order.lastName }}</h1>
+                <h1>{{ order.customerName }}</h1>
                 <p>{{ order.orderName ? order.orderName : order.orderId }}</p>
               </ion-label>
               <div class="metadata">
@@ -302,29 +302,31 @@ export default defineComponent({
     },
     async scheduleOrderForPickup(shipmentId: string) {
       emitter.emit("presentLoader");
-
-      let resp
+      let resp;
       try {
-        resp = await OrderService.updateShipment({
-          shipmentId: shipmentId,
-          statusId: 'PICKUP_SCHEDULED'
-        })
+        const payload = {
+          shipmentId: shipmentId
+        };
+        resp = await OrderService.shipOrder(payload);
         if (!hasError(resp)) {
-          resp = await OrderService.sendPickupScheduledNotification({ shipmentId })
-          this.getIncomingOrders()
+          // Send pickup notification email
+          resp = await OrderService.sendPickupScheduledNotification({ shipmentId });
+          // Refresh the incoming orders list
+          this.getIncomingOrders();
 
-          if (!hasError(resp)) showToast(translate('Order marked as ready for pickup, an email notification has been sent to the customer'))
-          else showToast(translate('Order marked as ready for pickup but something went wrong while sending the email notification'))
-        } else {
-          showToast(translate("Something went wrong"))
-        }
-        emitter.emit("dismissLoader")
+          if (!hasError(resp)) {
+            showToast(translate('Order marked as ready for pickup, an email notification has been sent to the customer'));
+          } else {
+            showToast(translate('Order marked as ready for pickup but something went wrong while sending the email notification'));
+          }
+        }   
       } catch (err) {
-        logger.error(err)
-        showToast(translate("Something went wrong"))
+        logger.error('Schedule order for pickup error:', err);
+        showToast(translate("Something went wrong"));
+      }finally{
+        emitter.emit("dismissLoader");
       }
 
-      emitter.emit("dismissLoader")
       return resp;
     },
     async confirmHandoverOrder(shipmentId: string) {
@@ -347,36 +349,45 @@ export default defineComponent({
         });
       return alert.present();
     },
-    async handoverOrder(shipmentId: string) {
-      emitter.emit("presentLoader");
-      const params = {
-        shipmentId: shipmentId,
-        statusId: 'SHIPMENT_DELIVERED'
+  async handoverOrder(shipmentId: string) {
+    emitter.emit("presentLoader");
+  
+    try {
+      const resp = await OrderService.handoverShipToStoreOrder(shipmentId);
+      
+      if (!hasError(resp)) {
+        this.getReadyForPickupOrders(); // Refresh
+        showToast(translate('Order handed over successfully'));
+      } else {
+        showToast(translate("Failed to handover order"));
+        logger.error("Handover failed", resp);
       }
-
-      let resp
-
-      try {
-        resp = await OrderService.updateShipment(params)
-        if (!hasError(resp)) {
-          this.getReadyForPickupOrders()          
-          showToast(translate('Order marked as complete'))
-        } else {
-          showToast(translate("Something went wrong"))
-        }
-        emitter.emit("dismissLoader")
-      } catch (err) {
-        logger.error(err)
-        showToast(translate("Something went wrong"))
+      
+    } catch (err) {
+      logger.error(err);
+      showToast(translate("Something went wrong"));
+    }
+    try {
+      const resp = await OrderService.handoverShipToStoreOrder(shipmentId);
+      
+      if (!hasError(resp)) {
+        this.getReadyForPickupOrders(); // Refresh
+        showToast(translate('Order handed over successfully'));
+      } else {
+        showToast(translate("Failed to handover order"));
+        logger.error("Handover failed", resp);
       }
-
-      emitter.emit("dismissLoader")
-      return resp
-    },
+      
+    } catch (err) {
+      logger.error(err);
+      showToast(translate("Something went wrong"));
+    }
+  emitter.emit("dismissLoader");
+},
 
     async sendReadyForPickupEmail(order: any) {
       const header = translate('Resend email')
-      const message = translate('An email notification will be sent to that their order is ready for pickup.', { customerName: `${order.firstName} ${order.lastName}` })
+      const message = translate('An email notification will be sent to that their order is ready for pickup.', { customerName: order.customerName })
 
       const alert = await alertController
         .create({
