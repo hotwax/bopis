@@ -948,7 +948,7 @@ const actions: ActionTree<OrderState , RootState> ={
     } as any
 
     if(payload.queryString?.length){
-      params.keyword=payload.queryString;
+      params.keyword = payload.queryString;
     }
 
     let readyForPickupOrders = []
@@ -1013,7 +1013,7 @@ const actions: ActionTree<OrderState , RootState> ={
     } as any
 
     if(payload.queryString?.length){
-      params.keyword=payload.queryString;
+      params.keyword = payload.queryString;
     }
  
     let completedOrders = []
