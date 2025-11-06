@@ -1319,10 +1319,10 @@ export default defineComponent({
           shipGroupSeqId: order.shipGroup.shipGroupSeqId
         });
         if (!hasError(resp)) {
-          showToast(translate('Order converted to Ship-to-Store successfully'));
+          showToast(translate('Order marked as ship to store'));
           this.router.push({ path: '/tabs/orders' });
         } else {
-          showToast(translate('Failed to convert order to Ship-to-Store'));
+          showToast(translate('Failed to mark order as ship to store'));
           logger.error('Ship-to-Store conversion failed', resp);
         }
       } catch (err) {

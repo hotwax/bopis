@@ -37,7 +37,7 @@
             <ProductListItem v-for="item in order.items" :key="item.productId" :item="item" :isShipToStoreOrder=true />
 
             <div class="border-top">
-              <ion-button :disabled="!hasPermission(Actions.APP_ORDER_UPDATE)|| !order.shipmentId" fill="clear" @click.stop="confirmScheduleOrderForPickup(order)">
+              <ion-button :disabled="!hasPermission(Actions.APP_ORDER_UPDATE)|| order.shipmentStatusId!='SHIPMENT_PACKED'" fill="clear" @click.stop="confirmScheduleOrderForPickup(order)">
                 {{ translate("Arrived") }}
               </ion-button>
             </div>
@@ -327,8 +327,8 @@ export default defineComponent({
         emitter.emit("dismissLoader");
       }
 
-  return resp;
-},
+      return resp;
+    },
     async confirmHandoverOrder(shipmentId: string) {
       const header = translate('Complete order')
       const message = translate('Order will be marked as completed. This action is irreversible.');
@@ -349,25 +349,39 @@ export default defineComponent({
         });
       return alert.present();
     },
-    async handoverOrder(shipmentId: string) {
-  emitter.emit("presentLoader");
+  async handoverOrder(shipmentId: string) {
+    emitter.emit("presentLoader");
   
-  try {
-    const resp = await OrderService.handoverShipToStoreOrder(shipmentId);
-    
-    if (!hasError(resp)) {
-      this.getReadyForPickupOrders(); // Refresh
-      showToast(translate('Order handed over successfully'));
-    } else {
-      showToast(translate("Failed to handover order"));
-      logger.error("Handover failed", resp);
+    try {
+      const resp = await OrderService.handoverShipToStoreOrder(shipmentId);
+      
+      if (!hasError(resp)) {
+        this.getReadyForPickupOrders(); // Refresh
+        showToast(translate('Order handed over successfully'));
+      } else {
+        showToast(translate("Failed to handover order"));
+        logger.error("Handover failed", resp);
+      }
+      
+    } catch (err) {
+      logger.error(err);
+      showToast(translate("Something went wrong"));
     }
-    
-  } catch (err) {
-    logger.error(err);
-    showToast(translate("Something went wrong"));
-  }
-  
+    try {
+      const resp = await OrderService.handoverShipToStoreOrder(shipmentId);
+      
+      if (!hasError(resp)) {
+        this.getReadyForPickupOrders(); // Refresh
+        showToast(translate('Order handed over successfully'));
+      } else {
+        showToast(translate("Failed to handover order"));
+        logger.error("Handover failed", resp);
+      }
+      
+    } catch (err) {
+      logger.error(err);
+      showToast(translate("Something went wrong"));
+    }
   emitter.emit("dismissLoader");
 },
 

@@ -269,13 +269,12 @@ const sendPickupScheduledNotification = async (payload: any): Promise <any> => {
 }
 
 const handoverShipToStoreOrder = async (shipmentId: string): Promise<any> => {
-  const payload={
-    statusId : 'SHIPMENT_DELIVERED', 
-  }
   return api({
     url: `/poorti/shipments/${shipmentId}`,
     method: 'PUT',
-    data: payload
+    data: {
+      statusId : 'SHIPMENT_DELIVERED', 
+    }
   });
 }
 

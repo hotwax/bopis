@@ -157,7 +157,6 @@ const actions: ActionTree<OrderState , RootState> ={
               showKitComponents: false
             }))
           }));
-        
           return {
             ...order,
             shipGroups,
@@ -883,8 +882,8 @@ const actions: ActionTree<OrderState , RootState> ={
       pageSize: payload.viewSize || process.env.VUE_APP_VIEW_SIZE,
       pageIndex: payload.viewIndex || 0
     } as any
-    if(payload.queryString?.length){
-      params.keyword=payload.queryString;
+    if(payload.queryString?.trim()?.length){
+      params.keyword = payload.queryString;
     }
     let incomingOrders = [] as any
     try {
@@ -895,7 +894,7 @@ const actions: ActionTree<OrderState , RootState> ={
       
         incomingOrders = ordersResp.flatMap((order: any) => {
           const shipGroups = order.shipGroups||[];
-
+          
           return shipGroups.map((shipGroup: any) => {
             return {
               customerName:order.customerName,
@@ -908,6 +907,7 @@ const actions: ActionTree<OrderState , RootState> ={
           
         })
         
+        console.log("ghjlk;fgjklghjkl",incomingOrders)
         let productIds: any = new Set();
 
         incomingOrders.map((order: any) => {
@@ -945,7 +945,6 @@ const actions: ActionTree<OrderState , RootState> ={
       orderStatusId:"ORDER_COMPLETED",
       viewSize: payload.viewSize ? payload.viewSize : process.env.VUE_APP_VIEW_SIZE,
       viewIndex: payload.viewIndex ? payload.viewIndex : 0,
-      shipmentStatusId_op: 'in',
       distinct: "Y",
     } as any
 
@@ -973,6 +972,7 @@ const actions: ActionTree<OrderState , RootState> ={
           })
 
         })
+        console.log("ghjlk;fgjklghjkl",readyForPickupOrders)
         let productIds: any = new Set();
 
         readyForPickupOrders.map((order: any) => {
@@ -1010,7 +1010,6 @@ const actions: ActionTree<OrderState , RootState> ={
       orderFacilityId: getCurrentFacilityId(),
       viewSize: payload.viewSize ? payload.viewSize : process.env.VUE_APP_VIEW_SIZE,
       viewIndex: payload.viewIndex ? payload.viewIndex : 0,
-      shipmentStatusId_op: 'in',
       noConditionFind: "Y",
       distinct: "Y",
     } as any
