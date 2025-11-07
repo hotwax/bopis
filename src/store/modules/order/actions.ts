@@ -944,7 +944,7 @@ const actions: ActionTree<OrderState , RootState> ={
       distinct: "Y",
     } as any
 
-    if(payload.queryString?.length){
+    if(payload.queryString?.trim()?.length) {
       params.keyword = payload.queryString;
     }
 
@@ -1009,7 +1009,7 @@ const actions: ActionTree<OrderState , RootState> ={
       distinct: "Y",
     } as any
 
-    if(payload.queryString?.length){
+    if(payload.queryString?.trim()?.length) {
       params.keyword = payload.queryString;
     }
  
