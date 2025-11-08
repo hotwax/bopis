@@ -275,18 +275,32 @@ const sendPickupScheduledNotification = async (payload: any): Promise <any> => {
   });
 }
 
-const getShipToStoreOrders = async (query: any): Promise<any> => {
-  const baseURL = store.getters['user/getOmsBaseUrl'];
-  const omstoken = store.getters['user/getUserToken'];
-  return apiClient({
-    url: 'performFind',
+const handoverShipToStoreOrder = async (shipmentId: string): Promise<any> => {
+  return api({
+    url: `/poorti/shipments/${shipmentId}`,
+    method: 'PUT',
+    data: {
+      statusId : 'SHIPMENT_DELIVERED', 
+    }
+  });
+}
+
+const convertToShipToStore = async (payload: any): Promise<any> => {
+  return api({
+    url: `/oms/orders/${payload.orderId}/shipToStore`,
     method: 'POST',
-    baseURL,
-    headers: {
-      "Authorization": "Bearer " + omstoken,
-      "Content-Type": "application/json"
-    },
-    data: query
+    data: {
+      shipGroupSeqId: payload.shipGroupSeqId,
+    }
+  });
+}
+
+const getShipToStoreOrders = async (params: any): Promise<any> => {
+
+  return api({
+    url: 'oms/orders/shipToStore',
+    method: 'GET',
+    params
   })
 }
 
@@ -608,6 +622,8 @@ export const OrderService = {
   quickShipEntireShipGroup,
   rejectOrderItems,
   sendPickupScheduledNotification,
+  handoverShipToStoreOrder,
+  convertToShipToStore,
   shipOrder,
   updateShipment,
   getBillingDetails,
