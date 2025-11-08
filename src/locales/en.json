@@ -304,5 +304,9 @@
   "Relation to Customer": "Relation to Customer",
   "Email": "Email",
   "Failed to send handover email": "Failed to send handover email",
-  "Handover email sent successfully": "Handover email sent successfully"
+  "Handover email sent successfully": "Handover email sent successfully",
+  "Self": "Self",
+  "Family Member": "Family Member",
+  "Friend": "Friend",
+  "Other Relation": "Other Relation"
 }

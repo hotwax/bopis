@@ -27,34 +27,51 @@
         <strong>{{ translate("Please enter the details of the person picking up the order.") }}</strong>
       </p>
 
-      <div class="form-grid">
+      <!-- Add checkbox for same as billing -->
+      <ion-item class="form-item">
+        <ion-checkbox v-model="sameAsBilling" @ion-change="handleSameAsBilling">
+          {{ translate("Same as billing details") }}
+        </ion-checkbox>
+      </ion-item>
+
+      <div class="form-stack">
         <ion-item class="form-item">
           <ion-label position="stacked">{{ translate("Name") }}</ion-label>
-          <ion-input v-model="form.name" placeholder="Enter name" required />
+          <ion-input v-model="form.name" placeholder="Enter name" :disabled="isSubmitting || sameAsBilling" required />
         </ion-item>
 
         <ion-item class="form-item">
           <ion-label position="stacked">{{ translate("ID Number") }}</ion-label>
-          <ion-input v-model="form.idNumber" placeholder="Enter ID number" required />
+          <ion-input v-model="form.idNumber" placeholder="Enter ID number" :disabled="isSubmitting || sameAsBilling" required />
+        </ion-item>
+
+        <ion-item class="form-item">
+          <ion-label position="stacked">{{ translate("Relation to Customer") }}</ion-label>
+          <ion-select v-model="form.relationToCustomer" placeholder="Select relation" :disabled="isSubmitting" interface="action-sheet" @ionChange="$event.target.closeCircle()" >
+            <ion-select-option value="Self">{{ translate("Self") }}</ion-select-option>
+            <ion-select-option value="Family Member">{{ translate("Family Member") }}</ion-select-option>
+            <ion-select-option value="Friend">{{ translate("Friend") }}</ion-select-option>
+            <ion-select-option value="Other Relation">{{ translate("Other Relation") }}</ion-select-option>
+          </ion-select>
+        </ion-item>
+
+        <ion-item class="form-item">
+          <ion-label position="stacked">{{ translate("Email") }}</ion-label>
+          <ion-input v-model="form.email" type="email" placeholder="Enter email" :disabled="isSubmitting" />
         </ion-item>
       </div>
-
-      <ion-item class="form-item">
-        <ion-label position="stacked">{{ translate("Relation to Customer") }}</ion-label>
-        <ion-input v-model="form.relationToCustomer" placeholder="Enter relation" />
-      </ion-item>
-
-      <ion-item class="form-item">
-        <ion-label position="stacked">{{ translate("Email") }}</ion-label>
-        <ion-input v-model="form.email" type="email" placeholder="Enter email" />
-      </ion-item>
     </div>
   </ion-content>
 
   <!-- Floating Save Button -->
   <ion-fab vertical="bottom" horizontal="end" slot="fixed">
-    <ion-fab-button data-testid="proof-of-delivery-save-button" @click="submitForm">
-      <ion-icon :icon="saveOutline" />
+    <ion-fab-button
+      data-testid="proof-of-delivery-save-button"
+      @click="submitForm"
+      :disabled="isSubmitting"
+    >
+      <ion-spinner v-if="isSubmitting" name="crescent" />
+      <ion-icon v-else :icon="saveOutline" />
     </ion-fab-button>
   </ion-fab>
 </template>
@@ -74,7 +91,10 @@ import {
   IonInput,
   IonFab,
   IonFabButton,
-  modalController
+  modalController,
+  IonSelect,
+  IonSelectOption,
+  IonCheckbox
 } from "@ionic/vue";
 import { defineComponent, ref, onMounted } from "vue";
 import { closeOutline, saveOutline } from "ionicons/icons";
@@ -99,15 +119,24 @@ export default defineComponent({
     IonLabel,
     IonInput,
     IonFab,
-    IonFabButton
+    IonFabButton,
+    IonSelect,
+    IonSelectOption,
+    IonCheckbox
   },
-  props: ["order"],
+  props: {
+    order: { type: Object, required: true },
+    deliverShipmentFn: { type: Function, required: true }
+  },
   setup(props) {
     const store = useStore();
+    const isSubmitting = ref(false);
+    const sameAsBilling = ref(false);
+    
     const form = ref({
       name: "",
       idNumber: "",
-      relationToCustomer: "",
+      relationToCustomer: "Self",
       email: ""
     });
 
@@ -118,32 +147,70 @@ export default defineComponent({
       try {
         const resp = await OrderService.getBillingDetails({ orderId: props.order.orderId });
         billingDetails.value = resp?.data?.billToAddress || {};
+
+        // Prefill form fields from billing details by default
+        form.value.name = billingDetails.value?.toName || billingDetails.value?.contactName || "";
+        form.value.email = billingDetails.value?.email || billingDetails.value?.toEmail || "";
+        form.value.relationToCustomer = "Self"; // Set default relation
       } catch (err) {
         console.error("Error fetching billing details:", err);
       }
     };
 
-    const closeModal = () => {
-      modalController.dismiss({ dismissed: true });
+    // Handle Same as Billing checkbox
+    const handleSameAsBilling = () => {
+      if (sameAsBilling.value) {
+        // When checked, restore billing details and prefilled ID
+        form.value.name = billingDetails.value?.toName || billingDetails.value?.contactName || "";
+        form.value.email = billingDetails.value?.email || billingDetails.value?.toEmail || "";
+        form.value.relationToCustomer = "Self";
+      } else {
+        // When unchecked, clear only name and email
+        form.value.name = "";
+        form.value.email = "";
+      }
     };
 
-    const deliverShipment = async (order) => {
+    // Fetch order attributes to get prefield id for customerId and prefill idNumber
+    const getPrefilledValue = async () => {
       try {
-        const resp = await store.dispatch("order/deliverShipment", order);
-        if (!hasError(resp)) {
-          showToast(translate("Order delivered successfully"));
+        if (!props.order?.orderId) return;
+        const resp = await OrderService.fetchOrderAttributes(props.order.orderId);
+        const data = resp?.data ?? resp;
+        const list = Array.isArray(data) ? data : (data?.docs || data?.attributes || []);
+        const customerAttr = list.find((a) => a?.attrName === "customerId");
+        const prefilledId = customerAttr?.attrValue || "";
+        if (prefilledId) {
+          form.value.idNumber = prefilledId;
         }
       } catch (err) {
-        console.error("Error in deliverShipment:", err);
+        console.error("Failed fetching order attributes:", err);
+      }
+    };
+
+    const closeModal = async () => {
+      try {
+        await modalController.dismiss({ dismissed: true });
+      } catch (e) {
+        // ignore if modal already dismissed
       }
     };
 
     const submitForm = async () => {
-      const deliveryResp = await deliverShipment(props.order);
-      if (hasError(deliveryResp)) return;
+      if (isSubmitting.value) return;
+      isSubmitting.value = true;
 
-      // Construct payload based on your backend service definition
-       try {
+      try {
+        // Call deliverShipmentFn (may open confirmation)
+        let deliveryResp;
+        try {
+          deliveryResp = await props.deliverShipmentFn(props.order);
+        } catch (err) {
+          console.error("Deliver shipment function failed:", err);
+          showToast(translate("Delivery failed"));
+          return;
+        }
+
         // Build orderItems array from order.items
         const orderItemsList = (props.order?.items || []).map(item => ({
           orderId: item.orderId,
@@ -156,18 +223,15 @@ export default defineComponent({
           orderId: props.order?.orderId,
           orderItems: orderItemsList,
           shipmentId: props.order?.shipmentId,
-          emailType: "HANDOVER_BOPIS_ORDER",
+          emailType: "HANDOVER_POD_BOPIS",
           additionalFields: {
             name: form.value.name,
             idNumber: form.value.idNumber,
             relationToCustomer: form.value.relationToCustomer,
             email: form.value.email
-          },
-          emailAddress: form.value.email
+          }
         };
 
-        
-        // Call your new API
         const resp = await OrderService.sendPickupNotification(payload);
 
         if (hasError(resp)) {
@@ -177,15 +241,19 @@ export default defineComponent({
           showToast(translate("Handover email sent successfully"));
         }
 
+        // Close modal after processing
         await closeModal();
       } catch (err) {
         console.error("Error in submitForm:", err);
         showToast(translate("Something went wrong"));
+      } finally {
+        isSubmitting.value = false;
       }
     };
 
-    onMounted(() => {
-      getBillingDetails();
+    onMounted(async () => {
+      await getBillingDetails();
+      await getPrefilledValue();
     });
 
     return {
@@ -195,7 +263,10 @@ export default defineComponent({
       form,
       closeModal,
       submitForm,
-      billingDetails
+      billingDetails,
+      isSubmitting,
+      sameAsBilling,
+      handleSameAsBilling
     };
   }
 });
@@ -235,15 +306,15 @@ ion-content {
 }
 
 /* Form layout */
-.form-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 0.75rem 1rem;
-  margin-bottom: 1rem;
+.form-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
 }
 
 .form-item {
   --min-height: 48px;
+  width: 100%;
 }
 
 /* General form input appearance */
@@ -257,8 +328,18 @@ ion-input {
   font-size: 14px;
 }
 
+ion-select {
+  width: 100%;
+  max-width: 100%;
+}
+
 ion-fab-button {
   --background: #3b82f6;
   --box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+}
+
+/* Add styles for checkbox */
+ion-checkbox {
+  margin: 1rem 0;
 }
 </style>

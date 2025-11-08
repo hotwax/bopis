@@ -399,24 +399,11 @@ export default defineComponent({
       }
     },
     async deliverShipment (order: any) {
+      console.log("===============deliveryshipment order page====================================")
       await this.store.dispatch('order/deliverShipment', order)
       .then((resp) => {
         if(!hasError(resp)) {
           showToast(translate('Order delivered to', {customerName: order.customerName}))
-
-          // We are collecting the product IDs of the order items and then fetching stock information
-          // for each product ID if it is available for updated inventory.
-          const productIds = [...new Set(order.shipGroups.reduce((productId: any, shipGroup: any) => {
-            const ids = shipGroup.items.map((item: any) => item.productId)
-            return productId.concat(ids)
-          }, []))]
-
-          productIds.map((productId: any) => {
-            const productStock = this.getProductStock(productId);
-            if (productStock && productStock.quantityOnHandTotal >= 0) {
-              this.store.dispatch('stock/fetchStock', { productId });
-            }
-          })
         }
       })
     },
@@ -590,9 +577,12 @@ export default defineComponent({
     },
 
     async openProofOfDeliveryModal(order:any) {
-          const modal = await modalController.create({
+      const modal = await modalController.create({
         component: ProofOfDeliveryModal,
-        componentProps: { order },
+        componentProps: {
+          order,
+          deliverShipmentFn: this.deliverShipment 
+        },
       });
 
       await modal.present();

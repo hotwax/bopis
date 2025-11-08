@@ -24,6 +24,13 @@ const fetchOrderDetails = async (orderId: string): Promise<any> => {
   });
 }
 
+const fetchOrderAttributes = async (orderId: string): Promise<any> => {
+  return api({
+    url: `oms/orders/${orderId}/attributes`,
+    method: "GET",
+  });
+}
+
 const fetchOrderItems = async (payload: any): Promise <any> => {
   const baseURL = store.getters['user/getOmsBaseUrl'];
   const omstoken = store.getters['user/getUserToken'];
@@ -578,6 +585,7 @@ export const OrderService = {
   createPicklist,
   fetchGiftCardActivationDetails,
   fetchOrderDetails,
+  fetchOrderAttributes,
   fetchOrderItems,
   fetchOrderPaymentPreferences,
   fetchPicklists,
