@@ -309,15 +309,16 @@ export default defineComponent({
         };
         resp = await OrderService.shipOrder(payload);
         if (!hasError(resp)) {
-          // Send pickup notification email
-          resp = await OrderService.sendPickupScheduledNotification({ shipmentId });
-          // Refresh the incoming orders list
-          this.getIncomingOrders();
-
-          if (!hasError(resp)) {
-            showToast(translate('Order marked as ready for pickup, an email notification has been sent to the customer'));
-          } else {
+          try{
+            const emailResp = await OrderService.sendPickupScheduledNotification({ shipmentId });
+            if(!hasError(emailResp)){
+              showToast(translate('Order marked as ready for pickup, an email notification has been sent to the customer'));
+            }
+          }catch(error){
+            logger.error('Error sending pickup scheduled notification:', error);
             showToast(translate('Order marked as ready for pickup but something went wrong while sending the email notification'));
+          }finally{
+            await this.getIncomingOrders();
           }
         }   
       } catch (err) {
