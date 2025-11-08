@@ -399,7 +399,6 @@ export default defineComponent({
       }
     },
     async deliverShipment (order: any) {
-      console.log("===============deliveryshipment order page====================================")
       await this.store.dispatch('order/deliverShipment', order)
       .then((resp) => {
         if(!hasError(resp)) {

@@ -525,7 +525,6 @@ export default defineComponent({
       return editPickerModal.present();
     },
     async deliverShipment(order: any) {
-      console.log("===============deliveryshipment order detail page====================================")
       const pickup = order.shipGroup.shipmentMethodTypeId === 'STOREPICKUP';
       const header = pickup ? translate("Handover") : translate("Ship");
       const message = pickup ? translate("Verify that the items in the package are valid and the customer has received their order. Once the order is handed over to the customer it cannot be undone.", { space: '<br/><br/>' }) : '';
@@ -542,7 +541,6 @@ export default defineComponent({
             handler: async () => {
               await this.store.dispatch('order/deliverShipmentFromDetail', order).then((resp: any) => {
                 if(!hasError(resp)) {
-                  console.log("========sucess service call===============")
                   // Update order timeline once the order is completed
                   // Sending statusId explicitly as we do not fetch the order info again on handover
                   this.getOrderDetail(this.orderId, this.shipGroupSeqId, this.orderType);
