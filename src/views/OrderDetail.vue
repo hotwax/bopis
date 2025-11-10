@@ -807,7 +807,7 @@ export default defineComponent({
     },
     getRejectionReasonDescription(rejectionReasonId: string) {
       const reason = this.rejectReasons?.find((reason: any) => reason.enumId === rejectionReasonId)
-      return reason?.description ? reason.description : reason?.enumDescription ? reason.enumDescription : reason?.enumId;
+      return reason?.enumDescription ? reason.enumDescription : reason?.description ? reason.description : reason?.enumId;
     },
     getCancelReasonDescription(cancelReasonId: string) {
       const reason = this.cancelReasons?.find((reason: any) => reason.enumId === cancelReasonId)
