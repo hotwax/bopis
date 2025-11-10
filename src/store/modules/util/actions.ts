@@ -24,9 +24,9 @@ const actions: ActionTree<UtilState, RootState> = {
       if(isAdminUser) {
         payload = {
           parentTypeId: ["REPORT_AN_ISSUE", "RPRT_NO_VAR_LOG"],
-            parentTypeId_op: "in",
+          parentTypeId_op: "in",
           pageSize: 20, // keeping view size 20 as considering that we will have max 20 reasons
-        ...payload
+          ...payload
       }
       resp = await UtilService.fetchRejectReasons(payload);
     } else {
