@@ -165,6 +165,8 @@ export default defineComponent({
           {
             text: translate('Reject'),
             handler: async () => {
+              alert.dismiss();
+              this.closeModal();  
               const updatedItems = (this.orderProps?.shipGroup?.items ?? [])
                 .filter((item: any) => item.rejectReasonId)
                 .map((item: any) => ({
@@ -182,7 +184,6 @@ export default defineComponent({
               if (resp) {
                 await this.store.dispatch("order/getOpenOrders", { viewSize: process.env.VUE_APP_VIEW_SIZE, viewIndex: 0, queryString: '', facilityId: getCurrentFacilityId() });
               }
-              this.closeModal();              
             }
           }
         ]

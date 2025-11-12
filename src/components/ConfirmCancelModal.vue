@@ -139,6 +139,7 @@ export default defineComponent({
     async cancelOrder() {
       emitter.emit("presentLoader");
 
+      this.closeModal();
       const itemsPayload = this.cancelledItems.map((item: any) => ({
         orderItemSeqId: item.orderItemSeqId,
         shipGroupSeqId: item.shipGroupSeqId,
@@ -184,7 +185,6 @@ export default defineComponent({
 
       await this.store.dispatch("order/updateCurrent", { order: this.currentOrder });
       emitter.emit("dismissLoader");
-      this.closeModal();
     }
   },
   setup() {

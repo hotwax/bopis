@@ -21,7 +21,7 @@
               <ion-card-title>{{ userProfile?.userFullName }}</ion-card-title>
             </ion-card-header>
           </ion-item>
-          <ion-button color="danger" @click="logout()">{{ translate("Logout") }}</ion-button>
+          <ion-button color="danger" :disabled="isLoading" @click="logout()">{{ translate("Logout") }}</ion-button>
           <ion-button :standalone-hidden="!hasPermission(Actions.APP_PWA_STANDALONE_ACCESS)" fill="outline" @click="goToLaunchpad()">
             {{ translate("Go to Launchpad") }}
             <ion-icon slot="end" :icon="openOutline" />
@@ -273,7 +273,8 @@ export default defineComponent({
       } as any,
       carriers: [] as any,
       availableShipmentMethods: [] as any,
-      rerouteFulfillmentConfigMapping: (process.env.VUE_APP_RF_CNFG_MPNG? JSON.parse(process.env.VUE_APP_RF_CNFG_MPNG) : {}) as any
+      rerouteFulfillmentConfigMapping: (process.env.VUE_APP_RF_CNFG_MPNG? JSON.parse(process.env.VUE_APP_RF_CNFG_MPNG) : {}) as any,
+      isLoading: false
     }
   },
   computed: {
@@ -326,6 +327,7 @@ export default defineComponent({
     async logout () {
       // remove firebase notification registration token -
       // OMS and auth is required hence, removing it before logout (clearing state)
+      this.isLoading = true
       try {
         await removeClientRegistrationToken(this.firebaseDeviceId, process.env.VUE_APP_NOTIF_APP_ID)
       } catch (error) {
@@ -344,6 +346,7 @@ export default defineComponent({
           window.location.href = `${process.env.VUE_APP_LOGIN_URL}?isLoggedOut=true&redirectUrl=${redirectUrl}`
         }
       })
+      this.isLoading = false
     },
     goToLaunchpad() {
       window.location.href = `${process.env.VUE_APP_LOGIN_URL}`

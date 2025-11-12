@@ -62,7 +62,7 @@
               <ion-button data-testid="listpage-reject-button" v-if="order.shipGroup.shipmentMethodTypeId === 'STOREPICKUP'" color="danger" :disabled="!hasPermission(Actions.APP_ORDER_UPDATE)" fill="clear" @click.stop="openRejectOrderModal(order)">
                 {{ translate("Reject") }}
               </ion-button>
-              <ion-button size="default" v-if="getBopisProductStoreSettings('PRINT_PICKLISTS')" slot="end" fill="clear" @click.stop="printPicklist(order, order.shipGroup)">
+              <ion-button size="default" :disabled="isLoadingOrder(order.orderId)" v-if="getBopisProductStoreSettings('PRINT_PICKLISTS')" slot="end" fill="clear" @click.stop="printPicklist(order, order.shipGroup)">
                   <ion-icon :icon="printOutline" slot="icon-only" />
               </ion-button>
             </div>
@@ -91,7 +91,7 @@
             <ProductListItem v-for="item in order.items" :key="item.productId" :item="item" :orderId="order.orderId" :customerId="order.customerId" :currencyUom="order.currencyUom" orderType="packed"/>
             <div class="border-top">
 
-              <ion-button data-testid="handover-button" :disabled="!hasPermission(Actions.APP_ORDER_UPDATE)" fill="clear" @click.stop="deliverShipment(order)">
+              <ion-button data-testid="handover-button" :disabled="!hasPermission(Actions.APP_ORDER_UPDATE)|| isLoadingOrder(order.orderId) " fill="clear" @click.stop="deliverShipment(order)">
                 {{ order.shipmentMethodTypeId === 'STOREPICKUP' ? translate("Handover") : translate("Ship") }}
               </ion-button>
               <ion-button size="default" data-testid="packing-slip-button" v-if="getBopisProductStoreSettings('PRINT_PACKING_SLIPS')" fill="clear" slot="end" @click.stop="printPackingSlip(order)">
@@ -233,7 +233,8 @@ export default defineComponent({
   data() {
     return {
       queryString: '',
-      isScrollingEnabled: false
+      isScrollingEnabled: false,
+      isLoading: false,
     }
   },
   methods: {
@@ -398,6 +399,7 @@ export default defineComponent({
       }
     },
     async deliverShipment (order: any) {
+      this.loadingOrderId = order.orderId;
       await this.store.dispatch('order/deliverShipment', order)
       .then((resp) => {
         if(!hasError(resp)) {
@@ -417,7 +419,11 @@ export default defineComponent({
             }
           })
         }
-      })
+      }).catch((error) => {
+        logger.error("Something went wrong while delivering shipment:", error);
+      }).finally(() => {
+        this.loadingOrderId = null;
+      });
     },
     segmentChanged (e: CustomEvent) {
       this.queryString = ''
@@ -460,6 +466,8 @@ export default defineComponent({
             text: translate('Send'),
             handler: async () => {
               try {
+                alert.dismiss();
+                emitter.emit("presentLoader", {message: "Loading...", backdropDismiss: false});
                 const resp = await OrderService.sendPickupScheduledNotification({ shipmentId: order.shipmentId });
                 if (!hasError(resp)) {
                   showToast(translate("Email sent successfully"))
@@ -470,6 +478,7 @@ export default defineComponent({
                 showToast(translate("Something went wrong while sending the email."))
                 logger.error(error)
               }
+              emitter.emit("dismissLoader");
             }
           }]
         });
@@ -487,7 +496,9 @@ export default defineComponent({
     },
     async printPicklist(order: any, shipGroup: any) {
       if(shipGroup.picklistId) {
+        this.loadingOrderId = order.orderId
         await OrderService.printPicklist(shipGroup.picklistId)
+        this.loadingOrderId = null
         return;
       }
 
@@ -606,6 +617,8 @@ export default defineComponent({
     const router = useRouter();
     const store = useStore();
     const segmentSelected = ref('open');
+    const loadingOrderId = ref(null);
+    const isLoadingOrder = (orderId:any) => loadingOrderId.value === orderId
     const userStore = useUserStore()
     let currentFacility: any = computed(() => userStore.getCurrentFacility) 
     
@@ -615,6 +628,8 @@ export default defineComponent({
       copyToClipboard,
       currentFacility,
       hasPermission,
+      isLoadingOrder,
+      loadingOrderId,
       notificationsOutline,
       mailOutline,
       printOutline,
