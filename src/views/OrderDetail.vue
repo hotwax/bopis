@@ -11,7 +11,7 @@
           <ion-button data-testid="rejection-history-button" :disabled="!order?.orderId" @click="openOrderItemRejHistoryModal()">
             <ion-icon slot="icon-only" :icon="timeOutline" />
           </ion-button>
-          <ion-button data-testid="print-picklist-button" v-if="orderType === 'open' && getBopisProductStoreSettings('PRINT_PICKLISTS')" :disabled="!order?.orderId || !hasPermission(Actions.APP_ORDER_UPDATE) || order.handovered || order.shipped || !order.shipGroup?.items?.length"  @click="printPicklist(order, order.shipGroup)">
+          <ion-button data-testid="print-picklist-button" v-if="orderType === 'open' && getBopisProductStoreSettings('PRINT_PICKLISTS')" :disabled=" isLoading || !order?.orderId || !hasPermission(Actions.APP_ORDER_UPDATE) || order.handovered || order.shipped || !order.shipGroup?.items?.length"  @click="printPicklist(order, order.shipGroup)">
             <ion-icon slot="icon-only" :icon="printOutline" />
           </ion-button>
           <ion-button data-testid="packing-slip-button" v-else-if="orderType === 'packed' && getBopisProductStoreSettings('PRINT_PACKING_SLIPS')" :class="order.shipGroup.shipmentMethodTypeId !== 'STOREPICKUP' ? 'ion-hide-md-up' : ''" :disabled="!order?.orderId || !hasPermission(Actions.APP_ORDER_UPDATE) || order.handovered || order.shipped || !order.shipGroup?.items?.length" @click="order.shipGroup.shipmentMethodTypeId === 'STOREPICKUP' ? printPackingSlip(order) : printShippingLabelAndPackingSlip(order)">
@@ -185,7 +185,7 @@
               <ion-icon slot="start" :icon="bagCheckOutline"/>
               {{ order?.shipGroup.shipmentMethodTypeId === 'STOREPICKUP' ? translate("Ready for pickup") : translate("Ready to ship") }}
             </ion-button>
-            <ion-button data-testid="submit-rejected-items-button" size="default" :disabled="!hasPermission(Actions.APP_ORDER_UPDATE) || order.readyToHandover || order.readyToShip || order.rejected || !hasRejectedItems" color="danger" fill="outline" @click="rejectOrder()">
+            <ion-button data-testid="submit-rejected-items-button" size="default" :disabled="!hasPermission(Actions.APP_ORDER_UPDATE) || order.readyToHandover || order.readyToShip || order.rejected || !hasRejectedItems || isLoading " color="danger" fill="outline" @click="rejectOrder()">
               {{ translate("Reject Items") }}
             </ion-button>
             <ion-button slot="end" fill="outline" data-testid="request-transfer-button" size="default" color="warning" :disabled="!hasPermission(Actions.APP_ORDER_UPDATE) || !canRequestTransfer(order)" @click="confirmRequestTransfer(order)">
@@ -459,7 +459,8 @@ export default defineComponent({
       hasRejectedItems: false,
       pickers: [] as any,
       picklistDate: 0,
-      orderStatus: ""
+      orderStatus: "",
+      isLoading: false,
     }
   },
   computed: {
@@ -537,6 +538,8 @@ export default defineComponent({
           }, {
             text: translate(header),
             handler: async () => {
+              alert.dismiss();
+              emitter.emit("presentLoader");
               await this.store.dispatch('order/deliverShipmentFromDetail', order).then((resp: any) => {
                 if(!hasError(resp)) {
                   // Update order timeline once the order is completed
@@ -545,6 +548,7 @@ export default defineComponent({
                   this.prepareOrderTimeline({ statusId: "ORDER_COMPLETED" });
                 }
               })
+              emitter.emit("dismissLoader");
             }
           }]
         });
@@ -566,7 +570,7 @@ export default defineComponent({
     },
     async rejectOrder() {
       emitter.emit("presentLoader");
-
+      this.isLoading = true;
       const payload = {
         "orderId": this.order.orderId
       }
@@ -612,6 +616,7 @@ export default defineComponent({
         } catch (err) {
           logger.error("Something went wrong while rejecting order items:", err);
         }
+        this.isLoading = false;
       }
 
       // If all the items are rejected then marking the whole order as rejected
@@ -845,7 +850,9 @@ export default defineComponent({
     async printPicklist(order: any, shipGroup: any) {
       // shipGroup.picklistId is copied over to order.picklistId in getOrderDetail function
       if(shipGroup.picklistId) {
-        await OrderService.printPicklist(shipGroup.picklistId)
+        this.isLoading = true;
+        await OrderService.printPicklist(shipGroup.picklistId);
+        this.isLoading = false;
         return;
       }
 
@@ -1254,6 +1261,8 @@ export default defineComponent({
           },{
             text: translate("Send"),
             handler: async () => {
+              alert.dismiss();
+              emitter.emit("presentLoader")
               try {
                 const resp = await OrderService.sendPickupScheduledNotification({ shipmentId: order.shipmentId });
                 if (!hasError(resp)) {
@@ -1265,6 +1274,7 @@ export default defineComponent({
                 showToast(translate("Something went wrong while sending the email."))
                 logger.error(error)
               }
+              emitter.emit("dismissLoader")
             }
           }]
         });
@@ -1309,7 +1319,10 @@ export default defineComponent({
         },
         {
          text: translate('Convert'), 
-         handler: async () => await this.requestTransfer(order) 
+         handler: async () => {
+          alert.dismiss();
+          await this.requestTransfer(order) 
+         }
         }]
       });
 

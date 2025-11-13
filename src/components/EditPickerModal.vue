@@ -88,6 +88,7 @@ import { translate } from '@hotwax/dxp-components'
 import { UtilService } from "@/services/UtilService";
 import { PicklistService } from "@/services/PicklistService";
 import logger from "@/logger";
+import emitter from "@/event-bus";
 
 export default defineComponent({
   name: "EditPickerModal",
@@ -224,13 +225,16 @@ export default defineComponent({
             text: translate("Replace"),
             handler: async () => {
               try { 
-                await this.resetPicker()
+                alert.dismiss();
                 this.closeModal({ selectedPicker: this.selectedPicker })
+                emitter.emit("presentLoader", {message: "Updating Picker...", backdropDismiss: false});  
+                await this.resetPicker()
               } catch(err) {
                 showToast(translate('Something went wrong, could not edit picker.'))
                 logger.error('Something went wrong, could not edit picker', err)
                 this.closeModal();
               }
+              emitter.emit("dismissLoader");
             }
           }
         ],
