@@ -52,7 +52,7 @@
       </ion-item>
     </ion-list>
 
-    <ion-button class="ion-margin" color="danger" @click="cancelOrder">
+    <ion-button :disabled="isLoading" class="ion-margin" color="danger" @click="cancelOrder">
       {{ translate("Confirm Cancellation") }}
     </ion-button>
   </ion-content>
@@ -111,7 +111,8 @@ export default defineComponent({
       cancelledItems: [] as Array<any>,
       orderTotal: 0,
       currentOrder: {} as any,
-      runTimeDiff: ""
+      runTimeDiff: "",
+      isLoading: false
     }
   },
   computed: {
@@ -138,8 +139,7 @@ export default defineComponent({
     },
     async cancelOrder() {
       emitter.emit("presentLoader");
-
-      this.closeModal();
+      this.isLoading = true;
       const itemsPayload = this.cancelledItems.map((item: any) => ({
         orderItemSeqId: item.orderItemSeqId,
         shipGroupSeqId: item.shipGroupSeqId,
@@ -185,6 +185,8 @@ export default defineComponent({
 
       await this.store.dispatch("order/updateCurrent", { order: this.currentOrder });
       emitter.emit("dismissLoader");
+      this.isLoading = false;
+      this.closeModal();
     }
   },
   setup() {
