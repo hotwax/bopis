@@ -44,7 +44,7 @@
           </ion-card>
         </div>
       </div>      
-      <div v-if="segmentSelected === 'readyForPickup' && readyForPickupOrders.length">
+      <div v-else-if="segmentSelected === 'readyForPickup' && readyForPickupOrders.length">
         <div v-for="(order, index) in readyForPickupOrders" :key="index" v-show="order.items.length">
           <ion-card button>
             <ion-item lines="none">
@@ -70,7 +70,7 @@
           </ion-card>
         </div>
       </div>
-      <div v-if="segmentSelected === 'completed' && completedOrders.length">
+      <div v-else-if="segmentSelected === 'completed' && completedOrders.length">
         <div v-for="(order, index) in completedOrders" :key="index" v-show="order.items.length">
           <ion-card button>
             <ion-item lines="none">
