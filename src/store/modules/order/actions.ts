@@ -880,7 +880,7 @@ const actions: ActionTree<OrderState , RootState> ={
       pageIndex: payload.viewIndex || 0
     } as any
     if(payload.queryString?.trim()?.length){
-      params.keyword = payload.queryString;
+      params.keyword = payload.queryString.trim();
     }
     let incomingOrders = [] as any
     try {
@@ -944,8 +944,8 @@ const actions: ActionTree<OrderState , RootState> ={
       distinct: "Y",
     } as any
 
-    if(payload.queryString?.length){
-      params.keyword = payload.queryString;
+    if(payload.queryString?.trim()?.length) {
+      params.keyword = payload.queryString.trim();
     }
 
     let readyForPickupOrders = []
@@ -1009,8 +1009,8 @@ const actions: ActionTree<OrderState , RootState> ={
       distinct: "Y",
     } as any
 
-    if(payload.queryString?.length){
-      params.keyword = payload.queryString;
+    if(payload.queryString?.trim()?.length) {
+      params.keyword = payload.queryString.trim();
     }
  
     let completedOrders = []
