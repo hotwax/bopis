@@ -874,7 +874,7 @@ const actions: ActionTree<OrderState , RootState> ={
       orderStatusId: 'ORDER_APPROVED',
       statusId: 'ITEM_APPROVED',
       shipmentMethodTypeId: 'SHIP_TO_STORE',
-      shipmentStatusId: 'SHIPMENT_INPUT,SHIPMENT_APPROVED,SHIPMENT_PACKED',
+      shipmentStatusId: 'SHIPMENT_INPUT,SHIPMENT_APPROVED,SHIPMENT_PACKED,SHIPMENT_SHIPPED',
       shipmentStatusId_op: 'in',
       pageSize: payload.viewSize || process.env.VUE_APP_VIEW_SIZE,
       pageIndex: payload.viewIndex || 0
@@ -934,11 +934,11 @@ const actions: ActionTree<OrderState , RootState> ={
     let resp: any
 
     const params = {
-      shipmentStatusId: "SHIPMENT_SHIPPED",
+      shipmentStatusId: "SHIPMENT_ARRIVED",
       shipmentMethodTypeId: "SHIP_TO_STORE",
       orderFacilityId: getCurrentFacilityId(),
-      statusId:"ITEM_COMPLETED",
-      orderStatusId:"ORDER_COMPLETED",
+      statusId:"ITEM_APPROVED",
+      orderStatusId:"ORDER_APPROVED",
       viewSize: payload.viewSize ? payload.viewSize : process.env.VUE_APP_VIEW_SIZE,
       viewIndex: payload.viewIndex ? payload.viewIndex : 0,
       distinct: "Y",
