@@ -956,7 +956,7 @@ const actions: ActionTree<OrderState , RootState> ={
         readyForPickupOrders = ordersResp.flatMap((order: any) => {
           const shipGroups = order.shipGroups||[];
 
-          return shipGroups.map((shipGroup: any) => {
+          return shipGroups.filter((shipGroup: any) => shipGroup.shipmentId != null).map((shipGroup: any) =>  {
             return {
               customerName:order.customerName,
               createdDate:order.orderDate,
