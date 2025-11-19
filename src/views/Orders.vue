@@ -227,6 +227,7 @@ export default defineComponent({
       unreadNotificationsStatus: 'user/getUnreadNotificationsStatus',
       getBopisProductStoreSettings: 'user/getBopisProductStoreSettings',
       getProductStock: 'stock/getProductStock',
+      getInventoryInformation: 'stock/getInventoryInformation',
       order: "order/getCurrent"
     })
   },
@@ -402,18 +403,14 @@ export default defineComponent({
       .then((resp) => {
         if(!hasError(resp)) {
           showToast(translate('Order delivered to', {customerName: order.customerName}))
-
           // We are collecting the product IDs of the order items and then fetching stock information
           // for each product ID if it is available for updated inventory.
-          const productIds = [...new Set(order.shipGroups.reduce((productId: any, shipGroup: any) => {
-            const ids = shipGroup.items.map((item: any) => item.productId)
-            return productId.concat(ids)
-          }, []))]
+          const productIds = [...new Set(order.items.map((item: any) => item.productId))];
 
           productIds.map((productId: any) => {
-            const productStock = this.getProductStock(productId);
-            if (productStock && productStock.quantityOnHandTotal >= 0) {
-              this.store.dispatch('stock/fetchStock', { productId });
+            const productStock = this.getInventoryInformation(productId);
+            if (productStock && productStock.quantityOnHand >= 0) {
+              this.store.dispatch('stock/fetchProductInventory', { productId, forceFetchStock: true });
             }
           })
         }
