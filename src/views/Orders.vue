@@ -69,7 +69,7 @@
           </ion-card>
         </div>
       </div>       
-      <div v-if="segmentSelected === 'packed' && packedOrders.length">
+      <div v-else-if="segmentSelected === 'packed' && packedOrders.length">
         <div v-for="(order, index) in packedOrders" :key="index" v-show="order.items.length > 0">
           <ion-card data-testid="order-card" button @click.prevent="viewOrder(order, order.primaryShipGroupSeqId, 'packed')">
             <ion-item lines="none">
@@ -105,7 +105,7 @@
           </ion-card>
         </div>
       </div>
-      <div v-if="segmentSelected === 'completed' && completedOrders.length">
+      <div v-else-if="segmentSelected === 'completed' && completedOrders.length">
         <div v-for="(order, index) in completedOrders" :key="index" v-show="order.items.length > 0">
           <ion-card data-testid="order-card" button @click.prevent="viewOrder(order, order.primaryShipGroupSeqId, 'completed')">
             <ion-item lines="none">
