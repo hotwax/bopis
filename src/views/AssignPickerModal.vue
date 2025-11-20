@@ -27,7 +27,7 @@
             <ion-radio data-testid="assign-picker-radio" :value="picker.id">
               <ion-label>
                 {{ picker.name }}
-                <p>{{ picker.id }}</p>
+                <p>{{ picker.externalId ? picker.externalId : picker.id }}</p>
               </ion-label>
             </ion-radio>
           </ion-item>
