@@ -301,5 +301,18 @@
   "View shipping orders along with pickup orders.": "View shipping orders along with pickup orders.",
   "Yes": "Yes",
   "You do not have permission to access this page": "You do not have permission to access this page",
-  "Zipcode": "Zipcode"
+  "Zipcode": "Zipcode",
+  "Billing Details": "Billing Details",
+  "Proof of Delivery": "Proof of Delivery",
+  "Please enter the details of the person picking up the order.": "Please enter the details of the person picking up the order.",
+  "Name": "Name",
+  "ID Number": "ID Number",
+  "Relation to Customer": "Relation to Customer",
+  "Email": "Email",
+  "Failed to send handover email": "Failed to send handover email",
+  "Handover email sent successfully": "Handover email sent successfully",
+  "Self": "Self",
+  "Family Member": "Family Member",
+  "Friend": "Friend",
+  "Other Relation": "Other Relation"
 }
