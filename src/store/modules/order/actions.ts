@@ -174,7 +174,6 @@ const actions: ActionTree<OrderState , RootState> ={
         emitter.emit("dismissLoader");
       } else {
         commit(types.ORDER_OPEN_UPDATED, { orders: {}, total: 0 });
-        showToast(translate("Orders Not Found"));
       }
 
       emitter.emit("dismissLoader");
@@ -601,7 +600,6 @@ const actions: ActionTree<OrderState , RootState> ={
         if (params.viewIndex === 0) emitter.emit("dismissLoader");
       } else {
         commit(types.ORDER_PACKED_UPDATED, { orders: {}, total: 0 });
-        showToast(translate("Orders Not Found"));
       }
 
       emitter.emit("dismissLoader");
@@ -671,7 +669,6 @@ const actions: ActionTree<OrderState , RootState> ={
         if (params.viewIndex === 0) emitter.emit("dismissLoader");
       } else {
         commit(types.ORDER_COMPLETED_UPDATED, { orders: {}, total: 0 });
-        showToast(translate("Orders Not Found"));
       }
 
       emitter.emit("dismissLoader");
