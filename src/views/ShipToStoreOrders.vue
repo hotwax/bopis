@@ -37,7 +37,7 @@
             <ProductListItem v-for="item in order.items" :key="item.productId" :item="item" :isShipToStoreOrder=true />
 
             <div class="border-top">
-              <ion-button :disabled="!hasPermission(Actions.APP_ORDER_UPDATE)|| order.shipmentStatusId!='SHIPMENT_PACKED'" fill="clear" @click.stop="confirmScheduleOrderForPickup(order)">
+              <ion-button :disabled="!hasPermission(Actions.APP_ORDER_UPDATE)|| order.shipmentStatusId!='SHIPMENT_SHIPPED'" fill="clear" @click.stop="confirmScheduleOrderForPickup(order)">
                 {{ translate("Arrived") }}
               </ion-button>
             </div>
@@ -285,7 +285,7 @@ export default defineComponent({
     },
     async confirmScheduleOrderForPickup(order: any) {
       const header = translate('Ready for pickup')
-      const message = translate('Order will be marked as ready for pickup and an email notification will be sent to . This action is irreversible.', { customerName: `${order.firstName} ${order.lastName}` });
+      const message = translate('Order will be marked as ready for pickup and an email notification will be sent to . This action is irreversible.',{  customerName: order.customerName });
 
       const alert = await alertController
         .create({
@@ -305,32 +305,33 @@ export default defineComponent({
     },
     async scheduleOrderForPickup(shipmentId: string) {
       emitter.emit("presentLoader");
-      let resp;
-      try {
-        const payload = {
-          shipmentId: shipmentId
-        };
-        resp = await OrderService.shipOrder(payload);
-        if (!hasError(resp)) {
-          // Send pickup notification email
-          resp = await OrderService.sendPickupScheduledNotification({ shipmentId });
-          // Refresh the incoming orders list
-          this.getIncomingOrders();
 
-          if (!hasError(resp)) {
-            showToast(translate('Order marked as ready for pickup, an email notification has been sent to the customer'));
-          } else {
+      try{
+        const resp = await OrderService.arrivedShipToSTore(shipmentId);
+
+        if(!hasError(resp)){
+          try{
+            const emailResp = await OrderService.sendPickupScheduledNotification({shipmentId});
+
+            if(!hasError(emailResp)) {
+              showToast(translate('Order marked as ready for pickup, an email notification has been sent to the customer'));
+            }
+          } catch(error) {
+            logger.error('Error sending pickup scheduled notification:', error);
             showToast(translate('Order marked as ready for pickup but something went wrong while sending the email notification'));
+          } finally {
+            await this.getIncomingOrders(); // Refresh
           }
-        }   
+        } else {
+          showToast(translate("Failed to mark order as ready for pickup"));
+        }
+
       } catch (err) {
         logger.error('Schedule order for pickup error:', err);
         showToast(translate("Something went wrong"));
-      }finally{
+      } finally {
         emitter.emit("dismissLoader");
       }
-
-      return resp;
     },
     async confirmHandoverOrder(shipmentId: string) {
       const header = translate('Complete order')
@@ -352,41 +353,27 @@ export default defineComponent({
         });
       return alert.present();
     },
-  async handoverOrder(shipmentId: string) {
-    emitter.emit("presentLoader");
-  
-    try {
-      const resp = await OrderService.handoverShipToStoreOrder(shipmentId);
+    async handoverOrder(shipmentId: string) {
+      emitter.emit("presentLoader");
       
-      if (!hasError(resp)) {
-        this.getReadyForPickupOrders(); // Refresh
-        showToast(translate('Order handed over successfully'));
-      } else {
-        showToast(translate("Failed to handover order"));
-        logger.error("Handover failed", resp);
+      try{
+        const resp = await OrderService.handoverShipToStoreOrder(shipmentId);
+
+        if(!hasError(resp)) {
+          await this.getReadyForPickupOrders();
+          showToast(translate('Order handed over successfully'));
+        } else {
+          showToast(translate("Failed to handover order"));
+          logger.error("Handover failed", resp);
+        }
       }
+      catch (err) {
+        logger.error('Handover failed', err);
+        showToast(translate("Something went wrong"));
+      } 
+        emitter.emit("dismissLoader");
       
-    } catch (err) {
-      logger.error(err);
-      showToast(translate("Something went wrong"));
-    }
-    try {
-      const resp = await OrderService.handoverShipToStoreOrder(shipmentId);
-      
-      if (!hasError(resp)) {
-        this.getReadyForPickupOrders(); // Refresh
-        showToast(translate('Order handed over successfully'));
-      } else {
-        showToast(translate("Failed to handover order"));
-        logger.error("Handover failed", resp);
-      }
-      
-    } catch (err) {
-      logger.error(err);
-      showToast(translate("Something went wrong"));
-    }
-  emitter.emit("dismissLoader");
-},
+    },
 
     async sendReadyForPickupEmail(order: any) {
       const header = translate('Resend email')

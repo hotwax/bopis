@@ -874,13 +874,13 @@ const actions: ActionTree<OrderState , RootState> ={
       orderStatusId: 'ORDER_APPROVED',
       statusId: 'ITEM_APPROVED',
       shipmentMethodTypeId: 'SHIP_TO_STORE',
-      shipmentStatusId: 'SHIPMENT_INPUT,SHIPMENT_APPROVED,SHIPMENT_PACKED',
+      shipmentStatusId: 'SHIPMENT_INPUT,SHIPMENT_APPROVED,SHIPMENT_PACKED,SHIPMENT_SHIPPED',
       shipmentStatusId_op: 'in',
       pageSize: payload.viewSize || process.env.VUE_APP_VIEW_SIZE,
       pageIndex: payload.viewIndex || 0
     } as any
     if(payload.queryString?.trim()?.length){
-      params.keyword = payload.queryString;
+      params.keyword = payload.queryString.trim();
     }
     let incomingOrders = [] as any
     try {
@@ -934,18 +934,18 @@ const actions: ActionTree<OrderState , RootState> ={
     let resp: any
 
     const params = {
-      shipmentStatusId: "SHIPMENT_SHIPPED",
+      shipmentStatusId: "SHIPMENT_ARRIVED",
       shipmentMethodTypeId: "SHIP_TO_STORE",
       orderFacilityId: getCurrentFacilityId(),
-      statusId:"ITEM_COMPLETED",
-      orderStatusId:"ORDER_COMPLETED",
+      statusId:"ITEM_APPROVED",
+      orderStatusId:"ORDER_APPROVED",
       viewSize: payload.viewSize ? payload.viewSize : process.env.VUE_APP_VIEW_SIZE,
       viewIndex: payload.viewIndex ? payload.viewIndex : 0,
       distinct: "Y",
     } as any
 
-    if(payload.queryString?.length){
-      params.keyword = payload.queryString;
+    if(payload.queryString?.trim()?.length) {
+      params.keyword = payload.queryString.trim();
     }
 
     let readyForPickupOrders = []
@@ -956,7 +956,7 @@ const actions: ActionTree<OrderState , RootState> ={
         readyForPickupOrders = ordersResp.flatMap((order: any) => {
           const shipGroups = order.shipGroups||[];
 
-          return shipGroups.map((shipGroup: any) => {
+          return shipGroups.filter((shipGroup: any) => shipGroup.shipmentId != null).map((shipGroup: any) =>  {
             return {
               customerName:order.customerName,
               createdDate:order.orderDate,
@@ -1009,8 +1009,8 @@ const actions: ActionTree<OrderState , RootState> ={
       distinct: "Y",
     } as any
 
-    if(payload.queryString?.length){
-      params.keyword = payload.queryString;
+    if(payload.queryString?.trim()?.length) {
+      params.keyword = payload.queryString.trim();
     }
  
     let completedOrders = []
