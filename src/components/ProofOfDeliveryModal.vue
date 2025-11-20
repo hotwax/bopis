@@ -24,56 +24,57 @@
     <!-- Pickup Section -->
     <div class="pickup-section">
       <p class="pickup-info">
-        <strong>{{ translate("Please enter the details of the person picking up the order.") }}</strong>
+        {{ translate("Please enter the details of the person picking up the order:") }}
       </p>
 
       <!-- Add checkbox for same as billing -->
-      <ion-item class="form-item">
-        <ion-checkbox v-model="sameAsBilling" @ion-change="handleSameAsBilling">
-          {{ translate("Same as billing details") }}
-        </ion-checkbox>
+      <ion-item lines="none" class="checkbox-item">
+        <ion-checkbox slot="start" v-model="sameAsBilling" @ion-change="handleSameAsBilling" />
+        <ion-label>{{ translate("Same person as the billing customer") }}</ion-label>
       </ion-item>
 
       <div class="form-stack">
-        <ion-item class="form-item">
-          <ion-label position="stacked">{{ translate("Name") }}</ion-label>
-          <ion-input v-model="form.name" placeholder="Enter name" :disabled="isSubmitting || sameAsBilling" required />
+        <ion-item class="form-item" lines="inset">
+          <ion-label position="floating">{{ translate("Name") }}</ion-label>
+          <ion-input v-model="form.name" :disabled="isSubmitting || sameAsBilling" required />
         </ion-item>
 
         <ion-item class="form-item">
-          <ion-label position="stacked">{{ translate("ID Number") }}</ion-label>
-          <ion-input v-model="form.idNumber" placeholder="Enter ID number" :disabled="isSubmitting || sameAsBilling" required />
+          <ion-label position="floating">{{ translate("ID Number") }}</ion-label>
+          <ion-input v-model="form.idNumber" :disabled="isSubmitting || sameAsBilling" required />
         </ion-item>
 
-        <ion-item class="form-item">
-          <ion-label position="stacked">{{ translate("Relation to Customer") }}</ion-label>
-          <ion-select v-model="form.relationToCustomer" placeholder="Select relation" :disabled="isSubmitting" interface="action-sheet" @ionChange="$event.target.closeCircle()" >
-            <ion-select-option value="Self">{{ translate("Self") }}</ion-select-option>
-            <ion-select-option value="Family Member">{{ translate("Family Member") }}</ion-select-option>
-            <ion-select-option value="Friend">{{ translate("Friend") }}</ion-select-option>
-            <ion-select-option value="Other Relation">{{ translate("Other Relation") }}</ion-select-option>
-          </ion-select>
+        <ion-item class="form-item" lines="full">
+          <div slot="start">
+            <ion-label>{{ translate("Relation to customer") }}</ion-label>
+          </div>
+          <div slot="end">
+            <ion-select v-model="form.relationToCustomer" placeholder="Select" :disabled="isSubmitting" interface="popover">
+              <ion-select-option value="Family">{{ translate("Family") }}</ion-select-option>
+              <ion-select-option value="Friend">{{ translate("Friend") }}</ion-select-option>
+            </ion-select>
+          </div>
+
         </ion-item>
 
-        <ion-item class="form-item">
-          <ion-label position="stacked">{{ translate("Email") }}</ion-label>
-          <ion-input v-model="form.email" type="email" placeholder="Enter email" :disabled="isSubmitting" />
+
+        <ion-item class="form-item" lines="inset">
+          <ion-label position="floating">{{ translate("Email") }}</ion-label>
+          <ion-input v-model="form.email" type="email" :disabled="isSubmitting" />
         </ion-item>
       </div>
     </div>
   </ion-content>
 
-  <!-- Floating Save Button -->
-  <ion-fab vertical="bottom" horizontal="end" slot="fixed">
-    <ion-fab-button
-      data-testid="proof-of-delivery-save-button"
-      @click="submitForm"
-      :disabled="isSubmitting"
-    >
-      <ion-spinner v-if="isSubmitting" name="crescent" />
-      <ion-icon v-else :icon="saveOutline" />
-    </ion-fab-button>
-  </ion-fab>
+  <!-- Fixed Save Button at Bottom -->
+  <ion-footer>
+    <ion-toolbar>
+      <ion-button expand="block" @click="submitForm" :disabled="isSubmitting || !isFormValid" class="save-button">
+        <ion-spinner v-if="isSubmitting" name="crescent" slot="start" />
+        <span v-else>{{ translate("HANDOVER") }}</span>
+      </ion-button>
+    </ion-toolbar>
+  </ion-footer>
 </template>
 
 
@@ -89,14 +90,14 @@ import {
   IonItem,
   IonLabel,
   IonInput,
-  IonFab,
-  IonFabButton,
+  IonFooter,
   modalController,
   IonSelect,
   IonSelectOption,
-  IonCheckbox
+  IonCheckbox,
+  IonSpinner
 } from "@ionic/vue";
-import { defineComponent, ref, onMounted } from "vue";
+import { defineComponent, ref, onMounted, computed } from "vue";
 import { closeOutline, saveOutline } from "ionicons/icons";
 import { useStore } from "vuex";
 import { showToast } from "@/utils";
@@ -118,11 +119,11 @@ export default defineComponent({
     IonItem,
     IonLabel,
     IonInput,
-    IonFab,
-    IonFabButton,
+    IonFooter,
     IonSelect,
     IonSelectOption,
-    IonCheckbox
+    IonCheckbox,
+    IonSpinner
   },
   props: {
     order: { type: Object, required: true },
@@ -141,6 +142,13 @@ export default defineComponent({
     });
 
     const billingDetails = ref({});
+
+    // Computed property for form validation
+    const isFormValid = computed(() => {
+      return form.value.name.trim() !== "" && 
+             form.value.idNumber.trim() !== "" && 
+             form.value.relationToCustomer !== "";
+    });
 
     // Fetch billing details on modal open
     const getBillingDetails = async () => {
@@ -266,7 +274,8 @@ export default defineComponent({
       billingDetails,
       isSubmitting,
       sameAsBilling,
-      handleSameAsBilling
+      handleSameAsBilling,
+      isFormValid
     };
   }
 });
@@ -274,72 +283,124 @@ export default defineComponent({
 
 <style scoped>
 ion-content {
-  --background: #ffffff;
+  --background: #fafafa;
 }
 
 /* Section spacing */
 .billing-section {
-  margin-bottom: 1.5rem;
+  margin-bottom: 2rem;
+  background: white;
+  padding: 1rem;
+  border-radius: 8px;
 }
 
 .section-title {
   font-weight: 600;
-  font-size: 1rem;
-  margin-bottom: 0.5rem;
+  font-size: 0.875rem;
+  margin-bottom: 0.75rem;
+  color: #666;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
 .billing-line {
   margin: 0;
   font-size: 14px;
-  line-height: 20px;
+  line-height: 22px;
+  color: #333;
 }
 
 /* Pickup section styling */
 .pickup-section {
-  margin-top: 1.5rem;
+  margin-top: 1rem;
+  background: white;
+  padding: 1rem;
+  border-radius: 8px;
 }
 
 .pickup-info {
   font-size: 14px;
   margin-bottom: 1rem;
-  color: #222;
+  color: #333;
+  font-weight: 400;
+}
+
+/* Checkbox styling */
+.checkbox-item {
+  --padding-start: 0;
+  --inner-padding-end: 0;
+  margin-bottom: 1.5rem;
+}
+
+.checkbox-item ion-label {
+  margin-left: 0.75rem;
+  font-size: 14px;
+  color: #333;
 }
 
 /* Form layout */
 .form-stack {
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
+  gap: 1rem;
 }
 
 .form-item {
-  --min-height: 48px;
-  width: 100%;
+  --padding-start: 0;
+  --inner-padding-end: 0;
+  --min-height: 56px;
+  --background: transparent;
 }
 
 /* General form input appearance */
 ion-label {
-  font-size: 14px;
-  color: #444;
-  font-weight: 500;
+  font-size: 12px;
+  color: #666;
+  font-weight: 400;
+  margin-bottom: 4px;
 }
 
 ion-input {
   font-size: 14px;
+  color: #333;
 }
 
 ion-select {
+  font-size: 14px;
+  color: #333;
   width: 100%;
   max-width: 100%;
 }
 
-ion-fab-button {
-  --background: #3b82f6;
-  --box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+/* Footer and button styling */
+ion-footer {
+  box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
 }
 
-/* Add styles for checkbox */
-ion-checkbox {
-  margin: 1rem 0;
+ion-footer ion-toolbar {
+  --padding-top: 12px;
+  --padding-bottom: 12px;
+  --padding-start: 16px;
+  --padding-end: 16px;
 }
+
+.save-button {
+  --background: #2563eb;
+  --background-hover: #1d4ed8;
+  --background-activated: #1e40af;
+  --border-radius: 8px;
+  --box-shadow: none;
+  height: 48px;
+  font-weight: 600;
+  font-size: 14px;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  margin: 0;
+}
+
+.save-button[disabled] {
+  --background: #e5e7eb;
+  --color: #9ca3af;
+}
+
 </style>

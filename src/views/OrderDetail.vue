@@ -1304,6 +1304,7 @@ export default defineComponent({
       } else {
         this.deliverShipment(order);
       }
+    },
     canRequestTransfer(order: any): boolean {
       return (
         order?.shipGroup?.shipmentMethodTypeId === 'STOREPICKUP' &&
