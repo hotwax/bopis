@@ -91,7 +91,7 @@
             <ProductListItem v-for="item in order.items" :key="item.productId" :item="item" :orderId="order.orderId" :customerId="order.customerId" :currencyUom="order.currencyUom" orderType="packed"/>
             <div class="border-top">
 
-              <ion-button data-testid="handover-button" :disabled="!hasPermission(Actions.APP_ORDER_UPDATE)" fill="clear" @click.stop="deliverShipment(order)">
+              <ion-button data-testid="handover-button" :disabled="!hasPermission(Actions.APP_ORDER_UPDATE)" fill="clear" @click.stop="handleHandover(order)">
                 {{ order.shipmentMethodTypeId === 'STOREPICKUP' ? translate("Handover") : translate("Ship") }}
               </ion-button>
               <ion-button size="default" data-testid="packing-slip-button" v-if="getBopisProductStoreSettings('PRINT_PACKING_SLIPS')" fill="clear" slot="end" @click.stop="printPackingSlip(order)">
@@ -187,6 +187,7 @@ import { UserService } from "@/services/UserService";
 import { Actions, hasPermission } from '@/authorization'
 import logger from "@/logger";
 import RejectOrderItemModal from "@/components/RejectOrderItemModal.vue";
+import ProofOfDeliveryModal from '@/components/ProofOfDeliveryModal.vue'
 
 export default defineComponent({
   name: 'Orders',
@@ -586,6 +587,25 @@ export default defineComponent({
         }
       })
       return rejectOrderModal.present()
+    },
+
+    async openProofOfDeliveryModal(order:any) {
+      const modal = await modalController.create({
+        component: ProofOfDeliveryModal,
+        componentProps: {
+          order,
+          deliverShipmentFn: this.deliverShipment 
+        },
+      });
+
+      await modal.present();
+    },
+    handleHandover(order:any) {
+      if (this.getBopisProductStoreSettings('HANDOVER_PROOF')) {
+        this.openProofOfDeliveryModal(order);
+      } else {
+        this.deliverShipment(order);
+      }
     }
   },
   ionViewWillEnter () {
@@ -657,6 +677,12 @@ ion-item {
   flex-direction: column;
   align-items: flex-end;
   row-gap: 4px;
+}
+
+.handover-modal {
+  --height: 80%;
+  --width: 90%;
+  --border-radius: 12px;
 }
 
 @media (min-width: 991px){
