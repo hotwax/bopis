@@ -315,6 +315,13 @@ const activateGiftCard = async (payload: any): Promise<any> => {
     data: payload
   });
 }
+const fetchPartiesInformation = async (payload: any): Promise<any> => {
+  return api({
+    url: "oms/parties",
+    method: "get",
+    params: payload
+  });
+}
 
 export const UtilService = {
   activateGiftCard,
@@ -325,6 +332,7 @@ export const UtilService = {
   fetchFacilityTypeInformation,
   fetchGiftCardFulfillmentInfo,
   fetchJobInformation,
+  fetchPartiesInformation,
   fetchPartyInformation,
   fetchPaymentMethodTypeDesc,
   fetchRejectReasons,

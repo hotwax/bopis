@@ -397,7 +397,54 @@ const actions: ActionTree<UtilState, RootState> = {
 
   async clearStoresInformation({ commit }) {
     commit(types.UTIL_STORES_INFORMATION_UPDATED, [])
-  }
+  },
+  
+  async fetchPartiesInformation({ commit, state }, partyIds) {
+    let partyInformation = JSON.parse(JSON.stringify(state.partyNames))
+    const cachedPartyIds = Object.keys(partyInformation);
+    const ids = partyIds.filter((partyId: string) => !cachedPartyIds.includes(partyId))
+
+    if(!ids.length) return partyInformation;
+    
+    try {
+      const payload = {
+        partyId: ids,
+        partyId_op: "in",
+        fieldsToSelect: ["firstName", "middleName", "lastName", "groupName", "partyId"],
+        pageSize: ids.length
+      }
+
+      const resp = await UtilService.fetchPartiesInformation(payload);
+      if (!hasError(resp)) {
+        const partyResp = {} as any
+        resp.data.map((partyInformation: any) => {
+
+          let partyName = ''
+          if(partyInformation.groupName) {
+            partyName = partyInformation.groupName
+          } else {
+            partyName = [partyInformation.firstName, partyInformation.lastName].filter(Boolean).join(' ');
+          }
+
+          partyResp[partyInformation.partyId] = partyName
+        })
+
+        partyInformation = {
+          ...partyInformation,
+          ...partyResp
+        }
+
+        commit(types.UTIL_PARTY_NAMES_UPDATED, partyInformation)
+      } else {
+        throw resp.data
+      }
+    } catch(err) {
+      logger.error('Error fetching party information', err)
+    }
+
+    return partyInformation;
+  },
+
 }
 
 export default actions;

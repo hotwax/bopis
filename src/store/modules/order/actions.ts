@@ -508,8 +508,10 @@ const actions: ActionTree<OrderState , RootState> ={
       if (!order.shipGroup) {
         currentOrder.orderId = null;
       }
+      const partyIds = [...new Set(data.shipGroups.map((shipgroup:any) => shipgroup.carrierPartyId))];
 
 
+      await this.dispatch('util/fetchPartiesInformation',partyIds);
       await dispatch('updateCurrent', { order: { ...currentOrder, orderType } });
 
     } else {
