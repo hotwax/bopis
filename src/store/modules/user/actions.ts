@@ -35,7 +35,10 @@ const actions: ActionTree<UserState, RootState> = {
  */
   async login ({ commit, dispatch, getters }, payload) {
     try {
-      const {token, oms, omsRedirectionUrl} = payload;
+      // const {token, oms, omsRedirectionUrl} = payload;
+      const {token} = payload;
+      const omsRedirectionUrl = "adoc-gt-uat"
+      const oms = "adoc-gt-maarg-uat"
       dispatch("setUserInstanceUrl", oms);
 
       // Getting the permissions list from server

@@ -679,12 +679,6 @@ ion-item {
   row-gap: 4px;
 }
 
-.handover-modal {
-  --height: 80%;
-  --width: 90%;
-  --border-radius: 12px;
-}
-
 @media (min-width: 991px){
   ion-header > div {
     display: flex;

@@ -313,5 +313,8 @@
   "Self": "Yo mismo",
   "Family Member": "Miembro de la Familia",
   "Friend": "Amigo",
-  "Other Relation": "Otra Relación"
+  "Other Relation": "Otra Relación",
+  "Please enter the details of the person picking up the order:": "Por favor, introduzca los datos de la persona que recogerá el pedido:",
+  "Same person as the billing customer": "La misma persona que el cliente de facturación",
+  "Familiy": "Familia"
 }
