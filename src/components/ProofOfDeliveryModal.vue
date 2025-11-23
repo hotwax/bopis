@@ -14,56 +14,64 @@
     <!-- Billing Details -->
     <div class="billing-section">
       <h2 class="section-title">{{ translate("Billing Details") }}</h2>
-      <p class="billing-line">{{ billingDetails?.toName }}</p>
-      <p class="billing-line">{{ billingDetails?.address1 }}</p>
-      <p class="billing-line">
-        {{ billingDetails?.city }} {{ billingDetails?.state }} {{ billingDetails?.country }}
-      </p>
+      <p>{{ billingDetails?.toName }}</p>
+      <p>{{ billingDetails?.address1 }}</p>
+      <p>{{ billingDetails?.city }} {{ billingDetails?.state }} {{ billingDetails?.country }}</p>
     </div>
 
     <!-- Pickup Section -->
-    <div class="pickup-section">
-      <p class="pickup-info">
-        {{ translate("Please enter the details of the person picking up the order:") }}
-      </p>
+    <div>
+      <p>{{ translate("Please enter the details of the person picking up the order:") }}</p>
 
       <!-- Add checkbox for same as billing -->
-      <ion-item lines="none" class="checkbox-item">
+      <ion-item lines="none">
         <ion-checkbox slot="start" v-model="sameAsBilling" @ion-change="handleSameAsBilling" />
         <ion-label>{{ translate("Same person as the billing customer") }}</ion-label>
       </ion-item>
 
-      <div class="form-stack">
-        <ion-item class="form-item" lines="inset">
-          <ion-label position="floating">{{ translate("Name") }}</ion-label>
-          <ion-input v-model="form.name" :disabled="isSubmitting || sameAsBilling" required />
-        </ion-item>
+      <ion-input 
+        v-model="form.name" 
+        :label="translate('Name')" 
+        label-placement="floating"
+        :disabled="isSubmitting || sameAsBilling" 
+        required 
+      />
 
-        <ion-item class="form-item">
-          <ion-label position="floating">{{ translate("ID Number") }}</ion-label>
-          <ion-input v-model="form.idNumber" :disabled="isSubmitting || sameAsBilling" required />
-        </ion-item>
+      <ion-input 
+        v-model="form.idNumber" 
+        :label="translate('ID Number')" 
+        label-placement="floating"
+        :disabled="isSubmitting || sameAsBilling" 
+        required 
+      />
 
-         <ion-item class="form-item" lines="full">
-          <ion-select v-model="form.relationToCustomer" :label="translate('Relation to customer')" labelPlacement="floating" placeholder="Select" :disabled="isSubmitting" interface="popover">
-            <ion-select-option value="Self">{{ translate("Self") }}</ion-select-option>
-            <ion-select-option value="Family">{{ translate("Family") }}</ion-select-option>
-            <ion-select-option value="Friend">{{ translate("Friend") }}</ion-select-option>
-          </ion-select>
-        </ion-item>
+      <ion-select 
+        v-model="form.relationToCustomer" 
+        :label="translate('Relation to customer')" 
+        label-placement="floating" 
+        placeholder="Select" 
+        :disabled="isSubmitting" 
+        interface="popover"
+      >
+        <ion-select-option value="Self">{{ translate("Self") }}</ion-select-option>
+        <ion-select-option value="Family">{{ translate("Family") }}</ion-select-option>
+        <ion-select-option value="Friend">{{ translate("Friend") }}</ion-select-option>
+      </ion-select>
 
-        <ion-item class="form-item" lines="inset">
-          <ion-label position="floating">{{ translate("Email") }}</ion-label>
-          <ion-input v-model="form.email" type="email" :disabled="isSubmitting" />
-        </ion-item>
-      </div>
+      <ion-input 
+        v-model="form.email" 
+        :label="translate('Email')" 
+        label-placement="floating"
+        type="email" 
+        :disabled="isSubmitting" 
+      />
     </div>
   </ion-content>
 
   <!-- Fixed Save Button at Bottom -->
   <ion-footer>
     <ion-toolbar>
-      <ion-button expand="block" @click="submitForm" :disabled="isSubmitting || !isFormValid" class="save-button">
+      <ion-button expand="block" @click="submitForm" :disabled="isSubmitting || !isFormValid">
         <ion-spinner v-if="isSubmitting" name="crescent" slot="start" />
         <span>{{ translate("HANDOVER") }}</span>
       </ion-button>
@@ -121,7 +129,8 @@ const isFormValid = computed(() => {
 
 const getBillingDetails = async () => {
   try {
-     if (!props.order?.orderId) return;
+    if (!props.order?.orderId) return;
+    
     const resp = await OrderService.getBillingDetails({ orderId: props.order.orderId });
     billingDetails.value = resp?.data?.billToAddress || {};
 
@@ -150,7 +159,7 @@ const getPrefilledValue = async () => {
     const resp = await OrderService.fetchOrderAttributes(props.order.orderId);
     const data = resp?.data ?? resp;
     const list = Array.isArray(data) ? data : (data?.docs || data?.attributes || []);
-    const customerAttr = list.find((a) => a.attrName === "customerId");
+    const customerAttr = list.find((a) => a?.attrName === "customerId");
     const prefilledId = customerAttr?.attrValue || "";
     if (prefilledId) {
       form.value.idNumber = prefilledId;
@@ -208,120 +217,12 @@ onMounted(async () => {
 </script>
 
 <style scoped>
-/* Section spacing */
 .billing-section {
-  margin-bottom: 2rem;
-  background: white;
-  padding: 1rem;
-  border-radius: 8px;
+  margin-bottom: var(--spacer-base);
 }
 
 .section-title {
   font-weight: 600;
-  font-size: 0.875rem;
-  margin-bottom: 0.75rem;
-  color: #666;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-
-.billing-line {
-  margin: 0;
-  font-size: 14px;
-  line-height: 22px;
-  color: #333;
-}
-
-/* Pickup section styling */
-.pickup-section {
-  margin-top: 1rem;
-  background: white;
-  padding: 1rem;
-  border-radius: 8px;
-}
-
-.pickup-info {
-  font-size: 14px;
-  margin-bottom: 1rem;
-  color: #333;
-  font-weight: 400;
-}
-
-/* Checkbox styling */
-.checkbox-item {
-  --padding-start: 0;
-  --inner-padding-end: 0;
-  margin-bottom: 1.5rem;
-}
-
-.checkbox-item ion-label {
-  margin-left: 0.75rem;
-  font-size: 14px;
-  color: #333;
-}
-
-/* Form layout */
-.form-stack {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-}
-
-.form-item {
-  --padding-start: 0;
-  --inner-padding-end: 0;
-  --min-height: 56px;
-  --background: transparent;
-}
-
-/* General form input appearance */
-ion-label {
-  font-size: 12px;
-  color: #666;
-  font-weight: 400;
-  margin-bottom: 4px;
-}
-
-ion-input {
-  font-size: 14px;
-  color: #333;
-}
-
-ion-select {
-  font-size: 14px;
-  color: #333;
-  width: 100%;
-  max-width: 100%;
-}
-
-/* Footer and button styling */
-ion-footer {
-  box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
-}
-
-ion-footer ion-toolbar {
-  --padding-top: 12px;
-  --padding-bottom: 12px;
-  --padding-start: 16px;
-  --padding-end: 16px;
-}
-
-.save-button {
-  --background: #2563eb;
-  --background-hover: #1d4ed8;
-  --background-activated: #1e40af;
-  --border-radius: 8px;
-  --box-shadow: none;
-  height: 48px;
-  font-weight: 600;
-  font-size: 14px;
-  letter-spacing: 0.5px;
-  text-transform: uppercase;
-  margin: 0;
-}
-
-.save-button[disabled] {
-  --background: #e5e7eb;
-  --color: #9ca3af;
+  margin-bottom: var(--spacer-xs);
 }
 </style>
