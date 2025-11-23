@@ -575,18 +575,44 @@ export default defineComponent({
       return rejectOrderModal.present()
     },
 
-    async openProofOfDeliveryModal(order:any) {
+    async openProofOfDeliveryModal(order: any) {
       const modal = await modalController.create({
         component: ProofOfDeliveryModal,
         componentProps: {
-          order,
-          deliverShipmentFn: this.deliverShipment 
+          order
         },
       });
 
       await modal.present();
+      
+      const { data } = await modal.onDidDismiss();
+      
+      if (data?.confirmed && data?.proofOfDeliveryData) {
+        emitter.emit("presentLoader");
+        
+        try {
+          // First deliver the shipment
+          await this.deliverShipment(order);
+          
+          // Then send the proof of delivery email
+          const resp = await OrderService.sendPickupNotification(data.proofOfDeliveryData);
+          
+          if (hasError(resp)) {
+            logger.error("Pickup notification failed:", resp);
+            showToast(translate("Order delivered but failed to send handover email"));
+          } else {
+            showToast(translate("Order delivered and handover email sent successfully"));
+          }
+        } catch (err) {
+          logger.error("Error in handover process:", err);
+          showToast(translate("Something went wrong during handover"));
+        } finally {
+          emitter.emit("dismissLoader");
+        }
+      }
     },
-    handleHandover(order:any) {
+
+    handleHandover(order: any) {
       if (this.getBopisProductStoreSettings('HANDOVER_PROOF')) {
         this.openProofOfDeliveryModal(order);
       } else {
@@ -663,17 +689,5 @@ ion-item {
   flex-direction: column;
   align-items: flex-end;
   row-gap: 4px;
-}
-
-.handover-modal {
-  --height: 80%;
-  --width: 90%;
-  --border-radius: 12px;
-}
-
-@media (min-width: 991px){
-  ion-header > div {
-    display: flex;
-  }
 }
 </style>

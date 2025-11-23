@@ -10,7 +10,7 @@
     </ion-toolbar>
   </ion-header>
 
-  <ion-content ref="contentRef" :scroll-events="true" class="ion-padding">
+  <ion-content class="ion-padding">
     <!-- Billing Details -->
     <div class="billing-section">
       <h2 class="section-title">{{ translate("Billing Details") }}</h2>
@@ -44,19 +44,13 @@
           <ion-input v-model="form.idNumber" :disabled="isSubmitting || sameAsBilling" required />
         </ion-item>
 
-        <ion-item class="form-item" lines="full">
-          <div slot="start">
-            <ion-label>{{ translate("Relation to customer") }}</ion-label>
-          </div>
-          <div slot="end">
-            <ion-select v-model="form.relationToCustomer" placeholder="Select" :disabled="isSubmitting" interface="popover">
-              <ion-select-option value="Family">{{ translate("Family") }}</ion-select-option>
-              <ion-select-option value="Friend">{{ translate("Friend") }}</ion-select-option>
-            </ion-select>
-          </div>
-
+         <ion-item class="form-item" lines="full">
+          <ion-select v-model="form.relationToCustomer" :label="translate('Relation to customer')" labelPlacement="floating" placeholder="Select" :disabled="isSubmitting" interface="popover">
+            <ion-select-option value="Self">{{ translate("Self") }}</ion-select-option>
+            <ion-select-option value="Family">{{ translate("Family") }}</ion-select-option>
+            <ion-select-option value="Friend">{{ translate("Friend") }}</ion-select-option>
+          </ion-select>
         </ion-item>
-
 
         <ion-item class="form-item" lines="inset">
           <ion-label position="floating">{{ translate("Email") }}</ion-label>
@@ -71,14 +65,15 @@
     <ion-toolbar>
       <ion-button expand="block" @click="submitForm" :disabled="isSubmitting || !isFormValid" class="save-button">
         <ion-spinner v-if="isSubmitting" name="crescent" slot="start" />
-        <span v-else>{{ translate("HANDOVER") }}</span>
+        <span>{{ translate("HANDOVER") }}</span>
       </ion-button>
     </ion-toolbar>
   </ion-footer>
 </template>
 
-
-<script>
+<script setup>
+import { ref, onMounted, computed, defineProps } from "vue";
+import { modalController } from "@ionic/vue";
 import {
   IonButtons,
   IonButton,
@@ -91,201 +86,128 @@ import {
   IonLabel,
   IonInput,
   IonFooter,
-  modalController,
   IonSelect,
   IonSelectOption,
   IonCheckbox,
   IonSpinner
 } from "@ionic/vue";
-import { defineComponent, ref, onMounted, computed } from "vue";
-import { closeOutline, saveOutline } from "ionicons/icons";
-import { useStore } from "vuex";
+import { closeOutline } from "ionicons/icons";
+import logger from "@/logger";
 import { showToast } from "@/utils";
-import { hasError } from "@/adapter";
 import { translate } from "@hotwax/dxp-components";
 import { OrderService } from "@/services/OrderService";
 
+const props = defineProps({
+  order: { type: Object, required: true }
+});
 
-export default defineComponent({
-  name: "ProofOfDeliveryModal",
-  components: {
-    IonButtons,
-    IonButton,
-    IonContent,
-    IonHeader,
-    IonToolbar,
-    IonIcon,
-    IonTitle,
-    IonItem,
-    IonLabel,
-    IonInput,
-    IonFooter,
-    IonSelect,
-    IonSelectOption,
-    IonCheckbox,
-    IonSpinner
-  },
-  props: {
-    order: { type: Object, required: true },
-    deliverShipmentFn: { type: Function, required: true }
-  },
-  setup(props) {
-    const store = useStore();
-    const isSubmitting = ref(false);
-    const sameAsBilling = ref(false);
-    
-    const form = ref({
-      name: "",
-      idNumber: "",
-      relationToCustomer: "Self",
-      email: ""
-    });
+const isSubmitting = ref(false);
+const sameAsBilling = ref(false);
 
-    const billingDetails = ref({});
+const form = ref({
+  name: "",
+  idNumber: "",
+  relationToCustomer: "Self",
+  email: ""
+});
 
-    // Computed property for form validation
-    const isFormValid = computed(() => {
-      return form.value.name.trim() !== "" && 
-             form.value.idNumber.trim() !== "" && 
-             form.value.relationToCustomer !== "";
-    });
+const billingDetails = ref({});
 
-    // Fetch billing details on modal open
-    const getBillingDetails = async () => {
-      try {
-        const resp = await OrderService.getBillingDetails({ orderId: props.order.orderId });
-        billingDetails.value = resp?.data?.billToAddress || {};
+const isFormValid = computed(() => {
+  return form.value.name.trim() !== "" &&
+    form.value.idNumber.trim() !== "" &&
+    form.value.relationToCustomer !== "";
+});
 
-        // Prefill form fields from billing details by default
-        form.value.name = billingDetails.value?.toName || billingDetails.value?.contactName || "";
-        form.value.email = billingDetails.value?.email || billingDetails.value?.toEmail || "";
-        form.value.relationToCustomer = "Self"; // Set default relation
-      } catch (err) {
-        console.error("Error fetching billing details:", err);
-      }
-    };
+const getBillingDetails = async () => {
+  try {
+     if (!props.order?.orderId) return;
+    const resp = await OrderService.getBillingDetails({ orderId: props.order.orderId });
+    billingDetails.value = resp?.data?.billToAddress || {};
 
-    // Handle Same as Billing checkbox
-    const handleSameAsBilling = () => {
-      if (sameAsBilling.value) {
-        // When checked, restore billing details and prefilled ID
-        form.value.name = billingDetails.value?.toName || billingDetails.value?.contactName || "";
-        form.value.email = billingDetails.value?.email || billingDetails.value?.toEmail || "";
-        form.value.relationToCustomer = "Self";
-      } else {
-        // When unchecked, clear only name and email
-        form.value.name = "";
-        form.value.email = "";
-      }
-    };
-
-    // Fetch order attributes to get prefield id for customerId and prefill idNumber
-    const getPrefilledValue = async () => {
-      try {
-        if (!props.order?.orderId) return;
-        const resp = await OrderService.fetchOrderAttributes(props.order.orderId);
-        const data = resp?.data ?? resp;
-        const list = Array.isArray(data) ? data : (data?.docs || data?.attributes || []);
-        const customerAttr = list.find((a) => a?.attrName === "customerId");
-        const prefilledId = customerAttr?.attrValue || "";
-        if (prefilledId) {
-          form.value.idNumber = prefilledId;
-        }
-      } catch (err) {
-        console.error("Failed fetching order attributes:", err);
-      }
-    };
-
-    const closeModal = async () => {
-      try {
-        await modalController.dismiss({ dismissed: true });
-      } catch (e) {
-        // ignore if modal already dismissed
-      }
-    };
-
-    const submitForm = async () => {
-      if (isSubmitting.value) return;
-      isSubmitting.value = true;
-
-      try {
-        // Call deliverShipmentFn (may open confirmation)
-        let deliveryResp;
-        try {
-          deliveryResp = await props.deliverShipmentFn(props.order);
-        } catch (err) {
-          console.error("Deliver shipment function failed:", err);
-          showToast(translate("Delivery failed"));
-          return;
-        }
-
-        // Build orderItems array from order.items
-        const orderItemsList = (props.order?.items || []).map(item => ({
-          orderId: item.orderId,
-          orderItemSeqId: item.orderItemSeqId,
-          shipGroupSeqId: item.shipGroupSeqId
-        }));
-
-        // Construct the payload as per backend definition
-        const payload = {
-          orderId: props.order?.orderId,
-          orderItems: orderItemsList,
-          shipmentId: props.order?.shipmentId,
-          emailType: "HANDOVER_POD_BOPIS",
-          additionalFields: {
-            name: form.value.name,
-            idNumber: form.value.idNumber,
-            relationToCustomer: form.value.relationToCustomer,
-            email: form.value.email
-          }
-        };
-
-        const resp = await OrderService.sendPickupNotification(payload);
-
-        if (hasError(resp)) {
-          console.error("Pickup notification failed:", resp);
-          showToast(translate("Failed to send handover email"));
-        } else {
-          showToast(translate("Handover email sent successfully"));
-        }
-
-        // Close modal after processing
-        await closeModal();
-      } catch (err) {
-        console.error("Error in submitForm:", err);
-        showToast(translate("Something went wrong"));
-      } finally {
-        isSubmitting.value = false;
-      }
-    };
-
-    onMounted(async () => {
-      await getBillingDetails();
-      await getPrefilledValue();
-    });
-
-    return {
-      closeOutline,
-      saveOutline,
-      translate,
-      form,
-      closeModal,
-      submitForm,
-      billingDetails,
-      isSubmitting,
-      sameAsBilling,
-      handleSameAsBilling,
-      isFormValid
-    };
+    form.value.name = billingDetails.value?.toName || billingDetails.value?.contactName || "";
+    form.value.email = billingDetails.value?.email || billingDetails.value?.toEmail || "";
+    form.value.relationToCustomer = "Self";
+  } catch (err) {
+    logger.error("Error fetching billing details:", err);
   }
+};
+
+const handleSameAsBilling = () => {
+  if (sameAsBilling.value) {
+    form.value.name = billingDetails.value?.toName || billingDetails.value?.contactName || "";
+    form.value.email = billingDetails.value?.email || billingDetails.value?.toEmail || "";
+    form.value.relationToCustomer = "Self";
+  } else {
+    form.value.name = "";
+    form.value.email = "";
+  }
+};
+
+const getPrefilledValue = async () => {
+  try {
+    if (!props.order?.orderId) return;
+    const resp = await OrderService.fetchOrderAttributes(props.order.orderId);
+    const data = resp?.data ?? resp;
+    const list = Array.isArray(data) ? data : (data?.docs || data?.attributes || []);
+    const customerAttr = list.find((a) => a.attrName === "customerId");
+    const prefilledId = customerAttr?.attrValue || "";
+    if (prefilledId) {
+      form.value.idNumber = prefilledId;
+    }
+  } catch (err) {
+    logger.error("Failed fetching order attributes:", err);
+  }
+};
+
+const closeModal = async () => {
+  await modalController.dismiss({ dismissed: true });
+};
+
+const submitForm = async () => {
+  if (isSubmitting.value) return;
+  isSubmitting.value = true;
+
+  try {
+    const orderItemsList = (props.order?.items || props.order?.shipGroup?.items || []).map(item => ({
+      orderId: item.orderId,
+      orderItemSeqId: item.orderItemSeqId,
+      shipGroupSeqId: item.shipGroupSeqId
+    }));
+
+    const proofOfDeliveryData = {
+      orderId: props.order?.orderId,
+      orderItems: orderItemsList,
+      shipmentId: props.order?.shipmentId || props.order?.shipGroup?.shipmentId,
+      emailType: "HANDOVER_POD_BOPIS",
+      additionalFields: {
+        name: form.value.name,
+        idNumber: form.value.idNumber,
+        relationToCustomer: form.value.relationToCustomer,
+        email: form.value.email
+      }
+    };
+
+    // Return the proof of delivery data to parent component
+    await modalController.dismiss({ 
+      proofOfDeliveryData,
+      confirmed: true 
+    });
+  } catch (err) {
+    logger.error("Error in submitForm:", err);
+    showToast(translate("Something went wrong"));
+  } finally {
+    isSubmitting.value = false;
+  }
+};
+
+onMounted(async () => {
+  await getBillingDetails();
+  await getPrefilledValue();
 });
 </script>
 
 <style scoped>
-ion-content {
-  --background: #fafafa;
-}
-
 /* Section spacing */
 .billing-section {
   margin-bottom: 2rem;
@@ -402,5 +324,4 @@ ion-footer ion-toolbar {
   --background: #e5e7eb;
   --color: #9ca3af;
 }
-
 </style>
