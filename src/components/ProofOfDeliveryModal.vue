@@ -25,46 +25,20 @@
 
       <!-- Add checkbox for same as billing -->
       <ion-item lines="none">
-        <ion-checkbox slot="start" v-model="sameAsBilling" @ion-change="handleSameAsBilling" />
-        <ion-label>{{ translate("Same person as the billing customer") }}</ion-label>
+        <ion-checkbox slot="start" label-placement="floating" :label="translate('Same person as the billing customer')" v-model="sameAsBilling" @ion-change="handleSameAsBilling" />
       </ion-item>
 
-      <ion-input 
-        v-model="form.name" 
-        :label="translate('Name')" 
-        label-placement="floating"
-        :disabled="isSubmitting || sameAsBilling" 
-        required 
-      />
+      <ion-input v-model="form.name" :label="translate('Name')" label-placement="floating" :disabled="isSubmitting || sameAsBilling" required/>
 
-      <ion-input 
-        v-model="form.idNumber" 
-        :label="translate('ID Number')" 
-        label-placement="floating"
-        :disabled="isSubmitting || sameAsBilling" 
-        required 
-      />
+      <ion-input v-model="form.idNumber" :label="translate('ID Number')" label-placement="floating" :disabled="isSubmitting || sameAsBilling" required/>
 
-      <ion-select 
-        v-model="form.relationToCustomer" 
-        :label="translate('Relation to customer')" 
-        label-placement="floating" 
-        placeholder="Select" 
-        :disabled="isSubmitting" 
-        interface="popover"
-      >
+      <ion-select v-model="form.relationToCustomer" :label="translate('Relation to customer')" label-placement="floating" placeholder="Select" :disabled="isSubmitting" interface="popover">
         <ion-select-option value="Self">{{ translate("Self") }}</ion-select-option>
         <ion-select-option value="Family">{{ translate("Family") }}</ion-select-option>
         <ion-select-option value="Friend">{{ translate("Friend") }}</ion-select-option>
       </ion-select>
 
-      <ion-input 
-        v-model="form.email" 
-        :label="translate('Email')" 
-        label-placement="floating"
-        type="email" 
-        :disabled="isSubmitting" 
-      />
+      <ion-input v-model="form.email" :label="translate('Email')" label-placement="floating" type="email" :disabled="isSubmitting" />
     </div>
   </ion-content>
 

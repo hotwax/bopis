@@ -690,4 +690,10 @@ ion-item {
   align-items: flex-end;
   row-gap: 4px;
 }
+
+@media (min-width: 991px){
+  ion-header > div {
+    display: flex;
+  }
+}
 </style>
