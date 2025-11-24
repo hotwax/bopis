@@ -314,5 +314,6 @@
   "Self": "Self",
   "Family Member": "Family Member",
   "Friend": "Friend",
-  "Other Relation": "Other Relation"
+  "Other Relation": "Other Relation",
+  "Same person as the billing customer": "Same person as the billing customer"
 }

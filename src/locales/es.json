@@ -313,5 +313,6 @@
   "Self": "Yo mismo",
   "Family Member": "Miembro de la Familia",
   "Friend": "Amigo",
-  "Other Relation": "Otra Relación"
+  "Other Relation": "Otra Relación",
+  "Same person as the billing customer": "La misma persona que el cliente de facturación"
 }

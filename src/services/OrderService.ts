@@ -580,8 +580,7 @@ const fetchGiftCardActivationDetails = async ({ isDetailsPage, currentOrders }: 
 const getBillingDetails = async (payload: any): Promise<any> => {
   return api({
     url: `/poorti/orders/${payload.orderId}/billing`,
-    method: "GET",
-    data: payload
+    method: "GET"
   });
 }
 

@@ -25,7 +25,9 @@
 
       <!-- Add checkbox for same as billing -->
       <ion-item lines="none">
-        <ion-checkbox slot="start" label-placement="floating" :label="translate('Same person as the billing customer')" v-model="sameAsBilling" @ion-change="handleSameAsBilling" />
+        <ion-checkbox slot="start" v-model="sameAsBilling" @ion-change="handleSameAsBilling" label-placement="end">
+          {{ translate("Same person as the billing customer") }}
+        </ion-checkbox>
       </ion-item>
 
       <ion-input v-model="form.name" :label="translate('Name')" label-placement="floating" :disabled="isSubmitting || sameAsBilling" required/>
@@ -42,20 +44,17 @@
     </div>
   </ion-content>
 
-  <!-- Fixed Save Button at Bottom -->
-  <ion-footer>
-    <ion-toolbar>
-      <ion-button expand="block" @click="submitForm" :disabled="isSubmitting || !isFormValid">
-        <ion-spinner v-if="isSubmitting" name="crescent" slot="start" />
-        <span>{{ translate("HANDOVER") }}</span>
-      </ion-button>
-    </ion-toolbar>
-  </ion-footer>
+  <ion-fab vertical="bottom" horizontal="end" slot="fixed">
+    <ion-fab-button data-testid="handover-modal-button" :disabled="isSubmitting || !isFormValid" @click="submitForm">
+      <ion-icon :icon="saveOutline"/>
+    </ion-fab-button>
+  </ion-fab>
 </template>
 
 <script setup>
 import { ref, onMounted, computed, defineProps } from "vue";
 import { modalController } from "@ionic/vue";
+import { saveOutline } from "ionicons/icons";
 import {
   IonButtons,
   IonButton,
@@ -65,13 +64,12 @@ import {
   IonIcon,
   IonTitle,
   IonItem,
-  IonLabel,
   IonInput,
-  IonFooter,
+  IonFab,
+  IonFabButton,
   IonSelect,
   IonSelectOption,
-  IonCheckbox,
-  IonSpinner
+  IonCheckbox
 } from "@ionic/vue";
 import { closeOutline } from "ionicons/icons";
 import logger from "@/logger";
@@ -84,7 +82,8 @@ const props = defineProps({
 });
 
 const isSubmitting = ref(false);
-const sameAsBilling = ref(false);
+const sameAsBilling = ref(true);
+const billingDetails = ref({});
 
 const form = ref({
   name: "",
@@ -93,8 +92,6 @@ const form = ref({
   email: ""
 });
 
-const billingDetails = ref({});
-
 const isFormValid = computed(() => {
   return form.value.name.trim() !== "" &&
     form.value.idNumber.trim() !== "" &&
@@ -102,9 +99,9 @@ const isFormValid = computed(() => {
 });
 
 const getBillingDetails = async () => {
+  if (!props.order?.orderId) return;
+  
   try {
-    if (!props.order?.orderId) return;
-    
     const resp = await OrderService.getBillingDetails({ orderId: props.order.orderId });
     billingDetails.value = resp?.data?.billToAddress || {};
 
@@ -116,6 +113,23 @@ const getBillingDetails = async () => {
   }
 };
 
+const getPrefilledValue = async () => {
+  if (!props.order?.orderId) return;
+  
+  try {
+    const resp = await OrderService.fetchOrderAttributes(props.order.orderId);
+    const data = resp?.data ?? resp;
+    const list = Array.isArray(data) ? data : (data?.docs || data?.attributes || []);
+    const customerAttr = list.find((a) => a?.attrName === "customerId");
+    
+    if (customerAttr?.attrValue) {
+      form.value.idNumber = customerAttr.attrValue;
+    }
+  } catch (err) {
+    logger.error("Failed fetching order attributes:", err);
+  }
+};
+
 const handleSameAsBilling = () => {
   if (sameAsBilling.value) {
     form.value.name = billingDetails.value?.toName || billingDetails.value?.contactName || "";
@@ -124,22 +138,6 @@ const handleSameAsBilling = () => {
   } else {
     form.value.name = "";
     form.value.email = "";
-  }
-};
-
-const getPrefilledValue = async () => {
-  try {
-    if (!props.order?.orderId) return;
-    const resp = await OrderService.fetchOrderAttributes(props.order.orderId);
-    const data = resp?.data ?? resp;
-    const list = Array.isArray(data) ? data : (data?.docs || data?.attributes || []);
-    const customerAttr = list.find((a) => a?.attrName === "customerId");
-    const prefilledId = customerAttr?.attrValue || "";
-    if (prefilledId) {
-      form.value.idNumber = prefilledId;
-    }
-  } catch (err) {
-    logger.error("Failed fetching order attributes:", err);
   }
 };
 
@@ -171,7 +169,6 @@ const submitForm = async () => {
       }
     };
 
-    // Return the proof of delivery data to parent component
     await modalController.dismiss({ 
       proofOfDeliveryData,
       confirmed: true 
@@ -189,14 +186,3 @@ onMounted(async () => {
   await getPrefilledValue();
 });
 </script>
-
-<style scoped>
-.billing-section {
-  margin-bottom: var(--spacer-base);
-}
-
-.section-title {
-  font-weight: 600;
-  margin-bottom: var(--spacer-xs);
-}
-</style>
