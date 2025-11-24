@@ -119,7 +119,6 @@ const getPrefilledValue = async () => {
   try {
     const resp = await OrderService.fetchOrderAttributes(props.order.orderId);
     const data = resp.data || {};
-    console.log("Order attributes fetched:", data);
     const customerAttr = data.find((a) => a.attrName === "customerId");
     
     if (customerAttr?.attrValue) {
