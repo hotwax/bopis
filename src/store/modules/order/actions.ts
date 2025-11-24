@@ -871,8 +871,9 @@ const actions: ActionTree<OrderState , RootState> ={
 
     const params = {
       orderFacilityId: getCurrentFacilityId(),
-      orderStatusId: 'ORDER_APPROVED',
-      statusId: 'ITEM_APPROVED',
+      orderStatusId: 'ORDER_COMPLETED,ORDER_APPROVED',
+      orderStatusId_op: 'in',
+      statusId: 'ITEM_COMPLETED,ITEM_APPROVED',
       shipmentMethodTypeId: 'SHIP_TO_STORE',
       shipmentStatusId: 'SHIPMENT_INPUT,SHIPMENT_APPROVED,SHIPMENT_PACKED,SHIPMENT_SHIPPED',
       shipmentStatusId_op: 'in',
@@ -914,8 +915,16 @@ const actions: ActionTree<OrderState , RootState> ={
         productIds = [...productIds]
         store.dispatch('product/fetchProducts', { productIds })
 
-        if (payload.viewIndex) incomingOrders = state.shipToStore.incoming.list.concat(incomingOrders)
+        const total = resp.data.ordersCount;
+     
+        if (payload.viewIndex && payload.viewIndex > 0){
+          incomingOrders = state.shipToStore.incoming.list.concat(incomingOrders);
+        } 
+
+        commit(types.ORDER_SHIP_TO_STORE_INCOMING_UPDATED, { orders: incomingOrders, total });
+        emitter.emit("dismissLoader");
       } else {
+        commit(types.ORDER_SHIP_TO_STORE_INCOMING_UPDATED, { orders: [], total: 0 });
         showToast(translate("Orders Not Found"))
       }
     } catch (err) {
@@ -923,7 +932,6 @@ const actions: ActionTree<OrderState , RootState> ={
       showToast(translate("Something went wrong"))
     } finally {
       emitter.emit("dismissLoader")
-      commit(types.ORDER_SHIP_TO_STORE_INCOMING_UPDATED, { orders: incomingOrders, total: resp.data?.count ? resp.data.count  : 0 })
     }
     return resp;
   },
@@ -937,8 +945,8 @@ const actions: ActionTree<OrderState , RootState> ={
       shipmentStatusId: "SHIPMENT_ARRIVED",
       shipmentMethodTypeId: "SHIP_TO_STORE",
       orderFacilityId: getCurrentFacilityId(),
-      statusId:"ITEM_APPROVED",
-      orderStatusId:"ORDER_APPROVED",
+      statusId:"ITEM_COMPLETED",
+      orderStatusId:"ORDER_COMPLETED",
       viewSize: payload.viewSize ? payload.viewSize : process.env.VUE_APP_VIEW_SIZE,
       viewIndex: payload.viewIndex ? payload.viewIndex : 0,
       distinct: "Y",
@@ -977,8 +985,18 @@ const actions: ActionTree<OrderState , RootState> ={
 
         productIds = [...productIds]
         store.dispatch('product/fetchProducts', { productIds })
-        if (payload.viewIndex) readyForPickupOrders = state.shipToStore.readyForPickup.list.concat(readyForPickupOrders)
+
+        const total = resp.data.ordersCount;
+
+        commit(types.ORDER_SHIP_TO_STORE_RDYFORPCKUP_UPDATED, { orders: readyForPickupOrders, total });
+        emitter.emit("dismissLoader");
+
+        if (payload.viewIndex && payload.viewIndex > 0)
+          {
+            readyForPickupOrders = state.shipToStore.readyForPickup.list.concat(readyForPickupOrders)
+          } 
       } else {
+        commit(types.ORDER_SHIP_TO_STORE_RDYFORPCKUP_UPDATED,{ orders: [], total: 0 });
         showToast(translate("Orders Not Found"))
       }
     } catch (err) {
@@ -986,7 +1004,6 @@ const actions: ActionTree<OrderState , RootState> ={
       showToast(translate("Something went wrong"))
     } finally {
       emitter.emit("dismissLoader")
-      commit(types.ORDER_SHIP_TO_STORE_RDYFORPCKUP_UPDATED, { orders: readyForPickupOrders, total: resp.data?.count ? resp.data.count : 0 })
     }
 
     return resp;
@@ -1042,8 +1059,18 @@ const actions: ActionTree<OrderState , RootState> ={
 
         productIds = [...productIds]
         store.dispatch('product/fetchProducts', { productIds })
-        if (payload.viewIndex) completedOrders = state.shipToStore.completed.list.concat(completedOrders)
+
+        const total = resp.data.ordersCount;
+
+        commit(types.ORDER_SHIP_TO_STORE_COMPLETED_UPDATED, { orders: completedOrders, total });
+        emitter.emit("dismissLoader");
+
+        if (payload.viewIndex && payload.viewIndex>0 ) 
+          {
+            completedOrders = state.shipToStore.completed.list.concat(completedOrders)
+          }
       } else {
+        commit(types.ORDER_SHIP_TO_STORE_COMPLETED_UPDATED, { orders: [], total: 0 });
         showToast(translate("Orders Not Found"))
       }
     } catch(err) {
@@ -1051,7 +1078,6 @@ const actions: ActionTree<OrderState , RootState> ={
       showToast(translate("Something went wrong"))
     } finally {
       emitter.emit("dismissLoader")
-      commit(types.ORDER_SHIP_TO_STORE_COMPLETED_UPDATED, { orders: completedOrders, total: resp.data?.count ? resp.data.count : 0 })
     }
 
     return resp;
