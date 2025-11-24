@@ -105,8 +105,8 @@ const getBillingDetails = async () => {
     const resp = await OrderService.getBillingDetails({ orderId: props.order.orderId });
     billingDetails.value = resp?.data?.billToAddress || {};
 
-    form.value.name = billingDetails.value?.toName || billingDetails.value?.contactName || "";
-    form.value.email = billingDetails.value.email || billingDetails.value.toEmail || "";
+    form.value.name = billingDetails.value.toName || "";
+    form.value.email = billingDetails.value.email || "";
     form.value.relationToCustomer = "Self";
   } catch (err) {
     logger.error("Error fetching billing details:", err);
@@ -118,9 +118,9 @@ const getPrefilledValue = async () => {
   
   try {
     const resp = await OrderService.fetchOrderAttributes(props.order.orderId);
-    const data = resp?.data ?? resp;
-    const list = Array.isArray(data) ? data : (data?.docs || data?.attributes || []);
-    const customerAttr = list.find((a) => a?.attrName === "customerId");
+    const data = resp.data || {};
+    console.log("Order attributes fetched:", data);
+    const customerAttr = data.find((a) => a.attrName === "customerId");
     
     if (customerAttr?.attrValue) {
       form.value.idNumber = customerAttr.attrValue;
@@ -132,8 +132,8 @@ const getPrefilledValue = async () => {
 
 const handleSameAsBilling = () => {
   if (sameAsBilling.value) {
-    form.value.name = billingDetails.value?.toName || billingDetails.value?.contactName || "";
-    form.value.email = billingDetails.value?.email || billingDetails.value?.toEmail || "";
+    form.value.name = billingDetails.value.toName || "";
+    form.value.email = billingDetails.value.email || "";
     form.value.relationToCustomer = "Self";
   } else {
     form.value.name = "";
