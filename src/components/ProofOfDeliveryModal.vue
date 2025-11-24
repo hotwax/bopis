@@ -106,7 +106,7 @@ const getBillingDetails = async () => {
     billingDetails.value = resp?.data?.billToAddress || {};
 
     form.value.name = billingDetails.value?.toName || billingDetails.value?.contactName || "";
-    form.value.email = billingDetails.value?.email || billingDetails.value?.toEmail || "";
+    form.value.email = billingDetails.value.email || billingDetails.value.toEmail || "";
     form.value.relationToCustomer = "Self";
   } catch (err) {
     logger.error("Error fetching billing details:", err);
