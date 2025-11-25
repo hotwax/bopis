@@ -91,7 +91,7 @@
             <ProductListItem v-for="item in order.items" :key="item.productId" :item="item" :orderId="order.orderId" :customerId="order.customerId" :currencyUom="order.currencyUom" orderType="packed"/>
             <div class="border-top">
 
-              <ion-button data-testid="handover-button" :disabled="!hasPermission(Actions.APP_ORDER_UPDATE)" fill="clear" @click.stop="deliverShipment(order)">
+              <ion-button data-testid="handover-button" :disabled="!hasPermission(Actions.APP_ORDER_UPDATE)" fill="clear" @click.stop="handleHandover(order)">
                 {{ order.shipmentMethodTypeId === 'STOREPICKUP' ? translate("Handover") : translate("Ship") }}
               </ion-button>
               <ion-button size="default" data-testid="packing-slip-button" v-if="getBopisProductStoreSettings('PRINT_PACKING_SLIPS')" fill="clear" slot="end" @click.stop="printPackingSlip(order)">
@@ -187,6 +187,7 @@ import { UserService } from "@/services/UserService";
 import { Actions, hasPermission } from '@/authorization'
 import logger from "@/logger";
 import RejectOrderItemModal from "@/components/RejectOrderItemModal.vue";
+import ProofOfDeliveryModal from '@/components/ProofOfDeliveryModal.vue'
 
 export default defineComponent({
   name: 'Orders',
@@ -406,16 +407,6 @@ export default defineComponent({
       .then((resp) => {
         if(!hasError(resp)) {
           showToast(translate('Order delivered to', {customerName: order.customerName}))
-          // We are collecting the product IDs of the order items and then fetching stock information
-          // for each product ID if it is available for updated inventory.
-          const productIds = [...new Set(order.items.map((item: any) => item.productId))];
-
-          productIds.map((productId: any) => {
-            const productStock = this.getInventoryInformation(productId);
-            if (productStock && productStock.quantityOnHand >= 0) {
-              this.store.dispatch('stock/fetchProductInventory', { productId, forceFetchStock: true });
-            }
-          })
         }
       })
     },
@@ -586,6 +577,51 @@ export default defineComponent({
         }
       })
       return rejectOrderModal.present()
+    },
+
+    async openProofOfDeliveryModal(order: any) {
+      const modal = await modalController.create({
+        component: ProofOfDeliveryModal,
+        componentProps: {
+          order
+        },
+      });
+
+      await modal.present();
+      
+      const { data } = await modal.onDidDismiss();
+      
+      if (data?.confirmed && data?.proofOfDeliveryData) {
+        emitter.emit("presentLoader");
+        
+        try {
+          // First deliver the shipment
+          await this.deliverShipment(order);
+          
+          // Then send the proof of delivery email
+          const resp = await OrderService.sendPickupNotification(data.proofOfDeliveryData);
+          
+          if (hasError(resp)) {
+            logger.error("Pickup notification failed:", resp);
+            showToast(translate("Order delivered but failed to send handover email"));
+          } else {
+            showToast(translate("Order delivered and handover email sent successfully"));
+          }
+        } catch (err) {
+          logger.error("Error in handover process:", err);
+          showToast(translate("Something went wrong during handover"));
+        } finally {
+          emitter.emit("dismissLoader");
+        }
+      }
+    },
+
+    handleHandover(order: any) {
+      if (this.getBopisProductStoreSettings('HANDOVER_PROOF')) {
+        this.openProofOfDeliveryModal(order);
+      } else {
+        this.deliverShipment(order);
+      }
     }
   },
   ionViewWillEnter () {
