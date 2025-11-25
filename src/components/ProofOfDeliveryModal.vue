@@ -34,7 +34,7 @@
 
       <ion-input v-model="form.idNumber" :label="translate('ID Number')" label-placement="floating" :disabled="isSubmitting || sameAsBilling" required/>
 
-      <ion-select v-model="form.relationToCustomer" :label="translate('Relation to customer')" label-placement="floating" placeholder="Select" :disabled="isSubmitting" interface="popover">
+      <ion-select v-model="form.relationToCustomer" :label="translate('Relation to customer')" label-placement="start" placeholder="Select" :disabled="isSubmitting" interface="popover">
         <ion-select-option value="Self">{{ translate("Self") }}</ion-select-option>
         <ion-select-option value="Family">{{ translate("Family") }}</ion-select-option>
         <ion-select-option value="Friend">{{ translate("Friend") }}</ion-select-option>
