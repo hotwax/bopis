@@ -12,11 +12,13 @@
 
   <ion-content class="ion-padding">
     <!-- Billing Details -->
-    <div class="billing-section">
-      <h2 class="section-title">{{ translate("Billing Details") }}</h2>
-      <p>{{ billingDetails?.toName }}</p>
-      <p>{{ billingDetails?.address1 }}</p>
-      <p>{{ billingDetails?.city }} {{ billingDetails?.state }} {{ billingDetails?.country }}</p>
+    <ion-item lines="none">
+      <ion-label>
+        <strong>{{ translate("Billing Details") }}</strong>
+        <p class="ion-padding-top">{{ billingDetails?.toName }}</p>
+        <p>{{ billingDetails?.address1 }}</p>
+        <p>{{ billingDetails?.city }} {{ billingDetails?.state }} {{ billingDetails?.country }}</p>
+      </ion-label>
     </div>
 
     <!-- Pickup Section -->
