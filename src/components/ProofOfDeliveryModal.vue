@@ -27,7 +27,7 @@
 
       <!-- Add checkbox for same as billing -->
       <ion-item lines="none">
-        <ion-checkbox slot="start" v-model="sameAsBilling" @ion-change="handleSameAsBilling" label-placement="end">
+        <ion-checkbox justify="start" v-model="sameAsBilling" @ion-change="handleSameAsBilling" label-placement="end">
           {{ translate("Same person as the billing customer") }}
         </ion-checkbox>
       </ion-item>
