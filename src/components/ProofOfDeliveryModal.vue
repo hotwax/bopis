@@ -21,7 +21,9 @@
 
     <!-- Pickup Section -->
     <div>
-      <p>{{ translate("Please enter the details of the person picking up the order:") }}</p>
+      <ion-item lines="none">
+        <ion-label><strong>{{ translate("Please enter the details of the person picking up the order.") }}</strong></ion-label>
+      </ion-item>
 
       <!-- Add checkbox for same as billing -->
       <ion-item lines="none">
