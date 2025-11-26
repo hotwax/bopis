@@ -110,7 +110,7 @@ const actions: ActionTree<OrderState , RootState> ={
     return resp;
   },
 
-  async getOpenOrders({ commit, dispatch, state }, params) {
+  async getOpenOrders({ commit, state }, params) {
     // Show loader only when new query and not the infinite scroll
     if (params.viewIndex === 0) emitter.emit("presentLoader");
 
@@ -186,7 +186,7 @@ const actions: ActionTree<OrderState , RootState> ={
     }
   },
 
-  async fetchPickersInformation({ commit }, { shipmentIds, shipmentStatusId }) {
+  async fetchPickersInformation(_, { shipmentIds, shipmentStatusId }) {
     const payload = {
       shipmentId: shipmentIds.join(','),
       shipmentId_op: 'in',

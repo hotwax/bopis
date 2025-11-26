@@ -466,12 +466,8 @@ export default defineComponent({
     ...mapGetters({
       order: "order/getCurrent",
       partialOrderRejectionConfig: 'user/getPartialOrderRejectionConfig',
-      getPaymentMethodDesc: 'util/getPaymentMethodDesc',
-      getStatusDesc: 'util/getStatusDesc',
       getProduct: 'product/getProduct',
       getInventoryInformation: 'stock/getInventoryInformation',
-      getProductStock: 'stock/getProductStock',
-      getfacilityTypeDesc: 'util/getFacilityTypeDesc',
       getPartyName: 'util/getPartyName',
       getBopisProductStoreSettings: 'user/getBopisProductStoreSettings',
       rejectReasons: 'util/getRejectReasons',

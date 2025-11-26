@@ -9,9 +9,6 @@ const utilModule: Module<UtilState, RootState> = {
   namespaced: true,
   state: {
     rejectReasons: [],
-    paymentMethodTypeDesc: {},
-    statusDesc: {},
-    facilityTypeDesc: {},
     partyNames: {},
     cancelReasons: [],
     facilities: {},

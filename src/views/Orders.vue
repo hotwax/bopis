@@ -229,7 +229,6 @@ export default defineComponent({
       notifications: 'user/getNotifications',
       unreadNotificationsStatus: 'user/getUnreadNotificationsStatus',
       getBopisProductStoreSettings: 'user/getBopisProductStoreSettings',
-      getProductStock: 'stock/getProductStock',
       getInventoryInformation: 'stock/getInventoryInformation',
       order: "order/getCurrent"
     })

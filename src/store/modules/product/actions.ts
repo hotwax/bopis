@@ -127,22 +127,6 @@ const actions: ActionTree<ProductState, RootState> = {
     return resp;
   },
 
-  async getProductInformation ({ dispatch }, { orders }) {
-    let productIds: any = new Set();
-    orders.forEach((order: any) => {
-      order.doclist.docs.forEach((item: any) => {
-        if (item.productId) {
-          productIds.add(item.productId)
-        }
-      })
-    })
-
-    productIds = [...productIds]
-    if (productIds.length) {
-      await dispatch('fetchProducts', { productIds })
-    }
-  },
-
   clearProducts ({ commit }) {
     commit(types.PRODUCT_LIST_UPDATED, { products: [], total: 0, queryString: '' })
   },
