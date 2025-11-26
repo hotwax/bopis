@@ -179,7 +179,7 @@ import { useRouter } from 'vue-router'
 import { copyToClipboard, showToast } from '@/utils'
 import { DateTime } from 'luxon';
 import emitter from "@/event-bus"
-import { api, hasError } from '@/adapter';
+import { hasError } from '@/adapter';
 import { translate, useUserStore } from "@hotwax/dxp-components";
 import AssignPickerModal from "./AssignPickerModal.vue";
 import { OrderService } from "@/services/OrderService";
@@ -576,7 +576,7 @@ export default defineComponent({
         return;
       }
     },
-  async openRejectOrderModal(order:any){
+    async openRejectOrderModal(order:any) {
       const orderProps = order
       const rejectOrderModal = await modalController.create({
         component:RejectOrderItemModal,
