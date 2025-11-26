@@ -1,5 +1,4 @@
-import { api, apiClient } from '@/adapter';
-import store from '@/store';
+import { api } from '@/adapter';
 
 const checkShippingInventory = async (query: any): Promise <any>  => {
   return api({
