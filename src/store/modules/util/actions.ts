@@ -11,7 +11,6 @@ const actions: ActionTree<UtilState, RootState> = {
   async fetchRejectReasons({ commit }) {
     const permissions = store.getters['user/getUserPermissions'];
     const isAdminUser = permissions.some((permission: any) => permission.action === "APP_STOREFULFILLMENT_ADMIN")
-    let isAdminReasonsNeeded = false;
 
     let rejectReasons = [];
     let payload = {
@@ -26,15 +25,15 @@ const actions: ActionTree<UtilState, RootState> = {
           parentTypeId_op: "in",
           pageSize: 20, // keeping view size 20 as considering that we will have max 20 reasons
           ...payload
-      }
-      resp = await UtilService.fetchRejectReasons(payload);
-    } else {
-      payload = {
+        }
+        resp = await UtilService.fetchRejectReasons(payload);
+      } else {
+        payload = {
           enumerationGroupId: "BOPIS_REJ_RSN_GRP",
           pageSize: 200,
           ...payload
         }
-       resp = await UtilService.fetchRejectReasonsByEnumerationGroup(payload); 
+        resp = await UtilService.fetchRejectReasonsByEnumerationGroup(payload);
       }
 
       if(!hasError(resp) && resp.data) {
@@ -44,7 +43,6 @@ const actions: ActionTree<UtilState, RootState> = {
       }
     } catch (err) {
       logger.error('Failed to fetch reject reasons', err)
-      if(!isAdminUser) isAdminReasonsNeeded = true;
     }
 
     commit(types.UTIL_REJECT_REASONS_UPDATED, rejectReasons)

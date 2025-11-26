@@ -140,8 +140,7 @@ const actions: ActionTree<OrderState , RootState> ={
       if (resp.status === 200 && !hasError(resp) && resp?.data?.orders.length > 0) {
         const ordersResp = resp.data.orders;
 
-        // Collect all orderIds and productIds
-        const orderIds = ordersResp.map((order: any) => order.orderId);
+        // Collect all productIds
         const productIds = ordersResp.flatMap((order: any) => 
           order.shipGroups.flatMap((group: any) => group.items.map((item: any) => item.productId))
         );
@@ -200,11 +199,10 @@ const actions: ActionTree<OrderState , RootState> ={
       if (!hasError(resp)) {
         const shipments = resp.data;
 
-        // Build a map of orderId -> { pickers, pickerIds }
+        // Build a map of shipmentId -> { shipmentId, pickers, pickerIds }
         const pickersMap = {} as any;
 
         shipments.forEach((shipment: any) => {
-          const orderId = shipment.primaryOrderId || shipment.order?.orderId;
           const shipmentId = shipment.shipmentId;
           const allRoles = shipment.picklistShipment?.flatMap((picklistShipment: any) =>
             (picklistShipment.picklist?.roles ?? []).filter((role: any) => !role.thruDate)
@@ -574,7 +572,7 @@ const actions: ActionTree<OrderState , RootState> ={
     return resp;
   },
 
-  async packShipGroupItems ({ state, dispatch, commit }, payload) {
+  async packShipGroupItems ({ dispatch }, payload) {
     const params = {
       orderId: payload.order.orderId,
       facilityId: payload.shipGroup.facilityId,
@@ -585,9 +583,8 @@ const actions: ActionTree<OrderState , RootState> ={
 
     try {
       resp = await OrderService.packOrder(params)
-      if (resp.status === 200 && !hasError(resp)) {        
-        const shipmentMethodTypeId = payload.shipGroup?.shipmentMethodTypeId
-          dispatch("removeOpenOrder", payload)
+      if (resp.status === 200 && !hasError(resp)) {
+        dispatch("removeOpenOrder", payload)
 
         // Adding readyToHandover or readyToShip because we need to show the user that the order has moved to the packed tab
         if(payload.order.shipGroup.shipmentMethodTypeId === 'STOREPICKUP') {
@@ -641,7 +638,7 @@ const actions: ActionTree<OrderState , RootState> ={
     }).catch(err => err);
   },
 
-  async rejectOrderItems ({ commit }, order) {
+  async rejectOrderItems (_, order) {
     const itemsToReject = order.shipGroup.items    
     .map((item: any) => ({
       ...item,
