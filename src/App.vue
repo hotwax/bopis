@@ -40,7 +40,7 @@ export default defineComponent({
       if (!this.loader) {
         this.loader = await loadingController
           .create({
-            message: options.message ? translate(options.message) : translate("Click the backdrop to dismiss."),
+            message: options.message ? translate(options.message) : translate("Loading…"),
             translucent: true,
             backdropDismiss: options.backdropDismiss
           });
@@ -90,7 +90,7 @@ export default defineComponent({
     // creating the loader on mounted as loadingController is taking too much time to create initially
     this.loader = await loadingController
       .create({
-        message: translate("Click the backdrop to dismiss."),
+        message: translate("Loading…"),
         translucent: true,
         backdropDismiss: true
       });
