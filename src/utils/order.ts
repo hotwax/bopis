@@ -1,25 +1,5 @@
 import store from "@/store"
 
-const handleParameterMatching = (orderVal: any, parameterVal: any, operation?: string) => {
-  // considering params will always be an Array for ORing and ANDing
-  if (operation === 'OR') {
-    return parameterVal.some((param: any) => orderVal === param)
-  } else if (operation === 'AND') {
-    return parameterVal.every((param: any) => orderVal === param)
-  } else if (operation === 'NOT') {
-    if(parameterVal === '*') {
-      if(!orderVal) {
-        return true;
-      }
-      return false;
-    }
-    if(Array.isArray(parameterVal)) return !parameterVal.some((param: any) => param === orderVal)
-    return orderVal !== parameterVal
-  } else if (!operation) {
-    return orderVal === parameterVal
-  }
-}
-
 const getOrderCategory = (shipGroup: any) => {
   // Determine category based on shipmentStatusId
   let category = '';

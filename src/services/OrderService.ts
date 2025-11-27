@@ -1,8 +1,7 @@
 import { api, apiClient, hasError } from '@/adapter';
-import emitter from '@/event-bus';
 import { translate } from '@hotwax/dxp-components';
 import store from '@/store';
-import { formatPhoneNumber, getCurrentFacilityId, showToast } from '@/utils';
+import { getCurrentFacilityId, showToast } from '@/utils';
 import logger from '@/logger';
 import { cogOutline } from 'ionicons/icons';
 import { UtilService } from "@/services/UtilService";
@@ -40,35 +39,11 @@ const fetchOrderItems = async (payload: any): Promise <any> => {
   });
 }
 
-const getOrderDetails = async (payload: any): Promise <any> => {
-  return await api({
-    url: `oms/orders/${payload.orderId}`,
-    method: "GET",
-    data: payload
-  });
-}
-
 const fetchPicklists = async (payload: any): Promise <any>  => {
   return api({
     url: `poorti/shipmentPicklists`,
     method: "GET",
     params: payload
-  });
-}
-
-const getPackedOrders = async (payload: any): Promise <any> => {
-  const baseURL = store.getters['user/getOmsBaseUrl'];
-  const omstoken = store.getters['user/getUserToken'];
-
-  return apiClient({
-    url: "solr-query",
-    method: "post",
-    baseURL,
-    headers: {
-      "Authorization": "Bearer " + omstoken,
-      "Content-Type": "application/json"
-    },
-    data: payload
   });
 }
 
@@ -114,54 +89,6 @@ const findCompletedShipments = async (params:any): Promise <any>  => {
     method: "GET",
     params
   }) as any;
-}
-
-const getCompletedOrders = async (payload: any): Promise <any> => {
-  const baseURL = store.getters['user/getOmsBaseUrl'];
-  const omstoken = store.getters['user/getUserToken'];
-
-  return apiClient({
-    url: "solr-query",
-    method: "post",
-    baseURL,
-    headers: {
-      "Authorization": "Bearer " + omstoken,
-      "Content-Type": "application/json"
-    },
-    data: payload
-  });
-}
-
-const updateShipment = async (payload: any): Promise <any> => {
-  const baseURL = store.getters['user/getOmsBaseUrl'];
-  const omstoken = store.getters['user/getUserToken'];
-
-  return apiClient({
-    url: "updateShipment",
-    method: "post",
-    baseURL,
-    headers: {
-      "Authorization": "Bearer " + omstoken,
-      "Content-Type": "application/json"
-    },
-    data: payload
-  });
-}
-
-const quickShipEntireShipGroup = async (payload: any): Promise <any> => {
-  const baseURL = store.getters['user/getOmsBaseUrl'];
-  const omstoken = store.getters['user/getUserToken'];
-
-  return apiClient({
-    url: "quickShipEntireShipGroup",
-    method: "post",
-    baseURL,
-    headers: {
-      "Authorization": "Bearer " + omstoken,
-      "Content-Type": "application/json"
-    },
-    data: payload
-  });
 }
 
 const rejectOrderItems = async (payload: any): Promise <any> => {
@@ -297,49 +224,6 @@ const getShipToStoreOrders = async (params: any): Promise<any> => {
   })
 }
 
-const getShipmentItems = async (shipmentIds: any): Promise<any> => {
-  if (!shipmentIds.length) return []
-  const requests = []
-
-  const baseURL = store.getters['user/getOmsBaseUrl'];
-  const omstoken = store.getters['user/getUserToken'];
-
-  const shipmentIdList = shipmentIds
-  while (shipmentIdList.length) {
-    const batch = shipmentIdList.splice(0, 20)
-    const params = {
-      inputFields: {
-        shipmentId: batch
-      },
-      viewSize: 250, // maximum view size
-      entityName: 'ShipmentItem',
-      noConditionFind: "Y",
-      fieldList: ['shipmentId', 'productId', 'shipmentItemSeqId']
-    }
-    requests.push(params)
-  }
-
-  const shipmentItemsResps = await Promise.all(requests.map((params) => apiClient({
-    url: 'performFind',
-    method: 'POST',
-    baseURL,
-    headers: {
-      "Authorization": "Bearer " + omstoken,
-      "Content-Type": "application/json"
-    },
-    data: params
-  })))
-
-  const hasFailedResponse = shipmentItemsResps.some((response: any) => hasError(response) && response.data.error !== "No record found")
-
-  if (hasFailedResponse) return Promise.reject(shipmentItemsResps);
-
-  return shipmentItemsResps.reduce((responseData: any, response: any) => {
-    if (!hasError(response)) responseData.push(...response.data.docs)
-    return responseData
-  }, [])
-}
-
 const getOrderItemRejectionHistory = async (payload: any): Promise<any> => {
   const baseURL = store.getters['user/getOmsBaseUrl'];
   const omstoken = store.getters['user/getUserToken'];
@@ -354,21 +238,6 @@ const getOrderItemRejectionHistory = async (payload: any): Promise<any> => {
     },
     data: payload
   })
-}
-
-const fetchOrderPaymentPreferences = async (params: any): Promise<any> => {
-  const baseURL = store.getters['user/getOmsBaseUrl'];
-  const omstoken = store.getters['user/getUserToken'];
-  return await apiClient({
-    url: "performFind",
-    method: "get",
-    baseURL,
-    headers: {
-      "Authorization": "Bearer " + omstoken,
-      "Content-Type": "application/json"
-    },
-    params
-  });
 }
 
 const printShippingLabelAndPackingSlip = async (shipmentIds: Array<string>): Promise<any> => {
@@ -408,63 +277,6 @@ const printShippingLabelAndPackingSlip = async (shipmentIds: Array<string>): Pro
     showToast(translate('Failed to print shipping label and packing slip'))
     logger.error("Failed to load shipping label and packing slip", err)
   }
-}
-
-const findOrderShipGroup = async (query: any): Promise<any> => {
-  const baseURL = store.getters['user/getOmsBaseUrl'];
-  const omstoken = store.getters['user/getUserToken'];
-
-  return apiClient({
-    url: "solr-query",
-    method: "post",
-    baseURL,
-    headers: {
-      "Authorization": "Bearer " + omstoken,
-      "Content-Type": "application/json"
-    },
-    data: query
-  });
-}
-
-const fetchTrackingCodes = async (shipmentIds: Array<string>): Promise<any> => {
-  let shipmentTrackingCodes = [];
-  const baseURL = store.getters['user/getOmsBaseUrl'];
-  const omstoken = store.getters['user/getUserToken'];
-
-  const params = {
-    "entityName": "ShipmentPackageRouteSeg",
-    "inputFields": {
-      "shipmentId": shipmentIds,
-      "shipmentId_op": "in",
-      "shipmentItemSeqId_op": "not-empty"
-    },
-    "fieldList": ["shipmentId", "shipmentPackageSeqId", "trackingCode"],
-    "viewSize": 250,  // maximum records we could have
-    "distinct": "Y"
-  }
-
-  try {
-    const resp = await apiClient({
-      url: "performFind",
-      method: "get",
-      baseURL,
-      headers: {
-       "Authorization": "Bearer " + omstoken,
-        "Content-Type": "application/json"
-      },
-      params
-    })
-
-    if (!hasError(resp)) {
-      shipmentTrackingCodes = resp?.data.docs;
-    } else if (!resp?.data.error || (resp.data.error && resp.data.error !== "No record found")) {
-      return Promise.reject(resp?.data.error);
-    }
-  } catch (err) {
-    console.error('Failed to fetch tracking codes for shipments', err)
-  }
-
-  return shipmentTrackingCodes;
 }
 
 const packOrder = async (payload: any): Promise<any> => {  
@@ -577,29 +389,20 @@ export const OrderService = {
   fetchGiftCardActivationDetails,
   fetchOrderDetails,
   fetchOrderItems,
-  fetchOrderPaymentPreferences,
   fetchPicklists,
-  fetchTrackingCodes,
   findCompletedShipments,
-  findOrderShipGroup,
   findPackedShipments,
-  getCompletedOrders,
   getOpenOrders,
-  getOrderDetails,
   getOrderItemRejectionHistory,
-  getPackedOrders,
-  getShipmentItems,
   getShipToStoreOrders,
   packOrder,
   performFind,
   printPackingSlip,
   printPicklist,
   printShippingLabelAndPackingSlip,
-  quickShipEntireShipGroup,
   rejectOrderItems,
   sendPickupScheduledNotification,
   handoverShipToStoreOrder,
   convertToShipToStore,
-  shipOrder,
-  updateShipment
+  shipOrder
 }
