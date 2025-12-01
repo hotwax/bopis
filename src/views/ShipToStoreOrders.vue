@@ -175,6 +175,9 @@ export default defineComponent({
       isIncomingOrdersScrollable: 'order/isShipToStoreIncmngOrdrsScrlbl',
       isReadyForPickupOrdersScrollable: 'order/isShipToStoreRdyForPckupOrdrsScrlbl',
       isCompletedOrdersScrollable: 'order/isShipToStoreCmpltdOrdrsScrlbl',
+      incomingOrderCount: "order/getIncomingOrdersCount",
+      readyForPickupOrderCount: "order/getReadyForPickupOrdersCount",
+      completedOrderCount: "order/getCompletedOrdersCount"
     })
   },
   data() {
@@ -233,21 +236,21 @@ export default defineComponent({
       if (this.segmentSelected === 'incoming') {
         this.getIncomingOrders(
           undefined,
-          Math.ceil(this.incomingOrders.length / process.env.VUE_APP_VIEW_SIZE).toString()
+          Math.ceil(this.incomingOrderCount / process.env.VUE_APP_VIEW_SIZE).toString()
         ).then(async () => {
           await event.target.complete();
         });
-      } else if (this.segmentSelected === 'packed') {
+      } else if (this.segmentSelected === 'readyForPickup') {
         this.getReadyForPickupOrders(
           undefined,
-          Math.ceil(this.readyForPickupOrders.length / process.env.VUE_APP_VIEW_SIZE).toString()
+          Math.ceil(this.readyForPickupOrderCount / process.env.VUE_APP_VIEW_SIZE).toString()
         ).then(async () => {
           await event.target.complete();
         });
       } else {
         this.getCompletedOrders(
           undefined,
-          Math.ceil(this.completedOrders.length / process.env.VUE_APP_VIEW_SIZE).toString()
+          Math.ceil(this.completedOrderCount / process.env.VUE_APP_VIEW_SIZE).toString()
         ).then(async () => {
           await event.target.complete();
         });
@@ -256,7 +259,7 @@ export default defineComponent({
     segmentChanged (event: CustomEvent) {
       this.queryString = ''
       this.segmentSelected = event.detail.value
-
+      this.store.dispatch('order/resetShipToStoreOrdersPagination');
       if(this.segmentSelected === 'incoming') {
         this.getIncomingOrders()
       } else if(this.segmentSelected === 'readyForPickup') {
@@ -267,6 +270,7 @@ export default defineComponent({
     },
     async searchOrders() {
       this.queryString = this.queryString.trim()
+      this.store.dispatch('order/resetShipToStoreOrdersPagination');
       if(this.segmentSelected === 'incoming') {
         this.getIncomingOrders()
       } else if(this.segmentSelected === 'readyForPickup') {
@@ -408,7 +412,7 @@ export default defineComponent({
     this.queryString = '';
     if (this.segmentSelected === 'incoming') {
       this.getIncomingOrders()
-    } else if (this.segmentSelected === 'packed') {
+    } else if (this.segmentSelected === 'readyForPickup') {
       this.getReadyForPickupOrders()
     } else {
       this.getCompletedOrders()
