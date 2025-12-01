@@ -32,7 +32,7 @@ const actions: ActionTree<OrderState , RootState> ={
       if (!hasError(resp) && resp.data.grouped?.orderId?.ngroups > 0) {
         const orderIds = resp.data.grouped?.orderId?.groups.map((order: any) => order.doclist.docs[0].orderId);
         dispatch('fetchOrderItems', {...payload, orderIds});
-      } else {
+      } else {  
         commit(types.ORDER_INFO_UPDATED, { orders: {} })
       }
     } catch(err) {
@@ -43,7 +43,7 @@ const actions: ActionTree<OrderState , RootState> ={
   },
 
   async fetchOrderItems({ commit }, payload) {
-
+  
     let resp;
     const { productId, orderIds, ...params } = payload;
     const orderQueryPayload = prepareOrderQuery({
@@ -64,7 +64,7 @@ const actions: ActionTree<OrderState , RootState> ={
           const otherItemsObj: any = {};
           order.doclist.docs.map((item: any) => {
             if (item.productId == productId) {
-              currentItemQty += item.itemQuantity;
+              currentItemQty += item.itemQuantity; 
               if(!currentItem.productId) {
                 currentItem = item;
               }
@@ -79,7 +79,7 @@ const actions: ActionTree<OrderState , RootState> ={
 
           currentItem = { ...currentItem, quantity: currentItemQty };
           const otherItems = Object.values(otherItemsObj);
-
+          
           return {
             orderId: orderItem.orderId,
             orderName: orderItem.orderName,
@@ -96,7 +96,7 @@ const actions: ActionTree<OrderState , RootState> ={
           }
         })
         productIds.push(productId)
-
+        
         this.dispatch('product/fetchProducts', { productIds: productIds });
         commit(types.ORDER_INFO_UPDATED, { orders })
       } else {
@@ -120,7 +120,7 @@ const actions: ActionTree<OrderState , RootState> ={
       orderStatusId: 'ORDER_APPROVED',
       shipmentStatusId: 'SHIPMENT_INPUT,SHIPMENT_PACKED,SHIPMENT_SHIPPED',
       shipmentStatusId_op: 'in',
-      shipmentStatusId_not: 'Y',
+      shipmentStatusId_not: 'Y',    
       pageSize: process.env.VUE_APP_VIEW_SIZE,
       pageIndex: params.viewIndex
     } as any;
@@ -142,7 +142,7 @@ const actions: ActionTree<OrderState , RootState> ={
 
         // Collect all orderIds and productIds
         const orderIds = ordersResp.map((order: any) => order.orderId);
-        const productIds = ordersResp.flatMap((order: any) =>
+        const productIds = ordersResp.flatMap((order: any) => 
           order.shipGroups.flatMap((group: any) => group.items.map((item: any) => item.productId))
         );
 
@@ -212,30 +212,30 @@ const actions: ActionTree<OrderState , RootState> ={
           ) || [];
 
           const pickers = allRoles
-            .map((role: any) =>
-              role?.partyGroup?.groupName?.trim() ||
-              [role?.person?.firstName, role?.person?.lastName]
-                .filter(Boolean)
-                .join(" ")
-                .trim() ||
-              role?.partyId ||
-              null
-            )
-            .filter(Boolean)
-            .join(", ");
+              .map((role: any) => 
+                role?.partyGroup?.groupName?.trim() ||
+                [role?.person?.firstName, role?.person?.lastName]
+                  .filter(Boolean)
+                  .join(" ")
+                  .trim() ||
+                role?.partyId ||
+                null
+              )
+              .filter(Boolean)
+              .join(", ");
 
           const pickerIds = allRoles.map((role: any) => role.partyId);
 
           pickersMap[shipmentId] = { shipmentId, pickers, pickerIds };
         });
-        return pickersMap;
-      } else {
-        throw resp.data;
-      }
-    } catch (err) {
-      logger.error('Failed to fetch picklists', err);
-      return {};
+      return pickersMap;
+    } else {
+      throw resp.data;
     }
+  } catch (err) {
+    logger.error('Failed to fetch picklists', err);
+    return {};
+  }
   },
 
   async fetchAdditionalOrderInformation({ dispatch }, orderDetails) {
@@ -434,90 +434,90 @@ const actions: ActionTree<OrderState , RootState> ={
     let currentOrder = {} as any;
 
     try {
-      const resp = await OrderService.fetchOrderDetails(orderId);
+    const resp = await OrderService.fetchOrderDetails(orderId);
 
-      if (resp.status === 200 && !hasError(resp) && resp.data) {
-        const data = resp.data.orderDetail;
-        // Fetch products used in shipGroups
-        const productIds = data.shipGroups.flatMap((group: any) =>
-          group.items.map((item: any) => item.productId)
-        );
-        await this.dispatch('product/fetchProducts', { productIds });
+    if (resp.status === 200 && !hasError(resp) && resp.data) {
+      const data = resp.data.orderDetail;
+      // Fetch products used in shipGroups
+      const productIds = data.shipGroups.flatMap((group: any) =>
+        group.items.map((item: any) => item.productId)
+      );
+      await this.dispatch('product/fetchProducts', { productIds });
 
-        const sortedPaymentPreference = [...data.paymentPreferences].sort((a: any, b: any) => (b.createdDate || 0) - (a.createdDate || 0));
+      const sortedPaymentPreference = [...data.paymentPreferences].sort((a: any, b: any) => (b.createdDate || 0) - (a.createdDate || 0));
 
-        // Add showKitComponents to each item in shipGroups and remove cancelled items
-        const shipGroups = data.shipGroups.map((group: any) => {
-          const validItems = group.items.filter(
-            (item: any) => item.itemStatusId !== 'ITEM_CANCELLED'
-          )
+      // Add showKitComponents to each item in shipGroups and remove cancelled items
+      const shipGroups = data.shipGroups.map((group: any) => {
+        const validItems = group.items.filter(
+          (item: any) => item.itemStatusId !== 'ITEM_CANCELLED'
+        )
 
-          return {
-            ...group,
-            category: getOrderCategory(group),
-            items: removeKitComponents(validItems).map((item: any) => ({
-              ...item,
-              showKitComponents: false
-            }))
-          };
-        });
-
-        const order = {
-          ...data,
-          shipGroups,
-          statusId: data.orderStatusId,
-          customerId: data.partyId,
-          customerName: (`${data.customerFirstName || ""} ${data.customerLastName || ""}`).trim(),
-          shopifyOrderId: data.orderExternalId,
-          approvedDate: data.statuses?.find((status: any) => status.statusId === "ORDER_APPROVED")?.statusDatetime,
-          completedDate: data.statuses?.find((status: any) => status.statusId === "ORDER_COMPLETED")?.statusDatetime,
-          paymentPreferences: sortedPaymentPreference
+        return {
+          ...group,
+          category: getOrderCategory(group),
+          items: removeKitComponents(validItems).map((item: any) => ({
+            ...item,
+            showKitComponents: false
+          }))
         };
+      });
 
-        // Assign currentShipGroup and related fields
-        const currentFacilityId = getCurrentFacilityId();
-        const currentShipGroup = order.shipGroups.find((shipGroup: any) => shipGroup.shipGroupSeqId === payload.shipGroupSeqId && shipGroup.facilityId === currentFacilityId);
+      const order = {
+        ...data,
+        shipGroups,
+        statusId: data.orderStatusId,
+        customerId: data.partyId,
+        customerName: (`${data.customerFirstName || ""} ${data.customerLastName || ""}`).trim(),
+        shopifyOrderId: data.orderExternalId,
+        approvedDate: data.statuses?.find((status: any) => status.statusId === "ORDER_APPROVED")?.statusDatetime,
+        completedDate: data.statuses?.find((status: any) => status.statusId === "ORDER_COMPLETED")?.statusDatetime,
+        paymentPreferences: sortedPaymentPreference
+      };
 
-        if (currentShipGroup) {
-          if (currentShipGroup.shipmentMethodTypeId === 'STOREPICKUP') {
-            order.readyToHandover = currentShipGroup.category === "Packed"
-            order.handovered = currentShipGroup.category === "Completed"
-          } else {
-            order.readyToShip = currentShipGroup.category === "Packed"
-            order.shipped = currentShipGroup.category === "Completed"
-          }
-          order.shipGroup = currentShipGroup;
-          order.picklistId = currentShipGroup.picklistId || null;
-          order.isPicked = !!currentShipGroup.picklistId;
-          order.pickerIds = currentShipGroup.pickerId ? [currentShipGroup.pickerId] : [];
-          order.pickers = getPickerName(currentShipGroup.pickerGroupName, currentShipGroup.pickerFirstName, currentShipGroup.pickerLastName) || currentShipGroup.pickerId;
-          order.shipGroupSeqId = currentShipGroup.shipGroupSeqId;
-        }
+      // Assign currentShipGroup and related fields
+      const currentFacilityId = getCurrentFacilityId();
+      const currentShipGroup = order.shipGroups.find((shipGroup: any) => shipGroup.shipGroupSeqId === payload.shipGroupSeqId && shipGroup.facilityId === currentFacilityId);
 
-        // If gift card activation details needed for non-open orders
-        if (orderType !== "open") {
-          const enrichedOrder = await OrderService.fetchGiftCardActivationDetails({
-            isDetailsPage: true,
-            currentOrders: [order]
-          });
-          currentOrder = enrichedOrder;
+      if (currentShipGroup) {
+        if (currentShipGroup.shipmentMethodTypeId === 'STOREPICKUP') {
+          order.readyToHandover = currentShipGroup.category === "Packed"
+          order.handovered = currentShipGroup.category === "Completed"
         } else {
-          currentOrder = order;
+          order.readyToShip = currentShipGroup.category === "Packed"
+          order.shipped = currentShipGroup.category === "Completed"
         }
-
-        if (!order.shipGroup) {
-          currentOrder.orderId = null;
-        }
-
-
-        await dispatch('updateCurrent', { order: { ...currentOrder, orderType } });
-
-      } else {
-        throw resp.data;
+        order.shipGroup = currentShipGroup;
+        order.picklistId = currentShipGroup.picklistId || null;
+        order.isPicked = !!currentShipGroup.picklistId;
+        order.pickerIds = currentShipGroup.pickerId ? [currentShipGroup.pickerId] : [];
+        order.pickers = getPickerName(currentShipGroup.pickerGroupName, currentShipGroup.pickerFirstName, currentShipGroup.pickerLastName) || currentShipGroup.pickerId;
+        order.shipGroupSeqId = currentShipGroup.shipGroupSeqId;
       }
-    } catch (err) {
-      logger.error(err);
+
+      // If gift card activation details needed for non-open orders
+      if (orderType !== "open") {
+        const enrichedOrder = await OrderService.fetchGiftCardActivationDetails({
+          isDetailsPage: true,
+          currentOrders: [order]
+        });
+        currentOrder = enrichedOrder;
+      } else {
+        currentOrder = order;
+      }
+
+      if (!order.shipGroup) {
+        currentOrder.orderId = null;
+      }
+
+
+      await dispatch('updateCurrent', { order: { ...currentOrder, orderType } });
+
+    } else {
+      throw resp.data;
     }
+  } catch (err) {
+    logger.error(err);
+  }
   },
 
   async updateCurrent ({ commit }, payload) {
@@ -574,14 +574,14 @@ const actions: ActionTree<OrderState , RootState> ={
             return null;
           }
           productIds.push(...validItems.map((item: any) => item.productId));
-
+          
           const pickersInfo = pickers[shipment.shipmentId] || { pickers: "", pickerIds: [] };
 
           return {
             ...shipment,
             items: removeKitComponents(validItems),
             customerId: shipment.partyId,
-            customerName: `${shipment.firstName || ''} ${shipment.lastName || ''}`.trim(),
+            customerName: `${shipment.firstName || ''} ${shipment.lastName || ''}`.trim(),            
             pickers: pickersInfo.pickers,
             pickerIds: pickersInfo.pickerIds
           };
@@ -652,7 +652,7 @@ const actions: ActionTree<OrderState , RootState> ={
             ...shipment,
             items: removeKitComponents(validItems),
             customerId: shipment.partyId,
-            customerName: `${shipment.firstName || ''} ${shipment.lastName || ''}`.trim(),
+            customerName: `${shipment.firstName || ''} ${shipment.lastName || ''}`.trim(),            
             pickers: pickersInfo.pickers,
             pickerIds: pickersInfo.pickerIds
           };
@@ -780,14 +780,14 @@ const actions: ActionTree<OrderState , RootState> ={
       facilityId: payload.shipGroup.facilityId,
       shipmentId: payload.shipGroup.shipmentId
     }
-
+    
     let resp;
 
     try {
       resp = await OrderService.packOrder(params)
-      if (resp.status === 200 && !hasError(resp)) {
+      if (resp.status === 200 && !hasError(resp)) {        
         const shipmentMethodTypeId = payload.shipGroup?.shipmentMethodTypeId
-        dispatch("removeOpenOrder", payload)
+          dispatch("removeOpenOrder", payload)
 
         // Adding readyToHandover or readyToShip because we need to show the user that the order has moved to the packed tab
         if(payload.order.shipGroup.shipmentMethodTypeId === 'STOREPICKUP') {
@@ -842,13 +842,13 @@ const actions: ActionTree<OrderState , RootState> ={
   },
 
   async rejectOrderItems ({ commit }, order) {
-    const itemsToReject = order.shipGroup.items
-      .map((item: any) => ({
-        ...item,
-        updateQOH: false,
-        rejectionReasonId: item.reason,
-        kitComponents: isKit(item) ? item.rejectedComponents || [] : []
-      }));
+    const itemsToReject = order.shipGroup.items    
+    .map((item: any) => ({
+      ...item,
+      updateQOH: false,
+      rejectionReasonId: item.reason,
+      kitComponents: isKit(item) ? item.rejectedComponents || [] : []
+    }));
 
     const payload = {
       orderId: order.orderId,
@@ -868,7 +868,7 @@ const actions: ActionTree<OrderState , RootState> ={
     // Show loader only when new query and not the infinite scroll
     if (payload.viewIndex === 0) emitter.emit("presentLoader")
     let resp: any
-    console.log('Fetching Ship to Store Incoming Orders with payload:', payload);
+
     const params = {
       orderFacilityId: getCurrentFacilityId(),
       orderStatusId: 'ORDER_COMPLETED,ORDER_APPROVED',
@@ -884,13 +884,13 @@ const actions: ActionTree<OrderState , RootState> ={
     let incomingOrders = [] as any
     try {
       resp = await OrderService.getShipToStoreOrders(params)
-
+  
       if (!hasError(resp)) {
         const ordersResp = resp.data.orders;
         const orderCount = state.shipToStore.incoming.orderCount + resp.data.orders.length;
         incomingOrders = ordersResp.flatMap((order: any) => {
           const shipGroups = order.shipGroups||[];
-
+          
           return shipGroups.map((shipGroup: any) => {
             return {
               customerName:order.customerName,
@@ -900,11 +900,11 @@ const actions: ActionTree<OrderState , RootState> ={
               ...shipGroup
             }
           })
-
+          
         })
-
-        let productIds: any = new Set();
         
+        let productIds: any = new Set();
+
         incomingOrders.map((order: any) => {
           order.items.map((item: any) => productIds.add(item.productId))
           return productIds
@@ -914,9 +914,10 @@ const actions: ActionTree<OrderState , RootState> ={
         store.dispatch('product/fetchProducts', { productIds })
 
         const total = resp.data.ordersCount;
+     
         if (payload.viewIndex && payload.viewIndex > 0){
           incomingOrders = state.shipToStore.incoming.list.concat(incomingOrders);
-        }
+        } 
         commit(types.ORDER_SHIP_TO_STORE_INCOMING_UPDATED, { orders: incomingOrders, total, orderCount });
         emitter.emit("dismissLoader");
       } else {
@@ -969,7 +970,7 @@ const actions: ActionTree<OrderState , RootState> ={
               orderId:order.orderId,
               orderName: order.orderName,
               ...shipGroup
-
+              
             }
           })
 
@@ -991,8 +992,8 @@ const actions: ActionTree<OrderState , RootState> ={
 
         if (payload.viewIndex && payload.viewIndex > 0)
           {
-          readyForPickupOrders = state.shipToStore.readyForPickup.list.concat(readyForPickupOrders)
-        }
+            readyForPickupOrders = state.shipToStore.readyForPickup.list.concat(readyForPickupOrders)
+          } 
       } else {
         commit(types.ORDER_SHIP_TO_STORE_RDYFORPCKUP_UPDATED, { orders: [], total: 0, orderCount: 0 });
         showToast(translate("Orders Not Found"))
@@ -1006,7 +1007,7 @@ const actions: ActionTree<OrderState , RootState> ={
 
     return resp;
   },
-
+  
   async getShipToStoreCompletedOrders({ commit, state }, payload) {
     // Show loader only when new query and not the infinite scroll
     if (payload.viewIndex === 0) emitter.emit("presentLoader")
@@ -1027,7 +1028,7 @@ const actions: ActionTree<OrderState , RootState> ={
     if(payload.queryString?.trim()?.length) {
       params.keyword = payload.queryString.trim();
     }
-
+ 
     let completedOrders = []
     try {
       resp = await OrderService.getShipToStoreOrders(params)
@@ -1048,7 +1049,7 @@ const actions: ActionTree<OrderState , RootState> ={
           })
 
         })
-
+        
         let productIds: any = new Set();
 
         completedOrders.map((order: any) => {
@@ -1064,9 +1065,10 @@ const actions: ActionTree<OrderState , RootState> ={
         commit(types.ORDER_SHIP_TO_STORE_COMPLETED_UPDATED, { orders: completedOrders, total, orderCount });
         emitter.emit("dismissLoader");
 
-        if (payload.viewIndex && payload.viewIndex > 0) {
-          completedOrders = state.shipToStore.completed.list.concat(completedOrders)
-        }
+        if (payload.viewIndex && payload.viewIndex>0 ) 
+          {
+            completedOrders = state.shipToStore.completed.list.concat(completedOrders)
+          }
       } else {
         commit(types.ORDER_SHIP_TO_STORE_COMPLETED_UPDATED, { orders: [], total: 0 });
         showToast(translate("Orders Not Found"))
@@ -1196,8 +1198,8 @@ const actions: ActionTree<OrderState , RootState> ={
 
   async fetchAdditionalShipGroupForOrder({ commit, state }, payload) {
     const order = JSON.parse(JSON.stringify(state.current))
-
-
+    
+    
     // return if orderId is not found on order
     if (!order?.orderId) {
       return;
@@ -1205,18 +1207,18 @@ const actions: ActionTree<OrderState , RootState> ={
 
     const shipGroupSeqIds = payload.shipGroups.map((shipGroup: any) => shipGroup.shipGroupSeqId)
     const orderId = order.orderId
-
+    
     const params = {
       groupBy: 'shipGroupSeqId',
       'shipGroupSeqId': `(${shipGroupSeqIds.join(' OR ')})`,
       '-fulfillmentStatus': '(Rejected OR Cancelled)',
       orderId: orderId
     }
-
+    
     const orderQueryPayload = prepareOrderQuery(params)
-
+    
     let resp, total, shipGroups: any = [];
-
+    
     try {
       resp = await OrderService.findOrderShipGroup(orderQueryPayload);
       if (resp.status === 200 && !hasError(resp) && resp.data.grouped?.shipGroupSeqId.matches > 0) {
@@ -1284,9 +1286,9 @@ const actions: ActionTree<OrderState , RootState> ={
 
     try {
       const resp = await UtilService.fetchGiftCardFulfillmentInfo({
-        orderId: orderId,
-        orderItemSeqId: item.orderItemSeqId
-      })
+          orderId: orderId,
+          orderItemSeqId: item.orderItemSeqId        
+      })      
 
       if(!hasError(resp)) {
         isGCActivated = true;
@@ -1299,10 +1301,10 @@ const actions: ActionTree<OrderState , RootState> ={
     }
 
     if(!isGCActivated) return;
-
+    
     if(isDetailsPage) {
       const order = JSON.parse(JSON.stringify(state.current));
-
+      
       order.shipGroup.items?.map((currentItem: any) => {
         if(currentItem.orderId === orderId && currentItem.orderItemSeqId === item.orderItemSeqId) {
           currentItem.isGCActivated = true;
@@ -1318,9 +1320,9 @@ const actions: ActionTree<OrderState , RootState> ={
       if(order.orderId === orderId) {
         order.items.map((currentItem: any) => {
             if(currentItem.orderItemSeqId === item.orderItemSeqId) {
-            currentItem.isGCActivated = true;
-            currentItem.gcInfo = gcInfo;
-          }
+              currentItem.isGCActivated = true;
+              currentItem.gcInfo = gcInfo;
+            }          
         })
       }
     })
