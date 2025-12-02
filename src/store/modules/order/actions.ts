@@ -944,8 +944,8 @@ const actions: ActionTree<OrderState , RootState> ={
       orderFacilityId: getCurrentFacilityId(),
       statusId:"ITEM_COMPLETED",
       orderStatusId:"ORDER_COMPLETED",
-      viewSize: payload.viewSize ? payload.viewSize : process.env.VUE_APP_VIEW_SIZE,
-      viewIndex: payload.viewIndex ? payload.viewIndex : 0,
+      pageSize: payload.viewSize ? payload.viewSize : process.env.VUE_APP_VIEW_SIZE,
+      pageIndex: payload.viewIndex ? payload.viewIndex : 0,
       distinct: "Y",
       noConditionFind: "Y",
     } as any
@@ -987,13 +987,12 @@ const actions: ActionTree<OrderState , RootState> ={
 
         const total = resp.data.ordersCount;
 
-        commit(types.ORDER_SHIP_TO_STORE_RDYFORPCKUP_UPDATED, { orders: readyForPickupOrders, total, orderCount });
-        emitter.emit("dismissLoader");
-
         if (payload.viewIndex && payload.viewIndex > 0)
           {
             readyForPickupOrders = state.shipToStore.readyForPickup.list.concat(readyForPickupOrders)
-          } 
+          }
+        commit(types.ORDER_SHIP_TO_STORE_RDYFORPCKUP_UPDATED, { orders: readyForPickupOrders, total, orderCount });
+        emitter.emit("dismissLoader");
       } else {
         commit(types.ORDER_SHIP_TO_STORE_RDYFORPCKUP_UPDATED, { orders: [], total: 0, orderCount: 0 });
         showToast(translate("Orders Not Found"))
@@ -1019,8 +1018,8 @@ const actions: ActionTree<OrderState , RootState> ={
       statusId:"ITEM_COMPLETED",
       orderStatusId:"ORDER_COMPLETED",
       orderFacilityId: getCurrentFacilityId(),
-      viewSize: payload.viewSize ? payload.viewSize : process.env.VUE_APP_VIEW_SIZE,
-      viewIndex: payload.viewIndex ? payload.viewIndex : 0,
+      pageSize: payload.viewSize ? payload.viewSize : process.env.VUE_APP_VIEW_SIZE,
+      pageIndex: payload.viewIndex ? payload.viewIndex : 0,
       noConditionFind: "Y",
       distinct: "Y",
     } as any
@@ -1062,15 +1061,15 @@ const actions: ActionTree<OrderState , RootState> ={
 
         const total = resp.data.ordersCount;
 
-        commit(types.ORDER_SHIP_TO_STORE_COMPLETED_UPDATED, { orders: completedOrders, total, orderCount });
-        emitter.emit("dismissLoader");
 
         if (payload.viewIndex && payload.viewIndex>0 ) 
           {
             completedOrders = state.shipToStore.completed.list.concat(completedOrders)
           }
+        commit(types.ORDER_SHIP_TO_STORE_COMPLETED_UPDATED, { orders: completedOrders, total, orderCount });
+        emitter.emit("dismissLoader");
       } else {
-        commit(types.ORDER_SHIP_TO_STORE_COMPLETED_UPDATED, { orders: [], total: 0 });
+        commit(types.ORDER_SHIP_TO_STORE_COMPLETED_UPDATED, { orders: [], total: 0 ,orderCount:0});
         showToast(translate("Orders Not Found"))
       }
     } catch(err) {
