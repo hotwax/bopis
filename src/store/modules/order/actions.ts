@@ -945,9 +945,7 @@ const actions: ActionTree<OrderState , RootState> ={
       statusId:"ITEM_COMPLETED",
       orderStatusId:"ORDER_COMPLETED",
       pageSize: payload.viewSize ? payload.viewSize : process.env.VUE_APP_VIEW_SIZE,
-      pageIndex: payload.viewIndex ? payload.viewIndex : 0,
-      distinct: "Y",
-      noConditionFind: "Y",
+      pageIndex: payload.viewIndex ? payload.viewIndex : 0
     } as any
 
     if(payload.queryString?.trim()?.length) {
@@ -1019,9 +1017,7 @@ const actions: ActionTree<OrderState , RootState> ={
       orderStatusId:"ORDER_COMPLETED",
       orderFacilityId: getCurrentFacilityId(),
       pageSize: payload.viewSize ? payload.viewSize : process.env.VUE_APP_VIEW_SIZE,
-      pageIndex: payload.viewIndex ? payload.viewIndex : 0,
-      noConditionFind: "Y",
-      distinct: "Y",
+      pageIndex: payload.viewIndex ? payload.viewIndex : 0
     } as any
 
     if(payload.queryString?.trim()?.length) {

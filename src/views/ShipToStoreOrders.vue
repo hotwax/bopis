@@ -298,41 +298,54 @@ export default defineComponent({
           },{
             text: translate('Ready for pickup'),
             handler: async () => {
-              await this.scheduleOrderForPickup(order.shipmentId)
+              await this.scheduleOrderForPickup(order.shipmentId, order)
             }
           }]
         });
       return alert.present();
     },
-    async scheduleOrderForPickup(shipmentId: string) {
-      emitter.emit("presentLoader");
 
-      try{
-        const resp = await OrderService.arrivedShipToSTore(shipmentId);
+    async scheduleOrderForPickup(shipmentId: string, order: any) {
+        emitter.emit("presentLoader");
 
-        if(!hasError(resp)){
-          try{
-            const emailResp = await OrderService.sendPickupScheduledNotification({shipmentId});
+        try{
+          // Get all shipGroups for this orderId from incomingOrders
+          const orderId = order.orderId;
+          const currentShipGroupSeqId = order.shipGroupSeqId;
 
-            if(!hasError(emailResp)) {
-              showToast(translate('Order marked as ready for pickup, an email notification has been sent to the customer'));
+          // Filter all incoming cards for this orderId
+          const incomingShipGroups = this.incomingOrders.filter((o: any) => o.orderId === orderId);
+
+          // Check if only one shipGroup remains and it's the current one
+          const isLastShipGroup = incomingShipGroups.length === 1 && incomingShipGroups[0].shipGroupSeqId === currentShipGroupSeqId;
+
+          const resp = await OrderService.arrivedShipToSTore(shipmentId);
+
+          if(!hasError(resp)){
+            if (isLastShipGroup) {
+              try{
+                const emailResp = await OrderService.sendPickupScheduledNotification({shipmentId});
+                
+                if(!hasError(emailResp)) {
+                  showToast(translate('Order marked as ready for pickup, an email notification has been sent to the customer'));
+                }
+              } catch(error) {
+                logger.error('Error sending pickup scheduled notification:', error);
+                showToast(translate('Order marked as ready for pickup but something went wrong while sending the email notification'));
+              }
             }
-          } catch(error) {
-            logger.error('Error sending pickup scheduled notification:', error);
-            showToast(translate('Order marked as ready for pickup but something went wrong while sending the email notification'));
-          } finally {
-            await this.getIncomingOrders(); // Refresh
+            this.store.dispatch('order/resetShipToStoreOrdersPagination');
+            await this.getIncomingOrders(); // Refresh after all logic
+          } else {
+            showToast(translate("Failed to mark order as ready for pickup"));
           }
-        } else {
-          showToast(translate("Failed to mark order as ready for pickup"));
-        }
 
-      } catch (err) {
-        logger.error('Schedule order for pickup error:', err);
-        showToast(translate("Something went wrong"));
-      } finally {
-        emitter.emit("dismissLoader");
-      }
+        } catch (err) {
+          logger.error('Schedule order for pickup error:', err);
+          showToast(translate("Something went wrong"));
+        } finally {
+          emitter.emit("dismissLoader");
+        }
     },
     async confirmHandoverOrder(shipmentId: string) {
       const header = translate('Complete order')
