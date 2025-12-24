@@ -682,6 +682,34 @@ const actions: ActionTree<OrderState , RootState> ={
     }
   },
 
+  async getCommunicationEvents({ state, dispatch, commit }, params) {
+    try {
+      const completedOrdersList = params.orders.map((completedOrderData: any) => completedOrderData.orderId);
+
+      const currentOrdersList = store.getters['order/getCommunicationEvents'];
+
+      const filteredOrdersList = completedOrdersList.filter((orderId: any) => {
+        return !currentOrdersList.some((currentOrderData: any) => currentOrderData.orderId === orderId);
+      });
+
+      const resp = await OrderService.getCommunicationEvents({
+        orderIds: filteredOrdersList,
+        communicationEventTypeId: "API_COMMUNICATION",
+        reasonEnumId: "HANDOVER_PROOF",
+      });
+
+      if (!hasError(resp) && resp.data && resp.data.communicationEventList) {
+        commit(types.ORDER_COMMUNICATION_EVENTS_UPDATED, { communicationEvents: resp.data.communicationEventList });
+        return resp.data.communicationEventList;
+      } else {
+        throw resp.data;
+      }
+    } catch (err) {
+      logger.error(err);
+      showToast(translate("Something went wrong"));
+    }
+  },
+
   async deliverShipment ({ state, dispatch, commit }, order) {
     emitter.emit("presentLoader");
 

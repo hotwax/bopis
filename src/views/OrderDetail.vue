@@ -194,7 +194,7 @@
             </ion-button>            
           </ion-item>
           <ion-item lines="none" v-else-if="orderType === 'packed' && order.shipGroup?.items?.length" class="ion-hide-md-down">
-            <ion-button data-testid="handover-button" size="default" :disabled="!hasPermission(Actions.APP_ORDER_UPDATE) || order.handovered || order.shipped || order.cancelled || hasCancelledItems" expand="block" @click.stop="handleHandover(order)">
+            <ion-button data-testid="handover-button" size="default" :disabled="!hasPermission(Actions.APP_ORDER_UPDATE) || order.handovered || order.shipped || order.cancelled || hasCancelledItems" expand="block" @click.stop="deliverShipment(order)">
               <ion-icon slot="start" :icon="checkmarkDoneOutline"/>
               {{ order.shipGroup.shipmentMethodTypeId === 'STOREPICKUP' ? translate("Handover") : translate("Ship") }}
             </ion-button>
@@ -321,7 +321,7 @@
         </ion-fab-button>
       </ion-fab>
       <ion-fab v-else-if="orderType === 'packed' && order?.orderId" class="ion-hide-md-up" vertical="bottom" horizontal="end" slot="fixed" >
-        <ion-fab-button :disabled="!hasPermission(Actions.APP_ORDER_UPDATE) || order.handovered || order.shipped || order.cancelled" @click="handleHandover(order)">
+        <ion-fab-button :disabled="!hasPermission(Actions.APP_ORDER_UPDATE) || order.handovered || order.shipped || order.cancelled" @click="deliverShipment(order)">
           <ion-icon :icon="checkmarkDoneOutline" />
         </ion-fab-button>
       </ion-fab>
@@ -1322,13 +1322,6 @@ export default defineComponent({
       }
     },
 
-    handleHandover(order: any) {
-      if (this.getBopisProductStoreSettings('HANDOVER_PROOF')) {
-        this.openProofOfDeliveryModal(order);
-      } else {
-        this.deliverShipment(order);
-      }
-    },
     canRequestTransfer(order: any): boolean {
       return (
         order?.shipGroup?.shipmentMethodTypeId === 'STOREPICKUP' &&

@@ -592,6 +592,14 @@ const sendPickupNotification = async (payload: any): Promise<any> => {
   });
 };
 
+const getCommunicationEvents = async (payload: any): Promise<any> => {
+  return api({
+    url: `/oms/communicationEvents`,
+    method: "GET",
+    params: payload
+  });
+};
+
 
 export const OrderService = {
   cancelOrder,
@@ -626,5 +634,6 @@ export const OrderService = {
   shipOrder,
   updateShipment,
   getBillingDetails,
-  sendPickupNotification
+  sendPickupNotification,
+  getCommunicationEvents
 }

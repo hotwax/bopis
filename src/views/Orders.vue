@@ -91,7 +91,7 @@
             <ProductListItem v-for="item in order.items" :key="item.productId" :item="item" :orderId="order.orderId" :customerId="order.customerId" :currencyUom="order.currencyUom" orderType="packed"/>
             <div class="border-top">
 
-              <ion-button data-testid="handover-button" :disabled="!hasPermission(Actions.APP_ORDER_UPDATE)" fill="clear" @click.stop="handleHandover(order)">
+              <ion-button data-testid="handover-button" :disabled="!hasPermission(Actions.APP_ORDER_UPDATE)" fill="clear" @click.stop="deliverShipment(order)">
                 {{ order.shipmentMethodTypeId === 'STOREPICKUP' ? translate("Handover") : translate("Ship") }}
               </ion-button>
               <ion-button size="default" data-testid="packing-slip-button" v-if="getBopisProductStoreSettings('PRINT_PACKING_SLIPS')" fill="clear" slot="end" @click.stop="printPackingSlip(order)">
@@ -118,8 +118,15 @@
 
             <ProductListItem v-for="item in order.items" :key="item.productId" :item="item" :orderId="order.orderId" :customerId="order.customerId" :currencyUom="order.currencyUom" orderType="completed"/>          
             <div class="border-top">
-              <ion-button data-testid="packing-slip-button" v-if="getBopisProductStoreSettings('PRINT_PACKING_SLIPS')" fill="clear" slot="end" @click.stop="printPackingSlip(order)">
+              <!-- <ion-button data-testid="packing-slip-button" v-if="getBopisProductStoreSettings('PRINT_PACKING_SLIPS')" fill="clear" slot="end" @click.stop="printPackingSlip(order)">
                 {{ translate('Print customer letter') }}
+              </ion-button> -->
+              <ion-button data-testid="proof-of-delivery-button" fill="clear" @click.stop="openProofOfDeliveryModal(order, hasCommunicationEvent(order.orderId))">
+                {{ hasCommunicationEvent(order.orderId) ? translate('View Proof of Delivery') : translate('Proof of Delivery') }}
+              </ion-button>
+              <div></div>
+              <ion-button  size="default" data-testid="packing-slip-button" v-if="getBopisProductStoreSettings('PRINT_PACKING_SLIPS')" fill="clear" slot="end" @click.stop="printPackingSlip(order)">
+                <ion-icon slot="icon-only" :icon="printOutline" />
               </ion-button>
             </div>
           </ion-card>
@@ -187,7 +194,7 @@ import { UserService } from "@/services/UserService";
 import { Actions, hasPermission } from '@/authorization'
 import logger from "@/logger";
 import RejectOrderItemModal from "@/components/RejectOrderItemModal.vue";
-import ProofOfDeliveryModal from '@/components/ProofOfDeliveryModal.vue'
+import ProofOfDeliveryModal from "@/components/ProofOfDeliveryModal.vue";
 
 export default defineComponent({
   name: 'Orders',
@@ -232,7 +239,8 @@ export default defineComponent({
       getBopisProductStoreSettings: 'user/getBopisProductStoreSettings',
       getProductStock: 'stock/getProductStock',
       getInventoryInformation: 'stock/getInventoryInformation',
-      order: "order/getCurrent"
+      order: "order/getCurrent",
+      communicationEvents: 'order/getCommunicationEvents'
     })
   },
   data() {
@@ -307,11 +315,15 @@ export default defineComponent({
 
       await this.store.dispatch("order/getPackedOrders", { viewSize, viewIndex, queryString: this.queryString, facilityId: this.currentFacility?.facilityId });
     },
+    hasCommunicationEvent(orderId: string) {
+      return (this.communicationEvents || []).some((e: any) => e.orderId === orderId);
+    },
     async getCompletedOrders (vSize?: any, vIndex?: any) {
       const viewSize = vSize ? vSize : process.env.VUE_APP_VIEW_SIZE;
       const viewIndex = vIndex ? vIndex : 0;
 
       await this.store.dispatch("order/getCompletedOrders", { viewSize, viewIndex, queryString: this.queryString, facilityId: this.currentFacility?.facilityId });
+      await this.store.dispatch('order/getCommunicationEvents', { orders: this.completedOrders });
     },
     enableScrolling() {
       const parentElement = (this as any).$refs.contentRef.$el
@@ -579,11 +591,12 @@ export default defineComponent({
       return rejectOrderModal.present()
     },
 
-    async openProofOfDeliveryModal(order: any) {
+    async openProofOfDeliveryModal(order: any, isViewModeOnly: any) {
       const modal = await modalController.create({
         component: ProofOfDeliveryModal,
         componentProps: {
-          order
+          order,
+          isViewModeOnly
         },
       });
 
@@ -591,14 +604,11 @@ export default defineComponent({
       
       const { data } = await modal.onDidDismiss();
       
-      if (data?.confirmed && data?.proofOfDeliveryData) {
+      if (!isViewModeOnly && data?.confirmed && data?.proofOfDeliveryData) {
         emitter.emit("presentLoader");
         
         try {
-          // First deliver the shipment
-          await this.deliverShipment(order);
-          
-          // Then send the proof of delivery email
+          // Send the proof of delivery email
           const resp = await OrderService.sendPickupNotification(data.proofOfDeliveryData);
           
           if (hasError(resp)) {
@@ -613,14 +623,6 @@ export default defineComponent({
         } finally {
           emitter.emit("dismissLoader");
         }
-      }
-    },
-
-    handleHandover(order: any) {
-      if (this.getBopisProductStoreSettings('HANDOVER_PROOF')) {
-        this.openProofOfDeliveryModal(order);
-      } else {
-        this.deliverShipment(order);
       }
     }
   },
