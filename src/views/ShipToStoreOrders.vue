@@ -23,7 +23,7 @@
     <ion-content ref="contentRef" :scroll-events="true" @ionScroll="enableScrolling()">
       <div v-if="segmentSelected === 'incoming'">
         <div v-for="(order, index) in incomingOrders" :key="index" v-show="order.items.length">
-          <ion-card button>
+          <ion-card>
             <ion-item lines="none">
               <ion-label class="ion-text-wrap">
                 <h1>{{ order.customerName }}</h1>
@@ -46,7 +46,7 @@
       </div>      
       <div v-if="segmentSelected === 'readyForPickup'">
         <div v-for="(order, index) in readyForPickupOrders" :key="index" v-show="order.items.length">
-          <ion-card button>
+          <ion-card>
             <ion-item lines="none">
               <ion-label class="ion-text-wrap">
                 <h1>{{ order.customerName }}</h1>
@@ -72,7 +72,7 @@
       </div>
       <div v-if="segmentSelected === 'completed'">
         <div v-for="(order, index) in completedOrders" :key="index" v-show="order.items.length">
-          <ion-card button>
+          <ion-card>
             <ion-item lines="none">
               <ion-label class="ion-text-wrap">
                 <h1>{{ order.customerName }}</h1>
