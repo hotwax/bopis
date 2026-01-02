@@ -62,6 +62,8 @@ const getters: GetterTree <UserState, RootState> = {
     getBopisProductStoreSettings: (state) => (enumId: string) => {
         return state.bopisProductStoreSettings[enumId]
     },
-
+    getAppVersion: (state) => {
+        return state.appVersion
+    },
 }
 export default getters;

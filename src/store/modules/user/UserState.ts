@@ -12,4 +12,5 @@ export default interface UserState {
     allNotificationPrefs: any;
     bopisProductStoreSettings: any;
     omsRedirectionUrl: string;
+    appVersion: string;
 }

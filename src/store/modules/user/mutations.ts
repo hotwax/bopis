@@ -47,8 +47,10 @@ const mutations: MutationTree <UserState> = {
         state.bopisProductStoreSettings = payload
     },
     [types.USER_OMS_REDIRECTION_URL_UPDATED](state, payload) {
-    state.omsRedirectionUrl = payload;
+        state.omsRedirectionUrl = payload;
+    },
+    [types.USER_APP_VERSION_UPDATED](state, payload) {
+        state.appVersion = payload;
     }
-    
 }
 export default mutations;
