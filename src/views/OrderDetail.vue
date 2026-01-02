@@ -53,7 +53,7 @@
               <h1 data-testid="order-name-tag">{{ order.orderName }}</h1>
               <p data-testid="order-id-tag">{{ order.orderId }}</p>
             </ion-label>
-            <ion-chip data-testid="edit-picker-chip" :disabled="!hasPermission(Actions.APP_ORDER_UPDATE)" v-if="order.pickers && (orderType === 'open' || orderType === 'packed') && getBopisProductStoreSettings('ENABLE_TRACKING')" outline slot="end" @click="editPicker(order)">
+            <ion-chip data-testid="edit-picker-chip" :disabled="!hasPermission(Actions.APP_ORDER_UPDATE) || order.handovered || order.shipped || order.cancelled" v-if="order.pickers && (orderType === 'open' || orderType === 'packed') && getBopisProductStoreSettings('ENABLE_TRACKING')" outline slot="end" @click="editPicker(order)">
               <ion-icon :icon="personOutline"/>
               <ion-label>{{ order.pickers }}</ion-label>
             </ion-chip>
@@ -85,11 +85,11 @@
                   <!-- Order item rejection flow -->
                   <template v-if="orderType === 'open' && !(order.readyToHandover || order.readyToShip)">
                     <ion-chip data-testid="change-rejection-reason-chip" v-if="item.rejectReason" outline color="danger" @click.stop="openRejectReasonPopover($event, item, order)">
-                      <ion-icon data-testid="void-rejection-reason-icon" :icon="closeCircleOutline" @click.stop="removeRejectionReason($event, item, order)"/>
+                      <ion-icon data-testid="void-rejection-reason-icon" :icon="closeCircleOutline" @click.stop="removeRejectionReason(item, order)"/>
                       <ion-label>{{ getRejectionReasonDescription(item.rejectReason) }}</ion-label>
                       <ion-icon :icon="caretDownOutline"/>
                     </ion-chip>
-                    <ion-chip v-else-if="isEntireOrderRejectionEnabled(order)" outline color="danger" @click.stop="openRejectReasonPopover($event, item, order)">
+                    <ion-chip v-else-if="isEntireOrderRejectionEnabled()" outline color="danger" @click.stop="openRejectReasonPopover($event, item, order)">
                       <ion-label>{{ getRejectionReasonDescription(rejectEntireOrderReasonId) ? getRejectionReasonDescription(rejectEntireOrderReasonId) : translate("Reject to avoid order split (no variance)") }}</ion-label>
                       <ion-icon :icon="caretDownOutline"/>
                     </ion-chip>
@@ -100,7 +100,7 @@
                   <!-- Order item calcelation flow -->
                   <template v-else-if="orderType === 'packed' && !(order.handovered || order.shipped)">
                     <ion-chip data-testid="change-cancel-reason-chip" v-if="item.cancelReason" outline color="danger" @click.stop="openCancelReasonPopover($event, item, order)">
-                      <ion-icon data-testid="void-cancel-reason-icon" :icon="closeCircleOutline" @click.stop="removeCancellationReason($event, item, order)"/>
+                      <ion-icon data-testid="void-cancel-reason-icon" :icon="closeCircleOutline" @click.stop="removeCancellationReason(item, order)"/>
                       <ion-label>{{ getCancelReasonDescription(item.cancelReason) }}</ion-label>
                       <ion-icon :icon="caretDownOutline"/>
                     </ion-chip>
@@ -150,7 +150,7 @@
                       <p class="overline">{{ getProductIdentificationValue(productIdentificationPref.secondaryId, getProduct(productComponent.productIdTo)) }}</p>
                       {{ getProductIdentificationValue(productIdentificationPref.primaryId, getProduct(productComponent.productIdTo)) ? getProductIdentificationValue(productIdentificationPref.primaryId, getProduct(productComponent.productIdTo)) : productComponent.productIdTo }}
                     </ion-label>
-                    <ion-checkbox slot="end" aria-label="Rejection Reason kit component" v-if="item.rejectReason || isEntireOrderRejectionEnabled(order)" :checked="item.rejectedComponents?.includes(productComponent.productIdTo)" @ionChange="rejectKitComponent(order, item, productComponent.productIdTo)" color="danger"/>
+                    <ion-checkbox slot="end" aria-label="Rejection Reason kit component" v-if="item.rejectReason || isEntireOrderRejectionEnabled()" :checked="item.rejectedComponents?.includes(productComponent.productIdTo)" @ionChange="rejectKitComponent(order, item, productComponent.productIdTo)" color="danger"/>
                   </ion-item>
                 </template>
               </div>
@@ -397,7 +397,6 @@ import {
   warningOutline,
   personAddOutline,
   medkitOutline,
-  swapHorizontal
 } from "ionicons/icons";
 import { useRouter } from 'vue-router'
 import { Actions, hasPermission } from '@/authorization'
@@ -406,7 +405,7 @@ import AssignPickerModal from "@/views/AssignPickerModal.vue";
 import EditPickerModal from "@/components/EditPickerModal.vue";
 import { copyToClipboard, formatCurrency, formatPhoneNumber, getColorByDesc, getCurrentFacilityId, getFeature, showToast } from '@/utils'
 import { DateTime } from "luxon";
-import { api, hasError } from '@/adapter';
+import { hasError } from '@/adapter';
 import { OrderService } from "@/services/OrderService";
 import { getProductIdentificationValue, translate, useProductIdentificationStore, useUserStore } from "@hotwax/dxp-components";
 import emitter from '@/event-bus'
@@ -468,12 +467,8 @@ export default defineComponent({
     ...mapGetters({
       order: "order/getCurrent",
       partialOrderRejectionConfig: 'user/getPartialOrderRejectionConfig',
-      getPaymentMethodDesc: 'util/getPaymentMethodDesc',
-      getStatusDesc: 'util/getStatusDesc',
       getProduct: 'product/getProduct',
       getInventoryInformation: 'stock/getInventoryInformation',
-      getProductStock: 'stock/getProductStock',
-      getfacilityTypeDesc: 'util/getFacilityTypeDesc',
       getPartyName: 'util/getPartyName',
       getBopisProductStoreSettings: 'user/getBopisProductStoreSettings',
       rejectReasons: 'util/getRejectReasons',
@@ -569,12 +564,8 @@ export default defineComponent({
     async rejectOrder() {
       emitter.emit("presentLoader");
 
-      const payload = {
-        "orderId": this.order.orderId
-      }
-
       let order = JSON.parse(JSON.stringify(this.order))
-      const isEntireOrderRejection = this.isEntireOrderRejectionEnabled(order);
+      const isEntireOrderRejection = this.isEntireOrderRejectionEnabled();
       const rejectToFacilityId = order.shipGroup.shipmentMethodTypeId === "STOREPICKUP" ? "PICKUP_REJECTED" : "REJECTED_ITM_PARKING";
       const itemsToReject: any[] = [];
       
@@ -815,16 +806,16 @@ export default defineComponent({
       const reason = this.cancelReasons?.find((reason: any) => reason.enumId === cancelReasonId)
       return reason?.enumDescription ? reason.enumDescription : reason?.enumId;
     },
-    isEntireOrderRejectionEnabled(order: any) {
+    isEntireOrderRejectionEnabled() {
       return (!this.partialOrderRejectionConfig || !this.partialOrderRejectionConfig.settingValue || !JSON.parse(this.partialOrderRejectionConfig.settingValue)) && this.hasRejectedItems
     },
-    async removeRejectionReason(ev: Event, item: any, order: any) {
+    async removeRejectionReason(item: any, order: any) {
       delete item["rejectedComponents"];
       item.rejectReason = "";
       this.hasRejectedItems = order.shipGroup.items.some((item: any) => item.rejectReason);
       this.store.dispatch("order/updateCurrent", { order })
     },
-    async removeCancellationReason(ev: Event, item: any, order: any) {
+    async removeCancellationReason(item: any, order: any) {
       item.cancelReason = "";
       this.hasCancelledItems = order.shipGroup.items.some((item: any) => item.cancelReason);
       this.store.dispatch("order/updateCurrent", { order })
@@ -1344,11 +1335,11 @@ export default defineComponent({
         header,
         message,
         buttons: [{ 
-          text: translate('Cancel'), role: 'cancel' 
-        },
-        {
-         text: translate('Convert'), 
-         handler: async () => await this.requestTransfer(order) 
+          text: translate('Cancel'),
+          role: 'cancel'
+        }, {
+          text: translate('Convert'),
+          handler: async () => await this.requestTransfer(order)
         }]
       });
 

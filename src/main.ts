@@ -86,7 +86,7 @@ app.config.globalProperties.$filters = {
     }
     return DateTime.fromISO(value).toFormat(outFormat ? outFormat : 'MM-dd-yyyy');
   },
-  formatUtcDate(value: any, inFormat?: any, outFormat?: string) {
+  formatUtcDate(value: any, outFormat?: string) {
     // TODO Make default format configurable and from environment variables
     const userProfile = store.getters['user/getUserProfile'];
     // TODO Fix this setDefault should set the default timezone instead of getting it everytiem and setting the tz

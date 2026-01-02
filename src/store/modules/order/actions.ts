@@ -110,7 +110,7 @@ const actions: ActionTree<OrderState , RootState> ={
     return resp;
   },
 
-  async getOpenOrders({ commit, dispatch, state }, params) {
+  async getOpenOrders({ commit, state }, params) {
     // Show loader only when new query and not the infinite scroll
     if (params.viewIndex === 0) emitter.emit("presentLoader");
 
@@ -140,8 +140,7 @@ const actions: ActionTree<OrderState , RootState> ={
       if (resp.status === 200 && !hasError(resp) && resp?.data?.orders.length > 0) {
         const ordersResp = resp.data.orders;
 
-        // Collect all orderIds and productIds
-        const orderIds = ordersResp.map((order: any) => order.orderId);
+        // Collect all productIds
         const productIds = ordersResp.flatMap((order: any) => 
           order.shipGroups.flatMap((group: any) => group.items.map((item: any) => item.productId))
         );
@@ -186,7 +185,7 @@ const actions: ActionTree<OrderState , RootState> ={
     }
   },
 
-  async fetchPickersInformation({ commit }, { shipmentIds, shipmentStatusId }) {
+  async fetchPickersInformation(_, { shipmentIds, shipmentStatusId }) {
     const payload = {
       shipmentId: shipmentIds.join(','),
       shipmentId_op: 'in',
@@ -200,11 +199,10 @@ const actions: ActionTree<OrderState , RootState> ={
       if (!hasError(resp)) {
         const shipments = resp.data;
 
-        // Build a map of orderId -> { pickers, pickerIds }
+        // Build a map of shipmentId -> { shipmentId, pickers, pickerIds }
         const pickersMap = {} as any;
 
         shipments.forEach((shipment: any) => {
-          const orderId = shipment.primaryOrderId || shipment.order?.orderId;
           const shipmentId = shipment.shipmentId;
           const allRoles = shipment.picklistShipment?.flatMap((picklistShipment: any) =>
             (picklistShipment.picklist?.roles ?? []).filter((role: any) => !role.thruDate)
@@ -235,197 +233,6 @@ const actions: ActionTree<OrderState , RootState> ={
     logger.error('Failed to fetch picklists', err);
     return {};
   }
-  },
-
-  async fetchAdditionalOrderInformation({ dispatch }, orderDetails) {
-    let order = orderDetails;
-    const orderId = order.orderId
-
-    try {
-      const apiPayload = [{
-        inputFields: {
-          orderId
-        },
-        viewSize: 50,
-        filterByDate: "Y",
-        entityName: "OrderHeaderAndRoles"
-      }, {
-        inputFields: {
-          orderId,
-          contactMechPurposeTypeId: ["BILLING_LOCATION", "BILLING_EMAIL", "PHONE_BILLING"],
-          contactMechPurposeTypeId_op: "in"
-        },
-        viewSize: 50,
-        fieldList: ["contactMechPurposeTypeId", "contactMechId"],
-        entityName: "OrderContactMech"
-      }, {
-        inputFields: {
-          orderId
-        },
-        viewSize: 50,
-        filterByDate: "Y",
-        fieldList: ["orderIdentificationTypeId", "orderId", "idValue"],
-        entityName: "OrderIdentification"
-      }, {
-        inputFields: {
-          orderId,
-          attrName: ["customerId", "municipio"],
-          attrName_op: "in",
-          attrName_ic: "Y"
-        },
-        viewSize: 50,
-        fieldList: ["attrName", "attrValue"],
-        entityName: "OrderAttribute"
-      }, {
-        inputFields: {
-          orderId,
-          statusId: ["ORDER_COMPLETED", "ORDER_APPROVED"],
-          statusId_op: "in"
-        },
-        viewSize: 2,
-        entityName: "OrderStatus"
-      }, {
-        inputFields: {
-          orderId,
-          statusId: "PAYMENT_CANCELLED",
-          statusId_op: "notEqual"
-        },
-        orderBy: "createdDate DESC",
-        viewSize: 50,
-        fieldList: ["paymentMethodTypeId", "maxAmount", "statusId"],
-        entityName: "OrderPaymentPreference"
-      }, {
-        inputFields: {
-          orderId
-        },
-        viewSize: 50,
-        entityName: "OrderItemShipGroupAndFacility"
-      }]
-
-      const [orderHeader, orderContactMech, orderIdentifications, orderAttributes, orderStatusInfo, orderPaymentPreference] = await Promise.allSettled(apiPayload.map((payload: any) => OrderService.performFind(payload)))
-
-      if(orderHeader.status === "fulfilled" && !hasError(orderHeader.value) && orderHeader.value.data.count > 0) {
-        order = {
-          ...order,
-          ...orderHeader.value.data.docs[0]
-        }
-
-        if(!order.orderId) {
-          throw "Failed to fetch order information"
-        }
-      }
-      if(orderContactMech.status === "fulfilled" && !hasError(orderContactMech.value) && orderContactMech.value.data.count > 0) {
-        const orderContactMechTypes: any = orderContactMech.value.data.docs.reduce((contactMechTypes: any, contactMech: any) => {
-          contactMechTypes[contactMech.contactMechPurposeTypeId] = contactMech.contactMechId
-
-          return contactMechTypes;
-        }, {})
-
-        const postalAddress = await OrderService.performFind({
-          inputFields: {
-            contactMechId: Object.keys(orderContactMechTypes).filter((mechType: string) => mechType === "BILLING_LOCATION").map((mechType: string) => orderContactMechTypes[mechType]),
-            contactMechId_op: "in"
-          },
-          viewSize: 20,
-          entityName: "PostalAddressAndGeo"
-        })
-
-        if(!hasError(postalAddress) && postalAddress.data.count > 0) {
-          postalAddress.data.docs.map((address: any) => {
-            if(address.contactMechId === orderContactMechTypes["BILLING_LOCATION"]) {
-              order["billingAddress"] = address
-            }
-          })
-        }
-
-        const customerInfo = await OrderService.performFind({
-          inputFields: {
-            contactMechId: Object.keys(orderContactMechTypes).filter((mechType: string) => mechType === "BILLING_EMAIL" || mechType === "PHONE_BILLING").map((mechType: string) => orderContactMechTypes[mechType]),
-            contactMechId_op: "in"
-          },
-          viewSize: 20,
-          fieldList: ["infoString", "contactMechId", "tnContactNumber"],
-          entityName: "ContactMechDetail"
-        })
-
-        if(!hasError(customerInfo) && customerInfo.data.count > 0) {
-          customerInfo.data.docs.map((info: any) => {
-            if(info.contactMechId === orderContactMechTypes["BILLING_EMAIL"]) {
-              order["billingEmail"] = info.infoString
-            }
-
-            if(info.contactMechId === orderContactMechTypes["PHONE_BILLING"]) {
-              order["billingPhone"] = info.tnContactNumber
-            }
-          })
-        }
-      }
-
-      // Fetching order identifications
-      if(orderIdentifications.status === "fulfilled" && !hasError(orderIdentifications.value) && orderIdentifications.value.data.count > 0) {
-        order["shopifyOrderId"] = orderIdentifications.value.data.docs.find((identification: any) => identification.orderIdentificationTypeId === "SHOPIFY_ORD_ID")?.idValue
-      }
-
-      // Fetching order attributes
-      order["orderAttributes"] = {}
-      if(orderAttributes.status === "fulfilled" && !hasError(orderAttributes.value) && orderAttributes.value.data.count > 0) {
-        orderAttributes.value.data.docs.map((attribute: any) => {
-          // For some attbiutes we get casing difference, like customerId, CustomerId, so adding ic in performFind, but to display it correctly on UI, converting it into lowerCase
-          order["orderAttributes"][attribute.attrName.toLowerCase()] = attribute.attrValue
-        })
-      }
-
-      // Fetching brokering information for order
-      if(orderStatusInfo.status === "fulfilled" && !hasError(orderStatusInfo.value) && orderStatusInfo.value.data.count > 0) {
-        order["approvedDate"] = orderStatusInfo.value.data.docs.find((info: any) => info.statusId === "ORDER_APPROVED")?.statusDatetime
-        order["completedDate"] = orderStatusInfo.value.data.docs.find((info: any) => info.statusId === "ORDER_COMPLETED")?.statusDatetime
-      }
-
-      // Fetching payment preference for order
-      if(orderPaymentPreference.status === "fulfilled" && !hasError(orderPaymentPreference.value) && orderPaymentPreference.value.data.count > 0) {
-        const paymentMethodTypeIds: Array<string> = [];
-        const statusIds: Array<string> = [];
-        order["orderPayments"] = orderPaymentPreference.value.data.docs.map((paymentPreference: any) => {
-          paymentMethodTypeIds.push(paymentPreference.paymentMethodTypeId)
-          statusIds.push(paymentPreference.statusId)
-          return {
-            amount: paymentPreference["maxAmount"],
-            methodTypeId: paymentPreference["paymentMethodTypeId"],
-            paymentStatus: paymentPreference["statusId"]
-          }
-        })
-
-        this.dispatch("util/fetchStatusDesc", statusIds)
-
-        if(paymentMethodTypeIds.length) {
-          this.dispatch("util/fetchPaymentMethodTypeDesc", paymentMethodTypeIds)
-        }
-      }
-
-      if(order.picklistId) {
-        const picklistInfo = await OrderService.performFind({
-          inputFields: {
-            picklistId: order.picklistId,
-          },
-          viewSize: 1,
-          entityName: "Picklist",
-          fieldList: ["picklistId", "picklistDate"]
-        })
-
-        if(!hasError(picklistInfo) && picklistInfo.data.count > 0) {
-          order["picklistDate"] = picklistInfo.data.docs[0].picklistDate
-        }
-      }
-    } catch(err) {
-      logger.error(err)
-    }
-
-    if(orderDetails.orderType !== "open") {
-      order = await OrderService.fetchGiftCardActivationDetails({ isDetailsPage: true, currentOrders: [order] });
-    }
-
-
-    await dispatch('updateCurrent', { order })
   },
 
   async getOrderDetail({ dispatch }, { payload, orderType }) {
@@ -793,15 +600,7 @@ const actions: ActionTree<OrderState , RootState> ={
     return resp;
   },
 
-  async packDeliveryItems ({ commit }, params) {
-    params = {
-      facilityId: getCurrentFacilityId(),
-      ...params
-    }
-    return await OrderService.packOrder(params)
-  },
-
-  async packShipGroupItems ({ state, dispatch, commit }, payload) {
+  async packShipGroupItems ({ dispatch }, payload) {
     const params = {
       orderId: payload.order.orderId,
       facilityId: payload.shipGroup.facilityId,
@@ -812,9 +611,8 @@ const actions: ActionTree<OrderState , RootState> ={
 
     try {
       resp = await OrderService.packOrder(params)
-      if (resp.status === 200 && !hasError(resp)) {        
-        const shipmentMethodTypeId = payload.shipGroup?.shipmentMethodTypeId
-          dispatch("removeOpenOrder", payload)
+      if (resp.status === 200 && !hasError(resp)) {
+        dispatch("removeOpenOrder", payload)
 
         // Adding readyToHandover or readyToShip because we need to show the user that the order has moved to the packed tab
         if(payload.order.shipGroup.shipmentMethodTypeId === 'STOREPICKUP') {
@@ -868,7 +666,7 @@ const actions: ActionTree<OrderState , RootState> ={
     }).catch(err => err);
   },
 
-  async rejectOrderItems ({ commit }, order) {
+  async rejectOrderItems (_, order) {
     const itemsToReject = order.shipGroup.items    
     .map((item: any) => ({
       ...item,
@@ -1131,156 +929,6 @@ const actions: ActionTree<OrderState , RootState> ={
     commit(types.ORDER_CURRENT_UPDATED, { order: {} });
   },
 
-  async fetchShipGroupForOrder({ dispatch, state }) {
-    const order = JSON.parse(JSON.stringify(state.current))
-
-    // return if orderId is not found on order
-    if (!order?.orderId) {
-      return;
-    }
-
-    const params = {
-      groupBy: 'shipGroupSeqId',
-      'shipGroupSeqId': '[* TO *]',  // check to ignore all those records for which shipGroupSeqId is not present
-      '-shipGroupSeqId': order.shipGroupSeqId,
-      orderId: order.orderId,
-      docType: 'ORDER'
-    }
-
-    const orderQueryPayload = prepareOrderQuery(params)
-
-    let resp, total, shipGroups = [];
-    const facilityTypeIds: Array<string> = [];
-
-    try {
-      resp = await OrderService.findOrderShipGroup(orderQueryPayload);
-
-      if (resp.status === 200 && !hasError(resp) && resp.data.grouped?.shipGroupSeqId.matches > 0) {
-        shipGroups = resp.data.grouped.shipGroupSeqId.groups
-      } else {
-        throw resp.data
-      }
-    } catch (err) {
-      console.error('Failed to fetch ship group information for order', err)
-    }
-
-    // return if shipGroups are not found for order
-    if (!shipGroups.length) {
-      return;
-    }
-
-    shipGroups = shipGroups.map((shipGroup: any) => {
-      const shipItem = shipGroup?.doclist?.docs[0]
-
-      if (!shipItem) {
-        return;
-      }
-
-      // In some case we are not having facilityTypeId in resp, resulting in undefined being pushed in the array
-      // so checking for facilityTypeId before updating the array
-      shipItem.facilityTypeId && facilityTypeIds.push(shipItem.facilityTypeId)
-
-      return {
-        items: shipGroup.doclist.docs,
-        facilityId: shipItem.facilityId,
-        facilityTypeId: shipItem.facilityTypeId,
-        facilityName: shipItem.facilityName,
-        shippingMethod: shipItem.shippingMethod,
-        orderId: shipItem.orderId,
-        shipGroupSeqId: shipItem.shipGroupSeqId
-      }
-    })
-
-    this.dispatch('util/fetchFacilityTypeInformation', facilityTypeIds)
-
-    // fetching reservation information for shipGroup from OISGIR doc
-    await dispatch('fetchAdditionalShipGroupForOrder', { shipGroups });
-  },
-
-  async fetchAdditionalShipGroupForOrder({ commit, state }, payload) {
-    const order = JSON.parse(JSON.stringify(state.current))
-    
-    
-    // return if orderId is not found on order
-    if (!order?.orderId) {
-      return;
-    }
-
-    const shipGroupSeqIds = payload.shipGroups.map((shipGroup: any) => shipGroup.shipGroupSeqId)
-    const orderId = order.orderId
-    
-    const params = {
-      groupBy: 'shipGroupSeqId',
-      'shipGroupSeqId': `(${shipGroupSeqIds.join(' OR ')})`,
-      '-fulfillmentStatus': '(Rejected OR Cancelled)',
-      orderId: orderId
-    }
-    
-    const orderQueryPayload = prepareOrderQuery(params)
-    
-    let resp, total, shipGroups: any = [];
-    
-    try {
-      resp = await OrderService.findOrderShipGroup(orderQueryPayload);
-      if (resp.status === 200 && !hasError(resp) && resp.data.grouped?.shipGroupSeqId.matches > 0) {
-        total = resp.data.grouped.shipGroupSeqId.ngroups
-        shipGroups = resp.data.grouped.shipGroupSeqId.groups
-        await this.dispatch('product/getProductInformation', { orders: shipGroups })
-      } else {
-        throw resp.data
-      }
-    } catch (err) {
-      console.error('Failed to fetch ship group information for order', err)
-    }
-
-    shipGroups = payload.shipGroups.map((shipGroup: any) => {
-      const reservedShipGroupForOrder = shipGroups.find((group: any) => shipGroup.shipGroupSeqId === group.doclist?.docs[0]?.shipGroupSeqId)
-      const reservedShipGroup = reservedShipGroupForOrder?.groupValue ? reservedShipGroupForOrder.doclist.docs[0] : ''
-
-      return reservedShipGroup ? {
-        ...shipGroup,
-        items: ([{items: reservedShipGroupForOrder.doclist.docs}])[0]?.items,
-        carrierPartyId: reservedShipGroup.carrierPartyId,
-        shipmentId: reservedShipGroup.shipmentId,
-        category: getOrderCategory({ ...reservedShipGroupForOrder.doclist.docs[0], ...shipGroup.items[0] }) // Passing shipGroup item information as we need to derive the order status and for that we need some properties those are available on ORDER doc
-      } : {
-        ...shipGroup,
-        category: getOrderCategory(shipGroup.items[0])
-      }
-    })
-
-    shipGroups.map((shipGroup: any) => {
-      shipGroup.items.map((item: any) => item.isFetchingStock = false);
-    })
-
-    const carrierPartyIds: Array<string> = [];
-    const shipmentIds: Array<string> = [];
-
-
-    if (total) {
-      shipGroups.map((shipGroup: any) => {
-        if (shipGroup.shipmentId) shipmentIds.push(shipGroup.shipmentId)
-        if (shipGroup.carrierPartyId) carrierPartyIds.push(shipGroup.carrierPartyId)
-      })
-    }
-
-    try {
-      this.dispatch('util/fetchPartyInformation', carrierPartyIds)
-      const shipmentTrackingCodes = await OrderService.fetchTrackingCodes(shipmentIds)
-
-      shipGroups.find((shipGroup: any) => {
-        const trackingCode = shipmentTrackingCodes.find((shipmentTrackingCode: any) => shipGroup.shipmentId === shipmentTrackingCode.shipmentId)?.trackingCode
-
-        shipGroup.trackingCode = trackingCode;
-      })
-    } catch (err) {
-      console.error('Failed to fetch information for ship groups', err)
-    }
-    order['shipGroups'] = shipGroups
-    commit(types.ORDER_CURRENT_UPDATED, {order})
-
-    return shipGroups;
-  },
   async updateCurrentItemGCActivationDetails({ commit, state }, { item, orderId, orderType, isDetailsPage }) {
     let gcInfo = {};
     let isGCActivated = false;
