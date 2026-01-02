@@ -291,7 +291,8 @@ export default defineComponent({
     })
   },
   mounted() {
-    this.appVersion = this.appInfo.branch ? (this.appInfo.branch + "-" + this.appInfo.revision) : this.appInfo.tag;
+    this.appVersion = process.env.VUE_APP_BUILD ? process.env.VUE_APP_BUILD : this.appInfo.branch ? (this.appInfo.branch + "-" + this.appInfo.revision) : this.appInfo.tag;
+    console.log('this.appVersion', this.appVersion, process.env.VUE_APP_BUILD)
   },
   async ionViewWillEnter() {
     // Clearing the current order as to correctly display the selected segment when moving to list page

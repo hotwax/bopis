@@ -20,7 +20,8 @@ const userModule: Module<UserState, RootState> = {
       hasUnreadNotifications: true,
       allNotificationPrefs: [],
       bopisProductStoreSettings: {},
-      omsRedirectionUrl: ""
+      omsRedirectionUrl: "",
+      appVersion: ""
     },
     getters,
     actions,

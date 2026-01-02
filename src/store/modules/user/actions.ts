@@ -172,6 +172,7 @@ const actions: ActionTree<UserState, RootState> = {
     this.dispatch("util/clearStoresInformation", {})
     commit(types.USER_END_SESSION)
     dispatch("setOmsRedirectionUrl", "")
+    dispatch("updateAppVersion", "")
     resetPermissions();
     resetConfig();
 
@@ -504,6 +505,10 @@ const actions: ActionTree<UserState, RootState> = {
 
   clearPartialOrderRejectionConfig ({ commit }) {
     commit(types.USER_PARTIAL_ORDER_REJECTION_CONFIG_UPDATED, {})
+  },
+
+  updateAppVersion ({ commit }, version) {
+    commit(types.USER_APP_VERSION_UPDATED, version)
   }
 }
 export default actions;

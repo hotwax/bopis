@@ -124,12 +124,25 @@ const routes: Array<RouteRecordRaw> = [
   },
 ]
 
+const appVersion = window.location.pathname.split('/').slice(0, 2)[1];
+console.log('App Version: ', appVersion)
+
 const router = createRouter({
-  history: createWebHistory(process.env.BASE_URL),
+  // TODO: check if we need this condition to check for VUE_APP_BUILD value and compare it with appVersion
+  history: createWebHistory(appVersion == process.env.VUE_APP_BUILD ? appVersion : process.env.BASE_URL),
   routes
 })
 
 router.beforeEach((to, from) => {
+  console.log('store.state.user.appVersion', store.state.user.appVersion)
+  if(store.state.user.appVersion && store.state.user.appVersion !== appVersion) {
+    console.log('replacing app version')
+    window.location.replace(window.location.pathname.replace(appVersion, store.state.user.appVersion))
+  } else if(appVersion) {
+    console.log('updated versions', appVersion)
+    store.dispatch("user/updateAppVersion", appVersion)
+  }
+
   if (to.meta.permissionId && !hasPermission(to.meta.permissionId)) {
     let redirectToPath = from.path;
     // If the user has navigated from Login page or if it is page load, redirect user to settings page without showing any toast
