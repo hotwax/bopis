@@ -48,6 +48,12 @@ const getters: GetterTree<OrderState , RootState> = {
   getOrderItemRejectionHistory: (state) => {
     return state.orderItemRejectionHistory
   },
+  getCommunicationEvents: (state) => {
+    return state.communicationEvents;
+  },
+  getCommunicationEventsByOrderId: (state) => (orderId: string) => {
+    return state.communicationEvents.filter((event: any) => event.orderId === orderId);
+  }
 }
 
 export default getters;
