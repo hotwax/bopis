@@ -618,7 +618,7 @@ export default defineComponent({
           }
         } catch (err) {
           logger.error("Error in handover process:", err);
-          showToast(translate("Something went wrong during handover"));
+          showToast(translate("Something went wrong"));
         } finally {
           emitter.emit("dismissLoader");
         }

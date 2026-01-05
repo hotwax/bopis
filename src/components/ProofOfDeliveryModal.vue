@@ -22,31 +22,37 @@
     </ion-item>
 
     <!-- Pickup Section -->
-    <div>
-      <ion-item lines="none">
-        <ion-label><strong>{{ !isViewModeOnly ? translate("Please enter the details of the person picking up the order.") : translate("Details of the person:") }}</strong></ion-label>
-      </ion-item>
+    <ion-item lines="none">
+      <ion-label><strong>{{ !isViewModeOnly ? translate("Please enter the details of the person picking up the order.") : translate("Details of the person:") }}</strong></ion-label>
+    </ion-item>
 
-      <!-- Add checkbox for same as billing -->
-      <ion-item lines="none" v-if="!isViewModeOnly">
-        <ion-checkbox justify="start" v-model="sameAsBilling" @ion-change="handleSameAsBilling" label-placement="end">
-          {{ translate("Same person as the billing customer") }}
-        </ion-checkbox>
-      </ion-item>
+    <!-- Add checkbox for same as billing -->
+    <ion-item lines="none" v-if="!isViewModeOnly">
+      <ion-checkbox justify="start" v-model="sameAsBilling" @ion-change="handleSameAsBilling" label-placement="end">
+        {{ translate("Same person as the billing customer") }}
+      </ion-checkbox>
+    </ion-item>
 
-      <ion-input v-model="form.name" :label="translate('Name')" label-placement="floating" :disabled="isSubmitting || sameAsBilling || isViewModeOnly" required/>
+    <ion-item>
+      <ion-input v-model="form.name" :label="translate('Name')" label-placement="floating" :disabled="isSubmitting || isViewModeOnly || (form.name ? true : false && sameAsBilling)" required/>
+    </ion-item>
+    <ion-item>
+      <ion-input v-model="form.idNumber" :label="translate('ID Number')" label-placement="floating" :disabled="isSubmitting || isViewModeOnly || (form.idNumber ? true : false && sameAsBilling)" required/>
+    </ion-item>
 
-      <ion-input v-model="form.idNumber" :label="translate('ID Number')" label-placement="floating" :disabled="isSubmitting || sameAsBilling || isViewModeOnly" required/>
-
-      <ion-select v-model="form.relationToCustomer" :label="translate('Relation to customer')" label-placement="start" placeholder="Select" :disabled="isSubmitting || isViewModeOnly" interface="popover">
+    <ion-item>
+      <ion-select v-model="form.relationToCustomer" :label="translate('Relation to customer')" label-placement="start" :disabled="isSubmitting || isViewModeOnly" interface="popover">
         <ion-select-option value="Self">{{ translate("Self") }}</ion-select-option>
         <ion-select-option value="Family">{{ translate("Family") }}</ion-select-option>
         <ion-select-option value="Friend">{{ translate("Friend") }}</ion-select-option>
       </ion-select>
-
+    </ion-item>
+    <ion-item>
       <ion-input v-model="form.phone" :label="translate('Phone')" label-placement="floating" type="tel" :disabled="isSubmitting || isViewModeOnly" />
+    </ion-item>
+    <ion-item>
       <ion-input v-model="form.email" :label="translate('Email')" label-placement="floating" type="email" :disabled="isSubmitting || isViewModeOnly" />
-    </div>
+    </ion-item>
   </ion-content>
 
   <ion-fab vertical="bottom" horizontal="end" slot="fixed">
@@ -58,7 +64,6 @@
 
 <script setup>
 import { ref, onMounted, computed, defineProps } from "vue";
-import { modalController } from "@ionic/vue";
 import { saveOutline } from "ionicons/icons";
 import {
   IonButtons,
@@ -75,7 +80,8 @@ import {
   IonFabButton,
   IonSelect,
   IonSelectOption,
-  IonCheckbox
+  IonCheckbox,
+  modalController
 } from "@ionic/vue";
 import { closeOutline } from "ionicons/icons";
 import logger from "@/logger";
@@ -144,7 +150,7 @@ const getPrefilledValue = async () => {
   
   try {
     const resp = await OrderService.fetchOrderAttributes(props.order.orderId);
-    const data = resp.data || {};
+    const data = resp.data;
     const customerAttr = data.find((a) => a.attrName === "customerId");
     
     if (customerAttr?.attrValue) {
@@ -155,7 +161,7 @@ const getPrefilledValue = async () => {
   }
 };
 
-const handleSameAsBilling = () => {
+const handleSameAsBilling = () => {  
   if (sameAsBilling.value) {
     form.value.name = billingDetails.value.toName || "";
     form.value.email = billingDetails.value.email || "";
