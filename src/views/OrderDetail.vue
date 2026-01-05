@@ -185,10 +185,10 @@
               <ion-icon slot="start" :icon="bagCheckOutline"/>
               {{ order?.shipGroup.shipmentMethodTypeId === 'STOREPICKUP' ? translate("Ready for pickup") : translate("Ready to ship") }}
             </ion-button>
-            <ion-button data-testid="submit-rejected-items-button" size="default" :disabled="!hasPermission(Actions.APP_ORDER_UPDATE) || order.readyToHandover || order.readyToShip || order.rejected || !hasRejectedItems" color="danger" fill="outline" @click="rejectOrder()">
+            <ion-button data-testid="submit-rejected-items-button" v-if="!getBopisProductStoreSettings('REQUEST_TRANSFER')" size="default" :disabled="!hasPermission(Actions.APP_ORDER_UPDATE) || order.readyToHandover || order.readyToShip || order.rejected || !hasRejectedItems" color="danger" fill="outline" @click="rejectOrder()">
               {{ translate("Reject Items") }}
             </ion-button>
-            <ion-button slot="end" fill="outline" data-testid="request-transfer-button" size="default" color="warning" :disabled="!hasPermission(Actions.APP_ORDER_UPDATE) || !canRequestTransfer(order)" @click="confirmRequestTransfer(order)">
+            <ion-button fill="outline" data-testid="request-transfer-button" v-if="getBopisProductStoreSettings('REQUEST_TRANSFER')" size="default" color="warning" :disabled="!hasPermission(Actions.APP_ORDER_UPDATE) || !canRequestTransfer(order)" @click="confirmRequestTransfer(order)">
               <ion-icon slot="start" :icon="swapHorizontalOutline"/>
               {{ translate("Request Transfer") }}
             </ion-button>            
