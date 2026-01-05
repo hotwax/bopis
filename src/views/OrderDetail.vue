@@ -83,7 +83,7 @@
 
                 <div class="product-metadata" slot="end">
                   <!-- Order item rejection flow -->
-                  <template v-if="orderType === 'open' && !(order.readyToHandover || order.readyToShip)">
+                  <template v-if="orderType === 'open' && !(order.readyToHandover || order.readyToShip) && !getBopisProductStoreSettings('REQUEST_TRANSFER')">
                     <ion-chip data-testid="change-rejection-reason-chip" v-if="item.rejectReason" outline color="danger" @click.stop="openRejectReasonPopover($event, item, order)">
                       <ion-icon data-testid="void-rejection-reason-icon" :icon="closeCircleOutline" @click.stop="removeRejectionReason($event, item, order)"/>
                       <ion-label>{{ getRejectionReasonDescription(item.rejectReason) }}</ion-label>
