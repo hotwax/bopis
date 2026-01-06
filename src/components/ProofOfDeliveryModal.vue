@@ -34,10 +34,10 @@
     </ion-item>
 
     <ion-item>
-      <ion-input v-model="form.name" :label="translate('Name')" label-placement="floating" :disabled="isSubmitting || isViewModeOnly || (form.name ? true : false && sameAsBilling)" required/>
+      <ion-input v-model="form.name" :label="translate('Name')" label-placement="floating" :disabled="isSubmitting || isViewModeOnly || (sameAsBilling && isNamePrefilled)" required/>
     </ion-item>
     <ion-item>
-      <ion-input v-model="form.idNumber" :label="translate('ID Number')" label-placement="floating" :disabled="isSubmitting || isViewModeOnly || (form.idNumber ? true : false && sameAsBilling)" required/>
+      <ion-input v-model="form.idNumber" :label="translate('ID Number')" label-placement="floating" :disabled="isSubmitting || isViewModeOnly || (sameAsBilling && isIdPrefilled)" required/>
     </ion-item>
 
     <ion-item>
@@ -98,6 +98,8 @@ const props = defineProps({
 const isSubmitting = ref(false);
 const sameAsBilling = ref(true);
 const billingDetails = ref({});
+const isNamePrefilled = ref(false);
+const isIdPrefilled = ref(false);
 const store = useStore();
 
 const communicationEvents = computed(() => (orderId) => store.getters["order/getCommunicationEventsByOrderId"](orderId) || []);
@@ -140,6 +142,7 @@ const getBillingDetails = async () => {
     form.value.phone = orderContent.value?.phone || billingDetails.value.phone || "";
     form.value.relationToCustomer = orderContent.value?.relationToCustomer || "Self";
     form.value.phone = orderContent.value?.phone || "";
+    isNamePrefilled.value = !!(orderContent.value?.name || billingDetails.value.toName);
   } catch (err) {
     logger.error("Error fetching billing details:", err);
   }
@@ -155,6 +158,7 @@ const getPrefilledValue = async () => {
     
     if (customerAttr?.attrValue) {
       form.value.idNumber = customerAttr.attrValue;
+      isIdPrefilled.value = true;
     }
   } catch (err) {
     logger.error("Failed fetching order attributes:", err);
@@ -167,10 +171,12 @@ const handleSameAsBilling = () => {
     form.value.email = billingDetails.value.email || "";
     form.value.phone = billingDetails.value.phone || "";
     form.value.relationToCustomer = "Self";
+    isNamePrefilled.value = !!billingDetails.value.toName;
   } else {
     form.value.name = "";
     form.value.email = "";
     form.value.phone = "";
+    isNamePrefilled.value = false;
   }
 };
 
