@@ -84,6 +84,12 @@
             </ion-item>
 
             <ProductListItem v-for="item in order.items" :key="item.productId" :item="item" :isShipToStoreOrder=true />
+          
+            <div class="border-top">
+              <ion-button data-testid="proof-of-delivery-button" fill="clear" @click.stop="openProofOfDeliveryModal(order, communicationEventOrderIds.has(order.orderId))">
+                {{ communicationEventOrderIds.has(order.orderId) ? translate('View Proof of Delivery') : translate('Proof of Delivery') }}
+              </ion-button>
+            </div>
           </ion-card>
         </div>
       </div>
@@ -138,6 +144,8 @@ import { Actions, hasPermission } from '@/authorization'
 import { OrderService } from "@/services/OrderService";
 import { translate, useUserStore } from "@hotwax/dxp-components";
 import logger from "@/logger";
+import { modalController } from "@ionic/vue";
+import ProofOfDeliveryModal from "@/components/ProofOfDeliveryModal.vue";
 
 export default defineComponent({
   name: 'ShipToStoreOrders',
@@ -178,7 +186,12 @@ export default defineComponent({
       isIncomingOrdersScrollable: 'order/isShipToStoreIncmngOrdrsScrlbl',
       isReadyForPickupOrdersScrollable: 'order/isShipToStoreRdyForPckupOrdrsScrlbl',
       isCompletedOrdersScrollable: 'order/isShipToStoreCmpltdOrdrsScrlbl',
+      communicationEvents: 'order/getCommunicationEvents'
     })
+    ,
+    communicationEventOrderIds() {
+      return new Set(((this as any).communicationEvents || []).map((e: any) => e.orderId));
+    }
   },
   data() {
     return {
@@ -216,6 +229,7 @@ export default defineComponent({
       const viewIndex = vIndex ? vIndex : 0;
 
       await this.store.dispatch("order/getShipToStoreCompletedOrders", { viewSize, viewIndex, queryString: this.queryString, facilityId: this.currentFacility?.facilityId });
+      await this.store.dispatch('order/getCommunicationEvents', { orders: this.completedOrders });
     },
     enableScrolling() {
       const parentElement = (this as any).$refs.contentRef.$el
@@ -417,6 +431,36 @@ export default defineComponent({
           }]
         });
       return alert.present();
+    },
+    async openProofOfDeliveryModal(order: any, isViewModeOnly: any) {
+      const modal = await modalController.create({
+        component: ProofOfDeliveryModal,
+        componentProps: {
+          order,
+          isViewModeOnly
+        },
+      });
+
+      await modal.present();
+      const { data } = await modal.onDidDismiss();
+
+      if (!isViewModeOnly && data?.confirmed && data?.proofOfDeliveryData) {
+        emitter.emit("presentLoader");
+        try {
+          const resp = await OrderService.sendPickupNotification(data.proofOfDeliveryData);
+          if (hasError(resp)) {
+            logger.error("Pickup notification failed:", resp);
+            showToast(translate("Order delivered but failed to send handover email"));
+          } else {
+            showToast(translate("Order delivered and handover email sent successfully"));
+          }
+        } catch (err) {
+          logger.error("Error in handover process:", err);
+          showToast(translate("Something went wrong"));
+        } finally {
+          emitter.emit("dismissLoader");
+        }
+      }
     },
   },
   ionViewWillEnter() {
