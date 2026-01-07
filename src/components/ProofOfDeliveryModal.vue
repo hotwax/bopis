@@ -23,40 +23,63 @@
 
     <!-- Pickup Section -->
     <ion-item lines="none">
-      <ion-label><strong>{{ !isViewModeOnly ? translate("Please enter the details of the person picking up the order.") : translate("Details of the person:") }}</strong></ion-label>
+      <ion-label><strong>{{ !isViewModeOnly ? translate("Please enter the details of the person picking up the order.") : translate("Details of The Person:") }}</strong></ion-label>
     </ion-item>
 
-    <!-- Add checkbox for same as billing -->
-    <ion-item lines="none" v-if="!isViewModeOnly">
-      <ion-checkbox justify="start" v-model="sameAsBilling" @ion-change="handleSameAsBilling" label-placement="end">
-        {{ translate("Same person as the billing customer") }}
-      </ion-checkbox>
-    </ion-item>
+    <template v-if="!isViewModeOnly">
+      <!-- Add checkbox for same as billing -->
+      <ion-item lines="none">
+        <ion-checkbox justify="start" v-model="sameAsBilling" @ion-change="handleSameAsBilling" label-placement="end">
+          {{ translate("Same person as the billing customer") }}
+        </ion-checkbox>
+      </ion-item>
 
-    <ion-item>
-      <ion-input v-model="form.name" :label="translate('Name')" label-placement="floating" :disabled="isSubmitting || isViewModeOnly || (sameAsBilling && isNamePrefilled)" required/>
-    </ion-item>
-    <ion-item>
-      <ion-input v-model="form.idNumber" :label="translate('ID Number')" label-placement="floating" :disabled="isSubmitting || isViewModeOnly || (sameAsBilling && isIdPrefilled)" required/>
-    </ion-item>
+      <ion-item>
+        <ion-input v-model="form.name" :label="translate('Name')" label-placement="floating" :disabled="isSubmitting || (sameAsBilling && isNamePrefilled)" required/>
+      </ion-item>
+      <ion-item>
+        <ion-input v-model="form.idNumber" :label="translate('ID Number')" label-placement="floating" :disabled="isSubmitting || (sameAsBilling && isIdPrefilled)" required/>
+      </ion-item>
 
-    <ion-item>
-      <ion-select v-model="form.relationToCustomer" :label="translate('Relation to customer')" label-placement="start" :disabled="isSubmitting || isViewModeOnly" interface="popover">
-        <ion-select-option value="Self">{{ translate("Self") }}</ion-select-option>
-        <ion-select-option value="Family">{{ translate("Family") }}</ion-select-option>
-        <ion-select-option value="Friend">{{ translate("Friend") }}</ion-select-option>
-      </ion-select>
-    </ion-item>
-    <ion-item>
-      <ion-input v-model="form.phone" :label="translate('Phone')" label-placement="floating" type="tel" :disabled="isSubmitting || isViewModeOnly" />
-    </ion-item>
-    <ion-item>
-      <ion-input v-model="form.email" :label="translate('Email')" label-placement="floating" type="email" :disabled="isSubmitting || isViewModeOnly" />
-    </ion-item>
+      <ion-item>
+        <ion-select v-model="form.relationToCustomer" :label="translate('Relation to customer')" label-placement="start" :disabled="isSubmitting" interface="popover">
+          <ion-select-option value="Self">{{ translate("Self") }}</ion-select-option>
+          <ion-select-option value="Family">{{ translate("Family") }}</ion-select-option>
+          <ion-select-option value="Friend">{{ translate("Friend") }}</ion-select-option>
+        </ion-select>
+      </ion-item>
+      <ion-item>
+        <ion-input v-model="form.phone" :label="translate('Phone')" label-placement="floating" type="tel" :disabled="isSubmitting" />
+      </ion-item>
+      <ion-item>
+        <ion-input v-model="form.email" :label="translate('Email')" label-placement="floating" type="email" :disabled="isSubmitting" />
+      </ion-item>
+    </template>
+    <template v-if="isViewModeOnly">
+      <ion-item>
+        <ion-label class="ion-text-left">{{ translate("Name") }}</ion-label>
+        <ion-label class="ion-text-right">{{ form.name ? form.name : "-" }}</ion-label>
+      </ion-item>
+      <ion-item>
+        <ion-label class="ion-text-left">{{ translate("ID Number") }}</ion-label>
+        <ion-label class="ion-text-right">{{ form.idNumber ? form.idNumber : "-" }}</ion-label>
+      </ion-item>
+      <ion-item>
+        <ion-label class="ion-text-left">{{ translate("Relation to customer") }}</ion-label>
+        <ion-label class="ion-text-right">{{ form.relationToCustomer ? form.relationToCustomer : "Self" }}</ion-label>
+      </ion-item>
+      <ion-item>
+        <ion-label class="ion-text-left">{{ translate("Phone") }}</ion-label>
+        <ion-label class="ion-text-right">{{ form.phone ? form.phone : "-" }}</ion-label>
+      </ion-item>
+      <ion-item>
+        <ion-label class="ion-text-left">{{ translate("Email") }}</ion-label>
+        <ion-label class="ion-text-right">{{ form.email ? form.email : "-" }}</ion-label>
+      </ion-item>
+    </template>
   </ion-content>
-
-  <ion-fab vertical="bottom" horizontal="end" slot="fixed">
-    <ion-fab-button data-testid="handover-modal-button" :disabled="isSubmitting || !isFormValid || isViewModeOnly" @click="submitForm">
+  <ion-fab v-if="!isViewModeOnly" vertical="bottom" horizontal="end" slot="fixed">
+    <ion-fab-button data-testid="handover-modal-button" :disabled="isSubmitting || !isFormValid" @click="submitForm">
       <ion-icon :icon="saveOutline"/>
     </ion-fab-button>
   </ion-fab>
@@ -64,7 +87,6 @@
 
 <script setup>
 import { ref, onMounted, computed, defineProps } from "vue";
-import { saveOutline } from "ionicons/icons";
 import {
   IonButtons,
   IonButton,
@@ -83,7 +105,7 @@ import {
   IonCheckbox,
   modalController
 } from "@ionic/vue";
-import { closeOutline } from "ionicons/icons";
+import { closeOutline, saveOutline } from "ionicons/icons";
 import logger from "@/logger";
 import { showToast } from "@/utils";
 import { translate } from "@hotwax/dxp-components";
@@ -102,18 +124,19 @@ const isNamePrefilled = ref(false);
 const isIdPrefilled = ref(false);
 const store = useStore();
 
-const communicationEvents = computed(() => (orderId) => store.getters["order/getCommunicationEventsByOrderId"](orderId) || []);
+const communicationEvent = computed(() => store.getters["order/getCommunicationEventsByOrderId"](props.order?.orderId));
+
 const orderContent = computed(() => {
-  const events = communicationEvents.value(props.order?.orderId);
-  if (events.length > 0) {
+  const event = communicationEvent.value;
+  let content = {};
+  if (event) {
     try {
-      return JSON.parse(events[0]?.content)?.messageData?.additionalFields || {};
+      content = JSON.parse(event?.content)?.messageData?.additionalFields;
     } catch (e) {
       logger.error("Error parsing communication event content:", e);
-      return {};
     }
   }
-  return {};
+  return content;
 });
 
 const form = ref({

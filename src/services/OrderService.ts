@@ -406,7 +406,7 @@ const sendPickupNotification = async (payload: any): Promise<any> => {
 
 const getCommunicationEvents = async (payload: any): Promise<any> => {
   return api({
-    url: `/oms/communicationEvents`,
+    url: "/oms/communicationEvents",
     method: "GET",
     params: payload
   });

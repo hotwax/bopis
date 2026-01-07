@@ -52,7 +52,7 @@ const getters: GetterTree<OrderState , RootState> = {
     return state.communicationEvents;
   },
   getCommunicationEventsByOrderId: (state) => (orderId: string) => {
-    return state.communicationEvents.filter((event: any) => event.orderId === orderId);
+    return state.communicationEvents.find((event: any) => event.orderId === orderId);
   }
 }
 

@@ -121,8 +121,8 @@
               <!-- <ion-button data-testid="packing-slip-button" v-if="getBopisProductStoreSettings('PRINT_PACKING_SLIPS')" fill="clear" slot="end" @click.stop="printPackingSlip(order)">
                 {{ translate('Print customer letter') }}
               </ion-button> -->
-              <ion-button data-testid="proof-of-delivery-button" fill="clear" @click.stop="openProofOfDeliveryModal(order, hasCommunicationEvent(order.orderId))">
-                {{ hasCommunicationEvent(order.orderId) ? translate('View Proof of Delivery') : translate('Proof of Delivery') }}
+              <ion-button data-testid="proof-of-delivery-button" fill="clear" @click.stop="openProofOfDeliveryModal(order, communicationEventOrderIds.has(order.orderId))">
+                {{ communicationEventOrderIds.has(order.orderId) ? translate('View Proof of Delivery') : translate('Proof of Delivery') }}
               </ion-button>
               <div></div>
               <ion-button  size="default" data-testid="packing-slip-button" v-if="getBopisProductStoreSettings('PRINT_PACKING_SLIPS')" fill="clear" slot="end" @click.stop="printPackingSlip(order)">
@@ -240,7 +240,10 @@ export default defineComponent({
       getInventoryInformation: 'stock/getInventoryInformation',
       order: "order/getCurrent",
       communicationEvents: 'order/getCommunicationEvents'
-    })
+    }),
+    communicationEventOrderIds() {
+      return new Set(((this as any).communicationEvents || []).map((e: any) => e.orderId));
+    }
   },
   data() {
     return {
@@ -313,9 +316,6 @@ export default defineComponent({
       const viewIndex = vIndex ? vIndex : 0;
 
       await this.store.dispatch("order/getPackedOrders", { viewSize, viewIndex, queryString: this.queryString, facilityId: this.currentFacility?.facilityId });
-    },
-    hasCommunicationEvent(orderId: string) {
-      return (this.communicationEvents || []).some((e: any) => e.orderId === orderId);
     },
     async getCompletedOrders (vSize?: any, vIndex?: any) {
       const viewSize = vSize ? vSize : process.env.VUE_APP_VIEW_SIZE;

@@ -489,15 +489,17 @@ const actions: ActionTree<OrderState , RootState> ={
     }
   },
 
-  async getCommunicationEvents({ state, dispatch, commit }, params) {
+  async getCommunicationEvents({ commit }, params) {
     try {
       const completedOrdersList = params.orders.map((completedOrderData: any) => completedOrderData.orderId);
 
-      const currentOrdersList = store.getters['order/getCommunicationEvents'];
+      const orderCommunicationEvents = store.getters['order/getCommunicationEvents'];
 
       const filteredOrdersList = completedOrdersList.filter((orderId: any) => {
-        return !currentOrdersList.some((currentOrderData: any) => currentOrderData.orderId === orderId);
+        return !orderCommunicationEvents.some((currentOrderData: any) => currentOrderData.orderId === orderId);
       });
+
+      if (filteredOrdersList.length === 0) return orderCommunicationEvents;
 
       const resp = await OrderService.getCommunicationEvents({
         orderIds: filteredOrdersList,
@@ -506,7 +508,8 @@ const actions: ActionTree<OrderState , RootState> ={
       });
 
       if (!hasError(resp) && resp.data && resp.data.communicationEventList) {
-        commit(types.ORDER_COMMUNICATION_EVENTS_UPDATED, { communicationEvents: resp.data.communicationEventList });
+        const mergedOrdersList = [...orderCommunicationEvents, ...(resp.data.communicationEventList || [])];
+        commit(types.ORDER_COMMUNICATION_EVENTS_UPDATED, { communicationEvents: mergedOrdersList });
         return resp.data.communicationEventList;
       } else {
         throw resp.data;
