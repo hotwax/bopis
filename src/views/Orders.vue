@@ -118,9 +118,6 @@
 
             <ProductListItem v-for="item in order.items" :key="item.productId" :item="item" :orderId="order.orderId" :customerId="order.customerId" :currencyUom="order.currencyUom" orderType="completed"/>          
             <div class="border-top">
-              <!-- <ion-button data-testid="packing-slip-button" v-if="getBopisProductStoreSettings('PRINT_PACKING_SLIPS')" fill="clear" slot="end" @click.stop="printPackingSlip(order)">
-                {{ translate('Print customer letter') }}
-              </ion-button> -->
               <ion-button data-testid="proof-of-delivery-button" fill="clear" @click.stop="openProofOfDeliveryModal(order, communicationEventOrderIds.has(order.orderId))">
                 {{ communicationEventOrderIds.has(order.orderId) ? translate('View Proof of Delivery') : translate('Proof of Delivery') }}
               </ion-button>
