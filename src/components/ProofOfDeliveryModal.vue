@@ -188,7 +188,7 @@ const getPrefilledValue = async () => {
   }
 };
 
-const handleSameAsBilling = () => {  
+const handleSameAsBilling = () => {
   if (sameAsBilling.value) {
     form.value.name = billingDetails.value.toName || "";
     form.value.email = billingDetails.value.email || "";
@@ -199,6 +199,7 @@ const handleSameAsBilling = () => {
     form.value.name = "";
     form.value.email = "";
     form.value.phone = "";
+    form.value.idNumber = "";
     isNamePrefilled.value = false;
   }
 };
