@@ -1297,9 +1297,7 @@ export default defineComponent({
 
     async confirmRequestTransfer(order: any) {
       const header = translate('Convert to Ship-to-Store');
-      const message = translate(
-        'This BOPIS order will be converted to Ship-to-Store. The order will be fulfilled from a warehouse and shipped to this store for customer pickup. Continue?'
-      );
+      const message = translate("The item will be sourced from another store or warehouse and shipped to this location for customer pickup. {space} You can view the order in the Ship-to-Store section by clicking the trail icon in the upper-right corner of the page. {space} Do you want to continue?", { space: '<br/><br/>' });
 
       const alert = await alertController.create({
         header,
