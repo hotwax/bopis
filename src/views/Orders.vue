@@ -118,8 +118,12 @@
 
             <ProductListItem v-for="item in order.items" :key="item.productId" :item="item" :orderId="order.orderId" :customerId="order.customerId" :currencyUom="order.currencyUom" orderType="completed"/>          
             <div class="border-top">
-              <ion-button data-testid="packing-slip-button" v-if="getBopisProductStoreSettings('PRINT_PACKING_SLIPS')" fill="clear" slot="end" @click.stop="printPackingSlip(order)">
-                {{ translate('Print customer letter') }}
+              <ion-button data-testid="proof-of-delivery-button" fill="clear" @click.stop="openProofOfDeliveryModal(order, communicationEventOrderIds.has(order.orderId))">
+                {{ communicationEventOrderIds.has(order.orderId) ? translate('View Proof of Delivery') : translate('Proof of Delivery') }}
+              </ion-button>
+              <div></div>
+              <ion-button  size="default" data-testid="packing-slip-button" v-if="getBopisProductStoreSettings('PRINT_PACKING_SLIPS')" fill="clear" slot="end" @click.stop="printPackingSlip(order)">
+                <ion-icon slot="icon-only" :icon="printOutline" />
               </ion-button>
             </div>
           </ion-card>
@@ -187,6 +191,7 @@ import { UserService } from "@/services/UserService";
 import { Actions, hasPermission } from '@/authorization'
 import logger from "@/logger";
 import RejectOrderItemModal from "@/components/RejectOrderItemModal.vue";
+import ProofOfDeliveryModal from "@/components/ProofOfDeliveryModal.vue";
 
 export default defineComponent({
   name: 'Orders',
@@ -230,8 +235,12 @@ export default defineComponent({
       unreadNotificationsStatus: 'user/getUnreadNotificationsStatus',
       getBopisProductStoreSettings: 'user/getBopisProductStoreSettings',
       getInventoryInformation: 'stock/getInventoryInformation',
-      order: "order/getCurrent"
-    })
+      order: "order/getCurrent",
+      communicationEvents: 'order/getCommunicationEvents'
+    }),
+    communicationEventOrderIds() {
+      return new Set(((this as any).communicationEvents || []).map((e: any) => e.orderId));
+    }
   },
   data() {
     return {
@@ -310,6 +319,7 @@ export default defineComponent({
       const viewIndex = vIndex ? vIndex : 0;
 
       await this.store.dispatch("order/getCompletedOrders", { viewSize, viewIndex, queryString: this.queryString, facilityId: this.currentFacility?.facilityId });
+      await this.store.dispatch('order/getCommunicationEvents', { orders: this.completedOrders });
     },
     enableScrolling() {
       const parentElement = (this as any).$refs.contentRef.$el
@@ -405,16 +415,6 @@ export default defineComponent({
       .then((resp) => {
         if(!hasError(resp)) {
           showToast(translate('Order delivered to', {customerName: order.customerName}))
-          // We are collecting the product IDs of the order items and then fetching stock information
-          // for each product ID if it is available for updated inventory.
-          const productIds = [...new Set(order.items.map((item: any) => item.productId))];
-
-          productIds.map((productId: any) => {
-            const productStock = this.getInventoryInformation(productId);
-            if (productStock && productStock.quantityOnHand >= 0) {
-              this.store.dispatch('stock/fetchProductInventory', { productId, forceFetchStock: true });
-            }
-          })
         }
       })
     },
@@ -585,6 +585,41 @@ export default defineComponent({
         }
       })
       return rejectOrderModal.present()
+    },
+
+    async openProofOfDeliveryModal(order: any, isViewModeOnly: any) {
+      const modal = await modalController.create({
+        component: ProofOfDeliveryModal,
+        componentProps: {
+          order,
+          isViewModeOnly
+        },
+      });
+
+      await modal.present();
+      
+      const { data } = await modal.onDidDismiss();
+      
+      if (!isViewModeOnly && data?.confirmed && data?.proofOfDeliveryData) {
+        emitter.emit("presentLoader");
+        
+        try {
+          // Send the proof of delivery email
+          const resp = await OrderService.sendPickupNotification(data.proofOfDeliveryData);
+          
+          if (hasError(resp)) {
+            logger.error("Pickup notification failed:", resp);
+            showToast(translate("Order delivered but failed to send handover email"));
+          } else {
+            showToast(translate("Order delivered and handover email sent successfully"));
+          }
+        } catch (err) {
+          logger.error("Error in handover process:", err);
+          showToast(translate("Something went wrong"));
+        } finally {
+          emitter.emit("dismissLoader");
+        }
+      }
     }
   },
   ionViewWillEnter () {

@@ -6,4 +6,5 @@ export default interface OrderState {
   completed: any;
   shipToStore: any;
   orders: any;
+  communicationEvents: any;
 }

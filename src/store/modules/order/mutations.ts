@@ -35,6 +35,9 @@ const mutations: MutationTree <ProductState> = {
   },
   [types.ORDER_ITEM_REJECTION_HISTORY_UPDATED] (state, payload) {
     state.orderItemRejectionHistory = payload
+  },
+  [types.ORDER_COMMUNICATION_EVENTS_UPDATED] (state, payload) {
+    state.communicationEvents = payload.communicationEvents // need to rewrite based on payload structure
   }
 }
 
