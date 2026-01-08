@@ -165,6 +165,20 @@
           </ion-item>
           <ion-item lines="none" :disabled="!hasPermission(Actions.APP_PRINT_PICKLIST_PREF_UPDATE)">
             <ion-toggle label-placement="start" :checked="getBopisProductStoreSettings('PRINT_PICKLISTS')" @click.prevent="setBopisProductStoreSettings($event, 'PRINT_PICKLISTS')">{{ translate("Print picklists") }}</ion-toggle>
+          </ion-item> 
+        </ion-card>
+
+        <ion-card v-if="hasPermission(Actions.APP_REQUEST_TRANSFER_UPDATE)">
+          <ion-card-header>
+            <ion-card-title>
+              {{ translate("Request Transfer") }}
+            </ion-card-title>
+          </ion-card-header>
+          <ion-card-content>
+            {{ translate('This will allow store associates to request the item from another store when it is not available in their current stock') }}
+          </ion-card-content>
+          <ion-item lines="none" :disabled="!hasPermission(Actions.APP_REQUEST_TRANSFER_UPDATE)">
+            <ion-toggle label-placement="start" :checked="getBopisProductStoreSettings('REQUEST_TRANSFER')" @click.prevent="setBopisProductStoreSettings($event, 'REQUEST_TRANSFER')">{{ translate("Show Request Transfer") }}</ion-toggle>
           </ion-item>
         </ion-card>
 

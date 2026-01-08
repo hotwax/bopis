@@ -59,8 +59,11 @@
                 {{ order.shipGroup?.shipmentMethodTypeId === 'STOREPICKUP' ? translate("Ready for pickup") : translate("Ready to ship") }}
               </ion-button>
               <div></div>
-              <ion-button data-testid="listpage-reject-button" v-if="order.shipGroup.shipmentMethodTypeId === 'STOREPICKUP'" color="danger" :disabled="!hasPermission(Actions.APP_ORDER_UPDATE)" fill="clear" @click.stop="openRejectOrderModal(order)">
+              <ion-button data-testid="listpage-reject-button" v-if="order.shipGroup.shipmentMethodTypeId === 'STOREPICKUP' && !getBopisProductStoreSettings('REQUEST_TRANSFER')" color="danger" :disabled="!hasPermission(Actions.APP_ORDER_UPDATE)" fill="clear" @click.stop="openRejectOrderModal(order)">
                 {{ translate("Reject") }}
+              </ion-button>
+              <ion-button data-testid="listpage-request-transfer-button" v-if="order.shipGroup.shipmentMethodTypeId === 'STOREPICKUP' && getBopisProductStoreSettings('REQUEST_TRANSFER')" color="warning" :disabled="!hasPermission(Actions.APP_ORDER_UPDATE)" fill="clear" @click.stop="confirmRequestTransfer(order)">
+                {{ translate("Request Transfer") }}
               </ion-button>
               <ion-button size="default" v-if="getBopisProductStoreSettings('PRINT_PICKLISTS')" slot="end" fill="clear" @click.stop="printPicklist(order, order.shipGroup)">
                   <ion-icon :icon="printOutline" slot="icon-only" />
@@ -172,7 +175,8 @@ import {
   mailOutline,
   notificationsOutline,
   printOutline,
-  trailSignOutline
+  trailSignOutline,
+  swapHorizontalOutline
 } from "ionicons/icons";
 import { mapGetters, useStore } from 'vuex'
 import { useRouter } from 'vue-router'
@@ -585,6 +589,55 @@ export default defineComponent({
         }
       })
       return rejectOrderModal.present()
+    },
+    canRequestTransfer(order: any): boolean {
+      return (
+        order?.shipGroup?.shipmentMethodTypeId === 'STOREPICKUP' &&
+        order?.orderStatusId === 'ORDER_APPROVED' &&
+        !order?.shipGroup?.shipmentId &&
+        !order?.readyToHandover &&
+        !order?.readyToShip &&
+        !order?.rejected &&
+        !order?.shipGroup?.items?.some((item: any) => item.rejectReason)
+      );
+    },
+    async confirmRequestTransfer(order: any) {
+      const header = translate('Convert to Ship-to-Store');
+      const message = translate("The item will be sourced from another store or warehouse and shipped to this location for customer pickup. {space} You can view the order in the Ship-to-Store section by clicking the trail icon in the upper-right corner of the page. {space} Do you want to continue?", { space: '<br/><br/>' });
+
+      const alert = await alertController.create({
+        header,
+        message,
+        buttons: [{ 
+          text: translate('Cancel'), role: 'cancel' 
+        },
+        {
+         text: translate('Convert'), 
+         handler: async () => await this.requestTransfer(order) 
+        }]
+      });
+
+      return alert.present();
+    },
+    async requestTransfer(order: any) {
+      emitter.emit("presentLoader");
+      try {
+        const resp = await OrderService.convertToShipToStore({
+          orderId: order.orderId,
+          shipGroupSeqId: order.shipGroup.shipGroupSeqId
+        });
+        if (!hasError(resp)) {
+          showToast(translate('Order marked as ship to store'));
+          await this.store.dispatch("order/removeOpenOrder", { order, shipGroup: order.shipGroup })
+        } else {
+          showToast(translate('Failed to mark order as ship to store'));
+          logger.error('Ship-to-Store conversion failed', resp);
+        }
+      } catch (err) {
+        logger.error(err);
+        showToast(translate("Something went wrong"));
+      }
+      emitter.emit("dismissLoader");
     }
   },
   ionViewWillEnter () {
@@ -622,7 +675,8 @@ export default defineComponent({
       swapVerticalOutline,
       store,
       trailSignOutline,
-      translate
+      translate,
+      swapHorizontalOutline
     };
   },
 });
