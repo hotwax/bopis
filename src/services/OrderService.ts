@@ -278,7 +278,7 @@ const handoverShipToStoreOrder = async (shipmentId: string): Promise<any> => {
   });
 }
 
-const arrivedShipToSTore = async (shipmentId: string): Promise<any> => {
+const arrivedShipToStore = async (shipmentId: string): Promise<any> => {
   return api({
     url: `/poorti/shipments/${shipmentId}`,
     method: 'PUT',
@@ -609,7 +609,7 @@ export const OrderService = {
   rejectOrderItems,
   sendPickupScheduledNotification,
   handoverShipToStoreOrder,
-  arrivedShipToSTore,
+  arrivedShipToStore,
   convertToShipToStore,
   shipOrder,
   updateShipment

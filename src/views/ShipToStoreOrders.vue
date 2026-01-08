@@ -319,7 +319,7 @@ export default defineComponent({
           // Check if only one shipGroup remains and it's the current one
           const isLastShipGroup = incomingShipGroups.length === 1 && incomingShipGroups[0].shipGroupSeqId === currentShipGroupSeqId;
 
-          const resp = await OrderService.arrivedShipToSTore(shipmentId);
+          const resp = await OrderService.arrivedShipToStore(shipmentId);
 
           if(!hasError(resp)){
             if (isLastShipGroup) {
