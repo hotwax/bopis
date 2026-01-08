@@ -53,7 +53,7 @@
               <h1 data-testid="order-name-tag">{{ order.orderName }}</h1>
               <p data-testid="order-id-tag">{{ order.orderId }}</p>
             </ion-label>
-            <ion-chip data-testid="edit-picker-chip" :disabled="!hasPermission(Actions.APP_ORDER_UPDATE) || order.handovered || order.shipped || order.cancelled" v-if="order.pickers && (orderType === 'open' || orderType === 'packed') && getBopisProductStoreSettings('ENABLE_TRACKING')" outline slot="end" @click="editPicker(order)">
+            <ion-chip data-testid="edit-picker-chip" :disabled="!hasPermission(Actions.APP_ORDER_UPDATE) || order.handovered || order.shipped || order.rejected || order.cancelled" v-if="order.pickers && (orderType === 'open' || orderType === 'packed') && getBopisProductStoreSettings('ENABLE_TRACKING')" outline slot="end" @click="editPicker(order)">
               <ion-icon :icon="personOutline"/>
               <ion-label>{{ order.pickers }}</ion-label>
             </ion-chip>
@@ -489,13 +489,13 @@ export default defineComponent({
         componentProps: { order, shipGroup, facilityId }
       });
       assignPickerModal.onDidDismiss().then(async(result: any) => {
-        emitter.emit("presentLoader");
         if(result.data?.selectedPicker) {
+          emitter.emit("presentLoader");
           await this.createPicklist(order, result.data.selectedPicker);
           await this.store.dispatch('order/packShipGroupItems', { order, shipGroup })
           await this.getOrderDetail(this.orderId, this.shipGroupSeqId, this.orderType);
+          emitter.emit("dismissLoader");
         }
-        emitter.emit("dismissLoader");
       })
 
       return assignPickerModal.present();
