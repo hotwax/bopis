@@ -60,7 +60,7 @@
             <ProductListItem v-for="item in order.items" :key="item.productId" :item="item" :isShipToStoreOrder=true />
 
             <div class="border-top">
-              <ion-button :disabled="!hasPermission(Actions.APP_ORDER_UPDATE)" fill="clear" @click.stop="confirmHandoverOrder(order.shipmentId)">
+              <ion-button :disabled="!hasPermission(Actions.APP_ORDER_UPDATE)" fill="clear" @click.stop="confirmHandoverOrder(order)">
                 {{ translate("Handover") }}
               </ion-button>
               <ion-button fill="clear" slot="end" @click="sendReadyForPickupEmail(order)">
@@ -333,6 +333,8 @@ export default defineComponent({
                 logger.error('Error sending pickup scheduled notification:', error);
                 showToast(translate('Order marked as ready for pickup but something went wrong while sending the email notification'));
               }
+            } else {
+              showToast(translate('Order marked as ready for pickup'));
             }
             this.store.dispatch('order/resetShipToStoreOrdersPagination');
             await this.getIncomingOrders(); // Refresh after all logic
@@ -347,7 +349,7 @@ export default defineComponent({
           emitter.emit("dismissLoader");
         }
     },
-    async confirmHandoverOrder(shipmentId: string) {
+    async confirmHandoverOrder(order: any) {
       const header = translate('Complete order')
       const message = translate('Order will be marked as completed. This action is irreversible.');
 
@@ -361,21 +363,39 @@ export default defineComponent({
           },{
             text: translate('Complete'),
             handler: async () => {
-              await this.handoverOrder(shipmentId)
+              await this.handoverOrder(order.shipmentId, order)
             }
           }]
         });
       return alert.present();
     },
-    async handoverOrder(shipmentId: string) {
+    async handoverOrder(shipmentId: string, order: any) {
       emitter.emit("presentLoader");
       
       try{
         const resp = await OrderService.handoverShipToStoreOrder(shipmentId);
 
         if(!hasError(resp)) {
+          const orderId = order.orderId;
+          const currentShipGroupSeqId = order.shipGroupSeqId;
+
+          const readyForPickupShipGroups = this.readyForPickupOrders.filter((o: any) => o.orderId === orderId);
+          const isLastShipGroup = readyForPickupShipGroups.length === 1 && readyForPickupShipGroups[0].shipGroupSeqId === currentShipGroupSeqId;
+
+          if (isLastShipGroup) {
+            try {
+              const emailResp = await OrderService.sendHandoverNotification({ shipmentId });
+              if (!hasError(emailResp)) {
+                showToast(translate('Order handed over successfully and order completion email has been sent'));
+              }
+            } catch (error) {
+              logger.error('Error sending handover notification:', error);
+              showToast(translate('Order handed over successfully but something went wrong while sending the email notification'));
+            }
+          } else {
+            showToast(translate('Order handed over successfully'));
+          }
           await this.getReadyForPickupOrders();
-          showToast(translate('Order handed over successfully'));
         } else {
           showToast(translate("Failed to handover order"));
           logger.error("Handover failed", resp);
