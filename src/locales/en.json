@@ -104,6 +104,7 @@
   "Kit": "Kit",
   "Language": "Language",
   "Last name": "Last name",
+  "Last line": "Last line",
   "Latest": "Latest",
   "Learn more about unfillable items": "Learn more about unfillable items",
   "Loading": "Loading",
@@ -302,7 +303,7 @@
   "unit": "{ item } unit",
   "Update notification preferences": "Update notification preferences",
   "Verify that the items in the package are valid and the customer has received their order. Once the order is handed over to the customer it cannot be undone.": "Verify that the items in the package are valid and the customer has received their order.{ space }Once the order is handed over to the customer it cannot be undone.",
-  "View shipping orders along with pickup orders.": "View shipping orders along with pickup orders.",
+  "View only shipping orders in the application.": "View only shipping orders in the application.",
   "Yes": "Yes",
   "You do not have permission to access this page": "You do not have permission to access this page",
   "Zipcode": "Zipcode"
