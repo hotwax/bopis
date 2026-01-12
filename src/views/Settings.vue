@@ -130,7 +130,7 @@
             </ion-card-title>
           </ion-card-header>
           <ion-card-content>
-            {{ translate('View shipping orders along with pickup orders.') }}
+            {{ translate('View only shipping orders in the application.') }}
           </ion-card-content>
           <ion-item lines="none" :disabled="!hasPermission(Actions.APP_SHOW_SHIPPING_ORD_PREF_UPDATE)">
             <ion-toggle label-placement="start" :checked="getBopisProductStoreSettings('SHOW_SHIPPING_ORDERS')" @click.prevent="setBopisProductStoreSettings($event, 'SHOW_SHIPPING_ORDERS')">{{ translate("Show shipping orders") }}</ion-toggle>
