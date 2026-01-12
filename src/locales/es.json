@@ -298,7 +298,7 @@
   "unit": "{ item } unit",
   "Update notification preferences": "Actualizar preferencias de notificación",
   "Verify that the items in the package are valid and the customer has received their order. Once the order is handed over to the customer it cannot be undone.": "Verify that the items in the package are valid and the customer has received their order.{ space }Once the order is handed over to the customer it cannot be undone.",
-  "View only shipping orders in the application.": "Ver solo pedidos de envío en la aplicación.",
+  "Enabling this will show only shipping orders and hide all pickup orders.": "Al habilitar esta opción, solo se mostrarán los pedidos de envío y se ocultarán todos los pedidos de recogida.",
   "Yes": "Sí",
   "You do not have permission to access this page": "No tienes permiso para acceder a esta página",
   "Zipcode": "Código postal",
