@@ -291,7 +291,7 @@
   "units": "{ item }個",
   "unit": "{ item }個",
   "Verify that the items in the package are valid and the customer has received their order. Once the order is handed over to the customer it cannot be undone.": "Verify that the items in the package are valid and the customer has received their order.{ space }Once the order is handed over to the customer it cannot be undone.",
-  "View only shipping orders in the application.": "アプリで配送注文のみを表示します。",
+  "Enabling this will show only shipping orders and hide all pickup orders.": "この設定を有効にすると、配送注文のみが表示され、すべての店舗受取注文が非表示になります。",
   "Yes": "はい",
   "You do not have permission to access this page": "このページにアクセスする権限がありません",
   "Zipcode": "郵便番号"
