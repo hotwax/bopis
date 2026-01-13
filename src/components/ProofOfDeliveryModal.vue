@@ -165,6 +165,7 @@ const getBillingDetails = async () => {
     form.value.phone = orderContent.value?.phone || billingDetails.value.phone || "";
     form.value.relationToCustomer = orderContent.value?.relationToCustomer || "Self";
     form.value.phone = orderContent.value?.phone || "";
+    form.value.idNumber = props.isViewModeOnly ? (orderContent.value?.idNumber || "") : (form.value.idNumber || orderContent.value?.idNumber || "");
     isNamePrefilled.value = !!(orderContent.value?.name || billingDetails.value.toName);
   } catch (err) {
     logger.error("Error fetching billing details:", err);
@@ -247,7 +248,7 @@ const submitForm = async () => {
 };
 
 onMounted(async () => {
-  await getBillingDetails();
   await getPrefilledValue();
+  await getBillingDetails();
 });
 </script>
