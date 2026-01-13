@@ -53,7 +53,7 @@
               <h1 data-testid="order-name-tag">{{ order.orderName }}</h1>
               <p data-testid="order-id-tag">{{ order.orderId }}</p>
             </ion-label>
-            <ion-chip data-testid="edit-picker-chip" :disabled="!hasPermission(Actions.APP_ORDER_UPDATE) || order.handovered || order.shipped || order.cancelled" v-if="order.pickers && (orderType === 'open' || orderType === 'packed') && getBopisProductStoreSettings('ENABLE_TRACKING')" outline slot="end" @click="editPicker(order)">
+            <ion-chip data-testid="edit-picker-chip" :disabled="!hasPermission(Actions.APP_ORDER_UPDATE) || order.handovered || order.shipped || order.rejected || order.cancelled" v-if="order.pickers && (orderType === 'open' || orderType === 'packed') && getBopisProductStoreSettings('ENABLE_TRACKING')" outline slot="end" @click="editPicker(order)">
               <ion-icon :icon="personOutline"/>
               <ion-label>{{ order.pickers }}</ion-label>
             </ion-chip>
@@ -83,7 +83,7 @@
 
                 <div class="product-metadata" slot="end">
                   <!-- Order item rejection flow -->
-                  <template v-if="orderType === 'open' && !(order.readyToHandover || order.readyToShip)">
+                  <template v-if="orderType === 'open' && !(order.readyToHandover || order.readyToShip) && !getBopisProductStoreSettings('REQUEST_TRANSFER')">
                     <ion-chip data-testid="change-rejection-reason-chip" v-if="item.rejectReason" outline color="danger" @click.stop="openRejectReasonPopover($event, item, order)">
                       <ion-icon data-testid="void-rejection-reason-icon" :icon="closeCircleOutline" @click.stop="removeRejectionReason(item, order)"/>
                       <ion-label>{{ getRejectionReasonDescription(item.rejectReason) }}</ion-label>
@@ -185,10 +185,10 @@
               <ion-icon slot="start" :icon="bagCheckOutline"/>
               {{ order?.shipGroup.shipmentMethodTypeId === 'STOREPICKUP' ? translate("Ready for pickup") : translate("Ready to ship") }}
             </ion-button>
-            <ion-button data-testid="submit-rejected-items-button" size="default" :disabled="!hasPermission(Actions.APP_ORDER_UPDATE) || order.readyToHandover || order.readyToShip || order.rejected || !hasRejectedItems" color="danger" fill="outline" @click="rejectOrder()">
+            <ion-button data-testid="submit-rejected-items-button" v-if="!getBopisProductStoreSettings('REQUEST_TRANSFER')" size="default" :disabled="!hasPermission(Actions.APP_ORDER_UPDATE) || order.readyToHandover || order.readyToShip || order.rejected || !hasRejectedItems" color="danger" fill="outline" @click="rejectOrder()">
               {{ translate("Reject Items") }}
             </ion-button>
-            <ion-button slot="end" fill="outline" data-testid="request-transfer-button" size="default" color="warning" :disabled="!hasPermission(Actions.APP_ORDER_UPDATE) || !canRequestTransfer(order)" @click="confirmRequestTransfer(order)">
+            <ion-button fill="outline" data-testid="request-transfer-button" v-if="getBopisProductStoreSettings('REQUEST_TRANSFER')" size="default" color="warning" :disabled="!hasPermission(Actions.APP_ORDER_UPDATE) || !canRequestTransfer(order)" @click="confirmRequestTransfer(order)">
               <ion-icon slot="start" :icon="swapHorizontalOutline"/>
               {{ translate("Request Transfer") }}
             </ion-button>            
@@ -491,13 +491,13 @@ export default defineComponent({
         componentProps: { order, shipGroup, facilityId }
       });
       assignPickerModal.onDidDismiss().then(async(result: any) => {
-        emitter.emit("presentLoader");
         if(result.data?.selectedPicker) {
+          emitter.emit("presentLoader");
           await this.createPicklist(order, result.data.selectedPicker);
           await this.store.dispatch('order/packShipGroupItems', { order, shipGroup })
           await this.getOrderDetail(this.orderId, this.shipGroupSeqId, this.orderType);
+          emitter.emit("dismissLoader");
         }
-        emitter.emit("dismissLoader");
       })
 
       return assignPickerModal.present();
@@ -1327,9 +1327,7 @@ export default defineComponent({
 
     async confirmRequestTransfer(order: any) {
       const header = translate('Convert to Ship-to-Store');
-      const message = translate(
-        'This BOPIS order will be converted to Ship-to-Store. The order will be fulfilled from a warehouse and shipped to this store for customer pickup. Continue?'
-      );
+      const message = translate("The item will be sourced from another store or warehouse and shipped to this location for customer pickup. {space} You can view the order in the Ship-to-Store section by clicking the trail icon in the upper-right corner of the page. {space} Do you want to continue?", { space: '<br/><br/>' });
 
       const alert = await alertController.create({
         header,

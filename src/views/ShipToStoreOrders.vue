@@ -23,7 +23,7 @@
     <ion-content ref="contentRef" :scroll-events="true" @ionScroll="enableScrolling()">
       <div v-if="segmentSelected === 'incoming' && incomingOrders.length">
         <div v-for="(order, index) in incomingOrders" :key="index" v-show="order.items.length">
-          <ion-card button>
+          <ion-card>
             <ion-item lines="none">
               <ion-label class="ion-text-wrap">
                 <h1>{{ order.customerName }}</h1>
@@ -37,7 +37,7 @@
             <ProductListItem v-for="item in order.items" :key="item.productId" :item="item" :isShipToStoreOrder=true />
 
             <div class="border-top">
-              <ion-button :disabled="!hasPermission(Actions.APP_ORDER_UPDATE)|| order.shipmentStatusId!='SHIPMENT_PACKED'" fill="clear" @click.stop="confirmScheduleOrderForPickup(order)">
+              <ion-button :disabled="!hasPermission(Actions.APP_ORDER_UPDATE)|| order.shipmentStatusId!='SHIPMENT_SHIPPED'" fill="clear" @click.stop="confirmScheduleOrderForPickup(order)">
                 {{ translate("Arrived") }}
               </ion-button>
             </div>
@@ -46,7 +46,7 @@
       </div>      
       <div v-else-if="segmentSelected === 'readyForPickup' && readyForPickupOrders.length">
         <div v-for="(order, index) in readyForPickupOrders" :key="index" v-show="order.items.length">
-          <ion-card button>
+          <ion-card>
             <ion-item lines="none">
               <ion-label class="ion-text-wrap">
                 <h1>{{ order.customerName }}</h1>
@@ -72,7 +72,7 @@
       </div>
       <div v-else-if="segmentSelected === 'completed' && completedOrders.length">
         <div v-for="(order, index) in completedOrders" :key="index" v-show="order.items.length">
-          <ion-card button>
+          <ion-card>
             <ion-item lines="none">
               <ion-label class="ion-text-wrap">
                 <h1>{{ order.customerName }}</h1>
@@ -186,7 +186,10 @@ export default defineComponent({
       isIncomingOrdersScrollable: 'order/isShipToStoreIncmngOrdrsScrlbl',
       isReadyForPickupOrdersScrollable: 'order/isShipToStoreRdyForPckupOrdrsScrlbl',
       isCompletedOrdersScrollable: 'order/isShipToStoreCmpltdOrdrsScrlbl',
-      communicationEvents: 'order/getCommunicationEvents'
+      communicationEvents: 'order/getCommunicationEvents',
+      incomingOrderCount: "order/getIncomingOrdersCount",
+      readyForPickupOrderCount: "order/getReadyForPickupOrdersCount",
+      completedOrderCount: "order/getCompletedOrdersCount"
     })
     ,
     communicationEventOrderIds() {
@@ -250,21 +253,21 @@ export default defineComponent({
       if (this.segmentSelected === 'incoming') {
         this.getIncomingOrders(
           undefined,
-          Math.ceil(this.incomingOrders.length / process.env.VUE_APP_VIEW_SIZE).toString()
+          Math.ceil(this.incomingOrderCount / process.env.VUE_APP_VIEW_SIZE).toString()
         ).then(async () => {
           await event.target.complete();
         });
-      } else if (this.segmentSelected === 'packed') {
+      } else if (this.segmentSelected === 'readyForPickup') {
         this.getReadyForPickupOrders(
           undefined,
-          Math.ceil(this.readyForPickupOrders.length / process.env.VUE_APP_VIEW_SIZE).toString()
+          Math.ceil(this.readyForPickupOrderCount / process.env.VUE_APP_VIEW_SIZE).toString()
         ).then(async () => {
           await event.target.complete();
         });
       } else {
         this.getCompletedOrders(
           undefined,
-          Math.ceil(this.completedOrders.length / process.env.VUE_APP_VIEW_SIZE).toString()
+          Math.ceil(this.completedOrderCount / process.env.VUE_APP_VIEW_SIZE).toString()
         ).then(async () => {
           await event.target.complete();
         });
@@ -273,7 +276,7 @@ export default defineComponent({
     segmentChanged (event: CustomEvent) {
       this.queryString = ''
       this.segmentSelected = event.detail.value
-
+      this.store.dispatch('order/resetShipToStoreOrdersPagination');
       if(this.segmentSelected === 'incoming') {
         this.getIncomingOrders()
       } else if(this.segmentSelected === 'readyForPickup') {
@@ -284,6 +287,7 @@ export default defineComponent({
     },
     async searchOrders() {
       this.queryString = this.queryString.trim()
+      this.store.dispatch('order/resetShipToStoreOrdersPagination');
       if(this.segmentSelected === 'incoming') {
         this.getIncomingOrders()
       } else if(this.segmentSelected === 'readyForPickup') {
@@ -299,7 +303,7 @@ export default defineComponent({
     },
     async confirmScheduleOrderForPickup(order: any) {
       const header = translate('Ready for pickup')
-      const message = translate('Order will be marked as ready for pickup and an email notification will be sent to . This action is irreversible.', { customerName: `${order.firstName} ${order.lastName}` });
+      const message = translate('Order will be marked as ready for pickup and an email notification will be sent to . This action is irreversible.',{  customerName: order.customerName });
 
       const alert = await alertController
         .create({
@@ -311,40 +315,54 @@ export default defineComponent({
           },{
             text: translate('Ready for pickup'),
             handler: async () => {
-              await this.scheduleOrderForPickup(order.shipmentId)
+              await this.scheduleOrderForPickup(order.shipmentId, order)
             }
           }]
         });
       return alert.present();
     },
-    async scheduleOrderForPickup(shipmentId: string) {
-      emitter.emit("presentLoader");
-      let resp;
-      try {
-        const payload = {
-          shipmentId: shipmentId
-        };
-        resp = await OrderService.shipOrder(payload);
-        if (!hasError(resp)) {
-          // Send pickup notification email
-          resp = await OrderService.sendPickupScheduledNotification({ shipmentId });
-          // Refresh the incoming orders list
-          this.getIncomingOrders();
 
-          if (!hasError(resp)) {
-            showToast(translate('Order marked as ready for pickup, an email notification has been sent to the customer'));
+    async scheduleOrderForPickup(shipmentId: string, order: any) {
+        emitter.emit("presentLoader");
+
+        try{
+          // Get all shipGroups for this orderId from incomingOrders
+          const orderId = order.orderId;
+          const currentShipGroupSeqId = order.shipGroupSeqId;
+
+          // Filter all incoming cards for this orderId
+          const incomingShipGroups = this.incomingOrders.filter((o: any) => o.orderId === orderId);
+
+          // Check if only one shipGroup remains and it's the current one
+          const isLastShipGroup = incomingShipGroups.length === 1 && incomingShipGroups[0].shipGroupSeqId === currentShipGroupSeqId;
+
+          const resp = await OrderService.arrivedShipToStore(shipmentId);
+
+          if(!hasError(resp)){
+            if (isLastShipGroup) {
+              try{
+                const emailResp = await OrderService.sendPickupScheduledNotification({shipmentId});
+                
+                if(!hasError(emailResp)) {
+                  showToast(translate('Order marked as ready for pickup, an email notification has been sent to the customer'));
+                }
+              } catch(error) {
+                logger.error('Error sending pickup scheduled notification:', error);
+                showToast(translate('Order marked as ready for pickup but something went wrong while sending the email notification'));
+              }
+            }
+            this.store.dispatch('order/resetShipToStoreOrdersPagination');
+            await this.getIncomingOrders(); // Refresh after all logic
           } else {
-            showToast(translate('Order marked as ready for pickup but something went wrong while sending the email notification'));
+            showToast(translate("Failed to mark order as ready for pickup"));
           }
-        }   
-      } catch (err) {
-        logger.error('Schedule order for pickup error:', err);
-        showToast(translate("Something went wrong"));
-      }finally{
-        emitter.emit("dismissLoader");
-      }
 
-      return resp;
+        } catch (err) {
+          logger.error('Schedule order for pickup error:', err);
+          showToast(translate("Something went wrong"));
+        } finally {
+          emitter.emit("dismissLoader");
+        }
     },
     async confirmHandoverOrder(shipmentId: string) {
       const header = translate('Complete order')
@@ -366,41 +384,27 @@ export default defineComponent({
         });
       return alert.present();
     },
-  async handoverOrder(shipmentId: string) {
-    emitter.emit("presentLoader");
-  
-    try {
-      const resp = await OrderService.handoverShipToStoreOrder(shipmentId);
+    async handoverOrder(shipmentId: string) {
+      emitter.emit("presentLoader");
       
-      if (!hasError(resp)) {
-        this.getReadyForPickupOrders(); // Refresh
-        showToast(translate('Order handed over successfully'));
-      } else {
-        showToast(translate("Failed to handover order"));
-        logger.error("Handover failed", resp);
+      try{
+        const resp = await OrderService.handoverShipToStoreOrder(shipmentId);
+
+        if(!hasError(resp)) {
+          await this.getReadyForPickupOrders();
+          showToast(translate('Order handed over successfully'));
+        } else {
+          showToast(translate("Failed to handover order"));
+          logger.error("Handover failed", resp);
+        }
       }
+      catch (err) {
+        logger.error('Handover failed', err);
+        showToast(translate("Something went wrong"));
+      } 
+        emitter.emit("dismissLoader");
       
-    } catch (err) {
-      logger.error(err);
-      showToast(translate("Something went wrong"));
-    }
-    try {
-      const resp = await OrderService.handoverShipToStoreOrder(shipmentId);
-      
-      if (!hasError(resp)) {
-        this.getReadyForPickupOrders(); // Refresh
-        showToast(translate('Order handed over successfully'));
-      } else {
-        showToast(translate("Failed to handover order"));
-        logger.error("Handover failed", resp);
-      }
-      
-    } catch (err) {
-      logger.error(err);
-      showToast(translate("Something went wrong"));
-    }
-  emitter.emit("dismissLoader");
-},
+    },
 
     async sendReadyForPickupEmail(order: any) {
       const header = translate('Resend email')
@@ -468,7 +472,7 @@ export default defineComponent({
     this.queryString = '';
     if (this.segmentSelected === 'incoming') {
       this.getIncomingOrders()
-    } else if (this.segmentSelected === 'packed') {
+    } else if (this.segmentSelected === 'readyForPickup') {
       this.getReadyForPickupOrders()
     } else {
       this.getCompletedOrders()

@@ -31,22 +31,31 @@ const getters: GetterTree<OrderState , RootState> = {
     return state.shipToStore.incoming.list;
   },
   isShipToStoreIncmngOrdrsScrlbl: (state) => {
-    return state.shipToStore.incoming.list.length > 0 && state.shipToStore.incoming.list.length < state.shipToStore.incoming.total
+    return state.shipToStore.incoming.orderCount > 0 && state.shipToStore.incoming.orderCount < state.shipToStore.incoming.total
   },
   getShipToStoreReadyForPickupOrders: (state) => {
     return state.shipToStore.readyForPickup.list;
   },
   isShipToStoreRdyForPckupOrdrsScrlbl: (state) => {
-    return state.shipToStore.readyForPickup.list.length > 0 && state.shipToStore.readyForPickup.list.length < state.shipToStore.readyForPickup.total
+    return state.shipToStore.readyForPickup.orderCount > 0 && state.shipToStore.readyForPickup.orderCount < state.shipToStore.readyForPickup.total
   },
   getShipToStoreCompletedOrders: (state) => {
     return state.shipToStore.completed.list;
   },
   isShipToStoreCmpltdOrdrsScrlbl: (state) => {
-    return state.shipToStore.completed.list.length > 0 && state.shipToStore.completed.list.length < state.shipToStore.completed.total
+    return state.shipToStore.completed.orderCount > 0 && state.shipToStore.completed.orderCount < state.shipToStore.completed.total
   },
   getOrderItemRejectionHistory: (state) => {
     return state.orderItemRejectionHistory
+  },
+  getIncomingOrdersCount: (state) => {
+    return state.shipToStore.incoming.orderCount ;
+  },
+  getReadyForPickupOrdersCount: (state) => {
+    return state.shipToStore.readyForPickup.orderCount ;
+  },
+  getCompletedOrdersCount: (state) => {
+    return state.shipToStore.completed.orderCount ;
   },
   getCommunicationEvents: (state) => {
     return state.communicationEvents;

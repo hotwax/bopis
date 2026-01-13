@@ -27,15 +27,18 @@ const orderModule: Module<OrderState, RootState> = {
     shipToStore: {
       incoming: {
         list: {},
+        orderCount: 0,
         total: 0
       },
       readyForPickup: {
         list: {},
-        total: 0
+        total: 0,
+        orderCount: 0
       },
       completed: {
         list: {},
-        total: 0
+        total: 0,
+        orderCount: 0
       }
     },
     communicationEvents: [],
