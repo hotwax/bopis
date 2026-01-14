@@ -460,7 +460,7 @@ export default defineComponent({
             logger.error("Pickup notification failed:", resp);
             showToast(translate("Unable to save the details. Please try again."));
           } else {
-            await this.store.dispatch('order/getCommunicationEvents', { orders: [this.order] });
+            await this.store.dispatch('order/getCommunicationEvents', { orders: [order] });
             showToast(translate("Details have been successfully saved, and an email has been sent to the customer."));
           }
         } catch (err) {
