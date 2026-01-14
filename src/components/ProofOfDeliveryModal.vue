@@ -12,7 +12,7 @@
 
   <ion-content class="ion-padding">
     <!-- Billing Details -->
-    <ion-item lines="none">
+    <ion-item lines="none" v-if="Object.keys(billingDetails).length">
       <ion-label>
         <strong>{{ translate("Billing Details") }}</strong>
         <p class="ion-padding-top">{{ billingDetails?.toName }}</p>
@@ -28,7 +28,7 @@
 
     <template v-if="!isViewModeOnly">
       <!-- Add checkbox for same as billing -->
-      <ion-item lines="none">
+      <ion-item lines="none" v-if="Object.keys(billingDetails).length">
         <ion-checkbox justify="start" v-model="sameAsBilling" @ion-change="handleSameAsBilling" label-placement="end">
           {{ translate("Same person as the billing customer") }}
         </ion-checkbox>

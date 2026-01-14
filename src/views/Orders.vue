@@ -662,12 +662,13 @@ export default defineComponent({
           
           if (hasError(resp)) {
             logger.error("Pickup notification failed:", resp);
-            showToast(translate("Order delivered but failed to send handover email"));
+            showToast(translate("Unable to save the details. Please try again."));
           } else {
-            showToast(translate("Order delivered and handover email sent successfully"));
+            await this.store.dispatch('order/getCommunicationEvents', { orders: [this.order] });
+            showToast(translate("Details have been successfully saved, and an email has been sent to the customer."));
           }
         } catch (err) {
-          logger.error("Error in handover process:", err);
+          logger.error("Error in saving the details:", err);
           showToast(translate("Something went wrong"));
         } finally {
           emitter.emit("dismissLoader");
