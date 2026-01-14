@@ -1274,7 +1274,6 @@ export default defineComponent({
       })
       modal.present();
     },
-
     canRequestTransfer(order: any): boolean {
       return (
         order?.shipGroup?.shipmentMethodTypeId === 'STOREPICKUP' &&
