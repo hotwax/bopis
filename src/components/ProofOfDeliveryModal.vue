@@ -122,6 +122,7 @@ const sameAsBilling = ref(true);
 const billingDetails = ref({});
 const isNamePrefilled = ref(false);
 const isIdPrefilled = ref(false);
+const idNumberValue = ref("");
 const store = useStore();
 
 const communicationEvent = computed(() => store.getters["order/getCommunicationEventsByOrderId"](props.order?.orderId));
@@ -182,6 +183,7 @@ const getPrefilledValue = async () => {
     
     if (customerAttr?.attrValue) {
       form.value.idNumber = customerAttr.attrValue;
+      idNumberValue.value = customerAttr.attrValue;
       isIdPrefilled.value = true;
     }
   } catch (err) {
@@ -194,6 +196,7 @@ const handleSameAsBilling = () => {
     form.value.name = billingDetails.value.toName || "";
     form.value.email = billingDetails.value.email || "";
     form.value.phone = billingDetails.value.phone || "";
+    form.value.idNumber = idNumberValue.value || "";
     form.value.relationToCustomer = "Self";
     isNamePrefilled.value = !!billingDetails.value.toName;
   } else {
