@@ -130,6 +130,7 @@ import {
   IonSegmentButton,
   IonTitle,
   IonToolbar,
+  modalController
 } from "@ionic/vue";
 import { defineComponent, ref, computed } from "vue";
 import ProductListItem from '@/components/ProductListItem.vue'
@@ -144,7 +145,6 @@ import { Actions, hasPermission } from '@/authorization'
 import { OrderService } from "@/services/OrderService";
 import { translate, useUserStore } from "@hotwax/dxp-components";
 import logger from "@/logger";
-import { modalController } from "@ionic/vue";
 import ProofOfDeliveryModal from "@/components/ProofOfDeliveryModal.vue";
 
 export default defineComponent({
@@ -186,10 +186,10 @@ export default defineComponent({
       isIncomingOrdersScrollable: 'order/isShipToStoreIncmngOrdrsScrlbl',
       isReadyForPickupOrdersScrollable: 'order/isShipToStoreRdyForPckupOrdrsScrlbl',
       isCompletedOrdersScrollable: 'order/isShipToStoreCmpltdOrdrsScrlbl',
-      communicationEvents: 'order/getCommunicationEvents',
       incomingOrderCount: "order/getIncomingOrdersCount",
       readyForPickupOrderCount: "order/getReadyForPickupOrdersCount",
-      completedOrderCount: "order/getCompletedOrdersCount"
+      completedOrderCount: "order/getCompletedOrdersCount",
+      communicationEvents: 'order/getCommunicationEvents'
     })
     ,
     communicationEventOrderIds() {
@@ -446,26 +446,31 @@ export default defineComponent({
       });
 
       await modal.present();
+      
       const { data } = await modal.onDidDismiss();
-
+      
       if (!isViewModeOnly && data?.confirmed && data?.proofOfDeliveryData) {
         emitter.emit("presentLoader");
+        
         try {
+          // Send the proof of delivery email
           const resp = await OrderService.sendPickupNotification(data.proofOfDeliveryData);
+          
           if (hasError(resp)) {
             logger.error("Pickup notification failed:", resp);
-            showToast(translate("Order delivered but failed to send handover email"));
+            showToast(translate("Unable to save the details. Please try again."));
           } else {
-            showToast(translate("Order delivered and handover email sent successfully"));
+            await this.store.dispatch('order/getCommunicationEvents', { orders: [this.order] });
+            showToast(translate("Details have been successfully saved, and an email has been sent to the customer."));
           }
         } catch (err) {
-          logger.error("Error in handover process:", err);
+          logger.error("Error in saving the details:", err);
           showToast(translate("Something went wrong"));
         } finally {
           emitter.emit("dismissLoader");
         }
       }
-    },
+    }
   },
   ionViewWillEnter() {
     this.isScrollingEnabled = false;
