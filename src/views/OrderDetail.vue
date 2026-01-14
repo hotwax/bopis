@@ -194,7 +194,7 @@
             </ion-button>            
           </ion-item>
           <ion-item lines="none" v-else-if="orderType === 'packed' && order.shipGroup?.items?.length" class="ion-hide-md-down">
-            <ion-button data-testid="handover-button" size="default" :disabled="!hasPermission(Actions.APP_ORDER_UPDATE) || order.handovered || order.shipped || order.cancelled || hasCancelledItems" expand="block" @click.stop="deliverShipment(order)">
+            <ion-button data-testid="handover-button" size="default" :disabled="!hasPermission(Actions.APP_ORDER_UPDATE) || order.handovered || order.shipped || order.cancelled || hasCancelledItems" expand="block" @click="deliverShipment(order)">
               <ion-icon slot="start" :icon="checkmarkDoneOutline"/>
               {{ order.shipGroup.shipmentMethodTypeId === 'STOREPICKUP' ? translate("Handover") : translate("Ship") }}
             </ion-button>
@@ -417,8 +417,6 @@ import { UserService } from "@/services/UserService";
 import ConfirmCancelModal from "@/components/ConfirmCancelModal.vue";
 import { UtilService } from "@/services/UtilService";
 import GiftCardActivationModal from "@/components/GiftCardActivationModal.vue";
-import ProofOfDeliveryModal from '@/components/ProofOfDeliveryModal.vue'
-
 
 export default defineComponent({
   name: "OrderDetail",
@@ -1276,42 +1274,6 @@ export default defineComponent({
       })
       modal.present();
     },
-    async openProofOfDeliveryModal(order: any) {
-      const modal = await modalController.create({
-        component: ProofOfDeliveryModal,
-        componentProps: {
-          order
-        },
-      });
-
-      await modal.present();
-      
-      const { data } = await modal.onDidDismiss();
-      
-      if (data?.confirmed && data?.proofOfDeliveryData) {
-        emitter.emit("presentLoader");
-        
-        try {
-          // First deliver the shipment
-          await this.deliverShipment(order);
-          
-          // Then send the proof of delivery email
-          const resp = await OrderService.sendPickupNotification(data.proofOfDeliveryData);
-          
-          if (hasError(resp)) {
-            logger.error("Pickup notification failed:", resp);
-            showToast(translate("Order delivered but failed to send handover email"));
-          } else {
-            showToast(translate("Order delivered and handover email sent successfully"));
-          }
-        } catch (err) {
-          logger.error("Error in handover process:", err);
-          showToast(translate("Something went wrong during handover"));
-        } finally {
-          emitter.emit("dismissLoader");
-        }
-      }
-    },
 
     canRequestTransfer(order: any): boolean {
       return (
@@ -1364,7 +1326,6 @@ export default defineComponent({
       }
       emitter.emit("dismissLoader");
     }
-
   },
 
   async mounted() {
