@@ -23,6 +23,13 @@ const fetchOrderDetails = async (orderId: string): Promise<any> => {
   });
 }
 
+const fetchOrderAttributes = async (orderId: string): Promise<any> => {
+  return api({
+    url: `oms/orders/${orderId}/attributes`,
+    method: "GET",
+  });
+}
+
 const fetchOrderItems = async (payload: any): Promise <any> => {
   const baseURL = store.getters['user/getOmsBaseUrl'];
   const omstoken = store.getters['user/getUserToken'];
@@ -392,12 +399,36 @@ const fetchGiftCardActivationDetails = async ({ isDetailsPage, currentOrders }: 
 
   return isDetailsPage ? orders[0] : orders
 }
+const getBillingDetails = async (payload: any): Promise<any> => {
+  return api({
+    url: `/poorti/orders/${payload.orderId}/billing`,
+    method: "GET"
+  });
+}
+
+const sendPickupNotification = async (payload: any): Promise<any> => {  
+  return await api({
+    url: `oms/orders/pickupScheduledNotification`,
+    method: "POST",
+    data: payload,
+  });
+};
+
+const getCommunicationEvents = async (payload: any): Promise<any> => {
+  return api({
+    url: "/oms/communicationEvents",
+    method: "GET",
+    params: payload
+  });
+};
+
 
 export const OrderService = {
   cancelOrder,
   createPicklist,
   fetchGiftCardActivationDetails,
   fetchOrderDetails,
+  fetchOrderAttributes,
   fetchOrderItems,
   fetchPicklists,
   findCompletedShipments,
@@ -415,5 +446,8 @@ export const OrderService = {
   handoverShipToStoreOrder,
   arrivedShipToStore,
   convertToShipToStore,
-  shipOrder
+  shipOrder,
+  getBillingDetails,
+  sendPickupNotification,
+  getCommunicationEvents
 }

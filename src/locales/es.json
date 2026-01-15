@@ -304,5 +304,19 @@
   "Zipcode": "Código postal",
   "Configure Picker": "Configurar recolector",
   "Configuration to assign a picker to orders.": "Configuración para asignar un recolector a los pedidos.",
-  "No in stock": "No en stock"
+  "No in stock": "No en stock",
+  "Billing Details": "Detalles de Facturación",
+  "Proof of Delivery": "Comprobante de Entrega",
+  "Please enter the details of the person picking up the order.": "Por favor, introduzca los datos de la persona que recogerá el pedido.",
+  "Name": "Nombre",
+  "ID Number": "Número de Identificación",
+  "Relation to Customer": "Relación con el Cliente",
+  "Email": "Correo Electrónico",
+  "Failed to send handover email": "Error al enviar el correo de entrega",
+  "Handover email sent successfully": "Correo de entrega enviado correctamente",
+  "Self": "Yo mismo",
+  "Family Member": "Miembro de la Familia",
+  "Friend": "Amigo",
+  "Other Relation": "Otra Relación",
+  "Same person as the billing customer": "La misma persona que el cliente de facturación"
 }

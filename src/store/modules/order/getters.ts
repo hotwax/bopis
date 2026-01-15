@@ -56,6 +56,12 @@ const getters: GetterTree<OrderState , RootState> = {
   },
   getCompletedOrdersCount: (state) => {
     return state.shipToStore.completed.orderCount ;
+  },
+  getCommunicationEvents: (state) => {
+    return state.communicationEvents;
+  },
+  getCommunicationEventsByOrderId: (state) => (orderId: string) => {
+    return state.communicationEvents.find((event: any) => event.orderId === orderId);
   }
 }
 
