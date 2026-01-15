@@ -15,9 +15,9 @@
     <ion-item lines="none" v-if="Object.keys(billingDetails).length">
       <ion-label>
         <strong>{{ translate("Billing Details") }}</strong>
-        <p class="ion-padding-top">{{ billingDetails?.toName }}</p>
-        <p>{{ billingDetails?.address1 }}</p>
-        <p>{{ billingDetails?.city }} {{ billingDetails?.state }} {{ billingDetails?.country }}</p>
+        <p class="ion-padding-top">{{ billingDetails.toName }}</p>
+        <p>{{ billingDetails.address1 }}</p>
+        <p>{{ billingDetails.city }} {{ billingDetails.state }} {{ billingDetails.country }}</p>
       </ion-label>
     </ion-item>
 
@@ -66,7 +66,7 @@
       </ion-item>
       <ion-item>
         <ion-label class="ion-text-left">{{ translate("Relation to customer") }}</ion-label>
-        <ion-label class="ion-text-right">{{ form.relationToCustomer ? form.relationToCustomer : "Self" }}</ion-label>
+        <ion-label class="ion-text-right">{{ form.relationToCustomer }}</ion-label>
       </ion-item>
       <ion-item>
         <ion-label class="ion-text-left">{{ translate("Phone") }}</ion-label>
