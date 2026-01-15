@@ -449,7 +449,7 @@ export default defineComponent({
       
       const { data } = await modal.onDidDismiss();
       
-      if (!isViewModeOnly && data?.confirmed && data?.proofOfDeliveryData) {
+      if (data?.confirmed && data?.proofOfDeliveryData) {
         emitter.emit("presentLoader");
         
         try {
