@@ -156,6 +156,7 @@
   "Order not found": "Orden no encontrada",
   "Order packed and ready for delivery": "Orden empacada y lista para entrega",
   "Order will be marked as ready for pickup and an email notification will be sent to . This action is irreversible.": "El pedido se marcará como listo para recoger y se enviará una notificación por correo electrónico a {customerName}. Esta acción es irreversible.",
+  "Order will be marked as completed and an email notification will be sent to the customer. This action is irreversible.": "El pedido se marcará como completado y se enviará una notificación por correo electrónico al cliente. Esta acción es irreversible.",
   "Order will be marked as completed. This action is irreversible.": "El pedido se marcará como completado. Esta acción es irreversible.",
   "Orders": "Órdenes",
   "Orders Not Found": "Órdenes no encontradas",

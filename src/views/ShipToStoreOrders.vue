@@ -351,7 +351,7 @@ export default defineComponent({
     },
     async confirmHandoverOrder(order: any) {
       const header = translate('Complete order')
-      const message = translate('Order will be marked as completed. This action is irreversible.');
+      const message = translate('Order will be marked as completed and an email notification will be sent to the customer. This action is irreversible.');
 
       const alert = await alertController
         .create({
@@ -387,6 +387,9 @@ export default defineComponent({
               const emailResp = await OrderService.sendHandoverNotification({ shipmentId });
               if (!hasError(emailResp)) {
                 showToast(translate('Order handed over successfully and order completion email has been sent'));
+              } else {
+                logger.error('Error sending handover notification:', emailResp);
+                showToast(translate('Order handed over successfully but something went wrong while sending the email notification'));
               }
             } catch (error) {
               logger.error('Error sending handover notification:', error);
