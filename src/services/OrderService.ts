@@ -273,7 +273,7 @@ const sendHandoverNotification = async (payload: any): Promise <any> => {
     url: "oms/orders/pickupScheduledNotification",
     method: "post",
     data: {
-      emailType: "HANDOVER_BOPIS_ORDER",
+      emailType: "HANDOVER_STS_ORDER",
       ...payload
     }
   });
