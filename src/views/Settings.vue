@@ -182,6 +182,20 @@
           </ion-item>
         </ion-card>
 
+        <ion-card v-if="hasPermission(Actions.APP_PROOF_OF_DELIVERY_PREF_UPDATE)">
+          <ion-card-header>
+            <ion-card-title>
+              {{ translate("Proof of delivery") }}
+            </ion-card-title>
+          </ion-card-header>
+          <ion-card-content>
+            {{ translate('This will allow store associates to verify the delivery of pickup order') }}
+          </ion-card-content>
+          <ion-item lines="none">
+            <ion-toggle label-placement="start" :checked="getBopisProductStoreSettings('HANDOVER_PROOF')" @click.prevent="setBopisProductStoreSettings($event, 'HANDOVER_PROOF')">{{ translate("Show proof of delivery") }}</ion-toggle>
+          </ion-item>
+        </ion-card>
+
         <ion-card v-if="notificationPrefs.length">
           <ion-card-header>
             <ion-card-title>
