@@ -8,10 +8,12 @@
       </ion-buttons>
       <ion-title>{{ translate("Assign Pickers") }}</ion-title>
     </ion-toolbar>
+    <ion-toolbar>
+      <ion-searchbar v-model="queryString" @keyup.enter="queryString = $event.target.value; searchPicker()" />
+    </ion-toolbar>
   </ion-header>
 
   <ion-content ref="contentRef" :scroll-events="true" @ionScroll="enableScrolling()">
-    <ion-searchbar v-model="queryString" @keyup.enter="queryString = $event.target.value; searchPicker()"/>
 
     <div v-if="isLoading" class="empty-state">
       <ion-spinner name="crescent" />
@@ -27,7 +29,7 @@
             <ion-radio data-testid="assign-picker-radio" :value="picker.id">
               <ion-label>
                 {{ picker.name }}
-                <p>{{ picker.id }}</p>
+                <p>{{ picker.externalId ? picker.externalId : picker.id }}</p>
               </ion-label>
             </ion-radio>
           </ion-item>

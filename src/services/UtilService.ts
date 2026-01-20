@@ -1,7 +1,6 @@
 import { api, apiClient } from '@/adapter';
 import { hasError } from '@/adapter';
 import store from '@/store';
-import logger from '@/logger';
 
 const fetchRejectReasons = async (query: any): Promise<any> => {
   return api({
@@ -27,38 +26,6 @@ const fetchCancelReasons = async (payload: any): Promise<any> => {
   });
 }
 
-const fetchPaymentMethodTypeDesc = async (query: any): Promise <any>  => {
-  const baseURL = store.getters['user/getOmsBaseUrl'];
-  const omstoken = store.getters['user/getUserToken'];
-
-  return apiClient({
-    url: "performFind",
-    method: "get",
-    baseURL,
-    headers: {
-      "Authorization": "Bearer " + omstoken,
-      "Content-Type": "application/json"
-    },
-    params: query
-  });
-}
-
-const fetchStatusDesc = async (query: any): Promise <any>  => {
-  const baseURL = store.getters['user/getOmsBaseUrl'];
-  const omstoken = store.getters['user/getUserToken'];
-
-  return apiClient({
-    url: "performFind",
-    method: "get",
-    baseURL,
-    headers: {
-      "Authorization": "Bearer " + omstoken,
-      "Content-Type": "application/json"
-    },
-    params: query
-  });
-}
-
 const resetPicker = async (payload: any): Promise<any> => {
   const baseURL = store.getters['user/getOmsBaseUrl'];
   const omstoken = store.getters['user/getUserToken'];
@@ -73,38 +40,6 @@ const resetPicker = async (payload: any): Promise<any> => {
     },
     data: payload
   })
-}
-
-const fetchFacilityTypeInformation = async (query: any): Promise<any> => {
-  const baseURL = store.getters['user/getOmsBaseUrl'];
-  const omstoken = store.getters['user/getUserToken'];
-
-  return apiClient({
-    url: "performFind",
-    method: "get",
-    baseURL,
-    headers: {
-      "Authorization": "Bearer " + omstoken,
-      "Content-Type": "application/json"
-    },
-    params: query
-  });
-}
-
-const fetchPartyInformation = async (query: any): Promise<any> => {
-  const baseURL = store.getters['user/getOmsBaseUrl'];
-  const omstoken = store.getters['user/getUserToken'];
-
-  return apiClient({
-    url: "performFind",
-    method: "get",
-    baseURL,
-    headers: {
-      "Authorization": "Bearer " + omstoken,
-      "Content-Type": "application/json"
-    },
-    params: query
-  });
 }
 
 const getProductStoreSettings = async (payload: any): Promise<any> => {
@@ -315,6 +250,13 @@ const activateGiftCard = async (payload: any): Promise<any> => {
     data: payload
   });
 }
+const fetchPartiesInformation = async (payload: any): Promise<any> => {
+  return api({
+    url: "oms/parties",
+    method: "get",
+    params: payload
+  });
+}
 
 export const UtilService = {
   activateGiftCard,
@@ -322,15 +264,12 @@ export const UtilService = {
   createProductStoreSetting,
   fetchEnumerations,
   fetchFacilities,
-  fetchFacilityTypeInformation,
   fetchGiftCardFulfillmentInfo,
   fetchJobInformation,
-  fetchPartyInformation,
-  fetchPaymentMethodTypeDesc,
+  fetchPartiesInformation,
   fetchRejectReasons,
   fetchRejectReasonsByEnumerationGroup,
   fetchCancelReasons,
-  fetchStatusDesc,
   getProcessRefundStatus,
   getProductStoreSettings,
   isEnumExists,

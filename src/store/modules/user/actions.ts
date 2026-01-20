@@ -33,7 +33,7 @@ const actions: ActionTree<UserState, RootState> = {
   /**
  * Login user and return token
  */
-  async login ({ commit, dispatch, getters }, payload) {
+  async login ({ commit, dispatch }, payload) {
     try {
       const {token, oms, omsRedirectionUrl} = payload;
       dispatch("setUserInstanceUrl", oms);
@@ -364,7 +364,7 @@ const actions: ActionTree<UserState, RootState> = {
     commit(types.USER_ALL_NOTIFICATION_PREFS_UPDATED, allNotificationPrefs)
   },
 
-  async fetchBopisProductStoreSettings({ commit, dispatch }) {
+  async fetchBopisProductStoreSettings({ commit }) {
     const productStoreSettings = JSON.parse(process.env.VUE_APP_PRODUCT_STORE_SETTING_ENUMS);
     const settingValues = {} as any;
 
@@ -397,7 +397,7 @@ const actions: ActionTree<UserState, RootState> = {
     commit(types.USER_BOPIS_PRODUCT_STORE_SETTINGS_UPDATED, settingValues)
   },
 
-  async createProductStoreSetting({ commit }, enumeration) {
+  async createProductStoreSetting(_, enumeration) {
     try {
       if(!await UtilService.isEnumExists(enumeration.enumId)) {
         const resp = await UtilService.createEnumeration({
@@ -427,8 +427,7 @@ const actions: ActionTree<UserState, RootState> = {
     return false;
   },
 
-  async setProductStoreSetting({ commit, dispatch, state }, payload) {
-    const productStoreSettings = JSON.parse(process.env.VUE_APP_PRODUCT_STORE_SETTING_ENUMS);
+  async setProductStoreSetting({ commit, state }, payload) {
     let prefValue = state.bopisProductStoreSettings[payload.enumId]
     const eComStoreId = this.state.user.currentEComStore.productStoreId;
 

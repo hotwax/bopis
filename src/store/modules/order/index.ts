@@ -40,7 +40,8 @@ const orderModule: Module<OrderState, RootState> = {
         total: 0,
         orderCount: 0
       }
-    }
+    },
+    communicationEvents: [],
   },
   getters,
   actions,

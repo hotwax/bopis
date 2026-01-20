@@ -2,7 +2,7 @@
   <ion-page>
     <ion-header :translucent="true">
       <ion-toolbar>
-        <ion-title>{{ currentFacility?.facilityName }}</ion-title>
+        <ion-title>{{ currentFacility?.facilityName ? currentFacility?.facilityName : currentFacility?.facilityId }}</ion-title>
         <ion-buttons slot="end">
           <ion-button data-testid="notifications-button" @click="viewNotifications()">
             <ion-icon slot="icon-only" :icon="notificationsOutline" :color="(unreadNotificationsStatus && notifications.length) ? 'primary' : ''" />
@@ -29,7 +29,7 @@
       </div>    
     </ion-header>
     <ion-content ref="contentRef" :scroll-events="true" @ionScroll="enableScrolling()">
-      <div v-if="segmentSelected === 'open'">
+      <div v-if="segmentSelected === 'open' && orders.length">
 
         <div v-for="(order, index) in getOrdersByPart(orders)" :key="index" v-show="order.shipGroups.length > 0">
           <ion-card data-testid="order-card" button @click.prevent="viewOrder(order, order.shipGroup.shipGroupSeqId, 'open')">
@@ -72,7 +72,7 @@
           </ion-card>
         </div>
       </div>       
-      <div v-if="segmentSelected === 'packed'">
+      <div v-else-if="segmentSelected === 'packed' && packedOrders.length">
         <div v-for="(order, index) in packedOrders" :key="index" v-show="order.items.length > 0">
           <ion-card data-testid="order-card" button @click.prevent="viewOrder(order, order.primaryShipGroupSeqId, 'packed')">
             <ion-item lines="none">
@@ -108,7 +108,7 @@
           </ion-card>
         </div>
       </div>
-      <div v-if="segmentSelected === 'completed'">
+      <div v-else-if="segmentSelected === 'completed' && completedOrders.length">
         <div v-for="(order, index) in completedOrders" :key="index" v-show="order.items.length > 0">
           <ion-card data-testid="order-card" button @click.prevent="viewOrder(order, order.primaryShipGroupSeqId, 'completed')">
             <ion-item lines="none">
@@ -121,13 +121,20 @@
 
             <ProductListItem v-for="item in order.items" :key="item.productId" :item="item" :orderId="order.orderId" :customerId="order.customerId" :currencyUom="order.currencyUom" orderType="completed"/>          
             <div class="border-top">
-              <ion-button data-testid="packing-slip-button" v-if="getBopisProductStoreSettings('PRINT_PACKING_SLIPS')" fill="clear" slot="end" @click.stop="printPackingSlip(order)">
-                {{ translate('Print customer letter') }}
+              <ion-button data-testid="proof-of-delivery-button" fill="clear" v-if="getBopisProductStoreSettings('HANDOVER_PROOF')" @click.stop="openProofOfDeliveryModal(order, communicationEventOrderIds.has(order.orderId))">
+                {{ communicationEventOrderIds.has(order.orderId) ? translate('View Proof of Delivery') : translate('Proof of Delivery') }}
+              </ion-button>
+              <div></div>
+              <ion-button  size="default" data-testid="packing-slip-button" v-if="getBopisProductStoreSettings('PRINT_PACKING_SLIPS')" fill="clear" slot="end" @click.stop="printPackingSlip(order)">
+                <ion-icon slot="icon-only" :icon="printOutline" />
               </ion-button>
             </div>
           </ion-card>
         </div>
       </div>      
+      <template v-else>
+        <p class="empty-state">{{translate('No orders found')}}</p>
+      </template>
       <ion-refresher slot="fixed" @ionRefresh="refreshOrders($event)">
         <ion-refresher-content pullingIcon="crescent" refreshingSpinner="crescent" />
       </ion-refresher>
@@ -180,7 +187,7 @@ import { useRouter } from 'vue-router'
 import { copyToClipboard, showToast } from '@/utils'
 import { DateTime } from 'luxon';
 import emitter from "@/event-bus"
-import { api, hasError } from '@/adapter';
+import { hasError } from '@/adapter';
 import { translate, useUserStore } from "@hotwax/dxp-components";
 import AssignPickerModal from "./AssignPickerModal.vue";
 import { OrderService } from "@/services/OrderService";
@@ -188,6 +195,7 @@ import { UserService } from "@/services/UserService";
 import { Actions, hasPermission } from '@/authorization'
 import logger from "@/logger";
 import RejectOrderItemModal from "@/components/RejectOrderItemModal.vue";
+import ProofOfDeliveryModal from "@/components/ProofOfDeliveryModal.vue";
 
 export default defineComponent({
   name: 'Orders',
@@ -230,9 +238,13 @@ export default defineComponent({
       notifications: 'user/getNotifications',
       unreadNotificationsStatus: 'user/getUnreadNotificationsStatus',
       getBopisProductStoreSettings: 'user/getBopisProductStoreSettings',
-      getProductStock: 'stock/getProductStock',
-      order: "order/getCurrent"
-    })
+      getInventoryInformation: 'stock/getInventoryInformation',
+      order: "order/getCurrent",
+      communicationEvents: 'order/getCommunicationEvents'
+    }),
+    communicationEventOrderIds() {
+      return new Set(((this as any).communicationEvents || []).map((e: any) => e.orderId));
+    }
   },
   data() {
     return {
@@ -247,14 +259,14 @@ export default defineComponent({
         componentProps: { order, shipGroup, facilityId }
       });
       assignPickerModal.onDidDismiss().then(async(result: any) => {
-        emitter.emit("presentLoader");
         if(result.data?.selectedPicker) {
+          emitter.emit("presentLoader");
           await this.createPicklist(order, result.data.selectedPicker);
-          const updatedOrder  = this.orders.find((ord: any) => ord.orderId === order.orderId);
+          const updatedOrder = this.orders.find((ord: any) => ord.orderId === order.orderId);
           const updatedShipGroup = updatedOrder.shipGroups.find((sg: any) => sg.shipGroupSeqId === shipGroup.shipGroupSeqId);
           await this.store.dispatch('order/packShipGroupItems', { order: updatedOrder, shipGroup: updatedShipGroup })
+          emitter.emit("dismissLoader");
         }
-        emitter.emit("dismissLoader");
       })
 
       return assignPickerModal.present();
@@ -311,6 +323,7 @@ export default defineComponent({
       const viewIndex = vIndex ? vIndex : 0;
 
       await this.store.dispatch("order/getCompletedOrders", { viewSize, viewIndex, queryString: this.queryString, facilityId: this.currentFacility?.facilityId });
+      await this.store.dispatch('order/getCommunicationEvents', { orders: this.completedOrders });
     },
     enableScrolling() {
       const parentElement = (this as any).$refs.contentRef.$el
@@ -406,20 +419,6 @@ export default defineComponent({
       .then((resp) => {
         if(!hasError(resp)) {
           showToast(translate('Order delivered to', {customerName: order.customerName}))
-
-          // We are collecting the product IDs of the order items and then fetching stock information
-          // for each product ID if it is available for updated inventory.
-          const productIds = [...new Set(order.shipGroups.reduce((productId: any, shipGroup: any) => {
-            const ids = shipGroup.items.map((item: any) => item.productId)
-            return productId.concat(ids)
-          }, []))]
-
-          productIds.map((productId: any) => {
-            const productStock = this.getProductStock(productId);
-            if (productStock && productStock.quantityOnHandTotal >= 0) {
-              this.store.dispatch('stock/fetchStock', { productId });
-            }
-          })
         }
       })
     },
@@ -581,7 +580,7 @@ export default defineComponent({
         return;
       }
     },
-  async openRejectOrderModal(order:any){
+    async openRejectOrderModal(order:any) {
       const orderProps = order
       const rejectOrderModal = await modalController.create({
         component:RejectOrderItemModal,
@@ -639,6 +638,42 @@ export default defineComponent({
         showToast(translate("Something went wrong"));
       }
       emitter.emit("dismissLoader");
+    },
+
+    async openProofOfDeliveryModal(order: any, isViewModeOnly: any) {
+      const modal = await modalController.create({
+        component: ProofOfDeliveryModal,
+        componentProps: {
+          order,
+          isViewModeOnly
+        },
+      });
+
+      await modal.present();
+      
+      const { data } = await modal.onDidDismiss();
+      
+      if (data?.confirmed && data?.proofOfDeliveryData) {
+        emitter.emit("presentLoader");
+        
+        try {
+          // Send the proof of delivery email
+          const resp = await OrderService.sendPickupNotification(data.proofOfDeliveryData);
+          
+          if (hasError(resp)) {
+            logger.error("Pickup notification failed:", resp);
+            showToast(translate("Unable to save the details. Please try again."));
+          } else {
+            await this.store.dispatch('order/getCommunicationEvents', { orders: [this.order] });
+            showToast(translate("Details have been successfully saved, and an email has been sent to the customer."));
+          }
+        } catch (err) {
+          logger.error("Error in saving the details:", err);
+          showToast(translate("Something went wrong"));
+        } finally {
+          emitter.emit("dismissLoader");
+        }
+      }
     }
   },
   ionViewWillEnter () {

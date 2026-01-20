@@ -152,7 +152,6 @@ export default defineComponent({
       };
 
       let cancelledResponse;
-      let isCancelled = true;
 
       try {
         cancelledResponse = await OrderService.cancelOrder(payload);
@@ -174,7 +173,6 @@ export default defineComponent({
         };
       } catch (err) {
         console.error("Error cancelling order items", err);
-        isCancelled = false;
       }
 
       // If all the items are cancelled then mark the whole order as cancelled

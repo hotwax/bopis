@@ -130,7 +130,7 @@
             </ion-card-title>
           </ion-card-header>
           <ion-card-content>
-            {{ translate('View shipping orders along with pickup orders.') }}
+            {{ translate('Enabling this will show only shipping orders and hide all pickup orders.') }}
           </ion-card-content>
           <ion-item lines="none" :disabled="!hasPermission(Actions.APP_SHOW_SHIPPING_ORD_PREF_UPDATE)">
             <ion-toggle label-placement="start" :checked="getBopisProductStoreSettings('SHOW_SHIPPING_ORDERS')" @click.prevent="setBopisProductStoreSettings($event, 'SHOW_SHIPPING_ORDERS')">{{ translate("Show shipping orders") }}</ion-toggle>
@@ -179,6 +179,20 @@
           </ion-card-content>
           <ion-item lines="none" :disabled="!hasPermission(Actions.APP_REQUEST_TRANSFER_UPDATE)">
             <ion-toggle label-placement="start" :checked="getBopisProductStoreSettings('REQUEST_TRANSFER')" @click.prevent="setBopisProductStoreSettings($event, 'REQUEST_TRANSFER')">{{ translate("Show Request Transfer") }}</ion-toggle>
+          </ion-item>
+        </ion-card>
+
+        <ion-card v-if="hasPermission(Actions.APP_PROOF_OF_DELIVERY_PREF_UPDATE)">
+          <ion-card-header>
+            <ion-card-title>
+              {{ translate("Proof of delivery") }}
+            </ion-card-title>
+          </ion-card-header>
+          <ion-card-content>
+            {{ translate('This will allow store associates to verify the delivery of pickup order') }}
+          </ion-card-content>
+          <ion-item lines="none">
+            <ion-toggle label-placement="start" :checked="getBopisProductStoreSettings('HANDOVER_PROOF')" @click.prevent="setBopisProductStoreSettings($event, 'HANDOVER_PROOF')">{{ translate("Show proof of delivery") }}</ion-toggle>
           </ion-item>
         </ion-card>
 

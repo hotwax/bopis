@@ -7,11 +7,10 @@ import { hasError } from '@/adapter'
 import { getCurrentFacilityId } from '@/utils'
 import logger from '@/logger'
 
-
 const actions: ActionTree<StockState, RootState> = {
-  async fetchProductInventory({ commit, state }, { productId }) {
+  async fetchProductInventory({ commit, state }, { productId, forceFetchStock = false }) {
     const facilityId = getCurrentFacilityId();
-    if (state.inventoryInformation[productId] && state.inventoryInformation[productId][facilityId]) {
+    if (!forceFetchStock && state.inventoryInformation[productId] && state.inventoryInformation[productId][facilityId]) {
       return; 
     }
 
