@@ -86,7 +86,7 @@
             <ProductListItem v-for="item in order.items" :key="item.productId" :item="item" :isShipToStoreOrder=true />
           
             <div class="border-top">
-              <ion-button data-testid="proof-of-delivery-button" fill="clear" @click.stop="openProofOfDeliveryModal(order, communicationEventOrderIds.has(order.orderId))">
+              <ion-button data-testid="proof-of-delivery-button" fill="clear" v-if="getBopisProductStoreSettings('HANDOVER_PROOF')" @click.stop="openProofOfDeliveryModal(order, communicationEventOrderIds.has(order.orderId))">
                 {{ communicationEventOrderIds.has(order.orderId) ? translate('View Proof of Delivery') : translate('Proof of Delivery') }}
               </ion-button>
             </div>
@@ -189,7 +189,8 @@ export default defineComponent({
       incomingOrderCount: "order/getIncomingOrdersCount",
       readyForPickupOrderCount: "order/getReadyForPickupOrdersCount",
       completedOrderCount: "order/getCompletedOrdersCount",
-      communicationEvents: 'order/getCommunicationEvents'
+      communicationEvents: 'order/getCommunicationEvents',
+      getBopisProductStoreSettings: 'user/getBopisProductStoreSettings',
     })
     ,
     communicationEventOrderIds() {
