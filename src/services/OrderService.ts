@@ -202,6 +202,17 @@ const sendPickupScheduledNotification = async (payload: any): Promise <any> => {
   });
 }
 
+const sendHandoverNotification = async (payload: any): Promise <any> => {
+  return api({
+    url: "oms/orders/pickupScheduledNotification",
+    method: "post",
+    data: {
+      emailType: "HANDOVER_STS_ORDER",
+      ...payload
+    }
+  });
+}
+
 const handoverShipToStoreOrder = async (shipmentId: string): Promise<any> => {
   return api({
     url: `/poorti/shipments/${shipmentId}`,
@@ -443,6 +454,7 @@ export const OrderService = {
   printShippingLabelAndPackingSlip,
   rejectOrderItems,
   sendPickupScheduledNotification,
+  sendHandoverNotification,
   handoverShipToStoreOrder,
   arrivedShipToStore,
   convertToShipToStore,

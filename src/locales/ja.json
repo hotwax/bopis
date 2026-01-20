@@ -238,6 +238,7 @@
   "Ship to customer": "お客様に配送",
   "Shipping to store": "店舗に配送",
   "Order marked as ship to store": "店舗への発送としてマークされた注文",
+  "Order will be marked as completed and an email notification will be sent to the customer. This action is irreversible.": "注文が完了としてマークされ、顧客にメール通知が送られます。この操作は逆に行えません。",
   "Ship to this address": "この住所に配送",
   "Shop": "ショップ",
   "Show shipping orders": "出荷オーダーの表示",
