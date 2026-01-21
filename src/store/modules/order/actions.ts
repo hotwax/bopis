@@ -516,7 +516,6 @@ const actions: ActionTree<OrderState , RootState> ={
       }
     } catch (err) {
       logger.error(err);
-      showToast(translate("Something went wrong"));
     }
   },
 

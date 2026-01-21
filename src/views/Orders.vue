@@ -323,7 +323,7 @@ export default defineComponent({
       const viewIndex = vIndex ? vIndex : 0;
 
       await this.store.dispatch("order/getCompletedOrders", { viewSize, viewIndex, queryString: this.queryString, facilityId: this.currentFacility?.facilityId });
-      await this.store.dispatch('order/getCommunicationEvents', { orders: this.completedOrders });
+      if (hasPermission(Actions.APP_PROOF_OF_DELIVERY_PREF_UPDATE)) await this.store.dispatch('order/getCommunicationEvents', { orders: this.completedOrders });
     },
     enableScrolling() {
       const parentElement = (this as any).$refs.contentRef.$el
