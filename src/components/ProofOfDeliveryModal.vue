@@ -12,12 +12,12 @@
 
   <ion-content class="ion-padding">
     <!-- Billing Details -->
-    <ion-item lines="none" v-if="Object.keys(billingDetails).length">
+    <ion-item lines="none" v-if="Object.keys(billingDetails?.billingAddress).length">
       <ion-label>
         <strong>{{ translate("Billing Details") }}</strong>
-        <p class="ion-padding-top">{{ billingDetails.toName }}</p>
-        <p>{{ billingDetails.address1 }}</p>
-        <p>{{ billingDetails.city }} {{ billingDetails.state }} {{ billingDetails.country }}</p>
+        <p class="ion-padding-top">{{ billingDetails?.billingAddress?.toName }}</p>
+        <p>{{ billingDetails?.billingAddress?.address1 }}</p>
+        <p>{{ billingDetails?.billingAddress?.city }} {{ billingDetails?.billingAddress?.state }} {{ billingDetails?.billingAddress?.country }}</p>
       </ion-label>
     </ion-item>
 
@@ -28,7 +28,7 @@
 
     <template v-if="!isViewModeOnly">
       <!-- Add checkbox for same as billing -->
-      <ion-item lines="none" v-if="Object.keys(billingDetails).length">
+      <ion-item lines="none" v-if="Object.keys(billingDetails?.billingAddress).length">
         <ion-checkbox justify="start" v-model="sameAsBilling" @ion-change="handleSameAsBilling" label-placement="end">
           {{ translate("Same person as the billing customer") }}
         </ion-checkbox>
@@ -49,10 +49,10 @@
         </ion-select>
       </ion-item>
       <ion-item>
-        <ion-input v-model="form.phone" :label="translate('Phone')" label-placement="floating" type="tel" :disabled="isSubmitting" />
+        <ion-input v-model="form.phone" :label="translate('Phone')" label-placement="floating" type="tel" :disabled="isSubmitting || (sameAsBilling &&isPhonePrefilled)" :error-text="errors.phone" :class="{ 'ion-invalid': errors.phone, 'ion-touched': errors.phone }" />
       </ion-item>
       <ion-item>
-        <ion-input v-model="form.email" :label="translate('Email')" label-placement="floating" type="email" :disabled="isSubmitting" />
+        <ion-input v-model="form.email" :label="translate('Email')" label-placement="floating" type="email" :disabled="isSubmitting || (sameAsBilling && isEmailPrefilled)" :error-text="errors.email" :class="{ 'ion-invalid': errors.email, 'ion-touched': errors.email }" />
       </ion-item>
     </template>
     <template v-if="isViewModeOnly">
@@ -79,14 +79,14 @@
     </template>
   </ion-content>
   <ion-fab v-if="!isViewModeOnly" vertical="bottom" horizontal="end" slot="fixed">
-    <ion-fab-button data-testid="handover-modal-button" :disabled="isSubmitting || !isFormValid" @click="submitForm">
+    <ion-fab-button data-testid="handover-modal-button" :disabled="isSubmitting" @click="submitForm">
       <ion-icon :icon="saveOutline"/>
     </ion-fab-button>
   </ion-fab>
 </template>
 
 <script setup>
-import { ref, onMounted, computed, defineProps } from "vue";
+import { ref, onMounted, computed, defineProps, watch } from "vue";
 import {
   IonButtons,
   IonButton,
@@ -111,6 +111,7 @@ import { showToast } from "@/utils";
 import { translate } from "@hotwax/dxp-components";
 import { OrderService } from "@/services/OrderService";
 import { useStore } from "@/store";
+import { z } from "zod";
 
 const props = defineProps({
   order: { type: Object, required: true },
@@ -121,6 +122,8 @@ const isSubmitting = ref(false);
 const sameAsBilling = ref(true);
 const billingDetails = ref({});
 const isNamePrefilled = ref(false);
+const isPhonePrefilled = ref(false);
+const isEmailPrefilled = ref(false);
 const isIdPrefilled = ref(false);
 const idNumberValue = ref("");
 const store = useStore();
@@ -148,26 +151,43 @@ const form = ref({
   phone: ""
 });
 
-const isFormValid = computed(() => {
-  return form.value.name.trim() !== "" &&
-    form.value.idNumber.trim() !== "" &&
-    form.value.relationToCustomer !== "";
+const errors = ref({});
+
+const formSchema = z.object({
+  name: z.string().trim().min(1, translate("Name is required")),
+  idNumber: z.string().trim().min(1, translate("ID Number is required")),
+  relationToCustomer: z.string().min(1, translate("Relation is required")),
+  email: z.email(translate("Please enter a valid email")).or(z.literal("")),
+  phone: z.string().regex(/^\+?\d{10,15}$/, translate("Please enter a valid phone")).optional().or(z.literal(""))
 });
+
+watch(form, () => {
+  const result = formSchema.safeParse(form.value);
+  errors.value = {};
+  if (!result.success) {
+    result.error.issues.forEach(issue => {
+      errors.value[issue.path[0]] = issue.message;
+    });
+  }
+}, { deep: true });
 
 const getBillingDetails = async () => {
   if (!props.order?.orderId) return;
   
   try {
     const resp = await OrderService.getBillingDetails({ orderId: props.order.orderId });
-    billingDetails.value = resp?.data?.billToAddress || {};
+    billingDetails.value = resp?.data?.billingDetails || {};
 
-    form.value.name = orderContent.value?.name || billingDetails.value.toName || "";
-    form.value.email = orderContent.value?.email || billingDetails.value.email || "";
-    form.value.phone = orderContent.value?.phone || billingDetails.value.phone || "";
+    console.log('resp', billingDetails.value);
+
+    form.value.name = orderContent.value?.name || billingDetails.value?.billingAddress?.toName || "";
+    form.value.email = orderContent.value?.email || billingDetails.value.billingEmail || "";
+    form.value.phone = orderContent.value?.phone || (billingDetails.value?.billingPhone?.countryCode + billingDetails.value?.billingPhone?.contactNumber) || "";
     form.value.relationToCustomer = orderContent.value?.relationToCustomer || "Self";
-    form.value.phone = orderContent.value?.phone || "";
     form.value.idNumber = props.isViewModeOnly ? (orderContent.value?.idNumber || "") : (form.value.idNumber || orderContent.value?.idNumber || "");
-    isNamePrefilled.value = !!(orderContent.value?.name || billingDetails.value.toName);
+    isNamePrefilled.value = !!(orderContent.value?.name || billingDetails.value?.billingAddress?.toName);
+    isPhonePrefilled.value = !!(orderContent.value?.phone || billingDetails.value?.billingPhone?.countryCode + billingDetails.value?.billingPhone?.contactNumber);
+    isEmailPrefilled.value = !!(orderContent.value?.email || billingDetails.value.billingEmail);
   } catch (err) {
     logger.error("Error fetching billing details:", err);
   }
@@ -193,18 +213,22 @@ const getPrefilledValue = async () => {
 
 const handleSameAsBilling = () => {
   if (sameAsBilling.value) {
-    form.value.name = billingDetails.value.toName || "";
-    form.value.email = billingDetails.value.email || "";
-    form.value.phone = billingDetails.value.phone || "";
+    form.value.name = billingDetails.value?.billingAddress?.toName || "";
+    form.value.email = billingDetails.value?.billingEmail || "";
+    form.value.phone = (billingDetails.value?.billingPhone?.countryCode + billingDetails.value?.billingPhone?.contactNumber) || "";
     form.value.idNumber = idNumberValue.value || "";
     form.value.relationToCustomer = "Self";
-    isNamePrefilled.value = !!billingDetails.value.toName;
+    isNamePrefilled.value = !!(billingDetails.value?.billingAddress?.toName);
+    isPhonePrefilled.value = !!(billingDetails.value?.billingPhone?.countryCode + billingDetails.value?.billingPhone?.contactNumber);
+    isEmailPrefilled.value = !!(billingDetails.value?.billingEmail);
   } else {
     form.value.name = "";
     form.value.email = "";
     form.value.phone = "";
     form.value.idNumber = "";
     isNamePrefilled.value = false;
+    isPhonePrefilled.value = false;
+    isEmailPrefilled.value = false;
   }
 };
 
@@ -214,6 +238,17 @@ const closeModal = async () => {
 
 const submitForm = async () => {
   if (isSubmitting.value) return;
+
+  const result = formSchema.safeParse(form.value);
+  if (!result.success) {
+    errors.value = {};
+    result.error.issues.forEach(issue => {
+      errors.value[issue.path[0]] = issue.message;
+    });
+    showToast(translate("Please correct the errors in the form"));
+    return;
+  }
+
   isSubmitting.value = true;
 
   try {
