@@ -397,8 +397,18 @@ export default defineComponent({
           const orderId = order.orderId;
           const currentShipGroupSeqId = order.shipGroupSeqId;
 
+          // Refresh both sections to get current state before checking
+          await Promise.all([
+            this.getReadyForPickupOrders(),
+            this.getIncomingOrders()
+          ]);
+
+          // After refresh, if there are NO items left in either section for this orderId,
+          // it means the ship group we just handed over was the last one.
           const readyForPickupShipGroups = this.readyForPickupOrders.filter((o: any) => o.orderId === orderId);
-          const isLastShipGroup = readyForPickupShipGroups.length === 1 && readyForPickupShipGroups[0].shipGroupSeqId === currentShipGroupSeqId;
+          const incomingShipGroups = this.incomingOrders.filter((o: any) => o.orderId === orderId);
+
+          const isLastShipGroup = readyForPickupShipGroups.length === 0 && incomingShipGroups.length === 0;
 
           if (isLastShipGroup) {
             try {
@@ -416,7 +426,6 @@ export default defineComponent({
           } else {
             showToast(translate('Order handed over successfully'));
           }
-          await this.getReadyForPickupOrders();
         } else {
           showToast(translate("Failed to handover order"));
           logger.error("Handover failed", resp);
