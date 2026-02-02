@@ -23,8 +23,8 @@
 - **Tech Stack**:
   - Vue 3 + Vue Router + Vuex for SPA UI state and routing.【F:package.json†L21-L39】
   - Ionic Vue + Capacitor for cross-platform (web/iOS/Android) delivery.【F:package.json†L15-L18】
-  - HotWax OMS API SDK (`@hotwax/oms-api`) for OMS integration along with HotWax UI components.【F:package.json†L9-L14】
-  - Firebase for hosting/notifications support.【F:package.json†L25-L26】
+  - HotWax OMS API SDK (`@hotwax/oms-api`) for OMS integration along with HotWax UI components.【F:package.json†L20-L21】
+  - Firebase for hosting/notifications support.【F:package.json†L28-L28】
 
 - **Dependency Map (App repo)**:
   - **HotWax OMS APIs** for order, shipment, inventory, and configuration operations (e.g., `oms/orders/pickup`, `poorti/shipments`, `poorti/getInventoryAvailableByFacility`, `storeLookup`).【F:src/services/OrderService.ts†L7-L246】【F:src/services/StockService.ts†L1-L24】【F:src/services/UtilService.ts†L199-L217】
@@ -34,7 +34,7 @@
 ## 4. Technical Context
 - **Run locally**:
   1. Install dependencies: `npm install`
-  2. Start the dev server: `npm run serve` (Vue CLI).【F:package.json†L6-L10】
+  2. Start the dev server: `ionic serve`.
 
 - **Environment variables/configuration**:
   - `VUE_APP_BASE_URL` points to the HotWax OMS instance the app should connect to.
