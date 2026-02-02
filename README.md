@@ -1,3 +1,42 @@
+# BOPIS
+
+## 1. Repository Overview
+- **Logical Name**: **BOPIS** — “Buy Online, Pick Up In Store.” It is not a Sanskrit word.
+- **Business Purpose**: This repository contains the store-associate-facing BOPIS application used to manage pickup and ship-to-store fulfillment flows for retail orders. It connects to HotWax OMS APIs to fetch orders, generate picklists, pack/ship items, and send customer notifications for pickup readiness and handover events.
+
+## 2. Core Responsibilities & Business Logic
+- **Order pickup management**: Fetches open pickup orders and detailed order data to drive the in-store picking workflow.
+- **Picklist generation & printing**: Creates fulfillment waves (picklists) and prints picklists for associate workflows.
+- **Packing & shipping execution**: Packs and ships shipments, including printing packing slips and shipping labels when required.
+- **Ship-to-store workflows**: Converts orders to ship-to-store, tracks arrival, and completes handover for store pickup of transferred inventory.
+- **Pickup notifications & handover**: Sends ready-for-pickup and handover notifications to customers.
+- **Order exceptions**: Cancels or rejects items when fulfillment cannot proceed.
+- **Gift card activation enrichment**: Pulls gift card activation info to enrich order item fulfillment details.
+
+## 3. Dependencies & Architecture
+- **Tech Stack**:
+  - **Frontend**: Vue 3, Vue Router, Vuex, TypeScript, Ionic Vue, Capacitor.
+  - **Libraries/Utilities**: Luxon, Firebase, @hotwax/oms-api, @hotwax/dxp-components, @hotwax/apps-theme.
+
+- **Dependency Map (App Repo)**:
+  - **HotWax OMS APIs**: Primary backend for orders, shipments, picklists, notifications, and fulfillment operations (e.g., `/oms/*`, `/poorti/*`).
+  - **HotWax OMS admin/user services**: User profile, permissions, and product store settings via `/admin/*` and `performFind` endpoints.
+  - **Document services**: Printing picklists, packing slips, and shipping labels via `/fop/*` and `LabelAndPackingSlip.pdf` endpoints.
+  - **Solr/performFind**: Search and data access for OMS entities via `/solr-query` and `performFind`.
+  - **Shopify**: Access token generation for Shopify integrations via `/generateShopifyAccessToken` endpoint.
+
+## 4. Technical Context
+- **Run locally**:
+  1. Install dependencies: `npm install`.
+  2. Copy `.env.example` to `.env` and configure required values (especially `VUE_APP_BASE_URL`).
+  3. Start the dev server: `npm run serve` (or use the Ionic CLI if preferred).
+
+- **Environment configuration**:
+  - Core runtime settings live in `.env` (see `.env.example`). Key variables include:
+    - `VUE_APP_BASE_URL` (OMS base URL), `VUE_APP_LOGIN_URL`, `VUE_APP_VIEW_SIZE`, and locale/currency settings.
+    - Firebase integration settings for notifications/hosting: `VUE_APP_FIREBASE_CONFIG`, `VUE_APP_FIREBASE_VAPID_KEY`.
+    - Product store settings enums that control BOPIS behavior (tracking, picklists, packing slips, etc.).
+
 ![BOPIS app repo](https://user-images.githubusercontent.com/41404838/146546714-f95c73f9-ad24-483d-b037-0f6c33aa27aa.png)
 
 
@@ -95,4 +134,3 @@ If you have any questions or ideas feel free to join our <a href="https://discor
 # The license
 
 Bopis app is completely free and released under the Apache v2.0 License. Check <a href="https://github.com/hotwax/bopis/blob/main/LICENSE" target="_blank">LICENSE</a> for more details.
-
