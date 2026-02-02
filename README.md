@@ -1,3 +1,50 @@
+# BOPIS
+
+## 1. Repository Overview
+- **Logical Name**: BOPIS ("Buy Online, Pick Up In Store"); this is not a Sanskrit word.
+- **Business Purpose**: This repository contains the HotWax BOPIS application used by store teams to manage buy-online-pickup-in-store and ship-to-store fulfillment. It provides a store-ops UI for finding pickup orders, creating picklists, packing/handing over shipments, and sending customer pickup notifications against an OMS backend.【F:src/services/OrderService.ts†L1-L378】
+
+## 2. Core Responsibilities & Business Logic
+- **Core domains/business rules**:
+  - Order pickup and ship-to-store fulfillment (pickup orders, packed/completed shipments, shipment status transitions).【F:src/services/OrderService.ts†L7-L246】
+  - Picklist creation and printing; packing slips and shipping labels for outbound handover flows.【F:src/services/OrderService.ts†L73-L227】
+  - Order item rejection/cancel flows and pickup notifications to customers.【F:src/services/OrderService.ts†L66-L205】
+  - Inventory visibility for pickup/shipping and store availability lookup.【F:src/services/StockService.ts†L1-L24】【F:src/services/UtilService.ts†L146-L217】
+  - Product search and component lookups for store associates.【F:src/services/ProductService.ts†L1-L48】
+  - User authentication, profile, permissions, and store-level configuration settings.【F:src/services/UserService.ts†L1-L190】【F:src/services/UtilService.ts†L46-L108】
+
+- **Core business workflows implemented in this component**:
+  - Retrieve pickup/ship-to-store orders, view shipment state, and progress shipments through pack/ship/handover events via OMS APIs.【F:src/services/OrderService.ts†L7-L246】
+  - Generate and print picklists and packing materials required for fulfillment execution in-store.【F:src/services/OrderService.ts†L73-L227】
+  - Trigger customer notifications when orders are scheduled for pickup or handed over.【F:src/services/OrderService.ts†L145-L205】
+  - Check shipping inventory and view facility-level availability for rerouting or substitution decisions.【F:src/services/StockService.ts†L1-L24】
+
+## 3. Dependencies & Architecture
+- **Tech Stack**:
+  - Vue 3 + Vue Router + Vuex for SPA UI state and routing.【F:package.json†L21-L39】
+  - Ionic Vue + Capacitor for cross-platform (web/iOS/Android) delivery.【F:package.json†L15-L18】
+  - HotWax OMS API SDK (`@hotwax/oms-api`) for OMS integration along with HotWax UI components.【F:package.json†L9-L14】
+  - Firebase for hosting/notifications support.【F:package.json†L25-L26】
+
+- **Dependency Map (App repo)**:
+  - **HotWax OMS APIs** for order, shipment, inventory, and configuration operations (e.g., `oms/orders/pickup`, `poorti/shipments`, `poorti/getInventoryAvailableByFacility`, `storeLookup`).【F:src/services/OrderService.ts†L7-L246】【F:src/services/StockService.ts†L1-L24】【F:src/services/UtilService.ts†L199-L217】
+  - **HotWax admin APIs** for user/profile and enumeration/configuration data (e.g., `admin/user/profile`, `admin/enumGroups`).【F:src/services/UserService.ts†L15-L69】【F:src/services/UtilService.ts†L6-L44】
+  - **Shopify integration** for access token generation when linking to Shopify storefronts.【F:src/services/ShopifyService.ts†L1-L12】
+
+## 4. Technical Context
+- **Run locally**:
+  1. Install dependencies: `npm install`
+  2. Start the dev server: `npm run serve` (Vue CLI).【F:package.json†L6-L10】
+
+- **Environment variables/configuration**:
+  - `VUE_APP_BASE_URL` points to the HotWax OMS instance the app should connect to.
+  - `VUE_APP_LOGIN_URL` defines the login portal for authentication.
+  - `VUE_APP_VIEW_SIZE`, locale settings, and product/order identification settings tune list sizes and lookup behavior.
+  - Firebase configuration (`VUE_APP_FIREBASE_CONFIG`, `VUE_APP_FIREBASE_VAPID_KEY`) enables notifications/hosting integration.
+  - Product store setting enums (`VUE_APP_PRODUCT_STORE_SETTING_ENUMS`) define feature toggles for fulfillment behavior (e.g., picklist/packing slip printing).【F:.env.example†L1-L17】
+
+---
+
 ![BOPIS app repo](https://user-images.githubusercontent.com/41404838/146546714-f95c73f9-ad24-483d-b037-0f6c33aa27aa.png)
 
 
@@ -95,4 +142,3 @@ If you have any questions or ideas feel free to join our <a href="https://discor
 # The license
 
 Bopis app is completely free and released under the Apache v2.0 License. Check <a href="https://github.com/hotwax/bopis/blob/main/LICENSE" target="_blank">LICENSE</a> for more details.
-
