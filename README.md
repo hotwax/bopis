@@ -9,7 +9,7 @@
   - Order pickup and ship-to-store fulfillment (pickup orders, packed/completed shipments, shipment status transitions).【F:src/services/OrderService.ts†L7-L246】
   - Picklist creation and printing; packing slips and shipping labels for outbound handover flows.【F:src/services/OrderService.ts†L73-L227】
   - Order item rejection/cancel flows and pickup notifications to customers.【F:src/services/OrderService.ts†L66-L205】
-  - Inventory visibility for pickup/shipping and store availability lookup.【F:src/services/StockService.ts†L1-L24】【F:src/services/UtilService.ts†L146-L217】
+  - Inventory visibility for pickup/shipping and store availability lookup.【F:src/services/StockService.ts†L1-L22】【F:src/services/UtilService.ts†L146-L217】
   - Product search and component lookups for store associates.【F:src/services/ProductService.ts†L1-L48】
   - User authentication, profile, permissions, and store-level configuration settings.【F:src/services/UserService.ts†L1-L190】【F:src/services/UtilService.ts†L46-L108】
 
