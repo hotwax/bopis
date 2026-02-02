@@ -1,7 +1,7 @@
 # BOPIS
 
 ## 1. Repository Overview
-- **Logical Name**: BOPIS ("Buy Online, Pick Up In Store"); this is not a Sanskrit word.
+- **Logical Name**: BOPIS ("Buy Online, Pick Up In Store").
 - **Business Purpose**: This repository contains the HotWax BOPIS application used by store teams to manage buy-online-pickup-in-store and ship-to-store fulfillment. It provides a store-ops UI for finding pickup orders, creating picklists, packing/handing over shipments, and sending customer pickup notifications against an OMS backend.【F:src/services/OrderService.ts†L1-L378】
 
 ## 2. Core Responsibilities & Business Logic
