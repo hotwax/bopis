@@ -326,28 +326,35 @@ export default defineComponent({
     async scheduleOrderForPickup(shipmentId: string, order: any) {
         emitter.emit("presentLoader");
 
-        try{
-          // Get all shipGroups for this orderId from incomingOrders
-          const orderId = order.orderId;
-          const currentShipGroupSeqId = order.shipGroupSeqId;
-
-          // Filter all incoming cards for this orderId
-          const incomingShipGroups = this.incomingOrders.filter((o: any) => o.orderId === orderId);
-
-          // Check if only one shipGroup remains and it's the current one
-          const isLastShipGroup = incomingShipGroups.length === 1 && incomingShipGroups[0].shipGroupSeqId === currentShipGroupSeqId;
-
+        try {
           const resp = await OrderService.arrivedShipToStore(shipmentId);
 
-          if(!hasError(resp)){
+          if (!hasError(resp)) {
+            const orderId = order.orderId;
+
+            // Check for any remaining ship groups for this order that are still incoming.
+            // Directly querying the backend avoids pagination issues with the Vuex store.
+            const incomingParams = {
+              orderId,
+              orderFacilityId: this.currentFacility?.facilityId,
+              pageSize: 10,
+              orderStatusId: 'ORDER_COMPLETED,ORDER_APPROVED',
+              statusId: 'ITEM_COMPLETED,ITEM_APPROVED',
+              shipmentMethodTypeId: 'SHIP_TO_STORE',
+              shipmentStatusId: 'SHIPMENT_INPUT,SHIPMENT_APPROVED,SHIPMENT_PACKED,SHIPMENT_SHIPPED',
+            };
+
+            const incomingResp = await OrderService.getShipToStoreOrders(incomingParams);
+            const isLastShipGroup = !hasError(incomingResp) && incomingResp.data.ordersCount === 0;
+
             if (isLastShipGroup) {
-              try{
-                const emailResp = await OrderService.sendPickupScheduledNotification({shipmentId});
+              try {
+                const emailResp = await OrderService.sendPickupScheduledNotification({ shipmentId });
                 
-                if(!hasError(emailResp)) {
+                if (!hasError(emailResp)) {
                   showToast(translate('Order marked as ready for pickup, an email notification has been sent to the customer'));
                 }
-              } catch(error) {
+              } catch (error) {
                 logger.error('Error sending pickup scheduled notification:', error);
                 showToast(translate('Order marked as ready for pickup but something went wrong while sending the email notification'));
               }
@@ -395,10 +402,26 @@ export default defineComponent({
 
         if(!hasError(resp)) {
           const orderId = order.orderId;
-          const currentShipGroupSeqId = order.shipGroupSeqId;
 
-          const readyForPickupShipGroups = this.readyForPickupOrders.filter((o: any) => o.orderId === orderId);
-          const isLastShipGroup = readyForPickupShipGroups.length === 1 && readyForPickupShipGroups[0].shipGroupSeqId === currentShipGroupSeqId;
+          // Check for any remaining ship groups for this order before sending completion email.
+          // Directly querying the backend avoids pagination issues with the Vuex store.
+          const checkShipGroupParams = {
+            orderId,
+            orderFacilityId: this.currentFacility?.facilityId,
+            pageSize: 10
+          };
+
+          const pendingShipGroupParams = {
+            ...checkShipGroupParams,
+            orderStatusId: 'ORDER_COMPLETED,ORDER_APPROVED',
+            statusId: 'ITEM_COMPLETED,ITEM_APPROVED',
+            shipmentMethodTypeId: 'SHIP_TO_STORE',
+            shipmentStatusId: 'SHIPMENT_INPUT,SHIPMENT_APPROVED,SHIPMENT_PACKED,SHIPMENT_SHIPPED,SHIPMENT_ARRIVED',
+          };
+
+          const resp = await OrderService.getShipToStoreOrders(pendingShipGroupParams);
+
+          const isLastShipGroup = !hasError(resp) && resp.data.ordersCount === 0;
 
           if (isLastShipGroup) {
             try {
@@ -416,7 +439,8 @@ export default defineComponent({
           } else {
             showToast(translate('Order handed over successfully'));
           }
-          await this.getReadyForPickupOrders();
+          // Refresh the lists for UI update.
+          this.getReadyForPickupOrders();
         } else {
           showToast(translate("Failed to handover order"));
           logger.error("Handover failed", resp);
