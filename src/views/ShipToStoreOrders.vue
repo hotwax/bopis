@@ -337,7 +337,7 @@ export default defineComponent({
             const incomingParams = {
               orderId,
               orderFacilityId: this.currentFacility?.facilityId,
-              pageSize: 1,
+              pageSize: 10,
               orderStatusId: 'ORDER_COMPLETED,ORDER_APPROVED',
               statusId: 'ITEM_COMPLETED,ITEM_APPROVED',
               shipmentMethodTypeId: 'SHIP_TO_STORE',
@@ -408,31 +408,20 @@ export default defineComponent({
           const checkShipGroupParams = {
             orderId,
             orderFacilityId: this.currentFacility?.facilityId,
-            pageSize: 1
+            pageSize: 10
           };
 
-          const incomingParams = {
+          const pendingShipGroupParams = {
             ...checkShipGroupParams,
             orderStatusId: 'ORDER_COMPLETED,ORDER_APPROVED',
             statusId: 'ITEM_COMPLETED,ITEM_APPROVED',
             shipmentMethodTypeId: 'SHIP_TO_STORE',
-            shipmentStatusId: 'SHIPMENT_INPUT,SHIPMENT_APPROVED,SHIPMENT_PACKED,SHIPMENT_SHIPPED',
+            shipmentStatusId: 'SHIPMENT_INPUT,SHIPMENT_APPROVED,SHIPMENT_PACKED,SHIPMENT_SHIPPED,SHIPMENT_ARRIVED',
           };
 
-          const readyForPickupParams = {
-            ...checkShipGroupParams,
-            shipmentStatusId: 'SHIPMENT_ARRIVED',
-            shipmentMethodTypeId: 'SHIP_TO_STORE',
-            statusId: 'ITEM_COMPLETED',
-            orderStatusId: 'ORDER_COMPLETED',
-          };
+          const resp = await OrderService.getShipToStoreOrders(pendingShipGroupParams);
 
-          const [incomingResp, readyForPickupResp] = await Promise.all([
-            OrderService.getShipToStoreOrders(incomingParams),
-            OrderService.getShipToStoreOrders(readyForPickupParams)
-          ]);
-
-          const isLastShipGroup = !hasError(incomingResp) && !hasError(readyForPickupResp) && incomingResp.data.ordersCount === 0 && readyForPickupResp.data.ordersCount === 0;
+          const isLastShipGroup = !hasError(resp) && resp.data.ordersCount === 0;
 
           if (isLastShipGroup) {
             try {
@@ -450,7 +439,6 @@ export default defineComponent({
           } else {
             showToast(translate('Order handed over successfully'));
           }
-
           // Refresh the lists for UI update.
           this.getReadyForPickupOrders();
         } else {
