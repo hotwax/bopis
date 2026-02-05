@@ -1,0 +1,162 @@
+# Page snapshot
+
+```yaml
+- generic [ref=e2]:
+  - generic [ref=e3]:
+    - main [ref=e4]
+    - generic [ref=e7]:
+      - banner [ref=e8]:
+        - generic [ref=e10]:
+          - button [ref=e12] [cursor=pointer]:
+            - generic [ref=e13]:
+              - img:
+                - generic:
+                  - img
+          - generic [ref=e17]:
+            - button [ref=e19] [cursor=pointer]:
+              - generic [ref=e20]:
+                - img:
+                  - generic:
+                    - img
+            - button [ref=e22] [cursor=pointer]:
+              - generic [ref=e23]:
+                - img:
+                  - generic:
+                    - img
+      - main [ref=e24]:
+        - main [ref=e27]:
+          - complementary [ref=e28]:
+            - heading [level=2] [ref=e33]: Timeline
+            - list [ref=e34]
+          - generic [ref=e35]:
+            - generic [ref=e37]:
+              - img [ref=e38]:
+                - img [ref=e40]
+              - generic [ref=e45]:
+                - heading [level=1] [ref=e46]: HCDEV#4616
+                - paragraph [ref=e47]: "2577"
+            - generic [ref=e48]:
+              - generic [ref=e51]:
+                - img [ref=e53]
+                - generic [ref=e54]:
+                  - generic [ref=e56]:
+                    - heading [level=2] [ref=e57]: MH09-XS-Blue-01
+                    - paragraph [ref=e58]: MH09XSBlueHC-01
+                  - generic [ref=e59]:
+                    - button [ref=e61] [cursor=pointer]:
+                      - generic [ref=e62]:
+                        - img:
+                          - generic:
+                            - img
+                    - button [ref=e64] [cursor=pointer]:
+                      - generic [ref=e65]:
+                        - img:
+                          - generic:
+                            - img
+              - generic [ref=e68]:
+                - img [ref=e70]
+                - generic [ref=e71]:
+                  - generic [ref=e73]:
+                    - heading [level=2] [ref=e74]: MH09-XS-Blue-01
+                    - paragraph [ref=e75]: MH09XSBlueHC-01
+                  - generic [ref=e76]:
+                    - button [ref=e78] [cursor=pointer]:
+                      - generic [ref=e79]:
+                        - img:
+                          - generic:
+                            - img
+                    - button [ref=e81] [cursor=pointer]:
+                      - generic [ref=e82]:
+                        - img:
+                          - generic:
+                            - img
+              - generic [ref=e85]:
+                - img [ref=e87]
+                - generic [ref=e88]:
+                  - generic [ref=e90]:
+                    - heading [level=2] [ref=e91]: MH09-XS-Blue-01
+                    - paragraph [ref=e92]: MH09XSBlueHC-01
+                  - generic [ref=e93]:
+                    - button [ref=e95] [cursor=pointer]:
+                      - generic [ref=e96]:
+                        - img:
+                          - generic:
+                            - img
+                    - button [ref=e98] [cursor=pointer]:
+                      - generic [ref=e99]:
+                        - img:
+                          - generic:
+                            - img
+              - generic [ref=e102]:
+                - img [ref=e104]
+                - generic [ref=e105]:
+                  - generic [ref=e107]:
+                    - heading [level=2] [ref=e108]: WSH10-28-Black
+                    - paragraph [ref=e109]: WSH1028BlackHC
+                  - generic [ref=e110]:
+                    - button [ref=e112] [cursor=pointer]:
+                      - generic [ref=e113]:
+                        - img:
+                          - generic:
+                            - img
+                    - button [ref=e115] [cursor=pointer]:
+                      - generic [ref=e116]:
+                        - img:
+                          - generic:
+                            - img
+            - generic [ref=e120]:
+              - button [ref=e122] [cursor=pointer]:
+                - generic [ref=e123]:
+                  - img:
+                    - generic:
+                      - img
+              - generic:
+                - button [disabled]
+            - generic [ref=e124]:
+              - list [ref=e127]:
+                - listitem [ref=e128]:
+                  - generic [ref=e129]:
+                    - img [ref=e130]:
+                      - img [ref=e132]
+                    - generic [ref=e137]: "-"
+                - listitem [ref=e138]:
+                  - generic [ref=e139]:
+                    - img [ref=e140]:
+                      - img [ref=e142]
+                    - generic [ref=e146]: "-"
+                - listitem [ref=e147]:
+                  - img [ref=e149]:
+                    - img [ref=e151]
+              - generic [ref=e159]:
+                - heading [level=2] [ref=e161]
+                - list [ref=e163]:
+                  - listitem [ref=e164]:
+                    - generic [ref=e166]:
+                      - generic [ref=e168]:
+                        - paragraph [ref=e169]: EXT_SHOP_OTHR_GTWAY
+                        - generic [ref=e170]: Ext Other Gateways
+                      - generic [ref=e172]: $ 345.09
+          - generic [ref=e173]:
+            - generic [ref=e178]: Other shipments in this order
+            - generic [ref=e180]:
+              - generic [ref=e182]:
+                - heading [level=3] [ref=e183]
+                - heading [level=2] [ref=e184]
+                - text: "00001"
+              - generic [ref=e187]:
+                - img [ref=e189]
+                - generic [ref=e190]:
+                  - generic [ref=e192]:
+                    - heading [level=2] [ref=e193]: WSH10-28-Black
+                    - paragraph [ref=e194]: WSH1028BlackHC
+                  - button [ref=e197] [cursor=pointer]:
+                    - generic [ref=e198]:
+                      - img:
+                        - generic:
+                          - img
+  - dialog "Loading…" [active] [ref=e199]:
+    - generic [ref=e201]:
+      - progressbar [ref=e203]:
+        - img [ref=e204]
+      - generic [ref=e206]: Loading…
+```

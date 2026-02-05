@@ -1,0 +1,146 @@
+# Page snapshot
+
+```yaml
+- generic [ref=e3]:
+  - generic:
+    - main [ref=e4]
+    - generic [ref=e8]:
+      - generic [ref=e11]:
+        - banner [ref=e12]:
+          - generic [ref=e14]:
+            - generic [ref=e17]:
+              - generic: Boston
+            - generic [ref=e18]:
+              - button [ref=e20] [cursor=pointer]:
+                - generic [ref=e21]:
+                  - generic:
+                    - img:
+                      - generic:
+                        - img
+              - button [ref=e23] [cursor=pointer]:
+                - generic [ref=e24]:
+                  - generic:
+                    - img:
+                      - generic:
+                        - img
+          - generic [ref=e25]:
+            - search [ref=e26]:
+              - generic [ref=e27]:
+                - searchbox "search text" [ref=e28]
+                - img:
+                  - generic:
+                    - img
+            - tablist [ref=e29]:
+              - generic:
+                - generic [ref=e30] [cursor=pointer]:
+                  - tab "Open":
+                    - generic:
+                      - generic:
+                        - generic: Open
+                - generic [ref=e31] [cursor=pointer]:
+                  - tab "Packed" [selected]:
+                    - generic:
+                      - generic:
+                        - generic: Packed
+                - generic [ref=e32] [cursor=pointer]:
+                  - tab "Completed":
+                    - generic:
+                      - generic:
+                        - generic: Completed
+        - main [ref=e33]:
+          - generic [ref=e36]:
+            - button "Charlote Orton HCDEV#4519 Picked by Brooklyn 1 month ago MH12-XS-Blue MH12XSBlueHC Handover" [ref=e39] [cursor=pointer]:
+              - generic:
+                - generic [ref=e42]:
+                  - generic [ref=e44]:
+                    - heading "Charlote Orton" [level=1] [ref=e45]
+                    - paragraph [ref=e46]: HCDEV#4519
+                    - paragraph [ref=e47]: Picked by Brooklyn
+                  - generic [ref=e48]:
+                    - generic: 1 month ago
+                - generic [ref=e50]:
+                  - img [ref=e52]
+                  - generic [ref=e53]:
+                    - generic [ref=e55]:
+                      - heading "MH12-XS-Blue" [level=2] [ref=e56]
+                      - paragraph [ref=e57]: MH12XSBlueHC
+                    - button [ref=e60]:
+                      - generic [ref=e61]:
+                        - generic:
+                          - img:
+                            - generic:
+                              - img
+                - generic [ref=e62]:
+                  - button "Handover" [ref=e64]:
+                    - generic [ref=e65]:
+                      - generic: Handover
+                  - button [ref=e67]:
+                    - generic [ref=e68]:
+                      - generic:
+                        - img:
+                          - generic:
+                            - img
+                  - button [ref=e70]:
+                    - generic [ref=e71]:
+                      - generic:
+                        - img:
+                          - generic:
+                            - img
+            - button "Sample Order HCDEV#3454 No picker assigned. 9 months ago WSH10-28-Black WSH1028BlackHC Handover" [ref=e74] [cursor=pointer]:
+              - generic:
+                - generic [ref=e77]:
+                  - generic [ref=e79]:
+                    - heading "Sample Order" [level=1] [ref=e80]
+                    - paragraph [ref=e81]: HCDEV#3454
+                    - paragraph [ref=e82]: No picker assigned.
+                  - generic [ref=e83]:
+                    - generic: 9 months ago
+                - generic [ref=e85]:
+                  - img [ref=e87]
+                  - generic [ref=e88]:
+                    - generic [ref=e90]:
+                      - heading "WSH10-28-Black" [level=2] [ref=e91]
+                      - paragraph [ref=e92]: WSH1028BlackHC
+                    - button [ref=e95]:
+                      - generic [ref=e96]:
+                        - generic:
+                          - img:
+                            - generic:
+                              - img
+                - generic [ref=e97]:
+                  - button "Handover" [ref=e99]:
+                    - generic [ref=e100]:
+                      - generic: Handover
+                  - button [ref=e102]:
+                    - generic [ref=e103]:
+                      - generic:
+                        - img:
+                          - generic:
+                            - img
+                  - button [ref=e105]:
+                    - generic [ref=e106]:
+                      - generic:
+                        - img:
+                          - generic:
+                            - img
+      - tablist [ref=e107]:
+        - generic:
+          - tab "Catalog" [ref=e109] [cursor=pointer]:
+            - generic [ref=e110]:
+              - generic:
+                - img [ref=e111]:
+                  - img [ref=e113]
+                - generic [ref=e115]: Catalog
+          - tab "Orders" [selected] [ref=e117] [cursor=pointer]:
+            - generic [ref=e118]:
+              - generic:
+                - img [ref=e119]:
+                  - img [ref=e121]
+                - generic [ref=e123]: Orders
+          - tab "Settings" [ref=e125] [cursor=pointer]:
+            - generic [ref=e126]:
+              - generic:
+                - img [ref=e127]:
+                  - img [ref=e129]
+                - generic [ref=e131]: Settings
+```

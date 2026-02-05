@@ -1,0 +1,218 @@
+# Page snapshot
+
+```yaml
+- generic [ref=e2]:
+  - generic [ref=e3]:
+    - main [ref=e4]
+    - generic [ref=e7]:
+      - banner [ref=e8]:
+        - generic [ref=e10]:
+          - button [ref=e12] [cursor=pointer]:
+            - generic [ref=e13]:
+              - img:
+                - generic:
+                  - img
+          - generic [ref=e17]:
+            - button [ref=e19] [cursor=pointer]:
+              - generic [ref=e20]:
+                - img:
+                  - generic:
+                    - img
+            - button [ref=e22] [cursor=pointer]:
+              - generic [ref=e23]:
+                - img:
+                  - generic:
+                    - img
+            - button [ref=e25] [cursor=pointer]:
+              - generic [ref=e26]:
+                - img:
+                  - generic:
+                    - img
+      - main [ref=e27]:
+        - main [ref=e30]:
+          - complementary [ref=e31]:
+            - heading [level=2] [ref=e36]: Timeline
+            - list [ref=e38]:
+              - listitem [ref=e39]:
+                - generic [ref=e40]:
+                  - img [ref=e41]:
+                    - img [ref=e43]
+                  - generic [ref=e48]: Created in Shopify
+              - listitem [ref=e50]:
+                - generic [ref=e51]:
+                  - img [ref=e52]:
+                    - img [ref=e54]
+                  - generic [ref=e59]:
+                    - paragraph [ref=e60]: + 2 minutes
+                    - text: Imported from Shopify
+              - listitem [ref=e62]:
+                - generic [ref=e63]:
+                  - img [ref=e64]:
+                    - img [ref=e66]
+                  - generic [ref=e71]:
+                    - paragraph [ref=e72]: + 19 days 44 minutes
+                    - text: Ready for pickup
+          - generic [ref=e74]:
+            - generic [ref=e76]:
+              - img [ref=e77]:
+                - img [ref=e79]
+              - generic [ref=e82]:
+                - generic [ref=e84]:
+                  - heading [level=1] [ref=e85]: HCDEV#4616
+                  - paragraph [ref=e86]: "2577"
+                - generic [ref=e87] [cursor=pointer]:
+                  - img [ref=e88]:
+                    - img [ref=e90]
+                  - generic [ref=e93]: Orem
+            - generic [ref=e94]:
+              - generic [ref=e97]:
+                - img [ref=e99]
+                - generic [ref=e100]:
+                  - generic [ref=e102]:
+                    - heading [level=2] [ref=e103]: MH09-XS-Blue-01
+                    - paragraph [ref=e104]: MH09XSBlueHC-01
+                  - generic [ref=e105]:
+                    - generic [ref=e106] [cursor=pointer]:
+                      - img [ref=e107]:
+                        - img [ref=e109]
+                      - generic [ref=e112]: Bad review from friends/relatives
+                      - img [ref=e113]:
+                        - img [ref=e115]
+                    - button [ref=e118] [cursor=pointer]:
+                      - generic [ref=e119]:
+                        - img:
+                          - generic:
+                            - img
+              - generic [ref=e122]:
+                - img [ref=e124]
+                - generic [ref=e125]:
+                  - generic [ref=e127]:
+                    - heading [level=2] [ref=e128]: MH09-XS-Blue-01
+                    - paragraph [ref=e129]: MH09XSBlueHC-01
+                  - generic [ref=e130]:
+                    - button [ref=e132] [cursor=pointer]
+                    - button [ref=e135] [cursor=pointer]:
+                      - generic [ref=e136]:
+                        - img:
+                          - generic:
+                            - img
+              - generic [ref=e139]:
+                - img [ref=e141]
+                - generic [ref=e142]:
+                  - generic [ref=e144]:
+                    - heading [level=2] [ref=e145]: MH09-XS-Blue-01
+                    - paragraph [ref=e146]: MH09XSBlueHC-01
+                  - generic [ref=e147]:
+                    - button [ref=e149] [cursor=pointer]
+                    - button [ref=e152] [cursor=pointer]:
+                      - generic [ref=e153]:
+                        - img:
+                          - generic:
+                            - img
+              - generic [ref=e156]:
+                - img [ref=e158]
+                - generic [ref=e159]:
+                  - generic [ref=e161]:
+                    - heading [level=2] [ref=e162]: WSH10-28-Black
+                    - paragraph [ref=e163]: WSH1028BlackHC
+                  - generic [ref=e164]:
+                    - button [ref=e166] [cursor=pointer]
+                    - button [ref=e169] [cursor=pointer]:
+                      - generic [ref=e170]:
+                        - img:
+                          - generic:
+                            - img
+            - generic [ref=e172]:
+              - img [ref=e173]:
+                - img [ref=e175]
+              - generic [ref=e179]: Cancellation and refund sync to Shopify is not enabled.
+            - generic [ref=e183]:
+              - generic:
+                - button [disabled]:
+                  - generic:
+                    - img:
+                      - generic:
+                        - img
+              - button [ref=e185] [cursor=pointer]
+            - generic [ref=e187]:
+              - list [ref=e190]:
+                - listitem [ref=e191]:
+                  - generic [ref=e192]:
+                    - img [ref=e193]:
+                      - img [ref=e195]
+                    - generic [ref=e200]: "-"
+                - listitem [ref=e201]:
+                  - generic [ref=e202]:
+                    - img [ref=e203]:
+                      - img [ref=e205]
+                    - generic [ref=e209]: "-"
+                - listitem [ref=e210]:
+                  - img [ref=e212]:
+                    - img [ref=e214]
+              - generic [ref=e222]:
+                - heading [level=2] [ref=e224]
+                - list [ref=e226]:
+                  - listitem [ref=e227]:
+                    - generic [ref=e229]:
+                      - generic [ref=e231]:
+                        - paragraph [ref=e232]: EXT_SHOP_OTHR_GTWAY
+                        - generic [ref=e233]: Ext Other Gateways
+                      - generic [ref=e235]: $ 345.09
+          - generic [ref=e236]:
+            - generic [ref=e241]: Other shipments in this order
+            - generic [ref=e243]:
+              - generic [ref=e245]:
+                - heading [level=3] [ref=e246]
+                - heading [level=2] [ref=e247]
+                - text: "00001"
+              - generic [ref=e250]:
+                - img [ref=e252]
+                - generic [ref=e253]:
+                  - generic [ref=e255]:
+                    - heading [level=2] [ref=e256]: WSH10-28-Black
+                    - paragraph [ref=e257]: WSH1028BlackHC
+                  - button [ref=e260] [cursor=pointer]:
+                    - generic [ref=e261]:
+                      - img:
+                        - generic:
+                          - img
+  - dialog [ref=e264]:
+    - generic [ref=e265]:
+      - banner [ref=e266]:
+        - generic [ref=e268]:
+          - button [ref=e271] [cursor=pointer]:
+            - generic [ref=e272]:
+              - generic:
+                - img:
+                  - generic:
+                    - img
+          - generic [ref=e275]:
+            - generic: Cancel items
+      - generic [ref=e278]:
+        - generic:
+          - list [ref=e279]:
+            - generic [ref=e281]:
+              - generic: Summary
+            - listitem [ref=e282]:
+              - generic [ref=e283]:
+                - img [ref=e285]
+                - generic [ref=e286]:
+                  - generic [ref=e288]:
+                    - heading "MH09-XS-Blue-01" [level=2] [ref=e289]
+                    - paragraph [ref=e290]: MH09XSBlueHC-01
+                    - paragraph [ref=e291]: Bad review from friends/relatives
+                  - generic [ref=e292]:
+                    - generic: $ 69
+            - listitem [ref=e293]:
+              - generic [ref=e295]:
+                - generic [ref=e297]: Total
+                - generic [ref=e298]:
+                  - generic: $ 69
+            - listitem [ref=e299]:
+              - generic [ref=e303]:
+                - text: Cancellation not syncing to Shopify
+                - paragraph [ref=e304]: Cancellation and refund sync to Shopify is not enabled.
+          - button "Confirm Cancellation" [ref=e306] [cursor=pointer]:
+            - generic [ref=e307]:
+              - generic: Confirm Cancellation
+```

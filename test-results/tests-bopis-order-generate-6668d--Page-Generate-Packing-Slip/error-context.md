@@ -1,0 +1,284 @@
+# Page snapshot
+
+```yaml
+- generic [ref=e3]:
+  - generic:
+    - main [ref=e4]
+    - generic [ref=e8]:
+      - generic [ref=e11]:
+        - banner [ref=e12]:
+          - generic [ref=e14]:
+            - generic [ref=e17]:
+              - generic: Boston
+            - generic [ref=e18]:
+              - button [ref=e20] [cursor=pointer]:
+                - generic [ref=e21]:
+                  - generic:
+                    - img:
+                      - generic:
+                        - img
+              - button [ref=e23] [cursor=pointer]:
+                - generic [ref=e24]:
+                  - generic:
+                    - img:
+                      - generic:
+                        - img
+          - generic [ref=e25]:
+            - search [ref=e26]:
+              - generic [ref=e27]:
+                - searchbox "search text" [ref=e28]
+                - img:
+                  - generic:
+                    - img
+            - tablist [ref=e29]:
+              - generic:
+                - generic [ref=e30] [cursor=pointer]:
+                  - tab "Open" [selected]:
+                    - generic:
+                      - generic:
+                        - generic: Open
+                - generic [ref=e31] [cursor=pointer]:
+                  - tab "Packed":
+                    - generic:
+                      - generic:
+                        - generic: Packed
+                - generic [ref=e32] [cursor=pointer]:
+                  - tab "Completed":
+                    - generic:
+                      - generic:
+                        - generic: Completed
+        - main [ref=e33]:
+          - generic [ref=e36]:
+            - button "Tim Drake HCDEV#4616 19 days ago MH09-XS-Blue-01 MH09XSBlueHC-01 MH09-XS-Blue-01 MH09XSBlueHC-01 MH09-XS-Blue-01 MH09XSBlueHC-01 WSH10-28-Black WSH1028BlackHC Ready for pickup Reject" [ref=e39] [cursor=pointer]:
+              - generic:
+                - generic [ref=e43]:
+                  - generic:
+                    - generic [ref=e44]:
+                      - heading "Tim Drake" [level=1] [ref=e45]
+                      - paragraph [ref=e46]: HCDEV#4616
+                    - generic [ref=e48]:
+                      - generic: 19 days ago
+                - generic [ref=e50]:
+                  - img [ref=e52]
+                  - generic [ref=e53]:
+                    - generic [ref=e55]:
+                      - heading "MH09-XS-Blue-01" [level=2] [ref=e56]
+                      - paragraph [ref=e57]: MH09XSBlueHC-01
+                    - button [ref=e60]:
+                      - generic [ref=e61]:
+                        - generic:
+                          - img:
+                            - generic:
+                              - img
+                - generic [ref=e63]:
+                  - img [ref=e65]
+                  - generic [ref=e66]:
+                    - generic [ref=e68]:
+                      - heading "MH09-XS-Blue-01" [level=2] [ref=e69]
+                      - paragraph [ref=e70]: MH09XSBlueHC-01
+                    - button [ref=e73]:
+                      - generic [ref=e74]:
+                        - generic:
+                          - img:
+                            - generic:
+                              - img
+                - generic [ref=e76]:
+                  - img [ref=e78]
+                  - generic [ref=e79]:
+                    - generic [ref=e81]:
+                      - heading "MH09-XS-Blue-01" [level=2] [ref=e82]
+                      - paragraph [ref=e83]: MH09XSBlueHC-01
+                    - button [ref=e86]:
+                      - generic [ref=e87]:
+                        - generic:
+                          - img:
+                            - generic:
+                              - img
+                - generic [ref=e89]:
+                  - img [ref=e91]
+                  - generic [ref=e92]:
+                    - generic [ref=e94]:
+                      - heading "WSH10-28-Black" [level=2] [ref=e95]
+                      - paragraph [ref=e96]: WSH1028BlackHC
+                    - button [ref=e99]:
+                      - generic [ref=e100]:
+                        - generic:
+                          - img:
+                            - generic:
+                              - img
+                - generic [ref=e101]:
+                  - button "Ready for pickup" [ref=e103]:
+                    - generic [ref=e104]:
+                      - generic: Ready for pickup
+                  - button "Reject" [ref=e106]:
+                    - generic [ref=e107]:
+                      - generic: Reject
+                  - button [ref=e109]:
+                    - generic [ref=e110]:
+                      - generic:
+                        - img:
+                          - generic:
+                            - img
+            - button "Prerak Ghatode HCDEV#4571 30 days ago MH09-XS-Blue-01 MH09XSBlueHC-01 MH09-XS-Blue-01 MH09XSBlueHC-01 MH09-XS-Blue-01 MH09XSBlueHC-01 MH09-XS-Blue-01 MH09XSBlueHC-01 MH09-XS-Blue-01 MH09XSBlueHC-01 MH09-XS-Blue-01 MH09XSBlueHC-01 Ready for pickup Reject" [ref=e113] [cursor=pointer]:
+              - generic:
+                - generic [ref=e117]:
+                  - generic:
+                    - generic [ref=e118]:
+                      - heading "Prerak Ghatode" [level=1] [ref=e119]
+                      - paragraph [ref=e120]: HCDEV#4571
+                    - generic [ref=e122]:
+                      - generic: 30 days ago
+                - generic [ref=e124]:
+                  - img [ref=e126]
+                  - generic [ref=e127]:
+                    - generic [ref=e129]:
+                      - heading "MH09-XS-Blue-01" [level=2] [ref=e130]
+                      - paragraph [ref=e131]: MH09XSBlueHC-01
+                    - button [ref=e134]:
+                      - generic [ref=e135]:
+                        - generic:
+                          - img:
+                            - generic:
+                              - img
+                - generic [ref=e137]:
+                  - img [ref=e139]
+                  - generic [ref=e140]:
+                    - generic [ref=e142]:
+                      - heading "MH09-XS-Blue-01" [level=2] [ref=e143]
+                      - paragraph [ref=e144]: MH09XSBlueHC-01
+                    - button [ref=e147]:
+                      - generic [ref=e148]:
+                        - generic:
+                          - img:
+                            - generic:
+                              - img
+                - generic [ref=e150]:
+                  - img [ref=e152]
+                  - generic [ref=e153]:
+                    - generic [ref=e155]:
+                      - heading "MH09-XS-Blue-01" [level=2] [ref=e156]
+                      - paragraph [ref=e157]: MH09XSBlueHC-01
+                    - button [ref=e160]:
+                      - generic [ref=e161]:
+                        - generic:
+                          - img:
+                            - generic:
+                              - img
+                - generic [ref=e163]:
+                  - img [ref=e165]
+                  - generic [ref=e166]:
+                    - generic [ref=e168]:
+                      - heading "MH09-XS-Blue-01" [level=2] [ref=e169]
+                      - paragraph [ref=e170]: MH09XSBlueHC-01
+                    - button [ref=e173]:
+                      - generic [ref=e174]:
+                        - generic:
+                          - img:
+                            - generic:
+                              - img
+                - generic [ref=e176]:
+                  - img [ref=e178]
+                  - generic [ref=e179]:
+                    - generic [ref=e181]:
+                      - heading "MH09-XS-Blue-01" [level=2] [ref=e182]
+                      - paragraph [ref=e183]: MH09XSBlueHC-01
+                    - button [ref=e186]:
+                      - generic [ref=e187]:
+                        - generic:
+                          - img:
+                            - generic:
+                              - img
+                - generic [ref=e189]:
+                  - img [ref=e191]
+                  - generic [ref=e192]:
+                    - generic [ref=e194]:
+                      - heading "MH09-XS-Blue-01" [level=2] [ref=e195]
+                      - paragraph [ref=e196]: MH09XSBlueHC-01
+                    - button [ref=e199]:
+                      - generic [ref=e200]:
+                        - generic:
+                          - img:
+                            - generic:
+                              - img
+                - generic [ref=e202]:
+                  - img [ref=e204]
+                  - generic [ref=e205]:
+                    - generic [ref=e207]:
+                      - heading [level=2]
+                      - paragraph
+                    - button [ref=e210]:
+                      - generic [ref=e211]:
+                        - generic:
+                          - img:
+                            - generic:
+                              - img
+                - generic [ref=e213]:
+                  - img [ref=e215]
+                  - generic [ref=e216]:
+                    - generic [ref=e218]:
+                      - heading [level=2]
+                      - paragraph
+                    - button [ref=e221]:
+                      - generic [ref=e222]:
+                        - generic:
+                          - img:
+                            - generic:
+                              - img
+                - generic [ref=e224]:
+                  - img [ref=e226]
+                  - generic [ref=e227]:
+                    - generic [ref=e229]:
+                      - heading [level=2]
+                      - paragraph
+                    - button [ref=e232]:
+                      - generic [ref=e233]:
+                        - generic:
+                          - img:
+                            - generic:
+                              - img
+                - generic [ref=e235]:
+                  - img [ref=e237]
+                  - generic [ref=e238]:
+                    - generic [ref=e240]:
+                      - heading [level=2]
+                      - paragraph
+                    - button [ref=e243]:
+                      - generic [ref=e244]:
+                        - generic:
+                          - img:
+                            - generic:
+                              - img
+                - generic [ref=e245]:
+                  - button "Ready for pickup" [ref=e247]:
+                    - generic [ref=e248]:
+                      - generic: Ready for pickup
+                  - button "Reject" [ref=e250]:
+                    - generic [ref=e251]:
+                      - generic: Reject
+                  - button [ref=e253]:
+                    - generic [ref=e254]:
+                      - generic:
+                        - img:
+                          - generic:
+                            - img
+      - tablist [ref=e255]:
+        - generic:
+          - tab "Catalog" [ref=e257] [cursor=pointer]:
+            - generic [ref=e258]:
+              - generic:
+                - img [ref=e259]:
+                  - img [ref=e261]
+                - generic [ref=e263]: Catalog
+          - tab "Orders" [selected] [ref=e265] [cursor=pointer]:
+            - generic [ref=e266]:
+              - generic:
+                - img [ref=e267]:
+                  - img [ref=e269]
+                - generic [ref=e271]: Orders
+          - tab "Settings" [ref=e273] [cursor=pointer]:
+            - generic [ref=e274]:
+              - generic:
+                - img [ref=e275]:
+                  - img [ref=e277]
+                - generic [ref=e279]: Settings
+```

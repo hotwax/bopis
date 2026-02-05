@@ -1,0 +1,440 @@
+# Page snapshot
+
+```yaml
+- generic [ref=e2]:
+  - generic [ref=e3]:
+    - main [ref=e4]
+    - generic [ref=e7]:
+      - banner [ref=e8]:
+        - generic [ref=e10]:
+          - button [ref=e12] [cursor=pointer]:
+            - generic [ref=e13]:
+              - img:
+                - generic:
+                  - img
+          - generic [ref=e17]:
+            - button [ref=e19] [cursor=pointer]:
+              - generic [ref=e20]:
+                - img:
+                  - generic:
+                    - img
+            - button [ref=e22] [cursor=pointer]:
+              - generic [ref=e23]:
+                - img:
+                  - generic:
+                    - img
+      - main [ref=e24]:
+        - main [ref=e27]:
+          - complementary [ref=e28]:
+            - heading [level=2] [ref=e33]: Timeline
+            - list [ref=e35]:
+              - listitem [ref=e36]:
+                - generic [ref=e37]:
+                  - img [ref=e38]:
+                    - img [ref=e40]
+                  - generic [ref=e45]: Created in Shopify
+              - listitem [ref=e47]:
+                - generic [ref=e48]:
+                  - img [ref=e49]:
+                    - img [ref=e51]
+                  - generic [ref=e56]:
+                    - paragraph [ref=e57]: + 1 minutes
+                    - text: Imported from Shopify
+          - generic [ref=e59]:
+            - generic [ref=e61]:
+              - img [ref=e62]:
+                - img [ref=e64]
+              - generic [ref=e69]:
+                - heading [level=1] [ref=e70]: HCDEV#4571
+                - paragraph [ref=e71]: "2532"
+            - generic [ref=e72]:
+              - generic [ref=e75]:
+                - img [ref=e77]
+                - generic [ref=e78]:
+                  - generic [ref=e80]:
+                    - heading [level=2] [ref=e81]: MH09-XS-Blue-01
+                    - paragraph [ref=e82]: MH09XSBlueHC-01
+                  - generic [ref=e83]:
+                    - button [ref=e85] [cursor=pointer]:
+                      - generic [ref=e86]:
+                        - img:
+                          - generic:
+                            - img
+                    - button [ref=e88] [cursor=pointer]:
+                      - generic [ref=e89]:
+                        - img:
+                          - generic:
+                            - img
+              - generic [ref=e92]:
+                - img [ref=e94]
+                - generic [ref=e95]:
+                  - generic [ref=e97]:
+                    - heading [level=2] [ref=e98]: MH09-XS-Blue-01
+                    - paragraph [ref=e99]: MH09XSBlueHC-01
+                  - generic [ref=e100]:
+                    - button [ref=e102] [cursor=pointer]:
+                      - generic [ref=e103]:
+                        - img:
+                          - generic:
+                            - img
+                    - button [ref=e105] [cursor=pointer]:
+                      - generic [ref=e106]:
+                        - img:
+                          - generic:
+                            - img
+              - generic [ref=e109]:
+                - img [ref=e111]
+                - generic [ref=e112]:
+                  - generic [ref=e114]:
+                    - heading [level=2] [ref=e115]: MH09-XS-Blue-01
+                    - paragraph [ref=e116]: MH09XSBlueHC-01
+                  - generic [ref=e117]:
+                    - button [ref=e119] [cursor=pointer]:
+                      - generic [ref=e120]:
+                        - img:
+                          - generic:
+                            - img
+                    - button [ref=e122] [cursor=pointer]:
+                      - generic [ref=e123]:
+                        - img:
+                          - generic:
+                            - img
+              - generic [ref=e126]:
+                - img [ref=e128]
+                - generic [ref=e129]:
+                  - generic [ref=e131]:
+                    - heading [level=2] [ref=e132]: MH09-XS-Blue-01
+                    - paragraph [ref=e133]: MH09XSBlueHC-01
+                  - generic [ref=e134]:
+                    - button [ref=e136] [cursor=pointer]:
+                      - generic [ref=e137]:
+                        - img:
+                          - generic:
+                            - img
+                    - button [ref=e139] [cursor=pointer]:
+                      - generic [ref=e140]:
+                        - img:
+                          - generic:
+                            - img
+              - generic [ref=e143]:
+                - img [ref=e145]
+                - generic [ref=e146]:
+                  - generic [ref=e148]:
+                    - heading [level=2] [ref=e149]: MH09-XS-Blue-01
+                    - paragraph [ref=e150]: MH09XSBlueHC-01
+                  - generic [ref=e151]:
+                    - button [ref=e153] [cursor=pointer]:
+                      - generic [ref=e154]:
+                        - img:
+                          - generic:
+                            - img
+                    - button [ref=e156] [cursor=pointer]:
+                      - generic [ref=e157]:
+                        - img:
+                          - generic:
+                            - img
+              - generic [ref=e160]:
+                - img [ref=e162]
+                - generic [ref=e163]:
+                  - generic [ref=e165]:
+                    - heading [level=2] [ref=e166]: MH09-XS-Blue-01
+                    - paragraph [ref=e167]: MH09XSBlueHC-01
+                  - generic [ref=e168]:
+                    - button [ref=e170] [cursor=pointer]:
+                      - generic [ref=e171]:
+                        - img:
+                          - generic:
+                            - img
+                    - button [ref=e173] [cursor=pointer]:
+                      - generic [ref=e174]:
+                        - img:
+                          - generic:
+                            - img
+              - generic [ref=e177]:
+                - img [ref=e179]
+                - generic [ref=e183]:
+                  - button [ref=e185] [cursor=pointer]:
+                    - generic [ref=e186]:
+                      - img:
+                        - generic:
+                          - img
+                  - button [ref=e188] [cursor=pointer]:
+                    - generic [ref=e189]:
+                      - img:
+                        - generic:
+                          - img
+              - generic [ref=e192]:
+                - img [ref=e194]
+                - generic [ref=e198]:
+                  - button [ref=e200] [cursor=pointer]:
+                    - generic [ref=e201]:
+                      - img:
+                        - generic:
+                          - img
+                  - button [ref=e203] [cursor=pointer]:
+                    - generic [ref=e204]:
+                      - img:
+                        - generic:
+                          - img
+              - generic [ref=e207]:
+                - img [ref=e209]
+                - generic [ref=e213]:
+                  - button [ref=e215] [cursor=pointer]:
+                    - generic [ref=e216]:
+                      - img:
+                        - generic:
+                          - img
+                  - button [ref=e218] [cursor=pointer]:
+                    - generic [ref=e219]:
+                      - img:
+                        - generic:
+                          - img
+              - generic [ref=e222]:
+                - img [ref=e224]
+                - generic [ref=e228]:
+                  - button [ref=e230] [cursor=pointer]:
+                    - generic [ref=e231]:
+                      - img:
+                        - generic:
+                          - img
+                  - button [ref=e233] [cursor=pointer]:
+                    - generic [ref=e234]:
+                      - img:
+                        - generic:
+                          - img
+            - generic [ref=e238]:
+              - button [ref=e240] [cursor=pointer]:
+                - generic [ref=e241]:
+                  - img:
+                    - generic:
+                      - img
+              - generic:
+                - button [disabled]
+            - generic [ref=e242]:
+              - list [ref=e245]:
+                - listitem [ref=e246]:
+                  - generic [ref=e247]:
+                    - img [ref=e248]:
+                      - img [ref=e250]
+                    - generic [ref=e255]: "-"
+                - listitem [ref=e256]:
+                  - generic [ref=e257]:
+                    - img [ref=e258]:
+                      - img [ref=e260]
+                    - generic [ref=e264]: "-"
+                - listitem [ref=e265]:
+                  - img [ref=e267]:
+                    - img [ref=e269]
+              - generic [ref=e277]:
+                - heading [level=2] [ref=e279]
+                - generic [ref=e280]:
+                  - list [ref=e281]:
+                    - listitem [ref=e282]:
+                      - generic [ref=e284]:
+                        - generic [ref=e286]:
+                          - paragraph [ref=e287]: EXT_SHOP_OTHR_GTWAY
+                          - generic [ref=e288]: Ext Other Gateways
+                        - generic [ref=e290]: $ 407
+                  - list [ref=e291]:
+                    - listitem [ref=e292]:
+                      - generic [ref=e294]:
+                        - generic [ref=e296]:
+                          - paragraph [ref=e297]: EXT_SHOP_OTHR_GTWAY
+                          - generic [ref=e298]: Ext Other Gateways
+                        - generic [ref=e300]: $ 1421
+          - generic [ref=e301]:
+            - generic [ref=e306]: Other shipments in this order
+            - generic [ref=e307]:
+              - generic [ref=e308]:
+                - generic [ref=e310]:
+                  - heading [level=3] [ref=e311]
+                  - heading [level=2] [ref=e312]
+                  - text: "00001"
+                - generic [ref=e315]:
+                  - img [ref=e317]
+                  - generic [ref=e318]:
+                    - generic [ref=e320]:
+                      - heading [level=2] [ref=e321]: MH09-XS-Blue-01
+                      - paragraph [ref=e322]: MH09XSBlueHC-01
+                    - button [ref=e325] [cursor=pointer]:
+                      - generic [ref=e326]:
+                        - img:
+                          - generic:
+                            - img
+                - generic [ref=e328]:
+                  - img [ref=e330]
+                  - generic [ref=e331]:
+                    - generic [ref=e333]:
+                      - heading [level=2] [ref=e334]: MH09-XS-Blue-01
+                      - paragraph [ref=e335]: MH09XSBlueHC-01
+                    - button [ref=e338] [cursor=pointer]:
+                      - generic [ref=e339]:
+                        - img:
+                          - generic:
+                            - img
+              - generic [ref=e340]:
+                - generic [ref=e342]:
+                  - heading [level=3] [ref=e343]
+                  - heading [level=2] [ref=e344]
+                  - text: "00002"
+                - img [ref=e350]:
+                  - img [ref=e352]
+                - generic [ref=e355]:
+                  - img [ref=e357]
+                  - generic [ref=e358]:
+                    - generic [ref=e360]:
+                      - heading [level=2] [ref=e361]: MH09-XS-Blue-01
+                      - paragraph [ref=e362]: MH09XSBlueHC-01
+                    - button [ref=e365] [cursor=pointer]:
+                      - generic [ref=e366]:
+                        - img:
+                          - generic:
+                            - img
+  - dialog [ref=e369]:
+    - generic [ref=e370]:
+      - banner [ref=e371]:
+        - generic [ref=e373]:
+          - button [ref=e376] [cursor=pointer]:
+            - generic [ref=e377]:
+              - generic:
+                - img:
+                  - generic:
+                    - img
+          - generic [ref=e380]:
+            - generic: Assign Pickers
+        - search [ref=e384]:
+          - generic [ref=e385]:
+            - searchbox "search text" [ref=e386]
+            - img:
+              - generic:
+                - img
+      - list [ref=e390]:
+        - generic [ref=e392]:
+          - generic: Staff
+        - radiogroup [ref=e394]:
+          - radio "Orem 10112" [ref=e399] [cursor=pointer]:
+            - generic [ref=e402]:
+              - text: Orem
+              - paragraph [ref=e403]: "10112"
+          - radio "Queens 10113" [ref=e410] [cursor=pointer]:
+            - generic [ref=e413]:
+              - text: Queens
+              - paragraph [ref=e414]: "10113"
+          - radio "abc test 11502" [ref=e421] [cursor=pointer]:
+            - generic [ref=e424]:
+              - text: abc test
+              - paragraph [ref=e425]: "11502"
+          - radio "M100000 M100000" [ref=e432] [cursor=pointer]:
+            - generic [ref=e435]:
+              - text: M100000
+              - paragraph [ref=e436]: M100000
+          - radio "M100001 M100001" [ref=e443] [cursor=pointer]:
+            - generic [ref=e446]:
+              - text: M100001
+              - paragraph [ref=e447]: M100001
+          - radio "M100102 M100102" [ref=e454] [cursor=pointer]:
+            - generic [ref=e457]:
+              - text: M100102
+              - paragraph [ref=e458]: M100102
+          - radio "Tim Reed 12630" [ref=e465] [cursor=pointer]:
+            - generic [ref=e468]:
+              - text: Tim Reed
+              - paragraph [ref=e469]: "12630"
+          - radio "12530 12530" [ref=e476] [cursor=pointer]:
+            - generic [ref=e479]:
+              - text: "12530"
+              - paragraph [ref=e480]: "12530"
+          - radio "Ayushi Verma 12381" [ref=e487] [cursor=pointer]:
+            - generic [ref=e490]:
+              - text: Ayushi Verma
+              - paragraph [ref=e491]: "12381"
+          - radio "Malibu 12444" [ref=e498] [cursor=pointer]:
+            - generic [ref=e501]:
+              - text: Malibu
+              - paragraph [ref=e502]: "12444"
+          - radio "Broadway 12380" [ref=e509] [cursor=pointer]:
+            - generic [ref=e512]:
+              - text: Broadway
+              - paragraph [ref=e513]: "12380"
+          - radio "Riverdale 10114" [ref=e520] [cursor=pointer]:
+            - generic [ref=e523]:
+              - text: Riverdale
+              - paragraph [ref=e524]: "10114"
+          - radio "San Francisco 10011" [ref=e531] [cursor=pointer]:
+            - generic [ref=e534]:
+              - text: San Francisco
+              - paragraph [ref=e535]: "10011"
+          - radio "HOTWAX_USER 212" [ref=e542] [cursor=pointer]:
+            - generic [ref=e545]:
+              - text: HOTWAX_USER
+              - paragraph [ref=e546]: "212"
+          - radio "Brooklyn 1234" [ref=e553] [cursor=pointer]:
+            - generic [ref=e556]:
+              - text: Brooklyn
+              - paragraph [ref=e557]: "1234"
+          - radio "Ajinkya Moghe 10002" [ref=e564] [cursor=pointer]:
+            - generic [ref=e567]:
+              - text: Ajinkya Moghe
+              - paragraph [ref=e568]: "10002"
+          - radio "Alen Parker 123456" [ref=e575] [cursor=pointer]:
+            - generic [ref=e578]:
+              - text: Alen Parker
+              - paragraph [ref=e579]: "123456"
+          - radio "Alex Strange 12481" [ref=e586] [cursor=pointer]:
+            - generic [ref=e589]:
+              - text: Alex Strange
+              - paragraph [ref=e590]: "12481"
+          - radio "Aman Modi 2020" [ref=e597] [cursor=pointer]:
+            - generic [ref=e600]:
+              - text: Aman Modi
+              - paragraph [ref=e601]: "2020"
+          - radio "Aman Picker aman.picker" [ref=e608] [cursor=pointer]:
+            - generic [ref=e611]:
+              - text: Aman Picker
+              - paragraph [ref=e612]: aman.picker
+          - radio "Aman Singh 3523" [ref=e619] [cursor=pointer]:
+            - generic [ref=e622]:
+              - text: Aman Singh
+              - paragraph [ref=e623]: "3523"
+          - radio "Amber Paul 11331" [ref=e630] [cursor=pointer]:
+            - generic [ref=e633]:
+              - text: Amber Paul
+              - paragraph [ref=e634]: "11331"
+          - radio "Anish Kumar 11962" [ref=e641] [cursor=pointer]:
+            - generic [ref=e644]:
+              - text: Anish Kumar
+              - paragraph [ref=e645]: "11962"
+          - radio "Arav Sharma 12450" [ref=e652] [cursor=pointer]:
+            - generic [ref=e655]:
+              - text: Arav Sharma
+              - paragraph [ref=e656]: "12450"
+          - radio "Arohi Keshav 12445" [ref=e663] [cursor=pointer]:
+            - generic [ref=e666]:
+              - text: Arohi Keshav
+              - paragraph [ref=e667]: "12445"
+          - radio "Broklyn city 5375" [ref=e674] [cursor=pointer]:
+            - generic [ref=e677]:
+              - text: Broklyn city
+              - paragraph [ref=e678]: "5375"
+          - radio "Catherine Mendeley 10880" [ref=e685] [cursor=pointer]:
+            - generic [ref=e688]:
+              - text: Catherine Mendeley
+              - paragraph [ref=e689]: "10880"
+          - radio "Chinmay Sharma 10007" [ref=e696] [cursor=pointer]:
+            - generic [ref=e699]:
+              - text: Chinmay Sharma
+              - paragraph [ref=e700]: "10007"
+          - radio "Christian Harper 111100" [ref=e707] [cursor=pointer]:
+            - generic [ref=e710]:
+              - text: Christian Harper
+              - paragraph [ref=e711]: "111100"
+          - radio "DEMOUSER 123 11721" [ref=e718] [cursor=pointer]:
+            - generic [ref=e721]:
+              - text: DEMOUSER 123
+              - paragraph [ref=e722]: "11721"
+      - button [ref=e729] [cursor=pointer]:
+        - img [ref=e730]:
+          - img [ref=e732]
+        - img [ref=e735]:
+          - img [ref=e737]
+```
