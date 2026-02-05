@@ -1,10 +1,22 @@
-const { test: baseTest } = require("@playwright/test");
+const { test: baseTest, expect } = require("@playwright/test");
 const fs = require("fs");
 const path = require("path");
 const { getEnvironment, getAuthFilePath } = require("./config");
 
+// Load environment variables from .env file
+require('dotenv').config({ path: path.resolve(__dirname, '..', '.env') });
+
+
 // Set default app URL if not provided via environment
-process.env.CURRENT_APP_URL = process.env.CURRENT_APP_URL || "https://bopis-dev.hotwax.io/tabs/orders";
+process.env.LAUNCHPAD_URL = process.env.LAUNCHPAD_URL || "https://launchpad.hotwax.io";
+process.env.BOPIS_ORDERS_URL = process.env.BOPIS_ORDERS_URL || "https://bopis-dev.hotwax.io/tabs/orders";
+process.env.CURRENT_APP_URL = process.env.CURRENT_APP_URL || process.env.BOPIS_ORDERS_URL;
+process.env.OMS_NAME = process.env.OMS_NAME;
+
+process.env.BOPIS_USERNAME = process.env.BOPIS_USERNAME;
+process.env.BOPIS_PASSWORD = process.env.BOPIS_PASSWORD;
+
+
 
 /**
  * Custom test fixture that loads authenticated session
@@ -56,5 +68,5 @@ const test = baseTest.extend({
   },
 });
 
-module.exports = { test };
+module.exports = { test, expect };
 

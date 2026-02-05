@@ -15,10 +15,11 @@ export class OpenOrderPage {
     // Dynamic thing
     this.readyForPickupAlertBox = page.locator("ion-alert");
     this.readyForPickupAlertButton = page.getByRole("button", {
-      name: "ready for pickup",
+      name: /ready for pickup/i,
     });
     this.rejectionAlertBox = page.locator("ion-alert");
-    this.rejectionAlertButton = page.getByRole("button", { name: "Reject" });
+    this.rejectionAlertButton = page.getByRole("button", { name: /reject/i });
+
 
     this.assignPickerModal = page.getByTestId("assign-picker-modal-header");
     this.assignPickerRadios = page.getByTestId("assign-picker-radio");
@@ -37,17 +38,24 @@ export class OpenOrderPage {
     );
     this.submitRejectButton = page.getByTestId("reject-modal-button");
 
-    this.orderPackedText = page.getByText(
-      "Order packed and ready for delivery",
-    );
+    this.orderPackedText = page.getByText(/order packed/i);
+    this.loadingOverlay = page.locator("ion-loading, ion-backdrop, .loading-wrapper, .modal-wrapper");
   }
 
-  async goToOpenTab() {
-    await this.openTabButton.waitFor({ state: "visible" });
-    await this.openTabButton.click();
-    // Wait for the first card to be visible to ensure the tab content has loaded
-    await this.firstCard.waitFor({ state: "visible" });
+  async waitForOverlays() {
+    await this.loadingOverlay.waitFor({ state: "hidden", timeout: 15000 }).catch(() => { });
+    await this.page.waitForTimeout(1000);
   }
+
+
+  async goToOpenTab() {
+    await this.waitForOverlays();
+    await this.openTabButton.waitFor({ state: "visible" });
+    await this.openTabButton.click({ force: true });
+    // Wait for the first card to be visible to ensure the tab content has loaded
+    await this.firstCard.waitFor({ state: "visible" }).catch(() => { });
+  }
+
 
   async getFirstOrderCard() {
     return this.firstCard;

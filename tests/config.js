@@ -39,23 +39,25 @@ const environments = {
 // Test user accounts
 const testUsers = {
   admin: {
-    username: "hotwax.user",
-    password: "hotwax@786",
-    oms: "dev-oms",
+    username: process.env.BOPIS_USERNAME,
+    password: process.env.BOPIS_PASSWORD,
+    oms: process.env.OMS_NAME,
+
     permissions: ["admin", "user"],
   },
   manager: {
-    username: "manager.user",
-    password: "manager@786",
-    oms: "dev-oms",
+    username: process.env.MANAGER_USERNAME,
+    password: process.env.MANAGER_PASSWORD,
+    oms: process.env.OMS_NAME,
     permissions: ["manager", "user"],
   },
   regular: {
-    username: "regular.user",
-    password: "regular@786",
-    oms: "dev-oms",
+    username: process.env.REGULAR_USERNAME,
+    password: process.env.REGULAR_PASSWORD,
+    oms: process.env.OMS_NAME,
     permissions: ["user"],
   },
+
 };
 
 /**

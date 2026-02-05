@@ -41,8 +41,9 @@ test.describe("Launchpad – BOPIS App Full Login Flow", () => {
       console.log("✓ On OMS selection page");
 
       // Step 4: Enter OMS name as "dev-oms"
-      await omsInput.fill("dev-oms");
-      console.log("✓ Entered 'dev-oms' in OMS input field");
+      await omsInput.fill(process.env.OMS_NAME);
+      console.log(`✓ Entered ${process.env.OMS_NAME} in OMS input field`);
+
       await page.waitForTimeout(2000);
 
       // Step 5: Click on the "Next" button
@@ -67,8 +68,9 @@ test.describe("Launchpad – BOPIS App Full Login Flow", () => {
     console.log("✓ Username input field is visible");
 
     // Step 7: Enter username as "hotwax.user"
-    await usernameInput.fill("hotwax.user");
-    console.log("✓ Entered username: hotwax.user");
+    await usernameInput.fill(process.env.BOPIS_USERNAME);
+    console.log(`✓ Entered username: ${process.env.BOPIS_USERNAME}`);
+
     await page.waitForTimeout(2000);
 
     // Step 8: Locate the Password input field
@@ -77,9 +79,10 @@ test.describe("Launchpad – BOPIS App Full Login Flow", () => {
     await expect(passwordInput).toBeVisible();
     console.log("✓ Password input field is visible");
 
-    // Step 9: Enter password as "hotwax@786"
-    await passwordInput.fill("hotwax@786");
-    console.log("✓ Entered password: hotwax@786");
+    // Step 9: Enter password 
+    await passwordInput.fill(process.env.BOPIS_PASSWORD);
+    console.log(`✓ Entered password: [HIDDEN]`);
+
     await page.waitForTimeout(2000);
 
     // Step 10: Locate and click on the "Login" button
@@ -149,7 +152,8 @@ test.describe("Launchpad – BOPIS App Full Login Flow", () => {
 
     // Step 2: Enter OMS and proceed to login page
     const omsInput = page.getByLabel("OMS");
-    await omsInput.fill("dev-oms");
+    await omsInput.fill(process.env.OMS_NAME);
+
     await page.waitForTimeout(2000);
 
     const nextButton = page.getByRole("button", { name: /next/i });
@@ -165,7 +169,7 @@ test.describe("Launchpad – BOPIS App Full Login Flow", () => {
 
     // Step 4: Enter password
     const passwordInput = page.getByLabel(/password/i);
-    await passwordInput.fill("hotwax@786");
+    await passwordInput.fill("");
     await page.waitForTimeout(2000);
 
     // Step 5: Click Login button
@@ -197,7 +201,8 @@ test.describe("Launchpad – BOPIS App Full Login Flow", () => {
 
     // Step 2: Enter OMS and proceed to login page
     const omsInput = page.getByLabel("OMS");
-    await omsInput.fill("dev-oms");
+    await omsInput.fill(process.env.OMS_NAME);
+
     await page.waitForTimeout(2000);
 
     const nextButton = page.getByRole("button", { name: /next/i });
@@ -207,7 +212,7 @@ test.describe("Launchpad – BOPIS App Full Login Flow", () => {
 
     // Step 3: Enter valid username
     const usernameInput = page.getByLabel(/username|email|user/i);
-    await usernameInput.fill("hotwax.user");
+    await usernameInput.fill(process.env.BOPIS_USERNAME);
     console.log("✓ Entered valid username");
     await page.waitForTimeout(2000);
 
@@ -244,7 +249,8 @@ test.describe("Launchpad – BOPIS App Full Login Flow", () => {
 
     // Step 2: Enter OMS and proceed to login page
     const omsInput = page.getByLabel("OMS");
-    await omsInput.fill("dev-oms");
+    await omsInput.fill(process.env.OMS_NAME);
+
     await page.waitForTimeout(2000);
 
     const nextButton = page.getByRole("button", { name: /next/i });
@@ -254,7 +260,8 @@ test.describe("Launchpad – BOPIS App Full Login Flow", () => {
 
     // Step 3: Leave username empty and enter password
     const passwordInput = page.getByLabel(/password/i);
-    await passwordInput.fill("hotwax@786");
+    await passwordInput.fill(process.env.BOPIS_PASSWORD);
+
     console.log("✓ Entered password without username");
     await page.waitForTimeout(2000);
 
@@ -290,7 +297,8 @@ test.describe("Launchpad – BOPIS App Full Login Flow", () => {
 
     // Step 2: Enter OMS and proceed to login page
     const omsInput = page.getByLabel("OMS");
-    await omsInput.fill("dev-oms");
+    await omsInput.fill(process.env.OMS_NAME);
+
     await page.waitForTimeout(2000);
 
     const nextButton = page.getByRole("button", { name: /next/i });
@@ -300,7 +308,8 @@ test.describe("Launchpad – BOPIS App Full Login Flow", () => {
 
     // Step 3: Enter username but leave password empty
     const usernameInput = page.getByLabel(/username|email|user/i);
-    await usernameInput.fill("hotwax.user");
+    await usernameInput.fill(process.env.BOPIS_USERNAME);
+
     console.log("✓ Entered username without password");
     await page.waitForTimeout(2000);
 

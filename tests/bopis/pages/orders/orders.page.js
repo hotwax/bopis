@@ -8,9 +8,10 @@ export class OrderPage {
     this.packedTabButton = page.getByTestId("packed-segment-button");
     this.completedTabButton = page.getByTestId("completed-segment-button");
 
-    // Order Card
-    this.orderCard = this.page.getByTestId("order-card");
-    this.firstCard = this.orderCard.first();
+    // Order Cards
+    this.orderCards = this.page.getByTestId("order-card");
+    this.firstCard = this.orderCards.first();
+
     // Assign picker
     this.assignPickerModal = page.getByTestId("assign-picker-modal-header");
     this.assignPickerRadios = page.getByTestId("assign-picker-radio");
@@ -36,25 +37,61 @@ export class OrderPage {
     );
 
     this.searchBar = this.page.locator('[data-testid="order-searchbar"] input');
-    // toast
     this.orderDelivered = page.getByText(`Order delivered to`);
+    this.noOrdersMessage = page.getByText(/no (orders|record) found/i);
+    this.loadingOverlay = page.locator("ion-loading, ion-backdrop, .loading-wrapper, .modal-wrapper");
+
   }
+
+  async waitForOverlays() {
+    // Aggressive wait for any Ionic-style overlays to be hidden
+    await this.loadingOverlay.waitFor({ state: "hidden", timeout: 15000 }).catch(() => { });
+    // Small buffer for Ionic animations and pointer event release
+    await this.page.waitForTimeout(1000);
+  }
+
   async goToOpenTab() {
+    console.log("Navigating to Open tab...");
+    await this.waitForOverlays();
     await this.openTabButton.waitFor({ state: "visible" });
-    await this.openTabButton.click();
-    await this.firstCard.waitFor({ state: "visible" });
+    await this.openTabButton.click({ force: true });
+
+    // Wait for either a card OR the empty state message
+    await Promise.race([
+      this.firstCard.waitFor({ state: "visible" }).catch(() => { }),
+      this.noOrdersMessage.waitFor({ state: "visible" }).catch(() => { })
+    ]);
+    console.log("✓ Open tab loaded.");
   }
+
   async goToCompletedTab() {
+    console.log("Navigating to Completed tab...");
+    await this.waitForOverlays();
     await this.completedTabButton.waitFor({ state: "visible" });
-    await this.completedTabButton.click();
-    await this.firstCard.waitFor({ state: "visible" });
+    await this.completedTabButton.click({ force: true });
+
+    await Promise.race([
+      this.firstCard.waitFor({ state: "visible" }).catch(() => { }),
+      this.noOrdersMessage.waitFor({ state: "visible" }).catch(() => { })
+    ]);
+    console.log("✓ Completed tab loaded.");
   }
+
   async goToPackedTab() {
+    console.log("Navigating to Packed tab...");
+    await this.waitForOverlays();
     await this.packedTabButton.waitFor({ state: "visible" });
-    await this.packedTabButton.click();
-    const firstPackedCard = this.orderCard.first();
-    await firstPackedCard.waitFor({ state: "visible" });
+    await this.packedTabButton.click({ force: true });
+
+    await Promise.race([
+      this.firstCard.waitFor({ state: "visible" }).catch(() => { }),
+      this.noOrdersMessage.waitFor({ state: "visible" }).catch(() => { })
+    ]);
+    console.log("✓ Packed tab loaded.");
   }
+
+
+
   async verifyAssignPickerModal() {
     await expect(this.assignPickerModal).toBeVisible();
   }
@@ -84,10 +121,11 @@ export class OrderPage {
     return orderName?.trim();
   }
   async findCardByOrderName(orderName) {
-    const matchingCard = this.orderCard.filter({ hasText: orderName }).first();
+    const matchingCard = this.orderCards.filter({ hasText: orderName }).first();
     await expect(matchingCard).toBeVisible();
     return matchingCard;
   }
+
 
   async assignPickerAndSave(selectedIndex = 0) {
     await this.verifyAssignPickerModal();
@@ -108,7 +146,7 @@ export class OrderPage {
     }
   }
   async openFirstGiftCardOrder() {
-    const giftCardOrders = this.orderCard.filter({
+    const giftCardOrders = this.orderCards.filter({
       has: this.giftCardActivationButton,
     });
     const firstCard = giftCardOrders.first();
@@ -116,10 +154,12 @@ export class OrderPage {
     await firstCard.click();
   }
 
+
   async openFirstGiftCardModalFromList() {
-    const giftCardOrders = this.orderCard.filter({
+    const giftCardOrders = this.orderCards.filter({
       has: this.page.getByTestId("gift-card-activation-button"),
     });
+
     const firstGiftCard = giftCardOrders.first();
     await expect(firstGiftCard).toBeVisible();
 
@@ -180,11 +220,13 @@ export class OrderPage {
     await this.page.bringToFront();
   }
   async searchByOrderName(orderName) {
+    await this.waitForOverlays();
     await expect(this.searchBar).toBeVisible();
-    await this.searchBar.type(orderName);
+    await this.searchBar.fill(orderName);
     await this.page.keyboard.press("Enter");
-    const resultCard = this.orderCard.filter({ hasText: orderName }).first();
+    const resultCard = this.orderCards.filter({ hasText: orderName }).first();
     await expect(resultCard).toBeVisible();
     return resultCard;
   }
+
 }

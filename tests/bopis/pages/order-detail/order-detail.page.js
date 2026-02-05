@@ -11,7 +11,8 @@ export class OrderDetailPage {
     this.editPickerModalHeader = page.getByTestId("edit-picker-modal-header");
     this.editPickerRadios = page.getByTestId("edit-picker-radio");
     this.editPickerSaveButton = page.getByTestId("edit-picker-save-button");
-    this.replaceButton = page.getByRole("button", { name: "Replace" });
+    this.replaceButton = page.getByRole("button", { name: /replace/i });
+
 
     // Gift Card Elements
     this.giftCardActivationButton = this.orderDetailsPage.getByTestId(
@@ -27,13 +28,19 @@ export class OrderDetailPage {
       "giftcard-activation-close-button",
     );
     this.giftCardActivateButton = page.getByRole("button", {
-      name: "Activate",
+      name: /activate/i,
     });
 
-    this.replacedPickerSuccess = this.page.getByText(
-      "Pickers successfully replaced in the picklist with the new selections.",
-    );
+
+    this.replacedPickerSuccess = this.page.getByText(/pickers successfully replaced/i);
+    this.loadingOverlay = page.locator("ion-loading, ion-backdrop, .loading-wrapper, .modal-wrapper");
   }
+
+  async waitForOverlays() {
+    await this.loadingOverlay.waitFor({ state: "hidden", timeout: 15000 }).catch(() => { });
+    await this.page.waitForTimeout(1000);
+  }
+
 
   async verifyDetailPage() {
     await this.orderDetailsPage.waitFor({ state: "visible" });

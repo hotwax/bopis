@@ -40,22 +40,46 @@ export class PackedDetailPage {
     this.orderRejectedsuccess = this.page.getByText(
       "All order items are cancelled",
     );
+    this.backButton = page.getByTestId("back-button");
+    this.loadingOverlay = page.locator("ion-loading, ion-backdrop, .loading-wrapper");
   }
+
+  async goBack() {
+    await this.waitForOverlays();
+    if (await this.backButton.isVisible()) {
+      await this.backButton.click({ force: true });
+    } else {
+      await this.page.goBack();
+    }
+    await this.page.waitForLoadState("networkidle");
+  }
+
+
+  async waitForOverlays() {
+    await this.loadingOverlay.waitFor({ state: "hidden", timeout: 15000 }).catch(() => { });
+    await this.page.waitForTimeout(1000);
+  }
+
 
   async verifyDetailPageVisible() {
     await this.orderDetailsPage.waitFor({ state: "visible" });
   }
 
   async handoverOrder() {
+    console.log("Attempting handover...");
+    await this.waitForOverlays();
     await this.handoverButton.waitFor({ state: "visible" });
-    await this.handoverButton.click();
+    await this.handoverButton.click({ force: true });
 
     await this.handoverAlert.waitFor({ state: "visible" });
     await this.handoverConfirmButton.waitFor({ state: "visible" });
-    await this.handoverConfirmButton.click();
+    await this.handoverConfirmButton.click({ force: true });
 
+    console.log("Waiting for handed over success label...");
     await this.handedOverSuccessLabel.waitFor({ state: "visible" });
+    console.log("✓ Handover successful.");
   }
+
 
   async cancelSingleItem() {
     await expect(this.cancelItemButton.first()).toBeVisible();

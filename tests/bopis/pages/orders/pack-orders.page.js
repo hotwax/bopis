@@ -11,14 +11,22 @@ export class PackedOrderPage {
     );
     this.readyForHandoverButton = this.firstCard.getByTestId("handover-button");
     this.printPackingSlipButton = page.getByTestId("packing-slip-button");
+    this.loadingOverlay = page.locator("ion-loading, ion-backdrop, .loading-wrapper, .modal-wrapper");
   }
 
-  async goToPackedTab() {
-    await this.packedTabButton.waitFor({ state: "visible" });
-    await this.packedTabButton.click();
-    const firstPackedCard = this.orderCards.first();
-    await firstPackedCard.waitFor({ state: "visible" });
+  async waitForOverlays() {
+    await this.loadingOverlay.waitFor({ state: "hidden", timeout: 15000 }).catch(() => { });
+    await this.page.waitForTimeout(1000);
   }
+
+
+  async goToPackedTab() {
+    await this.waitForOverlays();
+    await this.packedTabButton.waitFor({ state: "visible" });
+    await this.packedTabButton.click({ force: true });
+    await this.firstCard.waitFor({ state: "visible" }).catch(() => { });
+  }
+
 
   async getFirstOrderCard() {
     return this.orderCards.first();

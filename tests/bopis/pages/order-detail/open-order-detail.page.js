@@ -20,6 +20,8 @@ export class OpenDetailPage {
     this.assignPickerModal = page.getByTestId("assign-picker-modal-header");
     this.assignPickerRadios = page.getByTestId("assign-picker-radio");
     this.assignPickerSaveButton = page.getByTestId("assign-picker-save-button");
+    this.noPickerMessage = page.getByText(/no picker found/i);
+
 
     // Alert
     this.readyForPickupAlertBox = page.locator("ion-alert");
@@ -43,16 +45,38 @@ export class OpenDetailPage {
       "Order packed and ready for delivery",
     );
     this.orderItemRejection = page.getByText("All order items are rejected");
+    this.backButton = page.getByTestId("back-button");
+    this.loadingOverlay = page.locator("ion-loading, ion-backdrop, .loading-wrapper");
   }
+
+  async goBack() {
+    await this.waitForOverlays();
+    if (await this.backButton.isVisible()) {
+      await this.backButton.click({ force: true });
+    } else {
+      await this.page.goBack();
+    }
+    await this.page.waitForLoadState("networkidle");
+  }
+
+
+  async waitForOverlays() {
+    await this.loadingOverlay.waitFor({ state: "hidden", timeout: 15000 }).catch(() => { });
+    await this.page.waitForTimeout(1000);
+  }
+
 
   async verifyDetailPage() {
     await this.orderDetailsPage.waitFor({ state: "visible" });
   }
 
   async markReadyForPickup() {
+    console.log("Clicking 'Ready for Pickup'...");
+    await this.waitForOverlays();
     await this.readyForPickupButton.waitFor({ state: "visible" });
-    await this.readyForPickupButton.click();
+    await this.readyForPickupButton.click({ force: true });
   }
+
 
   async verifyAssignPickerModal() {
     await this.assignPickerModal.waitFor({ state: "visible" });

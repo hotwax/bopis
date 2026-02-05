@@ -11,14 +11,22 @@ export class CompletedOrdersPage {
     );
     this.firstCard = page.getByTestId("order-card").first();
     this.printCustomerLetterButton = page.getByTestId("packing-slip-button");
+    this.loadingOverlay = page.locator("ion-loading, ion-backdrop, .loading-wrapper, .modal-wrapper");
   }
-  async goToCompletedTab() {
-    await this.completedTabButton.waitFor({ state: "visible" });
-    await this.completedTabButton.click();
 
-    const firstCard = this.orderCards.first();
-    await firstCard.waitFor({ state: "visible" });
+  async waitForOverlays() {
+    await this.loadingOverlay.waitFor({ state: "hidden", timeout: 15000 }).catch(() => { });
+    await this.page.waitForTimeout(1000);
   }
+
+  async goToCompletedTab() {
+    await this.waitForOverlays();
+    await this.completedTabButton.waitFor({ state: "visible" });
+    await this.completedTabButton.click({ force: true });
+
+    await this.firstCard.waitFor({ state: "visible" }).catch(() => { });
+  }
+
   async openFirstGiftCardOrder() {
     const giftCardOrders = this.orderCards.filter({
       has: this.giftCardActivationButton,

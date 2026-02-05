@@ -1,8 +1,20 @@
 // @ts-check
 import { defineConfig, devices } from "@playwright/test";
 
-// Set default app URL if not provided via environment
-process.env.CURRENT_APP_URL = process.env.CURRENT_APP_URL || "https://bopis-dev.hotwax.io/tabs/orders";
+import dotenv from 'dotenv';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// Load environment variables from .env file
+dotenv.config({ path: path.resolve(__dirname, '..', '.env') });
+
+
+dotenv.config();
+
+
 
 /**
  * @see https://playwright.dev/docs/test-configuration
