@@ -12,7 +12,7 @@
 
   <ion-content class="ion-padding">
     <!-- Billing Details -->
-    <ion-item lines="none" v-if="Object.keys(billingDetails?.billingAddress).length">
+    <ion-item lines="none" v-if="billingDetails?.billingAddress && Object.keys(billingDetails.billingAddress).length">
       <ion-label>
         <strong>{{ translate("Billing Details") }}</strong>
         <p class="ion-padding-top">{{ billingDetails?.billingAddress?.toName }}</p>
@@ -28,7 +28,7 @@
 
     <template v-if="!isViewModeOnly">
       <!-- Add checkbox for same as billing -->
-      <ion-item lines="none" v-if="Object.keys(billingDetails?.billingAddress).length">
+      <ion-item lines="none" v-if="billingDetails?.billingAddress && Object.keys(billingDetails.billingAddress).length">
         <ion-checkbox justify="start" v-model="sameAsBilling" @ion-change="handleSameAsBilling" label-placement="end">
           {{ translate("Same person as the billing customer") }}
         </ion-checkbox>
@@ -158,7 +158,7 @@ const formSchema = z.object({
   idNumber: z.string().trim().min(1, translate("ID Number is required")),
   relationToCustomer: z.string().min(1, translate("Relation is required")),
   email: z.email(translate("Please enter a valid email")).or(z.literal("")),
-  phone: z.string().regex(/^\+?\d{10,15}$/, translate("Please enter a valid phone")).optional().or(z.literal(""))
+  phone: z.string().regex(/^\+?\d{10,15}$/, translate("Please enter a valid phone or country code")).optional().or(z.literal(""))
 });
 
 watch(form, () => {
@@ -178,16 +178,14 @@ const getBillingDetails = async () => {
     const resp = await OrderService.getBillingDetails({ orderId: props.order.orderId });
     billingDetails.value = resp?.data?.billingDetails || {};
 
-    console.log('resp', billingDetails.value);
-
     form.value.name = orderContent.value?.name || billingDetails.value?.billingAddress?.toName || "";
-    form.value.email = orderContent.value?.email || billingDetails.value.billingEmail || "";
-    form.value.phone = orderContent.value?.phone || (billingDetails.value?.billingPhone?.countryCode + billingDetails.value?.billingPhone?.contactNumber) || "";
+    form.value.email = orderContent.value?.email || billingDetails.value?.billingEmail || "";
+    form.value.phone = orderContent.value?.phone || `${billingDetails.value?.billingPhone?.countryCode || ''}${billingDetails.value?.billingPhone?.contactNumber || ''}` || "";
     form.value.relationToCustomer = orderContent.value?.relationToCustomer || "Self";
     form.value.idNumber = props.isViewModeOnly ? (orderContent.value?.idNumber || "") : (form.value.idNumber || orderContent.value?.idNumber || "");
     isNamePrefilled.value = !!(orderContent.value?.name || billingDetails.value?.billingAddress?.toName);
-    isPhonePrefilled.value = !!(orderContent.value?.phone || billingDetails.value?.billingPhone?.countryCode + billingDetails.value?.billingPhone?.contactNumber);
-    isEmailPrefilled.value = !!(orderContent.value?.email || billingDetails.value.billingEmail);
+    isPhonePrefilled.value = !!(orderContent.value?.phone || `${billingDetails.value?.billingPhone?.countryCode || ''}${billingDetails.value?.billingPhone?.contactNumber || ''}`);
+    isEmailPrefilled.value = !!(orderContent.value?.email || billingDetails.value?.billingEmail);
   } catch (err) {
     logger.error("Error fetching billing details:", err);
   }
@@ -215,11 +213,11 @@ const handleSameAsBilling = () => {
   if (sameAsBilling.value) {
     form.value.name = billingDetails.value?.billingAddress?.toName || "";
     form.value.email = billingDetails.value?.billingEmail || "";
-    form.value.phone = (billingDetails.value?.billingPhone?.countryCode + billingDetails.value?.billingPhone?.contactNumber) || "";
+    form.value.phone = `${billingDetails.value?.billingPhone?.countryCode || ''}${billingDetails.value?.billingPhone?.contactNumber || ''}` || "";
     form.value.idNumber = idNumberValue.value || "";
     form.value.relationToCustomer = "Self";
     isNamePrefilled.value = !!(billingDetails.value?.billingAddress?.toName);
-    isPhonePrefilled.value = !!(billingDetails.value?.billingPhone?.countryCode + billingDetails.value?.billingPhone?.contactNumber);
+    isPhonePrefilled.value = !!(`${billingDetails.value?.billingPhone?.countryCode || ''}${billingDetails.value?.billingPhone?.contactNumber || ''}`);
     isEmailPrefilled.value = !!(billingDetails.value?.billingEmail);
   } else {
     form.value.name = "";
