@@ -1,4 +1,4 @@
-{ 
+{
   "Activate": "Activate",
   "Activate gift card": "Activate gift card",
   "Activation code": "Activation code",
@@ -161,7 +161,7 @@
   "Order marked as ready for pickup but something went wrong while sending the email notification": "Order marked as ready for pickup but something went wrong while sending the email notification",
   "Order not found": "Order not found",
   "Order packed and ready for delivery": "Order packed and ready for delivery",
-  "Order will be marked as ready for pickup and an email notification will be sent to . This action is irreversible." : "Order will be marked as ready for pickup and an email notification will be sent to { customerName }. This action is irreversible.",
+  "Order will be marked as ready for pickup and an email notification will be sent to . This action is irreversible.": "Order will be marked as ready for pickup and an email notification will be sent to { customerName }. This action is irreversible.",
   "Order will be marked as completed and an email notification will be sent to the customer. This action is irreversible.": "Order will be marked as completed and an email notification will be sent to the customer. This action is irreversible.",
   "Order will be marked as completed. This action is irreversible.": "Order will be marked as completed. This action is irreversible.",
   "Orders": "Orders",
@@ -248,7 +248,7 @@
   "Shipping method": "Shipping method",
   "Shipping orders": "Shipping orders",
   "Ship to customer": "Ship to customer",
-  "Shipping to store": "Shipping to store",
+  "Ship to Store": "Ship to Store",
   "Order marked as ship to store": "Order marked as ship to store",
   "Ship to this address": "Ship to this address",
   "Shop": "Shop",
