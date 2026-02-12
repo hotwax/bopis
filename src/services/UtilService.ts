@@ -1,4 +1,4 @@
-import { api, apiClient } from '@/adapter';
+import { api, apiClient, client } from '@/adapter';
 import { hasError } from '@/adapter';
 import store from '@/store';
 
@@ -258,10 +258,26 @@ const fetchPartiesInformation = async (payload: any): Promise<any> => {
   });
 }
 
+const fetchShopifyShopLocation = async (token: any, payload: any): Promise<any> => {
+  const baseURL = store.getters['user/getOmsBaseUrl'];
+
+  return apiClient({
+    url: "performFind",
+    method: "post",
+    baseURL,
+    headers: {
+      "Authorization": "Bearer " + token,
+      "Content-Type": "application/json"
+    },
+    data: payload
+  });
+}
+
 export const UtilService = {
   activateGiftCard,
   createEnumeration,
   createProductStoreSetting,
+  fetchShopifyShopLocation,
   fetchEnumerations,
   fetchFacilities,
   fetchGiftCardFulfillmentInfo,

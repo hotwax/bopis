@@ -88,6 +88,30 @@ const actions: ActionTree<UserState, RootState> = {
         else uniqueFacilities.push(facility.facilityId);
         return uniqueFacilities
       }, []);
+
+      const authStore = useAuthStore()
+      if(authStore.isEmbedded) {
+        const locationId = authStore.posContext.locationId
+        const resp = await UtilService.fetchShopifyShopLocation(token, {
+          entityName: "ShopifyShopLocation",
+          inputFields: {
+            shopifyLocationId: locationId.toString()
+          },
+          viewSize: 1
+        });
+        if(!hasError(resp) && resp.data.docs?.length) {
+          const facilityId = resp.data.docs[0].facilityId;
+          const facility = userProfile.facilities.find((facility: any) => facility.facilityId === facilityId);
+
+          if(!facility) {
+            throw "Unable to login. User is not associated with this location"
+          }
+          useUserStore().currentFacility = facility
+        } else {
+          throw "Failed to fetch location information"
+        }
+      }
+
       // TODO Use a separate API for getting facilities, this should handle user like admin accessing the app
       const currentEComStore = await UserService.getCurrentEComStore(token, getCurrentFacilityId());
 
@@ -134,11 +158,10 @@ const actions: ActionTree<UserState, RootState> = {
     // store the url on which we need to redirect the user after logout api completes in case of SSO enabled
     let redirectionUrl = ''
 
-    emitter.emit('presentLoader', { message: 'Logging out', backdropDismiss: false })
-
     // Calling the logout api to flag the user as logged out, only when user is authorised
     // if the user is already unauthorised then not calling the logout api as it returns 401 again that results in a loop, thus there is no need to call logout api if the user is unauthorised
     if(!payload?.isUserUnauthorised) {
+      emitter.emit('presentLoader', { message: 'Logging out', backdropDismiss: false })
       let resp;
 
       // wrapping the parsing logic in try catch as in some case the logout api makes redirection, and then we are unable to parse the resp and thus the logout process halts

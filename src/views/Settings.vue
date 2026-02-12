@@ -22,7 +22,7 @@
             </ion-card-header>
           </ion-item>
           <ion-button color="danger" @click="logout()">{{ translate("Logout") }}</ion-button>
-          <ion-button :standalone-hidden="!hasPermission(Actions.APP_PWA_STANDALONE_ACCESS)" fill="outline" @click="goToLaunchpad()">
+          <ion-button v-if="!authStore.isEmbedded" :standalone-hidden="!hasPermission(Actions.APP_PWA_STANDALONE_ACCESS)" fill="outline" @click="goToLaunchpad()">
             {{ translate("Go to Launchpad") }}
             <ion-icon slot="end" :icon="openOutline" />
           </ion-button>
@@ -46,7 +46,7 @@
           <ion-card-content>
             {{ translate("This is the name of the OMS you are connected to right now. Make sure that you are connected to the right instance before proceeding.") }}
           </ion-card-content>
-          <ion-button :disabled="!omsRedirectionUrl || !omsToken || !hasPermission(Actions.APP_COMMERCE_VIEW)" @click="goToOms(omsToken, omsRedirectionUrl)" fill="clear">
+          <ion-button v-if="!authStore.isEmbedded" :disabled="!omsRedirectionUrl || !omsToken || !hasPermission(Actions.APP_COMMERCE_VIEW)" @click="goToOms(omsToken, omsRedirectionUrl)" fill="clear">
             {{ translate("Go to OMS") }}
             <ion-icon slot="end" :icon="openOutline" />
           </ion-button>
@@ -254,7 +254,7 @@ import { DateTime } from 'luxon';
 import { UserService } from '@/services/UserService'
 import { showToast } from '@/utils';
 import { hasError, removeClientRegistrationToken, subscribeTopic, unsubscribeTopic } from '@/adapter'
-import { goToOms, initialiseFirebaseApp, translate, useUserStore } from "@hotwax/dxp-components";
+import { goToOms, initialiseFirebaseApp, translate, useUserStore, useAuthStore } from "@hotwax/dxp-components";
 import { Actions, hasPermission } from '@/authorization'
 import { addNotification, generateTopicName, isFcmConfigured, storeClientRegistrationToken } from "@/utils/firebase";
 import emitter from "@/event-bus"
@@ -593,9 +593,11 @@ export default defineComponent({
     const router = useRouter();
     const userStore = useUserStore()
     let currentFacility: any = computed(() => userStore.getCurrentFacility) 
+    const authStore = useAuthStore();
 
     return {
       Actions,
+      authStore,
       currentFacility,
       ellipsisVertical,
       goToOms,

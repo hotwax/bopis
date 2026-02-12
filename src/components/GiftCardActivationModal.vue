@@ -78,7 +78,7 @@ import {
 import { computed, defineComponent } from "vue";
 import { mapGetters, useStore } from "vuex";
 import { cameraOutline, cardOutline, closeOutline, giftOutline, saveOutline, stopOutline } from "ionicons/icons";
-import { getProductIdentificationValue, translate, useProductIdentificationStore } from '@hotwax/dxp-components'
+import { getProductIdentificationValue, translate, openPosScanner, useAuthStore, useProductIdentificationStore } from '@hotwax/dxp-components'
 import { UtilService } from "@/services/UtilService";
 import { formatCurrency, hasWebcamAccess, showToast } from '@/utils';
 import { hasError } from '@/adapter'
@@ -174,8 +174,12 @@ export default defineComponent({
       return DateTime.fromMillis(this.item.gcInfo.fulfillmentDate).toFormat("dd MMMM yyyy hh:mm a ZZZZ");
     },
     async scan() {
+      if (useAuthStore().isEmbedded) {
+        await openPosScanner();
+        return;
+      }
       if (!(await hasWebcamAccess())) {
-        showToast(translate("Camera access not allowed, please check permissons."));
+        showToast(translate("Camera access not allowed, please check permissions."));
         return;
       } 
 
