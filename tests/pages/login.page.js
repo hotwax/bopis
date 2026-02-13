@@ -29,7 +29,8 @@ export class LoginPage {
             await Promise.race([
                 this.omsInput.waitFor({ state: "visible", timeout: 10000 }),
                 this.usernameInput.waitFor({ state: "visible", timeout: 10000 }),
-                // this.page.waitForURL(/tabs\/orders/, { timeout: 10000 })
+                this.page.waitForURL(/login/, { timeout: 10000 }),
+                this.page.waitForURL(/tabs\/orders/, { timeout: 10000 })
             ]);
         } catch (e) {
             console.log("Timeout or redirection detected. Current URL:", this.page.url());
