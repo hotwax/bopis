@@ -55,13 +55,14 @@ export class OrderPage {
   }
 
   async refreshBeforeTabSwitch() {
+    console.log("Refreshing tab");
     await this.page.reload({ waitUntil: "domcontentloaded" }).catch(() => { });
     await this.waitForOverlays();
   }
 
   async goToOpenTab() {
     console.log("Navigating to Open tab...");
-    await this.waitForOverlays();
+    // await this.waitForOverlays();
     await this.refreshBeforeTabSwitch();
 
     await this.openTabButton.waitFor({ state: "visible" });
