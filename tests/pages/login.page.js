@@ -70,10 +70,33 @@ export class LoginPage {
             await this.page.waitForLoadState("networkidle");
             await this.page.waitForTimeout(2000);
         }
+
+        // Some environments remain on tokenized login URL briefly; force app URL and re-check.
+        if (this.page.url().includes("/login")) {
+            await this.page.goto(process.env.CURRENT_APP_URL, { waitUntil: "domcontentloaded" }).catch(() => { });
+            await this.page.waitForLoadState("networkidle").catch(() => { });
+        }
     }
 
 
     async verifyLoginSuccess() {
-        await expect(this.page).not.toHaveURL(/login/i);
+        const onOrders = await this.page
+            .waitForURL(/\/tabs\/orders/i, { timeout: 10000 })
+            .then(() => true)
+            .catch(() => false);
+        if (onOrders) return;
+
+        // Fallback: force-open app URL and verify we are not prompted for credentials.
+        await this.page.goto(process.env.CURRENT_APP_URL, { waitUntil: "domcontentloaded" }).catch(() => { });
+        await this.page.waitForLoadState("networkidle").catch(() => { });
+
+        const hasOmsInput = await this.omsInput.isVisible().catch(() => false);
+        const hasUserInput = await this.usernameInput.isVisible().catch(() => false);
+        const hasPasswordInput = await this.passwordInput.isVisible().catch(() => false);
+        if (hasOmsInput || hasUserInput || hasPasswordInput) {
+            throw new Error(`Login verification failed: still on auth form (${this.page.url()})`);
+        }
+
+        await expect(this.page).toHaveURL(/\/tabs\/orders/i);
     }
 }
