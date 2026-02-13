@@ -15,12 +15,19 @@ export class CompletedOrdersPage {
   }
 
   async waitForOverlays() {
+    if (this.page.isClosed()) return;
     await this.loadingOverlay.waitFor({ state: "hidden", timeout: 15000 }).catch(() => { });
-    await this.page.waitForTimeout(1000);
+  }
+
+  async refreshBeforeTabSwitch() {
+    if (this.page.isClosed()) return;
+    await this.page.reload({ waitUntil: "domcontentloaded" }).catch(() => { });
+    await this.waitForOverlays();
   }
 
   async goToCompletedTab() {
     await this.waitForOverlays();
+    await this.refreshBeforeTabSwitch();
     await this.completedTabButton.waitFor({ state: "visible" });
     await this.completedTabButton.click({ force: true });
 

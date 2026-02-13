@@ -12,8 +12,8 @@ export class LoginPage {
     }
 
     async waitForOverlays() {
+        if (this.page.isClosed()) return;
         await this.loadingOverlay.waitFor({ state: "hidden", timeout: 15000 }).catch(() => { });
-        await this.page.waitForTimeout(1000);
     }
 
 

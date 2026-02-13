@@ -40,21 +40,38 @@ export class OpenOrderPage {
     this.submitRejectButton = page.getByTestId("reject-modal-button");
 
     this.orderPackedText = page.getByText(/order packed/i);
+    this.openOrdersContainer = page.getByTestId("open-orders-container");
+    this.noOrdersMessage = page.getByText(/no (orders|record) found/i);
     this.loadingOverlay = page.locator("ion-loading, ion-backdrop, .loading-wrapper, .modal-wrapper");
   }
 
   async waitForOverlays() {
+    if (this.page.isClosed()) return;
     await this.loadingOverlay.waitFor({ state: "hidden", timeout: 15000 }).catch(() => { });
-    await this.page.waitForTimeout(1000);
+  }
+
+  async refreshBeforeTabSwitch() {
+    if (this.page.isClosed()) return;
+    if (!/\/tabs\/orders/.test(this.page.url())) return;
+    await this.page.reload({ waitUntil: "domcontentloaded" }).catch(() => { });
+    await this.waitForOverlays();
   }
 
 
   async goToOpenTab() {
     await this.waitForOverlays();
-    await this.openTabButton.waitFor({ state: "visible" });
-    await this.openTabButton.click({ force: true });
-    // Wait for the first card to be visible to ensure the tab content has loaded
-    await this.firstCard.waitFor({ state: "visible" }).catch(() => { });
+    await this.refreshBeforeTabSwitch();
+    const tabVisible = await this.openTabButton.isVisible().catch(() => false);
+    if (tabVisible) {
+      await this.openTabButton.click({ force: true });
+    } else {
+      console.warn("Open tab button not visible; assuming already on Open tab.");
+    }
+    await Promise.race([
+      this.openOrdersContainer.waitFor({ state: "visible", timeout: 15000 }).catch(() => { }),
+      this.noOrdersMessage.waitFor({ state: "visible", timeout: 15000 }).catch(() => { }),
+      this.firstCard.waitFor({ state: "visible", timeout: 15000 }).catch(() => { }),
+    ]);
   }
 
 

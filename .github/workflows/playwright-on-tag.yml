@@ -10,9 +10,19 @@ on:
 
 jobs:
   playwright-tests:
-    name: Run Playwright Automation
+    name: Run Playwright Automation (${{ matrix.shard }})
     runs-on: ubuntu-latest
-    timeout-minutes: 60
+    timeout-minutes: 50
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - shard: 1/3
+            shard_id: 1-of-3
+          - shard: 2/3
+            shard_id: 2-of-3
+          - shard: 3/3
+            shard_id: 3-of-3
 
     env:
       CI: true
@@ -63,9 +73,100 @@ jobs:
         run: npx playwright install --with-deps
 
       - name: Run Playwright tests
+        env:
+          PLAYWRIGHT_JSON_OUTPUT_NAME: test-results-${{ matrix.shard_id }}.json
         run: |
           npx playwright test \
-            --reporter=html
+            --reporter=blob,json \
+            --shard=${{ matrix.shard }}
+
+      - name: Post-run summary (failed + skipped)
+        if: always()
+        run: |
+          node -e '
+          const fs = require("fs");
+          const file = "test-results-${{ matrix.shard_id }}.json";
+          if (!fs.existsSync(file)) {
+            console.log("No JSON result file found:", file);
+            process.exit(0);
+          }
+          const data = JSON.parse(fs.readFileSync(file, "utf8"));
+          const failed = [];
+          const skipped = [];
+          function visitSuite(suite, parents = []) {
+            const path = [...parents, suite.title].filter(Boolean);
+            for (const spec of suite.specs || []) {
+              const name = [...path, spec.title].join(" > ");
+              for (const test of spec.tests || []) {
+                const outcome = test.outcome || "";
+                if (outcome === "unexpected") {
+                  const msg = (test.results || [])
+                    .map(r => (r.error && (r.error.message || r.error.value)) || "")
+                    .filter(Boolean)[0] || "No error message";
+                  failed.push({ name, msg });
+                } else if (outcome === "skipped") {
+                  const reason = (test.annotations || [])
+                    .filter(a => a.type === "skip")
+                    .map(a => a.description)
+                    .filter(Boolean)[0] || "No explicit skip reason";
+                  skipped.push({ name, reason });
+                }
+              }
+            }
+            for (const child of suite.suites || []) visitSuite(child, path);
+          }
+          for (const s of data.suites || []) visitSuite(s);
+          console.log("=== Playwright Summary (Shard: ${{ matrix.shard }}) ===");
+          console.log(`Failed tests: ${failed.length}`);
+          failed.slice(0, 20).forEach((f, i) => console.log(`${i + 1}. ${f.name}\n   ${f.msg}`));
+          console.log(`Skipped tests: ${skipped.length}`);
+          skipped.slice(0, 20).forEach((t, i) => console.log(`${i + 1}. ${t.name}\n   ${t.reason}`));
+          '
+
+      - name: Upload Playwright blob report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-blob-report-${{ matrix.shard_id }}
+          path: blob-report/
+          if-no-files-found: warn
+
+      - name: Upload Playwright JSON report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-json-report-${{ matrix.shard_id }}
+          path: test-results-${{ matrix.shard_id }}.json
+          if-no-files-found: warn
+
+  merge-reports:
+    name: Merge Playwright Reports
+    runs-on: ubuntu-latest
+    needs: playwright-tests
+    if: always()
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Download blob reports
+        uses: actions/download-artifact@v4
+        with:
+          path: all-blob-reports
+          pattern: playwright-blob-report-*
+          merge-multiple: true
+
+      - name: Merge to HTML report
+        run: npx playwright merge-reports --reporter html all-blob-reports
 
       - name: Upload Playwright HTML report
         if: always()
@@ -73,3 +174,4 @@ jobs:
         with:
           name: playwright-report
           path: playwright-report/
+          if-no-files-found: warn

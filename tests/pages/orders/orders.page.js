@@ -54,11 +54,18 @@ export class OrderPage {
     await this.page.waitForTimeout(1000);
   }
 
+  async refreshBeforeTabSwitch() {
+    await this.page.reload({ waitUntil: "domcontentloaded" }).catch(() => { });
+    await this.waitForOverlays();
+  }
+
   async goToOpenTab() {
     console.log("Navigating to Open tab...");
     await this.waitForOverlays();
+    await this.refreshBeforeTabSwitch();
 
-    // After login, we're already on the Open tab, so just wait for content to load
+    await this.openTabButton.waitFor({ state: "visible" });
+    await this.openTabButton.click({ force: true });
     console.log("Waiting for Open tab content to load...");
 
     // Wait for either the container (if orders exist) or the empty state message
@@ -78,6 +85,7 @@ export class OrderPage {
   async goToCompletedTab() {
     console.log("Navigating to Completed tab...");
     await this.waitForOverlays();
+    await this.refreshBeforeTabSwitch();
     await this.completedTabButton.waitFor({ state: "visible" });
     await this.completedTabButton.click({ force: true });
 
@@ -91,6 +99,7 @@ export class OrderPage {
   async goToPackedTab() {
     console.log("Navigating to Packed tab...");
     await this.waitForOverlays();
+    await this.refreshBeforeTabSwitch();
     await this.packedTabButton.waitFor({ state: "visible" });
     await this.packedTabButton.click({ force: true });
 

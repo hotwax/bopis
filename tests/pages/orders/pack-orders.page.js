@@ -21,9 +21,15 @@ export class PackedOrderPage {
     await this.page.waitForTimeout(1000);
   }
 
+  async refreshBeforeTabSwitch() {
+    await this.page.reload({ waitUntil: "domcontentloaded" }).catch(() => { });
+    await this.waitForOverlays();
+  }
+
 
   async goToPackedTab() {
     await this.waitForOverlays();
+    await this.refreshBeforeTabSwitch();
     await this.packedTabButton.waitFor({ state: "visible" });
     await this.packedTabButton.click({ force: true });
     await Promise.race([

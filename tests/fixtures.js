@@ -1,7 +1,6 @@
 const { test: baseTest, expect } = require("@playwright/test");
-const fs = require("fs");
 const path = require("path");
-const { getEnvironment, getAuthFilePath } = require("./config");
+const { getEnvironment } = require("./config");
 
 // Load environment variables from .env file
 require('dotenv').config({ path: path.resolve(__dirname, '..', '.env') });
@@ -36,31 +35,12 @@ process.env.BOPIS_PASSWORD = process.env.BOPIS_PASSWORD;
  * });
  */
 
-const environment = process.env.TEST_ENV || "dev";
-const userType = process.env.TEST_USER || "admin";
-const authFile = path.join(__dirname, `../auth-${environment}-${userType}.json`);
-
-// Warn if auth file doesn't exist
-const hasAuthFile = fs.existsSync(authFile);
-if (!hasAuthFile) {
-  console.warn(
-    `⚠️  ${path.basename(authFile)} not found for ${environment}/${userType}`
-  );
-  console.warn(
-    `   Continuing without storageState; tests that perform explicit login will still run.`
-  );
-}
-
 /**
  * Custom test fixture
  * - Extends Playwright test
- * - Auto-loads authenticated session
  * - Provides environment config
  */
 const test = baseTest.extend({
-  // Pre-load authenticated session
-  storageState: hasAuthFile ? authFile : undefined,
-
   // Provide environment config to tests
   env: async ({ }, use) => {
     const env = getEnvironment();

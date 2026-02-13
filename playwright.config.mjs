@@ -7,6 +7,7 @@ import { fileURLToPath } from 'url';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+const authFile = path.resolve(__dirname, "playwright/.auth/user.json");
 
 // Load environment variables from .env file
 dotenv.config({ path: path.resolve(__dirname, '.env') });
@@ -24,7 +25,7 @@ export default defineConfig({
   /* Fail the build on CI if you accidentally left test.only in the source code. */
   forbidOnly: !!process.env.CI,
   /* Retry on CI only */
-  retries: process.env.CI ? 2 : 0,
+  retries: process.env.CI ? 1 : 0,
   /* Use only 1 worker for sequential test execution */
   workers: 1,
   /* Increase timeout to 3 minutes */
@@ -37,14 +38,26 @@ export default defineConfig({
     // baseURL: 'http://localhost:3000',
 
     /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
-    trace: "on-first-retry",
+    trace: "retain-on-failure",
+    video: "retain-on-failure",
   },
 
   /* Configure projects for major browsers */
   projects: [
     {
+      name: "setup",
+      testMatch: /auth\.setup\.js/,
+    },
+    {
+      name: "login-flow",
+      testMatch: /login-flow\.spec\.js/,
+      use: { ...devices["Desktop Chrome"], storageState: undefined },
+    },
+    {
       name: "chromium",
-      use: { ...devices["Desktop Chrome"] },
+      dependencies: ["setup"],
+      testIgnore: [/auth\.setup\.js/, /login-flow\.spec\.js/],
+      use: { ...devices["Desktop Chrome"], storageState: authFile },
     },
 
     // {

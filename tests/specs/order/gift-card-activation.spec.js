@@ -1,9 +1,25 @@
-import { test } from "../../fixtures";
+import { test, expect } from "../../fixtures";
 import { PackedOrderPage } from "../../pages/orders/pack-orders.page";
 import { OrderDetailPage } from "../../pages/order-detail/order-detail.page";
 import { CompletedOrdersPage } from "../../pages/orders/complete-orders.page";
 import { OrderPage } from "../../pages/orders/orders.page";
 import { loginToOrders } from "../../helpers/auth";
+
+async function openCompletedGiftCardOrderDetail(completedOrders, retries = 4) {
+  for (let i = 0; i < retries; i++) {
+    await completedOrders.goToCompletedTab();
+    const giftCardOrders = completedOrders.orderCards.filter({
+      has: completedOrders.giftCardActivationButton,
+    });
+    const count = await giftCardOrders.count();
+    if (count > 0) {
+      await giftCardOrders.first().click({ force: true });
+      return true;
+    }
+    await completedOrders.page.waitForTimeout(2000);
+  }
+  return false;
+}
 
 // Gift Card Activation Packed List page
 test("Pack Orders Page: Gift Card Activation", async ({ page }) => {
@@ -54,15 +70,11 @@ test("Completed Details Page: Gift Card Activation", async ({ page }) => {
   const orderDetail = new OrderDetailPage(page);
 
   await loginToOrders(page);
-  await completedOrders.goToCompletedTab();
-  const completedGiftCount = await completedOrders.orderCards
-    .filter({ has: completedOrders.giftCardActivationButton })
-    .count();
-  if (completedGiftCount === 0) {
+  const opened = await openCompletedGiftCardOrderDetail(completedOrders, 5);
+  if (!opened) {
     test.skip(true, "No gift card orders found in Completed tab");
     return;
   }
-  await completedOrders.openFirstGiftCardOrder();
   // Gift card flow on detail page
   await orderDetail.verifyDetailPage();
   await orderDetail.openGiftCardModal();
@@ -73,20 +85,25 @@ test("Completed Details Page: Gift Card Activation", async ({ page }) => {
 test("Completed Orders Page: Gift Card Activation", async ({ page }) => {
   // Scenario: activate gift card directly from completed list card.
   const completedOrders = new CompletedOrdersPage(page);
-  const orderDetail = new OrderDetailPage(page);
   const orderList = new OrderPage(page);
 
   await loginToOrders(page);
   await completedOrders.goToCompletedTab();
-  const completedListGiftCount = await orderList.orderCards
-    .filter({ has: orderList.giftCardActivationButton })
+  const completedListGiftCount = await completedOrders.orderCards
+    .filter({ has: completedOrders.giftCardActivationButton })
     .count();
   if (completedListGiftCount === 0) {
     test.skip(true, "No gift card orders found in Completed list");
     return;
   }
   // Directly open gift card modal from list card
-  await orderList.openFirstGiftCardModalFromList();
+  const firstGiftCard = completedOrders.orderCards
+    .filter({ has: completedOrders.giftCardActivationButton })
+    .first();
+  await firstGiftCard.waitFor({ state: "visible", timeout: 10000 });
+  const giftIcon = firstGiftCard.getByTestId("gift-card-activation-button").first();
+  await giftIcon.click({ force: true });
+  await expect(orderList.giftCardModal).toBeVisible();
   // Gift card activation
   await orderList.activateGiftCard("mygiftcard123");
 });

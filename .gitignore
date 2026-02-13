@@ -30,6 +30,7 @@ npm-debug.log*
 /dist
 /node_modules
 /playwright-report
+/playwright/.auth
 /test-results
 auth-*.json
 /platforms
