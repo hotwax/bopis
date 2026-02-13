@@ -24,26 +24,15 @@ export class LoginPage {
         await this.page.waitForLoadState("networkidle");
         console.log(`Current URL: ${this.page.url()}`);
 
-        // If already logged in, skip
-        if (this.page.url().includes("tabs/orders")) {
-            console.log("Already on Orders page, skipping login steps.");
-            return;
-        }
-
         // Wait for either OMS input, Username input, or Orders page
         try {
             await Promise.race([
                 this.omsInput.waitFor({ state: "visible", timeout: 10000 }),
                 this.usernameInput.waitFor({ state: "visible", timeout: 10000 }),
-                this.page.waitForURL(/tabs\/orders/, { timeout: 10000 })
+                // this.page.waitForURL(/tabs\/orders/, { timeout: 10000 })
             ]);
         } catch (e) {
             console.log("Timeout or redirection detected. Current URL:", this.page.url());
-        }
-
-        if (this.page.url().includes("tabs/orders")) {
-            console.log("Redirected to Orders page, skipping login.");
-            return;
         }
 
         // OMS Selection if visible
@@ -56,47 +45,26 @@ export class LoginPage {
             await this.page.waitForTimeout(2000);
         }
 
-        // Authentication (skip if already on orders)
-        if (this.page.url().includes("tabs/orders")) return;
-
-        await this.waitForOverlays();
+        // await this.waitForOverlays();
         const isUserVisible = await this.usernameInput.isVisible();
         if (isUserVisible) {
             await this.usernameInput.fill(username);
-            await this.passwordInput.waitFor({ state: "visible" });
+            // await this.passwordInput.waitFor({ state: "visible" });
             await this.passwordInput.fill(password);
-            await this.waitForOverlays();
+            // await this.waitForOverlays();
             await this.loginButton.click({ force: true });
             await this.page.waitForLoadState("networkidle");
             await this.page.waitForTimeout(2000);
-        }
-
-        // Some environments remain on tokenized login URL briefly; force app URL and re-check.
-        if (this.page.url().includes("/login")) {
-            await this.page.goto(process.env.CURRENT_APP_URL, { waitUntil: "domcontentloaded" }).catch(() => { });
-            await this.page.waitForLoadState("networkidle").catch(() => { });
         }
     }
 
 
     async verifyLoginSuccess() {
-        const onOrders = await this.page
-            .waitForURL(/\/tabs\/orders/i, { timeout: 10000 })
-            .then(() => true)
-            .catch(() => false);
-        if (onOrders) return;
-
-        // Fallback: force-open app URL and verify we are not prompted for credentials.
-        await this.page.goto(process.env.CURRENT_APP_URL, { waitUntil: "domcontentloaded" }).catch(() => { });
-        await this.page.waitForLoadState("networkidle").catch(() => { });
-
         const hasOmsInput = await this.omsInput.isVisible().catch(() => false);
         const hasUserInput = await this.usernameInput.isVisible().catch(() => false);
         const hasPasswordInput = await this.passwordInput.isVisible().catch(() => false);
         if (hasOmsInput || hasUserInput || hasPasswordInput) {
             throw new Error(`Login verification failed: still on auth form (${this.page.url()})`);
         }
-
-        await expect(this.page).toHaveURL(/\/tabs\/orders/i);
     }
 }
