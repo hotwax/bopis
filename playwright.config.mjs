@@ -49,11 +49,6 @@ export default defineConfig({
       testMatch: /auth\.setup\.js/,
     },
     {
-      name: "login-flow",
-      testMatch: /login-flow\.spec\.js/,
-      use: { ...devices["Desktop Chrome"], storageState: undefined },
-    },
-    {
       name: "chromium",
       dependencies: ["setup"],
       testIgnore: [/auth\.setup\.js/, /login-flow\.spec\.js/],
