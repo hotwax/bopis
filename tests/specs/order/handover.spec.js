@@ -3,7 +3,6 @@ import { PackedDetailPage } from "../../pages/order-detail/pack-order-detail.pag
 import { CompletedOrdersPage } from "../../pages/orders/complete-orders.page";
 import { OrderPage } from "../../pages/orders/orders.page";
 import { OpenDetailPage } from "../../pages/order-detail/open-order-detail.page";
-import { loginToOrders } from "../../helpers/auth";
 
 test("Open -> Packed -> Completed: Handover flow", async ({ page }) => {
   // Happy path:
@@ -24,8 +23,6 @@ test("Open -> Packed -> Completed: Handover flow", async ({ page }) => {
     }
     await page.bringToFront().catch(() => {});
   };
-
-  await loginToOrders(page);
 
   // 1) Open tab: pick first order and mark as ready for pickup
   await orderPage.goToOpenTab();

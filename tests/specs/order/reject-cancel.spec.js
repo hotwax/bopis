@@ -4,7 +4,6 @@ import { OrderDetailPage } from "../../pages/order-detail/order-detail.page";
 import { PackedDetailPage } from "../../pages/order-detail/pack-order-detail.page";
 import { OrderPage } from "../../pages/orders/orders.page";
 import { OpenDetailPage } from "../../pages/order-detail/open-order-detail.page";
-import { loginToOrders } from "../../helpers/auth";
 
 async function openOpenOrderByItemCount({
   page,
@@ -80,7 +79,6 @@ test("Open Details Page: Single Item Order Rejection", async ({ page }) => {
   const openOrderDetail = new OpenDetailPage(page);
   const orderPage = new OrderPage(page);
 
-  await loginToOrders(page);
   const hasMatchingOrder = await openOpenOrderByItemCount({
     page,
     openOrders,
@@ -105,7 +103,6 @@ test("Open Details Page: Multiple Item Order Rejection", async ({ page }) => {
   const openOrderDetail = new OpenDetailPage(page);
   const orderPage = new OrderPage(page);
 
-  await loginToOrders(page);
   const hasMatchingOrder = await openOpenOrderByItemCount({
     page,
     openOrders,
@@ -130,7 +127,6 @@ test("Packed Details Page: Single Item Order Cancellation", async ({
   const packedDetail = new PackedDetailPage(page);
   const orderPage = new OrderPage(page);
 
-  await loginToOrders(page);
   const hasMatchingOrder = await openPackedOrderByItemCount({
     orderPage,
     packedDetail,
@@ -151,7 +147,7 @@ test("Packed Details Page: Multiple Item Order Cancellation", async ({
   // Scenario: cancel flow for packed orders with multiple line items.
   const packedDetail = new PackedDetailPage(page);
   const orderPage = new OrderPage(page);
-  await loginToOrders(page);
+
   const hasMatchingOrder = await openPackedOrderByItemCount({
     orderPage,
     packedDetail,

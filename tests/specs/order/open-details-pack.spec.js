@@ -1,7 +1,6 @@
 import { test } from "../../fixtures";
 import { OpenDetailPage } from "../../pages/order-detail/open-order-detail.page";
 import { OrderPage } from "../../pages/orders/orders.page";
-import { loginToOrders } from "../../helpers/auth";
 
 // Packed order from Open detail page by Assigning the Picker when the Enable Tracking is on
 test("Open Details Page: Pack Order When Tracking Enabled", async ({
@@ -10,7 +9,6 @@ test("Open Details Page: Pack Order When Tracking Enabled", async ({
   // Scenario: open-order detail flow where tracking may require picker assignment.
   const packOpenOrder = new OpenDetailPage(page);
   const orderPage = new OrderPage(page);
-  await loginToOrders(page);
   await orderPage.goToOpenTab();
   await orderPage.openOrdersContainer.waitFor({ state: "visible", timeout: 20000 }).catch(() => {});
   if (await orderPage.orderCards.count() === 0) {
@@ -50,7 +48,6 @@ test("Open Details Page: Pack Order When Tracking Disabled", async ({
   // Scenario: open-order detail flow where direct confirmation may be used.
   const packOpenOrder = new OpenDetailPage(page);
   const orderPage = new OrderPage(page);
-  await loginToOrders(page);
   await orderPage.goToOpenTab();
   await orderPage.openOrdersContainer.waitFor({ state: "visible", timeout: 20000 }).catch(() => {});
   if (await orderPage.orderCards.count() === 0) {

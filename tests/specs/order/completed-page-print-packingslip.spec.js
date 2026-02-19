@@ -1,11 +1,10 @@
 import { test } from "../../fixtures";
 import { CompletedOrdersPage } from "../../pages/orders/complete-orders.page";
 import { OrderPage } from "../../pages/orders/orders.page";
-import { loginToOrders } from "../../helpers/auth";
 
 // Case 1: Generate Packing Slip from List Page
 test("Pack Orders Page: Generate Packing Slip", async ({ page }) => {
-  await loginToOrders(page);
+  await page.goto(process.env.CURRENT_APP_URL);
 
   const completedOrders = new CompletedOrdersPage(page);
   const orderPage = new OrderPage(page);

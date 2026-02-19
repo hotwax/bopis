@@ -1,7 +1,6 @@
 import { test, expect } from "../../fixtures";
 import { OrderPage } from "../../pages/orders/orders.page";
 import { OpenDetailPage } from "../../pages/order-detail/open-order-detail.page";
-import { loginToOrders } from "../../helpers/auth";
 
 /**
  * BOPIS Negative Test Scenarios
@@ -11,13 +10,16 @@ import { loginToOrders } from "../../helpers/auth";
  */
 test.describe("BOPIS Negative Scenarios", () => {
     // Shared setup for negative tests
+    let orderPage, openDetail;
+    let areOpenOrdersAvailable = true;
+    
     test.beforeEach(async ({ page }) => {
-        await loginToOrders(page);
+        orderPage = new OrderPage(page);
+        openDetail = new OpenDetailPage(page);
+        await page.goto(process.env.CURRENT_APP_URL);
     });
 
     test("Scenario 1: Verify 'No orders found' empty state", async ({ page }) => {
-        const orderPage = new OrderPage(page);
-
         console.log("Checking for empty state on a potentially empty tab...");
         // We can't guarantee a tab is empty, so we'll check if orders exist first
         await orderPage.goToOpenTab();
@@ -25,6 +27,7 @@ test.describe("BOPIS Negative Scenarios", () => {
 
         if (count === 0) {
             console.log("Tab is empty, verifying message...");
+            areOpenOrdersAvailable = false;
             await expect(orderPage.noOrdersMessage).toBeVisible();
         } else {
             console.log(`Tab has ${count} orders. To force this, search for a non-existent order.`);
@@ -36,14 +39,11 @@ test.describe("BOPIS Negative Scenarios", () => {
     });
 
     test("Scenario 2: Handle missing 'Ready for Pickup' or modal failure", async ({ page }) => {
-        const orderPage = new OrderPage(page);
-        const openDetail = new OpenDetailPage(page);
-
-        await orderPage.goToOpenTab();
-        if (await orderPage.orderCards.count() === 0) {
+        if (!areOpenOrdersAvailable) {
             test.skip("No orders available to test detail page.");
         }
-
+        
+        await orderPage.goToOpenTab();
         await orderPage.clickFirstOrderCard();
         await openDetail.verifyDetailPage();
 
@@ -83,12 +83,11 @@ test.describe("BOPIS Negative Scenarios", () => {
     });
 
     test("Scenario 3: Validate Picker Assignment empty state and block save", async ({ page }) => {
-        const orderPage = new OrderPage(page);
-        const openDetail = new OpenDetailPage(page);
+        // const orderPage = new OrderPage(page);
+        // const openDetail = new OpenDetailPage(page);
+        if (!areOpenOrdersAvailable) test.skip();
 
         await orderPage.goToOpenTab();
-        if (await orderPage.orderCards.count() === 0) test.skip();
-
         await orderPage.clickFirstOrderCard();
         await openDetail.markReadyForPickup();
 
@@ -132,12 +131,9 @@ test.describe("BOPIS Negative Scenarios", () => {
 
 
     test("Scenario 4: Verify failure when new tab (Invoice/PDF) doesn't open", async ({ page }) => {
-        const orderPage = new OrderPage(page);
-        const openDetail = new OpenDetailPage(page);
+        if (!areOpenOrdersAvailable) test.skip();
 
         await orderPage.goToOpenTab();
-        if (await orderPage.orderCards.count() === 0) test.skip();
-
         await orderPage.clickFirstOrderCard();
 
         // Negative Check: Ensure tab opens
@@ -157,11 +153,9 @@ test.describe("BOPIS Negative Scenarios", () => {
 
 
     test("Scenario 5: Validate Order State Persistence (MISMATCH CASE)", async ({ page }) => {
-        const orderPage = new OrderPage(page);
+        if (!areOpenOrdersAvailable) test.skip();
 
         await orderPage.goToOpenTab();
-        if (await orderPage.orderCards.count() === 0) test.skip();
-
         const orderName = await orderPage.getOrderName();
 
         // Negative Case: Check order does NOT exist in Completed tab yet

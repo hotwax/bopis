@@ -2,6 +2,7 @@ import { expect } from "@playwright/test";
 
 export class PackedDetailPage {
   constructor(page) {
+    console.log('packed detail page')
     this.page = page;
     this.orderDetailsPage = this.page.getByTestId("order-details-page");
 

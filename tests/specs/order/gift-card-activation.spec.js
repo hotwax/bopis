@@ -3,7 +3,6 @@ import { PackedOrderPage } from "../../pages/orders/pack-orders.page";
 import { OrderDetailPage } from "../../pages/order-detail/order-detail.page";
 import { CompletedOrdersPage } from "../../pages/orders/complete-orders.page";
 import { OrderPage } from "../../pages/orders/orders.page";
-import { loginToOrders } from "../../helpers/auth";
 
 async function openCompletedGiftCardOrderDetail(completedOrders, retries = 4) {
   for (let i = 0; i < retries; i++) {
@@ -24,8 +23,6 @@ async function openCompletedGiftCardOrderDetail(completedOrders, retries = 4) {
 // Gift Card Activation Packed List page
 test("Pack Orders Page: Gift Card Activation", async ({ page }) => {
   // Scenario: activate gift card directly from packed list card.
-  await loginToOrders(page);
-
   const packedOrders = new PackedOrderPage(page);
   const orderList = new OrderPage(page);
   await packedOrders.goToPackedTab();
@@ -43,8 +40,6 @@ test("Pack Orders Page: Gift Card Activation", async ({ page }) => {
 // Gift Card Activation Packed Detail page
 test("Pack Details Page: Gift Card Activation", async ({ page }) => {
   // Scenario: open packed order detail and activate gift card from item action.
-  await loginToOrders(page);
-
   const packedOrders = new PackedOrderPage(page);
   const detailPage = new OrderDetailPage(page);
 
@@ -68,8 +63,6 @@ test("Completed Details Page: Gift Card Activation", async ({ page }) => {
   // Scenario: activate gift card from completed-order detail page.
   const completedOrders = new CompletedOrdersPage(page);
   const orderDetail = new OrderDetailPage(page);
-
-  await loginToOrders(page);
   const opened = await openCompletedGiftCardOrderDetail(completedOrders, 5);
   if (!opened) {
     test.skip(true, "No gift card orders found in Completed tab");
@@ -86,8 +79,6 @@ test("Completed Orders Page: Gift Card Activation", async ({ page }) => {
   // Scenario: activate gift card directly from completed list card.
   const completedOrders = new CompletedOrdersPage(page);
   const orderList = new OrderPage(page);
-
-  await loginToOrders(page);
   await completedOrders.goToCompletedTab();
   const completedListGiftCount = await completedOrders.orderCards
     .filter({ has: completedOrders.giftCardActivationButton })
