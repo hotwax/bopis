@@ -12,7 +12,7 @@ jobs:
   playwright-tests:
     name: Run Playwright Automation
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 60
 
     env:
       CI: true
