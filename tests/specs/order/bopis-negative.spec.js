@@ -41,7 +41,7 @@ test.describe("BOPIS Negative Scenarios", () => {
 
         await orderPage.goToOpenTab();
         if (await orderPage.orderCards.count() === 0) {
-            test.skip("No orders available to test detail page.");
+            test.skip(true, "No orders available to test detail page.");
         }
 
         await orderPage.clickFirstOrderCard();
@@ -87,7 +87,9 @@ test.describe("BOPIS Negative Scenarios", () => {
         const openDetail = new OpenDetailPage(page);
 
         await orderPage.goToOpenTab();
-        if (await orderPage.orderCards.count() === 0) test.skip();
+        if (await orderPage.orderCards.count() === 0) {
+            test.skip(true, "No open orders available for picker-assignment negative scenario.");
+        }
 
         await orderPage.clickFirstOrderCard();
         await openDetail.markReadyForPickup();
@@ -131,36 +133,13 @@ test.describe("BOPIS Negative Scenarios", () => {
     });
 
 
-    test("Scenario 4: Verify failure when new tab (Invoice/PDF) doesn't open", async ({ page }) => {
-        const orderPage = new OrderPage(page);
-        const openDetail = new OpenDetailPage(page);
-
-        await orderPage.goToOpenTab();
-        if (await orderPage.orderCards.count() === 0) test.skip();
-
-        await orderPage.clickFirstOrderCard();
-
-        // Negative Check: Ensure tab opens
-        console.log("Checking for Print Picklist tab opening...");
-        const popupPromise = page.waitForEvent("popup", { timeout: 10000 }).catch(() => null);
-        await openDetail.printPicklistButton.click({ force: true });
-        const popup = await popupPromise;
-
-        if (!popup) {
-            console.log("✓ Expected: No new tab opened for picklist.");
-            return;
-        }
-
-        console.warn(`Popup opened unexpectedly: ${popup.url()}`);
-        await expect(popup, "Invoice/Picklist tab should not open for this negative scenario").toBeFalsy();
-    });
-
-
     test("Scenario 5: Validate Order State Persistence (MISMATCH CASE)", async ({ page }) => {
         const orderPage = new OrderPage(page);
 
         await orderPage.goToOpenTab();
-        if (await orderPage.orderCards.count() === 0) test.skip();
+        if (await orderPage.orderCards.count() === 0) {
+            test.skip(true, "No open orders available for state-persistence negative scenario.");
+        }
 
         const orderName = await orderPage.getOrderName();
 

@@ -1,4 +1,4 @@
-import { test } from "../../fixtures";
+import { test, expect } from "../../fixtures";
 import { OpenDetailPage } from "../../pages/order-detail/open-order-detail.page";
 import { OrderPage } from "../../pages/orders/orders.page";
 import { loginToOrders } from "../../helpers/auth";
@@ -13,26 +13,44 @@ test("Open Details Page: Pack Order When Tracking Enabled", async ({
   await loginToOrders(page);
   await orderPage.goToOpenTab();
   await orderPage.openOrdersContainer.waitFor({ state: "visible", timeout: 20000 }).catch(() => {});
-  if (await orderPage.orderCards.count() === 0) {
-    test.skip(true, "No open orders found");
+  const totalOrders = await orderPage.orderCards.count();
+  if (totalOrders === 0) {
+    await expect(orderPage.noOrdersMessage).toBeVisible();
     return;
   }
-  const firstCardVisibleEnabled = await orderPage.firstCard
-    .waitFor({ state: "visible", timeout: 10000 })
-    .then(() => true)
-    .catch(() => false);
-  if (!firstCardVisibleEnabled) {
-    test.skip(true, "Open order card is not visible");
+
+  let detailReady = false;
+  const maxToTry = Math.min(totalOrders, 8);
+  for (let i = 0; i < maxToTry; i++) {
+    await orderPage.goToOpenTab();
+    const card = orderPage.orderCards.nth(i);
+    const cardVisible = await card.isVisible().catch(() => false);
+    if (!cardVisible) continue;
+    await card.click({ force: true });
+    await packOpenOrder.verifyDetailPage();
+    const hasReadyButton = await packOpenOrder.readyForPickupButton
+      .or(packOpenOrder.readyForPickupButtonAlt)
+      .or(packOpenOrder.readyForPickupButtonByRole)
+      .first()
+      .isVisible()
+      .catch(() => false);
+    if (hasReadyButton) {
+      detailReady = true;
+      break;
+    }
+    await packOpenOrder.goBack().catch(() => {});
+  }
+  if (!detailReady) {
+    test.skip(true, "No eligible open order detail had Ready for Pickup action");
     return;
   }
-  await orderPage.clickFirstOrderCard();
-  await packOpenOrder.verifyDetailPage();
+
   await packOpenOrder.markReadyForPickup();
   // Branch by product-store config / runtime state: modal flow vs alert flow.
   if (await packOpenOrder.assignPickerModal.isVisible().catch(() => false)) {
     const pickerCount = await packOpenOrder.assignPickerRadios.count();
     if (pickerCount === 0) {
-      test.skip(true, "No pickers available in assign picker modal");
+      await expect(packOpenOrder.assignPickerSaveButton).toBeDisabled();
       return;
     }
     await packOpenOrder.assignPickerAndSave(1);
@@ -53,20 +71,38 @@ test("Open Details Page: Pack Order When Tracking Disabled", async ({
   await loginToOrders(page);
   await orderPage.goToOpenTab();
   await orderPage.openOrdersContainer.waitFor({ state: "visible", timeout: 20000 }).catch(() => {});
-  if (await orderPage.orderCards.count() === 0) {
-    test.skip(true, "No open orders found");
+  const totalOrders = await orderPage.orderCards.count();
+  if (totalOrders === 0) {
+    await expect(orderPage.noOrdersMessage).toBeVisible();
     return;
   }
-  const firstCardVisibleDisabled = await orderPage.firstCard
-    .waitFor({ state: "visible", timeout: 10000 })
-    .then(() => true)
-    .catch(() => false);
-  if (!firstCardVisibleDisabled) {
-    test.skip(true, "Open order card is not visible");
+
+  let detailReady = false;
+  const maxToTry = Math.min(totalOrders, 8);
+  for (let i = 0; i < maxToTry; i++) {
+    await orderPage.goToOpenTab();
+    const card = orderPage.orderCards.nth(i);
+    const cardVisible = await card.isVisible().catch(() => false);
+    if (!cardVisible) continue;
+    await card.click({ force: true });
+    await packOpenOrder.verifyDetailPage();
+    const hasReadyButton = await packOpenOrder.readyForPickupButton
+      .or(packOpenOrder.readyForPickupButtonAlt)
+      .or(packOpenOrder.readyForPickupButtonByRole)
+      .first()
+      .isVisible()
+      .catch(() => false);
+    if (hasReadyButton) {
+      detailReady = true;
+      break;
+    }
+    await packOpenOrder.goBack().catch(() => {});
+  }
+  if (!detailReady) {
+    test.skip(true, "No eligible open order detail had Ready for Pickup action");
     return;
   }
-  await orderPage.clickFirstOrderCard();
-  await packOpenOrder.verifyDetailPage();
+
   await packOpenOrder.markReadyForPickup();
   // Handle whichever post-click UI appears in this environment.
   if (await packOpenOrder.readyForPickupAlertBox.isVisible().catch(() => false)) {
@@ -74,7 +110,7 @@ test("Open Details Page: Pack Order When Tracking Disabled", async ({
   } else if (await packOpenOrder.assignPickerModal.isVisible().catch(() => false)) {
     const pickerCount = await packOpenOrder.assignPickerRadios.count();
     if (pickerCount === 0) {
-      test.skip(true, "No pickers available in assign picker modal");
+      await expect(packOpenOrder.assignPickerSaveButton).toBeDisabled();
       return;
     }
     await packOpenOrder.assignPickerAndSave(0);

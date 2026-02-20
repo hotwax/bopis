@@ -32,7 +32,7 @@ npm-debug.log*
 /playwright-report
 /playwright/.auth
 /test-results
-auth-*.json
+auth*.json
 /platforms
 /plugins
 /www

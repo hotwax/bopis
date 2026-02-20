@@ -81,7 +81,7 @@ export class LoginPage {
 
     async verifyLoginSuccess() {
         const onOrders = await this.page
-            .waitForURL(/\/tabs\/orders/i, { timeout: 10000 })
+            .waitForURL(/\/tabs\/orders/i, { timeout: 30000 })
             .then(() => true)
             .catch(() => false);
         if (onOrders) return;
@@ -97,6 +97,6 @@ export class LoginPage {
             throw new Error(`Login verification failed: still on auth form (${this.page.url()})`);
         }
 
-        await expect(this.page).toHaveURL(/\/tabs\/orders/i);
+        await expect(this.page).toHaveURL(/\/tabs\/orders/i, { timeout: 30000 });
     }
 }

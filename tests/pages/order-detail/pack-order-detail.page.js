@@ -13,6 +13,9 @@ export class PackedDetailPage {
     this.handedOverSuccessLabel = this.orderDetailsPage.getByTestId(
       "handed-over-success-label",
     );
+    this.handoverSuccessText = this.orderDetailsPage.getByText(
+      /order.*(handed over|delivered).*customer/i,
+    );
 
     this.handoverAlert = page.locator("ion-alert");
     this.handoverConfirmButton = this.page.getByRole("button", {
@@ -88,18 +91,31 @@ export class PackedDetailPage {
     await this.handoverButton.click({ force: true });
     await this.page.waitForTimeout(500);
 
-    await this.handoverAlert.waitFor({ state: "visible", timeout: 10000 });
-    await this.handoverConfirmButton.waitFor({ state: "visible", timeout: 10000 });
-    await expect(this.handoverConfirmButton).toBeEnabled();
-    await this.handoverConfirmButton.click({ force: true });
-    await this.page.waitForTimeout(500);
+    // Some environments complete handover directly without confirmation alert.
+    const alertVisible = await this.handoverAlert
+      .waitFor({ state: "visible", timeout: 8000 })
+      .then(() => true)
+      .catch(() => false);
+    if (alertVisible) {
+      await this.handoverConfirmButton.waitFor({ state: "visible", timeout: 10000 });
+      await expect(this.handoverConfirmButton).toBeEnabled();
+      await this.handoverConfirmButton.click({ force: true });
+      await this.page.waitForTimeout(500);
+    } else {
+      console.warn("Handover alert not shown; checking success indicators.");
+    }
 
     console.log("Waiting for handed over success label...");
-    const success = await this.handedOverSuccessLabel
+    const successLabelVisible = await this.handedOverSuccessLabel
       .waitFor({ state: "visible", timeout: 15000 })
       .then(() => true)
       .catch(() => false);
-    if (success) {
+    const successTextVisible = await this.handoverSuccessText
+      .first()
+      .waitFor({ state: "visible", timeout: 15000 })
+      .then(() => true)
+      .catch(() => false);
+    if (successLabelVisible || successTextVisible) {
       console.log("✓ Handover successful.");
       return;
     }

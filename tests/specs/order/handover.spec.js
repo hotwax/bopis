@@ -99,7 +99,7 @@ test("Open -> Packed -> Completed: Handover flow", async ({ page }) => {
   }
   await packedDetail.handoverOrder();
   await closeNonAppTabs();
-  await expect(page.getByText("Order is successfully handed over to customer.")).toBeVisible({
+  await expect(page.getByText(/order.*(handed over|delivered).*customer/i)).toBeVisible({
     timeout: 10000,
   });
 

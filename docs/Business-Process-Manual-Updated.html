@@ -1,0 +1,185 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>BOPIS Playwright CI/CD Business Process Manual</title>
+  <style>
+    body { font-family: Arial, sans-serif; line-height: 1.45; color: #111; }
+    h1, h2, h3 { color: #0b2e59; }
+    h1 { border-bottom: 2px solid #0b2e59; padding-bottom: 6px; }
+    table { border-collapse: collapse; width: 100%; margin: 8px 0 16px; }
+    th, td { border: 1px solid #bbb; padding: 8px; text-align: left; vertical-align: top; }
+    th { background: #f3f6fb; }
+    .meta { margin: 8px 0 20px; }
+    .note { background: #fff7e6; border-left: 4px solid #f0ad4e; padding: 8px; }
+  </style>
+</head>
+<body>
+  <h1>HotWax Commerce - Business Process Manual</h1>
+  <div class="meta">
+    <p><strong>Document:</strong> BOPIS Playwright CI/CD Implementation Manual</p>
+    <p><strong>Date:</strong> February 16, 2026</p>
+    <p><strong>Audience:</strong> QA Engineers, Developers, Managers, and New Team Members</p>
+  </div>
+
+  <h2>1. Executive Summary</h2>
+  <p>
+    This manual explains how BOPIS test automation is implemented using Playwright and how CI/CD is executed via GitHub Actions.
+    It documents what has been completed, how the pipeline works end to end, what application flows are covered,
+    and what operational checks are required to keep CI stable.
+  </p>
+
+  <h2>2. Objectives</h2>
+  <ul>
+    <li>Run BOPIS regression automatically on code changes and release tags.</li>
+    <li>Detect UI/functional regressions early.</li>
+    <li>Produce consolidated test reports for release decisions.</li>
+    <li>Securely manage credentials and session state.</li>
+    <li>Reduce manual execution and increase release confidence.</li>
+  </ul>
+
+  <h2>3. Scope</h2>
+  <h3>In Scope</h3>
+  <ul>
+    <li>Playwright framework configuration and test execution.</li>
+    <li>GitHub Actions workflow for shard-based execution and report merge.</li>
+    <li>Authentication setup strategy (single setup auth + storage state reuse).</li>
+    <li>BOPIS order workflows across Open, Packed, and Completed stages.</li>
+    <li>Negative and lifecycle scenarios.</li>
+  </ul>
+  <h3>Out of Scope</h3>
+  <ul>
+    <li>Application feature development.</li>
+    <li>Infrastructure changes outside GitHub Actions runner context.</li>
+  </ul>
+
+  <h2>4. Team Roles and Responsibilities</h2>
+  <table>
+    <tr><th>Role</th><th>Responsibilities</th></tr>
+    <tr><td>QA Automation Team</td><td>Develop/maintain Playwright framework, stabilize tests, review failures, and maintain CI reliability.</td></tr>
+    <tr><td>Application Team</td><td>Fix product defects, provide stable selectors/flows, and support test data readiness.</td></tr>
+    <tr><td>DevOps/CI Owners</td><td>Maintain GitHub Actions workflow, secrets, artifacts, and execution performance.</td></tr>
+    <tr><td>Release Manager / Product Owner</td><td>Define regression scope, review reports, and approve release readiness.</td></tr>
+  </table>
+
+  <h2>5. Technical Implementation (What We Built)</h2>
+
+  <h3>5.1 Repository Components</h3>
+  <ul>
+    <li><strong>Workflow:</strong> <code>.github/workflows/playwright-on-tag.yml</code></li>
+    <li><strong>Playwright config:</strong> <code>playwright.config.mjs</code></li>
+    <li><strong>Auth setup spec:</strong> <code>tests/specs/auth.setup.js</code></li>
+    <li><strong>Main regression specs:</strong> <code>tests/specs/order/*.spec.js</code>, <code>tests/specs/login-flow.spec.js</code></li>
+  </ul>
+
+  <h3>5.2 CI Workflow Design</h3>
+  <ol>
+    <li>Checkout repository.</li>
+    <li>Setup Node.js 20 and npm cache.</li>
+    <li>Generate runtime <code>.env</code> from <code>.env.example</code> using GitHub secrets.</li>
+    <li>Install npm dependencies.</li>
+    <li>Install Playwright browsers with dependencies.</li>
+    <li>Run tests in 3 shards with reporters: blob + JSON.</li>
+    <li>Upload per-shard artifacts (blob and JSON).</li>
+    <li>Merge blob reports into one HTML report in a merge job.</li>
+  </ol>
+
+  <h3>5.3 Playwright Execution Strategy</h3>
+  <ul>
+    <li>CI retries enabled only in CI (<code>retries: 1</code>).</li>
+    <li>Traces and videos retained only for failed tests.</li>
+    <li>Project split:
+      <ul>
+        <li><strong>setup</strong>: creates authenticated storage state once.</li>
+        <li><strong>chromium</strong>: runs business tests with saved auth session.</li>
+        <li><strong>login-flow</strong>: validates login scenarios independently.</li>
+      </ul>
+    </li>
+  </ul>
+
+  <h2>6. Security and Configuration Controls</h2>
+
+  <h3>6.1 Required GitHub Secrets</h3>
+  <ul>
+    <li><code>CURRENT_APP_URL</code></li>
+    <li><code>OMS_NAME</code></li>
+    <li><code>USERNAME</code></li>
+    <li><code>PASSWORD</code></li>
+  </ul>
+
+  <p class="note"><strong>Critical Rule:</strong> All four secrets must belong to the same environment family (example: dev URL + dev OMS + dev user). Mixed environments cause login redirect failures in CI.</p>
+
+  <h3>6.2 Git Hygiene</h3>
+  <p>The following are excluded from source control to avoid sensitive data exposure:</p>
+  <ul>
+    <li><code>.env</code></li>
+    <li><code>auth*.json</code></li>
+    <li><code>playwright/.auth/</code></li>
+    <li><code>playwright-report/</code></li>
+    <li><code>test-results/</code></li>
+    <li><code>node_modules/</code></li>
+  </ul>
+
+  <h2>7. Application Coverage Implemented</h2>
+  <h3>7.1 Login and App Entry</h3>
+  <ul>
+    <li>Launchpad entry and BOPIS app selection.</li>
+    <li>Positive login flow and login validation scenarios.</li>
+  </ul>
+
+  <h3>7.2 BOPIS Orders Coverage</h3>
+  <ul>
+    <li>Open tab actions: assign picker, pack, print picklist.</li>
+    <li>Packed tab actions: handover, print packing slip, gift card activation.</li>
+    <li>Completed tab validations and order-detail checks.</li>
+    <li>Reject and cancel flows for single and multiple item scenarios.</li>
+    <li>Lifecycle flow: Open -&gt; Packed -&gt; Completed.</li>
+    <li>Negative scenarios (empty states, missing actions, persistence checks).</li>
+  </ul>
+
+  <h2>8. Known Failure Pattern and Root Cause</h2>
+  <p><strong>Observed CI error:</strong> Login stays on URL like <code>/login?oms=...&amp;token=...</code> and does not reach <code>/tabs/orders</code>.</p>
+  <p><strong>Primary cause:</strong> Domain/environment mismatch in secrets (for example, prod URL with dev OMS/credentials).</p>
+  <p><strong>Why local works:</strong> Local <code>.env</code> is usually aligned (same env domain + OMS + user), so session establishment succeeds.</p>
+
+  <h2>9. Onboarding Guide for New Team Members</h2>
+  <ol>
+    <li>Clone repository and run <code>npm ci</code>.</li>
+    <li>Create local <code>.env</code> from <code>.env.example</code>.</li>
+    <li>Set <code>CURRENT_APP_URL</code>, <code>OMS_NAME</code>, <code>USERNAME</code>, <code>PASSWORD</code> to the same environment.</li>
+    <li>Run smoke test locally: <code>npx playwright test tests/specs/login-flow.spec.js --headed</code>.</li>
+    <li>Run a target suite: <code>npx playwright test tests/specs/order/handover.spec.js --headed</code>.</li>
+    <li>Review reports in <code>playwright-report/</code>.</li>
+    <li>Before raising issue, collect trace/video from failed test artifacts.</li>
+  </ol>
+
+  <h2>10. CI/CD Runbook (Operational Checklist)</h2>
+  <table>
+    <tr><th>Check</th><th>Expected Result</th></tr>
+    <tr><td>Secrets configured</td><td>All 4 required secrets present and environment-aligned</td></tr>
+    <tr><td>Setup auth test</td><td>Passes and creates <code>playwright/.auth/user.json</code></td></tr>
+    <tr><td>Shard execution</td><td>All three shards complete</td></tr>
+    <tr><td>Artifact upload</td><td>Blob + JSON artifacts uploaded for each shard</td></tr>
+    <tr><td>Merge job</td><td>Merged HTML report uploaded successfully</td></tr>
+    <tr><td>Report review</td><td>Failures and skips reviewed before release decision</td></tr>
+  </table>
+
+  <h2>11. Definition of Done (CI Stable)</h2>
+  <ul>
+    <li>Auth setup passes consistently in CI.</li>
+    <li>Regression suite runs end-to-end across shards.</li>
+    <li>No sensitive files are committed.</li>
+    <li>Merged HTML report is available for every CI run.</li>
+    <li>No environment mismatch between URL, OMS, and credentials.</li>
+  </ul>
+
+  <h2>12. References</h2>
+  <ul>
+    <li><code>.github/workflows/playwright-on-tag.yml</code></li>
+    <li><code>playwright.config.mjs</code></li>
+    <li><code>tests/specs/</code></li>
+    <li>GitHub Actions Documentation</li>
+    <li>Playwright Official Documentation</li>
+  </ul>
+</body>
+</html>
