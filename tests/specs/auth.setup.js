@@ -16,7 +16,6 @@ setup("authenticate user once", async ({ page }) => {
     process.env.PASSWORD,
   );
   await login.verifyLoginSuccess();
-  // await expect(page).toHaveURL(/\/tabs\/orders/i);
 
   await page.context().storageState({ path: authFile });
 });
