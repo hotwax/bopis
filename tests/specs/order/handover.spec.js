@@ -7,6 +7,7 @@ import { OpenDetailPage } from "../../pages/order-detail/open-order-detail.page"
 test("Open -> Packed -> Completed: Handover flow", async ({ page }) => {
   // Happy path:
   // Open -> mark ready for pickup -> open packed detail -> handover -> check completed.
+  await page.goto(process.env.CURRENT_APP_URL);
   const orderPage = new OrderPage(page);
   const openDetail = new OpenDetailPage(page);
   const packedDetail = new PackedDetailPage(page);

@@ -6,6 +6,7 @@ import { OrderPage } from "../../pages/orders/orders.page";
 test("Open Details Page: Pack Order When Tracking Enabled", async ({
   page,
 }) => {
+  await page.goto(process.env.CURRENT_APP_URL);
   // Scenario: open-order detail flow where tracking may require picker assignment.
   const packOpenOrder = new OpenDetailPage(page);
   const orderPage = new OrderPage(page);
@@ -45,6 +46,7 @@ test("Open Details Page: Pack Order When Tracking Enabled", async ({
 test("Open Details Page: Pack Order When Tracking Disabled", async ({
   page,
 }) => {
+  await page.goto(process.env.CURRENT_APP_URL);
   // Scenario: open-order detail flow where direct confirmation may be used.
   const packOpenOrder = new OpenDetailPage(page);
   const orderPage = new OrderPage(page);

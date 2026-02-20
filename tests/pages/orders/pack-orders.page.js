@@ -29,9 +29,9 @@ export class PackedOrderPage {
 
   async goToPackedTab() {
     await this.waitForOverlays();
-    await this.refreshBeforeTabSwitch();
-    await this.packedTabButton.waitFor({ state: "visible" });
-    await this.packedTabButton.click({ force: true });
+    // await this.refreshBeforeTabSwitch();
+    // await this.packedTabButton.waitFor({ state: "domcontentloaded" });
+    await this.packedTabButton.click();
     await Promise.race([
       this.packedOrdersContainer.waitFor({ state: "visible", timeout: 20000 }).catch(() => { }),
       this.noOrdersMessage.waitFor({ state: "visible", timeout: 20000 }).catch(() => { }),

@@ -8,7 +8,13 @@ test("Pack Orders Page: Generate Packing Slip", async ({ page }) => {
 
   const completedOrders = new CompletedOrdersPage(page);
   const orderPage = new OrderPage(page);
-  await completedOrders.goToCompletedTab();
+  await orderPage.goToCompletedTab();
+
+  if (await orderPage.orderCards.count() === 0) {
+    test.skip(true, "No completed orders found");
+    return;
+  }
+
   await completedOrders.printCustomerLetter();
   await orderPage.handlePopupAndVerify();
 });

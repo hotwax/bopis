@@ -5,6 +5,7 @@ import { OpenOrderPage } from "../../pages/orders/open-orders.page";
 test("Open Orders Page: Print Picklist When Picker Not Assigned", async ({
   page,
 }) => {
+  await page.goto(process.env.CURRENT_APP_URL);
   const openOrder = new OpenOrderPage(page);
   await openOrder.goToOpenTab();
   if (await openOrder.orderCards.count() === 0) {
@@ -28,6 +29,7 @@ test("Open Orders Page: Print Picklist When Picker Not Assigned", async ({
 test("Open Orders Page: Print Picklist When Picker Is Assigned", async ({
   page,
 }) => {
+  await page.goto(process.env.CURRENT_APP_URL);
   const openOrder = new OpenOrderPage(page);
   await openOrder.goToOpenTab();
   if (await openOrder.orderCards.count() === 0) {

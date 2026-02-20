@@ -73,6 +73,7 @@ async function openPackedOrderByItemCount({
 
 // ---------------- SINGLE ITEM ORDER REJECTION ----------------
 test("Open Details Page: Single Item Order Rejection", async ({ page }) => {
+  await page.goto(process.env.CURRENT_APP_URL);
   // Scenario: reject flow for orders that contain exactly one line item.
   const openOrders = new OpenOrderPage(page);
   const orderDetail = new OrderDetailPage(page);
@@ -97,6 +98,7 @@ test("Open Details Page: Single Item Order Rejection", async ({ page }) => {
 
 // ---------------- MULTIPLE ITEM ORDER REJECTION ----------------
 test("Open Details Page: Multiple Item Order Rejection", async ({ page }) => {
+  await page.goto(process.env.CURRENT_APP_URL);
   // Scenario: reject flow for orders with multiple line items.
   const openOrders = new OpenOrderPage(page);
   const orderDetail = new OrderDetailPage(page);
@@ -123,6 +125,7 @@ test("Open Details Page: Multiple Item Order Rejection", async ({ page }) => {
 test("Packed Details Page: Single Item Order Cancellation", async ({
   page,
 }) => {
+  await page.goto(process.env.CURRENT_APP_URL);
   // Scenario: cancel flow for packed orders with one line item.
   const packedDetail = new PackedDetailPage(page);
   const orderPage = new OrderPage(page);
@@ -144,6 +147,7 @@ test("Packed Details Page: Single Item Order Cancellation", async ({
 test("Packed Details Page: Multiple Item Order Cancellation", async ({
   page,
 }) => {
+  await page.goto(process.env.CURRENT_APP_URL);
   // Scenario: cancel flow for packed orders with multiple line items.
   const packedDetail = new PackedDetailPage(page);
   const orderPage = new OrderPage(page);

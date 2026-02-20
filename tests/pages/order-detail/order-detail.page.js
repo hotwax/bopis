@@ -98,7 +98,7 @@ export class OrderDetailPage {
     await expect(this.giftCardModal).toBeVisible();
   }
 
-  async activateGiftCard(code = "mygiftcard123") {
+  async activateGiftCard(code = "mygiftcardtesting123") {
     await Promise.race([
       this.giftCardInput
         .first()

@@ -13,6 +13,7 @@ async function openOrderByIndex(orderPage, index) {
 test("Open Details Page: Print Picklist When Picker Not Assigned", async ({
   page,
 }) => {
+  await page.goto(process.env.CURRENT_APP_URL);
   // Scenario: open-order detail where printing requires picker assignment first.
   const orderPage = new OrderPage(page);
   const openDetail = new OpenDetailPage(page);
@@ -70,6 +71,7 @@ test("Open Details Page: Print Picklist When Picker Not Assigned", async ({
 test("Open Details Page: Print Picklist When Picker Is Assigned", async ({
   page,
 }) => {
+  await page.goto(process.env.CURRENT_APP_URL);
   // Scenario: open-order detail where picklist print should proceed without assignment.
   const orderPage = new OrderPage(page);
   const openDetail = new OpenDetailPage(page);
