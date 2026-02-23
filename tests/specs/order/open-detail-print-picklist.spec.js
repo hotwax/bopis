@@ -2,7 +2,6 @@ import { test } from "../../fixtures";
 import { OpenDetailPage } from "../../pages/order-detail/open-order-detail.page";
 import { OrderPage } from "../../pages/orders/orders.page";
 import { OrderDetailPage } from "../../pages/order-detail/order-detail.page";
-import { loginToOrders } from "../../helpers/auth";
 
 async function openOrderByIndex(orderPage, index) {
   const card = orderPage.orderCards.nth(index);
@@ -14,13 +13,12 @@ async function openOrderByIndex(orderPage, index) {
 test("Open Details Page: Print Picklist When Picker Not Assigned", async ({
   page,
 }) => {
+  await page.goto(process.env.CURRENT_APP_URL);
   // Scenario: open-order detail where printing requires picker assignment first.
   const orderPage = new OrderPage(page);
   const openDetail = new OpenDetailPage(page);
   const orderDetail = new OrderDetailPage(page);
 
-  console.log('CURRENT_APP_URL:', process.env.CURRENT_APP_URL);
-  await loginToOrders(page);
   await orderPage.goToOpenTab();
   const totalOrders = await orderPage.orderCards.count();
   if (totalOrders === 0) {
@@ -73,8 +71,8 @@ test("Open Details Page: Print Picklist When Picker Not Assigned", async ({
 test("Open Details Page: Print Picklist When Picker Is Assigned", async ({
   page,
 }) => {
+  await page.goto(process.env.CURRENT_APP_URL);
   // Scenario: open-order detail where picklist print should proceed without assignment.
-  await loginToOrders(page);
   const orderPage = new OrderPage(page);
   const openDetail = new OpenDetailPage(page);
   const orderDetail = new OrderDetailPage(page);

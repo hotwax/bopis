@@ -43,7 +43,7 @@ export class LoginPage {
             await this.waitForOverlays();
             await this.nextButton.click({ force: true });
             await this.page.waitForLoadState("networkidle");
-            await this.page.waitForTimeout(2000);
+            await this.page.waitForTimeout(5000);
         }
 
         // await this.waitForOverlays();
@@ -55,7 +55,7 @@ export class LoginPage {
             // await this.waitForOverlays();
             await this.loginButton.click({ force: true });
             await this.page.waitForLoadState("networkidle");
-            await this.page.waitForTimeout(2000);
+            await this.page.waitForTimeout(5000);
         }
     }
 

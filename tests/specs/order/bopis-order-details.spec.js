@@ -10,13 +10,15 @@ const { PackedDetailPage } = require("../../pages/order-detail/pack-order-detail
 const { loginToOrders } = require("../../helpers/auth");
 
 test.describe("BOPIS Order Details", () => {
-  test.beforeEach(async ({ page }) => {
-    await loginToOrders(page);
-  });
+  let orderPage, orderDetail;
 
+  test.beforeEach(async ({ page }) => {
+    await page.goto(process.env.CURRENT_APP_URL);
+    orderPage = new OrderPage(page);
+    orderDetail = new OrderDetailPage(page);
+  });
+  
   test("Open order details show correct order name", async ({ page }) => {
-    const orderPage = new OrderPage(page);
-    const orderDetail = new OrderDetailPage(page);
     const openDetail = new OpenDetailPage(page);
     await orderPage.goToOpenTab();
 
@@ -37,8 +39,6 @@ test.describe("BOPIS Order Details", () => {
   });
 
   test("Packed order details show correct order name and handover action", async ({ page }) => {
-    const orderPage = new OrderPage(page);
-    const orderDetail = new OrderDetailPage(page);
     const packedDetail = new PackedDetailPage(page);
     await orderPage.goToPackedTab();
 
@@ -60,8 +60,6 @@ test.describe("BOPIS Order Details", () => {
   });
 
   test("Completed order details show correct order name", async ({ page }) => {
-    const orderPage = new OrderPage(page);
-    const orderDetail = new OrderDetailPage(page);
     await orderPage.goToCompletedTab();
 
     if (await orderPage.orderCards.count() === 0) {

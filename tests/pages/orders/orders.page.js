@@ -62,9 +62,9 @@ export class OrderPage {
   async goToOpenTab() {
     console.log("Navigating to Open tab...");
     await this.waitForOverlays();
-    await this.refreshBeforeTabSwitch();
+    // await this.refreshBeforeTabSwitch();
 
-    await this.openTabButton.waitFor({ state: "visible" });
+    await expect(this.openTabButton).toBeVisible({ timeout: 30000 });
     await this.openTabButton.click({ force: true });
     console.log("Waiting for Open tab content to load...");
 
@@ -195,7 +195,7 @@ export class OrderPage {
     await expect(this.giftCardModal).toBeVisible();
   }
 
-  async activateGiftCard(code = "mygiftcard123") {
+  async activateGiftCard(code = "mygiftcardtesting123") {
     await Promise.race([
       this.giftCardInput
         .first()

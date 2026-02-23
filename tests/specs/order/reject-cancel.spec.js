@@ -4,7 +4,6 @@ import { OrderDetailPage } from "../../pages/order-detail/order-detail.page";
 import { PackedDetailPage } from "../../pages/order-detail/pack-order-detail.page";
 import { OrderPage } from "../../pages/orders/orders.page";
 import { OpenDetailPage } from "../../pages/order-detail/open-order-detail.page";
-import { loginToOrders } from "../../helpers/auth";
 
 async function openOpenOrderByItemCount({
   page,
@@ -74,13 +73,13 @@ async function openPackedOrderByItemCount({
 
 // ---------------- SINGLE ITEM ORDER REJECTION ----------------
 test("Open Details Page: Single Item Order Rejection", async ({ page }) => {
+  await page.goto(process.env.CURRENT_APP_URL);
   // Scenario: reject flow for orders that contain exactly one line item.
   const openOrders = new OpenOrderPage(page);
   const orderDetail = new OrderDetailPage(page);
   const openOrderDetail = new OpenDetailPage(page);
   const orderPage = new OrderPage(page);
 
-  await loginToOrders(page);
   const hasMatchingOrder = await openOpenOrderByItemCount({
     page,
     openOrders,
@@ -99,13 +98,13 @@ test("Open Details Page: Single Item Order Rejection", async ({ page }) => {
 
 // ---------------- MULTIPLE ITEM ORDER REJECTION ----------------
 test("Open Details Page: Multiple Item Order Rejection", async ({ page }) => {
+  await page.goto(process.env.CURRENT_APP_URL);
   // Scenario: reject flow for orders with multiple line items.
   const openOrders = new OpenOrderPage(page);
   const orderDetail = new OrderDetailPage(page);
   const openOrderDetail = new OpenDetailPage(page);
   const orderPage = new OrderPage(page);
 
-  await loginToOrders(page);
   const hasMatchingOrder = await openOpenOrderByItemCount({
     page,
     openOrders,
@@ -126,11 +125,11 @@ test("Open Details Page: Multiple Item Order Rejection", async ({ page }) => {
 test("Packed Details Page: Single Item Order Cancellation", async ({
   page,
 }) => {
+  await page.goto(process.env.CURRENT_APP_URL);
   // Scenario: cancel flow for packed orders with one line item.
   const packedDetail = new PackedDetailPage(page);
   const orderPage = new OrderPage(page);
 
-  await loginToOrders(page);
   const hasMatchingOrder = await openPackedOrderByItemCount({
     orderPage,
     packedDetail,
@@ -148,10 +147,11 @@ test("Packed Details Page: Single Item Order Cancellation", async ({
 test("Packed Details Page: Multiple Item Order Cancellation", async ({
   page,
 }) => {
+  await page.goto(process.env.CURRENT_APP_URL);
   // Scenario: cancel flow for packed orders with multiple line items.
   const packedDetail = new PackedDetailPage(page);
   const orderPage = new OrderPage(page);
-  await loginToOrders(page);
+
   const hasMatchingOrder = await openPackedOrderByItemCount({
     orderPage,
     packedDetail,
