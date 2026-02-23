@@ -1,7 +1,23 @@
 name: Playwright Automation
 
 on:
+  schedule:
+    # Run every day at 10:00 AM UTC
+    - cron: '0 10 * * *'
   workflow_dispatch:
+    inputs:
+      oms_name:
+        description: 'OMS on which test needs to run, default is dev-oms'
+        required: false
+        type: string
+      username:
+        description: 'Username used for login, ci.test'
+        required: false
+        type: string
+      password:
+        description: 'Password for login, if username is provided then this value is required'
+        required: false
+        type: string
   push: 
     tags:
       - "*"
@@ -17,9 +33,9 @@ jobs:
     env:
       CI: true
       CURRENT_APP_URL: ${{ secrets.CURRENT_APP_URL }}
-      OMS_NAME: ${{ secrets.OMS_NAME }}
-      USERNAME: ${{ secrets.USERNAME }}
-      PASSWORD: ${{ secrets.PASSWORD }}
+      OMS_NAME: ${{ github.event.inputs.oms_name || secrets.OMS_NAME }}
+      USERNAME: ${{ github.event.inputs.username || secrets.USERNAME }}
+      PASSWORD: ${{ github.event.inputs.password || secrets.PASSWORD }}
 
     steps:
       - name: Checkout repository
