@@ -2,7 +2,7 @@
   <ion-page>
     <ion-header :translucent="true">
       <ion-toolbar>
-        <ion-title>{{ currentFacility?.facilityName ? currentFacility?.facilityName : currentFacility?.facilityId }}</ion-title>
+        <ion-title>{{ (currentFacility as any)?.facilityName ? (currentFacility as any)?.facilityName : (currentFacility as any)?.facilityId }}</ion-title>
         <ion-buttons slot="end">
           <ion-button data-testid="notifications-button" @click="viewNotifications()">
             <ion-icon slot="icon-only" :icon="notificationsOutline" :color="(unreadNotificationsStatus && notifications.length) ? 'primary' : ''" />
@@ -147,48 +147,17 @@
   </ion-page>
 </template>
 
-<script lang="ts">
-import {
-  alertController,
-  IonBadge,
-  IonButton,
-  IonButtons,
-  IonCard,
-  IonContent,
-  IonHeader,
-  IonIcon,
-  IonInfiniteScroll,
-  IonInfiniteScrollContent,
-  IonItem,
-  IonLabel,
-  IonPage,
-  IonRefresher,
-  IonRefresherContent,
-  IonSearchbar,
-  IonSegment,
-  IonSegmentButton,
-  IonTitle,
-  IonToolbar,
-  modalController
-} from "@ionic/vue";
-import { defineComponent, ref, computed } from "vue";
+<script setup lang="ts">
+import { alertController, IonBadge, IonButton, IonButtons, IonCard, IonContent, IonHeader, IonIcon, IonInfiniteScroll, IonInfiniteScrollContent, IonItem, IonLabel, IonPage, IonRefresher, IonRefresherContent, IonSearchbar, IonSegment, IonSegmentButton, IonTitle, IonToolbar, modalController, onIonViewWillEnter } from "@ionic/vue";
+import { onMounted, onUnmounted, ref, computed } from "vue";
 import ProductListItem from '@/components/ProductListItem.vue'
-import {
-  swapVerticalOutline,
-  callOutline,
-  mailOutline,
-  notificationsOutline,
-  printOutline,
-  trailSignOutline,
-  swapHorizontalOutline
-} from "ionicons/icons";
-import { mapGetters, useStore } from 'vuex'
+import { mailOutline, notificationsOutline, printOutline, trailSignOutline } from "ionicons/icons";
 import { useRouter } from 'vue-router'
-import { copyToClipboard, showToast } from '@/utils'
+import { showToast } from '@/utils'
 import { DateTime } from 'luxon';
 import emitter from "@/event-bus"
 import { hasError } from '@/adapter';
-import { translate, useUserStore } from "@hotwax/dxp-components";
+import { translate } from "@hotwax/dxp-components";
 import AssignPickerModal from "./AssignPickerModal.vue";
 import { OrderService } from "@/services/OrderService";
 import { UserService } from "@/services/UserService";
@@ -196,526 +165,461 @@ import { Actions, hasPermission } from '@/authorization'
 import logger from "@/logger";
 import RejectOrderItemModal from "@/components/RejectOrderItemModal.vue";
 import ProofOfDeliveryModal from "@/components/ProofOfDeliveryModal.vue";
+import { useUserStore } from "@/store/user";
+import { useOrderStore } from "@/store/order";
 
-export default defineComponent({
-  name: 'Orders',
-  components: {
-    IonBadge,
-    IonButton,
-    IonButtons,
-    IonCard,
-    IonContent,
-    IonHeader,
-    IonIcon,
-    IonInfiniteScroll,
-    IonInfiniteScrollContent,
-    IonItem,
-    IonLabel,
-    IonPage,
-    IonRefresher,
-    IonRefresherContent,
-    IonSearchbar,
-    IonSegment,
-    IonSegmentButton,
-    IonTitle,
-    IonToolbar,
-    ProductListItem
-  },
-  created () {
-    emitter.on("refreshPickupOrders", this.getPickupOrders);
-  },
-  unmounted () {
-    emitter.off("refreshPickupOrders", this.getPickupOrders);
-  },
-  computed: {
-    ...mapGetters({
-      orders: 'order/getOpenOrders',
-      packedOrders: 'order/getPackedOrders',
-      completedOrders: 'order/getCompletedOrders',
-      isPackedOrdersScrollable: 'order/isPackedOrdersScrollable',
-      isOpenOrdersScrollable: 'order/isOpenOrdersScrollable',
-      isCompletedOrdersScrollable: 'order/isCompletedOrdersScrollable',
-      notifications: 'user/getNotifications',
-      unreadNotificationsStatus: 'user/getUnreadNotificationsStatus',
-      getBopisProductStoreSettings: 'user/getBopisProductStoreSettings',
-      getInventoryInformation: 'stock/getInventoryInformation',
-      order: "order/getCurrent",
-      communicationEvents: 'order/getCommunicationEvents'
-    }),
-    communicationEventOrderIds() {
-      return new Set(((this as any).communicationEvents || []).map((e: any) => e.orderId));
-    }
-  },
-  data() {
-    return {
-      queryString: '',
-      isScrollingEnabled: false
-    }
-  },
-  methods: {
-    async assignPicker(order: any, shipGroup: any, facilityId: any) {
-      const assignPickerModal = await modalController.create({
-        component: AssignPickerModal,
-        componentProps: { order, shipGroup, facilityId }
-      });
-      assignPickerModal.onDidDismiss().then(async(result: any) => {
-        if(result.data?.selectedPicker) {
-          emitter.emit("presentLoader");
-          await this.createPicklist(order, result.data.selectedPicker);
-          const updatedOrder = this.orders.find((ord: any) => ord.orderId === order.orderId);
-          const updatedShipGroup = updatedOrder.shipGroups.find((sg: any) => sg.shipGroupSeqId === shipGroup.shipGroupSeqId);
-          await this.store.dispatch('order/packShipGroupItems', { order: updatedOrder, shipGroup: updatedShipGroup })
-          emitter.emit("dismissLoader");
-        }
-      })
+const router = useRouter();
 
-      return assignPickerModal.present();
-    },
-    timeFromNow (time: any) {
-      const timeDiff = DateTime.fromISO(time).diff(DateTime.local());
-      return DateTime.local().plus(timeDiff).toRelative();
-    },
-    timeFromNowInMillis (time: any) {
-      const timeDiff = DateTime.fromMillis(time).diff(DateTime.local());
-      return DateTime.local().plus(timeDiff).toRelative();
-    },
-    async printPackingSlip(order: any) {
-      // if the request to print packing slip is not yet completed, then clicking multiple times on the button
-      // should not do anything
-      if(order.isGeneratingPackingSlip) {
-        return;
-      }
+const queryString = ref('');
+const isScrollingEnabled = ref(false);
+const segmentSelected = ref('open');
+const contentRef = ref(null as any);
+const infiniteScrollRef = ref(null as any);
 
-      order.isGeneratingPackingSlip = true;
-      await OrderService.printPackingSlip([order.shipmentId]);
-      order.isGeneratingPackingSlip = false;
-    },
-    async refreshOrders(event: any) {
-      if(this.segmentSelected === 'open') {
-        this.getPickupOrders().then(() => { event.target.complete() });
-      } else if (this.segmentSelected === 'packed') {
-        this.getPackedOrders().then(() => { event.target.complete() });
-      } else {
-        this.getCompletedOrders().then(() => { event.target.complete() });
-      }
-    },
-    async viewOrder(order: any, shipGroupSeqId: any, orderType: any) {
-      // TODO: find a better approach to handle the case that when in open segment we can click on
-      // order card to route on the order details page but not in the packed segment
-      order['orderType'] = orderType
-      await this.store.dispatch('order/updateCurrent', { order }).then(() => {
-        this.$router.push({ path: `/orderdetail/${orderType}/${order.orderId}/${shipGroupSeqId}` })
-      })
-    },
-    async getPickupOrders (vSize?: any, vIndex?: any) {
-      const viewSize = vSize ? vSize : process.env.VUE_APP_VIEW_SIZE;
-      const viewIndex = vIndex ? vIndex : 0;
-      await this.store.dispatch("order/getOpenOrders", { viewSize, viewIndex, queryString: this.queryString, facilityId: this.currentFacility?.facilityId });
-    },
-    async getPackedOrders (vSize?: any, vIndex?: any) {
-      const viewSize = vSize ? vSize : process.env.VUE_APP_VIEW_SIZE;
-      const viewIndex = vIndex ? vIndex : 0;
+const orders = computed(() => useOrderStore().getOpenOrders);
+const packedOrders = computed(() => useOrderStore().getPackedOrders);
+const completedOrders = computed(() => useOrderStore().getCompletedOrders);
+const isPackedOrdersScrollable = computed(() => useOrderStore().isPackedOrdersScrollable);
+const isOpenOrdersScrollable = computed(() => useOrderStore().isOpenOrdersScrollable);
+const isCompletedOrdersScrollable = computed(() => useOrderStore().isCompletedOrdersScrollable);
+const notifications = computed(() => useUserStore().getNotifications);
+const unreadNotificationsStatus = computed(() => useUserStore().hasUnreadNotifications);
+const getBopisProductStoreSettings = (property: string) => (useUserStore().getBopisProductStoreSettings as any)(property);
+const order = computed(() => useOrderStore().current);
+const communicationEvents = computed(() => useOrderStore().getCommunicationEvents);
+const currentFacility = computed(() => useUserStore().getCurrentFacility);
 
-      await this.store.dispatch("order/getPackedOrders", { viewSize, viewIndex, queryString: this.queryString, facilityId: this.currentFacility?.facilityId });
-    },
-    async getCompletedOrders (vSize?: any, vIndex?: any) {
-      const viewSize = vSize ? vSize : process.env.VUE_APP_VIEW_SIZE;
-      const viewIndex = vIndex ? vIndex : 0;
-
-      await this.store.dispatch("order/getCompletedOrders", { viewSize, viewIndex, queryString: this.queryString, facilityId: this.currentFacility?.facilityId });
-      if (hasPermission(Actions.APP_PROOF_OF_DELIVERY_PREF_UPDATE)) await this.store.dispatch('order/getCommunicationEvents', { orders: this.completedOrders });
-    },
-    enableScrolling() {
-      const parentElement = (this as any).$refs.contentRef.$el
-      const scrollEl = parentElement.shadowRoot.querySelector("div[part='scroll']")
-      let scrollHeight = scrollEl.scrollHeight, infiniteHeight = (this as any).$refs.infiniteScrollRef.$el.offsetHeight, scrollTop = scrollEl.scrollTop, threshold = 100, height = scrollEl.offsetHeight
-      const distanceFromInfinite = scrollHeight - infiniteHeight - scrollTop - threshold - height
-      if(distanceFromInfinite < 0) {
-        this.isScrollingEnabled = false;
-      } else {
-        this.isScrollingEnabled = true;
-      }
-    },
-    async loadMoreProducts (event: any) {
-      // Added this check here as if added on infinite-scroll component the Loading content does not get displayed
-      if (!(this.isScrollingEnabled && (this.segmentSelected === 'open' ? this.isOpenOrdersScrollable : this.segmentSelected === 'packed' ? this.isPackedOrdersScrollable : this.isCompletedOrdersScrollable))) {
-        await event.target.complete();
-      }
-      if (this.segmentSelected === 'open') {
-        this.getPickupOrders(
-          undefined,
-          Math.ceil(this.orders.length / process.env.VUE_APP_VIEW_SIZE).toString()
-        ).then(async () => {
-          await event.target.complete();
-       });
-      } else if (this.segmentSelected === 'packed') {
-        this.getPackedOrders(
-          undefined,
-          Math.ceil(this.packedOrders.length / process.env.VUE_APP_VIEW_SIZE).toString()
-        ).then(async () => {
-          await event.target.complete();
-       });
-      } else {
-        this.getCompletedOrders(
-          undefined,
-          Math.ceil(this.completedOrders.length / process.env.VUE_APP_VIEW_SIZE).toString()
-        ).then(async () => {
-          await event.target.complete();
-       });
-      }
-    },
-    async readyForPickup (order: any, shipGroup: any) {
-      if(this.getBopisProductStoreSettings('ENABLE_TRACKING') && !shipGroup.picklistId) return this.assignPicker(order, shipGroup, this.currentFacility?.facilityId);
-      const pickup = shipGroup.shipmentMethodTypeId === 'STOREPICKUP';
-      const header = pickup ? translate('Ready for pickup') : translate('Ready to ship');
-      const message = pickup ? translate('An email notification will be sent to that their order is ready for pickup. This order will also be moved to the packed orders tab.', { customerName: order.customerName, space: '<br/><br/>'}) : '';
-
-      const alert = await alertController
-        .create({
-          header: header,
-          message: message,
-          buttons: [{
-            text: translate('Cancel'),
-            role: 'cancel'
-          },{
-            text: header,
-            handler: async () => {
-              alert.dismiss();
-              emitter.emit("presentLoader", {message: "Loading...", backdropDismiss: false});
-              // Remove if part, single flow
-              let orderIndex;
-              if (!shipGroup.shipmentId) {
-                await this.printPicklist(order, shipGroup)
-                orderIndex = this.orders.findIndex((o: any) => o.orderId === order.orderId);
-              }
-              await this.store.dispatch('order/packShipGroupItems', { order: orderIndex >= 0 ? this.orders[orderIndex] : order, shipGroup: orderIndex >= 0 ? this.orders[orderIndex].shipGroup : shipGroup })
-              emitter.emit("dismissLoader");
-            }
-          }]
-        });
-      return alert.present();
-    },
-    async packShippingOrders(currentOrder: any, shipGroup: any) {
-      try {
-        const resp = await OrderService.packOrder({
-          'shipmentId': currentOrder.shipmentId,
-          'orderId': currentOrder.orderId,
-          'facilityId': shipGroup.facilityId
-        })
-
-        if(!hasError(resp)) {
-          showToast(translate("Order packed and ready for delivery"));
-          this.store.dispatch("order/removeOpenOrder", { order: currentOrder, shipGroup })
-        } else {
-          throw resp.data;
-        }
-      } catch(error: any) {
-        logger.error(error);
-        showToast(translate("Something went wrong"))
-      }
-    },
-    async deliverShipment (order: any) {
-      await this.store.dispatch('order/deliverShipment', order)
-      .then((resp) => {
-        if(!hasError(resp)) {
-          showToast(translate('Order delivered to', {customerName: order.customerName}))
-        }
-      })
-    },
-    segmentChanged (e: CustomEvent) {
-      this.queryString = ''
-      this.segmentSelected = e.detail.value
-
-      if(this.segmentSelected === 'open') {
-        this.getPickupOrders()
-      } else if(this.segmentSelected === 'packed') {
-        this.getPackedOrders()
-      } else {
-        this.getCompletedOrders()
-      }
-    },
-    async searchOrders() {
-      if(this.segmentSelected === 'open') {
-        this.getPickupOrders()
-      } else if(this.segmentSelected === 'packed') {
-        this.getPackedOrders()
-      } else {
-        this.getCompletedOrders()
-      }
-    },
-    selectSearchBarText(event: any) {
-      event.target.getInputElement().then((element: any) => {
-        element.select();
-      })
-    },
-    async sendReadyForPickupEmail(order: any) {
-      const header = translate('Resend email')
-      const message = translate('An email notification will be sent to that their order is ready for pickup.', { customerName: order.customerName });
-
-      const alert = await alertController
-        .create({
-          header: header,
-          message: message,
-          buttons: [{
-            text: translate('Cancel'),
-            role: 'cancel'
-          },{
-            text: translate('Send'),
-            handler: async () => {
-              try {
-                const resp = await OrderService.sendPickupScheduledNotification({ shipmentId: order.shipmentId });
-                if (!hasError(resp)) {
-                  showToast(translate("Email sent successfully"))
-                } else {
-                  showToast(translate("Something went wrong while sending the email."))
-                }
-              } catch (error) {
-                showToast(translate("Something went wrong while sending the email."))
-                logger.error(error)
-              }
-            }
-          }]
-        });
-      return alert.present();
-    },
-    getOrdersByPart(orders: Array<any>) {
-      return Object.keys(orders).length ? orders.flatMap((order: any) => order.shipGroups.map((shipGroup: any) => ({ ...order, shipGroup }))) : [];
-    },
-    viewShipToStoreOrders() {
-      this.$router.push({ path: '/ship-to-store-orders' })
-    },
-    viewNotifications() {
-      this.store.dispatch('user/setUnreadNotificationsStatus', false)
-      this.$router.push({ path: '/notifications' })
-    },
-    async printPicklist(order: any, shipGroup: any) {
-      if(shipGroup.picklistId) {
-        await OrderService.printPicklist(shipGroup.picklistId)
-        return;
-      }
-
-      if(!this.getBopisProductStoreSettings('ENABLE_TRACKING')) {
-        try {
-          const resp = await UserService.ensurePartyRole({
-            partyId: "_NA_",
-            roleTypeId: "WAREHOUSE_PICKER",
-          })
-
-          if(hasError(resp)) {
-            throw resp.data;
-          }
-        } catch (error) {
-          showToast(translate("Something went wrong. Picklist can not be created."));
-          logger.error(error)
-          return;
-        }
-        await this.createPicklist(order, "_NA_");
-        return;
-      }
-
-      const assignPickerModal = await modalController.create({
-        component: AssignPickerModal,
-        componentProps: { order, shipGroup, facilityId: this.currentFacility.facilityId }
-      });
-
-      assignPickerModal.onDidDismiss().then(async(result: any) => {
-        if(result.data?.selectedPicker) {
-          this.createPicklist(order, result.data.selectedPicker)
-        }
-      })
-
-      return assignPickerModal.present();
-    },
-    async createPicklist(order: any, selectedPicker: any) {
-      let resp: any;
-
-      const payload = {
-        packageName: "A", //default package name
-        facilityId: this.currentFacility?.facilityId,
-        shipmentMethodTypeId: order.shipGroup.shipmentMethodTypeId,
-        statusId: "PICKLIST_ASSIGNED",        
-        pickers: selectedPicker ? [{
-          partyId: selectedPicker,
-          roleTypeId: "WAREHOUSE_PICKER"
-        }] : [],
-        orderItems: order.shipGroup.items.map((item: { orderId: string, orderItemSeqId: string, shipGroupSeqId: string, productId: string, quantity: number }) => ({
-          orderId: item.orderId,
-          orderItemSeqId: item.orderItemSeqId,
-          shipGroupSeqId: item.shipGroupSeqId,
-          productId: item.productId,
-          quantity: item.quantity
-        }))
-      };      
-
-      try {
-        resp = await OrderService.createPicklist(payload);
-        if(!hasError(resp)) {
-          // generating picklist after creating a new picklist
-          await OrderService.printPicklist(resp.data.picklistId)
-          const orders = JSON.parse(JSON.stringify(this.orders))
-          const orderIndex = orders.findIndex((o: any) => o.orderId === order.orderId);
-          let orderShipGroups = orders[orderIndex].shipGroups || [];
-          orderShipGroups = orderShipGroups.map((shipGroup: any) => {
-            if(shipGroup.shipGroupSeqId === order.shipGroup.shipGroupSeqId) {
-              return { ...shipGroup, picklistId: resp.data.picklistId, shipmentId: resp.data.shipmentIds?.[0] }
-            }
-            return shipGroup;
-          });
-          order.shipGroup = { ...order.shipGroup, picklistId: resp.data.picklistId, shipmentId: resp.data.shipmentIds?.[0] };
-
-          orders[orderIndex] = {
-            ...orders[orderIndex],
-            shipGroup: order.shipGroup,
-            shipGroups: orderShipGroups
-          };
-
-          await this.store.dispatch("order/updateOpenOrder", { orders, total: orders.length })
-
-        } else {
-          throw resp.data;
-        }
-      } catch (err) {
-        showToast(translate('Something went wrong. Picklist can not be created.'));
-        emitter.emit("dismissLoader");
-        return;
-      }
-    },
-    async openRejectOrderModal(order:any) {
-      const orderProps = order
-      const rejectOrderModal = await modalController.create({
-        component:RejectOrderItemModal,
-        componentProps: {
-          orderProps, 
-        }
-      })
-      return rejectOrderModal.present()
-    },
-    canRequestTransfer(order: any): boolean {
-      return (
-        order?.shipGroup?.shipmentMethodTypeId === 'STOREPICKUP' &&
-        order?.orderStatusId === 'ORDER_APPROVED' &&
-        !order?.shipGroup?.shipmentId &&
-        !order?.readyToHandover &&
-        !order?.readyToShip &&
-        !order?.rejected &&
-        !order?.shipGroup?.items?.some((item: any) => item.rejectReason)
-      );
-    },
-    async confirmRequestTransfer(order: any) {
-      const header = translate('Convert to Ship-to-Store');
-      const message = translate("The item will be sourced from another store or warehouse and shipped to this location for customer pickup. {space} You can view the order in the Ship-to-Store section by clicking the trail icon in the upper-right corner of the page. {space} Do you want to continue?", { space: '<br/><br/>' });
-
-      const alert = await alertController.create({
-        header,
-        message,
-        buttons: [{ 
-          text: translate('Cancel'), role: 'cancel' 
-        },
-        {
-         text: translate('Convert'), 
-         handler: async () => await this.requestTransfer(order) 
-        }]
-      });
-
-      return alert.present();
-    },
-    async requestTransfer(order: any) {
-      emitter.emit("presentLoader");
-      try {
-        const resp = await OrderService.convertToShipToStore({
-          orderId: order.orderId,
-          shipGroupSeqId: order.shipGroup.shipGroupSeqId
-        });
-        if (!hasError(resp)) {
-          showToast(translate('Order marked as ship to store'));
-          await this.store.dispatch("order/removeOpenOrder", { order, shipGroup: order.shipGroup })
-        } else {
-          showToast(translate('Failed to mark order as ship to store'));
-          logger.error('Ship-to-Store conversion failed', resp);
-        }
-      } catch (err) {
-        logger.error(err);
-        showToast(translate("Something went wrong"));
-      }
-      emitter.emit("dismissLoader");
-    },
-
-    async openProofOfDeliveryModal(order: any, isViewModeOnly: any) {
-      const modal = await modalController.create({
-        component: ProofOfDeliveryModal,
-        componentProps: {
-          order,
-          isViewModeOnly
-        },
-      });
-
-      await modal.present();
-      
-      const { data } = await modal.onDidDismiss();
-      
-      if (data?.confirmed && data?.proofOfDeliveryData) {
-        emitter.emit("presentLoader");
-        
-        try {
-          // Send the proof of delivery email
-          const resp = await OrderService.sendPickupNotification(data.proofOfDeliveryData);
-          
-          if (hasError(resp)) {
-            logger.error("Pickup notification failed:", resp);
-            showToast(translate("Unable to save the details. Please try again."));
-          } else {
-            await this.store.dispatch('order/getCommunicationEvents', { orders: [this.order] });
-            showToast(translate("Details have been successfully saved, and an email has been sent to the customer."));
-          }
-        } catch (err) {
-          logger.error("Error in saving the details:", err);
-          showToast(translate("Something went wrong"));
-        } finally {
-          emitter.emit("dismissLoader");
-        }
-      }
-    }
-  },
-  ionViewWillEnter () {
-    this.isScrollingEnabled = false;
-    this.queryString = '';
-
-    this.segmentSelected = this.order?.orderType || "open"
-
-    if(this.segmentSelected === 'open') {
-      this.getPickupOrders()
-    } else if(this.segmentSelected === 'packed') {
-      this.getPackedOrders()
-    } else {
-      this.getCompletedOrders()
-    }
-  },
-  setup () {
-    const router = useRouter();
-    const store = useStore();
-    const segmentSelected = ref('open');
-    const userStore = useUserStore()
-    let currentFacility: any = computed(() => userStore.getCurrentFacility) 
-    
-    return {
-      Actions,
-      callOutline,
-      copyToClipboard,
-      currentFacility,
-      hasPermission,
-      notificationsOutline,
-      mailOutline,
-      printOutline,
-      router,
-      segmentSelected,
-      swapVerticalOutline,
-      store,
-      trailSignOutline,
-      translate,
-      swapHorizontalOutline
-    };
-  },
+const communicationEventOrderIds = computed(() => {
+  return new Set((communicationEvents.value || []).map((e: any) => e.orderId));
 });
+
+onMounted(() => {
+  emitter.on("refreshPickupOrders", getPickupOrders);
+});
+
+onUnmounted(() => {
+  emitter.off("refreshPickupOrders", getPickupOrders);
+});
+
+onIonViewWillEnter(() => {
+  isScrollingEnabled.value = false;
+  queryString.value = '';
+
+  segmentSelected.value = order.value?.orderType || "open"
+
+  if (segmentSelected.value === 'open') {
+    getPickupOrders()
+  } else if (segmentSelected.value === 'packed') {
+    getPackedOrders()
+  } else {
+    getCompletedOrders()
+  }
+});
+
+async function assignPicker(order: any, shipGroup: any, facilityId: any) {
+  const assignPickerModal = await modalController.create({
+    component: AssignPickerModal,
+    componentProps: { order, shipGroup, facilityId }
+  });
+  assignPickerModal.onDidDismiss().then(async (result: any) => {
+    if (result.data?.selectedPicker) {
+      emitter.emit("presentLoader");
+      await createPicklist(order, result.data.selectedPicker);
+      const updatedOrder = orders.value.find((ord: any) => ord.orderId === order.orderId);
+      const updatedShipGroup = updatedOrder.shipGroups.find((sg: any) => sg.shipGroupSeqId === shipGroup.shipGroupSeqId);
+      await useOrderStore().packShipGroupItems({ order: updatedOrder, shipGroup: updatedShipGroup })
+      emitter.emit("dismissLoader");
+    }
+  })
+
+  return assignPickerModal.present();
+}
+
+function timeFromNowInMillis(time: any) {
+  const timeDiff = DateTime.fromMillis(time).diff(DateTime.local());
+  return DateTime.local().plus(timeDiff).toRelative();
+}
+
+async function printPackingSlip(order: any) {
+  if (order.isGeneratingPackingSlip) {
+    return;
+  }
+
+  order.isGeneratingPackingSlip = true;
+  await OrderService.printPackingSlip([order.shipmentId]);
+  order.isGeneratingPackingSlip = false;
+}
+
+async function refreshOrders(event: any) {
+  if (segmentSelected.value === 'open') {
+    getPickupOrders().then(() => { event.target.complete() });
+  } else if (segmentSelected.value === 'packed') {
+    getPackedOrders().then(() => { event.target.complete() });
+  } else {
+    getCompletedOrders().then(() => { event.target.complete() });
+  }
+}
+
+async function viewOrder(orderData: any, shipGroupSeqId: any, orderType: any) {
+  orderData['orderType'] = orderType
+  await useOrderStore().updateCurrent({ order: orderData })
+  router.push({ path: `/orderdetail/${orderType}/${orderData.orderId}/${shipGroupSeqId}` })
+}
+
+async function getPickupOrders(vSize?: any, vIndex?: any) {
+  const viewSize = vSize ? vSize : process.env.VUE_APP_VIEW_SIZE;
+  const viewIndex = vIndex ? vIndex : 0;
+  await useOrderStore().fetchOpenOrders({ viewSize, viewIndex, queryString: queryString.value, facilityId: (currentFacility.value as any)?.facilityId });
+}
+
+async function getPackedOrders(vSize?: any, vIndex?: any) {
+  const viewSize = vSize ? vSize : process.env.VUE_APP_VIEW_SIZE;
+  const viewIndex = vIndex ? vIndex : 0;
+  await useOrderStore().fetchPackedOrders({ viewSize, viewIndex, queryString: queryString.value, facilityId: (currentFacility.value as any)?.facilityId });
+}
+
+async function getCompletedOrders(vSize?: any, vIndex?: any) {
+  const viewSize = vSize ? vSize : process.env.VUE_APP_VIEW_SIZE;
+  const viewIndex = vIndex ? vIndex : 0;
+  await useOrderStore().fetchCompletedOrders({ viewSize, viewIndex, queryString: queryString.value, facilityId: (currentFacility.value as any)?.facilityId });
+  if (hasPermission(Actions.APP_PROOF_OF_DELIVERY_PREF_UPDATE)) await useOrderStore().getCommunicationEvents({ orders: completedOrders.value });
+}
+
+function enableScrolling() {
+  const parentElement = contentRef.value?.$el
+  if(!parentElement) return;
+  const scrollEl = parentElement.shadowRoot?.querySelector("div[part='scroll']")
+  if(!scrollEl) return;
+  
+  let scrollHeight = scrollEl.scrollHeight, infiniteHeight = infiniteScrollRef.value?.$el.offsetHeight, scrollTop = scrollEl.scrollTop, threshold = 100, height = scrollEl.offsetHeight
+  const distanceFromInfinite = scrollHeight - infiniteHeight - scrollTop - threshold - height
+  if (distanceFromInfinite < 0) {
+    isScrollingEnabled.value = false;
+  } else {
+    isScrollingEnabled.value = true;
+  }
+}
+
+async function loadMoreProducts(event: any) {
+  if (!(isScrollingEnabled.value && (segmentSelected.value === 'open' ? isOpenOrdersScrollable.value : segmentSelected.value === 'packed' ? isPackedOrdersScrollable.value : isCompletedOrdersScrollable.value))) {
+    await event.target.complete();
+  }
+  if (segmentSelected.value === 'open') {
+    getPickupOrders(
+      undefined,
+      Math.ceil(orders.value.length / (process.env.VUE_APP_VIEW_SIZE as any)).toString()
+    ).then(async () => {
+      await event.target.complete();
+    });
+  } else if (segmentSelected.value === 'packed') {
+    getPackedOrders(
+      undefined,
+      Math.ceil(packedOrders.value.length / (process.env.VUE_APP_VIEW_SIZE as any)).toString()
+    ).then(async () => {
+      await event.target.complete();
+    });
+  } else {
+    getCompletedOrders(
+      undefined,
+      Math.ceil(completedOrders.value.length / (process.env.VUE_APP_VIEW_SIZE as any)).toString()
+    ).then(async () => {
+      await event.target.complete();
+    });
+  }
+}
+
+async function readyForPickup(orderData: any, shipGroup: any) {
+  if (getBopisProductStoreSettings('ENABLE_TRACKING') && !shipGroup.picklistId) return assignPicker(orderData, shipGroup, (currentFacility.value as any)?.facilityId);
+  const pickup = shipGroup.shipmentMethodTypeId === 'STOREPICKUP';
+  const header = pickup ? translate('Ready for pickup') : translate('Ready to ship');
+  const message = pickup ? translate('An email notification will be sent to that their order is ready for pickup. This order will also be moved to the packed orders tab.', { customerName: orderData.customerName, space: '<br/><br/>' }) : '';
+
+  const alert = await alertController
+    .create({
+      header: header,
+      message: message,
+      buttons: [{
+        text: translate('Cancel'),
+        role: 'cancel'
+      }, {
+        text: header,
+        handler: async () => {
+          alert.dismiss();
+          emitter.emit("presentLoader", { message: "Loading...", backdropDismiss: false });
+          let orderIndex;
+          if (!shipGroup.shipmentId) {
+            await printPicklist(orderData, shipGroup)
+            orderIndex = orders.value.findIndex((o: any) => o.orderId === orderData.orderId);
+          }
+          await useOrderStore().packShipGroupItems({ order: orderIndex >= 0 ? orders.value[orderIndex] : orderData, shipGroup: orderIndex >= 0 ? orders.value[orderIndex].shipGroup : shipGroup })
+          emitter.emit("dismissLoader");
+        }
+      }]
+    });
+  return alert.present();
+}
+
+async function deliverShipment(orderData: any) {
+  await useOrderStore().deliverShipment(orderData)
+    .then((resp) => {
+      if (!hasError(resp as any)) {
+        showToast(translate('Order delivered to', { customerName: orderData.customerName }))
+      }
+    })
+}
+
+function segmentChanged(e: CustomEvent) {
+  queryString.value = ''
+  segmentSelected.value = e.detail.value
+
+  if (segmentSelected.value === 'open') {
+    getPickupOrders()
+  } else if (segmentSelected.value === 'packed') {
+    getPackedOrders()
+  } else {
+    getCompletedOrders()
+  }
+}
+
+async function searchOrders() {
+  if (segmentSelected.value === 'open') {
+    getPickupOrders()
+  } else if (segmentSelected.value === 'packed') {
+    getPackedOrders()
+  } else {
+    getCompletedOrders()
+  }
+}
+
+function selectSearchBarText(event: any) {
+  event.target.getInputElement().then((element: any) => {
+    element.select();
+  })
+}
+
+async function sendReadyForPickupEmail(orderData: any) {
+  const header = translate('Resend email')
+  const message = translate('An email notification will be sent to that their order is ready for pickup.', { customerName: orderData.customerName });
+
+  const alert = await alertController
+    .create({
+      header: header,
+      message: message,
+      buttons: [{
+        text: translate('Cancel'),
+        role: 'cancel'
+      }, {
+        text: translate('Send'),
+        handler: async () => {
+          try {
+            const resp = await OrderService.sendPickupScheduledNotification({ shipmentId: orderData.shipmentId });
+            if (!hasError(resp)) {
+              showToast(translate("Email sent successfully"))
+            } else {
+              showToast(translate("Something went wrong while sending the email."))
+            }
+          } catch (error) {
+            showToast(translate("Something went wrong while sending the email."))
+            logger.error(error)
+          }
+        }
+      }]
+    });
+  return alert.present();
+}
+
+function getOrdersByPart(ordersData: any) {
+  return ordersData.length ? ordersData.flatMap((o: any) => o.shipGroups.map((shipGroup: any) => ({ ...o, shipGroup }))) : [];
+}
+
+function viewShipToStoreOrders() {
+  router.push({ path: '/ship-to-store-orders' })
+}
+
+function viewNotifications() {
+  useUserStore().setUnreadNotificationsStatus(false)
+  router.push({ path: '/notifications' })
+}
+
+async function printPicklist(orderData: any, shipGroup: any) {
+  if (shipGroup.picklistId) {
+    await OrderService.printPicklist(shipGroup.picklistId)
+    return;
+  }
+
+  if (!getBopisProductStoreSettings('ENABLE_TRACKING')) {
+    try {
+      const resp = await UserService.ensurePartyRole({
+        partyId: "_NA_",
+        roleTypeId: "WAREHOUSE_PICKER",
+      })
+
+      if (hasError(resp)) {
+        throw resp.data;
+      }
+    } catch (error) {
+      showToast(translate("Something went wrong. Picklist can not be created."));
+      logger.error(error)
+      return;
+    }
+    await createPicklist(orderData, "_NA_");
+    return;
+  }
+
+  const assignPickerModal = await modalController.create({
+    component: AssignPickerModal,
+    componentProps: { order: orderData, shipGroup, facilityId: (currentFacility.value as any).facilityId }
+  });
+
+  assignPickerModal.onDidDismiss().then(async (result: any) => {
+    if (result.data?.selectedPicker) {
+      createPicklist(orderData, result.data.selectedPicker)
+    }
+  })
+
+  return assignPickerModal.present();
+}
+
+async function createPicklist(orderData: any, selectedPicker: any) {
+  let resp: any;
+
+  const payload = {
+    packageName: "A", //default package name
+    facilityId: (currentFacility.value as any)?.facilityId,
+    shipmentMethodTypeId: orderData.shipGroup.shipmentMethodTypeId,
+    statusId: "PICKLIST_ASSIGNED",
+    pickers: selectedPicker ? [{
+      partyId: selectedPicker,
+      roleTypeId: "WAREHOUSE_PICKER"
+    }] : [],
+    orderItems: orderData.shipGroup.items.map((item: { orderId: string, orderItemSeqId: string, shipGroupSeqId: string, productId: string, quantity: number }) => ({
+      orderId: item.orderId,
+      orderItemSeqId: item.orderItemSeqId,
+      shipGroupSeqId: item.shipGroupSeqId,
+      productId: item.productId,
+      quantity: item.quantity
+    }))
+  };
+
+  try {
+    resp = await OrderService.createPicklist(payload);
+    if (!hasError(resp)) {
+      // generating picklist after creating a new picklist
+      await OrderService.printPicklist(resp.data.picklistId)
+      const currentOrders = JSON.parse(JSON.stringify(orders.value))
+      const orderIndex = currentOrders.findIndex((o: any) => o.orderId === orderData.orderId);
+      let orderShipGroups = currentOrders[orderIndex].shipGroups || [];
+      orderShipGroups = orderShipGroups.map((shipGroup: any) => {
+        if (shipGroup.shipGroupSeqId === orderData.shipGroup.shipGroupSeqId) {
+          return { ...shipGroup, picklistId: resp.data.picklistId, shipmentId: resp.data.shipmentIds?.[0] }
+        }
+        return shipGroup;
+      });
+      orderData.shipGroup = { ...orderData.shipGroup, picklistId: resp.data.picklistId, shipmentId: resp.data.shipmentIds?.[0] };
+
+      currentOrders[orderIndex] = {
+        ...currentOrders[orderIndex],
+        shipGroup: orderData.shipGroup,
+        shipGroups: orderShipGroups
+      };
+
+      await useOrderStore().updateOpenOrder({ orders: currentOrders, total: currentOrders.length })
+
+    } else {
+      throw resp.data;
+    }
+  } catch (err) {
+    showToast(translate('Something went wrong. Picklist can not be created.'));
+    emitter.emit("dismissLoader");
+    return;
+  }
+}
+
+async function openRejectOrderModal(orderData: any) {
+  const rejectOrderModal = await modalController.create({
+    component: RejectOrderItemModal,
+    componentProps: {
+      orderProps: orderData,
+    }
+  })
+  return rejectOrderModal.present()
+}
+
+async function confirmRequestTransfer(orderData: any) {
+  const header = translate('Convert to Ship-to-Store');
+  const message = translate("The item will be sourced from another store or warehouse and shipped to this location for customer pickup. {space} You can view the order in the Ship-to-Store section by clicking the trail icon in the upper-right corner of the page. {space} Do you want to continue?", { space: '<br/><br/>' });
+
+  const alert = await alertController.create({
+    header,
+    message,
+    buttons: [{
+      text: translate('Cancel'), role: 'cancel'
+    },
+    {
+      text: translate('Convert'),
+      handler: async () => await requestTransfer(orderData)
+    }]
+  });
+
+  return alert.present();
+}
+
+async function requestTransfer(orderData: any) {
+  emitter.emit("presentLoader");
+  try {
+    const resp = await OrderService.convertToShipToStore({
+      orderId: orderData.orderId,
+      shipGroupSeqId: orderData.shipGroup.shipGroupSeqId
+    });
+    if (!hasError(resp)) {
+      showToast(translate('Order marked as ship to store'));
+      await useOrderStore().removeOpenOrder({ order: orderData, shipGroup: orderData.shipGroup })
+    } else {
+      showToast(translate('Failed to mark order as ship to store'));
+      logger.error('Ship-to-Store conversion failed', resp);
+    }
+  } catch (err) {
+    logger.error(err);
+    showToast(translate("Something went wrong"));
+  }
+  emitter.emit("dismissLoader");
+}
+
+async function openProofOfDeliveryModal(orderData: any, isViewModeOnly: any) {
+  const modal = await modalController.create({
+    component: ProofOfDeliveryModal,
+    componentProps: {
+      order: orderData,
+      isViewModeOnly
+    },
+  });
+
+  await modal.present();
+
+  const { data } = await modal.onDidDismiss();
+
+  if (data?.confirmed && data?.proofOfDeliveryData) {
+    emitter.emit("presentLoader");
+
+    try {
+      // Send the proof of delivery email
+      const resp = await OrderService.sendPickupNotification(data.proofOfDeliveryData);
+
+      if (hasError(resp)) {
+        logger.error("Pickup notification failed:", resp);
+        showToast(translate("Unable to save the details. Please try again."));
+      } else {
+        await useOrderStore().getCommunicationEvents({ orders: [order.value] });
+        showToast(translate("Details have been successfully saved, and an email has been sent to the customer."));
+      }
+    } catch (err) {
+      logger.error("Error in saving the details:", err);
+      showToast(translate("Something went wrong"));
+    } finally {
+      emitter.emit("dismissLoader");
+    }
+  }
+}
 </script>
 
 <style scoped>

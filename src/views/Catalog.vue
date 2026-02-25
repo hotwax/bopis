@@ -35,123 +35,82 @@
   </ion-page>
 </template>
 
-<script lang="ts">
-import {
-  IonCard,
-  IonContent,
-  IonHeader,
-  IonInfiniteScrollContent,
-  IonInfiniteScroll,
-  IonItem,
-  IonLabel,
-  IonPage,
-  IonSearchbar,
-  IonTitle,
-  IonToolbar,
-} from '@ionic/vue';
-import { computed, defineComponent } from 'vue';
-import { mapGetters, useStore } from 'vuex';
+<script setup lang="ts">
+import { IonCard, IonContent, IonHeader, IonInfiniteScrollContent, IonInfiniteScroll, IonItem, IonLabel, IonPage, IonSearchbar, IonTitle, IonToolbar, onIonViewWillEnter } from '@ionic/vue';
+import { computed, ref } from 'vue';
 import { useRouter } from "vue-router";
-import { getProductIdentificationValue, DxpShopifyImg, translate, useProductIdentificationStore } from '@hotwax/dxp-components'
+import { DxpShopifyImg, translate } from '@hotwax/dxp-components'
+import { useProductStore } from "@/store/product";
+import { useOrderStore } from "@/store/order";
 
-export default defineComponent({
-  name: 'Catalog',
-  components: {
-    IonCard,
-    IonContent,
-    IonHeader,
-    IonInfiniteScrollContent,
-    IonInfiniteScroll,
-    IonItem,
-    IonLabel,
-    IonPage,
-    IonSearchbar,
-    IonTitle,
-    IonToolbar,
-    DxpShopifyImg,
-  },
-  data() {
-    return {
-      queryString: "",
-      isScrollingEnabled: false
-    };
-  },
-  computed: {
-    ...mapGetters({
-      products: "product/getProducts",
-      isScrollable: "product/isScrollable"
-    }),
-  },
-  methods: {
-    enableScrolling() {
-      const parentElement = (this as any).$refs.contentRef.$el
-      const scrollEl = parentElement.shadowRoot.querySelector("div[part='scroll']")
-      let scrollHeight = scrollEl.scrollHeight, infiniteHeight = (this as any).$refs.infiniteScrollRef.$el.offsetHeight, scrollTop = scrollEl.scrollTop, threshold = 100, height = scrollEl.offsetHeight
-      const distanceFromInfinite = scrollHeight - infiniteHeight - scrollTop - threshold - height
-      if(distanceFromInfinite < 0) {
-        this.isScrollingEnabled = false;
-      } else {
-        this.isScrollingEnabled = true;
-      }
-    },
-    async loadMoreProducts(event: any) {
-      // Added this check here as if added on infinite-scroll component the Loading content does not gets displayed
-      if(!(this.isScrollingEnabled && this.isScrollable)) {
-        await event.target.complete();
-      }
-      this.getProducts(
-        undefined,
-        Math.ceil(
-          this.products.list?.length / (process.env.VUE_APP_VIEW_SIZE as any)
-        ).toString()
-      ).then(async () => {
-        await event.target.complete();
-      });
-    },
-    async getProducts(vSize?: any, vIndex?: any) {
-      const viewSize = vSize ? vSize : process.env.VUE_APP_VIEW_SIZE;
-      const viewIndex = vIndex ? vIndex : 0;
-      const payload = {
-        viewSize,
-        viewIndex,
-        queryString: this.queryString,
-      };
-      await this.store.dispatch("product/findProduct", payload);
-    },
-    selectSearchBarText(event: any) {
-      event.target.getInputElement().then((element: any) => {
-        element.select();
-      })
-    },
-    async viewProduct(product: any) {
-      await this.store.dispatch('product/addProductToCache', product).then(() => {
-        this.router.push({ path: `/product-detail/${product.productId}` });
-      })
-    }
-  },
+const router = useRouter();
 
-  async ionViewWillEnter() {
-    // Clearing the current order as to correctly display the selected segment when moving to list page
-    this.store.dispatch("order/updateCurrent", { order: {}})
-    this.isScrollingEnabled = false;
-    this.queryString = this.products.queryString;
-    this.getProducts();
-  },
-  setup() {
-    const store = useStore();
-    const router = useRouter();
+const queryString = ref("");
+const isScrollingEnabled = ref(false);
+const contentRef = ref(null as any);
+const infiniteScrollRef = ref(null as any);
 
-    const productIdentificationStore = useProductIdentificationStore();
-    let productIdentificationPref = computed(() => productIdentificationStore.getProductIdentificationPref)
+const products = computed(() => useProductStore().getProducts);
+const isScrollable = computed(() => useProductStore().isScrollable);
 
-    return {
-      getProductIdentificationValue,
-      productIdentificationPref,
-      router,
-      store,
-      translate
-    };
-  },
+const enableScrolling = () => {
+  const parentElement = contentRef.value?.$el;
+  if (!parentElement) return;
+  const scrollEl = parentElement.shadowRoot.querySelector("div[part='scroll']");
+  if (!scrollEl) return;
+
+  let scrollHeight = scrollEl.scrollHeight, infiniteHeight = infiniteScrollRef.value?.$el.offsetHeight, scrollTop = scrollEl.scrollTop, threshold = 100, height = scrollEl.offsetHeight;
+  const distanceFromInfinite = scrollHeight - infiniteHeight - scrollTop - threshold - height;
+  if(distanceFromInfinite < 0) {
+    isScrollingEnabled.value = false;
+  } else {
+    isScrollingEnabled.value = true;
+  }
+};
+
+async function getProducts(vSize?: any, vIndex?: any) {
+  const viewSize = vSize ? vSize : (process.env.VUE_APP_VIEW_SIZE as any);
+  const viewIndex = vIndex ? vIndex : 0;
+  const payload = {
+    viewSize,
+    viewIndex,
+    queryString: queryString.value,
+  };
+  await useProductStore().findProduct(payload);
+}
+
+const loadMoreProducts = async (event: any) => {
+  // Added this check here as if added on infinite-scroll component the Loading content does not gets displayed
+  if(!(isScrollingEnabled.value && isScrollable.value)) {
+    await event.target.complete();
+  }
+  const viewSize = (process.env.VUE_APP_VIEW_SIZE as any);
+  await getProducts(
+    undefined,
+    Math.ceil(
+      products.value.list?.length / viewSize
+    ).toString()
+  );
+  await event.target.complete();
+};
+
+const selectSearchBarText = (event: any) => {
+  event.target.getInputElement().then((element: any) => {
+    element.select();
+  });
+};
+
+const viewProduct = async (product: any) => {
+  await useProductStore().addProductToCache(product);
+  router.push({ path: `/product-detail/${product.productId}` });
+};
+
+onIonViewWillEnter(() => {
+  // Clearing the current order as to correctly display the selected segment when moving to list page
+  useOrderStore().updateCurrent({ order: {} });
+  isScrollingEnabled.value = false;
+  queryString.value = products.value.queryString;
+  getProducts();
 });
 </script>
 <style scoped>

@@ -1,2 +1,0 @@
-export const SN_STOCK = 'stock'
-export const STOCK_ADD_PRODUCT_INFORMATION = SN_STOCK + '/ADD_PRODUCT_INFORMATION'

@@ -1,9 +1,9 @@
 import { apiClient } from '@/adapter';
-import store from '@/store';
+import { useUserStore } from '@/store/user';
 
-const getAvailablePickers = async (query: any): Promise <any> => {
-  const baseURL = store.getters['user/getOmsBaseUrl'];
-  const omstoken = store.getters['user/getUserToken'];
+const getAvailablePickers = async (query: any): Promise<any> => {
+  const baseURL = useUserStore().getOmsBaseUrl;
+  const omstoken = useUserStore().getUserToken;
 
   return apiClient({
     url: "solr-query",

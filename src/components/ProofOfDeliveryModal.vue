@@ -85,51 +85,33 @@
   </ion-fab>
 </template>
 
-<script setup>
-import { ref, onMounted, computed, defineProps } from "vue";
-import {
-  IonButtons,
-  IonButton,
-  IonContent,
-  IonHeader,
-  IonToolbar,
-  IonIcon,
-  IonTitle,
-  IonItem,
-  IonInput,
-  IonLabel,
-  IonFab,
-  IonFabButton,
-  IonSelect,
-  IonSelectOption,
-  IonCheckbox,
-  modalController
-} from "@ionic/vue";
+<script setup lang="ts">
+import { ref, onMounted, computed } from "vue";
+import { IonButtons, IonButton, IonContent, IonHeader, IonToolbar, IonIcon, IonTitle, IonItem, IonInput, IonLabel, IonFab, IonFabButton, IonSelect, IonSelectOption, IonCheckbox, modalController } from "@ionic/vue";
 import { closeOutline, saveOutline } from "ionicons/icons";
 import logger from "@/logger";
 import { showToast } from "@/utils";
 import { translate } from "@hotwax/dxp-components";
 import { OrderService } from "@/services/OrderService";
-import { useStore } from "@/store";
+import { useOrderStore } from "@/store/order";
 
 const props = defineProps({
-  order: { type: Object, required: true },
+  order: { type: Object as () => any, required: true },
   isViewModeOnly: { type: Boolean, default: false }
 });
 
 const isSubmitting = ref(false);
 const sameAsBilling = ref(true);
-const billingDetails = ref({});
+const billingDetails = ref({} as any);
 const isNamePrefilled = ref(false);
 const isIdPrefilled = ref(false);
 const idNumberValue = ref("");
-const store = useStore();
-
-const communicationEvent = computed(() => store.getters["order/getCommunicationEventsByOrderId"](props.order?.orderId));
+const orderStore = useOrderStore();
+const communicationEvent = computed(() => orderStore.getCommunicationEventsByOrderId(props.order?.orderId));
 
 const orderContent = computed(() => {
-  const event = communicationEvent.value;
-  let content = {};
+  const event = communicationEvent.value as any;
+  let content = {} as any;
   if (event) {
     try {
       content = JSON.parse(event?.content)?.messageData?.additionalFields;
@@ -178,8 +160,8 @@ const getPrefilledValue = async () => {
   
   try {
     const resp = await OrderService.fetchOrderAttributes(props.order.orderId);
-    const data = resp.data;
-    const customerAttr = data.find((a) => a.attrName === "customerId");
+    const data = resp.data as any;
+    const customerAttr = data.find((a: any) => a.attrName === "customerId");
     
     if (customerAttr?.attrValue) {
       form.value.idNumber = customerAttr.attrValue;
@@ -217,7 +199,7 @@ const submitForm = async () => {
   isSubmitting.value = true;
 
   try {
-    const orderItemsList = (props.order?.items || props.order?.shipGroup?.items || []).map(item => ({
+    const orderItemsList = (props.order?.items || props.order?.shipGroup?.items || []).map((item: any) => ({
       orderId: item.orderId,
       orderItemSeqId: item.orderItemSeqId,
       shipGroupSeqId: item.shipGroupSeqId

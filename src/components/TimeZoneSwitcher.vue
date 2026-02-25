@@ -91,46 +91,24 @@
 </template>
 
 <script setup lang="ts">
-import {
-  IonButton,
-  IonButtons,
-  IonCard, 
-  IonCardHeader,
-  IonCardTitle,
-  IonCardContent,
-  IonContent,
-  IonFab,
-  IonFabButton,
-  IonHeader,
-  IonIcon,
-  IonItem,
-  IonLabel,
-  IonList,
-  IonListHeader,
-  IonModal,
-  IonRadio,
-  IonRadioGroup,
-  IonSearchbar,
-  IonSpinner,
-  IonTitle,
-  IonToolbar
-} from '@ionic/vue';
+import { IonButton, IonButtons, IonCard, IonCardHeader, IonCardTitle, IonCardContent, IonContent, IonFab, IonFabButton, IonHeader, IonIcon, IonItem, IonLabel, IonList, IonListHeader, IonModal, IonRadio, IonRadioGroup, IonSearchbar, IonSpinner, IonTitle, IonToolbar } from '@ionic/vue';
 import { closeOutline, saveOutline } from "ionicons/icons";
-import { computed, onBeforeMount, ref, defineProps, defineEmits } from "vue";
+import { computed, onBeforeMount, ref } from "vue";
 import { getCurrentTime } from '../utils'
-import { translate, useUserStore } from "@hotwax/dxp-components"
-import store from '@/store';
+import { translate, useUserStore as useDxpUserStore } from "@hotwax/dxp-components"
+import { useUserStore } from '@/store/user';
 
 const userStore = useUserStore();
+const dxpUserStore = useDxpUserStore();
 
-const userProfile = computed(() => store.getters["user/getUserProfile"])
-const timeZones = computed(() => userStore.getTimeZones)
+const userProfile = computed(() => userStore.getUserProfile)
+const timeZones = computed(() => dxpUserStore.getTimeZones)
 const currentTimeZoneId = computed(() => userProfile.value.timeZone)
 
 const isLoading = ref(true);
 const timeZoneModal = ref();
 const queryString = ref('');
-const filteredTimeZones = ref([])
+const filteredTimeZones = ref([] as any[])
 const timeZoneId = ref('')
 // Fetching timeZone of the browser
 const browserTimeZone = ref({
@@ -161,10 +139,10 @@ const closeModal = () => {
 
 onBeforeMount(async () => {
   isLoading.value = true;
-  await userStore.getAvailableTimeZones();
+  await dxpUserStore.getAvailableTimeZones();
 
   if(userProfile.value && userProfile.value.timeZone) {
-    userStore.currentTimeZoneId = userProfile.value.timeZone
+    (dxpUserStore as any).currentTimeZoneId = userProfile.value.timeZone
     timeZoneId.value = userProfile.value.timeZone
   }
 

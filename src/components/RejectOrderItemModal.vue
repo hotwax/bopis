@@ -45,170 +45,123 @@
   </ion-content>
 </template>
 
-<script lang="ts">
-import {
-  IonButton,
-  IonButtons,
-  IonContent,
-  IonHeader,
-  IonIcon,
-  IonTitle,
-  IonToolbar,
-  IonSelect,
-  IonSelectOption,
-  IonItem,
-  IonThumbnail,
-  IonLabel,
-  IonFab,
-  IonFabButton,
-  alertController,
-  modalController,
-} from '@ionic/vue';
+<script setup lang="ts">
+import { IonButton, IonButtons, IonContent, IonHeader, IonIcon, IonTitle, IonToolbar, IonSelect, IonSelectOption, IonItem, IonThumbnail, IonLabel, IonFab, IonFabButton, IonBadge, alertController, modalController } from '@ionic/vue';
 import { closeOutline, warningOutline, trashOutline } from 'ionicons/icons';
-import { defineComponent, computed } from 'vue';
-import { mapGetters, useStore } from 'vuex';
+import { computed, onMounted, ref } from 'vue';
 import { DxpShopifyImg, translate, getProductIdentificationValue, useProductIdentificationStore } from '@hotwax/dxp-components';
 import { isKit } from '@/utils/order';
 import { getCurrentFacilityId } from '@/utils'
-export default defineComponent({
-  name: 'RejectOrderItemModal',
-  components: {
-    IonButton,
-    IonButtons,
-    IonContent,
-    IonHeader,
-    IonIcon,
-    IonTitle,
-    IonToolbar,
-    IonSelect,
-    IonSelectOption,
-    IonItem,
-    IonThumbnail,
-    IonLabel,
-    IonFab,
-    IonFabButton,
-    DxpShopifyImg
-  },
-  props: {
-    orderProps: {
-      type: Object as () => {
-        orderId: string;
-        orderName: string;
-        shipGroup?: {
-          shipGroupSeqId: string;
-          items?: any[];
-        };
-        [key: string]: any;
-      },
-      required: true
-    }
-  },
-  data() {
-    return {
-      rejectEntireOrderReasonId: "REJ_AVOID_ORD_SPLIT"
-    };
-  },
-  computed: {
-    ...mapGetters({
-      order: 'order/getCurrent',
-      getProduct: 'product/getProduct',
-      rejectReasons: 'util/getRejectReasons',
-      partialOrderRejectionConfig: 'user/getPartialOrderRejectionConfig',
-    }),
-    isPartialRejectionEnabled(): boolean {
-      const config = this.partialOrderRejectionConfig?.settingValue;
-      return !!(config && JSON.parse(config));
+import { useOrderStore } from '@/store/order';
+import { useProductStore } from '@/store/product';
+import { useUserStore } from '@/store/user';
+import { useUtilStore } from '@/store/util';
+
+const props = defineProps({
+  orderProps: {
+    type: Object as () => {
+      orderId: string;
+      orderName: string;
+      shipGroup?: {
+        shipGroupSeqId: string;
+        items?: any[];
+      };
+      [key: string]: any;
     },
-    showRejectionWarning(): boolean {
-      const hasRejectedItems = !!this.orderProps?.shipGroup?.items?.some((item: any) => !!item.rejectReasonId);
-      return !this.isPartialRejectionEnabled && hasRejectedItems;
-    },
-    canConfirm(): boolean {
-      const items = this.orderProps?.shipGroup?.items;
-      if (!items) return false;
-      if (this.isPartialRejectionEnabled) {
-        return items.some((item: any) => !!item.rejectReasonId);
-      } else {
-        return items.every((item: any) => !!item.rejectReasonId);
-      }
-    }
-  },
-  methods: {
-   onReasonChange(event: any, selectedItem: any) {
-     const selectedValue = event.detail.value;
-     const items = this.orderProps?.shipGroup?.items;
-     if (!this.isPartialRejectionEnabled && items) {
-       items.forEach((item: any) => {
-         item.rejectReasonId = item.orderItemSeqId === selectedItem.orderItemSeqId
-           ? selectedValue
-           : this.rejectEntireOrderReasonId;
-        });
-      } else {
-        selectedItem.rejectReasonId = selectedValue;
-      }
-    },      
-    closeModal() {
-      modalController.dismiss({ dismissed: true });
-    },
-    async fetchRejectReasons() {
-      await this.store.dispatch('util/fetchRejectReasons');
-    },
-    async confirmSave() {
-      const alert = await alertController.create({
-        header: translate('Reject Order'),
-        message: translate('This order will be removed from your dashboard. This action cannot be undone.'),
-        buttons: [
-          {
-            text: translate('Cancel'),
-            role: 'cancel'
-          },
-          {
-            text: translate('Reject'),
-            handler: async () => {
-              const updatedItems = (this.orderProps?.shipGroup?.items ?? [])
-                .filter((item: any) => item.rejectReasonId)
-                .map((item: any) => ({
-                  ...item,
-                  maySplit: 'Y',
-                  reason: item.rejectReasonId
-                }));
-              const shipGroup = { ...this.orderProps?.shipGroup, items: updatedItems };
-              const resp = await this.store.dispatch('order/rejectItems', {
-                orderId: this.orderProps?.orderId,
-                orderName: this.orderProps?.orderName,
-                shipGroup,
-                isEntireOrderRejected: (this.orderProps?.shipGroup?.items?.length === updatedItems.length)
-              });
-              if (resp) {
-                await this.store.dispatch("order/getOpenOrders", { viewSize: process.env.VUE_APP_VIEW_SIZE, viewIndex: 0, queryString: '', facilityId: getCurrentFacilityId() });
-              }
-              this.closeModal();              
-            }
-          }
-        ]
-      });
-      await alert.present();
-    }
-  },
-  mounted() {
-    this.fetchRejectReasons();
-  },
-  setup() {
-    const store = useStore();
-    const productIdentificationStore = useProductIdentificationStore();
-    const productIdentificationPref = computed(() => productIdentificationStore.getProductIdentificationPref);
-    return {
-      closeOutline,
-      warningOutline,
-      trashOutline,
-      store,
-      translate,
-      getProductIdentificationValue,
-      isKit,
-      productIdentificationPref
-    };
+    required: true
+  }
+})
+
+const orderStore = useOrderStore();
+const productStore = useProductStore();
+const utilStore = useUtilStore();
+const userStore = useUserStore();
+
+const rejectEntireOrderReasonId = ref("REJ_AVOID_ORD_SPLIT");
+
+const getProduct = (productId: string) => productStore.getProduct(productId);
+const rejectReasons = computed(() => utilStore.getRejectReasons);
+const partialOrderRejectionConfig = computed(() => userStore.getPartialOrderRejectionConfig);
+const productIdentificationPref = computed(() => useProductIdentificationStore().getProductIdentificationPref);
+
+const isPartialRejectionEnabled = computed(() => {
+  const config = partialOrderRejectionConfig.value?.settingValue;
+  return !!(config && JSON.parse(config));
+});
+
+const showRejectionWarning = computed(() => {
+  const hasRejectedItems = !!props.orderProps?.shipGroup?.items?.some((item: any) => !!item.rejectReasonId);
+  return !isPartialRejectionEnabled.value && hasRejectedItems;
+});
+
+const canConfirm = computed(() => {
+  const items = props.orderProps?.shipGroup?.items;
+  if (!items) return false;
+  if (isPartialRejectionEnabled.value) {
+    return items.some((item: any) => !!item.rejectReasonId);
+  } else {
+    return items.every((item: any) => !!item.rejectReasonId);
   }
 });
+
+onMounted(() => {
+  utilStore.fetchRejectReasons();
+});
+
+function onReasonChange(event: any, selectedItem: any) {
+  const selectedValue = event.detail.value;
+  const items = props.orderProps?.shipGroup?.items;
+  if (!isPartialRejectionEnabled.value && items) {
+    items.forEach((item: any) => {
+      item.rejectReasonId = item.orderItemSeqId === selectedItem.orderItemSeqId
+        ? selectedValue
+        : rejectEntireOrderReasonId.value;
+    });
+  } else {
+    selectedItem.rejectReasonId = selectedValue;
+  }
+}
+
+function closeModal() {
+  modalController.dismiss({ dismissed: true });
+}
+
+async function confirmSave() {
+  const alert = await alertController.create({
+    header: translate('Reject Order'),
+    message: translate('This order will be removed from your dashboard. This action cannot be undone.'),
+    buttons: [
+      {
+        text: translate('Cancel'),
+        role: 'cancel'
+      },
+      {
+        text: translate('Reject'),
+        handler: async () => {
+          const updatedItems = (props.orderProps?.shipGroup?.items ?? [])
+            .filter((item: any) => item.rejectReasonId)
+            .map((item: any) => ({
+              ...item,
+              maySplit: 'Y',
+              reason: item.rejectReasonId
+            }));
+          const shipGroup = { ...props.orderProps?.shipGroup, items: updatedItems };
+          const resp = await orderStore.rejectItems({
+            orderId: props.orderProps?.orderId,
+            orderName: props.orderProps?.orderName,
+            shipGroup,
+            isEntireOrderRejected: (props.orderProps?.shipGroup?.items?.length === updatedItems.length)
+          });
+          if (resp) {
+            await orderStore.fetchOpenOrders({ viewSize: process.env.VUE_APP_VIEW_SIZE, viewIndex: 0, queryString: '', facilityId: getCurrentFacilityId() });
+          }
+          closeModal();              
+        }
+      }
+    ]
+  });
+  await alert.present();
+}
 </script>
 
 <style scoped>

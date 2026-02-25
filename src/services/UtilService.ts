@@ -1,6 +1,6 @@
 import { api, apiClient } from '@/adapter';
 import { hasError } from '@/adapter';
-import store from '@/store';
+import { useUserStore } from '@/store/user';
 
 const fetchRejectReasons = async (query: any): Promise<any> => {
   return api({
@@ -27,8 +27,8 @@ const fetchCancelReasons = async (payload: any): Promise<any> => {
 }
 
 const resetPicker = async (payload: any): Promise<any> => {
-  const baseURL = store.getters['user/getOmsBaseUrl'];
-  const omstoken = store.getters['user/getUserToken'];
+  const baseURL = useUserStore().getOmsBaseUrl;
+  const omstoken = useUserStore().getUserToken;
 
   return apiClient({
     url: "/service/resetPicker",
@@ -43,8 +43,8 @@ const resetPicker = async (payload: any): Promise<any> => {
 }
 
 const getProductStoreSettings = async (payload: any): Promise<any> => {
-  const baseURL = store.getters['user/getOmsBaseUrl'];
-  const omstoken = store.getters['user/getUserToken'];
+  const baseURL = useUserStore().getOmsBaseUrl;
+  const omstoken = useUserStore().getUserToken;
 
   return apiClient({
     url: "performFind",
@@ -59,8 +59,8 @@ const getProductStoreSettings = async (payload: any): Promise<any> => {
 }
 
 const createProductStoreSetting = async (payload: any): Promise<any> => {
-  const baseURL = store.getters['user/getOmsBaseUrl'];
-  const omstoken = store.getters['user/getUserToken'];
+  const baseURL = useUserStore().getOmsBaseUrl;
+  const omstoken = useUserStore().getUserToken;
 
   return apiClient({
     url: "service/createProductStoreSetting",
@@ -75,8 +75,8 @@ const createProductStoreSetting = async (payload: any): Promise<any> => {
 }
 
 const updateProductStoreSetting = async (payload: any): Promise<any> => {
-  const baseURL = store.getters['user/getOmsBaseUrl'];
-  const omstoken = store.getters['user/getUserToken'];
+  const baseURL = useUserStore().getOmsBaseUrl;
+  const omstoken = useUserStore().getUserToken;
 
   return apiClient({
     url: "service/updateProductStoreSetting",
@@ -91,8 +91,8 @@ const updateProductStoreSetting = async (payload: any): Promise<any> => {
 }
 
 const createEnumeration = async (payload: any): Promise<any> => {
-  const baseURL = store.getters['user/getOmsBaseUrl'];
-  const omstoken = store.getters['user/getUserToken'];
+  const baseURL = useUserStore().getOmsBaseUrl;
+  const omstoken = useUserStore().getUserToken;
 
   return apiClient({
     url: "/service/createEnumeration",
@@ -107,8 +107,8 @@ const createEnumeration = async (payload: any): Promise<any> => {
 }
 
 const isEnumExists = async (enumId: string): Promise<any> => {
-  const baseURL = store.getters['user/getOmsBaseUrl'];
-  const omstoken = store.getters['user/getUserToken'];
+  const baseURL = useUserStore().getOmsBaseUrl;
+  const omstoken = useUserStore().getUserToken;
 
   try {
     const resp = await apiClient({
@@ -139,9 +139,9 @@ const isEnumExists = async (enumId: string): Promise<any> => {
   }
 }
 
-const fetchJobInformation = async (payload: any): Promise <any>  => {
-  const baseURL = store.getters['user/getOmsBaseUrl'];
-  const omstoken = store.getters['user/getUserToken'];
+const fetchJobInformation = async (payload: any): Promise<any> => {
+  const baseURL = useUserStore().getOmsBaseUrl;
+  const omstoken = useUserStore().getUserToken;
 
   return apiClient({
     url: "/findJobs",
@@ -156,8 +156,8 @@ const fetchJobInformation = async (payload: any): Promise <any>  => {
 }
 
 const getProcessRefundStatus = async (payload: any): Promise<any> => {
-  const baseURL = store.getters['user/getOmsBaseUrl'];
-  const omstoken = store.getters['user/getUserToken'];
+  const baseURL = useUserStore().getOmsBaseUrl;
+  const omstoken = useUserStore().getUserToken;
 
   return apiClient({
     url: "performFind",
@@ -172,8 +172,8 @@ const getProcessRefundStatus = async (payload: any): Promise<any> => {
 }
 
 const fetchFacilities = async (payload: any): Promise<any> => {
-  const baseURL = store.getters['user/getOmsBaseUrl'];
-  const omstoken = store.getters['user/getUserToken'];
+  const baseURL = useUserStore().getOmsBaseUrl;
+  const omstoken = useUserStore().getUserToken;
 
   return apiClient({
     url: "performFind",
@@ -188,8 +188,8 @@ const fetchFacilities = async (payload: any): Promise<any> => {
 }
 
 const fetchEnumerations = async (payload: any): Promise<any> => {
-  const baseURL = store.getters['user/getOmsBaseUrl'];
-  const omstoken = store.getters['user/getUserToken'];
+  const baseURL = useUserStore().getOmsBaseUrl;
+  const omstoken = useUserStore().getUserToken;
 
   return apiClient({
     url: "performFind",
@@ -204,8 +204,8 @@ const fetchEnumerations = async (payload: any): Promise<any> => {
 }
 
 const fetchCurrentFacilityLatLon = async (payload: any): Promise<any> => {
-  const baseURL = store.getters['user/getOmsBaseUrl'];
-  const omstoken = store.getters['user/getUserToken'];
+  const baseURL = useUserStore().getOmsBaseUrl;
+  const omstoken = useUserStore().getUserToken;
 
   return apiClient({
     url: "performFind",
@@ -220,8 +220,8 @@ const fetchCurrentFacilityLatLon = async (payload: any): Promise<any> => {
 }
 
 const fetchStoresInformation = async (payload: any): Promise<any> => {
-  const baseURL = store.getters['user/getOmsBaseUrl'];
-  const omstoken = store.getters['user/getUserToken'];
+  const baseURL = useUserStore().getOmsBaseUrl;
+  const omstoken = useUserStore().getUserToken;
 
   return apiClient({
     url: "storeLookup",

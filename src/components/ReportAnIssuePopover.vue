@@ -13,48 +13,23 @@
   </ion-content>
 </template>
 
-<script lang="ts">
-import {
-  IonContent,
-  IonItem,
-  IonList,
-  popoverController,
-} from "@ionic/vue";
-import { defineComponent } from "vue";
-import { mapGetters } from 'vuex';
+<script setup lang="ts">
+import { IonContent, IonItem, IonList, popoverController } from "@ionic/vue";
+import { computed } from "vue";
 import { translate } from '@hotwax/dxp-components';
+import { useUtilStore } from "@/store/util";
 
-export default defineComponent({
-  name: "ReportIssuePopover",
-  components: { 
-    IonContent,
-    IonItem,
-    IonList
-  },
-  props: {
-    reasonType: {
-      type: String,
-      default: "reject"
-    }
-  },
-  computed: {
-    ...mapGetters({
-      rejectReasons: 'util/getRejectReasons',
-      cancelReasons: 'util/getCancelReasons',
-    })
-  },
-  methods: {
-    closePopover() {
-      popoverController.dismiss();
-    },
-    updateIssue(enumId: string) {
-      popoverController.dismiss(enumId);
-    },
-  },
-  setup() {
-    return {
-      translate
-    }
+defineProps({
+  reasonType: {
+    type: String,
+    default: "reject"
   }
-});
+})
+
+const rejectReasons = computed(() => useUtilStore().getRejectReasons);
+const cancelReasons = computed(() => useUtilStore().getCancelReasons);
+
+function updateIssue(enumId: string) {
+  popoverController.dismiss(enumId);
+}
 </script>

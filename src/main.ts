@@ -1,8 +1,6 @@
-import { createApp } from 'vue'
+import { createApp, computed, reactive } from 'vue'
 import App from './App.vue'
 import router from './router';
-import { DateTime } from 'luxon';
-
 
 import { IonicVue } from '@ionic/vue';
 
@@ -26,9 +24,7 @@ import '@ionic/vue/css/display.css';
 import './theme/variables.css';
 import "@hotwax/apps-theme";
 
-import store from './store'
-
-import permissionPlugin, { Actions, hasPermission } from '@/authorization';
+import permissionPlugin, { Actions, hasPermission, setPermissions } from '@/authorization';
 import permissionRules from '@/authorization/Rules';
 import permissionActions from '@/authorization/Actions';
 
@@ -39,16 +35,23 @@ import { addNotification, storeClientRegistrationToken } from '@/utils/firebase'
 import { getConfig, fetchGoodIdentificationTypes, getProductIdentificationPref, getUserFacilities, getUserPreference, initialise, setProductIdentificationPref, setUserLocale, getAvailableTimeZones, setUserPreference } from '@/adapter';
 import logger from './logger';
 
+import { createPinia } from 'pinia'
+import piniaPluginPersistedstate from 'pinia-plugin-persistedstate'
+import { useUserStore } from '@/store/user'
+
 const app = createApp(App)
-  .use(IonicVue, {
-    mode: 'md',
-    innerHTMLTemplatesEnabled: true
-  })
+const pinia = createPinia();
+pinia.use(piniaPluginPersistedstate)
+
+app.use(IonicVue, {
+  mode: 'md',
+  innerHTMLTemplatesEnabled: true
+})
   .use(logger, {
     level: process.env.VUE_APP_DEFAULT_LOG_LEVEL
   })
   .use(router)
-  .use(store)
+  .use(pinia)
   .use(permissionPlugin, {
     rules: permissionRules,
     actions: permissionActions
@@ -78,41 +81,19 @@ const app = createApp(App)
     getUserPreference
   });
 
-// Filters are removed in Vue 3 and global filter introduced https://v3.vuejs.org/guide/migration/filters.html#global-filters
-app.config.globalProperties.$filters = {
-  formatDate(value: any, inFormat?: string, outFormat?: string) {
-    if(inFormat){
-      return DateTime.fromFormat(value, inFormat).toFormat(outFormat ? outFormat : 'MM-dd-yyyy');
-    }
-    return DateTime.fromISO(value).toFormat(outFormat ? outFormat : 'MM-dd-yyyy');
-  },
-  formatUtcDate(value: any, outFormat?: string) {
-    // TODO Make default format configurable and from environment variables
-    const userProfile = store.getters['user/getUserProfile'];
-    // TODO Fix this setDefault should set the default timezone instead of getting it everytiem and setting the tz
-    return DateTime.fromISO(value, { zone: 'utc' }).setZone(userProfile.timeZone).toFormat(outFormat ? outFormat : 'MM-dd-yyyy')  
-  },
-  getIdentificationId(identifications: any, id: string) {
-    let  externalId = ''
-    if (identifications) {
-      const externalIdentification = identifications.find((identification: any) => identification.startsWith(id))
-      const externalIdentificationSplit = externalIdentification ? externalIdentification.split('/') : [];
-      externalId = externalIdentificationSplit[1] ? externalIdentificationSplit[1] : '';
-    }
-    return externalId;
-  },
-  getFeature(featureHierarchy: any, featureKey: string) {
-    let  featureValue = ''
-    if (featureHierarchy) {
-      const feature = featureHierarchy.find((featureItem: any) => featureItem.startsWith(featureKey))
-      const featureSplit = feature ? feature.split('/') : [];
-      featureValue = featureSplit[2] ? featureSplit[2] : '';
-    }
-    return featureValue;
-  }
-}
-
+const userStore = useUserStore();
+setPermissions(userStore.getUserPermissions);
 
 router.isReady().then(() => {
   app.mount('#app');
 });
+
+//TODO: Remove this after dxp-components is updated to replace appContext.config.globalProperties.$store and stopped calling vuex pattern getters/actions
+app.config.globalProperties.$store = {
+  getters: reactive({
+    'user/getUserProfile': computed(() => useUserStore().getUserProfile),
+    'user/getInstanceUrl': computed(() => useUserStore().getInstanceUrl),
+    //'user/getCurrentFacility': computed(() => useUserStore().getCurrentFacility),
+    //'user/getCurrentEComStore': computed(() => useUserStore().getCurrentEComStore),
+  })
+}

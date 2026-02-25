@@ -216,401 +216,337 @@
   </ion-page>
 </template>
 
-<script lang="ts">
-import {
-  alertController,
-  IonAvatar,
-  IonButton,
-  IonCard,
-  IonCardContent,
-  IonCardHeader,
-  IonCardSubtitle,
-  IonCardTitle,
-  IonContent,
-  IonHeader,
-  IonIcon,
-  IonItem,
-  IonLabel,
-  IonList,
-  IonPage,
-  IonTitle,
-  IonToggle,
-  IonToolbar,
-  modalController
-} from '@ionic/vue';
-import { defineComponent, computed } from 'vue';
-import {
-  codeWorkingOutline,
-  ellipsisVertical,
-  openOutline,
-  personCircleOutline,
-  sendOutline,
-  storefrontOutline
-} from 'ionicons/icons'
-import { mapGetters, useStore } from 'vuex';
-import { useRouter } from 'vue-router';
+<script setup lang="ts">
+import { alertController, IonAvatar, IonButton, IonCard, IonCardContent, IonCardHeader, IonCardSubtitle, IonCardTitle, IonContent, IonHeader, IonIcon, IonItem, IonLabel, IonList, IonPage, IonTitle, IonToggle, IonToolbar, modalController, onIonViewWillEnter } from '@ionic/vue';
+import { computed, onMounted, ref } from 'vue';
+import { openOutline } from 'ionicons/icons'
 import Image from '@/components/Image.vue';
 import { DateTime } from 'luxon';
 import { UserService } from '@/services/UserService'
 import { showToast } from '@/utils';
 import { hasError, removeClientRegistrationToken, subscribeTopic, unsubscribeTopic } from '@/adapter'
-import { goToOms, initialiseFirebaseApp, translate, useUserStore } from "@hotwax/dxp-components";
+import { goToOms, initialiseFirebaseApp, translate } from "@hotwax/dxp-components";
 import { Actions, hasPermission } from '@/authorization'
 import { addNotification, generateTopicName, isFcmConfigured, storeClientRegistrationToken } from "@/utils/firebase";
 import emitter from "@/event-bus"
 import logger from '@/logger';
 import EditShipmentMethodModal from '@/components/EditShipmentMethodModal.vue';
 import TimeZoneSwitcher from "@/components/TimeZoneSwitcher.vue"
+import { useUserStore } from '@/store/user';
+import { useOrderStore } from '@/store/order';
+import { useUtilStore } from '@/store/util';
 
-export default defineComponent({
-  name: 'Settings',
-  components: {
-    IonAvatar,
-    IonButton, 
-    IonCard,
-    IonCardContent,
-    IonCardHeader,
-    IonCardSubtitle,
-    IonCardTitle,
-    IonContent, 
-    IonHeader, 
-    IonIcon,
-    IonItem, 
-    IonLabel,
-    IonList,
-    IonPage, 
-    IonTitle,
-    IonToggle, 
-    IonToolbar,
-    Image,
-    TimeZoneSwitcher
-  },
-  data(){
-    return {
-      baseURL: process.env.VUE_APP_BASE_URL,
-      appInfo: (process.env.VUE_APP_VERSION_INFO ? JSON.parse(process.env.VUE_APP_VERSION_INFO) : {}) as any,
-      appVersion: "",
-      rerouteFulfillmentConfig: {
-        // TODO Remove fromDate and directly store values making it loosely coupled with OMS
-        allowDeliveryMethodUpdate: {},
-        allowDeliveryAddressUpdate: {},
-        allowPickupUpdate: {},
-        allowCancel: {},
-        shippingMethod: {},
-        orderItemSplit: {}
-      } as any,
-      carriers: [] as any,
-      availableShipmentMethods: [] as any,
-      rerouteFulfillmentConfigMapping: (process.env.VUE_APP_RF_CNFG_MPNG? JSON.parse(process.env.VUE_APP_RF_CNFG_MPNG) : {}) as any
+const appInfo = ref(process.env.VUE_APP_VERSION_INFO ? JSON.parse(process.env.VUE_APP_VERSION_INFO) : {} as any);
+const appVersion = ref("");
+const rerouteFulfillmentConfig = ref({
+  allowDeliveryMethodUpdate: {},
+  allowDeliveryAddressUpdate: {},
+  allowPickupUpdate: {},
+  allowCancel: {},
+  shippingMethod: {},
+  orderItemSplit: {}
+} as any);
+const carriers = ref([] as any);
+const availableShipmentMethods = ref([] as any);
+const rerouteFulfillmentConfigMapping = ref(process.env.VUE_APP_RF_CNFG_MPNG ? JSON.parse(process.env.VUE_APP_RF_CNFG_MPNG) : {} as any);
+
+const userProfile = computed(() => useUserStore().getUserProfile);
+const currentEComStore = computed(() => useUserStore().getCurrentEComStore);
+const partialOrderRejectionConfig = computed(() => useUserStore().partialOrderRejectionConfig);
+const firebaseDeviceId = computed(() => useUserStore().firebaseDeviceId);
+const notificationPrefs = computed(() => useUserStore().notificationPrefs);
+const allNotificationPrefs = computed(() => useUserStore().allNotificationPrefs);
+const getBopisProductStoreSettings = (property: string) => (useUserStore().getBopisProductStoreSettings as any)(property);
+const oms = computed(() => useUserStore().instanceUrl);
+const omsRedirectionUrl = computed(() => useUserStore().getOmsBaseUrl);
+const omsToken = computed(() => useUserStore().token);
+const currentFacility = computed(() => useUserStore().getCurrentFacility);
+
+onMounted(() => {
+  appVersion.value = appInfo.value.branch ? (appInfo.value.branch + "-" + appInfo.value.revision) : appInfo.value.tag;
+});
+
+onIonViewWillEnter(async () => {
+  // Clearing the current order as to correctly display the selected segment when moving to list page
+  useOrderStore().updateCurrent({ order: {} })
+  
+  // Only fetch configuration when environment mapping exists
+  if (Object.keys(rerouteFulfillmentConfigMapping.value).length > 0) {
+    fetchCarriers()
+    getAvailableShipmentMethods();
+    getRerouteFulfillmentConfiguration();
+  }
+
+  // fetching partial order rejection when entering setting page to have latest information
+  await useUserStore().fetchPartialOrderRejectionConfig()
+
+  // as notification prefs can also be updated from the notification pref modal,
+  // latest state is fetched each time we open the settings page
+  await useUserStore().fetchNotificationPreferences()
+});
+
+async function updateFacility(facility: any) {
+  const previousEComStoreId = currentEComStore.value.productStoreId
+  await useUserStore().setFacility(facility?.facilityId);
+  await useUserStore().fetchNotificationPreferences()
+  if (Object.keys(rerouteFulfillmentConfigMapping.value).length > 0 && previousEComStoreId !== (currentEComStore.value as any).productStoreId) {
+    getAvailableShipmentMethods();
+    getRerouteFulfillmentConfiguration();
+  }
+}
+
+async function timeZoneUpdated(tzId: string) {
+  await useUserStore().setUserTimeZone(tzId)
+}
+
+async function logout() {
+  // remove firebase notification registration token -
+  // OMS and auth is required hence, removing it before logout (clearing state)
+  try {
+    await removeClientRegistrationToken(firebaseDeviceId.value, process.env.VUE_APP_NOTIF_APP_ID)
+  } catch (error) {
+    logger.error(error)
+  }
+
+  // clear facility lat lon and stores information state when facility changes
+  useUtilStore().clearCurrentFacilityLatLon()
+  useUtilStore().clearStoresInformation()
+  // Note: clearDeviceId was in util actions but I didn't see it in my migration. 
+  // Checking if I missed it.
+  
+  await useUserStore().logout({ isUserUnauthorised: false }).then((redirectionUrl) => {
+    // if not having redirection url then redirect the user to launchpad
+    if (!redirectionUrl) {
+      const redirectUrl = window.location.origin + '/login'
+      window.location.href = `${process.env.VUE_APP_LOGIN_URL}?isLoggedOut=true&redirectUrl=${redirectUrl}`
     }
-  },
-  computed: {
-    ...mapGetters({
-      userProfile: 'user/getUserProfile',
-      currentEComStore: 'user/getCurrentEComStore',
-      partialOrderRejectionConfig: 'user/getPartialOrderRejectionConfig',
-      firebaseDeviceId: 'user/getFirebaseDeviceId',
-      notificationPrefs: 'user/getNotificationPrefs',
-      allNotificationPrefs: 'user/getAllNotificationPrefs',
-      getBopisProductStoreSettings: "user/getBopisProductStoreSettings",
-      oms: "user/getInstanceUrl",
-      omsRedirectionUrl: "user/getOmsBaseUrl",
-      omsToken: "user/getUserToken"
-    })
-  },
-  mounted() {
-    this.appVersion = this.appInfo.branch ? (this.appInfo.branch + "-" + this.appInfo.revision) : this.appInfo.tag;
-  },
-  async ionViewWillEnter() {
-    // Clearing the current order as to correctly display the selected segment when moving to list page
-    this.store.dispatch("order/updateCurrent", { order: {}})
-    // Only fetch configuration when environment mapping exists
-    if (Object.keys(this.rerouteFulfillmentConfigMapping).length > 0) {
-      this.fetchCarriers()
-      this.getAvailableShipmentMethods();
-      this.getRerouteFulfillmentConfiguration();
+  })
+}
+
+function goToLaunchpad() {
+  window.location.href = `${process.env.VUE_APP_LOGIN_URL}`
+}
+
+function setBopisProductStoreSettings(ev: any, enumId: any) {
+  ev.stopImmediatePropagation();
+  useUserStore().setProductStoreSetting({ enumId, value: !useUserStore().getBopisProductStoreSettings(enumId) })
+}
+
+function getDateTime(time: any) {
+  return DateTime.fromMillis(time).toLocaleString(DateTime.DATETIME_MED);
+}
+
+async function openEditShipmentMethodModal(config: any) {
+  const editShipmentMethodModal = await modalController.create({
+    component: EditShipmentMethodModal,
+    componentProps: { currentcConfig: getShipmentMethodConfig(), carriers: carriers.value, availableShipmentMethods: availableShipmentMethods.value }
+  });
+
+  editShipmentMethodModal.onDidDismiss().then(async (result: any) => {
+    if (result.data?.shippingMethod) {
+      await updateRerouteFulfillmentConfiguration(config, result.data?.shippingMethod)
     }
+  })
 
-    // fetching partial order rejection when entering setting page to have latest information
-    await this.store.dispatch('user/getPartialOrderRejectionConfig')
+  return editShipmentMethodModal.present();
+}
 
-    // as notification prefs can also be updated from the notification pref modal,
-    // latest state is fetched each time we open the settings page
-    await this.store.dispatch('user/fetchNotificationPreferences')
-  },
-  methods: {
-    async updateFacility(facility: any) {
-      const previousEComStoreId = this.currentEComStore.productStoreId
-      await this.store.dispatch('user/setFacility', facility?.facilityId);
-      await this.store.dispatch('user/fetchNotificationPreferences')
-      if(Object.keys(this.rerouteFulfillmentConfigMapping).length > 0 && previousEComStoreId !== this.currentEComStore.productStoreId) {
-        this.getAvailableShipmentMethods();
-        this.getRerouteFulfillmentConfiguration();
+function getShipmentMethodConfig() {
+  if (Object.keys(rerouteFulfillmentConfig.value.shippingMethod).length !== 0) {
+    try {
+      const shippingMethodConfig = rerouteFulfillmentConfig.value.shippingMethod.settingValue ? JSON.parse(rerouteFulfillmentConfig.value.shippingMethod.settingValue) : {};
+      if (Object.keys(shippingMethodConfig).length > 0) {
+        const shipmentMethodDesc = availableShipmentMethods.value.find((shipmentMethod: any) => shipmentMethod.shipmentMethodTypeId === shippingMethodConfig.shipmentMethodTypeId)?.description;
+        const carrierName = carriers.value.find((carrier: any) => carrier.partyId === shippingMethodConfig.carrierPartyId)?.groupName;
+        return { ...shippingMethodConfig, shipmentMethodDesc, carrierName };
       }
-    },
-    async timeZoneUpdated(tzId: string) {
-      await this.store.dispatch("user/setUserTimeZone", tzId)
-    },
-    async logout () {
-      // remove firebase notification registration token -
-      // OMS and auth is required hence, removing it before logout (clearing state)
-      try {
-        await removeClientRegistrationToken(this.firebaseDeviceId, process.env.VUE_APP_NOTIF_APP_ID)
-      } catch (error) {
-        logger.error(error)
-      }
-
-      // clear facility lat lon and stores information state when facility changes
-      this.store.dispatch("util/clearCurrentFacilityLatLon", {})
-      this.store.dispatch("util/clearStoresInformation", {})
-      this.store.dispatch("util/clearDeviceId", {})
-
-      this.store.dispatch('user/logout', { isUserUnauthorised: false }).then((redirectionUrl) => {
-        // if not having redirection url then redirect the user to launchpad
-        if(!redirectionUrl) {
-          const redirectUrl = window.location.origin + '/login'
-          window.location.href = `${process.env.VUE_APP_LOGIN_URL}?isLoggedOut=true&redirectUrl=${redirectUrl}`
-        }
-      })
-    },
-    goToLaunchpad() {
-      window.location.href = `${process.env.VUE_APP_LOGIN_URL}`
-    },
-    setBopisProductStoreSettings (ev: any, enumId: any) {
-      ev.stopImmediatePropagation();
-      this.store.dispatch('user/setProductStoreSetting', { enumId, value: !this.getBopisProductStoreSettings(enumId) })
-    },
-    getDateTime(time: any) {
-      return DateTime.fromMillis(time).toLocaleString(DateTime.DATETIME_MED);
-    },
-    async openEditShipmentMethodModal(config: any) {
-      const editShipmentMethodModal = await modalController.create({
-        component: EditShipmentMethodModal,
-        componentProps: { currentcConfig: this.getShipmentMethodConfig(), carriers:  this.carriers, availableShipmentMethods: this.availableShipmentMethods }
-      });
-      
-      editShipmentMethodModal.onDidDismiss().then(async(result: any) => {
-        if(result.data?.shippingMethod) {
-          await this.updateRerouteFulfillmentConfiguration(config, result.data?.shippingMethod)
-        }
-      })
-
-      return editShipmentMethodModal.present();
-    },
-    getShipmentMethodConfig() {
-      if (Object.keys(this.rerouteFulfillmentConfig.shippingMethod).length !== 0) {
-        try {
-          const shippingMethodConfig = this.rerouteFulfillmentConfig.shippingMethod.settingValue ? JSON.parse(this.rerouteFulfillmentConfig.shippingMethod.settingValue) : {};
-          if (Object.keys(shippingMethodConfig).length > 0) {
-            const shipmentMethodDesc = this.availableShipmentMethods.find((shipmentMethod: any) => shipmentMethod.shipmentMethodTypeId === shippingMethodConfig.shipmentMethodTypeId)?.description;
-            const carrierName = this.carriers.find((carrier: any) => carrier.partyId === shippingMethodConfig.carrierPartyId)?.groupName;
-            return { ...shippingMethodConfig, shipmentMethodDesc, carrierName };
-          }
-        } catch (error) {
-          console.error('Error parsing shipping method config:', error);
-          return {};
-        }
-      }
+    } catch (error) {
+      console.error('Error parsing shipping method config:', error);
       return {};
-    },
-    async fetchCarriers () {
-      this.availableShipmentMethods = [];
-      try {
-        const resp = await UserService.getRerouteFulfillmentConfig({
-          "entityName": "CarrierShipmentMethodCount",
-          "inputFields": {
-            "roleTypeId": "CARRIER",
-            "partyTypeId": "PARTY_GROUP"
-          },
-          "fieldList": ["partyId", "roleTypeId", "groupName"],
-          "viewIndex": 0,
-          "viewSize": 250,  // maximum records we could have
-          "distinct": "Y",
-          "noConditionFind": "Y",
-          "orderBy": "groupName"
-        }) as any;
-        if (!hasError(resp) && resp.data?.docs) {
-          this.carriers = resp.data.docs;
-        }
-      } catch(err) {
-        logger.error(err)
-      }
-    },
-    async getAvailableShipmentMethods () {
-      this.availableShipmentMethods = [];
-      try {
-        const resp = await UserService.getRerouteFulfillmentConfig({
-          "inputFields": {
-            "productStoreId": this.currentEComStore?.productStoreId,
-            "shipmentMethodTypeId": "STOREPICKUP",
-            "shipmentMethodTypeId_op": "notEqual"
-          },
-          "filterByDate": 'Y',
-          "entityName": "ProductStoreShipmentMethView",
-          "fieldList": ["productStoreShipMethId", "partyId", "shipmentMethodTypeId", "description"],
-          "viewSize": 250
-        }) as any;
-        if (!hasError(resp) && resp.data?.docs) {
-          this.availableShipmentMethods = resp.data.docs;
-        }
-      } catch(err) {
-        logger.error(err)
-      }
-    },
-    async getRerouteFulfillmentConfiguration(settingTypeEnumId?: any) {
-      try {
-        const payload = {
-          "inputFields": {
-            "productStoreId": this.currentEComStore?.productStoreId,
-            settingTypeEnumId
-          },
-          "entityName": "ProductStoreSetting",
-          "fieldList": ["settingTypeEnumId", "settingValue"],
-          "viewSize": 5
-        } as any
-
-        // get all values
-        if (!payload.inputFields.settingTypeEnumId) {
-          payload.inputFields.settingTypeEnumId = Object.values(this.rerouteFulfillmentConfigMapping);
-          payload.inputFields.settingTypeEnumId_op = "in"
-          payload.viewSize = Object.values(this.rerouteFulfillmentConfigMapping)?.length
-
-        }
-
-        const resp = await UserService.getRerouteFulfillmentConfig(payload) as any
-        if (!hasError(resp) && resp.data?.docs) {
-          const rerouteFulfillmentConfigMappingFlipped = Object.fromEntries(Object.entries(this.rerouteFulfillmentConfigMapping).map(([key, value]) => [value, key])) as any;
-          resp.data.docs.map((config: any) => {
-            this.rerouteFulfillmentConfig[rerouteFulfillmentConfigMappingFlipped[config.settingTypeEnumId]] = config;
-          })
-        } else {
-          Object.keys(this.rerouteFulfillmentConfigMapping).map((key) => {
-            this.rerouteFulfillmentConfig[key] = {};
-          });
-        }
-      } catch(err) {
-        logger.error(err)
-        Object.keys(this.rerouteFulfillmentConfigMapping).map((key) => {
-          this.rerouteFulfillmentConfig[key] = {};
-        });
-      }
-    },
-    async updateRerouteFulfillmentConfiguration(config: any, value: any) {
-      const params = {
-        "productStoreId": this.currentEComStore?.productStoreId,
-        "settingTypeEnumId": config.settingTypeEnumId,
-        "settingValue": value
-      }
-
-      try {
-        const resp = await UserService.updateRerouteFulfillmentConfig(params) as any
-        if(!hasError(resp)) {
-          showToast(translate('Configuration updated'))
-        } else {
-          showToast(translate('Failed to update configuration'))
-        }
-      } catch(err) {
-        showToast(translate('Failed to update configuration'))
-        logger.error(err)
-      }
-      // Fetch the updated configuration
-      await this.getRerouteFulfillmentConfiguration(config.settingTypeEnumId);
-    },
-    async updatePartialOrderRejectionConfig(config: any, value: any) {
-      const params = {
-        ...config,
-        "settingValue": value
-      }
-      await this.store.dispatch('user/updatePartialOrderRejectionConfig', params)
-    },
-    async updateNotificationPref(enumId: string) {
-      let isToggledOn = false;
-
-      try {
-        if (!isFcmConfigured()) {
-          logger.error("FCM is not configured.");
-          showToast(translate('Notification preferences not updated. Please try again.'))
-          return;
-        }
-
-        emitter.emit('presentLoader',  { backdropDismiss: false })
-        const facilityId = this.currentFacility?.facilityId
-        const topicName = generateTopicName(facilityId, enumId)
-
-        const notificationPref = this.notificationPrefs.find((pref: any) => pref.enumId === enumId)
-        notificationPref.isEnabled
-          ? await unsubscribeTopic(topicName, process.env.VUE_APP_NOTIF_APP_ID)
-          : await subscribeTopic(topicName, process.env.VUE_APP_NOTIF_APP_ID)
-
-        isToggledOn = !notificationPref.isEnabled
-        notificationPref.isEnabled = !notificationPref.isEnabled
-        await this.store.dispatch('user/updateNotificationPreferences', this.notificationPrefs)
-        showToast(translate('Notification preferences updated.'))
-      } catch (error) {
-        showToast(translate('Notification preferences not updated. Please try again.'))
-      } finally {
-        emitter.emit("dismissLoader")
-      }
-      
-      try {
-        if(!this.allNotificationPrefs.length && isToggledOn) {
-          await initialiseFirebaseApp(JSON.parse(process.env.VUE_APP_FIREBASE_CONFIG), process.env.VUE_APP_FIREBASE_VAPID_KEY, storeClientRegistrationToken, addNotification)
-        } else if(this.allNotificationPrefs.length == 1 && !isToggledOn) {
-          await removeClientRegistrationToken(this.firebaseDeviceId, process.env.VUE_APP_NOTIF_APP_ID)
-        }
-        await this.store.dispatch("user/fetchAllNotificationPrefs");
-      } catch(error) {
-        logger.error(error);
-      }
-    },
-    async confirmNotificationPrefUpdate(enumId: string, event: CustomEvent) {
-      event.stopImmediatePropagation();
-
-      const message = translate("Are you sure you want to update the notification preferences?");
-      const alert = await alertController.create({
-        header: translate("Update notification preferences"),
-        message,
-        buttons: [
-          {
-            text: translate("Cancel"),
-            role: "cancel"
-          },
-          {
-            text: translate("Confirm"),
-            handler: async () => {
-              // passing event reference for updation in case the API success
-              alertController.dismiss()
-              await this.updateNotificationPref(enumId)
-            }
-          }
-        ],
-      });
-      return alert.present();
-    }
-  },
-  setup () {
-    const store = useStore();
-    const router = useRouter();
-    const userStore = useUserStore()
-    let currentFacility: any = computed(() => userStore.getCurrentFacility) 
-
-    return {
-      Actions,
-      currentFacility,
-      ellipsisVertical,
-      goToOms,
-      hasPermission,
-      personCircleOutline,
-      router,
-      sendOutline,
-      store,
-      storefrontOutline,
-      codeWorkingOutline,
-      openOutline,
-      translate
     }
   }
-});
+  return {};
+}
+
+async function fetchCarriers() {
+  availableShipmentMethods.value = [];
+  try {
+    const resp = await UserService.getRerouteFulfillmentConfig({
+      "entityName": "CarrierShipmentMethodCount",
+      "inputFields": {
+        "roleTypeId": "CARRIER",
+        "partyTypeId": "PARTY_GROUP"
+      },
+      "fieldList": ["partyId", "roleTypeId", "groupName"],
+      "viewIndex": 0,
+      "viewSize": 250,
+      "distinct": "Y",
+      "noConditionFind": "Y",
+      "orderBy": "groupName"
+    }) as any;
+    if (!hasError(resp) && resp.data?.docs) {
+      carriers.value = resp.data.docs;
+    }
+  } catch (err) {
+    logger.error(err)
+  }
+}
+
+async function getAvailableShipmentMethods() {
+  availableShipmentMethods.value = [];
+  try {
+    const resp = await UserService.getRerouteFulfillmentConfig({
+      "inputFields": {
+        "productStoreId": currentEComStore.value?.productStoreId,
+        "shipmentMethodTypeId": "STOREPICKUP",
+        "shipmentMethodTypeId_op": "notEqual"
+      },
+      "filterByDate": 'Y',
+      "entityName": "ProductStoreShipmentMethView",
+      "fieldList": ["productStoreShipMethId", "partyId", "shipmentMethodTypeId", "description"],
+      "viewSize": 250
+    }) as any;
+    if (!hasError(resp) && resp.data?.docs) {
+      availableShipmentMethods.value = resp.data.docs;
+    }
+  } catch (err) {
+    logger.error(err)
+  }
+}
+
+async function getRerouteFulfillmentConfiguration(settingTypeEnumId?: any) {
+  try {
+    const payload = {
+      "inputFields": {
+        "productStoreId": currentEComStore.value?.productStoreId,
+        settingTypeEnumId
+      },
+      "entityName": "ProductStoreSetting",
+      "fieldList": ["settingTypeEnumId", "settingValue"],
+      "viewSize": 5
+    } as any
+
+    // get all values
+    if (!payload.inputFields.settingTypeEnumId) {
+      payload.inputFields.settingTypeEnumId = Object.values(rerouteFulfillmentConfigMapping.value);
+      payload.inputFields.settingTypeEnumId_op = "in"
+      payload.viewSize = Object.values(rerouteFulfillmentConfigMapping.value)?.length
+    }
+
+    const resp = await UserService.getRerouteFulfillmentConfig(payload) as any
+    if (!hasError(resp) && resp.data?.docs) {
+      const rerouteFulfillmentConfigMappingFlipped = Object.fromEntries(Object.entries(rerouteFulfillmentConfigMapping.value).map(([key, value]) => [value, key])) as any;
+      resp.data.docs.map((config: any) => {
+        rerouteFulfillmentConfig.value[rerouteFulfillmentConfigMappingFlipped[config.settingTypeEnumId]] = config;
+      })
+    } else {
+      Object.keys(rerouteFulfillmentConfigMapping.value).map((key) => {
+        rerouteFulfillmentConfig.value[key] = {};
+      });
+    }
+  } catch (err) {
+    logger.error(err)
+    Object.keys(rerouteFulfillmentConfigMapping.value).map((key) => {
+      rerouteFulfillmentConfig.value[key] = {};
+    });
+  }
+}
+
+async function updateRerouteFulfillmentConfiguration(config: any, value: any) {
+  const params = {
+    "productStoreId": currentEComStore.value?.productStoreId,
+    "settingTypeEnumId": config.settingTypeEnumId,
+    "settingValue": value
+  }
+
+  try {
+    const resp = await UserService.updateRerouteFulfillmentConfig(params) as any
+    if (!hasError(resp)) {
+      showToast(translate('Configuration updated'))
+    } else {
+      showToast(translate('Failed to update configuration'))
+    }
+  } catch (err) {
+    showToast(translate('Failed to update configuration'))
+    logger.error(err)
+  }
+  // Fetch the updated configuration
+  await getRerouteFulfillmentConfiguration(config.settingTypeEnumId);
+}
+
+async function updatePartialOrderRejectionConfig(config: any, value: any) {
+  const params = {
+    ...config,
+    "settingValue": value
+  }
+  await useUserStore().updatePartialOrderRejectionConfig(params)
+}
+
+async function updateNotificationPref(enumId: string) {
+  let isToggledOn = false;
+
+  try {
+    if (!isFcmConfigured()) {
+      logger.error("FCM is not configured.");
+      showToast(translate('Notification preferences not updated. Please try again.'))
+      return;
+    }
+
+    emitter.emit('presentLoader', { backdropDismiss: false })
+    const facilityId = (currentFacility.value as any)?.facilityId
+    const topicName = generateTopicName(facilityId, enumId)
+
+    const pref = notificationPrefs.value.find((p: any) => p.enumId === enumId)
+    pref.isEnabled
+      ? await unsubscribeTopic(topicName, process.env.VUE_APP_NOTIF_APP_ID)
+      : await subscribeTopic(topicName, process.env.VUE_APP_NOTIF_APP_ID)
+
+    isToggledOn = !pref.isEnabled
+    pref.isEnabled = !pref.isEnabled
+    await useUserStore().updateNotificationPreferences(notificationPrefs.value)
+    showToast(translate('Notification preferences updated.'))
+  } catch (error) {
+    showToast(translate('Notification preferences not updated. Please try again.'))
+  } finally {
+    emitter.emit("dismissLoader")
+  }
+
+  try {
+    if (!allNotificationPrefs.value.length && isToggledOn) {
+      await initialiseFirebaseApp(JSON.parse(process.env.VUE_APP_FIREBASE_CONFIG || '{}'), process.env.VUE_APP_FIREBASE_VAPID_KEY, storeClientRegistrationToken, addNotification)
+    } else if (allNotificationPrefs.value.length == 1 && !isToggledOn) {
+      await removeClientRegistrationToken(firebaseDeviceId.value, process.env.VUE_APP_NOTIF_APP_ID)
+    }
+    await useUserStore().fetchAllNotificationPrefs();
+  } catch (error) {
+    logger.error(error);
+  }
+}
+
+async function confirmNotificationPrefUpdate(enumId: string, event: CustomEvent) {
+  event.stopImmediatePropagation();
+
+  const message = translate("Are you sure you want to update the notification preferences?");
+  const alert = await alertController.create({
+    header: translate("Update notification preferences"),
+    message,
+    buttons: [
+      {
+        text: translate("Cancel"),
+        role: "cancel"
+      },
+      {
+        text: translate("Confirm"),
+        handler: async () => {
+          // passing event reference for updation in case the API success
+          alertController.dismiss()
+          await updateNotificationPref(enumId)
+        }
+      }
+    ],
+  });
+  return alert.present();
+}
 </script>
 
 <style scoped>

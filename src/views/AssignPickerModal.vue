@@ -65,179 +65,123 @@
   </ion-fab>
 </template>
 
-<script>
-import { 
-  IonButtons,
-  IonButton,
-  IonContent,
-  IonFab,
-  IonFabButton,
-  IonHeader,
-  IonIcon,
-  IonItem,
-  IonLabel,
-  IonList,
-  IonListHeader,
-  IonRadio,
-  IonRadioGroup,
-  IonSearchbar,
-  IonSpinner,
-  IonTitle,
-  IonToolbar,
-  IonInfiniteScroll,
-  IonInfiniteScrollContent,
-  modalController } from "@ionic/vue";
-import { defineComponent } from "vue";
+<script setup lang="ts">
+import { IonButtons, IonButton, IonContent, IonFab, IonFabButton, IonHeader, IonIcon, IonItem, IonLabel, IonList, IonListHeader, IonRadio, IonRadioGroup, IonSearchbar, IonSpinner, IonTitle, IonToolbar, IonInfiniteScroll, IonInfiniteScrollContent, modalController } from "@ionic/vue";
+import { onMounted, ref } from "vue";
 import { closeOutline, saveOutline } from "ionicons/icons";
-import { useStore } from "vuex";
 import { showToast } from "@/utils";
 import { hasError } from '@/adapter'
 import { translate } from "@hotwax/dxp-components";
 import { PicklistService } from '@/services/PicklistService'
 import logger from '@/logger'
 
-export default defineComponent({
-  name: "AssignPickerModal",
-  components: { 
-    IonButtons,
-    IonButton,
-    IonContent,
-    IonFab,
-    IonFabButton,
-    IonHeader,
-    IonIcon,
-    IonItem,
-    IonLabel,
-    IonList,
-    IonListHeader,
-    IonRadio,
-    IonRadioGroup,
-    IonSearchbar,
-    IonSpinner,
-    IonTitle,
-    IonToolbar,
-    IonInfiniteScroll,
-    IonInfiniteScrollContent
-  },
-  props: ['order', 'shipGroup', 'facilityId'],
-  data () {
-    return {
-      selectedPicker: '',
-      queryString: '',
-      availablePickers: [],
-      isScrollable: true,
-      isScrollingEnabled: false,
-      isLoading: false
+const selectedPicker = ref('');
+const queryString = ref('');
+const availablePickers = ref([] as any);
+const isScrollable = ref(true);
+const isScrollingEnabled = ref(false);
+const isLoading = ref(false);
+const contentRef = ref(null as any);
+const infiniteScrollRef = ref(null as any);
+
+const closeModal = () => {
+  modalController.dismiss({ dismissed: true });
+};
+
+const searchPicker = async () => {
+  availablePickers.value = [];
+  await getPicker();
+};
+
+const readyForPickup = () => {
+  if (selectedPicker.value) {
+    const picker = availablePickers.value.find((picker: any) => picker.id == selectedPicker.value);
+    modalController.dismiss({ dismissed: true, selectedPicker: selectedPicker.value, picker });
+  } else {
+    showToast(translate('Select a picker'));
+  }
+};
+
+const enableScrolling = () => {
+  const parentElement = contentRef.value?.$el;
+  if (!parentElement) return;
+  const scrollEl = parentElement.shadowRoot.querySelector("div[part='scroll']");
+  let scrollHeight = scrollEl.scrollHeight, infiniteHeight = infiniteScrollRef.value?.$el.offsetHeight, scrollTop = scrollEl.scrollTop, threshold = 100, height = scrollEl.offsetHeight;
+  const distanceFromInfinite = scrollHeight - infiniteHeight - scrollTop - threshold - height;
+  if(distanceFromInfinite < 0) {
+    isScrollingEnabled.value = false;
+  } else {
+    isScrollingEnabled.value = true;
+  }
+};
+
+const loadMorePickers = async (event: any) => {
+  if(!(isScrollingEnabled.value && isScrollable.value)) {
+    await event.target.complete();
+  }
+  const viewSize = process.env.VUE_APP_VIEW_SIZE ? parseInt(process.env.VUE_APP_VIEW_SIZE) : 10;
+  await getPicker(
+    undefined,
+    Math.ceil(
+      availablePickers.value.length / viewSize
+    ).toString()
+  );
+  await event.target.complete();
+};
+
+const getPicker = async (vSize?: any, vIndex?: any) => {
+  if(!vIndex) isLoading.value = true;
+  const viewSize = vSize ? vSize : (process.env.VUE_APP_VIEW_SIZE ? parseInt(process.env.VUE_APP_VIEW_SIZE) : 10);
+  let query = "";
+
+  if(queryString.value.length > 0) {
+    let keyword = queryString.value.trim().split(' ');
+    query = `(${keyword.map(key => `*${key}*`).join(' OR ')}) OR "${queryString.value}"^100`;
+  }
+  else {
+    query = `*:*`;
+  }
+
+  const payload = {
+    "json": {
+      "params": {
+        "rows": viewSize,
+        "start": viewSize * (vIndex ? parseInt(vIndex) : 0),
+        "q": query,
+        "defType" : "edismax",
+        "qf": "firstName lastName groupName partyId externalId",
+        "sort": "firstName asc"
+      },
+      "filter": ["docType:EMPLOYEE", "statusId:PARTY_ENABLED", "WAREHOUSE_PICKER_role:true", "-partyId:_NA_"]
     }
-  },
-  methods: {
-    closeModal() {
-      modalController.dismiss({ dismissed: true });
-    },
-    async searchPicker () {
-      this.availablePickers = []
-      this.getPicker()
-    },
-    readyForPickup () {
-      if (this.selectedPicker) {
-        const picker = this.availablePickers.find((picker) => picker.id == this.selectedPicker);
-        modalController.dismiss({ dismissed: true, selectedPicker: this.selectedPicker, picker });
-      } else {
-        showToast(translate('Select a picker'))
-      }
-    },
-    enableScrolling() {
-      const parentElement = (this).$refs.contentRef.$el
-      const scrollEl = parentElement.shadowRoot.querySelector("div[part='scroll']")
-      let scrollHeight = scrollEl.scrollHeight, infiniteHeight = (this).$refs.infiniteScrollRef.$el.offsetHeight, scrollTop = scrollEl.scrollTop, threshold = 100, height = scrollEl.offsetHeight
-      const distanceFromInfinite = scrollHeight - infiniteHeight - scrollTop - threshold - height
-      if(distanceFromInfinite < 0) {
-        this.isScrollingEnabled = false;
-      } else {
-        this.isScrollingEnabled = true;
-      }
-    },
-    async loadMorePickers(event) {
-      // Added this check here as if added on infinite-scroll component the Loading content does not gets displayed
-      if(!(this.isScrollingEnabled && this.isScrollable)) {
-        await event.target.complete();
-      }
-      this.getPicker(
-        undefined,
-        Math.ceil(
-          this.availablePickers.length / (process.env.VUE_APP_VIEW_SIZE)
-        ).toString()
-      ).then(async () => {
-        await event.target.complete();
-      });
-    },
-    async getPicker(vSize, vIndex) {
-      if(!vIndex) this.isLoading = true;
-      const viewSize = vSize ? vSize : process.env.VUE_APP_VIEW_SIZE;
-      let query = {}
+  };
+  let total = 0;
 
-      if(this.queryString.length > 0) {
-        let keyword = this.queryString.trim().split(' ')
-        query = `(${keyword.map(key => `*${key}*`).join(' OR ')}) OR "${this.queryString}"^100`;
-      }
-      else {
-        query = `*:*`
-      }
-
-      const payload = {
-        "json": {
-          "params": {
-            "rows": viewSize,
-            "start": viewSize*vIndex,
-            "q": query,
-            "defType" : "edismax",
-            "qf": "firstName lastName groupName partyId externalId",
-            "sort": "firstName asc"
-          },
-          "filter": ["docType:EMPLOYEE", "statusId:PARTY_ENABLED", "WAREHOUSE_PICKER_role:true", "-partyId:_NA_"]
-        }
-      }
-      let total = 0;
-
-      try {
-        const resp = await PicklistService.getAvailablePickers(payload);
-        if (resp.status === 200 && !hasError(resp) && resp.data.response.docs.length > 0) {
-          const pickers = resp.data.response.docs.map((picker) => ({
-            name: picker.groupName ? picker.groupName : (picker.firstName || picker.lastName)
-                ? (picker.firstName ? picker.firstName : '') + (picker.lastName ? ' ' + picker.lastName : '') : picker.partyId,
-            id: picker.partyId,
-            externalId: picker.externalId
-          }))
-          this.availablePickers = this.availablePickers.concat(pickers);
-          total = resp.data.response?.numFound;
-        } else {
-          logger.error(translate('Something went wrong'))
-        }
-      } catch (err) {
-        logger.error(translate('Something went wrong'))
-      }
-      this.isScrollable = this.availablePickers.length < total;
-      this.isLoading = false;
+  try {
+    const resp = await PicklistService.getAvailablePickers(payload);
+    if (resp.status === 200 && !hasError(resp) && resp.data.response.docs.length > 0) {
+      const pickers = resp.data.response.docs.map((picker: any) => ({
+        name: picker.groupName ? picker.groupName : (picker.firstName || picker.lastName)
+            ? (picker.firstName ? picker.firstName : '') + (picker.lastName ? ' ' + picker.lastName : '') : picker.partyId,
+        id: picker.partyId,
+        externalId: picker.externalId
+      }));
+      availablePickers.value = availablePickers.value.concat(pickers);
+      total = resp.data.response?.numFound;
+    } else {
+      logger.error(translate('Something went wrong'));
     }
-  },
-  async mounted() {
-    // getting picker information on initial load
-    await this.getPicker();
-  },
-  async ionViewWillEnter() {
-    this.isScrollingEnabled = false;
-  },
-  setup() {
-    const store = useStore();
+  } catch (err) {
+    logger.error(translate('Something went wrong'));
+  }
+  isScrollable.value = availablePickers.value.length < total;
+  isLoading.value = false;
+};
 
-    return {
-      closeOutline,
-      saveOutline,
-      store,
-      translate
-    };
-  },
+onMounted(async () => {
+  await getPicker();
 });
+
 </script>
 
 <style scoped>

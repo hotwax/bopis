@@ -34,84 +34,46 @@
   </ion-content>
 </template>
   
-<script lang="ts">
-import {
-  IonButton,
-  IonButtons,
-  IonContent,
-  IonHeader,
-  IonIcon,
-  IonItem,
-  IonThumbnail,
-  IonLabel,
-  IonList,
-  IonTitle,
-  IonToolbar,
-  modalController
-} from '@ionic/vue';
-import { computed, defineComponent } from 'vue';
+<script setup lang="ts">
+import { IonButton, IonButtons, IonContent, IonHeader, IonIcon, IonItem, IonThumbnail, IonLabel, IonList, IonTitle, IonToolbar, modalController } from '@ionic/vue';
+import { computed, onMounted, ref } from 'vue';
 import { closeOutline } from 'ionicons/icons';
-import { mapGetters, useStore } from "vuex";
 import { DateTime } from 'luxon';
-import { getProductIdentificationValue, translate, useProductIdentificationStore } from '@hotwax/dxp-components';
+import { DxpShopifyImg, getProductIdentificationValue, translate, useProductIdentificationStore } from '@hotwax/dxp-components';
+import { useOrderStore } from '@/store/order';
+import { useProductStore } from '@/store/product';
+import { useUtilStore } from '@/store/util';
 
-export default defineComponent({
-  name: "OrderItemRejHistoryModal",
-  components: {
-    IonButton,
-    IonButtons,
-    IonContent,
-    IonHeader,
-    IonIcon,
-    IonItem,
-    IonThumbnail,
-    IonLabel,
-    IonList,
-    IonTitle,
-    IonToolbar,
-  },
-  data () {
-    return {
-      isLoading: true
-    }
-  },
-  computed: {
-    ...mapGetters({
-      getProduct: 'product/getProduct',
-      order: "order/getCurrent",
-      rejectReasons: 'util/getRejectReasons',
-      orderRejectionHistory: 'order/getOrderItemRejectionHistory'
-    })
-  },
-  async mounted() {
-    await this.store.dispatch('order/getOrderItemRejectionHistory', { orderId: this.order.orderId, rejectReasonEnumIds: this.rejectReasons.reduce((enumIds: [], reason: any) => [...enumIds, reason.enumId], []) });
-    this.isLoading = false;
-  },
-  methods: {
-    closeModal() {
-      modalController.dismiss({ dismissed: true });
-    },
-    getRejectReasonDescription(rejectReasonEnumId: string) {
-      const reason = this.rejectReasons.find((reason: any) => reason.enumId === rejectReasonEnumId)
-      return reason?.enumDescription ? reason.enumDescription : reason?.description;
-    },
-    getTime(time: number) {
-      return time ? DateTime.fromMillis(time).toLocaleString(DateTime.DATETIME_MED) : ''
-    }
-  },
-  setup() {
-    const store = useStore();
+const orderStore = useOrderStore();
+const productStore = useProductStore();
+const utilStore = useUtilStore();
 
-    const productIdentificationStore = useProductIdentificationStore();
-    let productIdentificationPref = computed(() => productIdentificationStore.getProductIdentificationPref)
+const isLoading = ref(true);
 
-    return {
-      closeOutline,
-      getProductIdentificationValue,
-      productIdentificationPref,
-      store,
-      translate
-    };
-  },
+const getProduct = (productId: string) => productStore.getProduct(productId);
+const order = computed(() => orderStore.getCurrent);
+const rejectReasons = computed(() => utilStore.getRejectReasons);
+const orderRejectionHistory = computed(() => orderStore.orderItemRejectionHistory);
+const productIdentificationPref = computed(() => useProductIdentificationStore().getProductIdentificationPref);
+
+onMounted(async () => {
+  await orderStore.getOrderItemRejectionHistory({ 
+    orderId: order.value.orderId, 
+    rejectReasonEnumIds: rejectReasons.value.map((reason: any) => reason.enumId) 
+  });
+  isLoading.value = false;
 });
+
+function closeModal() {
+  modalController.dismiss({ dismissed: true });
+}
+
+function getRejectReasonDescription(rejectReasonEnumId: string) {
+  const reason = rejectReasons.value.find((reason: any) => reason.enumId === rejectReasonEnumId)
+  return reason?.enumDescription ? reason.enumDescription : reason?.description;
+}
+
+function getTime(time: number) {
+  return time ? DateTime.fromMillis(time).toLocaleString(DateTime.DATETIME_MED) : ''
+}
 </script>

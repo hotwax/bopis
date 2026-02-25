@@ -108,449 +108,326 @@
   </ion-page>
 </template>
 
-<script lang="ts">
-import {
-  alertController,
-  IonBackButton,
-  IonButton,
-  IonCard,
-  IonContent,
-  IonHeader,
-  IonIcon,
-  IonInfiniteScroll,
-  IonInfiniteScrollContent,
-  IonItem,
-  IonLabel,
-  IonNote,
-  IonPage,
-  IonRefresher,
-  IonRefresherContent,
-  IonSearchbar,
-  IonSegment,
-  IonSegmentButton,
-  IonTitle,
-  IonToolbar,
-  modalController
-} from "@ionic/vue";
-import { defineComponent, ref, computed } from "vue";
+<script setup lang="ts">
+import { alertController, IonBackButton, IonButton, IonCard, IonContent, IonHeader, IonIcon, IonInfiniteScroll, IonInfiniteScrollContent, IonItem, IonLabel, IonNote, IonPage, IonRefresher, IonRefresherContent, IonSearchbar, IonSegment, IonSegmentButton, IonTitle, IonToolbar, modalController } from "@ionic/vue";
+import { onMounted, onUnmounted, ref, computed } from "vue";
 import ProductListItem from '@/components/ProductListItem.vue'
 import { mailOutline } from "ionicons/icons";
-import { mapGetters, useStore } from 'vuex'
-import { useRouter } from 'vue-router'
-import { copyToClipboard, showToast } from '@/utils'
+import { useOrderStore } from '@/store/order';
+import { useUserStore } from '@/store/user';
+import { showToast } from '@/utils'
 import { hasError } from '@/adapter'
 import { DateTime } from 'luxon';
 import emitter from "@/event-bus"
 import { Actions, hasPermission } from '@/authorization'
 import { OrderService } from "@/services/OrderService";
-import { translate, useUserStore } from "@hotwax/dxp-components";
+import { translate } from "@hotwax/dxp-components";
 import logger from "@/logger";
 import ProofOfDeliveryModal from "@/components/ProofOfDeliveryModal.vue";
 
-export default defineComponent({
-  name: 'ShipToStoreOrders',
-  components: {
-    IonBackButton,
-    IonButton,
-    IonCard,
-    IonContent,
-    IonHeader,
-    IonIcon,
-    IonInfiniteScroll,
-    IonInfiniteScrollContent,
-    IonItem,
-    IonLabel,
-    IonNote,
-    IonPage,
-    IonRefresher,
-    IonRefresherContent,
-    IonSearchbar,
-    IonSegment,
-    IonSegmentButton,
-    IonTitle,
-    IonToolbar,
-    ProductListItem
-  },
-  created () {
-    emitter.on("refreshPickupOrders", this.getIncomingOrders);
-  },
-  unmounted () {
-    emitter.off("refreshPickupOrders", this.getIncomingOrders);
-  },
-  computed: {
-    ...mapGetters({
-      incomingOrders: 'order/getShipToStoreIncomingOrders',
-      readyForPickupOrders: 'order/getShipToStoreReadyForPickupOrders',
-      completedOrders: 'order/getShipToStoreCompletedOrders',
-      isPackedOrdersScrollable: 'order/isPackedOrdersScrollable',
-      isIncomingOrdersScrollable: 'order/isShipToStoreIncmngOrdrsScrlbl',
-      isReadyForPickupOrdersScrollable: 'order/isShipToStoreRdyForPckupOrdrsScrlbl',
-      isCompletedOrdersScrollable: 'order/isShipToStoreCmpltdOrdrsScrlbl',
-      incomingOrderCount: "order/getIncomingOrdersCount",
-      readyForPickupOrderCount: "order/getReadyForPickupOrdersCount",
-      completedOrderCount: "order/getCompletedOrdersCount",
-      communicationEvents: 'order/getCommunicationEvents',
-      getBopisProductStoreSettings: 'user/getBopisProductStoreSettings',
-    })
-    ,
-    communicationEventOrderIds() {
-      return new Set(((this as any).communicationEvents || []).map((e: any) => e.orderId));
-    }
-  },
-  data() {
-    return {
-      queryString: '',
-      isScrollingEnabled: false
-    }
-  },
-  methods: {
-    getDateTime(time: any) {
-      return DateTime.fromMillis(time).toLocaleString();
-    },
-    async refreshOrders(event: any) {
-      if(this.segmentSelected === 'incoming') {
-        this.getIncomingOrders().then(() => { event.target.complete() });
-      } else if (this.segmentSelected === 'readyForPickup') {
-        this.getReadyForPickupOrders().then(() => { event.target.complete() });
-      } else {
-        this.getCompletedOrders().then(() => { event.target.complete() });
-      }
-    },
-    async getIncomingOrders (vSize?: any, vIndex?: any) {
-      const viewSize = vSize ? vSize : process.env.VUE_APP_VIEW_SIZE;
-      const viewIndex = vIndex ? vIndex : 0;
+const queryString = ref('');
+const isScrollingEnabled = ref(false);
+const segmentSelected = ref('incoming');
+const contentRef = ref(null as any);
+const infiniteScrollRef = ref(null as any);
 
-      await this.store.dispatch("order/getShipToStoreIncomingOrders", { viewSize, viewIndex, queryString: this.queryString, facilityId: this.currentFacility?.facilityId });
-    },
-    async getReadyForPickupOrders (vSize?: any, vIndex?: any) {
-      const viewSize = vSize ? vSize : process.env.VUE_APP_VIEW_SIZE;
-      const viewIndex = vIndex ? vIndex : 0;
+const incomingOrders = computed(() => useOrderStore().getShipToStoreIncomingOrders);
+const readyForPickupOrders = computed(() => useOrderStore().getShipToStoreReadyForPickupOrders);
+const completedOrders = computed(() => useOrderStore().getShipToStoreCompletedOrders);
+const isIncomingOrdersScrollable = computed(() => useOrderStore().isShipToStoreIncmngOrdrsScrlbl);
+const isReadyForPickupOrdersScrollable = computed(() => useOrderStore().isShipToStoreRdyForPckupOrdrsScrlbl);
+const isCompletedOrdersScrollable = computed(() => useOrderStore().isShipToStoreCmpltdOrdrsScrlbl);
+const incomingOrderCount = computed(() => useOrderStore().getIncomingOrdersCount);
+const readyForPickupOrderCount = computed(() => useOrderStore().getReadyForPickupOrdersCount);
+const completedOrderCount = computed(() => useOrderStore().getCompletedOrdersCount);
+const communicationEvents = computed(() => useOrderStore().getCommunicationEvents);
+const getBopisProductStoreSettings = computed(() => useUserStore().getBopisProductStoreSettings);
 
-      await this.store.dispatch("order/getShipToStoreReadyForPickupOrders", { viewSize, viewIndex, queryString: this.queryString, facilityId: this.currentFacility?.facilityId });
-    },
-    async getCompletedOrders (vSize?: any, vIndex?: any) {
-      const viewSize = vSize ? vSize : process.env.VUE_APP_VIEW_SIZE;
-      const viewIndex = vIndex ? vIndex : 0;
+const communicationEventOrderIds = computed(() => new Set((communicationEvents.value || []).map((e: any) => e.orderId)));
 
-      await this.store.dispatch("order/getShipToStoreCompletedOrders", { viewSize, viewIndex, queryString: this.queryString, facilityId: this.currentFacility?.facilityId });
-      await this.store.dispatch('order/getCommunicationEvents', { orders: this.completedOrders });
-    },
-    enableScrolling() {
-      const parentElement = (this as any).$refs.contentRef.$el
-      const scrollEl = parentElement.shadowRoot.querySelector("div[part='scroll']")
-      let scrollHeight = scrollEl.scrollHeight, infiniteHeight = (this as any).$refs.infiniteScrollRef.$el.offsetHeight, scrollTop = scrollEl.scrollTop, threshold = 100, height = scrollEl.offsetHeight
-      const distanceFromInfinite = scrollHeight - infiniteHeight - scrollTop - threshold - height
-      if(distanceFromInfinite < 0) {
-        this.isScrollingEnabled = false;
-      } else {
-        this.isScrollingEnabled = true;
-      }
-    },
-    async loadMoreOrders (event: any) {
-      // Added this check here as if added on infinite-scroll component the Loading content does not gets displayed
-      if (!(this.isScrollingEnabled && (this.segmentSelected === 'incoming' ? this.isIncomingOrdersScrollable : this.segmentSelected === 'readyForPickup' ? this.isReadyForPickupOrdersScrollable : this.isCompletedOrdersScrollable))) {
-        await event.target.complete();
-      }
-      if (this.segmentSelected === 'incoming') {
-        this.getIncomingOrders(
-          undefined,
-          Math.ceil(this.incomingOrderCount / process.env.VUE_APP_VIEW_SIZE).toString()
-        ).then(async () => {
-          await event.target.complete();
-        });
-      } else if (this.segmentSelected === 'readyForPickup') {
-        this.getReadyForPickupOrders(
-          undefined,
-          Math.ceil(this.readyForPickupOrderCount / process.env.VUE_APP_VIEW_SIZE).toString()
-        ).then(async () => {
-          await event.target.complete();
-        });
-      } else {
-        this.getCompletedOrders(
-          undefined,
-          Math.ceil(this.completedOrderCount / process.env.VUE_APP_VIEW_SIZE).toString()
-        ).then(async () => {
-          await event.target.complete();
-        });
-      }
-    },
-    segmentChanged (event: CustomEvent) {
-      this.queryString = ''
-      this.segmentSelected = event.detail.value
-      this.store.dispatch('order/resetShipToStoreOrdersPagination');
-      if(this.segmentSelected === 'incoming') {
-        this.getIncomingOrders()
-      } else if(this.segmentSelected === 'readyForPickup') {
-        this.getReadyForPickupOrders()
-      } else {
-        this.getCompletedOrders()
-      }
-    },
-    async searchOrders() {
-      this.queryString = this.queryString.trim()
-      this.store.dispatch('order/resetShipToStoreOrdersPagination');
-      if(this.segmentSelected === 'incoming') {
-        this.getIncomingOrders()
-      } else if(this.segmentSelected === 'readyForPickup') {
-        this.getReadyForPickupOrders()
-      } else {
-        this.getCompletedOrders()
-      }
-    },
-    selectSearchBarText(event: any) {
-      event.target.getInputElement().then((element: any) => {
-        element.select();
-      })
-    },
-    async confirmScheduleOrderForPickup(order: any) {
-      const header = translate('Ready for pickup')
-      const message = translate('Order will be marked as ready for pickup and an email notification will be sent to . This action is irreversible.',{  customerName: order.customerName });
+const getDateTime = (time: any) => {
+  return DateTime.fromMillis(time).toLocaleString();
+};
 
-      const alert = await alertController
-        .create({
-          header: header,
-          message: message,
-          buttons: [{
-            text: translate('Cancel'),
-            role: 'cancel'
-          },{
-            text: translate('Ready for pickup'),
-            handler: async () => {
-              await this.scheduleOrderForPickup(order.shipmentId, order)
-            }
-          }]
-        });
-      return alert.present();
-    },
+const getIncomingOrders = async (vSize?: any, vIndex?: any) => {
+  const viewSize = vSize ? vSize : (process.env.VUE_APP_VIEW_SIZE as any);
+  const viewIndex = vIndex ? vIndex : 0;
+  await (useOrderStore() as any).getShipToStoreIncomingOrders({ viewSize, viewIndex, queryString: queryString.value, facilityId: (useUserStore().getCurrentFacility as any)?.facilityId });
+};
 
-    async scheduleOrderForPickup(shipmentId: string, order: any) {
-        emitter.emit("presentLoader");
+const getReadyForPickupOrders = async (vSize?: any, vIndex?: any) => {
+  const viewSize = vSize ? vSize : (process.env.VUE_APP_VIEW_SIZE as any);
+  const viewIndex = vIndex ? vIndex : 0;
+  await (useOrderStore() as any).getReadyForPickupOrders({ viewSize, viewIndex, queryString: queryString.value, facilityId: (useUserStore().getCurrentFacility as any)?.facilityId });
+};
 
+const getCompletedOrders = async (vSize?: any, vIndex?: any) => {
+  const viewSize = vSize ? vSize : (process.env.VUE_APP_VIEW_SIZE as any);
+  const viewIndex = vIndex ? vIndex : 0;
+  await (useOrderStore() as any).getShipToStoreCompletedOrders({ viewSize, viewIndex, queryString: queryString.value, facilityId: (useUserStore().getCurrentFacility as any)?.facilityId });
+  await (useOrderStore() as any).getCommunicationEvents({ orders: completedOrders.value });
+};
+
+const refreshOrders = async (event: any) => {
+  if(segmentSelected.value === 'incoming') {
+    await getIncomingOrders();
+  } else if (segmentSelected.value === 'readyForPickup') {
+    await getReadyForPickupOrders();
+  } else {
+    await getCompletedOrders();
+  }
+  event.target.complete();
+};
+
+const enableScrolling = () => {
+  const parentElement = contentRef.value?.$el;
+  if (!parentElement) return;
+  const scrollEl = parentElement.shadowRoot.querySelector("div[part='scroll']");
+  if (!scrollEl) return;
+  let scrollHeight = scrollEl.scrollHeight, infiniteHeight = infiniteScrollRef.value?.$el.offsetHeight, scrollTop = scrollEl.scrollTop, threshold = 100, height = scrollEl.offsetHeight;
+  const distanceFromInfinite = scrollHeight - infiniteHeight - scrollTop - threshold - height;
+  if(distanceFromInfinite < 0) {
+    isScrollingEnabled.value = false;
+  } else {
+    isScrollingEnabled.value = true;
+  }
+};
+
+const loadMoreOrders = async (event: any) => {
+  const isScrollable = segmentSelected.value === 'incoming' ? isIncomingOrdersScrollable.value : segmentSelected.value === 'readyForPickup' ? isReadyForPickupOrdersScrollable.value : isCompletedOrdersScrollable.value;
+  if (!(isScrollingEnabled.value && isScrollable)) {
+    await event.target.complete();
+  }
+
+  const viewSize = (process.env.VUE_APP_VIEW_SIZE as any);
+  if (segmentSelected.value === 'incoming') {
+    await getIncomingOrders(undefined, Math.ceil(incomingOrderCount.value / viewSize).toString());
+  } else if (segmentSelected.value === 'readyForPickup') {
+    await getReadyForPickupOrders(undefined, Math.ceil(readyForPickupOrderCount.value / viewSize).toString());
+  } else {
+    await getCompletedOrders(undefined, Math.ceil(completedOrderCount.value / viewSize).toString());
+  }
+  await event.target.complete();
+};
+
+const segmentChanged = (event: CustomEvent) => {
+  queryString.value = '';
+  segmentSelected.value = event.detail.value;
+  useOrderStore().resetShipToStoreOrdersPagination();
+  if(segmentSelected.value === 'incoming') {
+    getIncomingOrders();
+  } else if(segmentSelected.value === 'readyForPickup') {
+    getReadyForPickupOrders();
+  } else {
+    getCompletedOrders();
+  }
+};
+
+const searchOrders = async () => {
+  queryString.value = queryString.value.trim();
+  useOrderStore().resetShipToStoreOrdersPagination();
+  if(segmentSelected.value === 'incoming') {
+    await getIncomingOrders();
+  } else if(segmentSelected.value === 'readyForPickup') {
+    await getReadyForPickupOrders();
+  } else {
+    await getCompletedOrders();
+  }
+};
+
+const selectSearchBarText = (event: any) => {
+  event.target.getInputElement().then((element: any) => {
+    element.select();
+  });
+};
+
+const scheduleOrderForPickup = async (shipmentId: string, order: any) => {
+  emitter.emit("presentLoader");
+  try {
+    const resp = await OrderService.arrivedShipToStore(shipmentId);
+    if (!hasError(resp)) {
+      const orderId = order.orderId;
+      const incomingParams = {
+        orderId,
+        orderFacilityId: (useUserStore().getCurrentFacility as any)?.facilityId,
+        pageSize: 10,
+        orderStatusId: 'ORDER_COMPLETED,ORDER_APPROVED',
+        statusId: 'ITEM_COMPLETED,ITEM_APPROVED',
+        shipmentMethodTypeId: 'SHIP_TO_STORE',
+        shipmentStatusId: 'SHIPMENT_INPUT,SHIPMENT_APPROVED,SHIPMENT_PACKED,SHIPMENT_SHIPPED',
+      };
+      const incomingResp = await OrderService.getShipToStoreOrders(incomingParams);
+      const isLastShipGroup = !hasError(incomingResp) && incomingResp.data.ordersCount === 0;
+      if (isLastShipGroup) {
         try {
-          const resp = await OrderService.arrivedShipToStore(shipmentId);
-
-          if (!hasError(resp)) {
-            const orderId = order.orderId;
-
-            // Check for any remaining ship groups for this order that are still incoming.
-            // Directly querying the backend avoids pagination issues with the Vuex store.
-            const incomingParams = {
-              orderId,
-              orderFacilityId: this.currentFacility?.facilityId,
-              pageSize: 10,
-              orderStatusId: 'ORDER_COMPLETED,ORDER_APPROVED',
-              statusId: 'ITEM_COMPLETED,ITEM_APPROVED',
-              shipmentMethodTypeId: 'SHIP_TO_STORE',
-              shipmentStatusId: 'SHIPMENT_INPUT,SHIPMENT_APPROVED,SHIPMENT_PACKED,SHIPMENT_SHIPPED',
-            };
-
-            const incomingResp = await OrderService.getShipToStoreOrders(incomingParams);
-            const isLastShipGroup = !hasError(incomingResp) && incomingResp.data.ordersCount === 0;
-
-            if (isLastShipGroup) {
-              try {
-                const emailResp = await OrderService.sendPickupScheduledNotification({ shipmentId });
-                
-                if (!hasError(emailResp)) {
-                  showToast(translate('Order marked as ready for pickup, an email notification has been sent to the customer'));
-                }
-              } catch (error) {
-                logger.error('Error sending pickup scheduled notification:', error);
-                showToast(translate('Order marked as ready for pickup but something went wrong while sending the email notification'));
-              }
-            } else {
-              showToast(translate('Order marked as ready for pickup'));
-            }
-            this.store.dispatch('order/resetShipToStoreOrdersPagination');
-            await this.getIncomingOrders(); // Refresh after all logic
-          } else {
-            showToast(translate("Failed to mark order as ready for pickup"));
+          const emailResp = await OrderService.sendPickupScheduledNotification({ shipmentId });
+          if (!hasError(emailResp)) {
+            showToast(translate('Order marked as ready for pickup, an email notification has been sent to the customer'));
           }
-
-        } catch (err) {
-          logger.error('Schedule order for pickup error:', err);
-          showToast(translate("Something went wrong"));
-        } finally {
-          emitter.emit("dismissLoader");
+        } catch (error) {
+          logger.error('Error sending pickup scheduled notification:', error);
+          showToast(translate('Order marked as ready for pickup but something went wrong while sending the email notification'));
         }
-    },
-    async confirmHandoverOrder(order: any) {
-      const header = translate('Complete order')
-      const message = translate('Order will be marked as completed and an email notification will be sent to the customer. This action is irreversible.');
-
-      const alert = await alertController
-        .create({
-          header: header,
-          message: message,
-          buttons: [{
-            text: translate('Cancel'),
-            role: 'cancel'
-          },{
-            text: translate('Complete'),
-            handler: async () => {
-              await this.handoverOrder(order.shipmentId, order)
-            }
-          }]
-        });
-      return alert.present();
-    },
-    async handoverOrder(shipmentId: string, order: any) {
-      emitter.emit("presentLoader");
-      
-      try{
-        const resp = await OrderService.handoverShipToStoreOrder(shipmentId);
-
-        if(!hasError(resp)) {
-          const orderId = order.orderId;
-
-          // Check for any remaining ship groups for this order before sending completion email.
-          // Directly querying the backend avoids pagination issues with the Vuex store.
-          const checkShipGroupParams = {
-            orderId,
-            orderFacilityId: this.currentFacility?.facilityId,
-            pageSize: 10
-          };
-
-          const pendingShipGroupParams = {
-            ...checkShipGroupParams,
-            orderStatusId: 'ORDER_COMPLETED,ORDER_APPROVED',
-            statusId: 'ITEM_COMPLETED,ITEM_APPROVED',
-            shipmentMethodTypeId: 'SHIP_TO_STORE',
-            shipmentStatusId: 'SHIPMENT_INPUT,SHIPMENT_APPROVED,SHIPMENT_PACKED,SHIPMENT_SHIPPED,SHIPMENT_ARRIVED',
-          };
-
-          const resp = await OrderService.getShipToStoreOrders(pendingShipGroupParams);
-
-          const isLastShipGroup = !hasError(resp) && resp.data.ordersCount === 0;
-
-          if (isLastShipGroup) {
-            try {
-              const emailResp = await OrderService.sendHandoverNotification({ shipmentId });
-              if (!hasError(emailResp)) {
-                showToast(translate('Order handed over successfully and order completion email has been sent'));
-              } else {
-                logger.error('Error sending handover notification:', emailResp);
-                showToast(translate('Order handed over successfully but something went wrong while sending the email notification'));
-              }
-            } catch (error) {
-              logger.error('Error sending handover notification:', error);
-              showToast(translate('Order handed over successfully but something went wrong while sending the email notification'));
-            }
-          } else {
-            showToast(translate('Order handed over successfully'));
-          }
-          // Refresh the lists for UI update.
-          this.getReadyForPickupOrders();
-        } else {
-          showToast(translate("Failed to handover order"));
-          logger.error("Handover failed", resp);
-        }
+      } else {
+        showToast(translate('Order marked as ready for pickup'));
       }
-      catch (err) {
-        logger.error('Handover failed', err);
-        showToast(translate("Something went wrong"));
-      } 
-        emitter.emit("dismissLoader");
-      
-    },
-
-    async sendReadyForPickupEmail(order: any) {
-      const header = translate('Resend email')
-      const message = translate('An email notification will be sent to that their order is ready for pickup.', { customerName: order.customerName })
-
-      const alert = await alertController
-        .create({
-          header: header,
-          message: message,
-          buttons: [{
-            text: translate('Cancel'),
-            role: 'cancel'
-          }, {
-            text: translate('Send'),
-            handler: async () => {
-              try {
-                const resp = await OrderService.sendPickupScheduledNotification({ shipmentId: order.shipmentId });
-                if (!hasError(resp)) {
-                  showToast(translate("Email sent successfully"))
-                } else {
-                  showToast(translate("Something went wrong while sending the email."))
-                }
-              } catch (error) {
-                showToast(translate("Something went wrong while sending the email."))
-                logger.error(error)
-              }
-            }
-          }]
-        });
-      return alert.present();
-    },
-    async openProofOfDeliveryModal(order: any, isViewModeOnly: any) {
-      const modal = await modalController.create({
-        component: ProofOfDeliveryModal,
-        componentProps: {
-          order,
-          isViewModeOnly
-        },
-      });
-
-      await modal.present();
-      
-      const { data } = await modal.onDidDismiss();
-      
-      if (data?.confirmed && data?.proofOfDeliveryData) {
-        emitter.emit("presentLoader");
-        
-        try {
-          // Send the proof of delivery email
-          const resp = await OrderService.sendPickupNotification(data.proofOfDeliveryData);
-          
-          if (hasError(resp)) {
-            logger.error("Pickup notification failed:", resp);
-            showToast(translate("Unable to save the details. Please try again."));
-          } else {
-            await this.store.dispatch('order/getCommunicationEvents', { orders: [order] });
-            showToast(translate("Details have been successfully saved, and an email has been sent to the customer."));
-          }
-        } catch (err) {
-          logger.error("Error in saving the details:", err);
-          showToast(translate("Something went wrong"));
-        } finally {
-          emitter.emit("dismissLoader");
-        }
-      }
-    }
-  },
-  ionViewWillEnter() {
-    this.isScrollingEnabled = false;
-    this.queryString = '';
-    if (this.segmentSelected === 'incoming') {
-      this.getIncomingOrders()
-    } else if (this.segmentSelected === 'readyForPickup') {
-      this.getReadyForPickupOrders()
+      useOrderStore().resetShipToStoreOrdersPagination();
+      await getIncomingOrders();
     } else {
-      this.getCompletedOrders()
+      showToast(translate("Failed to mark order as ready for pickup"));
     }
-  },
-  setup () {
-    const router = useRouter();
-    const store = useStore();
-    const userStore = useUserStore()
-    const segmentSelected = ref('incoming');
-    let currentFacility: any = computed(() => userStore.getCurrentFacility) 
+  } catch (err) {
+    logger.error('Schedule order for pickup error:', err);
+    showToast(translate("Something went wrong"));
+  } finally {
+    emitter.emit("dismissLoader");
+  }
+};
 
-    return {
-      Actions,
-      copyToClipboard,
-      currentFacility,
-      hasPermission,
-      mailOutline,
-      router,
-      segmentSelected,
-      store,
-      translate
-    };
-  },
+const confirmScheduleOrderForPickup = async (order: any) => {
+  const alert = await alertController.create({
+    header: translate('Ready for pickup'),
+    message: translate('Order will be marked as ready for pickup and an email notification will be sent to . This action is irreversible.',{  customerName: order.customerName }),
+    buttons: [{
+      text: translate('Cancel'),
+      role: 'cancel'
+    },{
+      text: translate('Ready for pickup'),
+      handler: () => scheduleOrderForPickup(order.shipmentId, order)
+    }]
+  });
+  return alert.present();
+};
+
+const handoverOrder = async (shipmentId: string, order: any) => {
+  emitter.emit("presentLoader");
+  try{
+    const resp = await OrderService.handoverShipToStoreOrder(shipmentId);
+    if(!hasError(resp)) {
+      const orderId = order.orderId;
+      const checkShipGroupParams = {
+        orderId,
+        orderFacilityId: (useUserStore().getCurrentFacility as any)?.facilityId,
+        pageSize: 10
+      };
+      const pendingShipGroupParams = {
+        ...checkShipGroupParams,
+        orderStatusId: 'ORDER_COMPLETED,ORDER_APPROVED',
+        statusId: 'ITEM_COMPLETED,ITEM_APPROVED',
+        shipmentMethodTypeId: 'SHIP_TO_STORE',
+        shipmentStatusId: 'SHIPMENT_INPUT,SHIPMENT_APPROVED,SHIPMENT_PACKED,SHIPMENT_SHIPPED,SHIPMENT_ARRIVED',
+      };
+      const shipGroupResp = await OrderService.getShipToStoreOrders(pendingShipGroupParams);
+      const isLastShipGroup = !hasError(shipGroupResp) && shipGroupResp.data.ordersCount === 0;
+      if (isLastShipGroup) {
+        try {
+          const emailResp = await OrderService.sendHandoverNotification({ shipmentId });
+          if (!hasError(emailResp)) {
+            showToast(translate('Order handed over successfully and order completion email has been sent'));
+          } else {
+            logger.error('Error sending handover notification:', emailResp);
+            showToast(translate('Order handed over successfully but something went wrong while sending the email notification'));
+          }
+        } catch (error) {
+          logger.error('Error sending handover notification:', error);
+          showToast(translate('Order handed over successfully but something went wrong while sending the email notification'));
+        }
+      } else {
+        showToast(translate('Order handed over successfully'));
+      }
+      await getReadyForPickupOrders();
+    } else {
+      showToast(translate("Failed to handover order"));
+      logger.error("Handover failed", resp);
+    }
+  } catch (err) {
+    logger.error('Handover failed', err);
+    showToast(translate("Something went wrong"));
+  } finally {
+    emitter.emit("dismissLoader");
+  }
+};
+
+const confirmHandoverOrder = async (order: any) => {
+  const alert = await alertController.create({
+    header: translate('Complete order'),
+    message: translate('Order will be marked as completed and an email notification will be sent to the customer. This action is irreversible.'),
+    buttons: [{
+      text: translate('Cancel'),
+      role: 'cancel'
+    },{
+      text: translate('Complete'),
+      handler: () => handoverOrder(order.shipmentId, order)
+    }]
+  });
+  return alert.present();
+};
+
+const sendReadyForPickupEmail = async (order: any) => {
+  const alert = await alertController.create({
+    header: translate('Resend email'),
+    message: translate('An email notification will be sent to that their order is ready for pickup.', { customerName: order.customerName }),
+    buttons: [{
+      text: translate('Cancel'),
+      role: 'cancel'
+    }, {
+      text: translate('Send'),
+      handler: async () => {
+        try {
+          const resp = await OrderService.sendPickupScheduledNotification({ shipmentId: order.shipmentId });
+          if (!hasError(resp)) {
+            showToast(translate("Email sent successfully"));
+          } else {
+            showToast(translate("Something went wrong while sending the email."));
+          }
+        } catch (error) {
+          showToast(translate("Something went wrong while sending the email."));
+          logger.error(error);
+        }
+      }
+    }]
+  });
+  return alert.present();
+};
+
+const openProofOfDeliveryModal = async (order: any, isViewModeOnly: any) => {
+  const modal = await modalController.create({
+    component: ProofOfDeliveryModal,
+    componentProps: {
+      order,
+      isViewModeOnly
+    },
+  });
+  await modal.present();
+  const { data } = await modal.onDidDismiss();
+  if (data?.confirmed && data?.proofOfDeliveryData) {
+    emitter.emit("presentLoader");
+    try {
+      const resp = await OrderService.sendPickupNotification(data.proofOfDeliveryData);
+      if (hasError(resp)) {
+        logger.error("Pickup notification failed:", resp);
+        showToast(translate("Unable to save the details. Please try again."));
+      } else {
+        await (useOrderStore() as any).getCommunicationEvents({ orders: [order] });
+        showToast(translate("Details have been successfully saved, and an email has been sent to the customer."));
+      }
+    } catch (err) {
+      logger.error("Error in saving the details:", err);
+      showToast(translate("Something went wrong"));
+    } finally {
+      emitter.emit("dismissLoader");
+    }
+  }
+};
+
+onMounted(() => {
+  emitter.on("refreshPickupOrders", getIncomingOrders);
 });
+
+onUnmounted(() => {
+  emitter.off("refreshPickupOrders", getIncomingOrders);
+});
+
 </script>
 
 <style scoped>
