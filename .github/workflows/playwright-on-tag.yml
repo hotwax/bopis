@@ -1,0 +1,146 @@
+name: Playwright Automation
+
+on:
+  schedule:
+    # Run every day at 10:00 AM UTC
+    - cron: '0 10 * * *'
+  workflow_dispatch:
+    inputs:
+      oms_name:
+        description: 'OMS on which test needs to run, default is dev-oms'
+        required: false
+        type: string
+      username:
+        description: 'Username used for login, ci.test'
+        required: false
+        type: string
+      password:
+        description: 'Password for login, if username is provided then this value is required'
+        required: false
+        type: string
+  push: 
+    tags:
+      - "*"
+    branches:
+      - "main"
+
+jobs:
+  playwright-tests:
+    name: Run Playwright Automation
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+
+    env:
+      CI: true
+      CURRENT_APP_URL: ${{ secrets.CURRENT_APP_URL }}
+      OMS_NAME: ${{ github.event.inputs.oms_name || secrets.OMS_NAME }}
+      USERNAME: ${{ github.event.inputs.username || secrets.USERNAME }}
+      PASSWORD: ${{ github.event.inputs.password || secrets.PASSWORD }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Generate .env for Playwright
+        run: |
+          cp .env.example .env
+
+          upsert_env() {
+            key="$1"
+            value="$2"
+            if grep -q "^${key}=" .env; then
+              awk -v k="$key" -v v="$value" '
+                BEGIN { FS=OFS="=" }
+                $1 == k { $0 = k "=" v }
+                { print }
+              ' .env > .env.tmp && mv .env.tmp .env
+            else
+              printf "%s=%s\n" "$key" "$value" >> .env
+            fi
+          }
+
+          upsert_env CURRENT_APP_URL "${CURRENT_APP_URL}"
+          upsert_env OMS_NAME "${OMS_NAME}"
+          upsert_env USERNAME "${USERNAME}"
+          upsert_env PASSWORD "${PASSWORD}"
+          upsert_env TEST_ENV "dev"
+          upsert_env TEST_USER "admin"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps
+
+      - name: Run Playwright tests
+        env:
+          PLAYWRIGHT_JSON_OUTPUT_NAME: test-results.json
+        run: |
+          npx playwright test \
+            --reporter=blob,json
+
+      - name: Post-run summary (failed + skipped)
+        if: always()
+        run: |
+          node -e '
+          const fs = require("fs");
+          const file = "test-results.json";
+          if (!fs.existsSync(file)) {
+            console.log("No JSON result file found:", file);
+            process.exit(0);
+          }
+          const data = JSON.parse(fs.readFileSync(file, "utf8"));
+          const failed = [];
+          const skipped = [];
+          function visitSuite(suite, parents = []) {
+            const path = [...parents, suite.title].filter(Boolean);
+            for (const spec of suite.specs || []) {
+              const name = [...path, spec.title].join(" > ");
+              for (const test of spec.tests || []) {
+                const outcome = test.outcome || "";
+                if (outcome === "unexpected") {
+                  const msg = (test.results || [])
+                    .map(r => (r.error && (r.error.message || r.error.value)) || "")
+                    .filter(Boolean)[0] || "No error message";
+                  failed.push({ name, msg });
+                } else if (outcome === "skipped") {
+                  const reason = (test.annotations || [])
+                    .filter(a => a.type === "skip")
+                    .map(a => a.description)
+                    .filter(Boolean)[0] || "No explicit skip reason";
+                  skipped.push({ name, reason });
+                }
+              }
+            }
+            for (const child of suite.suites || []) visitSuite(child, path);
+          }
+          for (const s of data.suites || []) visitSuite(s);
+          console.log("=== Playwright Summary ===");
+          console.log(`Failed tests: ${failed.length}`);
+          failed.slice(0, 20).forEach((f, i) => console.log(`${i + 1}. ${f.name}\n   ${f.msg}`));
+          console.log(`Skipped tests: ${skipped.length}`);
+          skipped.slice(0, 20).forEach((t, i) => console.log(`${i + 1}. ${t.name}\n   ${t.reason}`));
+          '
+
+      - name: Upload Playwright blob report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-blob-report
+          path: blob-report/
+          if-no-files-found: warn
+
+      - name: Upload Playwright JSON report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-json-report
+          path: test-results.json
+          if-no-files-found: warn
+
