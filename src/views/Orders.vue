@@ -29,7 +29,7 @@
       </div>    
     </ion-header>
     <ion-content ref="contentRef" :scroll-events="true" @ionScroll="enableScrolling()">
-      <div v-if="segmentSelected === 'open' && orders.length">
+      <div data-testid="open-orders-container" v-if="segmentSelected === 'open' && orders.length">
 
         <div v-for="(order, index) in getOrdersByPart(orders)" :key="index" v-show="order.shipGroups.length > 0">
           <ion-card data-testid="order-card" button @click.prevent="viewOrder(order, order.shipGroup.shipGroupSeqId, 'open')">
@@ -72,7 +72,7 @@
           </ion-card>
         </div>
       </div>       
-      <div v-else-if="segmentSelected === 'packed' && packedOrders.length">
+      <div data-testid="packed-orders-container" v-else-if="segmentSelected === 'packed' && packedOrders.length">
         <div v-for="(order, index) in packedOrders" :key="index" v-show="order.items.length > 0">
           <ion-card data-testid="order-card" button @click.prevent="viewOrder(order, order.primaryShipGroupSeqId, 'packed')">
             <ion-item lines="none">
@@ -108,7 +108,7 @@
           </ion-card>
         </div>
       </div>
-      <div v-else-if="segmentSelected === 'completed' && completedOrders.length">
+      <div data-testid="completed-orders-container" v-else-if="segmentSelected === 'completed' && completedOrders.length">
         <div v-for="(order, index) in completedOrders" :key="index" v-show="order.items.length > 0">
           <ion-card data-testid="order-card" button @click.prevent="viewOrder(order, order.primaryShipGroupSeqId, 'completed')">
             <ion-item lines="none">

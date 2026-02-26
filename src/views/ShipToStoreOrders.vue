@@ -3,7 +3,7 @@
     <ion-header :translucent="true">
       <ion-toolbar>
         <ion-back-button default-href="/" slot="start" />
-        <ion-title>{{ translate("Shipping to store") }}</ion-title>
+        <ion-title>{{ translate("Ship to Store") }}</ion-title>
       </ion-toolbar>
       <div>
         <ion-searchbar @ionFocus="selectSearchBarText($event)" v-model="queryString" @keyup.enter="queryString = $event.target.value; searchOrders()" :placeholder= "translate('Search')" />
