@@ -1,12 +1,12 @@
 import { api, apiClient, hasError } from '@/adapter';
 import { translate } from '@hotwax/dxp-components';
-import store from '@/store';
+import { useUserStore } from '@/store/user';
 import { getCurrentFacilityId, showToast } from '@/utils';
 import logger from '@/logger';
 import { cogOutline } from 'ionicons/icons';
 import { UtilService } from "@/services/UtilService";
 
-const getOpenOrders = async (params: any): Promise <any> => {
+const getOpenOrders = async (params: any): Promise<any> => {
 
   return api({
     url: "oms/orders/pickup",
@@ -30,9 +30,9 @@ const fetchOrderAttributes = async (orderId: string): Promise<any> => {
   });
 }
 
-const fetchOrderItems = async (payload: any): Promise <any> => {
-  const baseURL = store.getters['user/getOmsBaseUrl'];
-  const omstoken = store.getters['user/getUserToken'];
+const fetchOrderItems = async (payload: any): Promise<any> => {
+  const baseURL = useUserStore().getOmsBaseUrl;
+  const omstoken = useUserStore().getUserToken;
 
   return apiClient({
     url: "solr-query",
@@ -46,7 +46,7 @@ const fetchOrderItems = async (payload: any): Promise <any> => {
   });
 }
 
-const fetchPicklists = async (payload: any): Promise <any>  => {
+const fetchPicklists = async (payload: any): Promise<any> => {
   return api({
     url: `poorti/shipmentPicklists`,
     method: "GET",
@@ -54,7 +54,7 @@ const fetchPicklists = async (payload: any): Promise <any>  => {
   });
 }
 
-const findPackedShipments = async (params: any): Promise <any>  => {
+const findPackedShipments = async (params: any): Promise<any> => {
   params = {
     statusId: 'SHIPMENT_PACKED',
     originFacilityId: getCurrentFacilityId(),
@@ -65,7 +65,7 @@ const findPackedShipments = async (params: any): Promise <any>  => {
     pageIndex: params.viewIndex || 0
   } as any
 
-  if(!store.state.user.bopisProductStoreSettings['SHOW_SHIPPING_ORDERS']) {
+  if (!useUserStore().getBopisProductStoreSettings('SHOW_SHIPPING_ORDERS')) {
     params.shipmentMethodTypeIds = 'STOREPICKUP'
   }
 
@@ -76,7 +76,7 @@ const findPackedShipments = async (params: any): Promise <any>  => {
   }) as any;
 }
 
-const findCompletedShipments = async (params:any): Promise <any>  => {
+const findCompletedShipments = async (params: any): Promise<any> => {
   params = {
     statusId: 'SHIPMENT_SHIPPED',
     originFacilityId: getCurrentFacilityId(),
@@ -87,7 +87,7 @@ const findCompletedShipments = async (params:any): Promise <any>  => {
     pageIndex: params.viewIndex || 0
   } as any
 
-  if(!store.state.user.bopisProductStoreSettings['SHOW_SHIPPING_ORDERS']) {
+  if (!useUserStore().getBopisProductStoreSettings('SHOW_SHIPPING_ORDERS')) {
     params.shipmentMethodTypeIds = 'STOREPICKUP'
   }
 
@@ -98,7 +98,7 @@ const findCompletedShipments = async (params:any): Promise <any>  => {
   }) as any;
 }
 
-const rejectOrderItems = async (payload: any): Promise <any> => {
+const rejectOrderItems = async (payload: any): Promise<any> => {
   return api({
     url: "poorti/rejectOrderItems",
     method: "post",
@@ -106,7 +106,7 @@ const rejectOrderItems = async (payload: any): Promise <any> => {
   });
 }
 
-const createPicklist = async (payload: any): Promise <any> => {
+const createPicklist = async (payload: any): Promise<any> => {
   return api({
     url: `/poorti/createOrderFulfillmentWave`,
     method: "POST",
@@ -116,8 +116,8 @@ const createPicklist = async (payload: any): Promise <any> => {
 
 const printPicklist = async (picklistId: string): Promise<any> => {
   try {
-    const baseURL = store.getters['user/getMaargUrl'];
-    const omstoken = store.getters['user/getUserToken'];
+    const baseURL = useUserStore().getMaargUrl;
+    const omstoken = useUserStore().getUserToken;
 
     const resp = await apiClient({
       url: "/fop/apps/pdf/PrintPicklist",
@@ -130,11 +130,11 @@ const printPicklist = async (picklistId: string): Promise<any> => {
       responseType: "blob",
       params: { picklistId }
     });
-    
+
     if (!resp || hasError(resp)) {
       throw resp?.data;
     }
-  
+
     // Generate local file URL for the blob received
     const pdfUrl = window.URL.createObjectURL(resp.data);
     // Open the file in new tab
@@ -142,7 +142,7 @@ const printPicklist = async (picklistId: string): Promise<any> => {
       (window as any).open(pdfUrl, "_blank").focus();
     }
     catch {
-      showToast(translate('Unable to open as browser is blocking pop-ups.', {documentName: 'picklist'}), { icon: cogOutline });
+      showToast(translate('Unable to open as browser is blocking pop-ups.', { documentName: 'picklist' }), { icon: cogOutline });
     }
   } catch (err) {
     showToast(translate('Failed to print picklist'))
@@ -152,8 +152,8 @@ const printPicklist = async (picklistId: string): Promise<any> => {
 
 const printPackingSlip = async (shipmentIds: Array<string>): Promise<any> => {
   try {
-    const baseURL = store.getters['user/getMaargUrl'];
-    const omstoken = store.getters['user/getUserToken'];
+    const baseURL = useUserStore().getMaargUrl;
+    const omstoken = useUserStore().getUserToken;
 
     const resp = await apiClient({
       url: "fop/apps/pdf/PrintPackingSlip",
@@ -181,7 +181,7 @@ const printPackingSlip = async (shipmentIds: Array<string>): Promise<any> => {
       (window as any).open(pdfUrl, "_blank").focus();
     }
     catch {
-      showToast(translate('Unable to open as browser is blocking pop-ups.', {documentName: 'packing slip'}), { icon: cogOutline });
+      showToast(translate('Unable to open as browser is blocking pop-ups.', { documentName: 'packing slip' }), { icon: cogOutline });
     }
 
   } catch (err) {
@@ -190,7 +190,7 @@ const printPackingSlip = async (shipmentIds: Array<string>): Promise<any> => {
   }
 }
 
-const sendPickupScheduledNotification = async (payload: any): Promise <any> => {
+const sendPickupScheduledNotification = async (payload: any): Promise<any> => {
   payload = {
     "emailType": "READY_FOR_PICKUP",
     ...payload
@@ -202,7 +202,7 @@ const sendPickupScheduledNotification = async (payload: any): Promise <any> => {
   });
 }
 
-const sendHandoverNotification = async (payload: any): Promise <any> => {
+const sendHandoverNotification = async (payload: any): Promise<any> => {
   return api({
     url: "oms/orders/pickupScheduledNotification",
     method: "post",
@@ -218,7 +218,7 @@ const handoverShipToStoreOrder = async (shipmentId: string): Promise<any> => {
     url: `/poorti/shipments/${shipmentId}`,
     method: 'PUT',
     data: {
-      statusId : 'SHIPMENT_DELIVERED', 
+      statusId: 'SHIPMENT_DELIVERED',
     }
   });
 }
@@ -228,7 +228,7 @@ const arrivedShipToStore = async (shipmentId: string): Promise<any> => {
     url: `/poorti/shipments/${shipmentId}`,
     method: 'PUT',
     data: {
-      statusId : 'SHIPMENT_ARRIVED', 
+      statusId: 'SHIPMENT_ARRIVED',
     }
   });
 }
@@ -253,8 +253,8 @@ const getShipToStoreOrders = async (params: any): Promise<any> => {
 }
 
 const getOrderItemRejectionHistory = async (payload: any): Promise<any> => {
-  const baseURL = store.getters['user/getOmsBaseUrl'];
-  const omstoken = store.getters['user/getUserToken'];
+  const baseURL = useUserStore().getOmsBaseUrl;
+  const omstoken = useUserStore().getUserToken;
 
   return apiClient({
     url: 'performFind',
@@ -269,8 +269,8 @@ const getOrderItemRejectionHistory = async (payload: any): Promise<any> => {
 }
 
 const printShippingLabelAndPackingSlip = async (shipmentIds: Array<string>): Promise<any> => {
-  const baseURL = store.getters['user/getOmsBaseUrl'];
-  const omstoken = store.getters['user/getUserToken'];
+  const baseURL = useUserStore().getOmsBaseUrl;
+  const omstoken = useUserStore().getUserToken;
 
   try {
     // Get packing slip from the server
@@ -298,7 +298,7 @@ const printShippingLabelAndPackingSlip = async (shipmentIds: Array<string>): Pro
       (window as any).open(pdfUrl, "_blank").focus();
     }
     catch {
-      showToast(translate('Unable to open as browser is blocking pop-ups.', {documentName: 'shipping label and packing slip'}));
+      showToast(translate('Unable to open as browser is blocking pop-ups.', { documentName: 'shipping label and packing slip' }));
     }
 
   } catch (err) {
@@ -307,7 +307,7 @@ const printShippingLabelAndPackingSlip = async (shipmentIds: Array<string>): Pro
   }
 }
 
-const packOrder = async (payload: any): Promise<any> => {  
+const packOrder = async (payload: any): Promise<any> => {
   return await api({
     url: `poorti/shipments/${payload.shipmentId}/pack`,
     method: "POST",
@@ -324,8 +324,8 @@ const shipOrder = async (payload: any): Promise<any> => {
 }
 
 const performFind = async (payload: any): Promise<any> => {
-  const baseURL = store.getters['user/getOmsBaseUrl'];
-  const omstoken = store.getters['user/getUserToken'];
+  const baseURL = useUserStore().getOmsBaseUrl;
+  const omstoken = useUserStore().getUserToken;
   return apiClient({
     url: "performFind",
     method: "post",
@@ -351,7 +351,7 @@ const updateGiftCardActivationDetails = (item: any, giftCardActivationInfo: any,
     return (orderId ? activationInfo.orderId === orderId : activationInfo.orderId === item.orderId) && activationInfo.orderItemSeqId === item.orderItemSeqId;
   })
 
-  if(activationRecord?.cardNumber) {
+  if (activationRecord?.cardNumber) {
     item.isGCActivated = true;
     item.gcInfo = activationRecord;
   }
@@ -364,46 +364,46 @@ const fetchGiftCardActivationDetails = async ({ isDetailsPage, currentOrders }: 
   const orderIds = [] as any;
   let giftCardActivationInfo = [] as any;
 
-  if(isDetailsPage) {
+  if (isDetailsPage) {
     orderIds.push(orders[0].orderId);
   } else {
     orders.map((order: any) => {
       order.items.map((currentItem: any) => {
-          if(currentItem.productTypeId === 'GIFT_CARD' && !orderIds.includes(currentItem.orderId)) {
-            orderIds.push(order.orderId);
-          }        
+        if (currentItem.productTypeId === 'GIFT_CARD' && !orderIds.includes(currentItem.orderId)) {
+          orderIds.push(order.orderId);
+        }
       })
     })
   }
-  if(!orderIds.length) return orders;
+  if (!orderIds.length) return orders;
 
   try {
     const resp = await UtilService.fetchGiftCardFulfillmentInfo({
-          orderId: orderIds,
-          orderId_op: "in",
-          pageSize: 250 // The default pageSize < 10 and can cause issues with large gitCardFulfillment records, Hence setting to 250
-      })
+      orderId: orderIds,
+      orderId_op: "in",
+      pageSize: 250 // The default pageSize < 10 and can cause issues with large gitCardFulfillment records, Hence setting to 250
+    })
 
-    if(!hasError(resp)) {
+    if (!hasError(resp)) {
       giftCardActivationInfo = resp.data
     } else {
       throw resp.data
     }
-  } catch(error) {
+  } catch (error) {
     logger.error(error)
   }
 
-  if(giftCardActivationInfo.length) {
-    if(isDetailsPage) {
+  if (giftCardActivationInfo.length) {
+    if (isDetailsPage) {
       orders[0].shipGroup.items = orders[0].shipGroup.items.map((item: any) => {
         return updateGiftCardActivationDetails(item, giftCardActivationInfo);
       })
     } else {
       orders = orders.map((order: any) => {
         order.items = order.items.map((item: any) => {
-            return updateGiftCardActivationDetails(item, giftCardActivationInfo, order.orderId);
-          })
-          return order
+          return updateGiftCardActivationDetails(item, giftCardActivationInfo, order.orderId);
+        })
+        return order
       })
     }
   }
@@ -417,7 +417,7 @@ const getBillingDetails = async (payload: any): Promise<any> => {
   });
 }
 
-const sendPickupNotification = async (payload: any): Promise<any> => {  
+const sendPickupNotification = async (payload: any): Promise<any> => {
   return await api({
     url: `oms/orders/pickupScheduledNotification`,
     method: "POST",

@@ -79,242 +79,173 @@
   </ion-content>
 </template>
 
-<script lang="ts">
-import {
-  IonAccordionGroup,
-  IonAccordion,
-  IonButtons,
-  IonButton,
-  IonContent,
-  IonHeader,
-  IonItem,
-  IonIcon,
-  IonLabel,
-  IonList,
-  IonNote,
-  IonSearchbar,
-  IonTitle,
-  IonToggle,
-  IonToolbar,
-  modalController,
-  IonSpinner
-} from "@ionic/vue";
-import { computed, defineComponent } from "vue";
-import { close, locationOutline, textOutline, chevronDownOutline } from "ionicons/icons";
-import { mapGetters } from "vuex";
-import { useStore } from "@/store";
-import { translate, useUserStore  } from "@hotwax/dxp-components";
+<script setup lang="ts">
+import { IonAccordionGroup, IonAccordion, IonButtons, IonButton, IonContent, IonHeader, IonItem, IonIcon, IonLabel, IonList, IonNote, IonSearchbar, IonTitle, IonToggle, IonToolbar, modalController, IonSpinner } from "@ionic/vue";
+import { computed, onMounted, ref } from "vue";
+import { close, locationOutline, textOutline } from "ionicons/icons";
+import { useUtilStore } from "@/store/util";
+import { useUserStore } from "@/store/user";
+import { translate } from "@hotwax/dxp-components";
 import { DateTime } from "luxon";
 
-export default defineComponent({
-  name: "OtherStoresInventoryModal",
-  components: {
-    IonAccordionGroup,
-    IonAccordion,
-    IonButtons,
-    IonButton,
-    IonContent,
-    IonHeader,
-    IonIcon,
-    IonItem,
-    IonLabel,
-    IonList,
-    IonNote,
-    IonSearchbar,
-    IonTitle,
-    IonToggle,
-    IonToolbar,
-    IonSpinner
-  },
-  props: ["otherStoresInventory"],
-  data() {
-    return {
-      queryString: "",
-      isRefreshing: false,
-      storesInventory: [] as any, // will be used when fallback
-      storesWithInventory: [] as any, // will be used primarily.
-      hideStoresWithoutInventory: false,
-      sortBy: "name", // 'name' or 'distance'
-      weekArray: ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"]
-    }
-  },
-  computed: {
-    ...mapGetters({
-      facilityLatLon: 'util/getFacilityLatLon',
-      storesInformation: 'util/getStoresInformation'
-    })
-  },
- async mounted() {
-    this.isRefreshing = true;
-    // Create a copy of otherStoresInventory on mount
-    this.storesInventory = this.otherStoresInventory.slice();
-    const currentFacilityId = this.currentFacility?.facilityId;
+const props = defineProps(["otherStoresInventory"]);
 
-    try {
-      // Check if the state already has the required data
-      if (!this.facilityLatLon(currentFacilityId).latitude || !this.facilityLatLon(currentFacilityId).longitude) {
-        // Fetching Lat Lon for current facility
-        await this.store.dispatch("util/fetchCurrentFacilityLatLon", currentFacilityId);
-      }
+const queryString = ref("");
+const isRefreshing = ref(false);
+const storesInventory = ref([] as any); // will be used when fallback
+const storesWithInventory = ref([] as any); // will be used primarily.
+const hideStoresWithoutInventory = ref(false);
+const sortBy = ref("name"); // 'name' or 'distance'
+const weekArray = ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"];
 
-      if (!this.storesInformation || this.storesInformation.length === 0) {
-        // Fetching store lookup
-        if (this.facilityLatLon(currentFacilityId)?.latitude && this.facilityLatLon(currentFacilityId)?.longitude) {
-          await this.store.dispatch("util/fetchStoresInformation", {
-            latitude: this.facilityLatLon(currentFacilityId).latitude,
-            longitude: this.facilityLatLon(currentFacilityId).longitude
-          });
-        }
-      }
+const currentFacility = computed(() => useUserStore().getCurrentFacility);
 
-      // Map the stock information
-      this.storesWithInventory = this.mapStock(this.storesInventory, this.storesInformation);
-    } catch (error) {
-      // Fallback mapping when APIs fail
-      this.storesWithInventory = this.storesInventory.map((facility: any) => ({
-        storeCode: facility.facilityId,
-        storeName: facility.facilityName,
-        stock: facility.stock
-      }));
-    } finally {
-      this.isRefreshing = false;
-    }
+const formatTime = (time: string): string => {
+  return DateTime.fromFormat(time, 'HH:mm:ss').toFormat('h:mm a');
+};
 
-    // Sort by name by default
-    this.sortByName();
-  },
-  methods: {
-    closeModal() {
-      modalController.dismiss({ dismissed: true });
-    },
-    searchFacilities() {
-      this.isRefreshing = true;
-      let filteredInventory = this.mapStock(this.storesInventory, this.storesInformation);
-      if (this.queryString.trim() !== "") {
-        filteredInventory = filteredInventory.filter((store: any) =>
-          store.storeName.toLowerCase().includes(this.queryString.toLowerCase())
-        );
-      }
-      if (this.hideStoresWithoutInventory) {
-        filteredInventory = filteredInventory.filter((store: any) => store.stock > 0);
-      }
-      this.storesWithInventory = filteredInventory;
-      this.isRefreshing = false;
-    },
-    // method to map the facility inventory from props to the store lookup data from api call
-    mapStock(storesInventory: any[], storesInformation: any[]): any[] {
-      return storesInformation.slice(1).map((store, index) => {  // skips first item (current facility)
-        const matchingFacility = storesInventory.find(facility => facility.facilityId === store.storeCode);
-        const storeHoursInfo = this.getStoreHoursInfo(store);
-        return {
-          ...store,
-          index: index + 1,
-          stock: matchingFacility ? matchingFacility.stock : 0,
-          hoursDisplay: storeHoursInfo.display,
-          isOpen: storeHoursInfo.isOpen
-        };
-      });
-    },
-    // logic for sorting stores by names
-    sortStoresAlphabetically(a: any, b: any): number {
-      return a.storeName.localeCompare(b.storeName);
-    },
-    // method to sort the stores by distance 
-    sortByDistance() {
-      this.sortBy = 'distance';
-      // if store has Infinity distance, move it to the end
-      this.storesWithInventory.sort((a: any, b: any) => {
-        if (a.dist === "Infinity" && b.dist === "Infinity") return this.sortStoresAlphabetically(a, b);  //If both stores have "Infinity" distance, sorts them alphabetically by store name
-        if (a.dist === "Infinity") return 1;  //If only store 'a' has "Infinity" distance, moves it to the end.
-        if (b.dist === "Infinity") return -1;  //If only store 'b' has "Infinity" distance, moves it to the end.
-        return a.dist - b.dist;  //For stores with numeric distances, sorts them in ascending order.
-      });
-    },
-    // method to sort the stores by name
-    sortByName() {
-      this.sortBy = 'name';
-      this.storesWithInventory.sort((a: any, b: any) => this.sortStoresAlphabetically(a, b));
-    },
-    // method to run the current filter to maintain the current sort type when toggling empty stock toggle
-    updateSort() {
-      if (this.sortBy === 'distance') {
-        this.sortByDistance();
-      } else {
-        this.sortByName();
-      }
-    },
-    // method to handle empty stock toggle
-    toggleHideEmptyStock() {
-      this.hideStoresWithoutInventory = !this.hideStoresWithoutInventory;
-      if (this.hideStoresWithoutInventory) {
-        this.storesWithInventory = this.storesWithInventory.filter((store: any) => store.stock > 0);
-      } else {
-        this.storesWithInventory = this.mapStock(this.storesInventory, this.storesInformation);
-      }
-      this.updateSort();   // Run the current filter to maintain the current sort type
-    },
-    getCurrentWeekday() {
-      const today = DateTime.now() // Get weekday index (1-7, Monday is 1, Sunday is 7)
-      const weekdayIndex = today.weekday // Convert to 0-6 index (Sunday is 0, Monday is 1)
-      const momentWeekday = weekdayIndex === 7 ? 0 : weekdayIndex
-      return momentWeekday
-    },
-    // method to get the store hours status
-    getStoreHoursInfo(store: any) {
-      const currentDay = this.weekArray[this.getCurrentWeekday()];
-      const hasCalendar = Object.keys(store).some(key => /_open$|_close$/.test(key));
+const hasWeekCalendar = (store: any): boolean => {
+  return Object.keys(store).some(key => /_open$|_close$/.test(key));
+};
 
-      // Case 1: No calendar at all - return empty
-      if (!hasCalendar) {
-        return { display: '', isOpen: false };
-      }
+const getCurrentWeekday = () => {
+  const today = DateTime.now(); // Get weekday index (1-7, Monday is 1, Sunday is 7)
+  const weekdayIndex = today.weekday; // Convert to 0-6 index (Sunday is 0, Monday is 1)
+  const momentWeekday = weekdayIndex === 7 ? 0 : weekdayIndex;
+  return momentWeekday;
+};
 
-      const openKey = `${currentDay}_open`;
-      const closeKey = `${currentDay}_close`;
+const getStoreHoursInfo = (store: any) => {
+  const currentDay = weekArray[getCurrentWeekday()];
+  const hasCalendar = Object.keys(store).some(key => /_open$|_close$/.test(key));
 
-      // Case 2: Has calendar and today's hours
-      if (store[openKey] && store[closeKey]) {
-        const now = DateTime.now();
-        const openTime = DateTime.fromFormat(store[openKey], 'HH:mm:ss');
-        const closeTime = DateTime.fromFormat(store[closeKey], 'HH:mm:ss');
-
-        const openDisplay = openTime.toFormat('hh:mm a').toLowerCase();
-        const closeDisplay = closeTime.toFormat('hh:mm a').toLowerCase();
-
-        const isOpen = now >= openTime && now <= closeTime;
-
-        return {
-          display: isOpen ? `${translate("Open")} ${openDisplay} - ${closeDisplay}` : translate("Closed"),
-          isOpen
-        };
-      }
-
-      // Case 3: Has calendar but no hours for today
-      else return {
-        display: translate("Closed"),
-        isOpen: false
-      };
-    },
-    hasWeekCalendar(store: any): boolean {
-      return Object.keys(store).some(key => /_open$|_close$/.test(key));
-    },
-    formatTime(time: string): string {
-      return DateTime.fromFormat(time, 'HH:mm:ss').toFormat('h:mm a');
-    },
-  },
-  setup() {
-    const store = useStore();
-    const userStore = useUserStore();
-    let currentFacility: any = computed(() => userStore.getCurrentFacility);
-    return {
-      close,
-      locationOutline,
-      textOutline,
-      store,
-      translate,
-      chevronDownOutline,
-      currentFacility
-    };
+  if (!hasCalendar) {
+    return { display: '', isOpen: false };
   }
+
+  const openKey = `${currentDay}_open`;
+  const closeKey = `${currentDay}_close`;
+
+  if (store[openKey] && store[closeKey]) {
+    const now = DateTime.now();
+    const openTime = DateTime.fromFormat(store[openKey], 'HH:mm:ss');
+    const closeTime = DateTime.fromFormat(store[closeKey], 'HH:mm:ss');
+
+    const openDisplay = openTime.toFormat('hh:mm a').toLowerCase();
+    const closeDisplay = closeTime.toFormat('hh:mm a').toLowerCase();
+
+    const isOpen = now >= openTime && now <= closeTime;
+
+    return {
+      display: isOpen ? `${translate("Open")} ${openDisplay} - ${closeDisplay}` : translate("Closed"),
+      isOpen
+    };
+  } else return {
+    display: translate("Closed"),
+    isOpen: false
+  };
+};
+
+const mapStock = (storesInventory: any[], storesInformation: any[]): any[] => {
+  return storesInformation.slice(1).map((store, index) => {  // skips first item (current facility)
+    const matchingFacility = storesInventory.find(facility => facility.facilityId === store.storeCode);
+    const storeHoursInfo = getStoreHoursInfo(store);
+    return {
+      ...store,
+      index: index + 1,
+      stock: matchingFacility ? matchingFacility.stock : 0,
+      hoursDisplay: storeHoursInfo.display,
+      isOpen: storeHoursInfo.isOpen
+    };
+  });
+};
+
+const sortStoresAlphabetically = (a: any, b: any): number => {
+  return a.storeName.localeCompare(b.storeName);
+};
+
+const sortByDistance = () => {
+  sortBy.value = 'distance';
+  storesWithInventory.value.sort((a: any, b: any) => {
+    if (a.dist === "Infinity" && b.dist === "Infinity") return sortStoresAlphabetically(a, b);
+    if (a.dist === "Infinity") return 1;
+    if (b.dist === "Infinity") return -1;
+    return a.dist - b.dist;
+  });
+};
+
+const sortByName = () => {
+  sortBy.value = 'name';
+  storesWithInventory.value.sort((a: any, b: any) => sortStoresAlphabetically(a, b));
+};
+
+const updateSort = () => {
+  if (sortBy.value === 'distance') {
+    sortByDistance();
+  } else {
+    sortByName();
+  }
+};
+
+const searchFacilities = () => {
+  isRefreshing.value = true;
+  let filteredInventory = mapStock(storesInventory.value, useUtilStore().getStoresInformation);
+  if (queryString.value.trim() !== "") {
+    filteredInventory = filteredInventory.filter((store: any) =>
+      store.storeName.toLowerCase().includes(queryString.value.toLowerCase())
+    );
+  }
+  if (hideStoresWithoutInventory.value) {
+    filteredInventory = filteredInventory.filter((store: any) => store.stock > 0);
+  }
+  storesWithInventory.value = filteredInventory;
+  isRefreshing.value = false;
+};
+
+const toggleHideEmptyStock = () => {
+  hideStoresWithoutInventory.value = !hideStoresWithoutInventory.value;
+  if (hideStoresWithoutInventory.value) {
+    storesWithInventory.value = storesWithInventory.value.filter((store: any) => store.stock > 0);
+  } else {
+    storesWithInventory.value = mapStock(storesInventory.value, useUtilStore().getStoresInformation);
+  }
+  updateSort();
+};
+
+const closeModal = () => {
+  modalController.dismiss({ dismissed: true });
+};
+
+onMounted(async () => {
+  isRefreshing.value = true;
+  storesInventory.value = props.otherStoresInventory.slice();
+  const currentFacilityId = currentFacility.value?.facilityId;
+
+  try {
+    if (!useUtilStore().getFacilityLatLon(currentFacilityId).latitude || !useUtilStore().getFacilityLatLon(currentFacilityId).longitude) {
+      await useUtilStore().fetchCurrentFacilityLatLon(currentFacilityId);
+    }
+
+    if (!useUtilStore().getStoresInformation || useUtilStore().getStoresInformation.length === 0) {
+      if (useUtilStore().getFacilityLatLon(currentFacilityId)?.latitude && useUtilStore().getFacilityLatLon(currentFacilityId)?.longitude) {
+        await useUtilStore().fetchStoresInformation({
+          latitude: useUtilStore().getFacilityLatLon(currentFacilityId).latitude,
+          longitude: useUtilStore().getFacilityLatLon(currentFacilityId).longitude
+        });
+      }
+    }
+
+    storesWithInventory.value = mapStock(storesInventory.value, useUtilStore().getStoresInformation);
+  } catch (error) {
+    storesWithInventory.value = storesInventory.value.map((facility: any) => ({
+      storeCode: facility.facilityId,
+      storeName: facility.facilityName,
+      stock: facility.stock
+    }));
+  } finally {
+    isRefreshing.value = false;
+  }
+
+  sortByName();
 });
 </script>

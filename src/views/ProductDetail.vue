@@ -91,7 +91,7 @@
         </div>
         
         <div v-if="orders.length">
-          <h3>{{ translate('order reservations at', { count: getInventoryInformation(currentVariant.productId).reservedQuantity ?? '0', store: currentFacility.facilityName }) }}</h3>
+          <h3>{{ translate('order reservations at', { count: getInventoryInformation(currentVariant.productId).reservedQuantity ?? '0', store: (currentFacility as any).facilityName }) }}</h3>
           <div class="reservation-section">
             <ion-card v-for="(order, index) in orders" :key="index"> 
               <ion-item lines="none">
@@ -136,201 +136,148 @@
   </ion-page>
 </template>
 
-<script lang="ts">
-import {
-  IonBackButton,
-  IonBadge,
-  IonButton,
-  IonCard,
-  IonChip,
-  IonContent,
-  IonHeader,
-  IonItem,
-  IonLabel,
-  IonList,
-  IonListHeader,
-  IonNote,
-  IonPage,
-  IonRow,
-  IonSegment,
-  IonSegmentButton,
-  IonTitle,
-  IonThumbnail,
-  IonToolbar,
-  modalController
-} from "@ionic/vue";
-import { computed, defineComponent } from "vue";
-import { mapGetters, useStore } from "vuex";
+<script setup lang="ts">
+import { IonBackButton, IonBadge, IonButton, IonCard, IonChip, IonContent, IonHeader, IonItem, IonLabel, IonList, IonListHeader, IonNote, IonPage, IonRow, IonSegment, IonSegmentButton, IonTitle, IonThumbnail, IonToolbar, modalController } from "@ionic/vue";
+import { computed, onMounted, ref, getCurrentInstance } from "vue";
+import { useRoute } from 'vue-router';
+import { useProductStore } from "@/store/product";
+import { useUserStore } from "@/store/user";
+import { useStockStore } from "@/store/stock";
+import { useOrderStore } from "@/store/order";
 import { StockService } from '@/services/StockService'
 import { getFeature, showToast } from "@/utils";
 import { hasError } from '@/adapter'
 import { sortSizes } from '@/apparel-sorter';
 import OtherStoresInventoryModal from "./OtherStoresInventoryModal.vue";
-import { DxpShopifyImg, getProductIdentificationValue, translate, useProductIdentificationStore, useUserStore } from "@hotwax/dxp-components";
+import { DxpShopifyImg, getProductIdentificationValue, translate, useProductIdentificationStore } from "@hotwax/dxp-components";
 import logger from "@/logger";
 
-export default defineComponent({
-  name: "ProductDetail",
-  components: {
-    IonBackButton,
-    IonBadge,
-    IonButton,
-    IonCard,
-    IonChip,
-    IonContent,
-    IonHeader,
-    IonItem,
-    IonLabel,
-    IonList,
-    IonListHeader,
-    IonNote,
-    IonPage,
-    IonRow,
-    IonSegment,
-    IonSegmentButton,
-    IonTitle,
-    IonThumbnail,
-    IonToolbar,
-    DxpShopifyImg
-  },
-  data() {
-    return {
-      selectedColor: '',
-      selectedSize: '',
-      features: [] as any,
-      currentVariant: {} as any,
-      currentStoreInventory: 0,
-      otherStoresInventory: 0,
-      warehouseInventory: 0,
-      otherStoresInventoryDetails: [] as any,
-      selectedSegment: 'inStore',
-      queryString: ''
-    }
-  },
-  computed: {
-    ...mapGetters({
-      product: "product/getCurrent",
-      currency: 'user/getCurrency',
-      getInventoryInformation: 'stock/getInventoryInformation',
-      orders: 'order/getOrders',
-      getProduct: 'product/getProduct',
-      currentEComStore: 'user/getCurrentEComStore',
-    }),
-  },
-  async beforeMount() {
-    await this.store.dispatch('product/setCurrent', { productId: this.$route.params.productId })
-    if (this.product.variants) {
-      this.getFeatures()
-      await this.updateVariant()
-    }
-  },
-  methods: {
-    //For fetching all the orders for this product & facility.
-    async getOrderDetails() {
-      await this.store.dispatch("order/getOrderDetails", { viewSize: 200, facilityId: this.currentFacility?.facilityId, productId: this.currentVariant.productId });
-    },
-    async applyFeature(feature: string, type: string) {
-      if(type === 'color') this.selectedColor = feature;
-      else if(type === 'size') this.selectedSize = feature
-      await this.updateVariant();
-    },
-    getFeatures() {
-      const features = {} as any
-      this.product.variants.map((variant: any) => {
-        const size = getFeature(variant.featureHierarchy, '1/SIZE/');
-        const color = getFeature(variant.featureHierarchy, '1/COLOR/');
-        if (!features[color]) features[color] = [size];
-        else if(!features[color].includes(size)) features[color].push(size);
-      });
+const route = useRoute();
 
-      Object.keys(features).forEach((color) => this.features[color] = sortSizes(features[color]))
+const { proxy } = getCurrentInstance() as any;
+const $n = proxy?.$n;
 
-      this.selectedColor = Object.keys(this.features)[0];
-      this.selectedSize = this.features[this.selectedColor][0];
-    },
-    async updateVariant() {
-      let variant;
-      if(this.selectedColor || this.selectedSize) {
-        variant = this.product.variants.find((variant: any) => {
-          const hasSize = getFeature(variant.featureHierarchy, '1/SIZE/') === this.selectedSize;
-          const hasColor = getFeature(variant.featureHierarchy, '1/COLOR/') === this.selectedColor;
-          return hasSize && hasColor;
-        })
+const selectedColor = ref('');
+const selectedSize = ref('');
+const features = ref({} as any);
+const currentVariant = ref({} as any);
+const currentStoreInventory = ref(0);
+const otherStoresInventory = ref(0);
+const warehouseInventory = ref(0);
+const otherStoresInventoryDetails = ref([] as any);
+const selectedSegment = ref('inStore');
 
-        // if the selected size is not available for that color, default it to the first size available
-        if(!variant) {
-          this.selectedSize = this.features[this.selectedColor][0];
-          variant = this.product.variants.find((variant: any) => getFeature(variant.featureHierarchy, '1/SIZE/') === this.selectedSize)
-          showToast(translate("Selected variant not available"));
-        }
-      }
+const product = computed(() => useProductStore().getCurrent);
+const currency = computed(() => useUserStore().getCurrency);
+const getInventoryInformation = computed(() => useStockStore().getInventoryInformation);
+const orders = computed(() => useOrderStore().getOrders);
+const getProduct = computed(() => useProductStore().getProduct);
+const currentEComStore = computed(() => useUserStore().getCurrentEComStore);
+const productIdentificationPref = computed(() => useProductIdentificationStore().getProductIdentificationPref);
+const currentFacility = computed(() => useUserStore().getCurrentFacility);
+
+const getOrderDetails = async () => {
+  await useOrderStore().getOrderDetails({ viewSize: 200, facilityId: (useUserStore().getCurrentFacility as any)?.facilityId, productId: currentVariant.value.productId });
+};
+
+const applyFeature = async (feature: string, type: string) => {
+  if(type === 'color') selectedColor.value = feature;
+  else if(type === 'size') selectedSize.value = feature;
+  await updateVariant();
+};
+
+const getFeatures = () => {
+  const allFeatures = {} as any
+  product.value.variants.map((variant: any) => {
+    const size = getFeature(variant.featureHierarchy, '1/SIZE/');
+    const color = getFeature(variant.featureHierarchy, '1/COLOR/');
+    if (!allFeatures[color]) allFeatures[color] = [size];
+    else if(!allFeatures[color].includes(size)) allFeatures[color].push(size);
+  });
+
+  Object.keys(allFeatures).forEach((color) => features.value[color] = sortSizes(allFeatures[color]))
+
+  selectedColor.value = Object.keys(features.value)[0];
+  selectedSize.value = features.value[selectedColor.value][0];
+};
+
+const checkInventory = async () => {
+  currentStoreInventory.value = otherStoresInventory.value = warehouseInventory.value = 0;
+  otherStoresInventoryDetails.value = [];
+
+  try {
+    const resp: any = await StockService.checkShippingInventory({
+      productStoreId: currentEComStore.value.productStoreId,
+      productIds: currentVariant.value.productId,
+    });
+
+    if (resp.status === 200 && !hasError(resp)) {          
+      const resultList = resp.data.resultList || [];
       
-      // if the variant does not have color or size as features
-      this.currentVariant = variant || this.product.variants[0];
-      await this.checkInventory();
-      await this.getOrderDetails();
-      await this.store.dispatch('stock/fetchProductInventory', { productId: this.currentVariant.productId });
-    },
-    async checkInventory() {
-      this.currentStoreInventory = this.otherStoresInventory = this.warehouseInventory = 0
-      this.otherStoresInventoryDetails = []
+      resultList.forEach((productInventory: any) => {
+        (productInventory.facilities || []).forEach((storeInventory: any) => {
+          if (storeInventory.atp) {
+            const isCurrentStore = storeInventory.facilityId === (currentFacility.value as any)?.facilityId;
+            if (isCurrentStore) {
+              currentStoreInventory.value = storeInventory.atp;
+            }
 
-      try {
-        const resp: any = await StockService.checkShippingInventory({
-          productStoreId: this.currentEComStore.productStoreId,
-          productIds: this.currentVariant.productId,
+            if (storeInventory.facilityTypeId === 'WAREHOUSE') {
+              warehouseInventory.value += storeInventory.atp;
+            } else if (!isCurrentStore) {
+              // Only add to list if it is not a current store
+              otherStoresInventoryDetails.value.push({ facilityName: storeInventory.facilityName || storeInventory.facilityId, stock: storeInventory.atp, facilityId: storeInventory.facilityId });
+              otherStoresInventory.value += storeInventory.atp;
+            }
+          }
         });
-
-        if (resp.status === 200 && !hasError(resp)) {          
-          const resultList = resp.data.resultList || [];
-      
-          resultList.forEach((productInventory: any) => {
-            (productInventory.facilities || []).forEach((storeInventory: any) => {
-              if (storeInventory.atp) {
-                const isCurrentStore = storeInventory.facilityId === this.currentFacility?.facilityId;
-                if (isCurrentStore) {
-                  this.currentStoreInventory = storeInventory.atp;
-                }
-
-                if (storeInventory.facilityTypeId === 'WAREHOUSE') {
-                  this.warehouseInventory += storeInventory.atp;
-                } else if (!isCurrentStore) {
-                  // Only add to list if it is not a current store
-                  this.otherStoresInventoryDetails.push({ facilityName: storeInventory.facilityName || storeInventory.facilityId, stock: storeInventory.atp, facilityId: storeInventory.facilityId });
-                  this.otherStoresInventory += storeInventory.atp;
-                }
-              }
-            });
-          });
-        }
-      } catch (error) {
-        logger.error(error)
-        showToast(translate("Something went wrong"));
-      }
-    },
-    async getOtherStoresInventoryDetails() {
-      const otherStoresInventoryModal = await modalController.create({
-        component: OtherStoresInventoryModal,
-        componentProps: { otherStoresInventory: this.otherStoresInventoryDetails }
       });
-      return otherStoresInventoryModal.present();
     }
-  },
-  setup() {
-    const store = useStore();
-    const userStore = useUserStore()
-    const productIdentificationStore = useProductIdentificationStore();
-    let productIdentificationPref = computed(() => productIdentificationStore.getProductIdentificationPref)
-    let currentFacility: any = computed(() => userStore.getCurrentFacility) 
+  } catch (error) {
+    logger.error(error);
+    showToast(translate("Something went wrong"));
+  }
+};
 
-    return {
-      currentFacility,
-      getProductIdentificationValue,
-      productIdentificationPref,
-      store,
-      translate
+const updateVariant = async () => {
+  let variant;
+  if(selectedColor.value || selectedSize.value) {
+    variant = product.value.variants.find((v: any) => {
+      const hasSize = getFeature(v.featureHierarchy, '1/SIZE/') === selectedSize.value;
+      const hasColor = getFeature(v.featureHierarchy, '1/COLOR/') === selectedColor.value;
+      return hasSize && hasColor;
+    })
+
+    // if the selected size is not available for that color, default it to the first size available
+    if(!variant) {
+      selectedSize.value = features.value[selectedColor.value][0];
+      variant = product.value.variants.find((v: any) => getFeature(v.featureHierarchy, '1/SIZE/') === selectedSize.value)
+      showToast(translate("Selected variant not available"));
     }
   }
+  
+  // if the variant does not have color or size as features
+  currentVariant.value = variant || product.value.variants[0];
+  await checkInventory();
+  await getOrderDetails();
+  await useStockStore().fetchProductInventory({ productId: currentVariant.value.productId });
+};
+
+const getOtherStoresInventoryDetails = async () => {
+  const otherStoresInventoryModal = await modalController.create({
+    component: OtherStoresInventoryModal,
+    componentProps: { otherStoresInventory: otherStoresInventoryDetails.value }
+  });
+  return otherStoresInventoryModal.present();
+};
+
+onMounted(async () => {
+  await useProductStore().setCurrent({ productId: route.params.productId });
+  if (product.value.variants) {
+    getFeatures();
+    await updateVariant();
+  }
+  await useProductIdentificationStore().getIdentificationPref(useUserStore().getCurrentEComStore?.productStoreId);
 });
 </script>
 

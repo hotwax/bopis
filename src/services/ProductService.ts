@@ -1,13 +1,13 @@
 import { apiClient } from '@/adapter';
-import store from '@/store';
+import { useUserStore } from '@/store/user';
 
-const fetchProducts = async (query: any): Promise <any>  => {
-  const baseURL = store.getters['user/getOmsBaseUrl'];
-  const omstoken = store.getters['user/getUserToken'];
+const fetchProducts = async (query: any): Promise<any> => {
+  const baseURL = useUserStore().getOmsBaseUrl;
+  const omstoken = useUserStore().getUserToken;
 
   return apiClient({
-   // TODO: We can replace this with any API
-    url: "searchProducts", 
+    // TODO: We can replace this with any API
+    url: "searchProducts",
     method: "post",
     baseURL,
     headers: {
@@ -18,12 +18,12 @@ const fetchProducts = async (query: any): Promise <any>  => {
     cache: true
   });
 }
-const findProducts = async (query: any): Promise <any>  => {
-  const baseURL = store.getters['user/getOmsBaseUrl'];
-  const omstoken = store.getters['user/getUserToken'];
+const findProducts = async (query: any): Promise<any> => {
+  const baseURL = useUserStore().getOmsBaseUrl;
+  const omstoken = useUserStore().getUserToken;
 
   return apiClient({
-   // TODO: We can replace this with any API
+    // TODO: We can replace this with any API
     url: "searchProducts",
     method: "post",
     baseURL,
@@ -36,8 +36,8 @@ const findProducts = async (query: any): Promise <any>  => {
   });
 }
 const fetchProductComponents = async (params: any): Promise<any> => {
-  const baseURL = store.getters['user/getOmsBaseUrl'];
-  const omstoken = store.getters['user/getUserToken'];
+  const baseURL = useUserStore().getOmsBaseUrl;
+  const omstoken = useUserStore().getUserToken;
 
   return await apiClient({
     url: "performFind",

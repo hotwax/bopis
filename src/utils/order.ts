@@ -1,4 +1,4 @@
-import store from "@/store"
+import { useProductStore } from "@/store/product"
 
 const getOrderCategory = (shipGroup: any) => {
   // Determine category based on shipmentStatusId
@@ -16,7 +16,7 @@ const getOrderCategory = (shipGroup: any) => {
 }
 
 const isKit = (item: any) => {
-  const product = store.getters['product/getProduct'](item.productId);
+  const product = useProductStore().getProduct(item.productId);
   return product && product.productTypeId === 'MARKETING_PKG_PICK';
 }
 
@@ -24,12 +24,12 @@ const removeKitComponents = (items: any) => {
   const kitItemSeqIds = new Set();
   const itemsWithoutKitComponents = [] as any;
 
-  items.forEach((item:any) => {
+  items.forEach((item: any) => {
     if (item.productTypeId === "MARKETING_PKG_PICK") {
       kitItemSeqIds.add(item.orderItemSeqId);
     }
   })
-  
+
   //In current implementation kit product and component product will have the same orderItemSeqId
   items.forEach((item: any) => {
     const alreadyExists = itemsWithoutKitComponents.some(
@@ -44,11 +44,11 @@ const removeKitComponents = (items: any) => {
 }
 
 const getOrderStatus = (order: any, shipGroup: any, orderRouteSegment: any, orderType: string) => {
-  if(order.orderStatusId === "ORDER_COMPLETED" || orderType === "completed") {
+  if (order.orderStatusId === "ORDER_COMPLETED" || orderType === "completed") {
     return shipGroup?.shipmentMethodTypeId === "STOREPICKUP" ? "Picked up" : "Completed"
   }
 
-  if(orderRouteSegment?.length) {
+  if (orderRouteSegment?.length) {
     return orderRouteSegment[0]?.shipmentStatusId === "SHIPMENT_PACKED" ? "Ready for pickup" : orderRouteSegment[0]?.shipmentStatusId === "SHIPMENT_APPROVED" && order.pickers ? "Picking" : "Reserved"
   }
 

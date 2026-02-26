@@ -329,85 +329,21 @@
   </ion-page>
 </template>
 
-<script lang="ts">
+<script setup lang="ts">
 
-import {
-  alertController,
-  IonBackButton,
-  IonBadge,
-  IonButton,
-  IonButtons,
-  IonCard,
-  IonCardHeader,
-  IonCardSubtitle,
-  IonCardTitle,
-  IonCheckbox,
-  IonChip,
-  IonContent,
-  IonHeader,
-  IonIcon,
-  IonItem,
-  IonList,
-  IonPage,
-  IonLabel,
-  IonNote,
-  IonSkeletonText,
-  IonSpinner,
-  IonThumbnail,
-  IonTitle,
-  IonToolbar,
-  IonFab,
-  IonFabButton,
-  modalController,
-  popoverController
-} from "@ionic/vue";
-import { computed, defineComponent } from "vue";
-import { mapGetters, useStore } from "vuex";
-import {
-  banSharp,
-  callOutline,
-  cashOutline,
-  copyOutline,
-  closeOutline,
-  closeCircleOutline,
-  checkmarkCircleOutline,
-  checkmarkDoneOutline,
-  cubeOutline,
-  gift,
-  giftOutline,
-  informationCircleOutline,
-  locateOutline,
-  mailOutline,
-  personOutline,
-  printOutline,
-  pulseOutline,
-  sendOutline,
-  bagHandleOutline,
-  bagRemoveOutline,
-  timeOutline,
-  ticketOutline,
-  bagCheckOutline,
-  swapHorizontalOutline,
-  sunnyOutline,
-  downloadOutline,
-  trashOutline,
-  chevronUpOutline,
-  listOutline,
-  caretDownOutline,
-  warningOutline,
-  personAddOutline,
-  medkitOutline,
-} from "ionicons/icons";
+import { alertController, IonBackButton, IonBadge, IonButton, IonButtons, IonCard, IonCardHeader, IonCardSubtitle, IonCardTitle, IonCheckbox, IonChip, IonContent, IonHeader, IonIcon, IonItem, IonList, IonPage, IonLabel, IonNote, IonSkeletonText, IonSpinner, IonThumbnail, IonTitle, IonToolbar, IonFab, IonFabButton, modalController, popoverController } from "@ionic/vue";
+import { onMounted, ref, computed } from "vue";
+import { banSharp, callOutline, cashOutline, closeOutline, closeCircleOutline, checkmarkCircleOutline, checkmarkDoneOutline, cubeOutline, gift, giftOutline, informationCircleOutline, locateOutline, mailOutline, personOutline, printOutline, pulseOutline, bagHandleOutline, timeOutline, ticketOutline, bagCheckOutline, swapHorizontalOutline, sunnyOutline, downloadOutline, trashOutline, chevronUpOutline, listOutline, caretDownOutline, warningOutline, personAddOutline, medkitOutline } from "ionicons/icons";
 import { useRouter } from 'vue-router'
 import { Actions, hasPermission } from '@/authorization'
 import OrderItemRejHistoryModal from '@/components/OrderItemRejHistoryModal.vue';
 import AssignPickerModal from "@/views/AssignPickerModal.vue";
 import EditPickerModal from "@/components/EditPickerModal.vue";
-import { copyToClipboard, formatCurrency, formatPhoneNumber, getColorByDesc, getCurrentFacilityId, getFeature, showToast } from '@/utils'
+import { formatCurrency, formatPhoneNumber, getColorByDesc, showToast } from '@/utils'
 import { DateTime } from "luxon";
 import { hasError } from '@/adapter';
 import { OrderService } from "@/services/OrderService";
-import { getProductIdentificationValue, translate, useProductIdentificationStore, useUserStore } from "@hotwax/dxp-components";
+import { getProductIdentificationValue, translate, useProductIdentificationStore } from "@hotwax/dxp-components";
 import emitter from '@/event-bus'
 import logger from "@/logger";
 import InventoryDetailsPopover from '@/components/InventoryDetailsPopover.vue'
@@ -417,996 +353,849 @@ import { UserService } from "@/services/UserService";
 import ConfirmCancelModal from "@/components/ConfirmCancelModal.vue";
 import { UtilService } from "@/services/UtilService";
 import GiftCardActivationModal from "@/components/GiftCardActivationModal.vue";
+import { useUserStore } from "@/store/user";
+import { useOrderStore } from "@/store/order";
+import { useProductStore } from "@/store/product";
+import { useStockStore } from "@/store/stock";
+import { useUtilStore } from "@/store/util";
 
-export default defineComponent({
-  name: "OrderDetail",
-  components: {
-    IonBackButton,
-    IonBadge,
-    IonButton,
-    IonButtons,
-    IonCard,
-    IonCardHeader,
-    IonCardSubtitle,
-    IonCardTitle,
-    IonCheckbox,
-    IonChip,
-    IonContent,
-    IonHeader,
-    IonIcon,
-    IonItem,
-    IonList,
-    IonPage,
-    IonLabel,
-    IonNote,
-    IonSkeletonText,
-    IonSpinner,
-    IonThumbnail,
-    IonTitle,
-    IonToolbar,
-    IonFab,
-    IonFabButton,
-  },
-  data() {
-    return {
-      rejectEntireOrderReasonId: "REJ_AVOID_ORD_SPLIT",
-      isCancelationSyncJobEnabled: false,
-      isProcessRefundEnabled: false,
-      cancelJobNextRunTime: "",
-      orderTimeline: [] as any,
-      hasCancelledItems: false,
-      hasRejectedItems: false,
-      pickers: [] as any,
-      picklistDate: 0,
-      orderStatus: ""
+const props = defineProps(['orderType', 'orderId', 'shipGroupSeqId']);
+const router = useRouter();
+
+const rejectEntireOrderReasonId = ref("REJ_AVOID_ORD_SPLIT");
+const isCancelationSyncJobEnabled = ref(false);
+const isProcessRefundEnabled = ref(false);
+const cancelJobNextRunTime = ref("");
+const orderTimeline = ref([] as any);
+const hasCancelledItems = ref(false);
+const hasRejectedItems = ref(false);
+const pickers = ref([] as any);
+const picklistDate = ref(0);
+const orderStatus = ref("");
+
+const order = computed(() => useOrderStore().current);
+const partialOrderRejectionConfig = computed(() => useUserStore().partialOrderRejectionConfig);
+const getProduct = computed(() => useProductStore().getProduct);
+const getInventoryInformation = computed(() => useStockStore().getInventoryInformation);
+const getPartyName = (partyId: string) => useUtilStore().getPartyName(partyId);
+const getBopisProductStoreSettings = (setting: string) => useUserStore().getBopisProductStoreSettings(setting);
+const rejectReasons = computed(() => useUtilStore().getRejectReasons);
+const cancelReasons = computed(() => useUtilStore().getCancelReasons);
+const productIdentificationPref = computed(() => useProductIdentificationStore().getProductIdentificationPref);
+const currentFacility = computed(() => useUserStore().getCurrentFacility);
+
+function isEntireOrderRejectionEnabled() {
+  return partialOrderRejectionConfig.value?.isEnabled && partialOrderRejectionConfig.value?.entireOrderRejection;
+}
+
+function formatDateTime(date: any) {
+  return DateTime.fromMillis(date).toLocaleString({ hour: "numeric", minute: "2-digit", day: "numeric", month: "short", year: "numeric", hourCycle: "h12" })
+}
+
+function findTimeDiff(startTime: any, endTime: any) {
+  if(!endTime || !startTime) {
+    return ""
+  }
+
+  const timeDiff = DateTime.fromMillis(endTime).diff(DateTime.fromMillis(startTime), ["years", "months", "days", "hours", "minutes"]);
+  let diffString = "+ ";
+  if(timeDiff.years) diffString += `${Math.round(timeDiff.years)} years `
+  if(timeDiff.months) diffString += `${Math.round(timeDiff.months)} months `
+  if(timeDiff.days) diffString += `${Math.round(timeDiff.days)} days `
+  if(timeDiff.hours) diffString += `${Math.round(timeDiff.hours)} hours `
+  if(timeDiff.minutes) diffString += `${Math.round(timeDiff.minutes)} minutes`
+  return diffString
+}
+
+function sortSequence(sequence: any, sortOnField: string) {
+  return sequence.sort((a: any, b: any) => {
+    if(a[sortOnField] === b[sortOnField]) return 0;
+
+    if(a[sortOnField] == undefined) return 1;
+    if(b[sortOnField] == undefined) return -1;
+
+    return a[sortOnField] - b[sortOnField]
+  })
+}
+
+function getRejectionReasonDescription(rejectionReasonId: string) {
+  const reason = rejectReasons.value?.find((reason: any) => reason.enumId === rejectionReasonId)
+  return reason?.enumDescription ? reason.enumDescription : reason?.description ? reason.description : reason?.enumId;
+}
+
+function getCancelReasonDescription(cancelReasonId: string) {
+  const reason = cancelReasons.value?.find((reason: any) => reason.enumId === cancelReasonId)
+  return reason?.enumDescription ? reason.enumDescription : reason?.enumId;
+}
+
+function canRequestTransfer(orderRef: any): boolean {
+  return (
+    orderRef?.shipGroup?.shipmentMethodTypeId === 'STOREPICKUP' &&
+    orderRef?.statusId === 'ORDER_APPROVED' &&
+    !orderRef?.shipGroup?.shipmentId &&
+    !orderRef?.readyToHandover &&
+    !orderRef?.readyToShip &&
+    !orderRef?.rejected &&
+    !orderRef?.shipGroup?.items?.some((item: any) => item.rejectReason)
+  );
+}
+
+async function fetchJobs() {
+  const params = {
+    "inputFields": {
+      "statusId": "SERVICE_PENDING",
+      "statusId_op": "equals",
+      "systemJobEnumId": "JOB_EXP_CAN_S_ORD",
+      "systemJobEnumId_op": "equals"
+    },
+    "fieldList": ["systemJobEnumId", "statusId", "tempExprId", "nextExecutionDateTime"],
+    "noConditionFind": "Y",
+    "viewSize": 1
+  }
+
+  try {
+    const resp = await UtilService.fetchJobInformation(params)
+    if(!hasError(resp) && resp.data.count > 0) {
+      isCancelationSyncJobEnabled.value = true;
+      cancelJobNextRunTime.value = resp.data.docs[0].nextExecutionDateTime;
     }
-  },
-  computed: {
-    ...mapGetters({
-      order: "order/getCurrent",
-      partialOrderRejectionConfig: 'user/getPartialOrderRejectionConfig',
-      getProduct: 'product/getProduct',
-      getInventoryInformation: 'stock/getInventoryInformation',
-      getPartyName: 'util/getPartyName',
-      getBopisProductStoreSettings: 'user/getBopisProductStoreSettings',
-      rejectReasons: 'util/getRejectReasons',
-      cancelReasons: 'util/getCancelReasons',
-      currentEComStore: 'user/getCurrentEComStore',
-      getFacilityName: "util/getFacilityName",
-      getEnumDescription: "util/getEnumDescription"
+
+    const refundStatusResp = await UtilService.getProcessRefundStatus({
+      "inputFields": {
+        "productStoreId": useUserStore().getCurrentEComStore.productStoreId,
+        "settingTypeEnumId": "PROCS_RFND_STUS",
+      },
+      "fieldList": ["settingValue"],
+      "noConditionFind": "Y",
+      "entityName": "ProductStoreSetting",
+      "viewSize": 1
     })
-  },
-  props: ['orderType', 'orderId', 'shipGroupSeqId'],
-  methods: {
-    async fetchProductInventory(productId: string, shipGroupSeqId: any) {
-      this.store.dispatch('order/updateOrderItemFetchingStatus', { productId, shipGroupSeqId })
-      await this.store.dispatch('stock/fetchProductInventory', { productId })
-      this.store.dispatch('order/updateOrderItemFetchingStatus', { productId, shipGroupSeqId })
-    },    
-    async assignPicker(order: any, shipGroup: any, facilityId: any) {
-      const assignPickerModal = await modalController.create({
-        component: AssignPickerModal,
-        componentProps: { order, shipGroup, facilityId }
-      });
-      assignPickerModal.onDidDismiss().then(async(result: any) => {
-        if(result.data?.selectedPicker) {
-          emitter.emit("presentLoader");
-          await this.createPicklist(order, result.data.selectedPicker);
-          await this.store.dispatch('order/packShipGroupItems', { order, shipGroup })
-          await this.getOrderDetail(this.orderId, this.shipGroupSeqId, this.orderType);
-          emitter.emit("dismissLoader");
-        }
-      })
 
-      return assignPickerModal.present();
-    },
-    async editPicker(order: any) {
-      const editPickerModal = await modalController.create({
-        component: EditPickerModal,
-        componentProps: { order }
-      });
+    if(!hasError(refundStatusResp) && refundStatusResp.data.count > 0) {
+      isProcessRefundEnabled.value = refundStatusResp.data.docs[0].settingValue === "true";
+    }
+  } catch(err) {
+    logger.error(err)
+  }
+}
 
-      editPickerModal.onDidDismiss().then((result) => {
-        if(result.data?.selectedPicker){
-          const selectedPicker = result.data.selectedPicker
-          this.order.pickers = selectedPicker.name
-          this.order.pickerIds = [selectedPicker.id]
-          this.store.dispatch('order/updateCurrent', { order: this.order })
-          this.prepareOrderTimeline();
-        }
-      })
-      return editPickerModal.present();
-    },
-    async deliverShipment(order: any) {
-      const pickup = order.shipGroup.shipmentMethodTypeId === 'STOREPICKUP';
-      const header = pickup ? translate("Handover") : translate("Ship");
-      const message = pickup ? translate("Verify that the items in the package are valid and the customer has received their order. Once the order is handed over to the customer it cannot be undone.", { space: '<br/><br/>' }) : '';
+async function fetchProductInventory(productId: string, shipGroupSeqId: any) {
+  useOrderStore().updateOrderItemFetchingStatus({ productId, shipGroupSeqId })
+  await useStockStore().fetchProductInventory({ productId })
+  useOrderStore().updateOrderItemFetchingStatus({ productId, shipGroupSeqId })
+}
 
-      const alert = await alertController
-        .create({
-          header,
-          message,
-          buttons: [{
-            text: translate('Cancel'),
-            role: 'cancel'
-          }, {
-            text: translate(header),
-            handler: async () => {
-              await this.store.dispatch('order/deliverShipmentFromDetail', order).then((resp: any) => {
-                if(!hasError(resp)) {
-                  // Update order timeline once the order is completed
-                  // Sending statusId explicitly as we do not fetch the order info again on handover
-                  this.getOrderDetail(this.orderId, this.shipGroupSeqId, this.orderType);
-                  this.prepareOrderTimeline({ statusId: "ORDER_COMPLETED" });
-                }
-              })
-            }
-          }]
-        });
-      return alert.present();
-    },
-    async openOrderItemRejHistoryModal() {
-      const orderItemRejHistoryModal = await modalController.create({
-        component: OrderItemRejHistoryModal,
-      });
-      return orderItemRejHistoryModal.present();
-    },
-    async getOrderDetail(orderId: any, shipGroupSeqId: any, orderType: any) {
-      const payload = {
-        facilityId: this.currentFacility?.facilityId,
-        orderId,
-        shipGroupSeqId
-      }
-      await this.store.dispatch("order/getOrderDetail", { payload, orderType })
-    },
-    async rejectOrder() {
-      emitter.emit("presentLoader");
+async function getOrderDetail(orderId: any, shipGroupSeqId: any, orderType: any) {
+  const payload = {
+    facilityId: (currentFacility.value as any)?.facilityId,
+    orderId,
+    shipGroupSeqId
+  }
+  await useOrderStore().getOrderDetail({ payload, orderType })
+}
 
-      let order = JSON.parse(JSON.stringify(this.order))
-      const isEntireOrderRejection = this.isEntireOrderRejectionEnabled();
-      const rejectToFacilityId = order.shipGroup.shipmentMethodTypeId === "STOREPICKUP" ? "PICKUP_REJECTED" : "REJECTED_ITM_PARKING";
-      const itemsToReject: any[] = [];
-      
-      for (const item of order.shipGroup.items) {
-        const shouldReject = isEntireOrderRejection || item.rejectReason;
+async function fetchRejectReasons() {
+  await useUtilStore().fetchRejectReasons();
+}
 
-        if (shouldReject) {
-          itemsToReject.push({
-            orderItemSeqId: item.orderItemSeqId,
-            quantity: parseInt(item.quantity),
-            maySplit: 'Y',
-            updateQOH: false, // Could be true if QOH needs to be updated on rejection
-            rejectionReasonId: item.rejectReason || this.rejectEntireOrderReasonId,
-            kitComponents: isKit(item) ? item.rejectedComponents || [] : []
-          });
-        }
-      }
-      if (itemsToReject.length > 0) {
-        const payload = {
-          orderId: order.orderId,
-          rejectToFacilityId,
-          items: itemsToReject
-        };
-        try {
-          const resp = await OrderService.rejectOrderItems(payload);
+async function fetchCancelReasons() {
+  await useUtilStore().fetchCancelReasons();
+}
 
-          if (!hasError(resp)) {
-            // Remove rejected items from the shipGroup.items
-            const rejectedSeqIds = new Set(itemsToReject.map(i => i.orderItemSeqId));
-            order.shipGroup.items = order.shipGroup.items.filter(
-              (item: any) => !rejectedSeqIds.has(item.orderItemSeqId)
-            );
-            
-            const toastMessage = order.shipGroup.items.length === 0 ? translate('All items were rejected from the order.', { orderId: order.orderName ?? order.orderId }) : translate('Some items were rejected from the order.', { orderId: order.orderName ?? order.orderId });
-            showToast(toastMessage);
-          }
-        } catch (err) {
-          logger.error("Something went wrong while rejecting order items:", err);
-        }
-      }
+async function fetchOrderRouteSegmentInfo() {
+  let orderRouteSegment = []
+  let shipmentStatusInfo = []
+  try {
+    const resp = await OrderService.performFind({
+      inputFields: {
+        orderId: order.value.orderId,
+        shipGroupSeqId: order.value.shipGroup.shipGroupSeqId
+      },
+      fieldList: ["orderId", "shipGroupSeqId", "shipmentId", "shipmentStatusId", "trackingIdNumber"],
+      viewSize: 50,
+      entityName: "OrderShipmentAndRouteSegment"
+    }) as any
 
-      // If all the items are rejected then marking the whole order as rejected
-      if(!order.shipGroup.items.length) order.rejected = true;
+    if(!hasError(resp) && resp.data?.docs.length) {
+      orderRouteSegment = resp.data.docs
 
-      await this.store.dispatch("order/updateCurrent", { order });
-      this.hasRejectedItems = this.order.shipGroup.items.some((item: any) => item.rejectReason);
-
-      // We are only preparing the complete timeline for the store pickup order
-      if(this.order.shipGroup?.shipmentMethodTypeId === "STOREPICKUP") {
-        this.prepareOrderTimeline();
-      }
-
-      emitter.emit("dismissLoader");
-    },
-    async cancelOrder(order: any) {
-      const cancelOrderConfirmModal = await modalController.create({
-        component: ConfirmCancelModal,
-        componentProps: {
-          order,
-          isCancelationSyncJobEnabled: this.isCancelationSyncJobEnabled,
-          isProcessRefundEnabled: this.isProcessRefundEnabled,
-          cancelJobNextRunTime: this.cancelJobNextRunTime,
-          orderType: this.orderType
-        }
-      });
-
-      cancelOrderConfirmModal.onDidDismiss().then(() => {
-        this.hasCancelledItems = this.order.shipGroup.items.some((item: any) => item.cancelReason);
-        // We are only preparing the complete timeline for the store pickup order
-        if(this.order.shipGroup.shipmentMethodTypeId === "STOREPICKUP") {
-          this.prepareOrderTimeline();
-        }
-      })
-
-      return cancelOrderConfirmModal.present();
-    },
-
-    async readyForPickup(order: any, shipGroup: any) {
-      if(this.getBopisProductStoreSettings('ENABLE_TRACKING') && !shipGroup.picklistId) return this.assignPicker(order, shipGroup, this.currentFacility?.facilityId);
-      const pickup = shipGroup?.shipmentMethodTypeId === 'STOREPICKUP';
-      const header = pickup ? translate('Ready for pickup') : translate('Ready to ship');
-      const message = pickup ? translate('An email notification will be sent to that their order is ready for pickup. This order will also be moved to the packed orders tab.', { customerName: order.customerName, space: '<br/><br/>'}) : '';
-
-      const alert = await alertController
-        .create({
-          header: header,
-          message: message,
-          buttons: [{
-            text: translate('Cancel'),
-            role: 'cancel'
-          },{
-            text: header,
-            handler: async () => {
-              alert.dismiss();
-              emitter.emit("presentLoader", {message: "Loading...", backdropDismiss: false});
-              if (!shipGroup.shipmentId) {
-                await this.printPicklist(order, shipGroup)
-              }
-              await this.store.dispatch('order/packShipGroupItems', { order, shipGroup })
-              emitter.emit("dismissLoader");
-            }
-          }]
-        });
-      return alert.present();
-    },
-
-    async packShippingOrders(currentOrder: any, shipGroup: any) {
-      try {
-        const resp = await OrderService.packOrder({
-          'shipmentId': currentOrder.shipmentId,
-          'orderId': currentOrder.orderId,
-          'facilityId': getCurrentFacilityId()
-        })
-
-        if(!hasError(resp)) {
-          showToast(translate("Order packed and ready for delivery"));
-          this.store.dispatch("order/updateCurrent", { order: { ...currentOrder, readyToShip: true } }) 
-          this.store.dispatch("order/removeOpenOrder", { order: currentOrder, shipGroup })
-        } else {
-          throw resp.data;
-        }
-      } catch(error: any) {
-        logger.error(error);
-        showToast(translate("Something went wrong"))
-      }
-    },
-    async fetchRejectReasons() {
-      await this.store.dispatch('util/fetchRejectReasons');
-    },
-    async fetchCancelReasons() {
-      await this.store.dispatch('util/fetchCancelReasons');
-    },
-    async printPackingSlip(order: any) {
-      // if the request to print packing slip is not yet completed, then clicking multiple times on the button
-      // should not do anything
-      if(order.isGeneratingPackingSlip) {
-        return;
-      }
-
-      order.isGeneratingPackingSlip = true;
-      await OrderService.printPackingSlip([order.shipGroup.shipmentId]);
-      order.isGeneratingPackingSlip = false;
-    },
-    async printShippingLabelAndPackingSlip(order: any) {
-      await OrderService.printShippingLabelAndPackingSlip(order.shipGroup.shipmentId)
-    },
-    async openInventoryDetailPopover(Event: any, item: any){
-      const popover = await popoverController.create({
-        component: InventoryDetailsPopover,
-        event: Event,
-        showBackdrop: false,
-        componentProps: { item }
-      });
-      await popover.present();
-    },
-    formatDateTime(date: any) {
-      return DateTime.fromMillis(date).toLocaleString({ hour: "numeric", minute: "2-digit", day: "numeric", month: "short", year: "numeric", hourCycle: "h12" })
-    },
-    findTimeDiff(startTime: any, endTime: any) {
-      if(!endTime || !startTime) {
-        return ""
-      }
-
-      const timeDiff = DateTime.fromMillis(endTime).diff(DateTime.fromMillis(startTime), ["years", "months", "days", "hours", "minutes"]);
-      let diffString = "+ ";
-      if(timeDiff.years) diffString += `${Math.round(timeDiff.years)} years `
-      if(timeDiff.months) diffString += `${Math.round(timeDiff.months)} months `
-      if(timeDiff.days) diffString += `${Math.round(timeDiff.days)} days `
-      if(timeDiff.hours) diffString += `${Math.round(timeDiff.hours)} hours `
-      if(timeDiff.minutes) diffString += `${Math.round(timeDiff.minutes)} minutes`
-      return diffString
-    },
-    async fetchKitComponents(orderItem: any, order: any, toggleKitComponents = true) {
-      await this.store.dispatch('product/fetchProductComponents', { productId: orderItem.productId })
-
-      if(toggleKitComponents) {
-        orderItem.showKitComponents = !orderItem.showKitComponents
-        this.store.dispatch("order/updateCurrentOrderInfo", order)
-      }
-    },
-    async openRejectReasonPopover(ev: Event, item: any, order: any) {
-      const reportIssuePopover = await popoverController.create({
-        component: ReportAnIssuePopover,
-        event: ev,
-        translucent: true,
-        showBackdrop: false,
-      });
-
-      reportIssuePopover.present();
-
-      const result = await reportIssuePopover.onDidDismiss();
-
-      if (result.data) {
-        this.updateRejectReason(result.data, item, order)
-      }
-    },
-    async openCancelReasonPopover(ev: Event, item: any, order: any) {
-      const cancelItemPopover = await popoverController.create({
-        component: ReportAnIssuePopover,
-        componentProps: {
-          reasonType: "cancel"
-        },
-        event: ev,
-        translucent: true,
-        showBackdrop: false,
-      });
-
-      cancelItemPopover.present();
-
-      const result = await cancelItemPopover.onDidDismiss();
-
-      if (result.data) {
-        this.updateCancelReason(result.data, item, order)
-      }
-    },
-    async updateCancelReason(updatedReason: string, item: any, order: any) {
-      item.cancelReason = updatedReason;
-      this.hasCancelledItems = true
-      this.store.dispatch("order/updateCurrent", { order })
-    },
-    async updateRejectReason(updatedReason: string, item: any, order: any) {
-      item.rejectReason = updatedReason;
-
-      // If the current item is kit, and if its components are not available then fetch the components for the kit and mark those components as rejected components
-      if(isKit(item)) {
-        if(!this.getProduct(item.productId).productComponents) await this.fetchKitComponents(item, order, false)
-        item.rejectedComponents = this.getProduct(item.productId).productComponents?.map((product: any) => product.productIdTo)
-      }
-
-      this.hasRejectedItems = true
-      this.store.dispatch("order/updateCurrent", { order })
-    },
-    getRejectionReasonDescription(rejectionReasonId: string) {
-      const reason = this.rejectReasons?.find((reason: any) => reason.enumId === rejectionReasonId)
-      return reason?.enumDescription ? reason.enumDescription : reason?.description ? reason.description : reason?.enumId;
-    },
-    getCancelReasonDescription(cancelReasonId: string) {
-      const reason = this.cancelReasons?.find((reason: any) => reason.enumId === cancelReasonId)
-      return reason?.enumDescription ? reason.enumDescription : reason?.enumId;
-    },
-    isEntireOrderRejectionEnabled() {
-      return (!this.partialOrderRejectionConfig || !this.partialOrderRejectionConfig.settingValue || !JSON.parse(this.partialOrderRejectionConfig.settingValue)) && this.hasRejectedItems
-    },
-    async removeRejectionReason(item: any, order: any) {
-      delete item["rejectedComponents"];
-      item.rejectReason = "";
-      this.hasRejectedItems = order.shipGroup.items.some((item: any) => item.rejectReason);
-      this.store.dispatch("order/updateCurrent", { order })
-    },
-    async removeCancellationReason(item: any, order: any) {
-      item.cancelReason = "";
-      this.hasCancelledItems = order.shipGroup.items.some((item: any) => item.cancelReason);
-      this.store.dispatch("order/updateCurrent", { order })
-    },
-    rejectKitComponent(order: any, item: any, componentProductId: string) {
-      let rejectedComponents = item.rejectedComponents ? item.rejectedComponents : []
-      if (rejectedComponents.includes(componentProductId)) {
-        rejectedComponents = rejectedComponents.filter((rejectedComponent: any) => rejectedComponent !== componentProductId)
-      } else {
-        rejectedComponents.push(componentProductId);
-      }
-      item.rejectedComponents = rejectedComponents;
-      order.shipGroup.items.map((orderItem: any) => {
-        if (orderItem.orderItemSeqId === item.orderItemSeqId) {
-          orderItem.rejectedComponents = rejectedComponents;
-        }
-      })
-      this.store.dispatch("order/updateCurrent", { order })
-    },
-    async printPicklist(order: any, shipGroup: any) {
-      // shipGroup.picklistId is copied over to order.picklistId in getOrderDetail function
-      if(shipGroup.picklistId) {
-        await OrderService.printPicklist(shipGroup.picklistId)
-        return;
-      }
-
-      if(!this.getBopisProductStoreSettings('ENABLE_TRACKING')) {
-        try {
-          const resp = await UserService.ensurePartyRole({
-            partyId: "_NA_",
-            roleTypeId: "WAREHOUSE_PICKER",
-          })
-
-          if(hasError(resp)) {
-            throw resp.data;
-          }
-        } catch (error) {
-          showToast(translate("Something went wrong. Picklist can not be created."));
-          logger.error(error)
-          return;
-        }
-        await this.createPicklist(order, "_NA_");
-        this.pickers = ["Default"]
-        this.picklistDate = DateTime.now().toMillis()
-        this.prepareOrderTimeline();
-        return;
-      }
-
-      const assignPickerModal = await modalController.create({
-        component: AssignPickerModal,
-        componentProps: { order, shipGroup, facilityId: this.currentFacility.facilityId }
-      });
-
-      assignPickerModal.onDidDismiss().then(async(result: any) => {
-        if(result.data?.selectedPicker) {
-          await this.createPicklist(order, result.data.selectedPicker)
-          this.pickers = result.data.picker
-          this.picklistDate = DateTime.now().toMillis()
-          await this.getOrderDetail(this.orderId, this.shipGroupSeqId, this.orderType);
-          this.prepareOrderTimeline();
-        }
-      })
-
-      return assignPickerModal.present();
-    },
-    async createPicklist(order: any, selectedPicker: any) {
-      let resp;
-
-      const payload = {
-        packageName: "A", //default package name
-        facilityId: this.currentFacility?.facilityId,
-        shipmentMethodTypeId: order.shipGroup.shipmentMethodTypeId,
-        statusId: "PICKLIST_ASSIGNED",        
-        pickers: selectedPicker ? [{
-          partyId: selectedPicker,
-          roleTypeId: "WAREHOUSE_PICKER"
-        }] : [],
-        orderItems: order.shipGroup?.items.map((item: { orderId: string, orderItemSeqId: string, shipGroupSeqId: string, productId: string, quantity: number }) => ({
-          orderId: item.orderId,
-          orderItemSeqId: item.orderItemSeqId,
-          shipGroupSeqId: item.shipGroupSeqId,
-          productId: item.productId,
-          quantity: item.quantity
-        }))
-      };      
-
-      try {
-        resp = await OrderService.createPicklist(payload);
-        if(!hasError(resp)) {
-          // generating picklist after creating a new picklist
-          await OrderService.printPicklist(resp.data.picklistId)
-          this.order.shipGroup.picklistId = resp.data.picklistId
-          this.order.shipGroup.shipmentId = resp.data.shipmentIds[0]
-          this.store.dispatch("order/updateCurrentOrderInfo", this.order)
-        } else {
-          throw resp.data;
-        }
-      } catch (err) {
-        showToast(translate('Something went wrong. Picklist can not be created.'));
-        emitter.emit("dismissLoader");
-        return;
-      }
-    },
-    async fetchJobs() {
-      // TODO: Add check to only fetch the jobs for current product store
-      let params = {
-        inputFields: {
-          statusId: ["SERVICE_DRAFT", "SERVICE_PENDING"],
-          statusId_op: "in",
-          systemJobEnumId: "JOB_UL_CNCLD_ORD",
-          systemJobEnumId_op: "equals",
-          productStoreId: this.currentEComStore?.productStoreId,
-        },
-        orderBy: "runTime DESC",
-        noConditionFind: "Y",
-        viewSize: 50
-      } as any
-
-      try {
-        const resp = await UtilService.fetchJobInformation(params)
-
-        if(!hasError(resp) && resp.data.count) {
-          resp.data.docs.find((job: any) => {
-            if(job.statusId === "SERVICE_PENDING") {
-              this.isCancelationSyncJobEnabled = true;
-              this.cancelJobNextRunTime = job.runTime
-              this.getProcessRefundStatus();
-              return true;
-            }
-          })
-        }
-      } catch(err) {
-        logger.error(err)
-      }
-    },
-    async getProcessRefundStatus() {
-      try {
-        const params = {
+      if(resp.data.docs[0].shipmentId) {
+        const shipmentStatusResp = await OrderService.performFind({
           inputFields: {
-            productStoreId: this.currentEComStore?.productStoreId,
-            productStoreId_op: "equals"
+            shipmentId: resp.data.docs[0].shipmentId
           },
-          entityName: "ShopifyConfig",
-          fieldList: ["shopifyConfigId", "processRefund"],
-          viewSize: 1
-        }
-
-        const resp = await UtilService.getProcessRefundStatus(params);
-        if(!hasError(resp) && resp.data?.count > 0) {
-          this.isProcessRefundEnabled = resp.data.docs[0]?.processRefund === "Y"
-        }
-      } catch(err) {
-        logger.error(err)
-      }
-    },
-    async fetchOrderChangeHistory() {
-      // Only fetching the records those are store pickup related
-      // Added fromFacility check as when customer manually moves order it will be moved from PICKUP_REJECTED queue
-      // Added facilityId check as when order is rejected/canceled it will be moved to PICKUP_REJECTED queue
-      // TODO: need to implement the support to fetch the history for ship orders
-      let orderChangeHistory = []
-      try {
-        let payload = {
-          inputFields: {
-            orderId: this.order.orderId,
-            fromFacilityId_value: "PICKUP_REJECTED",
-            fromFacilityId_op: "equals",
-            fromFacilityId_grp :"1",
-            facilityId_value: "PICKUP_REJECTED",
-            facilityId_op: "equals",
-            facilityId_grp: "2"
-          },
-          entityName: "OrderFacilityChange",
-          orderBy: "changeDatetime DESC",
-          viewSize: 250,
-        }
-
-        const resp = await OrderService.performFind(payload);
-        if(!hasError(resp) && resp.data.docs?.length) {
-          orderChangeHistory = resp.data.docs
-        } else {
-          throw resp.data;
-        }
-      } catch(err) {
-        logger.error("Failed to fetch order change history", err)
-      }
-
-      return orderChangeHistory
-    },
-    async fetchOrderCommunicationEvent() {
-      let orderCommunicationEvent = []
-      try {
-        let payload = {
-          inputFields: {
-            orderId: this.order.orderId,
-            subject: "pickup",
-            subject_op: "contains",
-            communicationEventTypeId: "EMAIL_COMMUNICATION"
-          },
-          entityName: "CommunicationEventAndOrder",
-          viewSize: 250,
-          orderBy: "entryDate ASC",
-          fieldList: ["communicationEventId", "entryDate", "orderId"]
-        }
-
-        const resp = await OrderService.performFind(payload);
-        if(!hasError(resp) && resp.data.docs?.length) {
-          orderCommunicationEvent = resp.data.docs
-        } else {
-          throw resp.data;
-        }
-      } catch(err) {
-        logger.error("Failed to fetch communication events for order", err)
-      }
-
-      return orderCommunicationEvent
-    },
-    sortSequence(sequence: any, sortOnField: string) {
-      return sequence.sort((a: any, b: any) => {
-        if(a[sortOnField] === b[sortOnField]) return 0;
-
-        // Sort undefined values at last
-        if(a[sortOnField] == undefined) return 1;
-        if(b[sortOnField] == undefined) return -1;
-
-        return a[sortOnField] - b[sortOnField]
-      })
-    },
-    async prepareOrderTimeline(paramsToUpdate ?: any) {
-      const timeline = []
-
-      const {orderRouteSegment, shipmentStatusInfo} = await this.fetchOrderRouteSegmentInfo();
-
-      // Get order status using utility method
-      this.orderStatus = this.getOrderStatus({
-        ...this.order,
-        ...paramsToUpdate
-      }, this.order.shipGroup, orderRouteSegment, this.orderType)
-
-      let orderChangeHistory = await this.fetchOrderChangeHistory();
-      const orderPickupEmailCommnicationEvent = await this.fetchOrderCommunicationEvent();
-
-      // Removed the first record from the list, the first mail is sent as soon as item is marked for pickup
-      // and we do not need to add the same in the timeline
-      const communicationEvents = orderPickupEmailCommnicationEvent.slice(1).map((event: any) => ({
-        ...event,
-        sortDate: event.entryDate
-      }))
-
-      const facilityIds = [] as Array<string>
-      const enumIds = [] as Array<string>
-      orderChangeHistory = orderChangeHistory.map((orderChange: any) => {
-        facilityIds.push(orderChange.facilityId)
-        facilityIds.push(orderChange.fromFacilityId)
-        enumIds.push(orderChange.changeReasonEnumId)
-        return {
-          ...orderChange,
-          sortDate: orderChange.changeDatetime
-        }
-      })
-
-      await this.store.dispatch("util/fetchFacilities", [...new Set(facilityIds)])
-      await this.store.dispatch("util/fetchEnumerations", [...new Set(enumIds)])
-
-      const orderTimelineComponents = [...communicationEvents, ...orderChangeHistory]
-
-      // Add order creation date to timeline
-      if(this.order.orderDate) {
-        timeline.push({
-          label: "Created in Shopify",
-          id: "orderDate",
-          value: this.order.orderDate,
-          icon: sunnyOutline,
-          valueType: "date-time-millis"
-        })
-      }
-
-      // Add order import date to timeline
-      if(this.order.entryDate) {
-        timeline.push({
-          label: "Imported from Shopify",
-          id: "entryDate",
-          value: this.order.entryDate,
-          icon: downloadOutline,
-          valueType: "date-time-millis",
-          timeDiff: this.findTimeDiff(this.order.orderDate, this.order.entryDate)
-        })
-      }
-
-      // Add order approved date to timeline
-      if(this.order.approvedDate) {
-        timeline.push({
-          label: "Approved for fulfillment",
-          id: "approvedDate",
-          value: this.order.approvedDate,
-          icon: pulseOutline,
-          valueType: "date-time-millis",
-          timeDiff: this.findTimeDiff(this.order.orderDate, this.order.approvedDate)
-        })
-      }
-
-      // Add picker info to timeline
-      if((this.order.pickers?.length && this.order.picklistDate) || this.pickers.length) {
-        const date = this.order.picklistDate || this.picklistDate || DateTime.now().toMillis()
-        timeline.push({
-          label: "Picker assigned",
-          id: "pickerInfo",
-          value: date,
-          icon: personAddOutline,
-          valueType: "date-time-millis",
-          timeDiff: this.findTimeDiff(this.order.orderDate, date),
-          metaData: this.order.pickers || this.pickers
-        })
-      }
-
-      if(orderTimelineComponents.length) {
-        orderTimelineComponents.map((component: any) => {
-          let label = "Pickup remainder"
-          let id = "pickupRemainder"
-          let icon = mailOutline
-          let metaData = ""
-          if(component.facilityId === "PICKUP_REJECTED") {            
-            label = "Rejected"
-            id = "rejected"
-            icon = trashOutline
-            metaData = this.getFacilityName(component.fromFacilityId) + ": " + this.getEnumDescription(component.changeReasonEnumId)
-            if (this.cancelReasons.some((reason: any) => reason.enumId === component.changeReasonEnumId)) {
-              label = "Cancelled"
-              id = "cancelled"
-              icon = banSharp
-            }
-          } else if(component.fromFacilityId === "PICKUP_REJECTED") {
-            label = "Assigned for fulfillment"
-            id = "assigned"
-            icon = medkitOutline
-            metaData = this.getFacilityName(component.facilityId) + ": " + this.getEnumDescription(component.changeReasonEnumId)
-          }
-
-          timeline.push({
-            label,
-            id,
-            value: component.sortDate,
-            icon,
-            valueType: "date-time-millis",
-            timeDiff: this.findTimeDiff(this.order.orderDate, component.sortDate),
-            metaData
-          })
-        })
-      }
-
-      // Add order completed date to timeline, if we do not have order completed date then check for orderType
-      if(this.order.completedDate || this.orderType === "completed") {
-        timeline.push({
-          label: this.order.shipGroup.shipmentMethodTypeId === "STOREPICKUP" ? "Picked up" : "Order completed",
-          id: "completedDate",
-          value: this.order.completedDate ? this.order.completedDate : undefined,
-          icon: checkmarkDoneOutline,
-          valueType: "date-time-millis",
-          timeDiff: this.order.completedDate ? this.findTimeDiff(this.order.orderDate, this.order.completedDate) : ""
-        })
-      }
-
-      const getShipmentPackedDate = shipmentStatusInfo?.find((statusInfo: any) => statusInfo.statusId === "SHIPMENT_PACKED")
-      if(getShipmentPackedDate?.statusDate) {
-        timeline.push({
-          label: "Ready for pickup",
-          id: "packedDate",
-          value: getShipmentPackedDate.statusDate,
-          icon: bagCheckOutline,
-          valueType: "date-time-millis",
-          timeDiff: this.findTimeDiff(this.order.orderDate, getShipmentPackedDate.statusDate)
-        })
-      }
-
-      this.orderTimeline = this.sortSequence(timeline, "value")
-    },
-    async fetchOrderRouteSegmentInfo() {
-      let orderRouteSegment = []
-      let shipmentStatusInfo = []
-      try {
-        const resp = await OrderService.performFind({
-          inputFields: {
-            orderId: this.order.orderId,
-            shipGroupSeqId: this.order.shipGroup.shipGroupSeqId
-          },
-          fieldList: ["orderId", "shipGroupSeqId", "shipmentId", "shipmentStatusId", "trackingIdNumber"],
+          fieldList: ["shipmentId", "statusId", "statusDate"],
           viewSize: 50,
-          entityName: "OrderShipmentAndRouteSegment"
+          entityName: "ShipmentAndShipmentStatus"
         }) as any
 
-        if(!hasError(resp) && resp.data?.docs.length) {
-          orderRouteSegment = resp.data.docs
-
-          if(resp.data.docs[0].shipmentId) {
-            const shipmentStatusResp = await OrderService.performFind({
-              inputFields: {
-                shipmentId: resp.data.docs[0].shipmentId
-              },
-              fieldList: ["shipmentId", "statusId", "statusDate"],
-              viewSize: 50,
-              entityName: "ShipmentAndShipmentStatus"
-            }) as any
-
-            if(!hasError(resp) && shipmentStatusResp.data?.docs.length) {
-              shipmentStatusInfo = shipmentStatusResp.data.docs
-            }
-          }
+        if(!hasError(shipmentStatusResp) && shipmentStatusResp.data?.docs.length) {
+          shipmentStatusInfo = shipmentStatusResp.data.docs
         }
-      } catch(err) {
-        logger.error("Failed to fetch route segment info for order")
+      }
+    }
+  } catch(err) {
+    logger.error("Failed to fetch route segment info for order")
+  }
+
+  return {
+    orderRouteSegment,
+    shipmentStatusInfo
+  }
+}
+
+async function fetchOrderChangeHistory() {
+  let orderChangeHistory = []
+  try {
+    let payload = {
+      inputFields: {
+        orderId: order.value.orderId,
+        fromFacilityId_value: "PICKUP_REJECTED",
+        fromFacilityId_op: "equals",
+        fromFacilityId_grp :"1",
+        facilityId_value: "PICKUP_REJECTED",
+        facilityId_op: "equals",
+        facilityId_grp: "2"
+      },
+      entityName: "OrderFacilityChange",
+      orderBy: "changeDatetime DESC",
+      viewSize: 250,
+    }
+
+    const resp = await OrderService.performFind(payload);
+    if(!hasError(resp) && resp.data.count) {
+      orderChangeHistory = resp.data.docs
+    } else {
+      throw resp.data;
+    }
+  } catch(err) {
+    logger.error("Failed to fetch order change history", err)
+  }
+
+  return orderChangeHistory
+}
+
+async function fetchOrderCommunicationEvent() {
+  let orderCommunicationEvent = []
+  try {
+    let payload = {
+      inputFields: {
+        orderId: order.value.orderId,
+        subject: "pickup",
+        subject_op: "contains",
+        communicationEventTypeId: "EMAIL_COMMUNICATION"
+      },
+      entityName: "CommunicationEventAndOrder",
+      viewSize: 250,
+      orderBy: "entryDate ASC",
+      fieldList: ["communicationEventId", "entryDate", "orderId"]
+    }
+
+    const resp = await OrderService.performFind(payload);
+    if(!hasError(resp) && resp.data.count) {
+      orderCommunicationEvent = resp.data.docs
+    } else {
+      throw resp.data;
+    }
+  } catch(err) {
+    logger.error("Failed to fetch communication events for order", err)
+  }
+
+  return orderCommunicationEvent
+}
+
+async function prepareOrderTimeline(paramsToUpdate ?: any) {
+  const timeline = []
+
+  const {orderRouteSegment, shipmentStatusInfo} = await fetchOrderRouteSegmentInfo();
+
+  orderStatus.value = getOrderStatus({
+    ...(order.value as any),
+    ...paramsToUpdate
+  }, order.value.shipGroup, orderRouteSegment, props.orderType)
+
+  let orderChangeHistory = await fetchOrderChangeHistory();
+  const orderPickupEmailCommnicationEvent = await fetchOrderCommunicationEvent();
+
+  const communicationEvents = orderPickupEmailCommnicationEvent.slice(1).map((event: any) => ({
+    ...event,
+    sortDate: event.entryDate
+  }))
+
+  const facilityIds = [] as Array<string>
+  const enumIds = [] as Array<string>
+  orderChangeHistory = orderChangeHistory.map((orderChange: any) => {
+    facilityIds.push(orderChange.facilityId)
+    facilityIds.push(orderChange.fromFacilityId)
+    enumIds.push(orderChange.changeReasonEnumId)
+    return {
+      ...orderChange,
+      sortDate: orderChange.changeDatetime
+    }
+  })
+
+  await useUtilStore().fetchFacilities([...new Set(facilityIds)])
+  await useUtilStore().fetchEnumerations([...new Set(enumIds)])
+
+  const orderTimelineComponents = [...communicationEvents, ...orderChangeHistory]
+
+  if(order.value.orderDate) {
+    timeline.push({
+      label: "Created in Shopify",
+      id: "orderDate",
+      value: order.value.orderDate,
+      icon: sunnyOutline,
+      valueType: "date-time-millis"
+    })
+  }
+
+  if(order.value.entryDate) {
+    timeline.push({
+      label: "Imported from Shopify",
+      id: "entryDate",
+      value: order.value.entryDate,
+      icon: downloadOutline,
+      valueType: "date-time-millis",
+      timeDiff: findTimeDiff(order.value.orderDate, order.value.entryDate)
+    })
+  }
+
+  if(order.value.approvedDate) {
+    timeline.push({
+      label: "Approved for fulfillment",
+      id: "approvedDate",
+      value: order.value.approvedDate,
+      icon: pulseOutline,
+      valueType: "date-time-millis",
+      timeDiff: findTimeDiff(order.value.orderDate, order.value.approvedDate)
+    })
+  }
+
+  if((order.value.pickers?.length && order.value.picklistDate) || pickers.value.length) {
+    const date = order.value.picklistDate || picklistDate.value || DateTime.now().toMillis()
+    timeline.push({
+      label: "Picker assigned",
+      id: "pickerInfo",
+      value: date,
+      icon: personAddOutline,
+      valueType: "date-time-millis",
+      timeDiff: findTimeDiff(order.value.orderDate, date),
+      metaData: order.value.pickers || pickers.value
+    })
+  }
+
+  if(orderTimelineComponents.length) {
+    orderTimelineComponents.map((component: any) => {
+      let label = "Pickup remainder"
+      let id = "pickupRemainder"
+      let icon = mailOutline
+      let metaData = ""
+      if(component.facilityId === "PICKUP_REJECTED") {            
+        label = "Rejected"
+        id = "rejected"
+        icon = trashOutline
+        metaData = useUtilStore().getFacilityName(component.fromFacilityId) + ": " + useUtilStore().getEnumDescription(component.changeReasonEnumId)
+        if (cancelReasons.value.some((reason: any) => reason.enumId === component.changeReasonEnumId)) {
+          label = "Cancelled"
+          id = "cancelled"
+          icon = banSharp
+        }
+      } else if(component.fromFacilityId === "PICKUP_REJECTED") {
+        label = "Assigned for fulfillment"
+        id = "assigned"
+        icon = medkitOutline
+        metaData = useUtilStore().getFacilityName(component.facilityId) + ": " + useUtilStore().getEnumDescription(component.changeReasonEnumId)
       }
 
-      return {
-        orderRouteSegment,
-        shipmentStatusInfo
-      }
-    },
-    async sendReadyForPickupEmail(order: any) {
-      const header = translate("Resend email")
-      const message = translate("An email notification will be sent to that their order is ready for pickup.", { customerName: order.customerName });
-
-      const alert = await alertController
-        .create({
-          header: header,
-          message: message,
-          buttons: [{
-            text: translate("Cancel"),
-            role: "cancel"
-          },{
-            text: translate("Send"),
-            handler: async () => {
-              try {
-                const resp = await OrderService.sendPickupScheduledNotification({ shipmentId: order.shipmentId });
-                if (!hasError(resp)) {
-                  showToast(translate("Email sent successfully"))
-                } else {
-                  showToast(translate("Something went wrong while sending the email."))
-                }
-              } catch (error) {
-                showToast(translate("Something went wrong while sending the email."))
-                logger.error(error)
-              }
-            }
-          }]
-        });
-      return alert.present();
-    },
-    async openGiftCardActivationModal(item: any) {
-      const modal = await modalController.create({
-        component: GiftCardActivationModal,
-        componentProps: { item, orderId: this.orderId, customerId: this.order.customerId, currencyUom: this.order.currencyUom }
+      timeline.push({
+        label,
+        id,
+        value: component.sortDate,
+        icon,
+        valueType: "date-time-millis",
+        timeDiff: findTimeDiff(order.value.orderDate, component.sortDate),
+        metaData
       })
-      
-      modal.onDidDismiss().then((result: any) => {
-        if(result.data?.isGCActivated) {
-          this.store.dispatch("order/updateCurrentItemGCActivationDetails", { item, orderId: this.orderId, isDetailsPage: true })
-        }
-      })
-      modal.present();
-    },
-    canRequestTransfer(order: any): boolean {
-      return (
-        order?.shipGroup?.shipmentMethodTypeId === 'STOREPICKUP' &&
-        order?.statusId === 'ORDER_APPROVED' &&
-        !order?.shipGroup?.shipmentId &&
-        !order?.readyToHandover &&
-        !order?.readyToShip &&
-        !order?.rejected &&
-        !order?.shipGroup?.items?.some((item: any) => item.rejectReason)
-      );
-    },
+    })
+  }
 
-    async confirmRequestTransfer(order: any) {
-      const header = translate('Convert to Ship-to-Store');
-      const message = translate("The item will be sourced from another store or warehouse and shipped to this location for customer pickup. {space} You can view the order in the Ship-to-Store section by clicking the trail icon in the upper-right corner of the page. {space} Do you want to continue?", { space: '<br/><br/>' });
+  if(order.value.completedDate || props.orderType === "completed") {
+    timeline.push({
+      label: order.value.shipGroup.shipmentMethodTypeId === "STOREPICKUP" ? "Picked up" : "Order completed",
+      id: "completedDate",
+      value: order.value.completedDate ? order.value.completedDate : undefined,
+      icon: checkmarkDoneOutline,
+      valueType: "date-time-millis",
+      timeDiff: order.value.completedDate ? findTimeDiff(order.value.orderDate, order.value.completedDate) : ""
+    })
+  }
 
-      const alert = await alertController.create({
-        header,
-        message,
-        buttons: [{ 
-          text: translate('Cancel'),
-          role: 'cancel'
-        }, {
-          text: translate('Convert'),
-          handler: async () => await this.requestTransfer(order)
-        }]
-      });
+  const getShipmentPackedDate = shipmentStatusInfo?.find((statusInfo: any) => statusInfo.statusId === "SHIPMENT_PACKED")
+  if(getShipmentPackedDate?.statusDate) {
+    timeline.push({
+      label: "Ready for pickup",
+      id: "packedDate",
+      value: getShipmentPackedDate.statusDate,
+      icon: bagCheckOutline,
+      valueType: "date-time-millis",
+      timeDiff: findTimeDiff(order.value.orderDate, getShipmentPackedDate.statusDate)
+    })
+  }
 
-      return alert.present();
-    },
+  orderTimeline.value = sortSequence(timeline, "value")
+}
 
-    async requestTransfer(order: any) {
+async function createPicklist(orderRef: any, selectedPicker: any) {
+  let resp;
+  try {
+    const payload = {
+      packageName: "A", //default package name
+      facilityId: (currentFacility.value as any)?.facilityId,
+      shipmentMethodTypeId: orderRef.shipGroup.shipmentMethodTypeId,
+      statusId: "PICKLIST_ASSIGNED",        
+      pickers: selectedPicker ? [{
+        partyId: selectedPicker,
+        roleTypeId: "WAREHOUSE_PICKER"
+      }] : [],
+      orderItems: orderRef.shipGroup?.items.map((item: { orderId: string, orderItemSeqId: string, shipGroupSeqId: string, productId: string, quantity: number }) => ({
+        orderId: item.orderId,
+        orderItemSeqId: item.orderItemSeqId,
+        shipGroupSeqId: item.shipGroupSeqId,
+        productId: item.productId,
+        quantity: item.quantity
+      }))
+    };
+    resp = await OrderService.createPicklist(payload);
+    if (!hasError(resp)) {
+      showToast(translate("Picklist created successfully", { picklistId: resp.data.picklistId }));
+      await OrderService.printPicklist(resp.data.picklistId)
+    } else {
+      throw resp.data
+    }
+  } catch (err) {
+    logger.error("Something went wrong while creating picklist", err);
+  }
+}
+
+async function printPicklist(orderRef: any, shipGroup: any) {
+  if(!getBopisProductStoreSettings('ENABLE_TRACKING')) {
+    const resp = await UserService.ensurePartyRole({
+      partyId: "_NA_",
+      roleTypeId: "WAREHOUSE_PICKER",
+    })
+    if(hasError(resp)) {
+      showToast(translate("Something went wrong"))
+      return;
+    }
+    await createPicklist(orderRef, "_NA_")
+    return;
+  }
+  await OrderService.printPicklist(shipGroup.picklistId)
+}
+
+async function assignPicker(orderRef: any, shipGroup: any, facilityId: any) {
+  const assignPickerModal = await modalController.create({
+    component: AssignPickerModal,
+    componentProps: { order: orderRef, shipGroup, facilityId }
+  });
+  assignPickerModal.onDidDismiss().then(async(result: any) => {
+    if(result.data?.selectedPicker) {
       emitter.emit("presentLoader");
-      try {
-        const resp = await OrderService.convertToShipToStore({
-          orderId: order.orderId,
-          shipGroupSeqId: order.shipGroup.shipGroupSeqId
-        });
-        if (!hasError(resp)) {
-          showToast(translate('Order marked as ship to store'));
-          this.router.push({ path: '/tabs/orders' });
-        } else {
-          showToast(translate('Failed to mark order as ship to store'));
-          logger.error('Ship-to-Store conversion failed', resp);
-        }
-      } catch (err) {
-        logger.error(err);
-        showToast(translate("Something went wrong"));
-      }
+      await createPicklist(orderRef, result.data.selectedPicker);
+      await useOrderStore().packShipGroupItems({ order: orderRef, shipGroup })
+      await getOrderDetail(props.orderId, props.shipGroupSeqId, props.orderType);
       emitter.emit("dismissLoader");
     }
-  },
+  })
 
-  async mounted() {
-    emitter.emit("presentLoader")
-    await this.getOrderDetail(this.orderId, this.shipGroupSeqId, this.orderType);
+  return assignPickerModal.present();
+}
 
-    // Removed condition of order type and fetched both rejection and cancellation reasons
-    // as when fetching conditionally the rejection reasons are not fetched correctly resulting in wrong
-    // rejection history being displayed
-    await this.fetchRejectReasons()
-    await this.fetchCancelReasons()
+async function editPicker(orderRef: any) {
+  const editPickerModal = await modalController.create({
+    component: EditPickerModal,
+    componentProps: { order: orderRef }
+  });
 
-    if(this.orderType === "packed") {
-      this.fetchJobs();
-      this.hasCancelledItems = this.order.shipGroup?.items.some((item: any) => item.cancelReason);
+  editPickerModal.onDidDismiss().then((result) => {
+    if(result.data?.selectedPicker){
+      const selectedPicker = result.data.selectedPicker
+      orderRef.pickers = selectedPicker.name
+      orderRef.pickerIds = [selectedPicker.id]
+      useOrderStore().updateCurrent({ order: orderRef })
+      prepareOrderTimeline();
     }
-    if(this.orderType === "open") {
-      this.hasRejectedItems = this.order.shipGroup?.items.some((item: any) => item.rejectReason);
+  })
+  return editPickerModal.present();
+}
+
+async function readyForPickup(orderData: any, shipGroup: any) {
+  if (getBopisProductStoreSettings('ENABLE_TRACKING') && !shipGroup.picklistId) return assignPicker(orderData, shipGroup, (useUserStore().getCurrentFacility as any)?.facilityId);
+  const pickup = shipGroup.shipmentMethodTypeId === 'STOREPICKUP';
+  const header = pickup ? translate('Ready for pickup') : translate('Ready to ship');
+  const message = pickup ? translate('An email notification will be sent to that their order is ready for pickup. This order will also be moved to the packed orders tab.', { customerName: orderData.customerName, space: '<br/><br/>' }) : '';
+
+  const alert = await alertController
+    .create({
+      header: header,
+      message: message,
+      buttons: [{
+        text: translate('Cancel'),
+        role: 'cancel'
+      }, {
+        text: header,
+        handler: async () => {
+          alert.dismiss();
+          emitter.emit("presentLoader", { message: "Loading...", backdropDismiss: false });
+          if (!shipGroup.shipmentId) {
+            await printPicklist(orderData, shipGroup)
+          }
+          await useOrderStore().packShipGroupItems({ order: orderData, shipGroup }).then(async (resp: any) => {
+            if (!hasError(resp)) {
+              await getOrderDetail(props.orderId, props.shipGroupSeqId, props.orderType);
+              prepareOrderTimeline({ statusId: "SHIPMENT_PACKED" });
+            }
+          })
+          emitter.emit("dismissLoader");
+        }
+      }]
+    });
+  return alert.present();
+}
+
+async function deliverShipment(orderRef: any) {
+  const pickup = orderRef.shipGroup.shipmentMethodTypeId === 'STOREPICKUP';
+  const header = pickup ? translate("Handover") : translate("Ship");
+  const message = pickup ? translate("Verify that the items in the package are valid and the customer has received their order. Once the order is handed over to the customer it cannot be undone.", { space: '<br/><br/>' }) : '';
+
+  const alert = await alertController
+    .create({
+      header,
+      message,
+      buttons: [{
+        text: translate('Cancel'),
+        role: 'cancel'
+      }, {
+        text: translate(header),
+        handler: async () => {
+          await useOrderStore().deliverShipmentFromDetail(orderRef).then((resp: any) => {
+            if(!hasError(resp)) {
+              getOrderDetail(props.orderId, props.shipGroupSeqId, props.orderType);
+              prepareOrderTimeline({ statusId: "ORDER_COMPLETED" });
+            }
+          })
+        }
+      }]
+    });
+  return alert.present();
+}
+
+async function openOrderItemRejHistoryModal() {
+  const orderItemRejHistoryModal = await modalController.create({
+    component: OrderItemRejHistoryModal,
+  });
+  return orderItemRejHistoryModal.present();
+}
+
+async function rejectOrder() {
+  emitter.emit("presentLoader");
+
+  let orderRef = JSON.parse(JSON.stringify(order.value))
+  const isEntireOrderRejectionValue = isEntireOrderRejectionEnabled();
+  const rejectToFacilityId = orderRef.shipGroup.shipmentMethodTypeId === "STOREPICKUP" ? "PICKUP_REJECTED" : "REJECTED_ITM_PARKING";
+  const itemsToReject: any[] = [];
+  
+  for (const item of orderRef.shipGroup.items) {
+    const shouldReject = isEntireOrderRejectionValue || item.rejectReason;
+
+    if (shouldReject) {
+      itemsToReject.push({
+        orderItemSeqId: item.orderItemSeqId,
+        quantity: parseInt(item.quantity),
+        maySplit: 'Y',
+        updateQOH: false,
+        rejectionReasonId: item.rejectReason || rejectEntireOrderReasonId.value,
+        kitComponents: isKit(item) ? item.rejectedComponents || [] : []
+      });
     }
-
-    await this.prepareOrderTimeline();
-
-    emitter.emit("dismissLoader")
-  },
-  setup() {
-    const store = useStore();
-    const router = useRouter();
-    const userStore = useUserStore()
-    const productIdentificationStore = useProductIdentificationStore();
-    let productIdentificationPref = computed(() => productIdentificationStore.getProductIdentificationPref)
-    let currentFacility: any = computed(() => userStore.getCurrentFacility) 
-
-    return {
-      Actions,
-      bagCheckOutline,
-      bagHandleOutline,
-      bagRemoveOutline,
-      swapHorizontalOutline,
-      callOutline,
-      caretDownOutline,
-      cashOutline,
-      copyOutline,
-      copyToClipboard,
-      closeCircleOutline,
-      closeOutline,
-      checkmarkCircleOutline,
-      checkmarkDoneOutline,
-      chevronUpOutline,
-      cubeOutline,
-      currentFacility,
-      downloadOutline,
-      formatCurrency,
-      formatPhoneNumber,
-      getColorByDesc,
-      getOrderStatus,
-      getProductIdentificationValue,
-      gift,
-      giftOutline,
-      getFeature,
-      hasPermission,
-      informationCircleOutline,
-      isKit,
-      listOutline,
-      locateOutline,
-      personOutline,
-      personAddOutline,
-      printOutline,
-      productIdentificationPref,
-      pulseOutline,
-      router,
-      store,
-      sunnyOutline,
-      ticketOutline,
-      timeOutline,
-      warningOutline,
-      mailOutline,
-      sendOutline,
-      translate,
-      trashOutline,
-      DateTime
-    };
   }
+  if (itemsToReject.length > 0) {
+    const payload = {
+      orderId: orderRef.orderId,
+      rejectToFacilityId,
+      items: itemsToReject
+    };
+    try {
+      const resp = await OrderService.rejectOrderItems(payload);
+
+      if (!hasError(resp)) {
+        const rejectedSeqIds = new Set(itemsToReject.map(i => i.orderItemSeqId));
+        orderRef.shipGroup.items = orderRef.shipGroup.items.filter(
+          (item: any) => !rejectedSeqIds.has(item.orderItemSeqId)
+        );
+        
+        const toastMessage = orderRef.shipGroup.items.length === 0 ? translate('All items were rejected from the order.', { orderId: orderRef.orderName ?? orderRef.orderId }) : translate('Some items were rejected from the order.', { orderId: orderRef.orderName ?? orderRef.orderId });
+        showToast(toastMessage);
+      }
+    } catch (err) {
+      logger.error("Something went wrong while rejecting order items:", err);
+    }
+  }
+
+  if(!orderRef.shipGroup.items.length) orderRef.rejected = true;
+
+  await useOrderStore().updateCurrent({ order: orderRef });
+  hasRejectedItems.value = order.value.shipGroup.items.some((item: any) => item.rejectReason);
+
+  if(order.value.shipGroup?.shipmentMethodTypeId === "STOREPICKUP") {
+    prepareOrderTimeline();
+  }
+
+  emitter.emit("dismissLoader");
+}
+
+async function cancelOrder(orderRef: any) {
+  const cancelOrderConfirmModal = await modalController.create({
+    component: ConfirmCancelModal,
+    componentProps: {
+      order: orderRef,
+      isCancelationSyncJobEnabled: isCancelationSyncJobEnabled.value,
+      isProcessRefundEnabled: isProcessRefundEnabled.value,
+      cancelJobNextRunTime: cancelJobNextRunTime.value,
+      orderType: props.orderType
+    }
+  });
+
+  cancelOrderConfirmModal.onDidDismiss().then(() => {
+    hasCancelledItems.value = order.value.shipGroup.items.some((item: any) => item.cancelReason);
+    if(order.value.shipGroup.shipmentMethodTypeId === "STOREPICKUP") {
+      prepareOrderTimeline();
+    }
+  })
+
+  return cancelOrderConfirmModal.present();
+}
+
+async function printPackingSlip(orderRef: any) {
+  if(orderRef.isGeneratingPackingSlip) {
+    return;
+  }
+
+  orderRef.isGeneratingPackingSlip = true;
+  await OrderService.printPackingSlip([orderRef.shipGroup.shipmentId]);
+  orderRef.isGeneratingPackingSlip = false;
+}
+
+async function printShippingLabelAndPackingSlip(orderRef: any) {
+  await OrderService.printShippingLabelAndPackingSlip(orderRef.shipGroup.shipmentId)
+}
+
+async function openInventoryDetailPopover(Event: any, item: any){
+  const popover = await popoverController.create({
+    component: InventoryDetailsPopover,
+    event: Event,
+    showBackdrop: false,
+    componentProps: { item }
+  });
+  await popover.present();
+}
+
+async function fetchKitComponents(orderItem: any, orderRef: any, toggleKitComponents = true) {
+  await useProductStore().fetchProductComponents({ productId: orderItem.productId })
+
+  if(toggleKitComponents) {
+    orderItem.showKitComponents = !orderItem.showKitComponents
+    useOrderStore().updateCurrentOrderInfo(orderRef)
+  }
+}
+
+async function openRejectReasonPopover(ev: Event, item: any, orderRef: any) {
+  const reportIssuePopover = await popoverController.create({
+    component: ReportAnIssuePopover,
+    event: ev,
+    translucent: true,
+    showBackdrop: false,
+  });
+
+  reportIssuePopover.present();
+
+  const result = await reportIssuePopover.onDidDismiss();
+
+  if (result.data) {
+    updateRejectReason(result.data, item, orderRef)
+  }
+}
+
+async function openCancelReasonPopover(ev: Event, item: any, orderRef: any) {
+  const cancelItemPopover = await popoverController.create({
+    component: ReportAnIssuePopover,
+    componentProps: {
+      reasonType: "cancel"
+    },
+    event: ev,
+    translucent: true,
+    showBackdrop: false,
+  });
+
+  cancelItemPopover.present();
+
+  const result = await cancelItemPopover.onDidDismiss();
+
+  if (result.data) {
+    updateCancelReason(result.data, item, orderRef)
+  }
+}
+
+async function updateCancelReason(updatedReason: string, item: any, orderRef: any) {
+  item.cancelReason = updatedReason;
+  hasCancelledItems.value = true
+  useOrderStore().updateCurrent({ order: orderRef })
+}
+
+async function updateRejectReason(updatedReason: string, item: any, orderRef: any) {
+  item.rejectReason = updatedReason;
+
+  if(isKit(item)) {
+    if(!useProductStore().getProduct(item.productId).productComponents) await fetchKitComponents(item, orderRef, false)
+    item.rejectedComponents = useProductStore().getProduct(item.productId).productComponents?.map((product: any) => product.productIdTo)
+  }
+
+  hasRejectedItems.value = true
+  useOrderStore().updateCurrent({ order: orderRef })
+}
+
+async function sendReadyForPickupEmail(orderRef: any) {
+  const header = translate("Resend email")
+  const message = translate("An email notification will be sent to that their order is ready for pickup.", { customerName: orderRef.customerName });
+
+  const alert = await alertController
+    .create({
+      header: header,
+      message: message,
+      buttons: [{
+        text: translate("Cancel"),
+        role: "cancel"
+      },{
+        text: translate("Send"),
+        handler: async () => {
+          try {
+            const resp = await OrderService.sendPickupScheduledNotification({ shipmentId: orderRef.shipmentId });
+            if (!hasError(resp)) {
+              showToast(translate("Email sent successfully"))
+            } else {
+              showToast(translate("Something went wrong while sending the email."))
+            }
+          } catch (error) {
+            showToast(translate("Something went wrong while sending the email."))
+            logger.error(error)
+          }
+        }
+      }]
+    });
+  return alert.present();
+}
+
+async function openGiftCardActivationModal(item: any) {
+  const modal = await modalController.create({
+    component: GiftCardActivationModal,
+    componentProps: { item, orderId: props.orderId, customerId: order.value.customerId, currencyUom: order.value.currencyUom }
+  })
+  
+  modal.onDidDismiss().then((result: any) => {
+    if(result.data?.isGCActivated) {
+      useOrderStore().updateCurrentItemGCActivationDetails({ item, orderId: props.orderId, orderType: props.orderType, isDetailsPage: true })
+    }
+  })
+  modal.present();
+}
+
+async function confirmRequestTransfer(orderRef: any) {
+  const header = translate('Convert to Ship-to-Store');
+  const message = translate("The item will be sourced from another store or warehouse and shipped to this location for customer pickup. {space} You can view the order in the Ship-to-Store section by clicking the trail icon in the upper-right corner of the page. {space} Do you want to continue?", { space: '<br/><br/>' });
+
+  const alert = await alertController.create({
+    header,
+    message,
+    buttons: [{ 
+      text: translate('Cancel'),
+      role: 'cancel'
+    }, {
+      text: translate('Convert'),
+      handler: async () => await requestTransfer(orderRef)
+    }]
+  });
+
+  return alert.present();
+}
+
+async function requestTransfer(orderRef: any) {
+  emitter.emit("presentLoader");
+  try {
+    const resp = await OrderService.convertToShipToStore({
+      orderId: orderRef.orderId,
+      shipGroupSeqId: orderRef.shipGroup.shipGroupSeqId
+    });
+    if (!hasError(resp)) {
+      showToast(translate('Order marked as ship to store'));
+      router.push({ path: '/tabs/orders' });
+    } else {
+      showToast(translate('Failed to mark order as ship to store'));
+      logger.error('Ship-to-Store conversion failed', resp);
+    }
+  } catch (err) {
+    logger.error(err);
+    showToast(translate("Something went wrong"));
+  }
+  emitter.emit("dismissLoader");
+}
+
+async function removeRejectionReason(item: any, orderRef: any) {
+  delete item["rejectedComponents"];
+  item.rejectReason = "";
+  hasRejectedItems.value = orderRef.shipGroup.items.some((item: any) => item.rejectReason);
+  useOrderStore().updateCurrent({ order: orderRef })
+}
+
+async function removeCancellationReason(item: any, orderRef: any) {
+  item.cancelReason = "";
+  hasCancelledItems.value = orderRef.shipGroup.items.some((item: any) => item.cancelReason);
+  useOrderStore().updateCurrent({ order: orderRef })
+}
+
+function rejectKitComponent(orderRef: any, item: any, componentProductId: string) {
+  let rejectedComponents = item.rejectedComponents ? item.rejectedComponents : []
+  if (rejectedComponents.includes(componentProductId)) {
+    rejectedComponents = rejectedComponents.filter((rejectedComponent: any) => rejectedComponent !== componentProductId)
+  } else {
+    rejectedComponents.push(componentProductId);
+  }
+  item.rejectedComponents = rejectedComponents;
+  orderRef.shipGroup.items.map((orderItem: any) => {
+    if (orderItem.orderItemSeqId === item.orderItemSeqId) {
+      orderItem.rejectedComponents = rejectedComponents;
+    }
+  })
+  useOrderStore().updateCurrent({ order: orderRef })
+}
+
+onMounted(async () => {
+  emitter.emit("presentLoader")
+  await getOrderDetail(props.orderId, props.shipGroupSeqId, props.orderType);
+
+  await fetchRejectReasons()
+  await fetchCancelReasons()
+
+  if(props.orderType === "packed") {
+    fetchJobs();
+    hasCancelledItems.value = order.value.shipGroup?.items.some((item: any) => item.cancelReason);
+  }
+  if(props.orderType === "open") {
+    hasRejectedItems.value = order.value.shipGroup?.items.some((item: any) => item.rejectReason);
+  }
+
+  await prepareOrderTimeline();
+
+  emitter.emit("dismissLoader")
 });
 </script>
 

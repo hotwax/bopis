@@ -31,74 +31,28 @@
   </ion-page>
 </template>
 
-<script lang="ts">
-import {
-  IonBackButton,
-  IonContent,
-  IonFab,
-  IonFabButton,
-  IonHeader,
-  IonIcon,
-  IonItem,
-  IonLabel,
-  IonList,
-  IonNote,
-  IonPage,
-  IonTitle,
-  IonToolbar,
-  modalController,
-} from "@ionic/vue";
+<script setup lang="ts">
+import { IonBackButton, IonContent, IonFab, IonFabButton, IonHeader, IonIcon, IonItem, IonLabel, IonList, IonNote, IonPage, IonTitle, IonToolbar, modalController } from "@ionic/vue";
 import { cogOutline } from 'ionicons/icons';
-import { defineComponent } from "vue";
-import { mapGetters, useStore } from "vuex";
+import { computed } from "vue";
 import { DateTime } from "luxon";
 import NotificationPreferenceModal from '@/components/NotificationPreferenceModal.vue'
 import { translate } from "@hotwax/dxp-components";
+import { useUserStore } from "@/store/user";
+const notifications = computed(() => useUserStore().getNotifications);
 
-export default defineComponent({
-  name: "Notifications",
-  components: {
-    IonBackButton,
-    IonContent,
-    IonFab,
-    IonFabButton,
-    IonHeader,
-    IonIcon,
-    IonItem,
-    IonLabel,
-    IonList,
-    IonNote,
-    IonPage,
-    IonTitle,
-    IonToolbar,
-  },
-  computed: {
-    ...mapGetters({
-      notifications: 'user/getNotifications',
-    })
-  },
-  methods: {
-    async openNotificationSettings() {
-      const timeZoneModal = await modalController.create({
-        component: NotificationPreferenceModal,
-      });
-      return timeZoneModal.present();
-    },
-    timeTillNotification(time: number) {
-      const timeDiff = DateTime.fromMillis(time).diff(DateTime.local());
-      return DateTime.local().plus(timeDiff).toRelative();
-    }
-  },
-  setup() {
-    const store = useStore();
+async function openNotificationSettings() {
+  const timeZoneModal = await modalController.create({
+    component: NotificationPreferenceModal,
+  });
+  return timeZoneModal.present();
+}
 
-    return {
-      cogOutline,
-      translate,
-      store
-    }
-  }
-});
+const timeTillNotification = (time: number) => {
+  const timeDiff = DateTime.fromMillis(time).diff(DateTime.local());
+  return DateTime.local().plus(timeDiff).toRelative();
+}
+
 </script>
 
 <style scoped>

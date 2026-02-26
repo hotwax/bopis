@@ -30,126 +30,102 @@
   </ion-page>
 </template>
 
-<script>
-import {
-  IonButton,
-  IonContent,
-  IonInput,
-  IonItem,
-  IonList,
-  IonPage,
-} from "@ionic/vue";
-import { defineComponent } from "vue";
+<script setup lang="ts">
+import { IonButton, IonContent, IonInput, IonItem, IonList, IonPage } from "@ionic/vue";
+import { onMounted, onBeforeUnmount, ref } from "vue";
 import { Redirect } from "@shopify/app-bridge/actions";
 import createApp from "@shopify/app-bridge";
-import { showToast } from "@/utils";
-import { useRouter } from "vue-router";
+import { useRouter, useRoute } from "vue-router";
 import emitter from "@/event-bus"
 import { ShopifyService } from "@/services/ShopifyService"
 import { getSessionToken } from "@shopify/app-bridge-utils";
-import { useStore } from 'vuex'
+import { useUserStore } from "@/store/user";
 import Logo from '@/components/Logo.vue'
 import { translate } from '@hotwax/dxp-components'
 
-export default defineComponent({
-  name: "Shopify",
-  components: {
-    IonButton,
-    IonContent,
-    IonInput,
-    IonItem,
-    IonList,
-    IonPage,
-    Logo
-  },
-  data() {
-    return {
-      apiKey: process.env.VUE_APP_SHOPIFY_API_KEY,
-      shopConfigs: JSON.parse(process.env.VUE_APP_SHOPIFY_SHOP_CONFIG),
-      shopOrigin: '',
-      session: this.$route.query['session'],
-      hmac: this.$route.query['hmac'],
-      shop: this.$route.query['shop'],
-      host: this.$route.query['host'],
-      locale: this.$route.query['locale'] || process.env.VUE_APP_I18N_LOCALE || process.env.VUE_APP_I18N_FALLBACK_LOCALE,
-      timestamp: this.$route.query['timestamp'],
-      code: this.$route.query['code']
-    };
-  },
-  async mounted () {
-    const shop = this.shop || this.shopOrigin
-    const shopConfig = this.shopConfigs[shop];
-    const apiKey = shopConfig ? shopConfig.apiKey : '';
-    const oms = shopConfig ? shopConfig.oms : '';
-    this.store.dispatch("user/setUserInstanceUrl", oms)
-    if (this.session) {
-      const app = createApp({
-        apiKey: apiKey,
-        host: this.host
-      });
-      const sessionToken = await getSessionToken(app);
-      if (sessionToken) {
-        // TODO Verify from server
-        this.$router.push("/");
-      }
-    } else if (this.code) {
-      // TODO store returned status and perform operation based upon it
-      await ShopifyService.generateAccessToken({
+const router = useRouter();
+const route = useRoute();
+
+const apiKey = ref(process.env.VUE_APP_SHOPIFY_API_KEY);
+const shopConfigs = ref(JSON.parse(process.env.VUE_APP_SHOPIFY_SHOP_CONFIG || '{}'));
+const shopOrigin = ref('');
+
+const session = route.query['session'];
+const hmac = route.query['hmac'];
+const shop = route.query['shop'];
+const host = route.query['host'];
+const timestamp = route.query['timestamp'];
+const code = route.query['code'];
+
+const authorise = (shop: any, host: any, apiKeyVal: any) => {
+  const scopes = process.env.VUE_APP_SHOPIFY_SCOPES
+  emitter.emit("presentLoader");
+  const shopConfig = shopConfigs.value[shop];
+  if (!apiKeyVal) apiKeyVal = shopConfig ? shopConfig.apiKey : '';
+  const redirectUri = process.env.VUE_APP_SHOPIFY_REDIRECT_URI;
+  const permissionUrl = `https://${shop}/admin/oauth/authorize?client_id=${apiKeyVal}&scope=${scopes}&redirect_uri=${redirectUri}`;
+
+  if (window.top == window.self) {
+    window.location.assign(permissionUrl);
+  } else {
+    // TODO Handle for host
+    const app = createApp({
+      apiKey: apiKeyVal,
+      host: host as string,
+    });
+    Redirect.create(app).dispatch(Redirect.Action.REMOTE, permissionUrl);
+  }
+  emitter.emit("dismissLoader");
+}
+
+const install = (shopOrigin: string) => {
+  authorise(shopOrigin, undefined, apiKey.value);
+}
+
+onMounted(async () => {
+  const shopVal = (shop as string) || shopOrigin.value;
+  const shopConfig = shopConfigs.value[shopVal];
+  const apiKeyVal = shopConfig ? shopConfig.apiKey : '';
+  const oms = shopConfig ? shopConfig.oms : '';
+  useUserStore().setUserInstanceUrl(oms);
+
+  if (session) {
+    const app = createApp({
+      apiKey: apiKeyVal,
+      host: host as string
+    });
+    const sessionToken = await getSessionToken(app);
+    if (sessionToken) {
+      // TODO Verify from server
+      router.push("/");
+    }
+  } else if (code) {
+    // TODO store returned status and perform operation based upon it
+    try {
+      const resp = await ShopifyService.generateAccessToken({
         data: {
-        "code": this.code,
-        "shop": shop,
-        "clientId": apiKey,
-        "host": this.host,
-        "hmac": this.hmac,
-        "timestamp": this.timestamp
+          "code": code,
+          "shop": shopVal,
+          "clientId": apiKeyVal,
+          "host": host,
+          "hmac": hmac,
+          "timestamp": timestamp
         },
         baseURL: `https://${oms}.hotwax.io/api/`
-      }).then(resp => resp.json()).then(data => data.status).catch(err => console.warn(err));
-      // TODO Navigate user based upon the status
-      const appURL = `https://${shop}/admin/apps/${apiKey}`;
-      window.location.assign(appURL);
-    } else if (this.shop || this.host) {
-      this.authorise(shop, this.host, apiKey);
+      });
+      await resp.json();
+    } catch (err) {
+      console.warn(err);
     }
-  },
-  methods: {
-    install(shopOrigin) {
-      this.authorise(shopOrigin, undefined, this.apiKey);
-    },
-    authorise(shop, host, apiKey) {
-      const scopes = process.env.VUE_APP_SHOPIFY_SCOPES
-      emitter.emit("presentLoader");
-      const shopConfig = this.shopConfigs[shop];
-      if (!apiKey) apiKey = shopConfig ? shopConfig.apiKey : '';
-      const redirectUri = process.env.VUE_APP_SHOPIFY_REDIRECT_URI;
-      const permissionUrl = `https://${shop}/admin/oauth/authorize?client_id=${apiKey}&scope=${scopes}&redirect_uri=${redirectUri}`;
+    const appURL = `https://${shopVal}/admin/apps/${apiKeyVal}`;
+    window.location.assign(appURL);
+  } else if (shop || host) {
+    authorise(shopVal, host, apiKeyVal);
+  }
+});
 
-      if (window.top == window.self) {
-        window.location.assign(permissionUrl);
-      } else {
-        // TODO Handle for host
-        const app = createApp({
-          apiKey,
-          host,
-        });
-        Redirect.create(app).dispatch(Redirect.Action.REMOTE, permissionUrl);
-      }
-      emitter.emit("dismissLoader");
-    }
-  },
-  beforeUnmount () {
-    emitter.emit("dismissLoader")
-  },
-  setup() {
-    const router = useRouter();
-    const store = useStore();
-    return {
-      router,
-      store,
-      showToast,
-      translate
-    };
-  },
+onBeforeUnmount(() => {
+  emitter.emit("dismissLoader");
 });
 </script>
 

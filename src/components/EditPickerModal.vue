@@ -55,33 +55,10 @@
   </ion-fab>
 </template>
 
-<script lang="ts">
-import { 
-  IonButtons,
-  IonButton,
-  IonContent,
-  IonFab,
-  IonFabButton,
-  IonHeader,
-  IonIcon,
-  IonInfiniteScroll,
-  IonInfiniteScrollContent,
-  IonItem,
-  IonLabel,
-  IonList,
-  IonListHeader,
-  IonRadio,
-  IonRadioGroup,
-  IonSearchbar,
-  IonSpinner,
-  IonTitle,
-  IonToolbar,
-  alertController,
-  modalController
-} from "@ionic/vue";
-import { defineComponent } from "vue";
+<script setup lang="ts">
+import { IonButtons, IonButton, IonContent, IonFab, IonFabButton, IonHeader, IonIcon, IonInfiniteScroll, IonInfiniteScrollContent, IonItem, IonLabel, IonList, IonListHeader, IonRadio, IonRadioGroup, IonSearchbar, IonSpinner, IonTitle, IonToolbar, alertController, modalController } from "@ionic/vue";
+import { onMounted, ref } from "vue";
 import { close, saveOutline } from "ionicons/icons";
-import { useStore } from "vuex";
 import { showToast } from '@/utils';
 import { hasError } from '@/adapter'
 import { translate } from '@hotwax/dxp-components'
@@ -89,186 +66,162 @@ import { UtilService } from "@/services/UtilService";
 import { PicklistService } from "@/services/PicklistService";
 import logger from "@/logger";
 
-export default defineComponent({
-  name: "EditPickerModal",
-  components: { 
-    IonButton,
-    IonButtons,
-    IonContent,
-    IonHeader,
-    IonIcon,
-    IonInfiniteScroll,
-    IonInfiniteScrollContent,
-    IonItem,
-    IonFab,
-    IonFabButton,
-    IonLabel,
-    IonList,
-    IonListHeader,
-    IonTitle,
-    IonToolbar,
-    IonRadio,
-    IonRadioGroup,
-    IonSearchbar,
-    IonSpinner
-  },
-  data () {
-    return {
-      availablePickers: [] as any,
-      queryString: '',
-      selectedPicker: {} as any,
-      selectedPickerId: this.order.pickerIds[0],
-      isLoading: false,
-      isScrollable: true,
-      isScrollingEnabled: false,
-    }
-  },
-  async mounted() {
-    await this.findPickers()
-    this.getAlreadyAssignedPicker()
-  },
-  props: ['order'],
-  methods: {
-    updateSelectedPicker(id: string) {
-      this.selectedPicker = this.availablePickers.find((picker: any) => picker.id == id)
-    },
-    enableScrolling() {
-      const parentElement = (this as any).$refs.contentRef.$el
-      const scrollEl = parentElement.shadowRoot.querySelector("div[part='scroll']")
-      let scrollHeight = scrollEl.scrollHeight, infiniteHeight = (this as any).$refs.infiniteScrollRef.$el.offsetHeight, scrollTop = scrollEl.scrollTop, threshold = 100, height = scrollEl.offsetHeight
-      const distanceFromInfinite = scrollHeight - infiniteHeight - scrollTop - threshold - height
-      if(distanceFromInfinite < 0) {
-        this.isScrollingEnabled = false;
-      } else {
-        this.isScrollingEnabled = true;
-      }
-    },
-    async loadMorePickers(event: any) {
-      // Added this check here as if added on infinite-scroll component the Loading content does not gets displayed
-      if(!(this.isScrollingEnabled && this.isScrollable)) {
-        await event.target.complete();
-      }
-      this.findPickers(
-        undefined,
-        Math.ceil(
-          this.availablePickers.length / (process.env.VUE_APP_VIEW_SIZE)
-        ).toString()
-      ).then(async () => {
-        await event.target.complete();
-        // Retrieve already assigned picker if not already selected
-        if(!this.selectedPicker) this.getAlreadyAssignedPicker();
-      });
-    },
-    async searchPicker() {
-      this.availablePickers = []
-      this.findPickers()
-    },
-    async findPickers(vSize?: any, vIndex?: any) {
-      if(!vIndex) this.isLoading = true;
-      const viewSize = vSize ? vSize : process.env.VUE_APP_VIEW_SIZE;
-      let query = {}
+const props = defineProps(['order'])
 
-      if(this.queryString.length > 0) {
-        let keyword = this.queryString.trim().split(' ')
-        query = `(${keyword.map(key => `*${key}*`).join(' OR ')}) OR "${this.queryString}"^100`;
-      }
-      else {
-        query = `*:*`
-      }
+const availablePickers = ref([] as any)
+const queryString = ref('')
+const selectedPicker = ref({} as any)
+const selectedPickerId = ref(props.order.pickerIds[0])
+const isLoading = ref(false)
+const isScrollable = ref(true)
+const isScrollingEnabled = ref(false)
+const contentRef = ref(null as any)
+const infiniteScrollRef = ref(null as any)
 
-      const payload = {
-        "json": {
-          "params": {
-            "rows": viewSize,
-            "start": viewSize*vIndex,
-            "q": query,
-            "defType" : "edismax",
-            "qf": "firstName lastName groupName partyId externalId",
-            "sort": "firstName asc"
-          },
-          "filter": ["docType:EMPLOYEE", "statusId:PARTY_ENABLED", "WAREHOUSE_PICKER_role:true"]
-        }
-      }
-      let total = 0;
+onMounted(async () => {
+  await findPickers()
+  getAlreadyAssignedPicker()
+})
 
-      try {
-        const resp = await PicklistService.getAvailablePickers(payload);
-        if (resp.status === 200 && !hasError(resp) && resp.data.response.docs.length > 0) {
-          const pickers = resp.data.response.docs.map((picker: any) => ({
-            name: picker.groupName ? picker.groupName : (picker.firstName || picker.lastName)
-                ? (picker.firstName ? picker.firstName : '') + (picker.lastName ? ' ' + picker.lastName : '') : picker.partyId,
-            id: picker.partyId,
-            externalId: picker.externalId
-          }))
-          this.availablePickers = this.availablePickers.concat(pickers);
-          total = resp.data.response?.numFound;
-        } else {
-          throw resp.data;
-        }
-      } catch (err) {
-        logger.error('Failed to fetch the pickers information or there are no pickers available', err)
-      }
-      this.isScrollable = this.availablePickers.length < total;
-      this.isLoading = false;
-    },
-    async confirmSave() {
-      const message = translate("Replace current pickers with new selection?");
-      const alert = await alertController.create({
-        header: translate("Replace pickers"),
-        message,
-        buttons: [
-          {
-            text: translate("Cancel"),
-          },
-          {
-            text: translate("Replace"),
-            handler: async () => {
-              try { 
-                await this.resetPicker()
-                this.closeModal({ selectedPicker: this.selectedPicker })
-              } catch(err) {
-                showToast(translate('Something went wrong, could not edit picker.'))
-                logger.error('Something went wrong, could not edit picker', err)
-                this.closeModal();
-              }
-            }
-          }
-        ],
-      });
-      return alert.present();
-    },
-    async resetPicker() {
-      const pickerId = this.selectedPicker.id
-      // Api call to remove already selected picker and assign new picker
-      const resp = await UtilService.resetPicker({
-        pickerIds: pickerId,
-        picklistId: this.order.picklistId
-      });
+function updateSelectedPicker(id: string) {
+  selectedPicker.value = availablePickers.value.find((picker: any) => picker.id == id)
+}
 
-      if(resp.status === 200 && !hasError(resp)) {
-        showToast(translate("Pickers successfully replaced in the picklist with the new selections."))
-      } else {
-        throw resp.data
-      }
-    },
-    closeModal(payload = {}) {
-      modalController.dismiss({ dismissed: true, ...payload });
-    },
-    getAlreadyAssignedPicker() {
-      this.selectedPicker = this.availablePickers.find((picker: any) => this.selectedPickerId === picker.id)
-    },
-    isPickerAlreadySelected() {
-      return this.selectedPicker.id === this.selectedPickerId
-    }
-  },
-  setup() {
-    const store = useStore();
-    return {
-      close,
-      saveOutline,
-      store,
-      translate
-    };
+function enableScrolling() {
+  const parentElement = contentRef.value?.$el
+  if (!parentElement) return;
+  const scrollEl = parentElement.shadowRoot.querySelector("div[part='scroll']")
+  let scrollHeight = scrollEl.scrollHeight, infiniteHeight = infiniteScrollRef.value?.$el.offsetHeight, scrollTop = scrollEl.scrollTop, threshold = 100, height = scrollEl.offsetHeight
+  const distanceFromInfinite = scrollHeight - infiniteHeight - scrollTop - threshold - height
+  if(distanceFromInfinite < 0) {
+    isScrollingEnabled.value = false;
+  } else {
+    isScrollingEnabled.value = true;
   }
-});
+}
+
+async function loadMorePickers(event: any) {
+  // Added this check here as if added on infinite-scroll component the Loading content does not gets displayed
+  if(!(isScrollingEnabled.value && isScrollable.value)) {
+    await event.target.complete();
+  }
+  findPickers(
+    undefined,
+    Math.ceil(
+      availablePickers.value.length / (process.env.VUE_APP_VIEW_SIZE as any)
+    ).toString()
+  ).then(async () => {
+    await event.target.complete();
+    // Retrieve already assigned picker if not already selected
+    if(!selectedPicker.value.id) getAlreadyAssignedPicker();
+  });
+}
+
+async function searchPicker() {
+  availablePickers.value = []
+  findPickers()
+}
+
+async function findPickers(vSize?: any, vIndex?: any) {
+  if(!vIndex) isLoading.value = true;
+  const viewSize = vSize ? vSize : process.env.VUE_APP_VIEW_SIZE;
+  let query = {}
+
+  if(queryString.value.length > 0) {
+    let keyword = queryString.value.trim().split(' ')
+    query = `(${keyword.map(key => `*${key}*`).join(' OR ')}) OR "${queryString.value}"^100`;
+  }
+  else {
+    query = `*:*`
+  }
+
+  const payload = {
+    "json": {
+      "params": {
+        "rows": viewSize,
+        "start": (viewSize as any)*vIndex,
+        "q": query,
+        "defType" : "edismax",
+        "qf": "firstName lastName groupName partyId externalId",
+        "sort": "firstName asc"
+      },
+      "filter": ["docType:EMPLOYEE", "statusId:PARTY_ENABLED", "WAREHOUSE_PICKER_role:true"]
+    }
+  }
+  let total = 0;
+
+  try {
+    const resp = await PicklistService.getAvailablePickers(payload);
+    if (resp.status === 200 && !hasError(resp) && resp.data.response.docs.length > 0) {
+      const pickers = resp.data.response.docs.map((picker: any) => ({
+        name: picker.groupName ? picker.groupName : (picker.firstName || picker.lastName)
+            ? (picker.firstName ? picker.firstName : '') + (picker.lastName ? ' ' + picker.lastName : '') : picker.partyId,
+        id: picker.partyId,
+        externalId: picker.externalId
+      }))
+      availablePickers.value = availablePickers.value.concat(pickers);
+      total = resp.data.response?.numFound;
+    } else {
+      throw resp.data;
+    }
+  } catch (err) {
+    logger.error('Failed to fetch the pickers information or there are no pickers available', err)
+  }
+  isScrollable.value = availablePickers.value.length < total;
+  isLoading.value = false;
+}
+
+async function confirmSave() {
+  const message = translate("Replace current pickers with new selection?");
+  const alert = await alertController.create({
+    header: translate("Replace pickers"),
+    message,
+    buttons: [
+      {
+        text: translate("Cancel"),
+      },
+      {
+        text: translate("Replace"),
+        handler: async () => {
+          try { 
+            await resetPicker()
+            closeModal({ selectedPicker: selectedPicker.value })
+          } catch(err) {
+            showToast(translate('Something went wrong, could not edit picker.'))
+            logger.error('Something went wrong, could not edit picker', err)
+            closeModal();
+          }
+        }
+      }
+    ],
+  });
+  return alert.present();
+}
+
+async function resetPicker() {
+  const pickerId = selectedPicker.value.id
+  // Api call to remove already selected picker and assign new picker
+  const resp = await UtilService.resetPicker({
+    pickerIds: pickerId,
+    picklistId: props.order.picklistId
+  });
+
+  if(resp.status === 200 && !hasError(resp)) {
+    showToast(translate("Pickers successfully replaced in the picklist with the new selections."))
+  } else {
+    throw resp.data
+  }
+}
+
+function closeModal(payload = {}) {
+  modalController.dismiss({ dismissed: true, ...payload });
+}
+
+function getAlreadyAssignedPicker() {
+  selectedPicker.value = availablePickers.value.find((picker: any) => selectedPickerId.value === picker.id)
+}
+
+function isPickerAlreadySelected() {
+  return selectedPicker.value?.id === selectedPickerId.value
+}
 </script>

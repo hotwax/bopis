@@ -56,99 +56,64 @@
   </template>
 </template>
 
-<script lang="ts">
-import { computed, defineComponent } from "vue";
+<script setup lang="ts">
+import { computed, ref } from "vue";
 import { IonBadge, IonButton, IonCard, IonIcon, IonItem, IonLabel, IonNote, IonSkeletonText, IonSpinner, IonThumbnail, popoverController, modalController } from "@ionic/vue";
-import { mapGetters, useStore } from 'vuex';
 import { getProductIdentificationValue, DxpShopifyImg, translate, useProductIdentificationStore } from '@hotwax/dxp-components'
 import { chevronUpOutline, cubeOutline, informationCircleOutline, listOutline, gift, giftOutline } from 'ionicons/icons'
 import InventoryDetailsPopover from '@/components/InventoryDetailsPopover.vue'
 import GiftCardActivationModal from "@/components/GiftCardActivationModal.vue";
 import { isKit } from '@/utils/order'
+import { useOrderStore } from "@/store/order";
+import { useProductStore } from "@/store/product";
+import { useStockStore } from "@/store/stock";
 
-export default defineComponent({
-  name: "ProductListItem",
-  components: {
-    IonBadge,
-    IonButton,
-    IonCard,
-    IonIcon,
-    IonItem,
-    IonLabel,
-    IonNote,
-    IonSkeletonText,
-    IonSpinner,
-    IonThumbnail,
-    DxpShopifyImg
-  },
-  data () {
-    return {
-      isFetchingStock: false,
-      showKitComponents: false
+const props = defineProps(['item', 'isShipToStoreOrder', 'orderId', 'orderType', 'customerId', 'currencyUom']);
+
+const productStore = useProductStore();
+const stockStore = useStockStore();
+const orderStore = useOrderStore();
+
+const isFetchingStock = ref(false);
+const showKitComponents = ref(false);
+
+const getProduct = (productId: string) => productStore.getProduct(productId);
+const getInventoryInformation = (productId: string) => stockStore.getInventoryInformation(productId);
+const productIdentificationPref = computed(() => useProductIdentificationStore().getProductIdentificationPref);
+
+async function fetchKitComponents(orderItem: any) {
+  productStore.fetchProductComponents({ productId: orderItem.productId })
+  showKitComponents.value = !showKitComponents.value
+}
+
+async function fetchProductInventory(productId: string) {
+  isFetchingStock.value = true
+  await stockStore.fetchProductInventory({ productId });
+  isFetchingStock.value = false
+}
+
+async function openInventoryDetailPopover(Event: any){
+  const popover = await popoverController.create({
+    component: InventoryDetailsPopover,
+    event: Event,
+    showBackdrop: false,
+    componentProps: { item: props.item }
+  });
+  await popover.present();
+}
+
+async function openGiftCardActivationModal(item: any) {
+  const modal = await modalController.create({
+    component: GiftCardActivationModal,
+    componentProps: { item, orderId: props.orderId, customerId: props.customerId, currencyUom: props.currencyUom }
+  })
+  modal.onDidDismiss().then((result: any) => {
+    if(result.data?.isGCActivated) {
+      orderStore.updateCurrentItemGCActivationDetails({ item, orderId: props.orderId, orderType: props.orderType, isDetailsPage: false })
     }
-  },
-  props: ['item', 'isShipToStoreOrder', 'orderId', 'orderType', 'customerId', 'currencyUom'],
-  computed: {
-    ...mapGetters({
-      getProduct: 'product/getProduct',
-      product: "product/getCurrent",
-      getInventoryInformation: 'stock/getInventoryInformation',
-    })
-  },
-  methods: {
-    async fetchKitComponents(orderItem: any) {
-      this.store.dispatch('product/fetchProductComponents', { productId: orderItem.productId })
-      this.showKitComponents = !this.showKitComponents
-    },
-    async fetchProductInventory(productId: string) {
-      this.isFetchingStock = true
-      await this.store.dispatch('stock/fetchProductInventory', { productId });
-      this.isFetchingStock = false
-    },
-    async openInventoryDetailPopover(Event: any){
-      const popover = await popoverController.create({
-        component: InventoryDetailsPopover,
-        event: Event,
-        showBackdrop: false,
-        componentProps: { item: this.item }
-      });
-      await popover.present();
-    },
-    updateColor(stock: number) {
-      return stock ? stock < 10 ? 'warning' : 'success' : 'danger';
-    },
-    async openGiftCardActivationModal(item: any) {
-      const modal = await modalController.create({
-        component: GiftCardActivationModal,
-        componentProps: { item, orderId: this.orderId, customerId: this.customerId, currencyUom: this.currencyUom }
-      })
-      modal.onDidDismiss().then((result: any) => {
-        if(result.data?.isGCActivated) {
-          this.store.dispatch("order/updateCurrentItemGCActivationDetails", { item, orderId: this.orderId, orderType: this.orderType, isDetailsPage: false })
-        }
-      })
-      modal.present();
-    }
-  },
-  setup() {
-    const store = useStore();
-    const productIdentificationStore = useProductIdentificationStore();
-    let productIdentificationPref = computed(() => productIdentificationStore.getProductIdentificationPref)
-    return {
-      chevronUpOutline,
-      getProductIdentificationValue,
-      productIdentificationPref,
-      cubeOutline,
-      informationCircleOutline,
-      gift,
-      giftOutline,
-      isKit,
-      listOutline,
-      store,
-      translate
-    }
-  }
-})
+  })
+  modal.present();
+}
 </script>
 
 <style>

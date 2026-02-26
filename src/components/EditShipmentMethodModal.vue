@@ -46,85 +46,44 @@
   </ion-fab>
 </template>
   
-<script lang="ts">
-import {
-  IonButton,
-  IonButtons,
-  IonContent,
-  IonFab,
-  IonFabButton,
-  IonHeader,
-  IonIcon,
-  IonItem,
-  IonLabel,
-  IonList,
-  IonSelect,
-  IonSelectOption,
-  IonTitle,
-  IonToolbar,
-  modalController
-} from '@ionic/vue';
-import { defineComponent } from 'vue';
+<script setup lang="ts">
+import { IonButton, IonButtons, IonContent, IonFab, IonFabButton, IonHeader, IonIcon, IonItem, IonLabel, IonList, IonSelect, IonSelectOption, IonTitle, IonToolbar, modalController } from '@ionic/vue';
+import { onMounted, ref } from 'vue';
 import { closeOutline, informationCircleOutline, saveOutline } from 'ionicons/icons';
 import { translate } from '@hotwax/dxp-components';
 
-export default defineComponent({
-  name: "OrderItemRejHistoryModal",
-  components: {
-    IonButton,
-    IonButtons,
-    IonContent,
-    IonFab,
-    IonFabButton,
-    IonHeader,
-    IonIcon,
-    IonItem,
-    IonLabel,
-    IonList,
-    IonSelect,
-    IonSelectOption,
-    IonTitle,
-    IonToolbar,
-  },
-  data(){
-    return {
-      carrierPartyId: "",
-      shipmentMethodTypeId: "",
-      productStoreShipmentMethods: [] as any
-    }
-  },
-  props: ['currentcConfig', 'carriers', 'availableShipmentMethods'],
-  mounted() {
-      this.carrierPartyId = this.currentcConfig.carrierPartyId
-      this.getProductStoreShipmentMethods(this.carrierPartyId)
-      this.shipmentMethodTypeId = this.currentcConfig.shipmentMethodTypeId
-  },
-  methods: {
-    closeModal() {
-      modalController.dismiss({ dismissed: true });
-    },
-    async getProductStoreShipmentMethods(carrierPartyId: string) { 
-      this.productStoreShipmentMethods = this.availableShipmentMethods?.filter((method: any) => method.partyId === carrierPartyId) || [];
-      this.shipmentMethodTypeId = this.productStoreShipmentMethods[0]?.shipmentMethodTypeId;
-    },
-    getCarrierName(carrierPartyId: string) {
-      const selectedCarrier = this.carriers.find((carrier: any) => carrier.partyId === carrierPartyId)
-      return selectedCarrier && selectedCarrier.groupName ? selectedCarrier.groupName : carrierPartyId
-    },
-    openShippingMethodDocumentReference() {
-      window.open('https://docs.hotwax.co/documents/v/system-admins/fulfillment/shipping-methods/carrier-and-shipment-methods', '_blank');
-    },
-    save() {
-      modalController.dismiss({ dismissed: true, shippingMethod: JSON.stringify({"carrierPartyId": this.carrierPartyId, "shipmentMethodTypeId": this.shipmentMethodTypeId})});
-    }
-  },
-  setup() {
-    return {
-      closeOutline,
-      informationCircleOutline,
-      saveOutline,
-      translate
-    };
-  },
-});
-  </script>
+const props = defineProps(['currentcConfig', 'carriers', 'availableShipmentMethods'])
+
+const carrierPartyId = ref("")
+const shipmentMethodTypeId = ref("")
+const productStoreShipmentMethods = ref([] as any)
+
+onMounted(() => {
+  carrierPartyId.value = props.currentcConfig.carrierPartyId
+  getProductStoreShipmentMethods(carrierPartyId.value)
+  shipmentMethodTypeId.value = props.currentcConfig.shipmentMethodTypeId
+})
+
+function closeModal() {
+  modalController.dismiss({ dismissed: true });
+}
+
+async function getProductStoreShipmentMethods(carrierId: string) { 
+  productStoreShipmentMethods.value = props.availableShipmentMethods?.filter((method: any) => method.partyId === carrierId) || [];
+  shipmentMethodTypeId.value = productStoreShipmentMethods.value[0]?.shipmentMethodTypeId;
+}
+
+function getCarrierName(carrierId: string) {
+  const selectedCarrier = props.carriers.find((carrier: any) => carrier.partyId === carrierId)
+  return selectedCarrier && selectedCarrier.groupName ? selectedCarrier.groupName : carrierId
+}
+
+function openShippingMethodDocumentReference() {
+  window.open('https://docs.hotwax.co/documents/v/system-admins/fulfillment/shipping-methods/carrier-and-shipment-methods', '_blank');
+}
+
+function save() {
+  modalController.dismiss({ dismissed: true, shippingMethod: JSON.stringify({"carrierPartyId": carrierPartyId.value, "shipmentMethodTypeId": shipmentMethodTypeId.value})});
+}
+
+</script>

@@ -20,27 +20,10 @@
   </ion-page>
 </template>
 
-<script lang="ts">
+<script setup lang="ts">
 import { IonIcon, IonLabel, IonPage, IonTabBar, IonTabButton, IonTabs, IonRouterOutlet } from "@ionic/vue";
-import {
-  infiniteOutline,
-  settingsOutline,
-  shirtOutline,
-} from "ionicons/icons";
+import { infiniteOutline, settingsOutline, shirtOutline } from "ionicons/icons";
 import { translate } from "@hotwax/dxp-components";
-
-export default {
-  name: "Tabs",
-  components: { IonIcon, IonLabel, IonPage, IonTabBar, IonTabButton, IonTabs, IonRouterOutlet },
-  setup () {
-    return {
-      infiniteOutline,
-      settingsOutline,
-      shirtOutline,
-      translate
-    };
-  }
-};
 </script>
 
 <style scoped>
