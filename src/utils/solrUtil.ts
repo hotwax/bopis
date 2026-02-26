@@ -14,7 +14,7 @@ const prepareOrderQuery = (params: any) => {
         "q.op": "AND",
         "start": viewIndex * viewSize
       },
-      "query":"(*:*)",
+      "query": "(*:*)",
       "filter": [`docType: ${params.docType ? params.docType : 'OISGIR'}`]
     }
   } as any
@@ -62,12 +62,12 @@ const prepareOrderQuery = (params: any) => {
       payload.json.filter.push(`${key}: ${params.filters[key]}`);
     });
   }
-  
-  if(params.orderIds){
+
+  if (params.orderIds) {
     payload.json.filter.push(`orderId: (${params.orderIds.join(' OR ')})`)
   }
 
-  if(params.facet) {
+  if (params.facet) {
     payload.json['facet'] = params.facet
   }
 
@@ -87,11 +87,13 @@ const prepareOrderQuery = (params: any) => {
     payload.json.filter.push(`-shipGroupSeqId: ${params['-shipGroupSeqId']}`)
   }
 
-  if(params.orderItemStatusId) {
+  if (params.orderItemStatusId) {
     payload.json.filter.push(`orderItemStatusId: ${params.orderItemStatusId}`)
   }
 
   return payload
 }
 
-export { prepareOrderQuery }
+export const solrUtil = {
+  prepareOrderQuery
+}

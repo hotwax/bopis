@@ -29,7 +29,7 @@
           <h2>{{ getProductIdentificationValue(productIdentificationPref.primaryId, getProduct(item.productId))|| getProduct(item.productId).productName }}
           </h2>
           <p>{{ getProductIdentificationValue(productIdentificationPref.secondaryId, getProduct(item.productId)) }}</p>
-          <ion-badge color="dark" v-if="isKit(item)">{{ translate("Kit") }}</ion-badge>
+          <ion-badge color="dark" v-if="orderUtil.isKit(item)">{{ translate("Kit") }}</ion-badge>
         </ion-label>
 
         <ion-select data-testid="rejection-reason-modal-button" slot="end" placeholder="Reason" interface="popover" v-model="item.rejectReasonId" @ionChange="onReasonChange($event, item)">
@@ -50,8 +50,8 @@ import { IonButton, IonButtons, IonContent, IonHeader, IonIcon, IonTitle, IonToo
 import { closeOutline, warningOutline, trashOutline } from 'ionicons/icons';
 import { computed, onMounted, ref } from 'vue';
 import { DxpShopifyImg, translate, getProductIdentificationValue, useProductIdentificationStore } from '@hotwax/dxp-components';
-import { isKit } from '@/utils/order';
-import { getCurrentFacilityId } from '@/utils'
+import { orderUtil } from '@/utils/orderUtil';
+import { commonUtil } from '@/utils/commonUtil'
 import { useOrderStore } from '@/store/order';
 import { useProductStore } from '@/store/product';
 import { useUserStore } from '@/store/user';
@@ -153,7 +153,7 @@ async function confirmSave() {
             isEntireOrderRejected: (props.orderProps?.shipGroup?.items?.length === updatedItems.length)
           });
           if (resp) {
-            await orderStore.fetchOpenOrders({ viewSize: process.env.VUE_APP_VIEW_SIZE, viewIndex: 0, queryString: '', facilityId: getCurrentFacilityId() });
+            await orderStore.fetchOpenOrders({ viewSize: process.env.VUE_APP_VIEW_SIZE, viewIndex: 0, queryString: '', facilityId: commonUtil.getCurrentFacilityId() });
           }
           closeModal();              
         }

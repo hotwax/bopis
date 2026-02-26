@@ -59,7 +59,7 @@
 import { IonButtons, IonButton, IonContent, IonFab, IonFabButton, IonHeader, IonIcon, IonInfiniteScroll, IonInfiniteScrollContent, IonItem, IonLabel, IonList, IonListHeader, IonRadio, IonRadioGroup, IonSearchbar, IonSpinner, IonTitle, IonToolbar, alertController, modalController } from "@ionic/vue";
 import { onMounted, ref } from "vue";
 import { close, saveOutline } from "ionicons/icons";
-import { showToast } from '@/utils';
+import { commonUtil } from '@/utils/commonUtil';
 import { hasError } from '@/adapter'
 import { translate } from '@hotwax/dxp-components'
 import { UtilService } from "@/services/UtilService";
@@ -187,7 +187,7 @@ async function confirmSave() {
             await resetPicker()
             closeModal({ selectedPicker: selectedPicker.value })
           } catch(err) {
-            showToast(translate('Something went wrong, could not edit picker.'))
+            commonUtil.showToast(translate('Something went wrong, could not edit picker.'))
             logger.error('Something went wrong, could not edit picker', err)
             closeModal();
           }
@@ -207,7 +207,7 @@ async function resetPicker() {
   });
 
   if(resp.status === 200 && !hasError(resp)) {
-    showToast(translate("Pickers successfully replaced in the picklist with the new selections."))
+    commonUtil.showToast(translate("Pickers successfully replaced in the picklist with the new selections."))
   } else {
     throw resp.data
   }

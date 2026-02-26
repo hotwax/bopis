@@ -20,14 +20,14 @@
           <h2>{{ getProductIdentificationValue(productIdentificationPref.primaryId, getProduct(item.productId)) ? getProductIdentificationValue(productIdentificationPref.primaryId, getProduct(item.productId)) : getProduct(item.productId).productName }}</h2>
           <p class="ion-text-wrap">{{ getProductIdentificationValue(productIdentificationPref.secondaryId, getProduct(item.productId)) }}</p>
           <p class="ion-text-wrap">{{ getCancelReasonDescription(item.cancelReason) }}</p>
-          <ion-badge color="dark" v-if="isKit(item)">{{ translate("Kit") }}</ion-badge>
+          <ion-badge color="dark" v-if="orderUtil.isKit(item)">{{ translate("Kit") }}</ion-badge>
         </ion-label>
-        <ion-note slot="end">{{ item.unitPrice ? formatCurrency(item.unitPrice, order.currencyUom) : "" }}</ion-note>
+        <ion-note slot="end">{{ item.unitPrice ? commonUtil.formatCurrency(item.unitPrice, order.currencyUom) : "" }}</ion-note>
       </ion-item>
 
       <ion-item lines="full">
         <ion-label>{{ translate("Total") }}</ion-label>
-        <ion-note slot="end">{{ formatCurrency(orderTotal, order.currencyUom) }}</ion-note>
+        <ion-note slot="end">{{ commonUtil.formatCurrency(orderTotal, order.currencyUom) }}</ion-note>
       </ion-item>
 
       <ion-item lines="full" v-if="isCancelationSyncJobEnabled && isProcessRefundEnabled">
@@ -64,8 +64,8 @@ import { computed, onMounted, ref } from "vue";
 import { closeOutline } from "ionicons/icons";
 import { OrderService } from "@/services/OrderService";
 import { getProductIdentificationValue, translate, useProductIdentificationStore } from "@hotwax/dxp-components";
-import { isKit } from "@/utils/order"
-import { formatCurrency, showToast } from "@/utils";
+import { orderUtil } from '@/utils/orderUtil'
+import { commonUtil } from "@/utils/commonUtil"
 import { hasError } from "@hotwax/oms-api";
 import { DateTime } from "luxon";
 import emitter from "@/event-bus";
@@ -127,7 +127,7 @@ async function cancelOrder() {
     }
 
     const toastMessage = currentOrder.value.shipGroup.items.length === itemsPayload.length ? translate('All items have been cancelled.') : translate('Some items have been cancelled.');
-    showToast(toastMessage);
+    commonUtil.showToast(toastMessage);
 
     // Remove the cancelled items from the order details page
     const cancelledItemSeqIds = new Set(itemsPayload.map(item => item.orderItemSeqId));

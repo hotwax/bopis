@@ -153,7 +153,7 @@ import { onMounted, onUnmounted, ref, computed } from "vue";
 import ProductListItem from '@/components/ProductListItem.vue'
 import { mailOutline, notificationsOutline, printOutline, trailSignOutline } from "ionicons/icons";
 import { useRouter } from 'vue-router'
-import { showToast } from '@/utils'
+import { commonUtil } from '@/utils/commonUtil'
 import { DateTime } from 'luxon';
 import emitter from "@/event-bus"
 import { hasError } from '@/adapter';
@@ -363,7 +363,7 @@ async function deliverShipment(orderData: any) {
   await useOrderStore().deliverShipment(orderData)
     .then((resp) => {
       if (!hasError(resp as any)) {
-        showToast(translate('Order delivered to', { customerName: orderData.customerName }))
+        commonUtil.showToast(translate('Order delivered to', { customerName: orderData.customerName }))
       }
     })
 }
@@ -414,12 +414,12 @@ async function sendReadyForPickupEmail(orderData: any) {
           try {
             const resp = await OrderService.sendPickupScheduledNotification({ shipmentId: orderData.shipmentId });
             if (!hasError(resp)) {
-              showToast(translate("Email sent successfully"))
+              commonUtil.showToast(translate("Email sent successfully"))
             } else {
-              showToast(translate("Something went wrong while sending the email."))
+              commonUtil.showToast(translate("Something went wrong while sending the email."))
             }
           } catch (error) {
-            showToast(translate("Something went wrong while sending the email."))
+            commonUtil.showToast(translate("Something went wrong while sending the email."))
             logger.error(error)
           }
         }
@@ -458,7 +458,7 @@ async function printPicklist(orderData: any, shipGroup: any) {
         throw resp.data;
       }
     } catch (error) {
-      showToast(translate("Something went wrong. Picklist can not be created."));
+      commonUtil.showToast(translate("Something went wrong. Picklist can not be created."));
       logger.error(error)
       return;
     }
@@ -529,7 +529,7 @@ async function createPicklist(orderData: any, selectedPicker: any) {
       throw resp.data;
     }
   } catch (err) {
-    showToast(translate('Something went wrong. Picklist can not be created.'));
+    commonUtil.showToast(translate('Something went wrong. Picklist can not be created.'));
     emitter.emit("dismissLoader");
     return;
   }
@@ -572,15 +572,15 @@ async function requestTransfer(orderData: any) {
       shipGroupSeqId: orderData.shipGroup.shipGroupSeqId
     });
     if (!hasError(resp)) {
-      showToast(translate('Order marked as ship to store'));
+      commonUtil.showToast(translate('Order marked as ship to store'));
       await useOrderStore().removeOpenOrder({ order: orderData, shipGroup: orderData.shipGroup })
     } else {
-      showToast(translate('Failed to mark order as ship to store'));
+      commonUtil.showToast(translate('Failed to mark order as ship to store'));
       logger.error('Ship-to-Store conversion failed', resp);
     }
   } catch (err) {
     logger.error(err);
-    showToast(translate("Something went wrong"));
+    commonUtil.showToast(translate("Something went wrong"));
   }
   emitter.emit("dismissLoader");
 }
@@ -607,14 +607,14 @@ async function openProofOfDeliveryModal(orderData: any, isViewModeOnly: any) {
 
       if (hasError(resp)) {
         logger.error("Pickup notification failed:", resp);
-        showToast(translate("Unable to save the details. Please try again."));
+        commonUtil.showToast(translate("Unable to save the details. Please try again."));
       } else {
         await useOrderStore().getCommunicationEvents({ orders: [order.value] });
-        showToast(translate("Details have been successfully saved, and an email has been sent to the customer."));
+        commonUtil.showToast(translate("Details have been successfully saved, and an email has been sent to the customer."));
       }
     } catch (err) {
       logger.error("Error in saving the details:", err);
-      showToast(translate("Something went wrong"));
+      commonUtil.showToast(translate("Something went wrong"));
     } finally {
       emitter.emit("dismissLoader");
     }

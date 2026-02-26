@@ -37,7 +37,7 @@ const copyToClipboard = async (text: any, showCopiedValue = true) => {
   await Clipboard.write({
     string: text,
   }).then(() => {
-    if(showCopiedValue) {
+    if (showCopiedValue) {
       showToast(translate("Copied", { text }));
     } else {
       showToast(translate("Copied to clipboard"));
@@ -46,7 +46,7 @@ const copyToClipboard = async (text: any, showCopiedValue = true) => {
 }
 
 const getFeature = (featureHierarchy: any, featureKey: string) => {
-  let  featureValue = ''
+  let featureValue = ''
   if (featureHierarchy) {
     const feature = featureHierarchy.find((featureItem: any) => featureItem.startsWith(featureKey))
     const featureSplit = feature ? feature.split('/') : [];
@@ -55,7 +55,7 @@ const getFeature = (featureHierarchy: any, featureKey: string) => {
   return featureValue;
 }
 
-const formatPhoneNumber = (countryCode: string | null, areaCode: string | null, contactNumber: string | null)  => {
+const formatPhoneNumber = (countryCode: string | null, areaCode: string | null, contactNumber: string | null) => {
   if (countryCode && areaCode) {
     return `+${countryCode}-${areaCode}-${contactNumber}`;
   } else if (countryCode) {
@@ -119,4 +119,15 @@ const getPickerName = (pickerGroupName: string, pickerFirstName: string, pickerL
   return pickerGroupName ? pickerGroupName : pickerFirstName ? `${pickerFirstName} ${pickerLastName ? pickerLastName : ''}`.trim() : '';
 }
 
-export { copyToClipboard, getCurrentTime, showToast, hasWebcamAccess, getFeature, formatPhoneNumber, getCurrentFacilityId, getColorByDesc, formatCurrency, getPickerName }
+export const commonUtil = {
+  copyToClipboard,
+  formatCurrency,
+  formatPhoneNumber,
+  getColorByDesc,
+  getCurrentFacilityId,
+  getPickerName,
+  showToast,
+  getFeature,
+  hasWebcamAccess,
+  getCurrentTime
+}

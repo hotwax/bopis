@@ -32,7 +32,7 @@
           {{ getProductIdentificationValue(productIdentificationPref.primaryId, getProduct(item.productId)) ? getProductIdentificationValue(productIdentificationPref.primaryId, getProduct(item.productId)) : item.productName }}
           <p>{{ getProductIdentificationValue(productIdentificationPref.secondaryId, getProduct(item.productId)) }}</p>
         </ion-label>
-        <ion-label slot="end">{{ formatCurrency(item.unitPrice, currencyUom) }}</ion-label>
+        <ion-label slot="end">{{ commonUtil.formatCurrency(item.unitPrice, currencyUom) }}</ion-label>
       </ion-item>
 
       <div class="ion-margin" v-if="!item.isGCActivated">
@@ -61,7 +61,7 @@ import { computed, ref } from "vue";
 import { cameraOutline, cardOutline, closeOutline, giftOutline, stopOutline } from "ionicons/icons";
 import { getProductIdentificationValue, translate, useProductIdentificationStore } from '@hotwax/dxp-components'
 import { UtilService } from "@/services/UtilService";
-import { formatCurrency, hasWebcamAccess, showToast } from '@/utils';
+import { commonUtil } from '@/utils/commonUtil';
 import { hasError } from '@/adapter'
 import logger from "@/logger";
 import { DateTime } from 'luxon';
@@ -85,7 +85,7 @@ function closeModal(payload = {}) {
 
 async function confirmSave() {
   if (!activationCode.value.trim()) {
-    showToast(translate("Please enter a activation code."))
+    commonUtil.showToast(translate("Please enter a activation code."))
     return;
   }
 
@@ -120,13 +120,13 @@ async function activateGitCard() {
     })
     
     if (!hasError(resp)) {
-      showToast(translate("Gift card activated successfully."))
+      commonUtil.showToast(translate("Gift card activated successfully."))
       closeModal({ isGCActivated: true, item: props.item })
     } else {
       throw resp.data;
     }
   } catch (error: any) {
-    showToast(translate("Failed to activate gift card."))
+    commonUtil.showToast(translate("Failed to activate gift card."))
     logger.error(error);
   }
 }
@@ -136,8 +136,8 @@ function getCreatedDateTime() {
 }
 
 async function scan() {
-  if (!(await hasWebcamAccess())) {
-    showToast(translate("Camera access not allowed, please check permissons."));
+  if (!(await commonUtil.hasWebcamAccess())) {
+    commonUtil.showToast(translate("Camera access not allowed, please check permissons."));
     return;
   } 
 

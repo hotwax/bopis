@@ -90,7 +90,7 @@ import { ref, onMounted, computed } from "vue";
 import { IonButtons, IonButton, IonContent, IonHeader, IonToolbar, IonIcon, IonTitle, IonItem, IonInput, IonLabel, IonFab, IonFabButton, IonSelect, IonSelectOption, IonCheckbox, modalController } from "@ionic/vue";
 import { closeOutline, saveOutline } from "ionicons/icons";
 import logger from "@/logger";
-import { showToast } from "@/utils";
+import { commonUtil } from "@/utils/commonUtil";
 import { translate } from "@hotwax/dxp-components";
 import { OrderService } from "@/services/OrderService";
 import { useOrderStore } from "@/store/order";
@@ -215,7 +215,7 @@ const submitForm = async () => {
     result.error.issues.forEach(issue => {
       errors.value[issue.path[0]] = issue.message;
     });
-    showToast(translate("Please correct the errors in the form"));
+    commonUtil.showToast(translate("Please correct the errors in the form"));
     return;
   }
 
@@ -249,7 +249,7 @@ const submitForm = async () => {
     });
   } catch (err) {
     logger.error("Error in submitForm:", err);
-    showToast(translate("Something went wrong"));
+    commonUtil.showToast(translate("Something went wrong"));
   } finally {
     isSubmitting.value = false;
   }

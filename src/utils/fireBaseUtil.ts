@@ -27,7 +27,7 @@ const isFcmConfigured = () => {
   }
 }
 
-export {
+export const fireBaseUtil = {
   addNotification,
   generateTopicName,
   generateDeviceId,

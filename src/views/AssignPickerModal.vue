@@ -69,7 +69,7 @@
 import { IonButtons, IonButton, IonContent, IonFab, IonFabButton, IonHeader, IonIcon, IonItem, IonLabel, IonList, IonListHeader, IonRadio, IonRadioGroup, IonSearchbar, IonSpinner, IonTitle, IonToolbar, IonInfiniteScroll, IonInfiniteScrollContent, modalController } from "@ionic/vue";
 import { onMounted, ref } from "vue";
 import { closeOutline, saveOutline } from "ionicons/icons";
-import { showToast } from "@/utils";
+import { commonUtil } from "@/utils/commonUtil";
 import { hasError } from '@/adapter'
 import { translate } from "@hotwax/dxp-components";
 import { PicklistService } from '@/services/PicklistService'
@@ -98,7 +98,7 @@ const readyForPickup = () => {
     const picker = availablePickers.value.find((picker: any) => picker.id == selectedPicker.value);
     modalController.dismiss({ dismissed: true, selectedPicker: selectedPicker.value, picker });
   } else {
-    showToast(translate('Select a picker'));
+    commonUtil.showToast(translate('Select a picker'));
   }
 };
 

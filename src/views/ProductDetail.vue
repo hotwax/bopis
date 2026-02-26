@@ -145,7 +145,7 @@ import { useUserStore } from "@/store/user";
 import { useStockStore } from "@/store/stock";
 import { useOrderStore } from "@/store/order";
 import { StockService } from '@/services/StockService'
-import { getFeature, showToast } from "@/utils";
+import { commonUtil } from "@/utils/commonUtil";
 import { hasError } from '@/adapter'
 import { sortSizes } from '@/apparel-sorter';
 import OtherStoresInventoryModal from "./OtherStoresInventoryModal.vue";
@@ -189,8 +189,8 @@ const applyFeature = async (feature: string, type: string) => {
 const getFeatures = () => {
   const allFeatures = {} as any
   product.value.variants.map((variant: any) => {
-    const size = getFeature(variant.featureHierarchy, '1/SIZE/');
-    const color = getFeature(variant.featureHierarchy, '1/COLOR/');
+    const size = commonUtil.getFeature(variant.featureHierarchy, '1/SIZE/');
+    const color = commonUtil.getFeature(variant.featureHierarchy, '1/COLOR/');
     if (!allFeatures[color]) allFeatures[color] = [size];
     else if(!allFeatures[color].includes(size)) allFeatures[color].push(size);
   });
@@ -235,7 +235,7 @@ const checkInventory = async () => {
     }
   } catch (error) {
     logger.error(error);
-    showToast(translate("Something went wrong"));
+    commonUtil.showToast(translate("Something went wrong"));
   }
 };
 
@@ -243,16 +243,16 @@ const updateVariant = async () => {
   let variant;
   if(selectedColor.value || selectedSize.value) {
     variant = product.value.variants.find((v: any) => {
-      const hasSize = getFeature(v.featureHierarchy, '1/SIZE/') === selectedSize.value;
-      const hasColor = getFeature(v.featureHierarchy, '1/COLOR/') === selectedColor.value;
+      const hasSize = commonUtil.getFeature(v.featureHierarchy, '1/SIZE/') === selectedSize.value;
+      const hasColor = commonUtil.getFeature(v.featureHierarchy, '1/COLOR/') === selectedColor.value;
       return hasSize && hasColor;
     })
 
     // if the selected size is not available for that color, default it to the first size available
     if(!variant) {
       selectedSize.value = features.value[selectedColor.value][0];
-      variant = product.value.variants.find((v: any) => getFeature(v.featureHierarchy, '1/SIZE/') === selectedSize.value)
-      showToast(translate("Selected variant not available"));
+      variant = product.value.variants.find((v: any) => commonUtil.getFeature(v.featureHierarchy, '1/SIZE/') === selectedSize.value)
+      commonUtil.showToast(translate("Selected variant not available"));
     }
   }
   

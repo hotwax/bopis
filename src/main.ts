@@ -30,8 +30,8 @@ import permissionActions from '@/authorization/Actions';
 
 import { dxpComponents } from '@hotwax/dxp-components'
 import localeMessages from './locales';
-import { login, logout, loader } from '@/utils/user';
-import { addNotification, storeClientRegistrationToken } from '@/utils/firebase';
+import { userUtil } from '@/utils/userUtil';
+import { fireBaseUtil } from '@/utils/fireBaseUtil';
 import { getConfig, fetchGoodIdentificationTypes, getProductIdentificationPref, getUserFacilities, getUserPreference, initialise, setProductIdentificationPref, setUserLocale, getAvailableTimeZones, setUserPreference } from '@/adapter';
 import logger from './logger';
 
@@ -58,7 +58,7 @@ app.use(IonicVue, {
   })
   .use(dxpComponents, {
     Actions,
-    addNotification,
+    addNotification: fireBaseUtil.addNotification,
     appLoginUrl: process.env.VUE_APP_LOGIN_URL as string,
     appFirebaseConfig: JSON.parse(process.env.VUE_APP_FIREBASE_CONFIG),
     appFirebaseVapidKey: process.env.VUE_APP_FIREBASE_VAPID_KEY,
@@ -67,13 +67,13 @@ app.use(IonicVue, {
     fetchGoodIdentificationTypes,
     getProductIdentificationPref,
     initialise,
-    loader,
-    login,
-    logout,
+    loader: userUtil.loader,
+    login: userUtil.login,
+    logout: userUtil.logout,
     localeMessages,
     setProductIdentificationPref,
     setUserLocale,
-    storeClientRegistrationToken,
+    storeClientRegistrationToken: fireBaseUtil.storeClientRegistrationToken,
     getAvailableTimeZones,
     hasPermission,
     getUserFacilities,

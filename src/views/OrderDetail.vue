@@ -31,7 +31,7 @@
           <!-- Timeline -->
           <ion-item lines="none">
             <h2>{{ translate("Timeline") }}</h2>
-            <ion-badge slot="end" :color="getColorByDesc(orderStatus)">{{ translate(orderStatus) }}</ion-badge>
+            <ion-badge slot="end" :color="commonUtil.getColorByDesc(orderStatus)">{{ translate(orderStatus) }}</ion-badge>
           </ion-item>
 
           <ion-list class="ion-margin-start desktop-only">
@@ -78,7 +78,7 @@
                 <ion-label class="ion-text-wrap">
                   <h2>{{ getProductIdentificationValue(productIdentificationPref.primaryId, getProduct(item.productId)) ? getProductIdentificationValue(productIdentificationPref.primaryId, getProduct(item.productId)) : getProduct(item.productId).productName }}</h2>
                   <p class="ion-text-wrap">{{ getProductIdentificationValue(productIdentificationPref.secondaryId, getProduct(item.productId)) }}</p>
-                  <ion-badge color="dark" v-if="isKit(item)">{{ translate("Kit") }}</ion-badge>
+                  <ion-badge color="dark" v-if="orderUtil.isKit(item)">{{ translate("Kit") }}</ion-badge>
                 </ion-label>
 
                 <div class="product-metadata" slot="end">
@@ -126,13 +126,13 @@
                   </ion-button>
 
                   <!-- Show kit components -->
-                  <ion-button v-if="isKit(item)" fill="clear" size="default" @click.stop="fetchKitComponents(item, order)">
+                  <ion-button v-if="orderUtil.isKit(item)" fill="clear" size="default" @click.stop="fetchKitComponents(item, order)">
                     <ion-icon v-if="item.showKitComponents" color="medium" slot="icon-only" :icon="chevronUpOutline"/>
                     <ion-icon v-else color="medium" slot="icon-only" :icon="listOutline"/>
                   </ion-button>
                 </div>
               </ion-item>
-              <div v-if="isKit(item) && item.showKitComponents" class="kit-components ion-margin">
+              <div v-if="orderUtil.isKit(item) && item.showKitComponents" class="kit-components ion-margin">
                 <template v-if="!getProduct(item.productId)?.productComponents">
                   <ion-item lines="none">
                     <ion-skeleton-text animated style="height: 80%;"/>
@@ -215,7 +215,7 @@
                 </ion-item>
                 <ion-item>
                   <ion-icon :icon="callOutline" slot="start" />
-                  <ion-label>{{ formatPhoneNumber(order.billingPhone?.countryCode, order.billingPhone?.areaCode, order.billingPhone?.contactNumber) || '-' }}</ion-label>
+                  <ion-label>{{ commonUtil.formatPhoneNumber(order.billingPhone?.countryCode, order.billingPhone?.areaCode, order.billingPhone?.contactNumber) || '-' }}</ion-label>
                 </ion-item>
                 <ion-item lines="none">
                   <ion-icon :icon="cashOutline" slot="start" />
@@ -241,10 +241,10 @@
                     <ion-label class="ion-text-wrap">
                       <p class="overline">{{ orderPaymentPreference.paymentMethodTypeId }}</p>
                       <ion-label>{{ translate(orderPaymentPreference.paymentMethodTypeDesc) || orderPaymentPreference.paymentMethodTypeId }}</ion-label>
-                      <ion-note :color="getColorByDesc(orderPaymentPreference.statusDesc)">{{ translate(orderPaymentPreference.statusDesc) }} {{ translate("at") }} : {{ DateTime.fromMillis(orderPaymentPreference.createdDate).toFormat("d LLL yyyy, h:mm a") }}</ion-note>
+                      <ion-note :color="commonUtil.getColorByDesc(orderPaymentPreference.statusDesc)">{{ translate(orderPaymentPreference.statusDesc) }} {{ translate("at") }} : {{ DateTime.fromMillis(orderPaymentPreference.createdDate).toFormat("d LLL yyyy, h:mm a") }}</ion-note>
                     </ion-label>
                     <div slot="end" class="ion-text-end">
-                      <ion-label slot="end">{{ formatCurrency(orderPaymentPreference.maxAmount, order.currencyUom) }}</ion-label>
+                      <ion-label slot="end">{{ commonUtil.formatCurrency(orderPaymentPreference.maxAmount, order.currencyUom) }}</ion-label>
                     </div>
                   </ion-item>
                 </ion-list>
@@ -293,7 +293,7 @@
                   <ion-label class="ion-text-wrap">
                     <h2>{{ getProductIdentificationValue(productIdentificationPref.primaryId, getProduct(item.productId)) ? getProductIdentificationValue(productIdentificationPref.primaryId, getProduct(item.productId)) : getProduct(item.productId).productName }}</h2>
                     <p class="ion-text-wrap">{{ getProductIdentificationValue(productIdentificationPref.secondaryId, getProduct(item.productId)) }}</p>
-                    <ion-badge class="kit-badge" color="dark" v-if="isKit(item)">{{ translate("Kit") }}</ion-badge>
+                    <ion-badge class="kit-badge" color="dark" v-if="orderUtil.isKit(item)">{{ translate("Kit") }}</ion-badge>
                   </ion-label>
 
                   <div slot="end">
@@ -339,7 +339,7 @@ import { Actions, hasPermission } from '@/authorization'
 import OrderItemRejHistoryModal from '@/components/OrderItemRejHistoryModal.vue';
 import AssignPickerModal from "@/views/AssignPickerModal.vue";
 import EditPickerModal from "@/components/EditPickerModal.vue";
-import { formatCurrency, formatPhoneNumber, getColorByDesc, showToast } from '@/utils'
+import { commonUtil } from '@/utils/commonUtil'
 import { DateTime } from "luxon";
 import { hasError } from '@/adapter';
 import { OrderService } from "@/services/OrderService";
@@ -347,7 +347,7 @@ import { getProductIdentificationValue, translate, useProductIdentificationStore
 import emitter from '@/event-bus'
 import logger from "@/logger";
 import InventoryDetailsPopover from '@/components/InventoryDetailsPopover.vue'
-import { isKit, getOrderStatus } from '@/utils/order'
+import { orderUtil } from '@/utils/orderUtil'
 import ReportAnIssuePopover from "@/components/ReportAnIssuePopover.vue";
 import { UserService } from "@/services/UserService";
 import ConfirmCancelModal from "@/components/ConfirmCancelModal.vue";
@@ -609,7 +609,7 @@ async function prepareOrderTimeline(paramsToUpdate ?: any) {
 
   const {orderRouteSegment, shipmentStatusInfo} = await fetchOrderRouteSegmentInfo();
 
-  orderStatus.value = getOrderStatus({
+  orderStatus.value = orderUtil.getOrderStatus({
     ...(order.value as any),
     ...paramsToUpdate
   }, order.value.shipGroup, orderRouteSegment, props.orderType)
@@ -767,7 +767,7 @@ async function createPicklist(orderRef: any, selectedPicker: any) {
     };
     resp = await OrderService.createPicklist(payload);
     if (!hasError(resp)) {
-      showToast(translate("Picklist created successfully", { picklistId: resp.data.picklistId }));
+      commonUtil.showToast(translate("Picklist created successfully", { picklistId: resp.data.picklistId }));
       await OrderService.printPicklist(resp.data.picklistId)
     } else {
       throw resp.data
@@ -784,7 +784,7 @@ async function printPicklist(orderRef: any, shipGroup: any) {
       roleTypeId: "WAREHOUSE_PICKER",
     })
     if(hasError(resp)) {
-      showToast(translate("Something went wrong"))
+      commonUtil.showToast(translate("Something went wrong"))
       return;
     }
     await createPicklist(orderRef, "_NA_")
@@ -915,7 +915,7 @@ async function rejectOrder() {
         maySplit: 'Y',
         updateQOH: false,
         rejectionReasonId: item.rejectReason || rejectEntireOrderReasonId.value,
-        kitComponents: isKit(item) ? item.rejectedComponents || [] : []
+        kitComponents: orderUtil.isKit(item) ? item.rejectedComponents || [] : []
       });
     }
   }
@@ -935,7 +935,7 @@ async function rejectOrder() {
         );
         
         const toastMessage = orderRef.shipGroup.items.length === 0 ? translate('All items were rejected from the order.', { orderId: orderRef.orderName ?? orderRef.orderId }) : translate('Some items were rejected from the order.', { orderId: orderRef.orderName ?? orderRef.orderId });
-        showToast(toastMessage);
+        commonUtil.showToast(toastMessage);
       }
     } catch (err) {
       logger.error("Something went wrong while rejecting order items:", err);
@@ -1055,7 +1055,7 @@ async function updateCancelReason(updatedReason: string, item: any, orderRef: an
 async function updateRejectReason(updatedReason: string, item: any, orderRef: any) {
   item.rejectReason = updatedReason;
 
-  if(isKit(item)) {
+  if(orderUtil.isKit(item)) {
     if(!useProductStore().getProduct(item.productId).productComponents) await fetchKitComponents(item, orderRef, false)
     item.rejectedComponents = useProductStore().getProduct(item.productId).productComponents?.map((product: any) => product.productIdTo)
   }
@@ -1081,12 +1081,12 @@ async function sendReadyForPickupEmail(orderRef: any) {
           try {
             const resp = await OrderService.sendPickupScheduledNotification({ shipmentId: orderRef.shipmentId });
             if (!hasError(resp)) {
-              showToast(translate("Email sent successfully"))
+              commonUtil.showToast(translate("Email sent successfully"))
             } else {
-              showToast(translate("Something went wrong while sending the email."))
+              commonUtil.showToast(translate("Something went wrong while sending the email."))
             }
           } catch (error) {
-            showToast(translate("Something went wrong while sending the email."))
+            commonUtil.showToast(translate("Something went wrong while sending the email."))
             logger.error(error)
           }
         }
@@ -1136,15 +1136,15 @@ async function requestTransfer(orderRef: any) {
       shipGroupSeqId: orderRef.shipGroup.shipGroupSeqId
     });
     if (!hasError(resp)) {
-      showToast(translate('Order marked as ship to store'));
+      commonUtil.showToast(translate('Order marked as ship to store'));
       router.push({ path: '/tabs/orders' });
     } else {
-      showToast(translate('Failed to mark order as ship to store'));
+      commonUtil.showToast(translate('Failed to mark order as ship to store'));
       logger.error('Ship-to-Store conversion failed', resp);
     }
   } catch (err) {
     logger.error(err);
-    showToast(translate("Something went wrong"));
+    commonUtil.showToast(translate("Something went wrong"));
   }
   emitter.emit("dismissLoader");
 }

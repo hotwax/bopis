@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia'
 import { UserService } from '@/services/UserService'
 import { UtilService } from '@/services/UtilService'
-import { getCurrentFacilityId, showToast } from '@/utils'
+import { commonUtil } from '@/utils/commonUtil'
 import {
   getNotificationEnumIds,
   getNotificationUserPrefTypeIds,
@@ -20,7 +20,7 @@ import {
   setPermissions
 } from '@/authorization'
 import { translate, useAuthStore, useProductIdentificationStore, useUserStore as useDxpUserStore } from '@hotwax/dxp-components'
-import { generateDeviceId, generateTopicName } from '@/utils/firebase'
+import { fireBaseUtil } from '@/utils/fireBaseUtil'
 import emitter from '@/event-bus'
 import logger from '@/logger';
 
@@ -94,7 +94,7 @@ export const useUserStore = defineStore('appUser', {
           const hasPermission = appPermissions.some((appPermission: any) => appPermission.action === permissionId);
           if (!hasPermission) {
             const permissionError = 'You do not have permission to access the app.';
-            showToast(translate(permissionError));
+            commonUtil.showToast(translate(permissionError));
             logger.error("error", permissionError);
             return Promise.reject(new Error(permissionError));
           }
@@ -120,7 +120,7 @@ export const useUserStore = defineStore('appUser', {
           return uniqueFacilities
         }, []);
 
-        const currentEComStore = await UserService.getCurrentEComStore(token, getCurrentFacilityId());
+        const currentEComStore = await UserService.getCurrentEComStore(token, commonUtil.getCurrentFacilityId());
 
         updateToken(token)
 
@@ -143,7 +143,7 @@ export const useUserStore = defineStore('appUser', {
         await this.fetchBopisProductStoreSettings();
 
       } catch (err: any) {
-        showToast(translate('Something went wrong while login. Please contact administrator'));
+        commonUtil.showToast(translate('Something went wrong while login. Please contact administrator'));
         logger.error("error", err);
         return Promise.reject(err instanceof Object ? err : new Error(err))
       }
@@ -215,10 +215,10 @@ export const useUserStore = defineStore('appUser', {
         current.timeZone = timeZoneId;
         this.current = { ...current };
         Settings.defaultZone = current.timeZone;
-        showToast(translate("Time zone updated successfully"));
+        commonUtil.showToast(translate("Time zone updated successfully"));
       } catch (err) {
         logger.error(err)
-        showToast(translate("Failed to update time zone"));
+        commonUtil.showToast(translate("Failed to update time zone"));
       }
     },
     async fetchPartialOrderRejectionConfig() {
@@ -274,12 +274,12 @@ export const useUserStore = defineStore('appUser', {
         }
 
         if (!hasError(resp)) {
-          showToast(translate('Configuration updated'))
+          commonUtil.showToast(translate('Configuration updated'))
         } else {
-          showToast(translate('Failed to update configuration'))
+          commonUtil.showToast(translate('Failed to update configuration'))
         }
       } catch (err) {
-        showToast(translate('Failed to update configuration'))
+        commonUtil.showToast(translate('Failed to update configuration'))
         logger.error(err)
       }
       await this.fetchPartialOrderRejectionConfig();
@@ -288,7 +288,7 @@ export const useUserStore = defineStore('appUser', {
       this.notifications.push({ ...payload.notification, time: DateTime.now().toMillis() })
       this.hasUnreadNotifications = true;
       if (payload.isForeground) {
-        showToast(translate("New notification received."));
+        commonUtil.showToast(translate("New notification received."));
       }
     },
     async fetchNotificationPreferences() {
@@ -299,7 +299,7 @@ export const useUserStore = defineStore('appUser', {
         resp = await getNotificationEnumIds(process.env.VUE_APP_NOTIF_ENUM_TYPE_ID)
         enumerationResp = resp
         resp = await getNotificationUserPrefTypeIds(process.env.VUE_APP_NOTIF_APP_ID, this.current.userId, {
-          "topic": getCurrentFacilityId(),
+          "topic": commonUtil.getCurrentFacilityId(),
           "topic_op": "contains"
         })
         userPrefIds = resp.map((userPref: any) => userPref.topic)
@@ -308,7 +308,7 @@ export const useUserStore = defineStore('appUser', {
       } finally {
         if (enumerationResp?.length) {
           notificationPreferences = enumerationResp.reduce((notifactionPref: any, pref: any) => {
-            const userPrefTypeIdToSearch = generateTopicName(getCurrentFacilityId(), pref.enumId)
+            const userPrefTypeIdToSearch = fireBaseUtil.generateTopicName(commonUtil.getCurrentFacilityId(), pref.enumId)
             notifactionPref.push({ ...pref, isEnabled: userPrefIds.includes(userPrefTypeIdToSearch) })
             return notifactionPref
           }, [])
@@ -320,7 +320,7 @@ export const useUserStore = defineStore('appUser', {
       let allNotificationPrefs = [];
       try {
         const resp = await getNotificationUserPrefTypeIds(process.env.VUE_APP_NOTIF_APP_ID, this.current.userId, {
-          "topic": getCurrentFacilityId(),
+          "topic": commonUtil.getCurrentFacilityId(),
           "topic_op": "contains"
         })
         allNotificationPrefs = resp
@@ -394,7 +394,7 @@ export const useUserStore = defineStore('appUser', {
       const eComStoreId = this.currentEComStore.productStoreId;
 
       if (!eComStoreId) {
-        showToast(translate("Unable to update product store setting."))
+        commonUtil.showToast(translate("Unable to update product store setting."))
         return;
       }
 
@@ -425,7 +425,7 @@ export const useUserStore = defineStore('appUser', {
           throw resp.data
         }
       } catch (err) {
-        showToast(translate("Failed to update product store setting."))
+        commonUtil.showToast(translate("Failed to update product store setting."))
         logger.error(err)
       }
 
@@ -435,7 +435,7 @@ export const useUserStore = defineStore('appUser', {
       this.notificationPrefs = payload;
     },
     async storeClientRegistrationToken(registrationToken: string) {
-      const firebaseDeviceId = generateDeviceId()
+      const firebaseDeviceId = fireBaseUtil.generateDeviceId()
       this.firebaseDeviceId = firebaseDeviceId;
 
       try {

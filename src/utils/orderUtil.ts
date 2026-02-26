@@ -55,7 +55,7 @@ const getOrderStatus = (order: any, shipGroup: any, orderRouteSegment: any, orde
   return "Reserved"
 }
 
-export {
+export const orderUtil = {
   getOrderCategory,
   getOrderStatus,
   isKit,

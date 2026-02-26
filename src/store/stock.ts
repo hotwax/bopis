@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia'
 import { StockService } from '@/services/StockService'
 import { hasError } from '@/adapter'
-import { getCurrentFacilityId } from '@/utils'
+import { commonUtil } from '@/utils/commonUtil'
 import logger from '@/logger'
 
 export const useStockStore = defineStore('stock', {
@@ -10,13 +10,13 @@ export const useStockStore = defineStore('stock', {
   }),
   getters: {
     getInventoryInformation: (state) => (productId: any) => {
-      const facilityId = getCurrentFacilityId()
+      const facilityId = commonUtil.getCurrentFacilityId()
       return state.inventoryInformation[productId] ? state.inventoryInformation[productId][facilityId] ? state.inventoryInformation[productId][facilityId] : {} : {};
     }
   },
   actions: {
     async fetchProductInventory({ productId, forceFetchStock = false }: { productId: string, forceFetchStock?: boolean }) {
-      const facilityId = getCurrentFacilityId();
+      const facilityId = commonUtil.getCurrentFacilityId();
       if (!forceFetchStock && this.inventoryInformation[productId] && this.inventoryInformation[productId][facilityId]) {
         return;
       }

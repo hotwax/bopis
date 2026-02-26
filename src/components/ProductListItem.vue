@@ -6,7 +6,7 @@
     <ion-label class="ion-text-wrap">
       <h2>{{ getProductIdentificationValue(productIdentificationPref.primaryId, getProduct(item.productId)) ? getProductIdentificationValue(productIdentificationPref.primaryId, getProduct(item.productId)) : getProduct(item.productId).productName }}</h2>
       <p class="ion-text-wrap">{{ getProductIdentificationValue(productIdentificationPref.secondaryId, getProduct(item.productId)) }}</p>
-      <ion-badge color="dark" v-if="isKit(item)">{{ translate("Kit") }}</ion-badge>
+      <ion-badge color="dark" v-if="orderUtil.isKit(item)">{{ translate("Kit") }}</ion-badge>
     </ion-label>
     <!-- Only show stock if its not a ship to store order -->
     <div class="show-kit-components" slot="end" v-if="!isShipToStoreOrder">
@@ -25,7 +25,7 @@
         <ion-icon slot="icon-only" :icon="item.isGCActivated ? gift : giftOutline"/>
       </ion-button>
       
-      <ion-button v-if="isKit(item)" fill="clear" size="default" @click.stop="fetchKitComponents(item)">
+      <ion-button v-if="orderUtil.isKit(item)" fill="clear" size="default" @click.stop="fetchKitComponents(item)">
         <ion-icon v-if="showKitComponents" color="medium" slot="icon-only" :icon="chevronUpOutline"/>
         <ion-icon v-else color="medium" slot="icon-only" :icon="listOutline"/>
       </ion-button>
@@ -63,7 +63,7 @@ import { getProductIdentificationValue, DxpShopifyImg, translate, useProductIden
 import { chevronUpOutline, cubeOutline, informationCircleOutline, listOutline, gift, giftOutline } from 'ionicons/icons'
 import InventoryDetailsPopover from '@/components/InventoryDetailsPopover.vue'
 import GiftCardActivationModal from "@/components/GiftCardActivationModal.vue";
-import { isKit } from '@/utils/order'
+import { orderUtil } from '@/utils/orderUtil'
 import { useOrderStore } from "@/store/order";
 import { useProductStore } from "@/store/product";
 import { useStockStore } from "@/store/stock";

@@ -11,7 +11,7 @@ import emitter from "@/event-bus"
 import { initialise, resetConfig } from '@/adapter'
 import { initialiseFirebaseApp, translate, useProductIdentificationStore } from "@hotwax/dxp-components";
 import logger from '@/logger'
-import { addNotification, storeClientRegistrationToken } from '@/utils/firebase';
+import { fireBaseUtil } from '@/utils/fireBaseUtil';
 import { UtilService } from './services/UtilService';
 import { useUserStore } from '@/store/user';
 
@@ -100,8 +100,8 @@ onMounted(async () => {
       await initialiseFirebaseApp(
         appFirebaseConfig.value,
         appFirebaseVapidKey,
-        storeClientRegistrationToken,
-        addNotification,
+        fireBaseUtil.storeClientRegistrationToken,
+        fireBaseUtil.addNotification,
       )
     }
   }

@@ -12,14 +12,14 @@
       <ion-label>
         <p class="overline">{{ translate("Browser TimeZone") }}</p>
         {{ browserTimeZone.id }}
-        <p v-if="showDateTime">{{ getCurrentTime(browserTimeZone.id, dateTimeFormat) }}</p>
+        <p v-if="showDateTime">{{ commonUtil.getCurrentTime(browserTimeZone.id, dateTimeFormat) }}</p>
       </ion-label>
     </ion-item>
     <ion-item lines="none">
       <ion-label>
         <p class="overline">{{ translate("Selected TimeZone") }}</p>
         {{ currentTimeZoneId }}
-        <p v-if="showDateTime">{{ getCurrentTime(currentTimeZoneId, dateTimeFormat) }}</p>
+        <p v-if="showDateTime">{{ commonUtil.getCurrentTime(currentTimeZoneId, dateTimeFormat) }}</p>
       </ion-label>
       <ion-button id="time-zone-modal" slot="end" fill="outline" color="dark">{{ translate("Change") }}</ion-button>
     </ion-item>
@@ -49,7 +49,7 @@
               <ion-radio label-placement="end" justify="start" :value="browserTimeZone.id">
                 <ion-label>
                   {{ browserTimeZone.label }} ({{ browserTimeZone.id }})
-                  <p v-if="showDateTime">{{ getCurrentTime(browserTimeZone.id, dateTimeFormat) }}</p>
+                  <p v-if="showDateTime">{{ commonUtil.getCurrentTime(browserTimeZone.id, dateTimeFormat) }}</p>
                 </ion-label>
               </ion-radio>
             </ion-item>
@@ -72,7 +72,7 @@
                 <ion-radio label-placement="end" justify="start" :value="timeZone.id">
                   <ion-label>
                     {{ timeZone.label }} ({{ timeZone.id }})
-                    <p v-if="showDateTime">{{ getCurrentTime(timeZone.id, dateTimeFormat) }}</p>
+                    <p v-if="showDateTime">{{ commonUtil.getCurrentTime(timeZone.id, dateTimeFormat) }}</p>
                   </ion-label>
                 </ion-radio>
               </ion-item>
@@ -94,7 +94,7 @@
 import { IonButton, IonButtons, IonCard, IonCardHeader, IonCardTitle, IonCardContent, IonContent, IonFab, IonFabButton, IonHeader, IonIcon, IonItem, IonLabel, IonList, IonListHeader, IonModal, IonRadio, IonRadioGroup, IonSearchbar, IonSpinner, IonTitle, IonToolbar } from '@ionic/vue';
 import { closeOutline, saveOutline } from "ionicons/icons";
 import { computed, onBeforeMount, ref } from "vue";
-import { getCurrentTime } from '../utils'
+import { commonUtil } from '../utils/commonUtil'
 import { translate, useUserStore as useDxpUserStore } from "@hotwax/dxp-components"
 import { useUserStore } from '@/store/user';
 

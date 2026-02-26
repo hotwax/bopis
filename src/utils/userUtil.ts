@@ -27,7 +27,7 @@ const loader = {
   }
 }
 
-export {
+export const userUtil = {
   login,
   loader,
   logout

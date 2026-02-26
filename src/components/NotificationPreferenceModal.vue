@@ -32,9 +32,9 @@ import { IonButtons, IonButton, IonContent, IonFab, IonFabButton, IonHeader, Ion
 import { computed, onBeforeMount, ref } from "vue";
 import { closeOutline, save } from "ionicons/icons";
 import { translate } from '@hotwax/dxp-components'
-import { showToast } from "@/utils";
+import { commonUtil } from "@/utils/commonUtil";
 import emitter from "@/event-bus"
-import { generateTopicName } from "@/utils/firebase";
+import { fireBaseUtil } from "@/utils/fireBaseUtil";
 import { subscribeTopic, unsubscribeTopic } from '@/adapter'
 import logger from "@/logger";
 import { useUserStore as usePiniaUserStore } from "@/store/user";
@@ -107,18 +107,18 @@ async function updateNotificationPref() {
 async function handleTopicSubscription() {
   const facilityId = (currentFacility.value as any)?.facilityId;
   const subscribeRequests = notificationPrefToUpdate.value.subscribe.map(async (enumId: string) => {
-    const topicName = generateTopicName(facilityId, enumId);
+    const topicName = fireBaseUtil.generateTopicName(facilityId, enumId);
     return subscribeTopic(topicName, process.env.VUE_APP_NOTIF_APP_ID);
   });
 
   const unsubscribeRequests = notificationPrefToUpdate.value.unsubscribe.map(async (enumId: string) => {
-    const topicName = generateTopicName(facilityId, enumId);
+    const topicName = fireBaseUtil.generateTopicName(facilityId, enumId);
     return unsubscribeTopic(topicName, process.env.VUE_APP_NOTIF_APP_ID);
   });
 
   const responses = await Promise.allSettled([...subscribeRequests, ...unsubscribeRequests]);
   const hasFailedResponse = responses.some((response: any) => response.status === "rejected");
-  showToast(
+  commonUtil.showToast(
     hasFailedResponse
       ? translate('Notification preferences not updated. Please try again.')
       : translate('Notification preferences updated.')

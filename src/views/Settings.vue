@@ -223,11 +223,11 @@ import { openOutline } from 'ionicons/icons'
 import Image from '@/components/Image.vue';
 import { DateTime } from 'luxon';
 import { UserService } from '@/services/UserService'
-import { showToast } from '@/utils';
+import { commonUtil } from '@/utils/commonUtil';
 import { hasError, removeClientRegistrationToken, subscribeTopic, unsubscribeTopic } from '@/adapter'
 import { goToOms, initialiseFirebaseApp, translate } from "@hotwax/dxp-components";
 import { Actions, hasPermission } from '@/authorization'
-import { addNotification, generateTopicName, isFcmConfigured, storeClientRegistrationToken } from "@/utils/firebase";
+import { fireBaseUtil } from "@/utils/fireBaseUtil";
 import emitter from "@/event-bus"
 import logger from '@/logger';
 import EditShipmentMethodModal from '@/components/EditShipmentMethodModal.vue';
@@ -462,12 +462,12 @@ async function updateRerouteFulfillmentConfiguration(config: any, value: any) {
   try {
     const resp = await UserService.updateRerouteFulfillmentConfig(params) as any
     if (!hasError(resp)) {
-      showToast(translate('Configuration updated'))
+      commonUtil.showToast(translate('Configuration updated'))
     } else {
-      showToast(translate('Failed to update configuration'))
+      commonUtil.showToast(translate('Failed to update configuration'))
     }
   } catch (err) {
-    showToast(translate('Failed to update configuration'))
+    commonUtil.showToast(translate('Failed to update configuration'))
     logger.error(err)
   }
   // Fetch the updated configuration
@@ -486,15 +486,15 @@ async function updateNotificationPref(enumId: string) {
   let isToggledOn = false;
 
   try {
-    if (!isFcmConfigured()) {
+    if (!fireBaseUtil.isFcmConfigured()) {
       logger.error("FCM is not configured.");
-      showToast(translate('Notification preferences not updated. Please try again.'))
+      commonUtil.showToast(translate('Notification preferences not updated. Please try again.'))
       return;
     }
 
     emitter.emit('presentLoader', { backdropDismiss: false })
     const facilityId = (currentFacility.value as any)?.facilityId
-    const topicName = generateTopicName(facilityId, enumId)
+    const topicName = fireBaseUtil.generateTopicName(facilityId, enumId)
 
     const pref = notificationPrefs.value.find((p: any) => p.enumId === enumId)
     pref.isEnabled
@@ -504,16 +504,16 @@ async function updateNotificationPref(enumId: string) {
     isToggledOn = !pref.isEnabled
     pref.isEnabled = !pref.isEnabled
     await useUserStore().updateNotificationPreferences(notificationPrefs.value)
-    showToast(translate('Notification preferences updated.'))
+    commonUtil.showToast(translate('Notification preferences updated.'))
   } catch (error) {
-    showToast(translate('Notification preferences not updated. Please try again.'))
+    commonUtil.showToast(translate('Notification preferences not updated. Please try again.'))
   } finally {
     emitter.emit("dismissLoader")
   }
 
   try {
     if (!allNotificationPrefs.value.length && isToggledOn) {
-      await initialiseFirebaseApp(JSON.parse(process.env.VUE_APP_FIREBASE_CONFIG || '{}'), process.env.VUE_APP_FIREBASE_VAPID_KEY, storeClientRegistrationToken, addNotification)
+      await initialiseFirebaseApp(JSON.parse(process.env.VUE_APP_FIREBASE_CONFIG || '{}'), process.env.VUE_APP_FIREBASE_VAPID_KEY, fireBaseUtil.storeClientRegistrationToken, fireBaseUtil.addNotification)
     } else if (allNotificationPrefs.value.length == 1 && !isToggledOn) {
       await removeClientRegistrationToken(firebaseDeviceId.value, process.env.VUE_APP_NOTIF_APP_ID)
     }

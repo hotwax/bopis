@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia'
 import { ProductService } from "@/services/ProductService";
-import { showToast } from '@/utils'
+import { commonUtil } from '@/utils/commonUtil'
 import { hasError } from '@/adapter'
 import { translate } from '@hotwax/dxp-components'
 import emitter from '@/event-bus'
@@ -78,7 +78,7 @@ export const useProductStore = defineStore('product', {
             total: 0,
             queryString: payload.queryString
           }
-          showToast(translate("Products not found"));
+          commonUtil.showToast(translate("Products not found"));
         }
       } catch (error) {
         logger.error(error)
@@ -87,7 +87,7 @@ export const useProductStore = defineStore('product', {
           total: 0,
           queryString: ''
         }
-        showToast(translate("Something went wrong"));
+        commonUtil.showToast(translate("Something went wrong"));
       }
       if (payload.viewIndex === 0) emitter.emit("dismissLoader");
       return resp;
@@ -124,11 +124,11 @@ export const useProductStore = defineStore('product', {
           this.current = product;
           this.cached[product.productId] = product;
         } else {
-          showToast(translate("Product not found"));
+          commonUtil.showToast(translate("Product not found"));
         }
       } catch (error) {
         logger.error(error)
-        showToast(translate("Something went wrong"));
+        commonUtil.showToast(translate("Something went wrong"));
       }
       emitter.emit("dismissLoader");
       return resp;

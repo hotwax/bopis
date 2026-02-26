@@ -1,12 +1,12 @@
 import { defineStore } from "pinia";
 import { OrderService } from "@/services/OrderService";
-import { showToast, getCurrentFacilityId, getPickerName } from "@/utils";
-import { isKit, removeKitComponents } from '@/utils/order'
+import { commonUtil } from "@/utils/commonUtil";
+import { orderUtil } from '@/utils/orderUtil'
 import { hasError } from '@/adapter'
 import { translate } from "@hotwax/dxp-components";
 import emitter from '@/event-bus'
-import { prepareOrderQuery } from "@/utils/solrHelper";
-import { getOrderCategory } from '@/utils/order'
+import { solrUtil } from "@/utils/solrUtil";
+
 import { UtilService } from "@/services/UtilService";
 import logger from "@/logger";
 import { useProductStore } from "./product";
@@ -74,7 +74,7 @@ export const useOrderStore = defineStore('order', {
   actions: {
     async getOrderDetails(payload: any) {
       let resp;
-      const orderQueryPayload = prepareOrderQuery({
+      const orderQueryPayload = solrUtil.prepareOrderQuery({
         ...payload,
         orderStatusId: 'ORDER_APPROVED',
         orderTypeId: 'SALES_ORDER',
@@ -98,7 +98,7 @@ export const useOrderStore = defineStore('order', {
     async fetchOrderItems(payload: any) {
       let resp;
       const { productId, orderIds, ...params } = payload;
-      const orderQueryPayload = prepareOrderQuery({
+      const orderQueryPayload = solrUtil.prepareOrderQuery({
         ...params,
         orderIds,
         orderStatusId: 'ORDER_APPROVED',
@@ -233,14 +233,14 @@ export const useOrderStore = defineStore('order', {
       } catch (err) {
         logger.error(err);
         emitter.emit("dismissLoader");
-        showToast(translate("Something went wrong"));
+        commonUtil.showToast(translate("Something went wrong"));
       }
     },
     async fetchPickersInformation({ shipmentIds, shipmentStatusId }: { shipmentIds: any, shipmentStatusId: string }) {
       const payload = {
         shipmentId: shipmentIds.join(','),
         shipmentId_op: 'in',
-        originalFacilityId: getCurrentFacilityId(),
+        originalFacilityId: commonUtil.getCurrentFacilityId(),
         statusId: shipmentStatusId,
         pageIndex: 0,
         pageSize: shipmentIds.length
@@ -308,8 +308,8 @@ export const useOrderStore = defineStore('order', {
 
             return {
               ...group,
-              category: getOrderCategory(group),
-              items: removeKitComponents(validItems).map((item: any) => ({
+              category: orderUtil.getOrderCategory(group),
+              items: orderUtil.removeKitComponents(validItems).map((item: any) => ({
                 ...item,
                 showKitComponents: false
               }))
@@ -328,7 +328,7 @@ export const useOrderStore = defineStore('order', {
             paymentPreferences: sortedPaymentPreference
           };
 
-          const currentFacilityId = getCurrentFacilityId();
+          const currentFacilityId = commonUtil.getCurrentFacilityId();
           const currentShipGroup = order.shipGroups.find((shipGroup: any) => shipGroup.shipGroupSeqId === payload.shipGroupSeqId && shipGroup.facilityId === currentFacilityId);
 
           if (currentShipGroup) {
@@ -343,7 +343,7 @@ export const useOrderStore = defineStore('order', {
             order.picklistId = currentShipGroup.picklistId || null;
             order.isPicked = !!currentShipGroup.picklistId;
             order.pickerIds = currentShipGroup.pickerId ? [currentShipGroup.pickerId] : [];
-            order.pickers = getPickerName(currentShipGroup.pickerGroupName, currentShipGroup.pickerFirstName, currentShipGroup.pickerLastName) || currentShipGroup.pickerId;
+            order.pickers = commonUtil.getPickerName(currentShipGroup.pickerGroupName, currentShipGroup.pickerFirstName, currentShipGroup.pickerLastName) || currentShipGroup.pickerId;
             order.shipGroupSeqId = currentShipGroup.shipGroupSeqId;
           }
 
@@ -421,7 +421,7 @@ export const useOrderStore = defineStore('order', {
 
             return {
               ...shipment,
-              items: removeKitComponents(validItems),
+              items: orderUtil.removeKitComponents(validItems),
               customerId: shipment.partyId,
               customerName: `${shipment.firstName || ''} ${shipment.lastName || ''}`.trim(),
               pickers: pickersInfo.pickers,
@@ -448,7 +448,7 @@ export const useOrderStore = defineStore('order', {
         return resp;
       } catch (err) {
         logger.error(err);
-        showToast(translate("Something went wrong"));
+        commonUtil.showToast(translate("Something went wrong"));
         emitter.emit("dismissLoader");
       }
     },
@@ -485,7 +485,7 @@ export const useOrderStore = defineStore('order', {
 
             return {
               ...shipment,
-              items: removeKitComponents(validItems),
+              items: orderUtil.removeKitComponents(validItems),
               customerId: shipment.partyId,
               customerName: `${shipment.firstName || ''} ${shipment.lastName || ''}`.trim(),
               pickers: pickersInfo.pickers,
@@ -511,7 +511,7 @@ export const useOrderStore = defineStore('order', {
         return resp;
       } catch (err) {
         logger.error(err);
-        showToast(translate("Something went wrong"));
+        commonUtil.showToast(translate("Something went wrong"));
         emitter.emit("dismissLoader");
       }
     },
@@ -565,11 +565,11 @@ export const useOrderStore = defineStore('order', {
           }
           this.updateCurrent({ order })
         } else {
-          showToast(translate("Something went wrong"))
+          commonUtil.showToast(translate("Something went wrong"))
         }
       } catch (err) {
         logger.error(err)
-        showToast(translate("Something went wrong"))
+        commonUtil.showToast(translate("Something went wrong"))
       }
       emitter.emit("dismissLoader")
       return resp;
@@ -598,11 +598,11 @@ export const useOrderStore = defineStore('order', {
           }
           this.updateCurrent({ order })
         } else {
-          showToast(translate("Something went wrong"))
+          commonUtil.showToast(translate("Something went wrong"))
         }
       } catch (err) {
         logger.error(err)
-        showToast(translate("Something went wrong"))
+        commonUtil.showToast(translate("Something went wrong"))
       }
       emitter.emit("dismissLoader")
       return resp;
@@ -624,13 +624,13 @@ export const useOrderStore = defineStore('order', {
             payload.order = { ...payload.order, readyToShip: true }
           }
           this.updateCurrent({ order: payload.order })
-          showToast(translate("Order packed and ready for delivery"))
+          commonUtil.showToast(translate("Order packed and ready for delivery"))
         } else {
-          showToast(translate("Something went wrong"))
+          commonUtil.showToast(translate("Something went wrong"))
         }
       } catch (err) {
         logger.error(err)
-        showToast(translate("Something went wrong"))
+        commonUtil.showToast(translate("Something went wrong"))
       } finally {
         emitter.emit("dismissLoader")
       }
@@ -654,9 +654,9 @@ export const useOrderStore = defineStore('order', {
         const resp = await this.rejectOrderItems(payload);
         const refreshPickupOrders = resp.find((response: any) => response.data);
         if (refreshPickupOrders) {
-          showToast(translate(payload.isEntireOrderRejected ? 'All items were rejected from the order' : 'Some items were rejected from the order') + ' ' + (payload.orderName ? payload.orderName : payload.orderId));
+          commonUtil.showToast(translate(payload.isEntireOrderRejected ? 'All items were rejected from the order' : 'Some items were rejected from the order') + ' ' + (payload.orderName ? payload.orderName : payload.orderId));
         } else {
-          showToast(translate('Something went wrong'));
+          commonUtil.showToast(translate('Something went wrong'));
         }
         return resp;
       } catch (err) {
@@ -671,7 +671,7 @@ export const useOrderStore = defineStore('order', {
           ...item,
           updateQOH: false,
           rejectionReasonId: item.reason,
-          kitComponents: isKit(item) ? item.rejectedComponents || [] : []
+          kitComponents: orderUtil.isKit(item) ? item.rejectedComponents || [] : []
         }));
 
       const payload = {
@@ -691,7 +691,7 @@ export const useOrderStore = defineStore('order', {
       if (payload.viewIndex === 0) emitter.emit("presentLoader")
       let resp: any
       const params = {
-        orderFacilityId: getCurrentFacilityId(),
+        orderFacilityId: commonUtil.getCurrentFacilityId(),
         orderStatusId: 'ORDER_COMPLETED,ORDER_APPROVED',
         statusId: 'ITEM_COMPLETED,ITEM_APPROVED',
         shipmentMethodTypeId: 'SHIP_TO_STORE',
@@ -735,11 +735,11 @@ export const useOrderStore = defineStore('order', {
           this.shipToStore.incoming = { list: incomingOrders, total, orderCount };
         } else {
           this.shipToStore.incoming = { list: [], total: 0, orderCount: 0 };
-          showToast(translate("Orders Not Found"))
+          commonUtil.showToast(translate("Orders Not Found"))
         }
       } catch (err) {
         logger.error(err)
-        showToast(translate("Something went wrong"))
+        commonUtil.showToast(translate("Something went wrong"))
       } finally {
         emitter.emit("dismissLoader")
       }
@@ -751,7 +751,7 @@ export const useOrderStore = defineStore('order', {
       const params = {
         shipmentStatusId: "SHIPMENT_ARRIVED",
         shipmentMethodTypeId: "SHIP_TO_STORE",
-        orderFacilityId: getCurrentFacilityId(),
+        orderFacilityId: commonUtil.getCurrentFacilityId(),
         statusId: "ITEM_COMPLETED",
         orderStatusId: "ORDER_COMPLETED",
         pageSize: payload.viewSize ? payload.viewSize : process.env.VUE_APP_VIEW_SIZE,
@@ -793,11 +793,11 @@ export const useOrderStore = defineStore('order', {
           this.shipToStore.readyForPickup = { list: readyForPickupOrders, total, orderCount };
         } else {
           this.shipToStore.readyForPickup = { list: [], total: 0, orderCount: 0 };
-          showToast(translate("Orders Not Found"))
+          commonUtil.showToast(translate("Orders Not Found"))
         }
       } catch (err) {
         logger.error(err)
-        showToast(translate("Something went wrong"))
+        commonUtil.showToast(translate("Something went wrong"))
       } finally {
         emitter.emit("dismissLoader")
       }
@@ -811,7 +811,7 @@ export const useOrderStore = defineStore('order', {
         shipmentMethodTypeId: "SHIP_TO_STORE",
         statusId: "ITEM_COMPLETED",
         orderStatusId: "ORDER_COMPLETED",
-        orderFacilityId: getCurrentFacilityId(),
+        orderFacilityId: commonUtil.getCurrentFacilityId(),
         pageSize: payload.viewSize ? payload.viewSize : process.env.VUE_APP_VIEW_SIZE,
         pageIndex: payload.viewIndex ? payload.viewIndex : 0
       } as any
@@ -851,11 +851,11 @@ export const useOrderStore = defineStore('order', {
           this.shipToStore.completed = { list: completedOrders, total, orderCount };
         } else {
           this.shipToStore.completed = { list: [], total: 0, orderCount: 0 };
-          showToast(translate("Orders Not Found"))
+          commonUtil.showToast(translate("Orders Not Found"))
         }
       } catch (err) {
         logger.error(err)
-        showToast(translate("Something went wrong"))
+        commonUtil.showToast(translate("Something went wrong"))
       } finally {
         emitter.emit("dismissLoader")
       }

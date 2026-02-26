@@ -1,7 +1,7 @@
 import { api, apiClient, hasError } from '@/adapter';
 import { translate } from '@hotwax/dxp-components';
 import { useUserStore } from '@/store/user';
-import { getCurrentFacilityId, showToast } from '@/utils';
+import { commonUtil } from '@/utils/commonUtil';
 import logger from '@/logger';
 import { cogOutline } from 'ionicons/icons';
 import { UtilService } from "@/services/UtilService";
@@ -57,7 +57,7 @@ const fetchPicklists = async (payload: any): Promise<any> => {
 const findPackedShipments = async (params: any): Promise<any> => {
   params = {
     statusId: 'SHIPMENT_PACKED',
-    originFacilityId: getCurrentFacilityId(),
+    originFacilityId: commonUtil.getCurrentFacilityId(),
     shipmentTypeId: 'SALES_SHIPMENT',
     keyword: params.keyword,
     orderBy: '-orderDate',
@@ -79,7 +79,7 @@ const findPackedShipments = async (params: any): Promise<any> => {
 const findCompletedShipments = async (params: any): Promise<any> => {
   params = {
     statusId: 'SHIPMENT_SHIPPED',
-    originFacilityId: getCurrentFacilityId(),
+    originFacilityId: commonUtil.getCurrentFacilityId(),
     shipmentTypeId: 'SALES_SHIPMENT',
     keyword: params.keyword,
     orderBy: '-orderDate',
@@ -142,10 +142,10 @@ const printPicklist = async (picklistId: string): Promise<any> => {
       (window as any).open(pdfUrl, "_blank").focus();
     }
     catch {
-      showToast(translate('Unable to open as browser is blocking pop-ups.', { documentName: 'picklist' }), { icon: cogOutline });
+      commonUtil.showToast(translate('Unable to open as browser is blocking pop-ups.', { documentName: 'picklist' }), { icon: cogOutline });
     }
   } catch (err) {
-    showToast(translate('Failed to print picklist'))
+    commonUtil.showToast(translate('Failed to print picklist'))
     logger.error("Failed to print picklist", err)
   }
 }
@@ -181,11 +181,11 @@ const printPackingSlip = async (shipmentIds: Array<string>): Promise<any> => {
       (window as any).open(pdfUrl, "_blank").focus();
     }
     catch {
-      showToast(translate('Unable to open as browser is blocking pop-ups.', { documentName: 'packing slip' }), { icon: cogOutline });
+      commonUtil.showToast(translate('Unable to open as browser is blocking pop-ups.', { documentName: 'packing slip' }), { icon: cogOutline });
     }
 
   } catch (err) {
-    showToast(translate('Failed to print packing slip'))
+    commonUtil.showToast(translate('Failed to print packing slip'))
     logger.error("Failed to load packing slip", err)
   }
 }
@@ -298,11 +298,11 @@ const printShippingLabelAndPackingSlip = async (shipmentIds: Array<string>): Pro
       (window as any).open(pdfUrl, "_blank").focus();
     }
     catch {
-      showToast(translate('Unable to open as browser is blocking pop-ups.', { documentName: 'shipping label and packing slip' }));
+      commonUtil.showToast(translate('Unable to open as browser is blocking pop-ups.', { documentName: 'shipping label and packing slip' }));
     }
 
   } catch (err) {
-    showToast(translate('Failed to print shipping label and packing slip'))
+    commonUtil.showToast(translate('Failed to print shipping label and packing slip'))
     logger.error("Failed to load shipping label and packing slip", err)
   }
 }
