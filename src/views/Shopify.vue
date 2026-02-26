@@ -14,10 +14,9 @@ import {
   IonPage,
 } from "@ionic/vue";
 import { defineComponent } from "vue";
-import { Redirect } from "@shopify/app-bridge/actions";
-import createApp from "@shopify/app-bridge";
 import { showToast } from "@/utils";
 import { useRouter } from "vue-router";
+import ShopifyService from "@/services/ShopifyService";
 import emitter from "@/event-bus"
 
 export default defineComponent({
@@ -60,11 +59,8 @@ export default defineComponent({
       if (window.top == window.self) {
         window.location.assign(permissionUrl);
       } else {
-        const app = createApp({
-          apiKey,
-          host,
-        });
-        Redirect.create(app).dispatch(Redirect.Action.REMOTE, permissionUrl);
+        ShopifyService.initialize(apiKey, host);
+        ShopifyService.redirect(permissionUrl);
       }
       emitter.emit("dismissLoader");
     }

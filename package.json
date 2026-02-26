@@ -22,6 +22,7 @@
     "@ionic/core": "8.4.2",
     "@ionic/vue": "8.4.2",
     "@ionic/vue-router": "8.4.2",
+    "@shopify/app-bridge": "^3.7.11",
     "@shopify/app-bridge-utils": "^2.0.4",
     "boon-js": "^2.0.3",
     "core-js": "^3.6.5",
