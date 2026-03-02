@@ -207,7 +207,7 @@
           </ion-card-content>
           <ion-list>
             <ion-item :key="pref.enumId" v-for="pref in notificationPrefs" lines="none">
-              <ion-toggle data-testid="notification-pref-toggle" label-placement="start" @click.prevent="confirmNotificationPrefUpdate(pref.enumId, $event)" :checked="pref.isEnabled">{{ pref.description }}</ion-toggle>
+              <ion-toggle :data-testid="'notification-pref-' + pref.enumId + '-toggle'" label-placement="start" @click.prevent="confirmNotificationPrefUpdate(pref.enumId, $event)" :checked="pref.isEnabled">{{ pref.description }}</ion-toggle>
             </ion-item>
           </ion-list>
         </ion-card>

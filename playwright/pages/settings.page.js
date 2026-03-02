@@ -23,14 +23,13 @@ export class SettingsPage {
 
         // Notification Preferences
         this.notificationSection = page.getByText(/notification preference/i);
-        this.notificationPrefToggles = page.getByTestId("notification-pref-toggle");
+        this.notificationPrefToggles = page.getByTestId(/notification-pref-.*-toggle/);
 
         this.loadingOverlay = page.locator("ion-loading, ion-backdrop, .loading-wrapper");
     }
 
     async waitForOverlays() {
         await this.loadingOverlay.waitFor({ state: "hidden", timeout: 15000 }).catch(() => { });
-        await this.page.waitForTimeout(1000);
     }
 
     async goToSettings() {
