@@ -36,11 +36,12 @@ jobs:
 
     steps:
       - name: Pre-config
-        env:
-          TEMP_OMS: ${{ github.event.inputs.oms_name || secrets.OMS_NAME }}
-          TEMP_USERNAME: ${{ github.event.inputs.username || secrets.USERNAME }}
-          TEMP_PASSWORD: ${{ github.event.inputs.password || secrets.PASSWORD }}
         run: |
+          set +x
+          TEMP_OMS="${{ github.event.inputs.oms_name || secrets.OMS_NAME }}"
+          TEMP_USERNAME="${{ github.event.inputs.username || secrets.USERNAME }}"
+          TEMP_PASSWORD="${{ github.event.inputs.password || secrets.PASSWORD }}"
+
           echo "::add-mask::$TEMP_OMS"
           echo "::add-mask::$TEMP_USERNAME"
           echo "::add-mask::$TEMP_PASSWORD"
