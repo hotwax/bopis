@@ -2,8 +2,8 @@ name: Playwright Automation
 
 on:
   schedule:
-    # Run every day at 10:00 AM UTC
-    - cron: '0 10 * * *'
+    # Run every day at 4:30 AM UTC
+    - cron: '30 4 * * *'
   workflow_dispatch:
     inputs:
       oms_name:
@@ -33,11 +33,25 @@ jobs:
     env:
       CI: true
       CURRENT_APP_URL: ${{ secrets.CURRENT_APP_URL }}
-      OMS_NAME: ${{ github.event.inputs.oms_name || secrets.OMS_NAME }}
-      USERNAME: ${{ github.event.inputs.username || secrets.USERNAME }}
-      PASSWORD: ${{ github.event.inputs.password || secrets.PASSWORD }}
 
     steps:
+      - name: Pre-config
+        run: |
+          # 1. Capture inputs into local variables
+          OMS="${{ github.event.inputs.oms_name || secrets.OMS_NAME }}"
+          OMS_USERNAME="${{ github.event.inputs.username || secrets.USERNAME }}"
+          OMS_PASSWORD="${{ github.event.inputs.password || secrets.PASSWORD }}"
+
+          # 2. Register the masks (GitHub will now redact these strings)
+          echo "::add-mask::$OMS"
+          echo "::add-mask::$OMS_USERNAME"
+          echo "::add-mask::$OMS_PASSWORD"
+
+          # 3. Export to the environment for subsequent steps
+          echo "OMS_NAME=$OMS" >> $GITHUB_ENV
+          echo "USERNAME=$OMS_USERNAME" >> $GITHUB_ENV
+          echo "PASSWORD=$OMS_PASSWORD" >> $GITHUB_ENV
+
       - name: Checkout repository
         uses: actions/checkout@v4
 
