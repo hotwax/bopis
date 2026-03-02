@@ -3,15 +3,15 @@
     <ion-tabs>
       <ion-router-outlet></ion-router-outlet>
       <ion-tab-bar slot="bottom">
-        <ion-tab-button tab="catalog" href="/tabs/catalog">
+        <ion-tab-button data-testid="catalog-tab-button" tab="catalog" href="/tabs/catalog">
           <ion-icon :icon="shirtOutline" />
           <ion-label>{{ translate("Catalog") }}</ion-label>
         </ion-tab-button>
-        <ion-tab-button tab="orders" href="/tabs/orders">
+        <ion-tab-button data-testid="orders-tab-button" tab="orders" href="/tabs/orders">
           <ion-icon :icon="infiniteOutline" />
           <ion-label>{{ translate("Orders") }}</ion-label>
         </ion-tab-button>
-        <ion-tab-button tab="more" href="/tabs/settings">
+        <ion-tab-button data-testid="settings-tab-button" tab="more" href="/tabs/settings">
           <ion-icon :icon="settingsOutline" />
           <ion-label>{{ translate("Settings") }}</ion-label>
         </ion-tab-button>

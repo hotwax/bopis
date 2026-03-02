@@ -141,12 +141,12 @@ export class OpenDetailPage {
   async verifyOrderPackedMessage() {
     await this.orderPackedText
       .waitFor({ state: "visible", timeout: 10000 })
-      .catch(() => {});
+      .catch(() => { });
   }
 
   async printPicklist() {
     await expect(this.printPicklistButton).toBeVisible();
-    await this.printPicklistButton.click();
+    await this.printPicklistButton.click({ force: true });
   }
 
   async verifyOrderRejectMessage() {
@@ -291,7 +291,7 @@ export class OpenDetailPage {
     // Verify item count is reduced by 1 (best-effort; some envs keep count stable)
     await this.detailPageIonItems
       .waitFor({ state: "visible", timeout: 5000 })
-      .catch(() => {});
+      .catch(() => { });
     const newCount = await this.detailPageIonItems.count();
     if (newCount === totalItems) {
       console.warn("Item count did not reduce after rejection; continuing.");
