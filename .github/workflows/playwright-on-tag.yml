@@ -36,21 +36,19 @@ jobs:
 
     steps:
       - name: Pre-config
+        env:
+          TEMP_OMS: ${{ github.event.inputs.oms_name || secrets.OMS_NAME }}
+          TEMP_USERNAME: ${{ github.event.inputs.username || secrets.USERNAME }}
+          TEMP_PASSWORD: ${{ github.event.inputs.password || secrets.PASSWORD }}
         run: |
-          # 1. Capture inputs into local variables
-          OMS="${{ github.event.inputs.oms_name || secrets.OMS_NAME }}"
-          OMS_USERNAME="${{ github.event.inputs.username || secrets.USERNAME }}"
-          OMS_PASSWORD="${{ github.event.inputs.password || secrets.PASSWORD }}"
+          echo "::add-mask::$TEMP_OMS"
+          echo "::add-mask::$TEMP_USERNAME"
+          echo "::add-mask::$TEMP_PASSWORD"
 
-          # 2. Register the masks (GitHub will now redact these strings)
-          echo "::add-mask::$OMS"
-          echo "::add-mask::$OMS_USERNAME"
-          echo "::add-mask::$OMS_PASSWORD"
-
-          # 3. Export to the environment for subsequent steps
-          echo "OMS_NAME=$OMS" >> $GITHUB_ENV
-          echo "USERNAME=$OMS_USERNAME" >> $GITHUB_ENV
-          echo "PASSWORD=$OMS_PASSWORD" >> $GITHUB_ENV
+          # Move them to global environment for subsequent steps
+          echo "OMS_NAME=$TEMP_OMS" >> $GITHUB_ENV
+          echo "USERNAME=$TEMP_USERNAME" >> $GITHUB_ENV
+          echo "PASSWORD=$TEMP_PASSWORD" >> $GITHUB_ENV
 
       - name: Checkout repository
         uses: actions/checkout@v4
