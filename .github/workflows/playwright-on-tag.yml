@@ -38,9 +38,15 @@ jobs:
       - name: Pre-config
         run: |
           set +x
-          TEMP_OMS="${{ github.event.inputs.oms_name || secrets.OMS_NAME }}"
-          TEMP_USERNAME="${{ github.event.inputs.username || secrets.USERNAME }}"
-          TEMP_PASSWORD="${{ github.event.inputs.password || secrets.PASSWORD }}"
+          # Read inputs from GITHUB_EVENT_PATH to avoid leakage in logs via string expansion
+          TEMP_OMS=$(jq -r '.inputs.oms_name // empty' "$GITHUB_EVENT_PATH")
+          TEMP_USERNAME=$(jq -r '.inputs.username // empty' "$GITHUB_EVENT_PATH")
+          TEMP_PASSWORD=$(jq -r '.inputs.password // empty' "$GITHUB_EVENT_PATH")
+
+          # Fallback to secrets if inputs are empty
+          [ -z "$TEMP_OMS" ] && TEMP_OMS="${{ secrets.OMS_NAME }}"
+          [ -z "$TEMP_USERNAME" ] && TEMP_USERNAME="${{ secrets.USERNAME }}"
+          [ -z "$TEMP_PASSWORD" ] && TEMP_PASSWORD="${{ secrets.PASSWORD }}"
 
           echo "::add-mask::$TEMP_OMS"
           echo "::add-mask::$TEMP_USERNAME"
