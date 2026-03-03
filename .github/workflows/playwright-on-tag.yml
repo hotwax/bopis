@@ -2,8 +2,8 @@ name: Playwright Automation
 
 on:
   schedule:
-    # Run every day at 10:00 AM UTC
-    - cron: '0 10 * * *'
+    # Run every day at 4:30 AM UTC
+    - cron: '30 4 * * *'
   workflow_dispatch:
     inputs:
       oms_name:
@@ -33,11 +33,30 @@ jobs:
     env:
       CI: true
       CURRENT_APP_URL: ${{ secrets.CURRENT_APP_URL }}
-      OMS_NAME: ${{ github.event.inputs.oms_name || secrets.OMS_NAME }}
-      USERNAME: ${{ github.event.inputs.username || secrets.USERNAME }}
-      PASSWORD: ${{ github.event.inputs.password || secrets.PASSWORD }}
 
     steps:
+      - name: Pre-config
+        run: |
+          set +x
+          # Read inputs from GITHUB_EVENT_PATH to avoid leakage in logs via string expansion
+          TEMP_OMS=$(jq -r '.inputs.oms_name // empty' "$GITHUB_EVENT_PATH")
+          TEMP_USERNAME=$(jq -r '.inputs.username // empty' "$GITHUB_EVENT_PATH")
+          TEMP_PASSWORD=$(jq -r '.inputs.password // empty' "$GITHUB_EVENT_PATH")
+
+          # Fallback to secrets if inputs are empty
+          [ -z "$TEMP_OMS" ] && TEMP_OMS="${{ secrets.OMS_NAME }}"
+          [ -z "$TEMP_USERNAME" ] && TEMP_USERNAME="${{ secrets.USERNAME }}"
+          [ -z "$TEMP_PASSWORD" ] && TEMP_PASSWORD="${{ secrets.PASSWORD }}"
+
+          echo "::add-mask::$TEMP_OMS"
+          echo "::add-mask::$TEMP_USERNAME"
+          echo "::add-mask::$TEMP_PASSWORD"
+
+          # Move them to global environment for subsequent steps
+          echo "OMS_NAME=$TEMP_OMS" >> $GITHUB_ENV
+          echo "USERNAME=$TEMP_USERNAME" >> $GITHUB_ENV
+          echo "PASSWORD=$TEMP_PASSWORD" >> $GITHUB_ENV
+
       - name: Checkout repository
         uses: actions/checkout@v4
 
