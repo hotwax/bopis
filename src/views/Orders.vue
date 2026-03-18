@@ -55,17 +55,17 @@
             <ProductListItem v-for="item in order.shipGroup.items" :key="item.productId" :item="item" />
                         
             <div class="border-top">
-              <ion-button :data-testid="order.shipGroup.shipmentMethodTypeId === 'STOREPICKUP' ? 'ready-pickup-button' : 'ready-ship-button'" :disabled="!hasPermission(Actions.APP_ORDER_UPDATE)" fill="clear" @click.stop="readyForPickup(order, order.shipGroup)">
+              <ion-button :data-testid="order.shipGroup.shipmentMethodTypeId === 'STOREPICKUP' ? 'ready-pickup-button' : 'ready-ship-button'" :disabled="!useUserStore().hasPermission('')" fill="clear" @click.stop="readyForPickup(order, order.shipGroup)">
                 {{ order.shipGroup?.shipmentMethodTypeId === 'STOREPICKUP' ? translate("Ready for pickup") : translate("Ready to ship") }}
               </ion-button>
               <div></div>
-              <ion-button data-testid="listpage-reject-button" v-if="order.shipGroup.shipmentMethodTypeId === 'STOREPICKUP' && !getBopisProductStoreSettings('REQUEST_TRANSFER')" color="danger" :disabled="!hasPermission(Actions.APP_ORDER_UPDATE)" fill="clear" @click.stop="openRejectOrderModal(order)">
+              <ion-button data-testid="listpage-reject-button" v-if="order.shipGroup.shipmentMethodTypeId === 'STOREPICKUP' && !isRequestTransferEnabled" color="danger" :disabled="!useUserStore().hasPermission('')" fill="clear" @click.stop="openRejectOrderModal(order)">
                 {{ translate("Reject") }}
               </ion-button>
-              <ion-button data-testid="listpage-request-transfer-button" v-if="order.shipGroup.shipmentMethodTypeId === 'STOREPICKUP' && getBopisProductStoreSettings('REQUEST_TRANSFER')" color="warning" :disabled="!hasPermission(Actions.APP_ORDER_UPDATE)" fill="clear" @click.stop="confirmRequestTransfer(order)">
+              <ion-button data-testid="listpage-request-transfer-button" v-if="order.shipGroup.shipmentMethodTypeId === 'STOREPICKUP' && isRequestTransferEnabled" color="warning" :disabled="!useUserStore().hasPermission('')" fill="clear" @click.stop="confirmRequestTransfer(order)">
                 {{ translate("Request Transfer") }}
               </ion-button>
-              <ion-button size="default" v-if="getBopisProductStoreSettings('PRINT_PICKLISTS')" slot="end" fill="clear" @click.stop="printPicklist(order, order.shipGroup)">
+              <ion-button size="default" v-if="isPrintPicklistsEnabled" slot="end" fill="clear" @click.stop="printPicklist(order, order.shipGroup)">
                   <ion-icon :icon="printOutline" slot="icon-only" />
               </ion-button>
             </div>
@@ -79,7 +79,7 @@
               <ion-label class="ion-text-wrap">
                 <h1>{{ order.customerName }}</h1>
                 <p data-testid="order-name-tag">{{ order.orderName ? order.orderName : order.orderId }}</p>
-                <p v-if="getBopisProductStoreSettings('ENABLE_TRACKING')">{{ order.pickers ? translate("Picked by", { pickers: order.pickers }) : translate("No picker assigned.") }}</p>
+                <p v-if="isTrackingEnabled">{{ order.pickers ? translate("Picked by", { pickers: order.pickers }) : translate("No picker assigned.") }}</p>
               </ion-label>
               <ion-badge v-if="order.orderDate" color="dark" slot="end">{{ timeFromNowInMillis(order.orderDate) }}</ion-badge>
             </ion-item>
@@ -94,10 +94,10 @@
             <ProductListItem v-for="item in order.items" :key="item.productId" :item="item" :orderId="order.orderId" :customerId="order.customerId" :currencyUom="order.currencyUom" orderType="packed"/>
             <div class="border-top">
 
-              <ion-button data-testid="handover-button" :disabled="!hasPermission(Actions.APP_ORDER_UPDATE)" fill="clear" @click.stop="deliverShipment(order)">
+              <ion-button data-testid="handover-button" :disabled="!useUserStore().hasPermission('')" fill="clear" @click.stop="deliverShipment(order)">
                 {{ order.shipmentMethodTypeId === 'STOREPICKUP' ? translate("Handover") : translate("Ship") }}
               </ion-button>
-              <ion-button size="default" data-testid="packing-slip-button" v-if="getBopisProductStoreSettings('PRINT_PACKING_SLIPS')" fill="clear" slot="end" @click.stop="printPackingSlip(order)">
+              <ion-button size="default" data-testid="packing-slip-button" v-if="isPrintPackingSlipEnabled" fill="clear" slot="end" @click.stop="printPackingSlip(order)">
                 <ion-icon slot="icon-only" :icon="printOutline" />
               </ion-button>
 
@@ -121,11 +121,11 @@
 
             <ProductListItem v-for="item in order.items" :key="item.productId" :item="item" :orderId="order.orderId" :customerId="order.customerId" :currencyUom="order.currencyUom" orderType="completed"/>          
             <div class="border-top">
-              <ion-button data-testid="proof-of-delivery-button" fill="clear" v-if="getBopisProductStoreSettings('HANDOVER_PROOF')" @click.stop="openProofOfDeliveryModal(order, communicationEventOrderIds.has(order.orderId))">
+              <ion-button data-testid="proof-of-delivery-button" fill="clear" v-if="isHandoverProofEnabled" @click.stop="openProofOfDeliveryModal(order, communicationEventOrderIds.has(order.orderId))">
                 {{ communicationEventOrderIds.has(order.orderId) ? translate('View Proof of Delivery') : translate('Proof of Delivery') }}
               </ion-button>
               <div></div>
-              <ion-button  size="default" data-testid="packing-slip-button" v-if="getBopisProductStoreSettings('PRINT_PACKING_SLIPS')" fill="clear" slot="end" @click.stop="printPackingSlip(order)">
+              <ion-button  size="default" data-testid="packing-slip-button" v-if="isPrintPackingSlipEnabled" fill="clear" slot="end" @click.stop="printPackingSlip(order)">
                 <ion-icon slot="icon-only" :icon="printOutline" />
               </ion-button>
             </div>
@@ -153,20 +153,16 @@ import { onMounted, onUnmounted, ref, computed } from "vue";
 import ProductListItem from '@/components/ProductListItem.vue'
 import { mailOutline, notificationsOutline, printOutline, trailSignOutline } from "ionicons/icons";
 import { useRouter } from 'vue-router'
-import { commonUtil } from '@/utils/commonUtil'
+import { commonUtil, emitter, logger, translate, useNotificationStore } from '@common'
 import { DateTime } from 'luxon';
-import emitter from "@/event-bus"
-import { hasError } from '@/adapter';
-import { translate } from "@hotwax/dxp-components";
+
 import AssignPickerModal from "./AssignPickerModal.vue";
-import { OrderService } from "@/services/OrderService";
-import { UserService } from "@/services/UserService";
-import { Actions, hasPermission } from '@/authorization'
-import logger from "@/logger";
+import { useOrder } from "@/composables/useOrder";
 import RejectOrderItemModal from "@/components/RejectOrderItemModal.vue";
 import ProofOfDeliveryModal from "@/components/ProofOfDeliveryModal.vue";
 import { useUserStore } from "@/store/user";
 import { useOrderStore } from "@/store/order";
+import { useProductStore } from "@/store/productStore"
 
 const router = useRouter();
 
@@ -182,12 +178,26 @@ const completedOrders = computed(() => useOrderStore().getCompletedOrders);
 const isPackedOrdersScrollable = computed(() => useOrderStore().isPackedOrdersScrollable);
 const isOpenOrdersScrollable = computed(() => useOrderStore().isOpenOrdersScrollable);
 const isCompletedOrdersScrollable = computed(() => useOrderStore().isCompletedOrdersScrollable);
-const notifications = computed(() => useUserStore().getNotifications);
-const unreadNotificationsStatus = computed(() => useUserStore().hasUnreadNotifications);
-const getBopisProductStoreSettings = (property: string) => (useUserStore().getBopisProductStoreSettings as any)(property);
+const notifications = computed(() => useNotificationStore().getNotifications);
+const unreadNotificationsStatus = computed(() => useNotificationStore().hasUnreadNotifications);
+const isHandoverProofEnabled = computed(() => useProductStore().isHandoverProofEnabled)
+const isPrintPackingSlipEnabled = computed(() => useProductStore().isPrintPackingSlipEnabled)
+const isTrackingEnabled = computed(() => useProductStore().isTrackingEnabled)
+const isPrintPicklistsEnabled = computed(() => useProductStore().isPrintPicklistsEnabled)
+const isRequestTransferEnabled = computed(() => useProductStore().isRequestTransferEnabled)
 const order = computed(() => useOrderStore().current);
 const communicationEvents = computed(() => useOrderStore().getCommunicationEvents);
-const currentFacility = computed(() => useUserStore().getCurrentFacility);
+const currentFacility = computed(() => useProductStore().getCurrentFacility);
+
+const {
+  sendPickupScheduledNotification,
+  printPicklist: printPicklistApi,
+  createPicklist: createPicklistApi,
+  convertToShipToStore,
+  sendPickupNotification,
+  printPackingSlip: printPackingSlipApi,
+  ensurePartyRole
+} = useOrder();
 
 const communicationEventOrderIds = computed(() => {
   return new Set((communicationEvents.value || []).map((e: any) => e.orderId));
@@ -246,7 +256,7 @@ async function printPackingSlip(order: any) {
   }
 
   order.isGeneratingPackingSlip = true;
-  await OrderService.printPackingSlip([order.shipmentId]);
+  await printPackingSlipApi([order.shipmentId]);
   order.isGeneratingPackingSlip = false;
 }
 
@@ -267,22 +277,22 @@ async function viewOrder(orderData: any, shipGroupSeqId: any, orderType: any) {
 }
 
 async function getPickupOrders(vSize?: any, vIndex?: any) {
-  const viewSize = vSize ? vSize : process.env.VUE_APP_VIEW_SIZE;
+  const viewSize = vSize ? vSize : import.meta.env.VITE_VIEW_SIZE;
   const viewIndex = vIndex ? vIndex : 0;
   await useOrderStore().fetchOpenOrders({ viewSize, viewIndex, queryString: queryString.value, facilityId: (currentFacility.value as any)?.facilityId });
 }
 
 async function getPackedOrders(vSize?: any, vIndex?: any) {
-  const viewSize = vSize ? vSize : process.env.VUE_APP_VIEW_SIZE;
+  const viewSize = vSize ? vSize : import.meta.env.VITE_VIEW_SIZE;
   const viewIndex = vIndex ? vIndex : 0;
   await useOrderStore().fetchPackedOrders({ viewSize, viewIndex, queryString: queryString.value, facilityId: (currentFacility.value as any)?.facilityId });
 }
 
 async function getCompletedOrders(vSize?: any, vIndex?: any) {
-  const viewSize = vSize ? vSize : process.env.VUE_APP_VIEW_SIZE;
+  const viewSize = vSize ? vSize : import.meta.env.VITE_VIEW_SIZE;
   const viewIndex = vIndex ? vIndex : 0;
   await useOrderStore().fetchCompletedOrders({ viewSize, viewIndex, queryString: queryString.value, facilityId: (currentFacility.value as any)?.facilityId });
-  if (hasPermission(Actions.APP_PROOF_OF_DELIVERY_PREF_UPDATE)) await useOrderStore().getCommunicationEvents({ orders: completedOrders.value });
+  if (useUserStore().hasPermission('BOPIS_POD_UPDATE')) await useOrderStore().getCommunicationEvents({ orders: completedOrders.value });
 }
 
 function enableScrolling() {
@@ -307,21 +317,21 @@ async function loadMoreProducts(event: any) {
   if (segmentSelected.value === 'open') {
     getPickupOrders(
       undefined,
-      Math.ceil(orders.value.length / (process.env.VUE_APP_VIEW_SIZE as any)).toString()
+      Math.ceil(orders.value.length / (import.meta.env.VITE_VIEW_SIZE as any)).toString()
     ).then(async () => {
       await event.target.complete();
     });
   } else if (segmentSelected.value === 'packed') {
     getPackedOrders(
       undefined,
-      Math.ceil(packedOrders.value.length / (process.env.VUE_APP_VIEW_SIZE as any)).toString()
+      Math.ceil(packedOrders.value.length / (import.meta.env.VITE_VIEW_SIZE as any)).toString()
     ).then(async () => {
       await event.target.complete();
     });
   } else {
     getCompletedOrders(
       undefined,
-      Math.ceil(completedOrders.value.length / (process.env.VUE_APP_VIEW_SIZE as any)).toString()
+      Math.ceil(completedOrders.value.length / (import.meta.env.VITE_VIEW_SIZE as any)).toString()
     ).then(async () => {
       await event.target.complete();
     });
@@ -329,7 +339,7 @@ async function loadMoreProducts(event: any) {
 }
 
 async function readyForPickup(orderData: any, shipGroup: any) {
-  if (getBopisProductStoreSettings('ENABLE_TRACKING') && !shipGroup.picklistId) return assignPicker(orderData, shipGroup, (currentFacility.value as any)?.facilityId);
+  if (isTrackingEnabled && !shipGroup.picklistId) return assignPicker(orderData, shipGroup, (currentFacility.value as any)?.facilityId);
   const pickup = shipGroup.shipmentMethodTypeId === 'STOREPICKUP';
   const header = pickup ? translate('Ready for pickup') : translate('Ready to ship');
   const message = pickup ? translate('An email notification will be sent to that their order is ready for pickup. This order will also be moved to the packed orders tab.', { customerName: orderData.customerName, space: '<br/><br/>' }) : '';
@@ -362,7 +372,7 @@ async function readyForPickup(orderData: any, shipGroup: any) {
 async function deliverShipment(orderData: any) {
   await useOrderStore().deliverShipment(orderData)
     .then((resp) => {
-      if (!hasError(resp as any)) {
+      if (!commonUtil.hasError(resp as any)) {
         commonUtil.showToast(translate('Order delivered to', { customerName: orderData.customerName }))
       }
     })
@@ -412,8 +422,8 @@ async function sendReadyForPickupEmail(orderData: any) {
         text: translate('Send'),
         handler: async () => {
           try {
-            const resp = await OrderService.sendPickupScheduledNotification({ shipmentId: orderData.shipmentId });
-            if (!hasError(resp)) {
+            const resp = await sendPickupScheduledNotification({ shipmentId: orderData.shipmentId });
+            if (!commonUtil.hasError(resp)) {
               commonUtil.showToast(translate("Email sent successfully"))
             } else {
               commonUtil.showToast(translate("Something went wrong while sending the email."))
@@ -443,18 +453,18 @@ function viewNotifications() {
 
 async function printPicklist(orderData: any, shipGroup: any) {
   if (shipGroup.picklistId) {
-    await OrderService.printPicklist(shipGroup.picklistId)
+    await printPicklistApi(shipGroup.picklistId)
     return;
   }
 
-  if (!getBopisProductStoreSettings('ENABLE_TRACKING')) {
+  if (!isTrackingEnabled) {
     try {
-      const resp = await UserService.ensurePartyRole({
+      const resp = await useOrder().ensurePartyRole({
         partyId: "_NA_",
         roleTypeId: "WAREHOUSE_PICKER",
       })
 
-      if (hasError(resp)) {
+      if (commonUtil.hasError(resp)) {
         throw resp.data;
       }
     } catch (error) {
@@ -502,10 +512,10 @@ async function createPicklist(orderData: any, selectedPicker: any) {
   };
 
   try {
-    resp = await OrderService.createPicklist(payload);
-    if (!hasError(resp)) {
+    resp = await createPicklistApi(payload);
+    if (!commonUtil.hasError(resp)) {
       // generating picklist after creating a new picklist
-      await OrderService.printPicklist(resp.data.picklistId)
+      await printPicklistApi(resp.data.picklistId)
       const currentOrders = JSON.parse(JSON.stringify(orders.value))
       const orderIndex = currentOrders.findIndex((o: any) => o.orderId === orderData.orderId);
       let orderShipGroups = currentOrders[orderIndex].shipGroups || [];
@@ -567,11 +577,11 @@ async function confirmRequestTransfer(orderData: any) {
 async function requestTransfer(orderData: any) {
   emitter.emit("presentLoader");
   try {
-    const resp = await OrderService.convertToShipToStore({
+    const resp = await convertToShipToStore({
       orderId: orderData.orderId,
       shipGroupSeqId: orderData.shipGroup.shipGroupSeqId
     });
-    if (!hasError(resp)) {
+    if (!commonUtil.hasError(resp)) {
       commonUtil.showToast(translate('Order marked as ship to store'));
       await useOrderStore().removeOpenOrder({ order: orderData, shipGroup: orderData.shipGroup })
     } else {
@@ -603,9 +613,9 @@ async function openProofOfDeliveryModal(orderData: any, isViewModeOnly: any) {
 
     try {
       // Send the proof of delivery email
-      const resp = await OrderService.sendPickupNotification(data.proofOfDeliveryData);
+      const resp = await sendPickupNotification(data.proofOfDeliveryData);
 
-      if (hasError(resp)) {
+      if (commonUtil.hasError(resp)) {
         logger.error("Pickup notification failed:", resp);
         commonUtil.showToast(translate("Unable to save the details. Please try again."));
       } else {

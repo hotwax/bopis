@@ -39,7 +39,7 @@
 import { IonCard, IonContent, IonHeader, IonInfiniteScrollContent, IonInfiniteScroll, IonItem, IonLabel, IonPage, IonSearchbar, IonTitle, IonToolbar, onIonViewWillEnter } from '@ionic/vue';
 import { computed, ref } from 'vue';
 import { useRouter } from "vue-router";
-import { DxpShopifyImg, translate } from '@hotwax/dxp-components'
+import { DxpShopifyImg, translate } from '@common'
 import { useProductStore } from "@/store/product";
 import { useOrderStore } from "@/store/order";
 
@@ -69,7 +69,7 @@ const enableScrolling = () => {
 };
 
 async function getProducts(vSize?: any, vIndex?: any) {
-  const viewSize = vSize ? vSize : (process.env.VUE_APP_VIEW_SIZE as any);
+  const viewSize = vSize ? vSize : (import.meta.env.VITE_VIEW_SIZE as any);
   const viewIndex = vIndex ? vIndex : 0;
   const payload = {
     viewSize,
@@ -84,7 +84,7 @@ const loadMoreProducts = async (event: any) => {
   if(!(isScrollingEnabled.value && isScrollable.value)) {
     await event.target.complete();
   }
-  const viewSize = (process.env.VUE_APP_VIEW_SIZE as any);
+  const viewSize = (import.meta.env.VITE_VIEW_SIZE as any);
   await getProducts(
     undefined,
     Math.ceil(

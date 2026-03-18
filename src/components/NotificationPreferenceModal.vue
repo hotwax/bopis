@@ -31,17 +31,13 @@
 import { IonButtons, IonButton, IonContent, IonFab, IonFabButton, IonHeader, IonIcon, IonItem, IonList, IonTitle, IonToggle, IonToolbar, modalController, alertController } from "@ionic/vue";
 import { computed, onBeforeMount, ref } from "vue";
 import { closeOutline, save } from "ionicons/icons";
-import { translate } from '@hotwax/dxp-components'
-import { commonUtil } from "@/utils/commonUtil";
-import emitter from "@/event-bus"
-import { fireBaseUtil } from "@/utils/fireBaseUtil";
-import { subscribeTopic, unsubscribeTopic } from '@/adapter'
-import logger from "@/logger";
+import { commonUtil, emitter, firebaseMessaging, logger, translate, useNotificationStore } from '@common';
+import { useProductStore } from "@/store/productStore";
 import { useUserStore as usePiniaUserStore } from "@/store/user";
 
 const userStore = usePiniaUserStore();
-const notificationPrefs = computed(() => userStore.getNotificationPrefs);
-const currentFacility = computed(() => userStore.getCurrentFacility);
+const notificationPrefs = computed(() => useNotificationStore().getNotificationPrefs);
+const currentFacility = computed(() => useProductStore().getCurrentFacility);
 
 const notificationPrefState = ref({} as any);
 const notificationPrefToUpdate = ref({
@@ -56,7 +52,7 @@ const isButtonDisabled = computed(() => {
 });
 
 onBeforeMount(async () => {
-  await userStore.fetchNotificationPreferences();
+  await useNotificationStore().fetchNotificationPreferences(import.meta.env.VITE_NOTIF_ENUM_TYPE_ID, import.meta.env.VITE_NOTIF_APP_ID, userStore.getUserProfile?.userLoginId, (enumId: string) => firebaseMessaging.generateTopicName(commonUtil.getOMSInstanceName(), (useProductStore().getCurrentFacility as any)?.facilityId, enumId));
   notificationPrefState.value = notificationPrefs.value.reduce((prefs: any, pref: any) => {
     prefs[pref.enumId] = pref.isEnabled
     return prefs
@@ -106,14 +102,15 @@ async function updateNotificationPref() {
 
 async function handleTopicSubscription() {
   const facilityId = (currentFacility.value as any)?.facilityId;
+  const notificationStore = useNotificationStore();
   const subscribeRequests = notificationPrefToUpdate.value.subscribe.map(async (enumId: string) => {
-    const topicName = fireBaseUtil.generateTopicName(facilityId, enumId);
-    return subscribeTopic(topicName, process.env.VUE_APP_NOTIF_APP_ID);
+    const topicName = firebaseMessaging.generateTopicName(commonUtil.getOMSInstanceName(), facilityId, enumId);
+    return notificationStore.subscribeTopic(topicName, import.meta.env.VITE_NOTIF_APP_ID);
   });
 
   const unsubscribeRequests = notificationPrefToUpdate.value.unsubscribe.map(async (enumId: string) => {
-    const topicName = fireBaseUtil.generateTopicName(facilityId, enumId);
-    return unsubscribeTopic(topicName, process.env.VUE_APP_NOTIF_APP_ID);
+    const topicName = firebaseMessaging.generateTopicName(commonUtil.getOMSInstanceName(), facilityId, enumId);
+    return notificationStore.unsubscribeTopic(topicName, import.meta.env.VITE_NOTIF_APP_ID);
   });
 
   const responses = await Promise.allSettled([...subscribeRequests, ...unsubscribeRequests]);

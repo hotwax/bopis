@@ -36,18 +36,18 @@ import { onMounted, onBeforeUnmount, ref } from "vue";
 import { Redirect } from "@shopify/app-bridge/actions";
 import createApp from "@shopify/app-bridge";
 import { useRouter, useRoute } from "vue-router";
-import emitter from "@/event-bus"
-import { ShopifyService } from "@/services/ShopifyService"
+import { cookieHelper, emitter, translate } from "@common"
+import { useOrder } from "@/composables/useOrder"
 import { getSessionToken } from "@shopify/app-bridge-utils";
 import { useUserStore } from "@/store/user";
 import Logo from '@/components/Logo.vue'
-import { translate } from '@hotwax/dxp-components'
 
 const router = useRouter();
 const route = useRoute();
+const { generateAccessToken } = useOrder();
 
-const apiKey = ref(process.env.VUE_APP_SHOPIFY_API_KEY);
-const shopConfigs = ref(JSON.parse(process.env.VUE_APP_SHOPIFY_SHOP_CONFIG || '{}'));
+const apiKey = ref(import.meta.env.VITE_SHOPIFY_API_KEY);
+const shopConfigs = ref(JSON.parse(import.meta.env.VITE_SHOPIFY_SHOP_CONFIG || '{}'));
 const shopOrigin = ref('');
 
 const session = route.query['session'];
@@ -58,11 +58,11 @@ const timestamp = route.query['timestamp'];
 const code = route.query['code'];
 
 const authorise = (shop: any, host: any, apiKeyVal: any) => {
-  const scopes = process.env.VUE_APP_SHOPIFY_SCOPES
+  const scopes = import.meta.env.VITE_SHOPIFY_SCOPES
   emitter.emit("presentLoader");
   const shopConfig = shopConfigs.value[shop];
   if (!apiKeyVal) apiKeyVal = shopConfig ? shopConfig.apiKey : '';
-  const redirectUri = process.env.VUE_APP_SHOPIFY_REDIRECT_URI;
+  const redirectUri = import.meta.env.VITE_SHOPIFY_REDIRECT_URI;
   const permissionUrl = `https://${shop}/admin/oauth/authorize?client_id=${apiKeyVal}&scope=${scopes}&redirect_uri=${redirectUri}`;
 
   if (window.top == window.self) {
@@ -87,7 +87,7 @@ onMounted(async () => {
   const shopConfig = shopConfigs.value[shopVal];
   const apiKeyVal = shopConfig ? shopConfig.apiKey : '';
   const oms = shopConfig ? shopConfig.oms : '';
-  useUserStore().setUserInstanceUrl(oms);
+  cookieHelper().set("oms", oms);
 
   if (session) {
     const app = createApp({
@@ -102,7 +102,7 @@ onMounted(async () => {
   } else if (code) {
     // TODO store returned status and perform operation based upon it
     try {
-      const resp = await ShopifyService.generateAccessToken({
+      const resp = await generateAccessToken({
         data: {
           "code": code,
           "shop": shopVal,

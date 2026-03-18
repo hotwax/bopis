@@ -89,10 +89,8 @@
 import { ref, onMounted, computed } from "vue";
 import { IonButtons, IonButton, IonContent, IonHeader, IonToolbar, IonIcon, IonTitle, IonItem, IonInput, IonLabel, IonFab, IonFabButton, IonSelect, IonSelectOption, IonCheckbox, modalController } from "@ionic/vue";
 import { closeOutline, saveOutline } from "ionicons/icons";
-import logger from "@/logger";
-import { commonUtil } from "@/utils/commonUtil";
-import { translate } from "@hotwax/dxp-components";
-import { OrderService } from "@/services/OrderService";
+import { commonUtil, logger, translate } from "@common";
+import { useOrder } from "@/composables/useOrder";
 import { useOrderStore } from "@/store/order";
 import { z } from "zod";
 
@@ -110,6 +108,7 @@ const isEmailPrefilled = ref(false);
 const isIdPrefilled = ref(false);
 const idNumberValue = ref("");
 const orderStore = useOrderStore();
+const { getBillingDetails: getBillingDetailsApi, fetchOrderAttributes } = useOrder();
 const communicationEvent = computed(() => orderStore.getCommunicationEventsByOrderId(props.order?.orderId));
 
 const orderContent = computed(() => {
@@ -147,7 +146,7 @@ const getBillingDetails = async () => {
   if (!props.order?.orderId) return;
   
   try {
-    const resp = await OrderService.getBillingDetails({ orderId: props.order.orderId });
+    const resp = await getBillingDetailsApi({ orderId: props.order.orderId });
     billingDetails.value = resp?.data?.billingDetails || {};
 
     form.value.name = orderContent.value?.name || billingDetails.value?.billingAddress?.toName || "";
@@ -167,7 +166,7 @@ const getPrefilledValue = async () => {
   if (!props.order?.orderId) return;
   
   try {
-    const resp = await OrderService.fetchOrderAttributes(props.order.orderId);
+    const resp = await fetchOrderAttributes(props.order.orderId);
     const data = resp.data as any;
     const customerAttr = data.find((a: any) => a.attrName === "customerId");
     

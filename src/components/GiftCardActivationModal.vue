@@ -29,8 +29,8 @@
       <ion-item lines="none">
         <ion-icon :icon="giftOutline" slot="start" />
         <ion-label>
-          {{ getProductIdentificationValue(productIdentificationPref.primaryId, getProduct(item.productId)) ? getProductIdentificationValue(productIdentificationPref.primaryId, getProduct(item.productId)) : item.productName }}
-          <p>{{ getProductIdentificationValue(productIdentificationPref.secondaryId, getProduct(item.productId)) }}</p>
+          {{ commonUtil.getProductIdentificationValue(productIdentificationPref.primaryId, getProduct(item.productId)) ? commonUtil.getProductIdentificationValue(productIdentificationPref.primaryId, getProduct(item.productId)) : item.productName }}
+          <p>{{ commonUtil.getProductIdentificationValue(productIdentificationPref.secondaryId, getProduct(item.productId)) }}</p>
         </ion-label>
         <ion-label slot="end">{{ commonUtil.formatCurrency(item.unitPrice, currencyUom) }}</ion-label>
       </ion-item>
@@ -59,11 +59,9 @@
 import { IonButton, IonButtons, IonContent, IonFab, IonFabButton, IonHeader, IonIcon, IonInput, IonItem, IonLabel, IonList, IonNote, IonSpinner, IonTitle, IonToolbar, alertController, modalController } from "@ionic/vue";
 import { computed, ref } from "vue";
 import { cameraOutline, cardOutline, closeOutline, giftOutline, stopOutline } from "ionicons/icons";
-import { getProductIdentificationValue, translate, useProductIdentificationStore } from '@hotwax/dxp-components'
-import { UtilService } from "@/services/UtilService";
-import { commonUtil } from '@/utils/commonUtil';
-import { hasError } from '@/adapter'
-import logger from "@/logger";
+import { useProductStore as useProductStoreSettings } from '@/store/productStore'
+import { useOrder } from "@/composables/useOrder";
+import { commonUtil, logger, translate } from '@common';
 import { DateTime } from 'luxon';
 import { StreamBarcodeReader } from "vue-barcode-reader";
 import { useProductStore } from "@/store/product";
@@ -76,7 +74,7 @@ const isLoading = ref(false)
 const activationCode = ref("")
 const isCameraEnabled = ref(false)
 
-const productIdentificationPref = computed(() => useProductIdentificationStore().getProductIdentificationPref)
+const productIdentificationPref = computed(() => useProductStoreSettings().getProductIdentificationPref)
 const getProduct = (productId: string) => productStore.getProduct(productId)
 
 function closeModal(payload = {}) {
@@ -109,7 +107,7 @@ async function confirmSave() {
 
 async function activateGitCard() {
   try {
-    const resp = await UtilService.activateGiftCard({
+    const resp = await useOrder().activateGiftCard({
       orderId: props.orderId,
       orderItemSeqId: props.item.orderItemSeqId,
       amount: props.item.unitPrice,
@@ -119,7 +117,7 @@ async function activateGitCard() {
       fulfillmentDate: Date.now()
     })
     
-    if (!hasError(resp)) {
+    if (!commonUtil.hasError(resp)) {
       commonUtil.showToast(translate("Gift card activated successfully."))
       closeModal({ isGCActivated: true, item: props.item })
     } else {

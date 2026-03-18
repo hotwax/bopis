@@ -26,9 +26,9 @@
         </ion-thumbnail>
 
         <ion-label class="ion-text-wrap">
-          <h2>{{ getProductIdentificationValue(productIdentificationPref.primaryId, getProduct(item.productId))|| getProduct(item.productId).productName }}
+          <h2>{{ commonUtil.getProductIdentificationValue(productIdentificationPref.primaryId, getProduct(item.productId))|| getProduct(item.productId).productName }}
           </h2>
-          <p>{{ getProductIdentificationValue(productIdentificationPref.secondaryId, getProduct(item.productId)) }}</p>
+          <p>{{ commonUtil.getProductIdentificationValue(productIdentificationPref.secondaryId, getProduct(item.productId)) }}</p>
           <ion-badge color="dark" v-if="orderUtil.isKit(item)">{{ translate("Kit") }}</ion-badge>
         </ion-label>
 
@@ -49,13 +49,12 @@
 import { IonButton, IonButtons, IonContent, IonHeader, IonIcon, IonTitle, IonToolbar, IonSelect, IonSelectOption, IonItem, IonThumbnail, IonLabel, IonFab, IonFabButton, IonBadge, alertController, modalController } from '@ionic/vue';
 import { closeOutline, warningOutline, trashOutline } from 'ionicons/icons';
 import { computed, onMounted, ref } from 'vue';
-import { DxpShopifyImg, translate, getProductIdentificationValue, useProductIdentificationStore } from '@hotwax/dxp-components';
+import { DxpShopifyImg, translate, commonUtil } from '@common';
+import { useProductStore as useProductStoreSettings } from '@/store/productStore'
 import { orderUtil } from '@/utils/orderUtil';
-import { commonUtil } from '@/utils/commonUtil'
 import { useOrderStore } from '@/store/order';
-import { useProductStore } from '@/store/product';
+import { useProductStore as useProduct } from '@/store/product';
 import { useUserStore } from '@/store/user';
-import { useUtilStore } from '@/store/util';
 
 const props = defineProps({
   orderProps: {
@@ -73,31 +72,24 @@ const props = defineProps({
 })
 
 const orderStore = useOrderStore();
-const productStore = useProductStore();
-const utilStore = useUtilStore();
 const userStore = useUserStore();
 
 const rejectEntireOrderReasonId = ref("REJ_AVOID_ORD_SPLIT");
 
-const getProduct = (productId: string) => productStore.getProduct(productId);
-const rejectReasons = computed(() => utilStore.getRejectReasons);
-const partialOrderRejectionConfig = computed(() => userStore.getPartialOrderRejectionConfig);
-const productIdentificationPref = computed(() => useProductIdentificationStore().getProductIdentificationPref);
-
-const isPartialRejectionEnabled = computed(() => {
-  const config = partialOrderRejectionConfig.value?.settingValue;
-  return !!(config && JSON.parse(config));
-});
+const getProduct = (productId: string) => useProduct().getProduct(productId);
+const rejectReasons = computed(() => orderStore.getRejectReasons);
+const isPartialOrderRejectionEnabled = computed(() => useProductStoreSettings().isPartialOrderRejectionEnabled);
+const productIdentificationPref = computed(() => useProductStoreSettings().getProductIdentificationPref);
 
 const showRejectionWarning = computed(() => {
   const hasRejectedItems = !!props.orderProps?.shipGroup?.items?.some((item: any) => !!item.rejectReasonId);
-  return !isPartialRejectionEnabled.value && hasRejectedItems;
+  return !isPartialOrderRejectionEnabled.value && hasRejectedItems;
 });
 
 const canConfirm = computed(() => {
   const items = props.orderProps?.shipGroup?.items;
   if (!items) return false;
-  if (isPartialRejectionEnabled.value) {
+  if (isPartialOrderRejectionEnabled.value) {
     return items.some((item: any) => !!item.rejectReasonId);
   } else {
     return items.every((item: any) => !!item.rejectReasonId);
@@ -105,13 +97,13 @@ const canConfirm = computed(() => {
 });
 
 onMounted(() => {
-  utilStore.fetchRejectReasons();
+  orderStore.fetchRejectReasons();
 });
 
 function onReasonChange(event: any, selectedItem: any) {
   const selectedValue = event.detail.value;
   const items = props.orderProps?.shipGroup?.items;
-  if (!isPartialRejectionEnabled.value && items) {
+  if (!isPartialOrderRejectionEnabled.value && items) {
     items.forEach((item: any) => {
       item.rejectReasonId = item.orderItemSeqId === selectedItem.orderItemSeqId
         ? selectedValue
@@ -152,9 +144,7 @@ async function confirmSave() {
             shipGroup,
             isEntireOrderRejected: (props.orderProps?.shipGroup?.items?.length === updatedItems.length)
           });
-          if (resp) {
-            await orderStore.fetchOpenOrders({ viewSize: process.env.VUE_APP_VIEW_SIZE, viewIndex: 0, queryString: '', facilityId: commonUtil.getCurrentFacilityId() });
-          }
+            await orderStore.fetchOpenOrders({ viewSize: import.meta.env.VITE_VIEW_SIZE, viewIndex: 0, queryString: '', facilityId: (useProductStoreSettings().getCurrentFacility as any)?.facilityId });
           closeModal();              
         }
       }

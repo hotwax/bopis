@@ -19,8 +19,8 @@
             <ion-item lines="none">
               <ion-label class="ion-text-wrap">
                 <p class="overline">{{ currentVariant.brandName }}</p>
-                <h1>{{ getProductIdentificationValue(productIdentificationPref.primaryId, currentVariant) }}</h1>
-                <h2>{{ getProductIdentificationValue(productIdentificationPref.secondaryId, currentVariant) }}</h2>
+                <h1>{{ commonUtil.getProductIdentificationValue(productIdentificationPref.primaryId, currentVariant) }}</h1>
+                <h2>{{ commonUtil.getProductIdentificationValue(productIdentificationPref.secondaryId, currentVariant) }}</h2>
               </ion-label>
               <!-- Price is given undefined to $n funtction on first render, hence, conditional rendering with empty string -->
               <ion-note slot="end">{{ currentVariant.LIST_PRICE_PURCHASE_USD_STORE_GROUP_price ? $n(currentVariant.LIST_PRICE_PURCHASE_USD_STORE_GROUP_price, 'currency', currency ) : '' }}</ion-note>
@@ -109,8 +109,8 @@
                   <DxpShopifyImg :src="getProduct(order.currentItem.productId).mainImageUrl" size="small" />
                 </ion-thumbnail>
                 <ion-label class="ion-text-wrap">
-                  <h2>{{ getProductIdentificationValue(productIdentificationPref.primaryId, getProduct(order.currentItem.productId)) ? getProductIdentificationValue(productIdentificationPref.primaryId, getProduct(order.currentItem.productId)) : order.currentItem.productId }}</h2>
-                  <p class="ion-text-wrap">{{ getProductIdentificationValue(productIdentificationPref.secondaryId, getProduct(order.currentItem.productId)) }}</p>
+                  <h2>{{ commonUtil.getProductIdentificationValue(productIdentificationPref.primaryId, getProduct(order.currentItem.productId)) ? commonUtil.getProductIdentificationValue(productIdentificationPref.primaryId, getProduct(order.currentItem.productId)) : order.currentItem.productId }}</h2>
+                  <p class="ion-text-wrap">{{ commonUtil.getProductIdentificationValue(productIdentificationPref.secondaryId, getProduct(order.currentItem.productId)) }}</p>
                 </ion-label>
                 <ion-note slot="end">{{ translate(order.currentItem.quantity == 1 ? "unit" : "units", { item: order.currentItem.quantity }) }}</ion-note>
               </ion-item>
@@ -123,8 +123,8 @@
                   <DxpShopifyImg :src="getProduct(item.productId).mainImageUrl" size="small" />
                 </ion-thumbnail>
                 <ion-label class="ion-text-wrap" >
-                  <h2>{{ getProductIdentificationValue(productIdentificationPref.primaryId, getProduct(item.productId)) ? getProductIdentificationValue(productIdentificationPref.primaryId, getProduct(item.productId)) : item.productId }}</h2>
-                  <p class="ion-text-wrap">{{ getProductIdentificationValue(productIdentificationPref.secondaryId, getProduct(item.productId)) }}</p>
+                  <h2>{{ commonUtil.getProductIdentificationValue(productIdentificationPref.primaryId, getProduct(item.productId)) ? commonUtil.getProductIdentificationValue(productIdentificationPref.primaryId, getProduct(item.productId)) : item.productId }}</h2>
+                  <p class="ion-text-wrap">{{ commonUtil.getProductIdentificationValue(productIdentificationPref.secondaryId, getProduct(item.productId)) }}</p>
                 </ion-label>
                 <ion-note slot="end">{{ translate(item.quantity == 1 ? "unit" : "units", { item: item.quantity }) }}</ion-note>
               </ion-item>
@@ -144,13 +144,10 @@ import { useProductStore } from "@/store/product";
 import { useUserStore } from "@/store/user";
 import { useStockStore } from "@/store/stock";
 import { useOrderStore } from "@/store/order";
-import { StockService } from '@/services/StockService'
-import { commonUtil } from "@/utils/commonUtil";
-import { hasError } from '@/adapter'
+import { DxpShopifyImg, commonUtil, logger, translate } from "@common";
 import { sortSizes } from '@/apparel-sorter';
-import OtherStoresInventoryModal from "./OtherStoresInventoryModal.vue";
-import { DxpShopifyImg, getProductIdentificationValue, translate, useProductIdentificationStore } from "@hotwax/dxp-components";
-import logger from "@/logger";
+import OtherStoresInventoryModal from "@/views/OtherStoresInventoryModal.vue";
+import { useProductStore as useProductStoreSettings } from "@/store/productStore";
 
 const route = useRoute();
 
@@ -172,12 +169,12 @@ const currency = computed(() => useUserStore().getCurrency);
 const getInventoryInformation = computed(() => useStockStore().getInventoryInformation);
 const orders = computed(() => useOrderStore().getOrders);
 const getProduct = computed(() => useProductStore().getProduct);
-const currentEComStore = computed(() => useUserStore().getCurrentEComStore);
-const productIdentificationPref = computed(() => useProductIdentificationStore().getProductIdentificationPref);
-const currentFacility = computed(() => useUserStore().getCurrentFacility);
+const currentEComStore = computed(() => useProductStoreSettings().getCurrentEComStore);
+const productIdentificationPref = computed(() => useProductStoreSettings().getProductIdentificationPref);
+const currentFacility = computed(() => useProductStoreSettings().getCurrentFacility);
 
 const getOrderDetails = async () => {
-  await useOrderStore().getOrderDetails({ viewSize: 200, facilityId: (useUserStore().getCurrentFacility as any)?.facilityId, productId: currentVariant.value.productId });
+  await useOrderStore().getOrderDetails({ viewSize: 200, facilityId: (useProductStoreSettings().getCurrentFacility as any)?.facilityId, productId: currentVariant.value.productId });
 };
 
 const applyFeature = async (feature: string, type: string) => {
@@ -206,12 +203,12 @@ const checkInventory = async () => {
   otherStoresInventoryDetails.value = [];
 
   try {
-    const resp: any = await StockService.checkShippingInventory({
+    const resp: any = await useStockStore().checkShippingInventory({
       productStoreId: currentEComStore.value.productStoreId,
       productIds: currentVariant.value.productId,
     });
 
-    if (resp.status === 200 && !hasError(resp)) {          
+    if (resp.status === 200 && !commonUtil.hasError(resp)) {          
       const resultList = resp.data.resultList || [];
       
       resultList.forEach((productInventory: any) => {
@@ -277,7 +274,7 @@ onMounted(async () => {
     getFeatures();
     await updateVariant();
   }
-  await useProductIdentificationStore().getIdentificationPref(useUserStore().getCurrentEComStore?.productStoreId);
+  await useProductStoreSettings().fetchProductStoreSettings(useProductStoreSettings().getCurrentEComStore?.productStoreId);
 });
 </script>
 

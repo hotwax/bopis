@@ -69,11 +69,10 @@
 import { IonButtons, IonButton, IonContent, IonFab, IonFabButton, IonHeader, IonIcon, IonItem, IonLabel, IonList, IonListHeader, IonRadio, IonRadioGroup, IonSearchbar, IonSpinner, IonTitle, IonToolbar, IonInfiniteScroll, IonInfiniteScrollContent, modalController } from "@ionic/vue";
 import { onMounted, ref } from "vue";
 import { closeOutline, saveOutline } from "ionicons/icons";
-import { commonUtil } from "@/utils/commonUtil";
-import { hasError } from '@/adapter'
-import { translate } from "@hotwax/dxp-components";
-import { PicklistService } from '@/services/PicklistService'
-import logger from '@/logger'
+import { useOrder } from '@/composables/useOrder'
+import { commonUtil, logger, translate } from "@common";
+
+const { getAvailablePickers } = useOrder()
 
 const selectedPicker = ref('');
 const queryString = ref('');
@@ -119,7 +118,7 @@ const loadMorePickers = async (event: any) => {
   if(!(isScrollingEnabled.value && isScrollable.value)) {
     await event.target.complete();
   }
-  const viewSize = process.env.VUE_APP_VIEW_SIZE ? parseInt(process.env.VUE_APP_VIEW_SIZE) : 10;
+  const viewSize = import.meta.env.VITE_VIEW_SIZE ? parseInt(import.meta.env.VITE_VIEW_SIZE) : 10;
   await getPicker(
     undefined,
     Math.ceil(
@@ -131,7 +130,7 @@ const loadMorePickers = async (event: any) => {
 
 const getPicker = async (vSize?: any, vIndex?: any) => {
   if(!vIndex) isLoading.value = true;
-  const viewSize = vSize ? vSize : (process.env.VUE_APP_VIEW_SIZE ? parseInt(process.env.VUE_APP_VIEW_SIZE) : 10);
+  const viewSize = vSize ? vSize : (import.meta.env.VITE_VIEW_SIZE ? parseInt(import.meta.env.VITE_VIEW_SIZE) : 10);
   let query = "";
 
   if(queryString.value.length > 0) {
@@ -158,8 +157,8 @@ const getPicker = async (vSize?: any, vIndex?: any) => {
   let total = 0;
 
   try {
-    const resp = await PicklistService.getAvailablePickers(payload);
-    if (resp.status === 200 && !hasError(resp) && resp.data.response.docs.length > 0) {
+    const resp = await getAvailablePickers(payload);
+    if (resp.status === 200 && !commonUtil.hasError(resp) && resp.data.response.docs.length > 0) {
       const pickers = resp.data.response.docs.map((picker: any) => ({
         name: picker.groupName ? picker.groupName : (picker.firstName || picker.lastName)
             ? (picker.firstName ? picker.firstName : '') + (picker.lastName ? ' ' + picker.lastName : '') : picker.partyId,

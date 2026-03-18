@@ -23,7 +23,7 @@
 <script setup lang="ts">
 import { IonIcon, IonLabel, IonPage, IonTabBar, IonTabButton, IonTabs, IonRouterOutlet } from "@ionic/vue";
 import { infiniteOutline, settingsOutline, shirtOutline } from "ionicons/icons";
-import { translate } from "@hotwax/dxp-components";
+import { translate } from "@common";
 </script>
 
 <style scoped>

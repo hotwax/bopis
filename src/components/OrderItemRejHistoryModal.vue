@@ -16,8 +16,8 @@
           <DxpShopifyImg :src="getProduct(item.productId).mainImageUrl" size="small" />
         </ion-thumbnail>
         <ion-label>
-          <h2>{{ getProductIdentificationValue(productIdentificationPref.primaryId, getProduct(item.productId)) }}</h2>
-          <h5>{{ getProductIdentificationValue(productIdentificationPref.secondaryId, getProduct(item.productId)) }}</h5>
+          <h2>{{ commonUtil.getProductIdentificationValue(productIdentificationPref.primaryId, getProduct(item.productId)) }}</h2>
+          <h5>{{ commonUtil.getProductIdentificationValue(productIdentificationPref.secondaryId, getProduct(item.productId)) }}</h5>
         </ion-label>
         <ion-label slot="end" class="ion-text-right">
           <h2>{{ getRejectReasonDescription(item.changeReasonEnumId) }}</h2>
@@ -39,22 +39,21 @@ import { IonButton, IonButtons, IonContent, IonHeader, IonIcon, IonItem, IonThum
 import { computed, onMounted, ref } from 'vue';
 import { closeOutline } from 'ionicons/icons';
 import { DateTime } from 'luxon';
-import { DxpShopifyImg, getProductIdentificationValue, translate, useProductIdentificationStore } from '@hotwax/dxp-components';
+import { DxpShopifyImg, commonUtil, translate } from '@common';
+import { useProductStore as useProductStoreSettings } from '@/store/productStore'
 import { useOrderStore } from '@/store/order';
 import { useProductStore } from '@/store/product';
-import { useUtilStore } from '@/store/util';
 
 const orderStore = useOrderStore();
 const productStore = useProductStore();
-const utilStore = useUtilStore();
 
 const isLoading = ref(true);
 
 const getProduct = (productId: string) => productStore.getProduct(productId);
 const order = computed(() => orderStore.getCurrent);
-const rejectReasons = computed(() => utilStore.getRejectReasons);
+const rejectReasons = computed(() => orderStore.getRejectReasons);
 const orderRejectionHistory = computed(() => orderStore.orderItemRejectionHistory);
-const productIdentificationPref = computed(() => useProductIdentificationStore().getProductIdentificationPref);
+const productIdentificationPref = computed(() => useProductStoreSettings().getProductIdentificationPref);
 
 onMounted(async () => {
   await orderStore.getOrderItemRejectionHistory({ 

@@ -25,7 +25,7 @@
 <script setup lang="ts">
 import { IonBadge, IonContent, IonItem, IonLabel, IonList, IonListHeader, IonNote } from '@ionic/vue'
 import { onBeforeMount } from 'vue';
-import { translate } from '@hotwax/dxp-components';
+import { translate } from '@common';
 import { useStockStore } from '@/store/stock';
 
 const props = defineProps(['item'])

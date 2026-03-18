@@ -4,8 +4,8 @@
       <DxpShopifyImg :src="getProduct(item.productId).mainImageUrl" size="small" />
     </ion-thumbnail>
     <ion-label class="ion-text-wrap">
-      <h2>{{ getProductIdentificationValue(productIdentificationPref.primaryId, getProduct(item.productId)) ? getProductIdentificationValue(productIdentificationPref.primaryId, getProduct(item.productId)) : getProduct(item.productId).productName }}</h2>
-      <p class="ion-text-wrap">{{ getProductIdentificationValue(productIdentificationPref.secondaryId, getProduct(item.productId)) }}</p>
+      <h2>{{ commonUtil.getProductIdentificationValue(productIdentificationPref.primaryId, getProduct(item.productId)) ? commonUtil.getProductIdentificationValue(productIdentificationPref.primaryId, getProduct(item.productId)) : getProduct(item.productId).productName }}</h2>
+      <p class="ion-text-wrap">{{ commonUtil.getProductIdentificationValue(productIdentificationPref.secondaryId, getProduct(item.productId)) }}</p>
       <ion-badge color="dark" v-if="orderUtil.isKit(item)">{{ translate("Kit") }}</ion-badge>
     </ion-label>
     <!-- Only show stock if its not a ship to store order -->
@@ -48,8 +48,8 @@
           <DxpShopifyImg :src="getProduct(productComponent.productIdTo).mainImageUrl" size="small"/>
         </ion-thumbnail>
         <ion-label>
-          <p class="overline">{{ getProductIdentificationValue(productIdentificationPref.secondaryId, getProduct(productComponent.productIdTo)) }}</p>
-          {{ getProductIdentificationValue(productIdentificationPref.primaryId, getProduct(productComponent.productIdTo)) ? getProductIdentificationValue(productIdentificationPref.primaryId, getProduct(productComponent.productIdTo)) : productComponent.productIdTo }}
+          <p class="overline">{{ commonUtil.getProductIdentificationValue(productIdentificationPref.secondaryId, getProduct(productComponent.productIdTo)) }}</p>
+          {{ commonUtil.getProductIdentificationValue(productIdentificationPref.primaryId, getProduct(productComponent.productIdTo)) ? commonUtil.getProductIdentificationValue(productIdentificationPref.primaryId, getProduct(productComponent.productIdTo)) : productComponent.productIdTo }}
         </ion-label>
       </ion-item>
     </ion-card>
@@ -59,7 +59,8 @@
 <script setup lang="ts">
 import { computed, ref } from "vue";
 import { IonBadge, IonButton, IonCard, IonIcon, IonItem, IonLabel, IonNote, IonSkeletonText, IonSpinner, IonThumbnail, popoverController, modalController } from "@ionic/vue";
-import { getProductIdentificationValue, DxpShopifyImg, translate, useProductIdentificationStore } from '@hotwax/dxp-components'
+import { commonUtil, DxpShopifyImg, translate } from '@common'
+import { useProductStore as useProductStoreSettings } from '@/store/productStore'
 import { chevronUpOutline, cubeOutline, informationCircleOutline, listOutline, gift, giftOutline } from 'ionicons/icons'
 import InventoryDetailsPopover from '@/components/InventoryDetailsPopover.vue'
 import GiftCardActivationModal from "@/components/GiftCardActivationModal.vue";
@@ -79,7 +80,7 @@ const showKitComponents = ref(false);
 
 const getProduct = (productId: string) => productStore.getProduct(productId);
 const getInventoryInformation = (productId: string) => stockStore.getInventoryInformation(productId);
-const productIdentificationPref = computed(() => useProductIdentificationStore().getProductIdentificationPref);
+const productIdentificationPref = computed(() => useProductStoreSettings().getProductIdentificationPref);
 
 async function fetchKitComponents(orderItem: any) {
   productStore.fetchProductComponents({ productId: orderItem.productId })

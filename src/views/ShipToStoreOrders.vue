@@ -37,7 +37,7 @@
             <ProductListItem v-for="item in order.items" :key="item.productId" :item="item" :isShipToStoreOrder=true />
 
             <div class="border-top">
-              <ion-button :disabled="!hasPermission(Actions.APP_ORDER_UPDATE)|| order.shipmentStatusId!='SHIPMENT_SHIPPED'" fill="clear" @click.stop="confirmScheduleOrderForPickup(order)">
+              <ion-button :disabled="!useUserStore().hasPermission('')|| order.shipmentStatusId!='SHIPMENT_SHIPPED'" fill="clear" @click.stop="confirmScheduleOrderForPickup(order)">
                 {{ translate("Arrived") }}
               </ion-button>
             </div>
@@ -60,7 +60,7 @@
             <ProductListItem v-for="item in order.items" :key="item.productId" :item="item" :isShipToStoreOrder=true />
 
             <div class="border-top">
-              <ion-button :disabled="!hasPermission(Actions.APP_ORDER_UPDATE)" fill="clear" @click.stop="confirmHandoverOrder(order)">
+              <ion-button :disabled="!useUserStore().hasPermission('')" fill="clear" @click.stop="confirmHandoverOrder(order)">
                 {{ translate("Handover") }}
               </ion-button>
               <ion-button fill="clear" slot="end" @click="sendReadyForPickupEmail(order)">
@@ -86,7 +86,7 @@
             <ProductListItem v-for="item in order.items" :key="item.productId" :item="item" :isShipToStoreOrder=true />
           
             <div class="border-top">
-              <ion-button data-testid="proof-of-delivery-button" fill="clear" v-if="getBopisProductStoreSettings('HANDOVER_PROOF')" @click.stop="openProofOfDeliveryModal(order, communicationEventOrderIds.has(order.orderId))">
+              <ion-button data-testid="proof-of-delivery-button" fill="clear" v-if="isHandoverProofEnabled" @click.stop="openProofOfDeliveryModal(order, communicationEventOrderIds.has(order.orderId))">
                 {{ communicationEventOrderIds.has(order.orderId) ? translate('View Proof of Delivery') : translate('Proof of Delivery') }}
               </ion-button>
             </div>
@@ -115,14 +115,11 @@ import ProductListItem from '@/components/ProductListItem.vue'
 import { mailOutline } from "ionicons/icons";
 import { useOrderStore } from '@/store/order';
 import { useUserStore } from '@/store/user';
-import { commonUtil } from '@/utils/commonUtil'
-import { hasError } from '@/adapter'
+import { useProductStore } from '@/store/productStore'
+import { commonUtil, emitter, logger, translate } from "@common"
+
 import { DateTime } from 'luxon';
-import emitter from "@/event-bus"
-import { Actions, hasPermission } from '@/authorization'
-import { OrderService } from "@/services/OrderService";
-import { translate } from "@hotwax/dxp-components";
-import logger from "@/logger";
+import { useOrder } from "@/composables/useOrder";
 import ProofOfDeliveryModal from "@/components/ProofOfDeliveryModal.vue";
 
 const queryString = ref('');
@@ -141,7 +138,16 @@ const incomingOrderCount = computed(() => useOrderStore().getIncomingOrdersCount
 const readyForPickupOrderCount = computed(() => useOrderStore().getReadyForPickupOrdersCount);
 const completedOrderCount = computed(() => useOrderStore().getCompletedOrdersCount);
 const communicationEvents = computed(() => useOrderStore().getCommunicationEvents);
-const getBopisProductStoreSettings = computed(() => useUserStore().getBopisProductStoreSettings);
+const isHandoverProofEnabled = computed(() => useProductStore().isHandoverProofEnabled);
+
+const {
+  arrivedShipToStore,
+  getShipToStoreOrders,
+  sendPickupScheduledNotification,
+  handoverShipToStoreOrder,
+  sendHandoverNotification,
+  sendPickupNotification
+} = useOrder();
 
 const communicationEventOrderIds = computed(() => new Set((communicationEvents.value || []).map((e: any) => e.orderId)));
 
@@ -150,19 +156,19 @@ const getDateTime = (time: any) => {
 };
 
 const getIncomingOrders = async (vSize?: any, vIndex?: any) => {
-  const viewSize = vSize ? vSize : (process.env.VUE_APP_VIEW_SIZE as any);
+  const viewSize = vSize ? vSize : (import.meta.env.VITE_VIEW_SIZE as any);
   const viewIndex = vIndex ? vIndex : 0;
   await (useOrderStore() as any).getShipToStoreIncomingOrders({ viewSize, viewIndex, queryString: queryString.value, facilityId: (useUserStore().getCurrentFacility as any)?.facilityId });
 };
 
 const getReadyForPickupOrders = async (vSize?: any, vIndex?: any) => {
-  const viewSize = vSize ? vSize : (process.env.VUE_APP_VIEW_SIZE as any);
+  const viewSize = vSize ? vSize : (import.meta.env.VITE_VIEW_SIZE as any);
   const viewIndex = vIndex ? vIndex : 0;
   await (useOrderStore() as any).getReadyForPickupOrders({ viewSize, viewIndex, queryString: queryString.value, facilityId: (useUserStore().getCurrentFacility as any)?.facilityId });
 };
 
 const getCompletedOrders = async (vSize?: any, vIndex?: any) => {
-  const viewSize = vSize ? vSize : (process.env.VUE_APP_VIEW_SIZE as any);
+  const viewSize = vSize ? vSize : (import.meta.env.VITE_VIEW_SIZE as any);
   const viewIndex = vIndex ? vIndex : 0;
   await (useOrderStore() as any).getShipToStoreCompletedOrders({ viewSize, viewIndex, queryString: queryString.value, facilityId: (useUserStore().getCurrentFacility as any)?.facilityId });
   await (useOrderStore() as any).getCommunicationEvents({ orders: completedOrders.value });
@@ -199,7 +205,7 @@ const loadMoreOrders = async (event: any) => {
     await event.target.complete();
   }
 
-  const viewSize = (process.env.VUE_APP_VIEW_SIZE as any);
+  const viewSize = (import.meta.env.VITE_VIEW_SIZE as any);
   if (segmentSelected.value === 'incoming') {
     await getIncomingOrders(undefined, Math.ceil(incomingOrderCount.value / viewSize).toString());
   } else if (segmentSelected.value === 'readyForPickup') {
@@ -244,8 +250,8 @@ const selectSearchBarText = (event: any) => {
 const scheduleOrderForPickup = async (shipmentId: string, order: any) => {
   emitter.emit("presentLoader");
   try {
-    const resp = await OrderService.arrivedShipToStore(shipmentId);
-    if (!hasError(resp)) {
+    const resp = await arrivedShipToStore(shipmentId);
+    if (!commonUtil.hasError(resp)) {
       const orderId = order.orderId;
       const incomingParams = {
         orderId,
@@ -256,12 +262,12 @@ const scheduleOrderForPickup = async (shipmentId: string, order: any) => {
         shipmentMethodTypeId: 'SHIP_TO_STORE',
         shipmentStatusId: 'SHIPMENT_INPUT,SHIPMENT_APPROVED,SHIPMENT_PACKED,SHIPMENT_SHIPPED',
       };
-      const incomingResp = await OrderService.getShipToStoreOrders(incomingParams);
-      const isLastShipGroup = !hasError(incomingResp) && incomingResp.data.ordersCount === 0;
+      const incomingResp = await getShipToStoreOrders(incomingParams);
+      const isLastShipGroup = !commonUtil.hasError(incomingResp) && incomingResp.data.ordersCount === 0;
       if (isLastShipGroup) {
         try {
-          const emailResp = await OrderService.sendPickupScheduledNotification({ shipmentId });
-          if (!hasError(emailResp)) {
+          const emailResp = await sendPickupScheduledNotification({ shipmentId });
+          if (!commonUtil.hasError(emailResp)) {
             commonUtil.showToast(translate('Order marked as ready for pickup, an email notification has been sent to the customer'));
           }
         } catch (error) {
@@ -302,8 +308,8 @@ const confirmScheduleOrderForPickup = async (order: any) => {
 const handoverOrder = async (shipmentId: string, order: any) => {
   emitter.emit("presentLoader");
   try{
-    const resp = await OrderService.handoverShipToStoreOrder(shipmentId);
-    if(!hasError(resp)) {
+    const resp = await handoverShipToStoreOrder(shipmentId);
+    if(!commonUtil.hasError(resp)) {
       const orderId = order.orderId;
       const checkShipGroupParams = {
         orderId,
@@ -317,12 +323,12 @@ const handoverOrder = async (shipmentId: string, order: any) => {
         shipmentMethodTypeId: 'SHIP_TO_STORE',
         shipmentStatusId: 'SHIPMENT_INPUT,SHIPMENT_APPROVED,SHIPMENT_PACKED,SHIPMENT_SHIPPED,SHIPMENT_ARRIVED',
       };
-      const shipGroupResp = await OrderService.getShipToStoreOrders(pendingShipGroupParams);
-      const isLastShipGroup = !hasError(shipGroupResp) && shipGroupResp.data.ordersCount === 0;
+      const shipGroupResp = await getShipToStoreOrders(pendingShipGroupParams);
+      const isLastShipGroup = !commonUtil.hasError(shipGroupResp) && shipGroupResp.data.ordersCount === 0;
       if (isLastShipGroup) {
         try {
-          const emailResp = await OrderService.sendHandoverNotification({ shipmentId });
-          if (!hasError(emailResp)) {
+          const emailResp = await sendHandoverNotification({ shipmentId });
+          if (!commonUtil.hasError(emailResp)) {
             commonUtil.showToast(translate('Order handed over successfully and order completion email has been sent'));
           } else {
             logger.error('Error sending handover notification:', emailResp);
@@ -374,8 +380,8 @@ const sendReadyForPickupEmail = async (order: any) => {
       text: translate('Send'),
       handler: async () => {
         try {
-          const resp = await OrderService.sendPickupScheduledNotification({ shipmentId: order.shipmentId });
-          if (!hasError(resp)) {
+          const resp = await sendPickupScheduledNotification({ shipmentId: order.shipmentId });
+          if (!commonUtil.hasError(resp)) {
             commonUtil.showToast(translate("Email sent successfully"));
           } else {
             commonUtil.showToast(translate("Something went wrong while sending the email."));
@@ -403,8 +409,8 @@ const openProofOfDeliveryModal = async (order: any, isViewModeOnly: any) => {
   if (data?.confirmed && data?.proofOfDeliveryData) {
     emitter.emit("presentLoader");
     try {
-      const resp = await OrderService.sendPickupNotification(data.proofOfDeliveryData);
-      if (hasError(resp)) {
+      const resp = await sendPickupNotification(data.proofOfDeliveryData);
+      if (commonUtil.hasError(resp)) {
         logger.error("Pickup notification failed:", resp);
         commonUtil.showToast(translate("Unable to save the details. Please try again."));
       } else {

@@ -17,8 +17,8 @@
           <DxpShopifyImg :src="getProduct(item.productId).mainImageUrl" size="small" />
         </ion-thumbnail>
         <ion-label class="ion-text-wrap">
-          <h2>{{ getProductIdentificationValue(productIdentificationPref.primaryId, getProduct(item.productId)) ? getProductIdentificationValue(productIdentificationPref.primaryId, getProduct(item.productId)) : getProduct(item.productId).productName }}</h2>
-          <p class="ion-text-wrap">{{ getProductIdentificationValue(productIdentificationPref.secondaryId, getProduct(item.productId)) }}</p>
+          <h2>{{ commonUtil.getProductIdentificationValue(productIdentificationPref.primaryId, getProduct(item.productId)) ? commonUtil.getProductIdentificationValue(productIdentificationPref.primaryId, getProduct(item.productId)) : getProduct(item.productId).productName }}</h2>
+          <p class="ion-text-wrap">{{ commonUtil.getProductIdentificationValue(productIdentificationPref.secondaryId, getProduct(item.productId)) }}</p>
           <p class="ion-text-wrap">{{ getCancelReasonDescription(item.cancelReason) }}</p>
           <ion-badge color="dark" v-if="orderUtil.isKit(item)">{{ translate("Kit") }}</ion-badge>
         </ion-label>
@@ -62,17 +62,14 @@
 import { IonBadge, IonButton, IonButtons, IonContent, IonHeader, IonIcon, IonItem, IonLabel, IonList, IonListHeader, IonNote, IonTitle, IonThumbnail, IonToolbar, modalController } from "@ionic/vue";
 import { computed, onMounted, ref } from "vue";
 import { closeOutline } from "ionicons/icons";
-import { OrderService } from "@/services/OrderService";
-import { getProductIdentificationValue, translate, useProductIdentificationStore } from "@hotwax/dxp-components";
+import { useOrder } from "@/composables/useOrder";
+import { useProductStore as useProductStoreSettings } from "@/store/productStore";
 import { orderUtil } from '@/utils/orderUtil'
-import { commonUtil } from "@/utils/commonUtil"
-import { hasError } from "@hotwax/oms-api";
+import { commonUtil, emitter, translate } from "@common"
 import { DateTime } from "luxon";
-import emitter from "@/event-bus";
 
 import { useOrderStore } from "@/store/order";
 import { useProductStore } from "@/store/product";
-import { useUtilStore } from "@/store/util";
 
 const props = defineProps(["order", "isCancelationSyncJobEnabled", "isProcessRefundEnabled", "cancelJobNextRunTime", "orderType"]);
 
@@ -82,8 +79,9 @@ const currentOrder = ref({} as any);
 const runTimeDiff = ref("");
 
 const getProduct = (productId: string) => useProductStore().getProduct(productId);
-const cancelReasons = computed(() => useUtilStore().getCancelReasons);
-const productIdentificationPref = computed(() => useProductIdentificationStore().getProductIdentificationPref);
+const cancelReasons = computed(() => useOrderStore().getCancelReasons);
+const productIdentificationPref = computed(() => useProductStoreSettings().getProductIdentificationPref);
+const { cancelOrder: cancelOrderApi } = useOrder();
 
 onMounted(() => {
   currentOrder.value = JSON.parse(JSON.stringify(props.order))
@@ -120,9 +118,9 @@ async function cancelOrder() {
   let cancelledResponse;
 
   try {
-    cancelledResponse = await OrderService.cancelOrder(payload);
+    cancelledResponse = await cancelOrderApi(payload);
 
-    if (hasError(cancelledResponse)) {
+    if (commonUtil.hasError(cancelledResponse)) {
       throw cancelledResponse.data;
     }
 

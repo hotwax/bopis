@@ -37,9 +37,9 @@ import { cogOutline } from 'ionicons/icons';
 import { computed } from "vue";
 import { DateTime } from "luxon";
 import NotificationPreferenceModal from '@/components/NotificationPreferenceModal.vue'
-import { translate } from "@hotwax/dxp-components";
-import { useUserStore } from "@/store/user";
-const notifications = computed(() => useUserStore().getNotifications);
+import { translate } from "@common";
+import { useNotificationStore } from "@common";
+const notifications = computed(() => useNotificationStore().getNotifications);
 
 async function openNotificationSettings() {
   const timeZoneModal = await modalController.create({

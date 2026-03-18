@@ -59,14 +59,12 @@
 import { IonButtons, IonButton, IonContent, IonFab, IonFabButton, IonHeader, IonIcon, IonInfiniteScroll, IonInfiniteScrollContent, IonItem, IonLabel, IonList, IonListHeader, IonRadio, IonRadioGroup, IonSearchbar, IonSpinner, IonTitle, IonToolbar, alertController, modalController } from "@ionic/vue";
 import { onMounted, ref } from "vue";
 import { close, saveOutline } from "ionicons/icons";
-import { commonUtil } from '@/utils/commonUtil';
-import { hasError } from '@/adapter'
-import { translate } from '@hotwax/dxp-components'
-import { UtilService } from "@/services/UtilService";
-import { PicklistService } from "@/services/PicklistService";
-import logger from "@/logger";
+import { commonUtil, logger, translate } from '@common';
+import { useOrder } from "@/composables/useOrder";
 
 const props = defineProps(['order'])
+
+const { getAvailablePickers } = useOrder()
 
 const availablePickers = ref([] as any)
 const queryString = ref('')
@@ -108,7 +106,7 @@ async function loadMorePickers(event: any) {
   findPickers(
     undefined,
     Math.ceil(
-      availablePickers.value.length / (process.env.VUE_APP_VIEW_SIZE as any)
+      availablePickers.value.length / (import.meta.env.VITE_VIEW_SIZE as any)
     ).toString()
   ).then(async () => {
     await event.target.complete();
@@ -124,7 +122,7 @@ async function searchPicker() {
 
 async function findPickers(vSize?: any, vIndex?: any) {
   if(!vIndex) isLoading.value = true;
-  const viewSize = vSize ? vSize : process.env.VUE_APP_VIEW_SIZE;
+  const viewSize = vSize ? vSize : import.meta.env.VITE_VIEW_SIZE;
   let query = {}
 
   if(queryString.value.length > 0) {
@@ -151,8 +149,8 @@ async function findPickers(vSize?: any, vIndex?: any) {
   let total = 0;
 
   try {
-    const resp = await PicklistService.getAvailablePickers(payload);
-    if (resp.status === 200 && !hasError(resp) && resp.data.response.docs.length > 0) {
+    const resp = await getAvailablePickers(payload);
+    if (resp.status === 200 && !commonUtil.hasError(resp) && resp.data.response.docs.length > 0) {
       const pickers = resp.data.response.docs.map((picker: any) => ({
         name: picker.groupName ? picker.groupName : (picker.firstName || picker.lastName)
             ? (picker.firstName ? picker.firstName : '') + (picker.lastName ? ' ' + picker.lastName : '') : picker.partyId,
@@ -201,12 +199,12 @@ async function confirmSave() {
 async function resetPicker() {
   const pickerId = selectedPicker.value.id
   // Api call to remove already selected picker and assign new picker
-  const resp = await UtilService.resetPicker({
+  const resp = await useOrder().resetPicker({
     pickerIds: pickerId,
     picklistId: props.order.picklistId
   });
 
-  if(resp.status === 200 && !hasError(resp)) {
+  if(resp.status === 200 && !commonUtil.hasError(resp)) {
     commonUtil.showToast(translate("Pickers successfully replaced in the picklist with the new selections."))
   } else {
     throw resp.data

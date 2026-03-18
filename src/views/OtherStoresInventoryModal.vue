@@ -83,9 +83,9 @@
 import { IonAccordionGroup, IonAccordion, IonButtons, IonButton, IonContent, IonHeader, IonItem, IonIcon, IonLabel, IonList, IonNote, IonSearchbar, IonTitle, IonToggle, IonToolbar, modalController, IonSpinner } from "@ionic/vue";
 import { computed, onMounted, ref } from "vue";
 import { close, locationOutline, textOutline } from "ionicons/icons";
-import { useUtilStore } from "@/store/util";
+import { useProductStore } from "@/store/productStore";
 import { useUserStore } from "@/store/user";
-import { translate } from "@hotwax/dxp-components";
+import { translate } from "@common";
 import { DateTime } from "luxon";
 
 const props = defineProps(["otherStoresInventory"]);
@@ -98,7 +98,7 @@ const hideStoresWithoutInventory = ref(false);
 const sortBy = ref("name"); // 'name' or 'distance'
 const weekArray = ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"];
 
-const currentFacility = computed(() => useUserStore().getCurrentFacility);
+const currentFacility = computed(() => useProductStore().getCurrentFacility);
 
 const formatTime = (time: string): string => {
   return DateTime.fromFormat(time, 'HH:mm:ss').toFormat('h:mm a');
@@ -189,7 +189,7 @@ const updateSort = () => {
 
 const searchFacilities = () => {
   isRefreshing.value = true;
-  let filteredInventory = mapStock(storesInventory.value, useUtilStore().getStoresInformation);
+  let filteredInventory = mapStock(storesInventory.value, useProductStore().getStoresInformation);
   if (queryString.value.trim() !== "") {
     filteredInventory = filteredInventory.filter((store: any) =>
       store.storeName.toLowerCase().includes(queryString.value.toLowerCase())
@@ -207,7 +207,7 @@ const toggleHideEmptyStock = () => {
   if (hideStoresWithoutInventory.value) {
     storesWithInventory.value = storesWithInventory.value.filter((store: any) => store.stock > 0);
   } else {
-    storesWithInventory.value = mapStock(storesInventory.value, useUtilStore().getStoresInformation);
+    storesWithInventory.value = mapStock(storesInventory.value, useProductStore().getStoresInformation);
   }
   updateSort();
 };
@@ -222,20 +222,20 @@ onMounted(async () => {
   const currentFacilityId = currentFacility.value?.facilityId;
 
   try {
-    if (!useUtilStore().getFacilityLatLon(currentFacilityId).latitude || !useUtilStore().getFacilityLatLon(currentFacilityId).longitude) {
-      await useUtilStore().fetchCurrentFacilityLatLon(currentFacilityId);
+    if (!useProductStore().getFacilityLatLon(currentFacilityId).latitude || !useProductStore().getFacilityLatLon(currentFacilityId).longitude) {
+      await useProductStore().fetchCurrentFacilityLatLon(currentFacilityId);
     }
 
-    if (!useUtilStore().getStoresInformation || useUtilStore().getStoresInformation.length === 0) {
-      if (useUtilStore().getFacilityLatLon(currentFacilityId)?.latitude && useUtilStore().getFacilityLatLon(currentFacilityId)?.longitude) {
-        await useUtilStore().fetchStoresInformation({
-          latitude: useUtilStore().getFacilityLatLon(currentFacilityId).latitude,
-          longitude: useUtilStore().getFacilityLatLon(currentFacilityId).longitude
+    if (!useProductStore().getStoresInformation || useProductStore().getStoresInformation.length === 0) {
+      if (useProductStore().getFacilityLatLon(currentFacilityId)?.latitude && useProductStore().getFacilityLatLon(currentFacilityId)?.longitude) {
+        await useProductStore().fetchStoresInformation({
+          latitude: useProductStore().getFacilityLatLon(currentFacilityId).latitude,
+          longitude: useProductStore().getFacilityLatLon(currentFacilityId).longitude
         });
       }
     }
 
-    storesWithInventory.value = mapStock(storesInventory.value, useUtilStore().getStoresInformation);
+    storesWithInventory.value = mapStock(storesInventory.value, useProductStore().getStoresInformation);
   } catch (error) {
     storesWithInventory.value = storesInventory.value.map((facility: any) => ({
       storeCode: facility.facilityId,

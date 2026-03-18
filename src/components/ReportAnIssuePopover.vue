@@ -16,8 +16,8 @@
 <script setup lang="ts">
 import { IonContent, IonItem, IonList, popoverController } from "@ionic/vue";
 import { computed } from "vue";
-import { translate } from '@hotwax/dxp-components';
-import { useUtilStore } from "@/store/util";
+import { translate } from '@common';
+import { useOrderStore } from "@/store/order";
 
 defineProps({
   reasonType: {
@@ -26,8 +26,8 @@ defineProps({
   }
 })
 
-const rejectReasons = computed(() => useUtilStore().getRejectReasons);
-const cancelReasons = computed(() => useUtilStore().getCancelReasons);
+const rejectReasons = computed(() => useOrderStore().getRejectReasons);
+const cancelReasons = computed(() => useOrderStore().getCancelReasons);
 
 function updateIssue(enumId: string) {
   popoverController.dismiss(enumId);

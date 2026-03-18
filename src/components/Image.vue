@@ -4,12 +4,12 @@
 
 <script setup lang="ts">
 import { onMounted, ref, watch } from "vue";
-import logger from "@/logger";
+import { logger } from "@common";
 import defaultImage from "@/assets/images/defaultImage.png"
 
 const props = defineProps(['src'])
 
-const resourceUrl = ref(process.env.VUE_APP_RESOURCE_URL || '')
+const resourceUrl = ref(import.meta.env.VITE_RESOURCE_URL || '')
 const imageUrl = ref(defaultImage)
 
 onMounted(() => {

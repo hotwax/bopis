@@ -1,10 +1,5 @@
 import { defineStore } from 'pinia'
-import { ProductService } from "@/services/ProductService";
-import { commonUtil } from '@/utils/commonUtil'
-import { hasError } from '@/adapter'
-import { translate } from '@hotwax/dxp-components'
-import emitter from '@/event-bus'
-import logger from "@/logger";
+import { api, commonUtil, emitter, logger, translate } from '@common'
 
 export const useProductStore = defineStore('product', {
   state: () => ({
@@ -37,11 +32,17 @@ export const useProductStore = defineStore('product', {
 
       if (productIdFilter === '') return;
 
-      const resp = await ProductService.fetchProducts({
-        "filters": ['productId: (' + productIdFilter + ')'],
-        "viewSize": productIds.length
-      })
-      if (resp.status === 200 && resp.data.response && !hasError(resp)) {
+      const resp = await api({
+        url: "searchProducts",
+        method: "post",
+        baseURL: commonUtil.getOmsURL(),
+        data: {
+          "filters": ['productId: (' + productIdFilter + ')'],
+          "viewSize": productIds.length
+        },
+        cache: true
+      }) as any;
+      if (resp.status === 200 && resp.data.response && !commonUtil.hasError(resp)) {
         const products = resp.data.response.docs;
         if (resp.data) {
           products.forEach((product: any) => {
@@ -57,13 +58,19 @@ export const useProductStore = defineStore('product', {
       if (payload.viewIndex === 0) emitter.emit("presentLoader");
       let resp;
       try {
-        resp = await ProductService.findProducts({
-          "viewSize": payload.viewSize,
-          "viewIndex": payload.viewIndex,
-          "keyword": payload.queryString,
-          "filters": ['isVirtual: true', 'isVariant: false'],
-        })
-        if (resp.status === 200 && !hasError(resp) && resp.data.response?.numFound) {
+        resp = await api({
+          url: "searchProducts",
+          method: "post",
+          baseURL: commonUtil.getOmsURL(),
+          data: {
+            "viewSize": payload.viewSize,
+            "viewIndex": payload.viewIndex,
+            "keyword": payload.queryString,
+            "filters": ['isVirtual: true', 'isVariant: false'],
+          },
+          cache: true
+        }) as any;
+        if (resp.status === 200 && !commonUtil.hasError(resp) && resp.data.response?.numFound) {
           let products = resp.data.response.docs;
           const total = resp.data.response?.numFound;
           if (payload.viewIndex && payload.viewIndex > 0) products = this.products.list.concat(products)
@@ -110,11 +117,17 @@ export const useProductStore = defineStore('product', {
       let productFilterCondition: any = `groupId: ${payload.productId}`;
       if (!isProductCached) productFilterCondition = `${productFilterCondition} OR productId: ${payload.productId}`;
       try {
-        resp = await ProductService.findProducts({
-          "filters": [productFilterCondition],
-          "viewSize": 50,
-        })
-        if (resp.status === 200 && !hasError(resp) && resp.data.response?.numFound) {
+        resp = await api({
+          url: "searchProducts",
+          method: "post",
+          baseURL: commonUtil.getOmsURL(),
+          data: {
+            "filters": [productFilterCondition],
+            "viewSize": 50,
+          },
+          cache: true
+        }) as any;
+        if (resp.status === 200 && !commonUtil.hasError(resp) && resp.data.response?.numFound) {
           let variants = resp.data.response.docs;
           if (!isProductCached) {
             product = resp.data.response.docs.find((product: any) => product.productId === payload.productId);
@@ -154,20 +167,25 @@ export const useProductStore = defineStore('product', {
 
       let resp;
       try {
-        resp = await ProductService.fetchProductComponents({
-          "entityName": "ProductAssoc",
-          "inputFields": {
-            "productId": productId,
-            "productTypeId": "PRODUCT_COMPONENT"
-          },
-          "fieldList": ["productId", "productIdTo", "productAssocTypeId"],
-          "viewIndex": 0,
-          "viewSize": 250,
-          "distinct": "Y",
-          "noConditionFind": "Y",
-          "filterByDate": "Y"
-        })
-        if (!hasError(resp)) {
+        resp = await api({
+          url: "performFind",
+          method: "get",
+          baseURL: commonUtil.getOmsURL(),
+          params: {
+            "entityName": "ProductAssoc",
+            "inputFields": {
+              "productId": productId,
+              "productTypeId": "PRODUCT_COMPONENT"
+            },
+            "fieldList": ["productId", "productIdTo", "productAssocTypeId"],
+            "viewIndex": 0,
+            "viewSize": 250,
+            "distinct": "Y",
+            "noConditionFind": "Y",
+            "filterByDate": "Y"
+          }
+        }) as any;
+        if (!commonUtil.hasError(resp)) {
           const productComponents = resp.data.docs;
           const componentProductIds = productComponents.map((productComponent: any) => productComponent.productIdTo);
           await this.fetchProducts({ productIds: componentProductIds })

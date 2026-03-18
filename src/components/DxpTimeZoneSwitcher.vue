@@ -42,7 +42,7 @@
 
     <ion-content>
       <div>
-        <ion-radio-group v-model="timeZoneId">
+        <ion-radio-group value="rd" v-model="timeZoneId">
           <ion-list v-if="showBrowserTimeZone">
             <ion-list-header>{{ translate("Browser time zone") }}</ion-list-header>
             <ion-item>
@@ -82,7 +82,7 @@
       </div>
 
       <ion-fab vertical="bottom" horizontal="end" slot="fixed">
-        <ion-fab-button :disabled="!timeZoneId || timeZoneId === currentTimeZoneId" @click="setUserTimeZone">
+        <ion-fab-button :disabled="!currentTimeZoneId" @click="setUserTimeZone">
           <ion-icon :icon="saveOutline" />
         </ion-fab-button>
       </ion-fab>
@@ -91,24 +91,46 @@
 </template>
 
 <script setup lang="ts">
-import { IonButton, IonButtons, IonCard, IonCardHeader, IonCardTitle, IonCardContent, IonContent, IonFab, IonFabButton, IonHeader, IonIcon, IonItem, IonLabel, IonList, IonListHeader, IonModal, IonRadio, IonRadioGroup, IonSearchbar, IonSpinner, IonTitle, IonToolbar } from '@ionic/vue';
+import {
+  IonButton,
+  IonButtons,
+  IonCard, 
+  IonCardHeader,
+  IonCardTitle,
+  IonCardContent,
+  IonContent,
+  IonFab,
+  IonFabButton,
+  IonHeader,
+  IonIcon,
+  IonItem,
+  IonLabel,
+  IonList,
+  IonListHeader,
+  IonModal,
+  IonRadio,
+  IonRadioGroup,
+  IonSearchbar,
+  IonSpinner,
+  IonTitle,
+  IonToolbar
+} from '@ionic/vue';
 import { closeOutline, saveOutline } from "ionicons/icons";
-import { computed, onBeforeMount, ref } from "vue";
-import { commonUtil } from '../utils/commonUtil'
-import { translate, useUserStore as useDxpUserStore } from "@hotwax/dxp-components"
 import { useUserStore } from '@/store/user';
+import { computed, onBeforeMount, ref } from "vue";
+import { commonUtil } from "@common"
+import { translate } from '@common';
 
 const userStore = useUserStore();
-const dxpUserStore = useDxpUserStore();
 
-const userProfile = computed(() => userStore.getUserProfile)
-const timeZones = computed(() => dxpUserStore.getTimeZones)
-const currentTimeZoneId = computed(() => userProfile.value.timeZone)
+const userProfile: any = computed(() => userStore.getUserProfile)
+const timeZones = computed(() => userStore.getTimeZones)
+const currentTimeZoneId = computed(() => userStore.getCurrentTimeZone)
 
 const isLoading = ref(true);
 const timeZoneModal = ref();
 const queryString = ref('');
-const filteredTimeZones = ref([] as any[])
+const filteredTimeZones = ref([]) as any
 const timeZoneId = ref('')
 // Fetching timeZone of the browser
 const browserTimeZone = ref({
@@ -139,10 +161,10 @@ const closeModal = () => {
 
 onBeforeMount(async () => {
   isLoading.value = true;
-  await dxpUserStore.getAvailableTimeZones();
+  await userStore.getAvailableTimeZones();
 
   if(userProfile.value && userProfile.value.timeZone) {
-    (dxpUserStore as any).currentTimeZoneId = userProfile.value.timeZone
+    userStore.currentTimeZoneId = userProfile.value.timeZone
     timeZoneId.value = userProfile.value.timeZone
   }
 
@@ -155,7 +177,7 @@ onBeforeMount(async () => {
 })
 
 async function setUserTimeZone() {
-  emit('timeZoneUpdated', timeZoneId.value);
+  await userStore.setUserTimeZone(timeZoneId.value)
   closeModal();
 }
 

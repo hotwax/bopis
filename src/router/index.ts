@@ -1,6 +1,5 @@
 import { createRouter, createWebHistory } from '@ionic/vue-router';
 import { RouteRecordRaw } from 'vue-router';
-import { useUserStore } from '@/store/user'
 import Tabs from '@/views/Tabs.vue'
 import OrderDetail from '@/views/OrderDetail.vue'
 import ProductDetail from '@/views/ProductDetail.vue'
@@ -8,37 +7,26 @@ import ShipToStoreOrders from '@/views/ShipToStoreOrders.vue'
 import Notifications from '@/views/Notifications.vue'
 import Shopify from '@/views/Shopify.vue'
 
-import { hasPermission } from '@/authorization';
-import { commonUtil } from '@/utils/commonUtil'
-import { translate } from '@hotwax/dxp-components'
+import { commonUtil, translate } from '@common'
+import { useUserStore } from '@/store/user'
 
 import 'vue-router'
-import { DxpLogin, useAuthStore } from '@hotwax/dxp-components';
-import { userUtil } from '@/utils/userUtil';
+import { useAuth } from '@/composables/auth';
+import Login from '@/views/Login.vue';
 
-// Defining types for the meta values
-declare module 'vue-router' {
-  interface RouteMeta {
-    permissionId?: string;
-  }
-}
 
 const authGuard = async (to: any, from: any, next: any) => {
-  const authStore = useAuthStore()
-  const userStore = useUserStore()
-  if (!authStore.isAuthenticated || !userStore.token) {
-    await userUtil.loader.present('Authenticating')
-    // TODO use authenticate() when support is there
-    const redirectUrl = window.location.origin + '/login'
-    window.location.href = `${process.env.VUE_APP_LOGIN_URL}?redirectUrl=${redirectUrl}`
-    userUtil.loader.dismiss()
+  const { isAuthenticated } = useAuth()
+  if (!isAuthenticated.value) {
+    next('/login');
+  } else {
+    next()
   }
-  next()
 };
 
 const loginGuard = (to: any, from: any, next: any) => {
-  const authStore = useAuthStore()
-  if (authStore.isAuthenticated && !to.query?.token && !to.query?.oms) {
+  const { isAuthenticated } = useAuth()
+  if (isAuthenticated.value && !to.query?.token && !to.query?.oms) {
     next('/')
   }
   next();
@@ -83,8 +71,8 @@ const routes: Array<RouteRecordRaw> = [
   },
   {
     path: '/login',
-    name: 'DxpLogin',
-    component: DxpLogin,
+    name: 'Login',
+    component: Login,
     beforeEnter: loginGuard
   },
   {
@@ -126,12 +114,12 @@ const routes: Array<RouteRecordRaw> = [
 ]
 
 const router = createRouter({
-  history: createWebHistory(process.env.BASE_URL),
-  routes
+  history: createWebHistory(import.meta.env.BASE_URL),
+  routes: routes as any
 })
 
 router.beforeEach((to, from) => {
-  if (to.meta.permissionId && !hasPermission(to.meta.permissionId)) {
+  if (to.meta.permissionId && !useUserStore().hasPermission(to.meta.permissionId as any)) {
     let redirectToPath = from.path;
     // If the user has navigated from Login page or if it is page load, redirect user to settings page without showing any toast
     if (redirectToPath == "/login" || redirectToPath == "/") redirectToPath = "/tabs/settings";

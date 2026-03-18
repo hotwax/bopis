@@ -50,7 +50,7 @@
 import { IonButton, IonButtons, IonContent, IonFab, IonFabButton, IonHeader, IonIcon, IonItem, IonLabel, IonList, IonSelect, IonSelectOption, IonTitle, IonToolbar, modalController } from '@ionic/vue';
 import { onMounted, ref } from 'vue';
 import { closeOutline, informationCircleOutline, saveOutline } from 'ionicons/icons';
-import { translate } from '@hotwax/dxp-components';
+import { translate } from '@common';
 
 const props = defineProps(['currentcConfig', 'carriers', 'availableShipmentMethods'])
 

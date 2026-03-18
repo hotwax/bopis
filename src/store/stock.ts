@@ -1,8 +1,6 @@
 import { defineStore } from 'pinia'
-import { StockService } from '@/services/StockService'
-import { hasError } from '@/adapter'
-import { commonUtil } from '@/utils/commonUtil'
-import logger from '@/logger'
+import { api, commonUtil, logger } from '@common'
+import { useProductStore } from "@/store/productStore";
 
 export const useStockStore = defineStore('stock', {
   state: () => ({
@@ -10,13 +8,20 @@ export const useStockStore = defineStore('stock', {
   }),
   getters: {
     getInventoryInformation: (state) => (productId: any) => {
-      const facilityId = commonUtil.getCurrentFacilityId()
+      const facilityId = useProductStore().getCurrentFacility?.facilityId;
       return state.inventoryInformation[productId] ? state.inventoryInformation[productId][facilityId] ? state.inventoryInformation[productId][facilityId] : {} : {};
     }
   },
   actions: {
+    async checkShippingInventory(query: any): Promise<any> {
+      return api({
+        url: "ofbiz-oms-usl/checkShippingInventory",
+        method: "post",
+        data: query
+      });
+    },
     async fetchProductInventory({ productId, forceFetchStock = false }: { productId: string, forceFetchStock?: boolean }) {
-      const facilityId = commonUtil.getCurrentFacilityId();
+      const facilityId = useProductStore().getCurrentFacility?.facilityId;
       if (!forceFetchStock && this.inventoryInformation[productId] && this.inventoryInformation[productId][facilityId]) {
         return;
       }
@@ -27,8 +32,12 @@ export const useStockStore = defineStore('stock', {
           facilityId: facilityId
         }
 
-        const resp: any = await StockService.getInventoryAvailableByFacility(params);
-        if (!hasError(resp) && resp.data) {
+        const resp: any = await api({
+          url: "poorti/getInventoryAvailableByFacility",
+          method: "get",
+          params
+        });
+        if (!commonUtil.hasError(resp) && resp.data) {
           const payload = {
             minimumStock: resp.data.minimumStock,
             quantityOnHand: resp.data.qoh,

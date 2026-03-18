@@ -54,10 +54,14 @@ const getOrderStatus = (order: any, shipGroup: any, orderRouteSegment: any, orde
 
   return "Reserved"
 }
+const getPickerName = (pickerGroupName: string, pickerFirstName: string, pickerLastName: string) => {
+  return pickerGroupName ? pickerGroupName : pickerFirstName ? `${pickerFirstName} ${pickerLastName ? pickerLastName : ''}`.trim() : '';
+}
 
 export const orderUtil = {
   getOrderCategory,
   getOrderStatus,
+  getPickerName,
   isKit,
   removeKitComponents
 }
