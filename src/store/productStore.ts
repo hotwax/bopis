@@ -34,7 +34,7 @@ export const useProductStore = defineStore('productStore', {
         allowCancel: "",
         shippingMethod: {
           carrierPartyId: "",
-
+          shipmentMethodTypeId: ""
         },
         orderItemSplit: ""
       }
