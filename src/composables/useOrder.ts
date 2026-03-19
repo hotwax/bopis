@@ -250,15 +250,6 @@ export const useOrder = () => {
     });
   }
 
-  const getRerouteFulfillmentConfig = async (payload: any): Promise<any> => {
-    return api({
-      url: "performFind",
-      method: "get",
-      baseURL: commonUtil.getOmsURL(),
-      params: payload,
-    });
-  }
-
 
   const ensurePartyRole = async (payload: any): Promise<any> => {
     return api({
@@ -289,7 +280,6 @@ export const useOrder = () => {
     getAvailablePickers,
     getBillingDetails,
     getProcessRefundStatus,
-    getRerouteFulfillmentConfig,
     getShipToStoreOrders,
     handoverShipToStoreOrder,
     printPackingSlip,

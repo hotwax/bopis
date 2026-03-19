@@ -49,20 +49,20 @@
             {{ translate('Control what your customers are allowed to edit on their order when they are editing their order on Re-route Fulfillment.') }}
           </ion-card-content>
           <ion-item lines="none">
-            <ion-toggle label-placement="start" :disabled="!useUserStore().hasPermission('COMMON_ADMIN') || Object.keys(rerouteFulfillmentConfig.allowDeliveryMethodUpdate).length == 0" :checked="rerouteFulfillmentConfig.allowDeliveryMethodUpdate.settingValue" @ionChange="updateRerouteFulfillmentConfiguration(rerouteFulfillmentConfig.allowDeliveryMethodUpdate, $event.detail.checked)">{{ translate("Delivery method") }}</ion-toggle>
+            <ion-toggle label-placement="start" :disabled="!useUserStore().hasPermission('COMMON_ADMIN')" :checked="isRerouteSettingEnabled('allowDeliveryMethodUpdate')" @click.prevent="setBopisProductStoreSettings($event, 'CUST_DLVRMTHD_UPDATE', !isRerouteSettingEnabled('allowDeliveryMethodUpdate'))">{{ translate("Delivery method") }}</ion-toggle>
           </ion-item>
           <ion-item lines="none">
-            <ion-toggle label-placement="start" :disabled="!useUserStore().hasPermission('COMMON_ADMIN') || Object.keys(rerouteFulfillmentConfig.allowDeliveryAddressUpdate).length == 0" :checked="rerouteFulfillmentConfig.allowDeliveryAddressUpdate.settingValue" @ionChange="updateRerouteFulfillmentConfiguration(rerouteFulfillmentConfig.allowDeliveryAddressUpdate, $event.detail.checked)">{{ translate("Delivery address") }}</ion-toggle>
+            <ion-toggle label-placement="start" :disabled="!useUserStore().hasPermission('COMMON_ADMIN')" :checked="isRerouteSettingEnabled('allowDeliveryAddressUpdate')" @click.prevent="setBopisProductStoreSettings($event, 'CUST_DLVRADR_UPDATE', !isRerouteSettingEnabled('allowDeliveryAddressUpdate'))">{{ translate("Delivery address") }}</ion-toggle>
           </ion-item>
           <ion-item lines="none">
-            <ion-toggle label-placement="start" :disabled="!useUserStore().hasPermission('COMMON_ADMIN') || Object.keys(rerouteFulfillmentConfig.allowPickupUpdate).length == 0" :checked="rerouteFulfillmentConfig.allowPickupUpdate.settingValue" @ionChange="updateRerouteFulfillmentConfiguration(rerouteFulfillmentConfig.allowPickupUpdate, $event.detail.checked)">{{ translate("Pick up location") }}</ion-toggle>
+            <ion-toggle label-placement="start" :disabled="!useUserStore().hasPermission('COMMON_ADMIN')" :checked="isRerouteSettingEnabled('allowPickupUpdate')" @click.prevent="setBopisProductStoreSettings($event, 'CUST_PCKUP_UPDATE', !isRerouteSettingEnabled('allowPickupUpdate'))">{{ translate("Pick up location") }}</ion-toggle>
           </ion-item>
           <ion-item lines="none">
             <!-- <p>Uploading order cancelations to Shopify is currently disabled. Order cancelations in HotWax will not be synced to Shopify.</p> -->
-            <ion-toggle label-placement="start" :disabled="!useUserStore().hasPermission('COMMON_ADMIN') || Object.keys(rerouteFulfillmentConfig.allowCancel).length == 0" :checked="rerouteFulfillmentConfig.allowCancel.settingValue" @ionChange="updateRerouteFulfillmentConfiguration(rerouteFulfillmentConfig.allowCancel, $event.detail.checked)">{{ translate("Cancel order before fulfillment") }}</ion-toggle>
+            <ion-toggle label-placement="start" :disabled="!useUserStore().hasPermission('COMMON_ADMIN')" :checked="isRerouteSettingEnabled('allowCancel')" @click.prevent="setBopisProductStoreSettings($event, 'CUST_ALLOW_CNCL', !isRerouteSettingEnabled('allowCancel'))">{{ translate("Cancel order before fulfillment") }}</ion-toggle>
           </ion-item>
           <ion-item lines="none">
-            <ion-toggle label-placement="start" :disabled="!useUserStore().hasPermission('COMMON_ADMIN') || Object.keys(rerouteFulfillmentConfig.orderItemSplit).length == 0" :checked="rerouteFulfillmentConfig.orderItemSplit.settingValue" @ionChange="updateRerouteFulfillmentConfiguration(rerouteFulfillmentConfig.orderItemSplit, $event.detail.checked)">{{ translate("Order item split") }}</ion-toggle>
+            <ion-toggle label-placement="start" :disabled="!useUserStore().hasPermission('COMMON_ADMIN')" :checked="isRerouteSettingEnabled('orderItemSplit')" @click.prevent="setBopisProductStoreSettings($event, 'CUST_ORD_ITEM_SPLIT', !isRerouteSettingEnabled('orderItemSplit'))">{{ translate("Order item split") }}</ion-toggle>
           </ion-item>
           <ion-item lines="none">
             <ion-label v-if="Object.keys(getShipmentMethodConfig()).length > 0">
@@ -73,7 +73,7 @@
             <ion-label v-else>
               {{ translate('Shipment method') }}
             </ion-label>
-            <ion-button slot="end" fill="outline" color="dark" :disabled="!useUserStore().hasPermission('COMMON_ADMIN') || Object.keys(rerouteFulfillmentConfig.shippingMethod).length == 0" @click="openEditShipmentMethodModal(rerouteFulfillmentConfig.shippingMethod)">{{ Object.keys(getShipmentMethodConfig()).length > 0 ? translate('Edit') : translate('Add')}}</ion-button>
+            <ion-button slot="end" fill="outline" color="dark" :disabled="!useUserStore().hasPermission('COMMON_ADMIN')" @click="openEditShipmentMethodModal()">{{ Object.keys(getShipmentMethodConfig()).length > 0 ? translate('Edit') : translate('Add')}}</ion-button>
           </ion-item>
         </ion-card>
 
@@ -199,7 +199,6 @@ import { alertController, IonAvatar, IonButton, IonCard, IonCardContent, IonCard
 import { computed, onMounted, ref } from 'vue';
 import { openOutline } from 'ionicons/icons'
 import Image from '@/components/Image.vue';
-import { DateTime } from 'luxon';
 
 import { commonUtil, emitter, firebaseMessaging, logger, translate, useNotificationStore } from '@common';
 import EditShipmentMethodModal from '@/components/EditShipmentMethodModal.vue';
@@ -211,7 +210,6 @@ import DxpFacilitySwitcher from "@/components/DxpFacilitySwitcher.vue";
 
 import { useUserStore } from '@/store/user';
 import { useOrderStore } from '@/store/order';
-import { useOrder } from '@/composables/useOrder';
 import { useProductStore } from '@/store/productStore';
 import DxpAppVersionInfo from '@/components/DxpAppVersionInfo.vue';
 import { useAuth } from '@/composables/auth'
@@ -219,17 +217,9 @@ import router from '@/router';
 
 const appInfo = ref(import.meta.env.VITE_VERSION_INFO ? JSON.parse(import.meta.env.VITE_VERSION_INFO) : {} as any);
 const appVersion = ref("");
-const rerouteFulfillmentConfig = ref({
-  allowDeliveryMethodUpdate: {},
-  allowDeliveryAddressUpdate: {},
-  allowPickupUpdate: {},
-  allowCancel: {},
-  shippingMethod: {},
-  orderItemSplit: {}
-} as any);
-const carriers = ref([] as any);
-const availableShipmentMethods = ref([] as any);
-const rerouteFulfillmentConfigMapping = ref(import.meta.env.VITE_RF_CNFG_MPNG ? JSON.parse(import.meta.env.VITE_RF_CNFG_MPNG) : {} as any);
+
+const carriers = computed(() => useProductStore().getCarriers);
+const availableShipmentMethods = computed(() => useProductStore().getAvailableShipmentMethods);
 
 const userProfile = computed(() => useUserStore().getUserProfile);
 const currentEComStore = computed(() => useProductStore().getCurrentEComStore);
@@ -240,6 +230,7 @@ const isPrintPicklistsEnabled = computed(() => useProductStore().isPrintPicklist
 const isShowShippingOrdersEnabled = computed(() => useProductStore().isShowShippingOrdersEnabled);
 const isRequestTransferEnabled = computed(() => useProductStore().isRequestTransferEnabled);
 const isHandoverProofEnabled = computed(() => useProductStore().isHandoverProofEnabled);
+const isRerouteSettingEnabled = computed(() => useProductStore().isRerouteSettingEnabled);
 
 const firebaseDeviceId = computed(() => useNotificationStore().getFirebaseDeviceId);
 const notificationPrefs = computed(() => useNotificationStore().getNotificationPrefs);
@@ -255,11 +246,8 @@ onIonViewWillEnter(async () => {
   useOrderStore().updateCurrent({ order: {} })
   
   // Only fetch configuration when environment mapping exists
-  if (Object.keys(rerouteFulfillmentConfigMapping.value).length > 0) {
-    fetchCarriers()
-    getAvailableShipmentMethods();
-    getRerouteFulfillmentConfiguration();
-  }
+  await useProductStore().fetchCarriers();
+  await useProductStore().fetchProductStoreShipmentMethods(currentEComStore.value?.productStoreId);
 
   // fetching partial order rejection when entering setting page to have latest information
   await useProductStore().fetchProductStoreSettings(currentEComStore.value.productStoreId)
@@ -275,10 +263,7 @@ async function fetchFacilityDependencies(facility: any) {
 
   if (previousEComStoreId !== (currentEComStore.value as any).productStoreId) {
     await useProductStore().fetchEComStoreDependencies(currentEComStore.value.productStoreId)
-    if (Object.keys(rerouteFulfillmentConfigMapping.value).length > 0) {
-      getAvailableShipmentMethods();
-      getRerouteFulfillmentConfiguration();
-    }
+    await useProductStore().fetchProductStoreShipmentMethods(currentEComStore.value?.productStoreId);
   }
   await useNotificationStore().fetchNotificationPreferences(import.meta.env.VITE_NOTIF_ENUM_TYPE_ID, import.meta.env.VITE_NOTIF_APP_ID, userProfile.value?.userLoginId, (enumId: string) => firebaseMessaging.generateTopicName(commonUtil.getOMSInstanceName(), (currentFacility.value as any)?.facilityId, enumId))
 }
@@ -322,7 +307,7 @@ function setBopisProductStoreSettings(ev: any, enumId: any, value: any) {
   useProductStore().setProductStoreSetting(currentEComStore.value?.productStoreId, enumId, (value ? "Y" : "N"))
 }
 
-async function openEditShipmentMethodModal(config: any) {
+async function openEditShipmentMethodModal() {
   const editShipmentMethodModal = await modalController.create({
     component: EditShipmentMethodModal,
     componentProps: { currentcConfig: getShipmentMethodConfig(), carriers: carriers.value, availableShipmentMethods: availableShipmentMethods.value }
@@ -330,7 +315,7 @@ async function openEditShipmentMethodModal(config: any) {
 
   editShipmentMethodModal.onDidDismiss().then(async (result: any) => {
     if (result.data?.shippingMethod) {
-      await updateRerouteFulfillmentConfiguration(config, result.data?.shippingMethod)
+      await useProductStore().setProductStoreSetting(currentEComStore.value?.productStoreId, 'RF_SHIPPING_METHOD', result.data?.shippingMethod);
     }
   })
 
@@ -338,127 +323,25 @@ async function openEditShipmentMethodModal(config: any) {
 }
 
 function getShipmentMethodConfig() {
-  if (Object.keys(rerouteFulfillmentConfig.value.shippingMethod).length !== 0) {
+  const shippingMethodConfig = useProductStore().getRerouteShipmentMethod;
+  if (shippingMethodConfig && typeof shippingMethodConfig === 'object' && Object.keys(shippingMethodConfig).length > 0) {
     try {
-      const shippingMethodConfig = rerouteFulfillmentConfig.value.shippingMethod.settingValue ? JSON.parse(rerouteFulfillmentConfig.value.shippingMethod.settingValue) : {};
-      if (Object.keys(shippingMethodConfig).length > 0) {
-        const shipmentMethodDesc = availableShipmentMethods.value.find((shipmentMethod: any) => shipmentMethod.shipmentMethodTypeId === shippingMethodConfig.shipmentMethodTypeId)?.description;
-        const carrierName = carriers.value.find((carrier: any) => carrier.partyId === shippingMethodConfig.carrierPartyId)?.groupName;
-        return { ...shippingMethodConfig, shipmentMethodDesc, carrierName };
-      }
+      const shipmentMethodDesc = availableShipmentMethods.value.find((shipmentMethod: any) => shipmentMethod.shipmentMethodTypeId === shippingMethodConfig.shipmentMethodTypeId)?.description;
+      const carrierName = carriers.value.find((carrier: any) => carrier.partyId === shippingMethodConfig.carrierPartyId)?.groupName;
+      return { ...shippingMethodConfig, shipmentMethodDesc, carrierName };
     } catch (error) {
       console.error('Error parsing shipping method config:', error);
       return {};
     }
+  } else if (typeof shippingMethodConfig === 'string' && shippingMethodConfig !== '') {
+    return { shipmentMethodTypeId: shippingMethodConfig };
   }
   return {};
 }
 
-async function fetchCarriers() {
-  availableShipmentMethods.value = [];
-  try {
-    const resp = await useOrder().getRerouteFulfillmentConfig({
-      "entityName": "CarrierShipmentMethodCount",
-      "inputFields": {
-        "roleTypeId": "CARRIER",
-        "partyTypeId": "PARTY_GROUP"
-      },
-      "fieldList": ["partyId", "roleTypeId", "groupName"],
-      "viewIndex": 0,
-      "viewSize": 250,
-      "distinct": "Y",
-      "noConditionFind": "Y",
-      "orderBy": "groupName"
-    }) as any;
-    if (!commonUtil.hasError(resp) && resp.data?.docs) {
-      carriers.value = resp.data.docs;
-    }
-  } catch (err) {
-    logger.error(err)
-  }
-}
 
-async function getAvailableShipmentMethods() {
-  availableShipmentMethods.value = [];
-  try {
-    const resp = await useOrder().getRerouteFulfillmentConfig({
-      "inputFields": {
-        "productStoreId": currentEComStore.value?.productStoreId,
-        "shipmentMethodTypeId": "STOREPICKUP",
-        "shipmentMethodTypeId_op": "notEqual"
-      },
-      "filterByDate": 'Y',
-      "entityName": "ProductStoreShipmentMethView",
-      "fieldList": ["productStoreShipMethId", "partyId", "shipmentMethodTypeId", "description"],
-      "viewSize": 250
-    }) as any;
-    if (!commonUtil.hasError(resp) && resp.data?.docs) {
-      availableShipmentMethods.value = resp.data.docs;
-    }
-  } catch (err) {
-    logger.error(err)
-  }
-}
 
-async function getRerouteFulfillmentConfiguration(settingTypeEnumId?: any) {
-  try {
-    const payload = {
-      "inputFields": {
-        "productStoreId": currentEComStore.value?.productStoreId,
-        settingTypeEnumId
-      },
-      "entityName": "ProductStoreSetting",
-      "fieldList": ["settingTypeEnumId", "settingValue"],
-      "viewSize": 5
-    } as any
 
-    // get all values
-    if (!payload.inputFields.settingTypeEnumId) {
-      payload.inputFields.settingTypeEnumId = Object.values(rerouteFulfillmentConfigMapping.value);
-      payload.inputFields.settingTypeEnumId_op = "in"
-      payload.viewSize = Object.values(rerouteFulfillmentConfigMapping.value)?.length
-    }
-
-    const resp = await useOrder().getRerouteFulfillmentConfig(payload) as any
-    if (!commonUtil.hasError(resp) && resp.data?.docs) {
-      const rerouteFulfillmentConfigMappingFlipped = Object.fromEntries(Object.entries(rerouteFulfillmentConfigMapping.value).map(([key, value]) => [value, key])) as any;
-      resp.data.docs.map((config: any) => {
-        rerouteFulfillmentConfig.value[rerouteFulfillmentConfigMappingFlipped[config.settingTypeEnumId]] = config;
-      })
-    } else {
-      Object.keys(rerouteFulfillmentConfigMapping.value).map((key) => {
-        rerouteFulfillmentConfig.value[key] = {};
-      });
-    }
-  } catch (err) {
-    logger.error(err)
-    Object.keys(rerouteFulfillmentConfigMapping.value).map((key) => {
-      rerouteFulfillmentConfig.value[key] = {};
-    });
-  }
-}
-
-async function updateRerouteFulfillmentConfiguration(config: any, value: any) {
-  const params = {
-    "productStoreId": currentEComStore.value?.productStoreId,
-    "settingTypeEnumId": config.settingTypeEnumId,
-    "settingValue": value
-  }
-
-  try {
-    const resp = await useProductStore().updateRerouteFulfillmentConfig(params) as any
-    if (!commonUtil.hasError(resp)) {
-      commonUtil.showToast(translate('Configuration updated'))
-    } else {
-      commonUtil.showToast(translate('Failed to update configuration'))
-    }
-  } catch (err) {
-    commonUtil.showToast(translate('Failed to update configuration'))
-    logger.error(err)
-  }
-  // Fetch the updated configuration
-  await getRerouteFulfillmentConfiguration(config.settingTypeEnumId);
-}
 
 async function updateNotificationPref(enumId: string) {
   let isToggledOn = false;

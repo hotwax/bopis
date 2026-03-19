@@ -26,11 +26,24 @@ export const useProductStore = defineStore('productStore', {
       barcodeIdentifier: {
         barcodeIdentifierPref: "",
         barcodeIdentifierOptions: [] as any[],
+      },
+      rerouteFulfillment: {
+        allowDeliveryMethodUpdate: "",
+        allowDeliveryAddressUpdate: "",
+        allowPickupUpdate: "",
+        allowCancel: "",
+        shippingMethod: {
+          carrierPartyId: "",
+
+        },
+        orderItemSplit: ""
       }
     } as any,
     facilities: {} as any,
     facilitiesLatLng: {} as any,
-    storesInformation: [] as any
+    storesInformation: [] as any,
+    carriers: [] as any[],
+    availableShipmentMethods: [] as any[]
   }),
 
   getters: {
@@ -52,9 +65,13 @@ export const useProductStore = defineStore('productStore', {
     getProductIdentificationOptions: (state) => state.settings.productIdentifier.productIdentificationOptions,
     getBarcodeIdentifierOptions: (state) => state.settings.barcodeIdentifier.barcodeIdentifierOptions,
     getCurrentSampleProduct: (state) => state.settings.productIdentifier.currentSampleProduct,
+    isRerouteSettingEnabled: (state) => (settingName: string) => state.settings.rerouteFulfillment[settingName] === "Y",
+    getRerouteShipmentMethod: (state) => state.settings.rerouteFulfillment.shippingMethod,
     getFacilityName: (state) => (facilityId: string) => state.facilities[facilityId] ? state.facilities[facilityId] : facilityId,
     getFacilityLatLon: (state) => (facilityId: string) => state.facilitiesLatLng[facilityId] ? state.facilitiesLatLng[facilityId] : {},
-    getStoresInformation: (state) => state.storesInformation ? state.storesInformation : []
+    getStoresInformation: (state) => state.storesInformation ? state.storesInformation : [],
+    getCarriers: (state) => state.carriers,
+    getAvailableShipmentMethods: (state) => state.availableShipmentMethods
   },
 
   actions: {
@@ -340,43 +357,66 @@ export const useProductStore = defineStore('productStore', {
       }
 
       Object.entries(defaultProductStoreSettings).forEach(([settingTypeEnumId, setting]: any) => {
-        const { stateKey, value } = setting
+        const { stateKey, value } = setting;
         const settingValue = productStoreSettings[settingTypeEnumId];
-        if (settingTypeEnumId === 'PRDT_IDEN_PREF') {
-          if (settingValue) {
-            this.settings.productIdentifier[stateKey] = JSON.parse(settingValue)
+        let finalValue;
+        try {
+          finalValue = settingValue ? JSON.parse(settingValue) : value;
+        } catch (e) {
+          finalValue = settingValue; // fallback to raw value
+        }
+
+        const keys = stateKey.split('.');
+        let current = this.settings;
+
+        for (let i = 0; i < keys.length; i++) {
+          const key = keys[i];
+
+          if (i === keys.length - 1) {
+            current[key] = finalValue;
           } else {
-            this.settings.productIdentifier[stateKey] = value
-          }
-        } else {
-          if (settingValue) {
-            this.settings[stateKey] = settingValue
-          } else {
-            this.settings[stateKey] = value
+            // ensure object exists at each level
+            if (!current[key] || typeof current[key] !== 'object') {
+              current[key] = {};
+            }
+            current = current[key];
           }
         }
       })
     },
 
-    async setProductStoreSetting(productStoreId: string, settingTypeEnumId: string, settingValue: string) {
+    async setProductStoreSetting(productStoreId: string, settingTypeEnumId: string, settingValue: any) {
       const defaultProductStoreSettings = JSON.parse(import.meta.env.VITE_DEFAULT_PRODUCT_STORE_SETTINGS as string || '{}')
 
       try {
+        const payloadSettingValue = typeof settingValue === 'object' ? JSON.stringify(settingValue) : settingValue;
         const resp = await api({
           url: `admin/productStores/${productStoreId}/settings`,
           method: 'POST',
           data: {
             productStoreId,
             settingTypeEnumId,
-            settingValue
+            settingValue: payloadSettingValue
           }
         })
         if (!commonUtil.hasError(resp)) {
           const defaultSetting = defaultProductStoreSettings[settingTypeEnumId]
-          if (settingTypeEnumId === 'PRDT_IDEN_PREF') {
-            this.settings.productIdentifier[defaultSetting.stateKey] = settingValue
-          } else {
-            this.settings[defaultSetting.stateKey] = settingValue
+          const { stateKey } = defaultSetting
+          const keys = stateKey.split('.');
+          let current = this.settings;
+
+          for (let i = 0; i < keys.length; i++) {
+            const key = keys[i];
+
+            if (i === keys.length - 1) {
+              current[key] = settingValue;
+            } else {
+              // ensure object exists at each level
+              if (!current[key] || typeof current[key] !== 'object') {
+                current[key] = {};
+              }
+              current = current[key];
+            }
           }
           commonUtil.showToast(translate('Product Store setting updated successfully.'))
         } else {
@@ -555,6 +595,62 @@ export const useProductStore = defineStore('productStore', {
         method: "post",
         data: payload
       });
+    },
+    async fetchCarriers() {
+      try {
+        const resp = await api({
+          url: "performFind",
+          method: "get",
+          baseURL: commonUtil.getOmsURL(),
+          params: {
+            "entityName": "CarrierShipmentMethodCount",
+            "inputFields": {
+              "roleTypeId": "CARRIER",
+              "partyTypeId": "PARTY_GROUP"
+            },
+            "fieldList": ["partyId", "roleTypeId", "groupName"],
+            "viewIndex": 0,
+            "viewSize": 250,
+            "distinct": "Y",
+            "noConditionFind": "Y",
+            "orderBy": "groupName"
+          }
+        }) as any;
+        if (!commonUtil.hasError(resp) && resp.data?.docs) {
+          this.carriers = resp.data.docs;
+        } else {
+          this.carriers = [];
+        }
+      } catch (err) {
+        logger.error(err)
+      }
+    },
+    async fetchProductStoreShipmentMethods(productStoreId: string) {
+      try {
+        const resp = await api({
+          url: "performFind",
+          method: "get",
+          baseURL: commonUtil.getOmsURL(),
+          params: {
+            "inputFields": {
+              "productStoreId": productStoreId,
+              "shipmentMethodTypeId": "STOREPICKUP",
+              "shipmentMethodTypeId_op": "notEqual"
+            },
+            "filterByDate": 'Y',
+            "entityName": "ProductStoreShipmentMethView",
+            "fieldList": ["productStoreShipMethId", "partyId", "shipmentMethodTypeId", "description"],
+            "viewSize": 250
+          }
+        }) as any;
+        if (!commonUtil.hasError(resp) && resp.data?.docs) {
+          this.availableShipmentMethods = resp.data.docs;
+        } else {
+          this.availableShipmentMethods = [];
+        }
+      } catch (err) {
+        logger.error(err)
+      }
     },
   },
   persist: true

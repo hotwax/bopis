@@ -83,7 +83,7 @@ function openShippingMethodDocumentReference() {
 }
 
 function save() {
-  modalController.dismiss({ dismissed: true, shippingMethod: JSON.stringify({"carrierPartyId": carrierPartyId.value, "shipmentMethodTypeId": shipmentMethodTypeId.value})});
+  modalController.dismiss({ dismissed: true, shippingMethod: {"carrierPartyId": carrierPartyId.value, "shipmentMethodTypeId": shipmentMethodTypeId.value}});
 }
 
 </script>

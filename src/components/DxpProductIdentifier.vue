@@ -66,9 +66,7 @@ onMounted(() => {
 
 function setProductIdentificationPref(value: string | any, id: string) {
   const updatedPreference = JSON.parse(JSON.stringify(productIdentificationPref.value)) as any
-  console.log("=====1=updatedPreference==", updatedPreference)
   updatedPreference[id] = value
-  console.log("=====2=updatedPreference==", updatedPreference)
   productStore.setProductStoreSetting(currentEComStore.value.productStoreId, "PRDT_IDEN_PREF", updatedPreference)
 }
 
