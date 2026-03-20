@@ -4,7 +4,11 @@ import { useUserStore } from '@/store/user'
 
 export const useProductStore = defineStore('productStore', {
   state: () => ({
-    currentFacility: {} as any,
+    currentFacility: {
+      facilityId: "",
+      facilityName: "",
+      productStores: []
+    } as any,
     currentEComStore: {} as any,
     settings: {
       partialOrderRejection: "",
@@ -50,16 +54,31 @@ export const useProductStore = defineStore('productStore', {
     getCurrentFacility: (state) => state.currentFacility,
     getCurrentEComStore: (state) => state.currentEComStore,
     getProductStores(state) {
-      return useUserStore().getUserProfile?.stores
+      return state.currentFacility?.productStores || []
     },
     getSettings: (state) => state.settings,
-    isPartialOrderRejectionEnabled: (state) => state.settings.partialOrderRejection === "Y",
-    isTrackingEnabled: (state) => state.settings.enableTracking === "Y",
-    isPrintPackingSlipEnabled: (state) => state.settings.printPackingSlip === "Y",
-    isPrintPicklistsEnabled: (state) => state.settings.printPicklists === "Y",
-    isShowShippingOrdersEnabled: (state) => state.settings.showShippingOrders === "Y",
-    isRequestTransferEnabled: (state) => state.settings.requestTransfer === "Y",
-    isHandoverProofEnabled: (state) => state.settings.handoverProof === "Y",
+    isProductStoreSettingEnabled: (state) => (settingName: string) => state.settings[settingName] === "Y",
+    isPartialOrderRejectionEnabled(): boolean {
+      return this.isProductStoreSettingEnabled('partialOrderRejection')
+    },
+    isTrackingEnabled(): boolean {
+      return this.isProductStoreSettingEnabled('enableTracking')
+    },
+    isPrintPackingSlipEnabled(): boolean {
+      return this.isProductStoreSettingEnabled('printPackingSlip')
+    },
+    isPrintPicklistsEnabled(): boolean {
+      return this.isProductStoreSettingEnabled('printPicklists')
+    },
+    isShowShippingOrdersEnabled(): boolean {
+      return this.isProductStoreSettingEnabled('showShippingOrders')
+    },
+    isRequestTransferEnabled(): boolean {
+      return this.isProductStoreSettingEnabled('requestTransfer')
+    },
+    isHandoverProofEnabled(): boolean {
+      return this.isProductStoreSettingEnabled('handoverProof')
+    },
     getProductIdentificationPref: (state) => state.settings.productIdentifier.productIdentificationPref,
     getBarcodeIdentifierPref: (state) => state.settings.barcodeIdentifier.barcodeIdentifierPref,
     getProductIdentificationOptions: (state) => state.settings.productIdentifier.productIdentificationOptions,
@@ -93,7 +112,10 @@ export const useProductStore = defineStore('productStore', {
       const facilityGroupId = "OMS_FULFILLMENT";
 
       try {
-        userStore.current.stores = [];
+        this.currentFacility = {
+          ...this.currentFacility,
+          productStores: []
+        }
 
         // Fetch the facilities associated with party
         if (partyId && !isAdminUser) {
@@ -233,7 +255,6 @@ export const useProductStore = defineStore('productStore', {
       }
     },
     async fetchProductStores(currentFacilityId?: string) {
-      const userStore = useUserStore();
       try {
         const facilityId = currentFacilityId ?? this.currentFacility.facilityId;
         const pageSize = 200;
@@ -268,14 +289,17 @@ export const useProductStore = defineStore('productStore', {
           }
         }
 
-        userStore.current.stores = stores;
+        this.currentFacility = {
+          ...this.currentFacility,
+          productStores: stores
+        }
 
-        userStore.current.stores.push({
+        this.currentFacility.productStores.push({
           productStoreId: "",
           storeName: "None",
         });
 
-        this.setCurrentEComStore(userStore.current.stores[0])
+        this.setCurrentEComStore(this.currentFacility.productStores[0])
       } catch (error: any) {
         logger.error("error", error);
         return Promise.reject(new Error(error));
@@ -295,7 +319,7 @@ export const useProductStore = defineStore('productStore', {
         }) as any;
         const preferredStoreId = preferredStoreResp.data?.[0]?.preferenceValue
         if (preferredStoreId) {
-          const store = userStore.current.stores.find((store: any) => store.productStoreId === preferredStoreId);
+          const store = this.currentFacility.productStores.find((store: any) => store.productStoreId === preferredStoreId);
           store && this.setCurrentEComStore(store)
         }
       } catch (err) {
