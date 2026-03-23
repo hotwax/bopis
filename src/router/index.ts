@@ -11,7 +11,7 @@ import { commonUtil, translate } from '@common'
 import { useUserStore } from '@/store/user'
 
 import 'vue-router'
-import { useAuth } from '@/composables/auth';
+import { useAuth } from '@/composables/useAuth';
 import Login from '@/views/Login.vue';
 
 

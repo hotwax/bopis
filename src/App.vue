@@ -11,7 +11,7 @@ import { translate, emitter, logger, useNotificationStore } from "@common";
 import { DateTime, Settings } from "luxon";
 import { useUserStore } from "@/store/user";
 import { useProductStore } from "@/store/productStore";
-import { useAuth } from "@/composables/auth";
+import { useAuth } from "@/composables/useAuth";
 import { firebaseUtil } from "@/utils/firebaseUtil";
 
 const { isAuthenticated } = useAuth();

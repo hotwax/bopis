@@ -66,7 +66,7 @@ import { useUserStore } from "@/store/user";
 import Logo from '@/components/Logo.vue';
 import { arrowForwardOutline } from 'ionicons/icons'
 import { api, commonUtil, cookieHelper, translate } from "@common";
-import { useAuth } from "@/composables/auth";
+import { useAuth } from "@/composables/useAuth";
 import { useRoute, useRouter } from "vue-router";
 
 const userStore = useUserStore();
