@@ -157,7 +157,6 @@ import { commonUtil, emitter, logger, translate, useNotificationStore } from '@c
 import { DateTime } from 'luxon';
 
 import AssignPickerModal from "./AssignPickerModal.vue";
-import { useOrder } from "@/composables/useOrder";
 import RejectOrderItemModal from "@/components/RejectOrderItemModal.vue";
 import ProofOfDeliveryModal from "@/components/ProofOfDeliveryModal.vue";
 import { useUserStore } from "@/store/user";
@@ -189,15 +188,7 @@ const order = computed(() => useOrderStore().current);
 const communicationEvents = computed(() => useOrderStore().getCommunicationEvents);
 const currentFacility = computed(() => useProductStore().getCurrentFacility);
 
-const {
-  sendPickupScheduledNotification,
-  printPicklist: printPicklistApi,
-  createPicklist: createPicklistApi,
-  convertToShipToStore,
-  sendPickupNotification,
-  printPackingSlip: printPackingSlipApi,
-  ensurePartyRole
-} = useOrder();
+const orderStore = useOrderStore();
 
 const communicationEventOrderIds = computed(() => {
   return new Set((communicationEvents.value || []).map((e: any) => e.orderId));
@@ -256,7 +247,7 @@ async function printPackingSlip(order: any) {
   }
 
   order.isGeneratingPackingSlip = true;
-  await printPackingSlipApi([order.shipmentId]);
+  await orderStore.printPackingSlip([order.shipmentId]);
   order.isGeneratingPackingSlip = false;
 }
 
@@ -422,7 +413,7 @@ async function sendReadyForPickupEmail(orderData: any) {
         text: translate('Send'),
         handler: async () => {
           try {
-            const resp = await sendPickupScheduledNotification({ shipmentId: orderData.shipmentId });
+            const resp = await orderStore.sendPickupScheduledNotification({ shipmentId: orderData.shipmentId });
             if (!commonUtil.hasError(resp)) {
               commonUtil.showToast(translate("Email sent successfully"))
             } else {
@@ -447,19 +438,19 @@ function viewShipToStoreOrders() {
 }
 
 function viewNotifications() {
-  useUserStore().setUnreadNotificationsStatus(false)
+  useNotificationStore().setUnreadNotificationsStatus(false)
   router.push({ path: '/notifications' })
 }
 
 async function printPicklist(orderData: any, shipGroup: any) {
   if (shipGroup.picklistId) {
-    await printPicklistApi(shipGroup.picklistId)
+    await orderStore.printPicklist(shipGroup.picklistId)
     return;
   }
 
   if (!isTrackingEnabled) {
     try {
-      const resp = await useOrder().ensurePartyRole({
+      const resp = await orderStore.ensurePartyRole({
         partyId: "_NA_",
         roleTypeId: "WAREHOUSE_PICKER",
       })
@@ -512,10 +503,10 @@ async function createPicklist(orderData: any, selectedPicker: any) {
   };
 
   try {
-    resp = await createPicklistApi(payload);
+    resp = await orderStore.createPicklist(payload);
     if (!commonUtil.hasError(resp)) {
       // generating picklist after creating a new picklist
-      await printPicklistApi(resp.data.picklistId)
+      await orderStore.printPicklist(resp.data.picklistId)
       const currentOrders = JSON.parse(JSON.stringify(orders.value))
       const orderIndex = currentOrders.findIndex((o: any) => o.orderId === orderData.orderId);
       let orderShipGroups = currentOrders[orderIndex].shipGroups || [];
@@ -577,7 +568,7 @@ async function confirmRequestTransfer(orderData: any) {
 async function requestTransfer(orderData: any) {
   emitter.emit("presentLoader");
   try {
-    const resp = await convertToShipToStore({
+    const resp = await orderStore.convertToShipToStore({
       orderId: orderData.orderId,
       shipGroupSeqId: orderData.shipGroup.shipGroupSeqId
     });
@@ -613,7 +604,7 @@ async function openProofOfDeliveryModal(orderData: any, isViewModeOnly: any) {
 
     try {
       // Send the proof of delivery email
-      const resp = await sendPickupNotification(data.proofOfDeliveryData);
+      const resp = await orderStore.sendPickupNotification(data.proofOfDeliveryData);
 
       if (commonUtil.hasError(resp)) {
         logger.error("Pickup notification failed:", resp);

@@ -119,9 +119,9 @@ import { useProductStore } from '@/store/productStore'
 import { commonUtil, emitter, logger, translate } from "@common"
 
 import { DateTime } from 'luxon';
-import { useOrder } from "@/composables/useOrder";
 import ProofOfDeliveryModal from "@/components/ProofOfDeliveryModal.vue";
 
+const orderStore = useOrderStore();
 const queryString = ref('');
 const isScrollingEnabled = ref(false);
 const segmentSelected = ref('incoming');
@@ -140,15 +140,6 @@ const completedOrderCount = computed(() => useOrderStore().getCompletedOrdersCou
 const communicationEvents = computed(() => useOrderStore().getCommunicationEvents);
 const isHandoverProofEnabled = computed(() => useProductStore().isHandoverProofEnabled);
 
-const {
-  arrivedShipToStore,
-  getShipToStoreOrders,
-  sendPickupScheduledNotification,
-  handoverShipToStoreOrder,
-  sendHandoverNotification,
-  sendPickupNotification
-} = useOrder();
-
 const communicationEventOrderIds = computed(() => new Set((communicationEvents.value || []).map((e: any) => e.orderId)));
 
 const getDateTime = (time: any) => {
@@ -158,19 +149,19 @@ const getDateTime = (time: any) => {
 const getIncomingOrders = async (vSize?: any, vIndex?: any) => {
   const viewSize = vSize ? vSize : (import.meta.env.VITE_VIEW_SIZE as any);
   const viewIndex = vIndex ? vIndex : 0;
-  await (useOrderStore() as any).getShipToStoreIncomingOrders({ viewSize, viewIndex, queryString: queryString.value, facilityId: (useUserStore().getCurrentFacility as any)?.facilityId });
+  await (useOrderStore() as any).getShipToStoreIncomingOrders({ viewSize, viewIndex, queryString: queryString.value, facilityId: (useProductStore().getCurrentFacility as any)?.facilityId });
 };
 
 const getReadyForPickupOrders = async (vSize?: any, vIndex?: any) => {
   const viewSize = vSize ? vSize : (import.meta.env.VITE_VIEW_SIZE as any);
   const viewIndex = vIndex ? vIndex : 0;
-  await (useOrderStore() as any).getReadyForPickupOrders({ viewSize, viewIndex, queryString: queryString.value, facilityId: (useUserStore().getCurrentFacility as any)?.facilityId });
+  await (useOrderStore() as any).getReadyForPickupOrders({ viewSize, viewIndex, queryString: queryString.value, facilityId: (useProductStore().getCurrentFacility as any)?.facilityId });
 };
 
 const getCompletedOrders = async (vSize?: any, vIndex?: any) => {
   const viewSize = vSize ? vSize : (import.meta.env.VITE_VIEW_SIZE as any);
   const viewIndex = vIndex ? vIndex : 0;
-  await (useOrderStore() as any).getShipToStoreCompletedOrders({ viewSize, viewIndex, queryString: queryString.value, facilityId: (useUserStore().getCurrentFacility as any)?.facilityId });
+  await (useOrderStore() as any).getShipToStoreCompletedOrders({ viewSize, viewIndex, queryString: queryString.value, facilityId: (useProductStore().getCurrentFacility as any)?.facilityId });
   await (useOrderStore() as any).getCommunicationEvents({ orders: completedOrders.value });
 };
 
@@ -250,23 +241,23 @@ const selectSearchBarText = (event: any) => {
 const scheduleOrderForPickup = async (shipmentId: string, order: any) => {
   emitter.emit("presentLoader");
   try {
-    const resp = await arrivedShipToStore(shipmentId);
+    const resp = await orderStore.arrivedShipToStore(shipmentId);
     if (!commonUtil.hasError(resp)) {
       const orderId = order.orderId;
       const incomingParams = {
         orderId,
-        orderFacilityId: (useUserStore().getCurrentFacility as any)?.facilityId,
+        orderFacilityId: (useProductStore().getCurrentFacility as any)?.facilityId,
         pageSize: 10,
         orderStatusId: 'ORDER_COMPLETED,ORDER_APPROVED',
         statusId: 'ITEM_COMPLETED,ITEM_APPROVED',
         shipmentMethodTypeId: 'SHIP_TO_STORE',
         shipmentStatusId: 'SHIPMENT_INPUT,SHIPMENT_APPROVED,SHIPMENT_PACKED,SHIPMENT_SHIPPED',
       };
-      const incomingResp = await getShipToStoreOrders(incomingParams);
+      const incomingResp = await orderStore.getShipToStoreOrdersMeta(incomingParams);
       const isLastShipGroup = !commonUtil.hasError(incomingResp) && incomingResp.data.ordersCount === 0;
       if (isLastShipGroup) {
         try {
-          const emailResp = await sendPickupScheduledNotification({ shipmentId });
+          const emailResp = await orderStore.sendPickupScheduledNotification({ shipmentId });
           if (!commonUtil.hasError(emailResp)) {
             commonUtil.showToast(translate('Order marked as ready for pickup, an email notification has been sent to the customer'));
           }
@@ -308,12 +299,12 @@ const confirmScheduleOrderForPickup = async (order: any) => {
 const handoverOrder = async (shipmentId: string, order: any) => {
   emitter.emit("presentLoader");
   try{
-    const resp = await handoverShipToStoreOrder(shipmentId);
+    const resp = await orderStore.handoverShipToStoreOrder(shipmentId);
     if(!commonUtil.hasError(resp)) {
       const orderId = order.orderId;
       const checkShipGroupParams = {
         orderId,
-        orderFacilityId: (useUserStore().getCurrentFacility as any)?.facilityId,
+        orderFacilityId: (useProductStore().getCurrentFacility as any)?.facilityId,
         pageSize: 10
       };
       const pendingShipGroupParams = {
@@ -323,11 +314,11 @@ const handoverOrder = async (shipmentId: string, order: any) => {
         shipmentMethodTypeId: 'SHIP_TO_STORE',
         shipmentStatusId: 'SHIPMENT_INPUT,SHIPMENT_APPROVED,SHIPMENT_PACKED,SHIPMENT_SHIPPED,SHIPMENT_ARRIVED',
       };
-      const shipGroupResp = await getShipToStoreOrders(pendingShipGroupParams);
+      const shipGroupResp = await orderStore.getShipToStoreOrdersMeta(pendingShipGroupParams);
       const isLastShipGroup = !commonUtil.hasError(shipGroupResp) && shipGroupResp.data.ordersCount === 0;
       if (isLastShipGroup) {
         try {
-          const emailResp = await sendHandoverNotification({ shipmentId });
+          const emailResp = await orderStore.sendHandoverNotification({ shipmentId });
           if (!commonUtil.hasError(emailResp)) {
             commonUtil.showToast(translate('Order handed over successfully and order completion email has been sent'));
           } else {
@@ -380,7 +371,7 @@ const sendReadyForPickupEmail = async (order: any) => {
       text: translate('Send'),
       handler: async () => {
         try {
-          const resp = await sendPickupScheduledNotification({ shipmentId: order.shipmentId });
+          const resp = await orderStore.sendPickupScheduledNotification({ shipmentId: order.shipmentId });
           if (!commonUtil.hasError(resp)) {
             commonUtil.showToast(translate("Email sent successfully"));
           } else {
@@ -409,7 +400,7 @@ const openProofOfDeliveryModal = async (order: any, isViewModeOnly: any) => {
   if (data?.confirmed && data?.proofOfDeliveryData) {
     emitter.emit("presentLoader");
     try {
-      const resp = await sendPickupNotification(data.proofOfDeliveryData);
+      const resp = await orderStore.sendPickupNotification(data.proofOfDeliveryData);
       if (commonUtil.hasError(resp)) {
         logger.error("Pickup notification failed:", resp);
         commonUtil.showToast(translate("Unable to save the details. Please try again."));

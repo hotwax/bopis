@@ -60,7 +60,7 @@ import { IonButton, IonButtons, IonContent, IonFab, IonFabButton, IonHeader, Ion
 import { computed, ref } from "vue";
 import { cameraOutline, cardOutline, closeOutline, giftOutline, stopOutline } from "ionicons/icons";
 import { useProductStore as useProductStoreSettings } from '@/store/productStore'
-import { useOrder } from "@/composables/useOrder";
+import { useOrderStore } from "@/store/order";
 import { commonUtil, logger, translate } from '@common';
 import { DateTime } from 'luxon';
 import { StreamBarcodeReader } from "vue-barcode-reader";
@@ -107,7 +107,7 @@ async function confirmSave() {
 
 async function activateGitCard() {
   try {
-    const resp = await useOrder().activateGiftCard({
+    const resp = await useOrderStore().activateGiftCard({
       orderId: props.orderId,
       orderItemSeqId: props.item.orderItemSeqId,
       amount: props.item.unitPrice,

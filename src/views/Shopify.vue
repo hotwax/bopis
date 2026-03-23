@@ -37,14 +37,14 @@ import { Redirect } from "@shopify/app-bridge/actions";
 import createApp from "@shopify/app-bridge";
 import { useRouter, useRoute } from "vue-router";
 import { cookieHelper, emitter, translate } from "@common"
-import { useOrder } from "@/composables/useOrder"
+import { useOrderStore } from "@/store/order";
 import { getSessionToken } from "@shopify/app-bridge-utils";
 import { useUserStore } from "@/store/user";
 import Logo from '@/components/Logo.vue'
 
 const router = useRouter();
 const route = useRoute();
-const { generateAccessToken } = useOrder();
+const orderStore = useOrderStore();
 
 const apiKey = ref(import.meta.env.VITE_SHOPIFY_API_KEY);
 const shopConfigs = ref(JSON.parse(import.meta.env.VITE_SHOPIFY_SHOP_CONFIG || '{}'));
@@ -102,7 +102,7 @@ onMounted(async () => {
   } else if (code) {
     // TODO store returned status and perform operation based upon it
     try {
-      const resp = await generateAccessToken({
+      const resp = await orderStore.generateAccessToken({
         data: {
           "code": code,
           "shop": shopVal,

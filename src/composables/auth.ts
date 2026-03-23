@@ -1,9 +1,10 @@
-import { api, client, commonUtil, cookieHelper, emitter, logger, translate, useNotificationStore } from "@common";
+import { api, client, commonUtil, cookieHelper, emitter, firebaseMessaging, logger, translate, useNotificationStore } from "@common";
 import { useUserStore } from "@/store/user";
 import { useProductStore } from "@/store/productStore";
 import { DateTime } from "luxon";
 import { computed, ref } from "vue";
 import router from '@/router';
+import { firebaseUtil } from "@/utils/firebaseUtil";
 
 interface LoginOption {
   loginAuthType?: string,
@@ -61,7 +62,8 @@ export function useAuth() {
       await useProductStore().fetchEComStoreDependencies(useProductStore().getCurrentEComStore.productStoreId)
 
       const notificationStore = useNotificationStore();
-      await notificationStore.fetchAllNotificationPrefs(import.meta.env.VITE_NOTIF_APP_ID, resp.data.userLoginId)
+      await notificationStore.fetchAllNotificationPrefs(import.meta.env.VITE_NOTIF_APP_ID, useUserStore().getUserProfile.userId)
+      await firebaseUtil.initialiseFirebaseMessaging();
 
       const facilityId = router.currentRoute.value.query.facilityId
       let isQueryFacilityFound = false

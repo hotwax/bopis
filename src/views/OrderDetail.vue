@@ -341,7 +341,6 @@ import EditPickerModal from "@/components/EditPickerModal.vue";
 
 import { DateTime } from "luxon";
 import { api, commonUtil, emitter, logger, translate } from '@common';
-import { useOrder } from "@/composables/useOrder";
 import { useProductStore } from "@/store/productStore";
 import InventoryDetailsPopover from '@/components/InventoryDetailsPopover.vue'
 import { orderUtil } from '@/utils/orderUtil'
@@ -357,6 +356,7 @@ import { useUserStore } from "@/store/user"
 const props = defineProps(['orderType', 'orderId', 'shipGroupSeqId']);
 const router = useRouter();
 
+const orderStore = useOrderStore();
 const {
   convertToShipToStore,
   createPicklist: createPicklistApi,
@@ -368,7 +368,7 @@ const {
   ensurePartyRole,
   fetchJobInformation,
   getProcessRefundStatus
-} = useOrder();
+} = orderStore;
 
 const rejectEntireOrderReasonId = ref("REJ_AVOID_ORD_SPLIT");
 const isCancelationSyncJobEnabled = ref(false);

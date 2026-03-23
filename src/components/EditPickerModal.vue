@@ -60,11 +60,11 @@ import { IonButtons, IonButton, IonContent, IonFab, IonFabButton, IonHeader, Ion
 import { onMounted, ref } from "vue";
 import { close, saveOutline } from "ionicons/icons";
 import { commonUtil, logger, translate } from '@common';
-import { useOrder } from "@/composables/useOrder";
+import { useOrderStore } from "@/store/order";
 
 const props = defineProps(['order'])
 
-const { getAvailablePickers } = useOrder()
+const orderStore = useOrderStore();
 
 const availablePickers = ref([] as any)
 const queryString = ref('')
@@ -149,7 +149,7 @@ async function findPickers(vSize?: any, vIndex?: any) {
   let total = 0;
 
   try {
-    const resp = await getAvailablePickers(payload);
+    const resp = await orderStore.getAvailablePickers(payload);
     if (resp.status === 200 && !commonUtil.hasError(resp) && resp.data.response.docs.length > 0) {
       const pickers = resp.data.response.docs.map((picker: any) => ({
         name: picker.groupName ? picker.groupName : (picker.firstName || picker.lastName)
@@ -199,7 +199,7 @@ async function confirmSave() {
 async function resetPicker() {
   const pickerId = selectedPicker.value.id
   // Api call to remove already selected picker and assign new picker
-  const resp = await useOrder().resetPicker({
+  const resp = await orderStore.resetPicker({
     pickerIds: pickerId,
     picklistId: props.order.picklistId
   });

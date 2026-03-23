@@ -62,10 +62,9 @@
 import { IonBadge, IonButton, IonButtons, IonContent, IonHeader, IonIcon, IonItem, IonLabel, IonList, IonListHeader, IonNote, IonTitle, IonThumbnail, IonToolbar, modalController } from "@ionic/vue";
 import { computed, onMounted, ref } from "vue";
 import { closeOutline } from "ionicons/icons";
-import { useOrder } from "@/composables/useOrder";
 import { useProductStore as useProductStoreSettings } from "@/store/productStore";
 import { orderUtil } from '@/utils/orderUtil'
-import { commonUtil, emitter, translate } from "@common"
+import { commonUtil, emitter, translate, logger } from "@common"
 import { DateTime } from "luxon";
 
 import { useOrderStore } from "@/store/order";
@@ -78,10 +77,10 @@ const orderTotal = ref(0);
 const currentOrder = ref({} as any);
 const runTimeDiff = ref("");
 
+const orderStore = useOrderStore();
 const getProduct = (productId: string) => useProductStore().getProduct(productId);
 const cancelReasons = computed(() => useOrderStore().getCancelReasons);
 const productIdentificationPref = computed(() => useProductStoreSettings().getProductIdentificationPref);
-const { cancelOrder: cancelOrderApi } = useOrder();
 
 onMounted(() => {
   currentOrder.value = JSON.parse(JSON.stringify(props.order))
@@ -118,7 +117,7 @@ async function cancelOrder() {
   let cancelledResponse;
 
   try {
-    cancelledResponse = await cancelOrderApi(payload);
+    cancelledResponse = await orderStore.cancelOrder(payload);
 
     if (commonUtil.hasError(cancelledResponse)) {
       throw cancelledResponse.data;
@@ -136,7 +135,7 @@ async function cancelOrder() {
       )
     };
   } catch (err) {
-    console.error("Error cancelling order items", err);
+    logger.error("Error cancelling order items", err);
   }
 
   // If all the items are cancelled then mark the whole order as cancelled

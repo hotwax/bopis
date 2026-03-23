@@ -213,6 +213,7 @@ import { useOrderStore } from '@/store/order';
 import { useProductStore } from '@/store/productStore';
 import DxpAppVersionInfo from '@/components/DxpAppVersionInfo.vue';
 import { useAuth } from '@/composables/auth'
+import { firebaseUtil } from "@/utils/firebaseUtil"
 import router from '@/router';
 
 const appInfo = ref(import.meta.env.VITE_VERSION_INFO ? JSON.parse(import.meta.env.VITE_VERSION_INFO) : {} as any);
@@ -254,7 +255,7 @@ onIonViewWillEnter(async () => {
 
   // as notification prefs can also be updated from the notification pref modal,
   // latest state is fetched each time we open the settings page
-  await useNotificationStore().fetchNotificationPreferences(import.meta.env.VITE_NOTIF_ENUM_TYPE_ID, import.meta.env.VITE_NOTIF_APP_ID, userProfile.value?.userLoginId, (enumId: string) => firebaseMessaging.generateTopicName(commonUtil.getOMSInstanceName(), (currentFacility.value as any)?.facilityId, enumId))
+  await useNotificationStore().fetchNotificationPreferences(import.meta.env.VITE_NOTIF_ENUM_TYPE_ID, import.meta.env.VITE_NOTIF_APP_ID, userProfile.value?.userId, (enumId: string) => firebaseMessaging.generateTopicName(commonUtil.getOMSInstanceName(), (currentFacility.value as any)?.facilityId, enumId))
 });
 
 async function fetchFacilityDependencies(facility: any) {
@@ -265,7 +266,7 @@ async function fetchFacilityDependencies(facility: any) {
     await useProductStore().fetchEComStoreDependencies(currentEComStore.value.productStoreId)
     await useProductStore().fetchProductStoreShipmentMethods(currentEComStore.value?.productStoreId);
   }
-  await useNotificationStore().fetchNotificationPreferences(import.meta.env.VITE_NOTIF_ENUM_TYPE_ID, import.meta.env.VITE_NOTIF_APP_ID, userProfile.value?.userLoginId, (enumId: string) => firebaseMessaging.generateTopicName(commonUtil.getOMSInstanceName(), (currentFacility.value as any)?.facilityId, enumId))
+  await useNotificationStore().fetchNotificationPreferences(import.meta.env.VITE_NOTIF_ENUM_TYPE_ID, import.meta.env.VITE_NOTIF_APP_ID, userProfile.value?.userId, (enumId: string) => firebaseMessaging.generateTopicName(commonUtil.getOMSInstanceName(), (currentFacility.value as any)?.facilityId, enumId))
 }
 
 async function timeZoneUpdated(tzId: string) {
@@ -277,7 +278,7 @@ async function logout() {
   // remove firebase notification registration token -
   // OMS and auth is required hence, removing it before logout (clearing state)
   try {
-    await useNotificationStore().unsubscribeTopic(firebaseDeviceId.value, import.meta.env.VITE_NOTIF_APP_ID)
+    await useNotificationStore().removeClientRegistrationToken(firebaseDeviceId.value, import.meta.env.VITE_NOTIF_APP_ID)
   } catch (error) {
     logger.error(error)
   }
@@ -339,10 +340,6 @@ function getShipmentMethodConfig() {
   return {};
 }
 
-
-
-
-
 async function updateNotificationPref(enumId: string) {
   let isToggledOn = false;
   const notificationStore = useNotificationStore();
@@ -375,20 +372,11 @@ async function updateNotificationPref(enumId: string) {
 
   try {
     if (!allNotificationPrefs.value.length && isToggledOn) {
-      await firebaseMessaging.initialiseFirebaseApp(
-        JSON.parse(import.meta.env.VITE_FIREBASE_CONFIG || '{}'),
-        import.meta.env.VITE_FIREBASE_VAPID_KEY,
-        async (token: string) => {
-          await notificationStore.storeClientRegistrationToken(token, firebaseMessaging.generateDeviceId(notificationStore.getFirebaseDeviceId), import.meta.env.VITE_NOTIF_APP_ID);
-        },
-        (notification: any) => {
-          notificationStore.addNotification(notification);
-        }
-      );
+      await firebaseUtil.initialiseFirebaseMessaging();
     } else if (allNotificationPrefs.value.length == 1 && !isToggledOn) {
       await notificationStore.unsubscribeTopic(firebaseDeviceId.value, import.meta.env.VITE_NOTIF_APP_ID)
     }
-    await notificationStore.fetchAllNotificationPrefs(import.meta.env.VITE_NOTIF_APP_ID, userProfile.value?.userLoginId);
+    await notificationStore.fetchAllNotificationPrefs(import.meta.env.VITE_NOTIF_APP_ID, userProfile.value?.userId);
   } catch (error) {
     logger.error(error);
   }

@@ -69,10 +69,10 @@
 import { IonButtons, IonButton, IonContent, IonFab, IonFabButton, IonHeader, IonIcon, IonItem, IonLabel, IonList, IonListHeader, IonRadio, IonRadioGroup, IonSearchbar, IonSpinner, IonTitle, IonToolbar, IonInfiniteScroll, IonInfiniteScrollContent, modalController } from "@ionic/vue";
 import { onMounted, ref } from "vue";
 import { closeOutline, saveOutline } from "ionicons/icons";
-import { useOrder } from '@/composables/useOrder'
+import { useOrderStore } from '@/store/order'
 import { commonUtil, logger, translate } from "@common";
 
-const { getAvailablePickers } = useOrder()
+const orderStore = useOrderStore();
 
 const selectedPicker = ref('');
 const queryString = ref('');
@@ -157,7 +157,7 @@ const getPicker = async (vSize?: any, vIndex?: any) => {
   let total = 0;
 
   try {
-    const resp = await getAvailablePickers(payload);
+    const resp = await orderStore.getAvailablePickers(payload);
     if (resp.status === 200 && !commonUtil.hasError(resp) && resp.data.response.docs.length > 0) {
       const pickers = resp.data.response.docs.map((picker: any) => ({
         name: picker.groupName ? picker.groupName : (picker.firstName || picker.lastName)

@@ -49,14 +49,14 @@ const routes: Array<RouteRecordRaw> = [
         path: 'orders',
         component: () => import('@/views/Orders.vue'),
         meta: {
-          permissionId: "APP_ORDERS_VIEW"
+          permissionId: ""
         }
       },
       {
         path: 'catalog',
         component: () => import('@/views/Catalog.vue'),
         meta: {
-          permissionId: "APP_CATALOG_VIEW"
+          permissionId: ""
         }
       },
       {
@@ -82,7 +82,7 @@ const routes: Array<RouteRecordRaw> = [
     beforeEnter: authGuard,
     props: true,
     meta: {
-      permissionId: "APP_ORDER_DETAIL_VIEW"
+      permissionId: ""
     }
   },
   {
@@ -91,7 +91,7 @@ const routes: Array<RouteRecordRaw> = [
     component: ProductDetail,
     beforeEnter: authGuard,
     meta: {
-      permissionId: "APP_PRODUCT_DETAIL_VIEW"
+      permissionId: ""
     }
   },
   {

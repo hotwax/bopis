@@ -34,10 +34,10 @@
         </ion-checkbox>
       </ion-item>
 
-      <ion-item :lines="errors.name ? 'none' : ''">
+      <ion-item :lines="errors.name ? 'none' : 'inset'">
         <ion-input v-model="form.name" :error-text="errors.name" :class="{ 'ion-invalid': errors.name, 'ion-touched': errors.name }" :label="translate('Name')" label-placement="floating" :disabled="isSubmitting || (sameAsBilling && isNamePrefilled)" required/>
       </ion-item>
-      <ion-item :lines="errors.idNumber ? 'none' : ''">
+      <ion-item :lines="errors.idNumber ? 'none' : 'inset'">
         <ion-input v-model="form.idNumber" :error-text="errors.idNumber" :class="{ 'ion-invalid': errors.idNumber, 'ion-touched': errors.idNumber }" :label="translate('ID Number')" label-placement="floating" :disabled="isSubmitting || (sameAsBilling && isIdPrefilled)" required/>
       </ion-item>
 
@@ -48,10 +48,10 @@
           <ion-select-option value="Friend">{{ translate("Friend") }}</ion-select-option>
         </ion-select>
       </ion-item>
-      <ion-item :lines="errors.phone ? 'none' : ''">
+      <ion-item :lines="errors.phone ? 'none' : 'inset'">
         <ion-input v-model="form.phone" :label="translate('Phone')" label-placement="floating" type="tel" :disabled="isSubmitting || (sameAsBilling &&isPhonePrefilled)" :error-text="errors.phone" :class="{ 'ion-invalid': errors.phone, 'ion-touched': errors.phone }" />
       </ion-item>
-      <ion-item :lines="errors.email ? 'none' : ''">
+      <ion-item :lines="errors.email ? 'none' : 'inset'">
         <ion-input v-model="form.email" :label="translate('Email')" label-placement="floating" type="email" :disabled="isSubmitting || (sameAsBilling && isEmailPrefilled)" :error-text="errors.email" :class="{ 'ion-invalid': errors.email, 'ion-touched': errors.email }" />
       </ion-item>
     </template>
@@ -90,7 +90,6 @@ import { ref, onMounted, computed } from "vue";
 import { IonButtons, IonButton, IonContent, IonHeader, IonToolbar, IonIcon, IonTitle, IonItem, IonInput, IonLabel, IonFab, IonFabButton, IonSelect, IonSelectOption, IonCheckbox, modalController } from "@ionic/vue";
 import { closeOutline, saveOutline } from "ionicons/icons";
 import { commonUtil, logger, translate } from "@common";
-import { useOrder } from "@/composables/useOrder";
 import { useOrderStore } from "@/store/order";
 import { z } from "zod";
 
@@ -108,7 +107,6 @@ const isEmailPrefilled = ref(false);
 const isIdPrefilled = ref(false);
 const idNumberValue = ref("");
 const orderStore = useOrderStore();
-const { getBillingDetails: getBillingDetailsApi, fetchOrderAttributes } = useOrder();
 const communicationEvent = computed(() => orderStore.getCommunicationEventsByOrderId(props.order?.orderId));
 
 const orderContent = computed(() => {
@@ -124,7 +122,15 @@ const orderContent = computed(() => {
   return content;
 });
 
-const form = ref({
+interface Form {
+  name: string;
+  idNumber: string;
+  relationToCustomer: string;
+  email: string;
+  phone: string;
+}
+
+const form = ref<Form>({
   name: "",
   idNumber: "",
   relationToCustomer: "Self",
@@ -132,7 +138,7 @@ const form = ref({
   phone: ""
 });
 
-const errors = ref({});
+const errors = ref<Partial<Record<keyof Form, string>>>({});
 
 const formSchema = z.object({
   name: z.string().trim().min(1, translate("Name is required")),
@@ -146,7 +152,7 @@ const getBillingDetails = async () => {
   if (!props.order?.orderId) return;
   
   try {
-    const resp = await getBillingDetailsApi({ orderId: props.order.orderId });
+    const resp = await orderStore.getBillingDetails({ orderId: props.order.orderId });
     billingDetails.value = resp?.data?.billingDetails || {};
 
     form.value.name = orderContent.value?.name || billingDetails.value?.billingAddress?.toName || "";
@@ -166,7 +172,7 @@ const getPrefilledValue = async () => {
   if (!props.order?.orderId) return;
   
   try {
-    const resp = await fetchOrderAttributes(props.order.orderId);
+    const resp = await orderStore.fetchOrderAttributes(props.order.orderId);
     const data = resp.data as any;
     const customerAttr = data.find((a: any) => a.attrName === "customerId");
     
@@ -212,7 +218,7 @@ const submitForm = async () => {
   if (!result.success) {
     errors.value = {};
     result.error.issues.forEach(issue => {
-      errors.value[issue.path[0]] = issue.message;
+      errors.value[issue.path[0] as keyof Form] = issue.message;
     });
     commonUtil.showToast(translate("Please correct the errors in the form"));
     return;

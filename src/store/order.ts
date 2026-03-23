@@ -1,8 +1,8 @@
 import { defineStore } from "pinia";
 import { orderUtil } from '@/utils/orderUtil'
-import { api, commonUtil, emitter, logger, solrUtil, translate } from '@common';
-import { useProductStore as useProductSettingsStore } from "@/store/productStore";
-import { useProductStore } from "@/store/product";
+import { api, client, commonUtil, emitter, logger, solrUtil, translate } from '@common';
+import { useProductStore as useProductStore } from "@/store/productStore";
+import { useProductStore as useProduct } from "@/store/product";
 import { useUserStore } from "@/store/user";
 
 export const useOrderStore = defineStore('order', {
@@ -228,7 +228,7 @@ export const useOrderStore = defineStore('order', {
           })
           productIds.push(productId)
 
-          const productStore = useProductStore();
+          const productStore = useProduct();
           await productStore.fetchProducts({ productIds });
           this.orders = orders;
         } else {
@@ -244,10 +244,6 @@ export const useOrderStore = defineStore('order', {
     async fetchOpenOrders(params: any) {
       if (params.viewIndex === 0) emitter.emit("presentLoader");
 
-      const userStore = useUserStore();
-      const productSettingsStore = useProductSettingsStore();
-      const productStore = useProductStore();
-
       let queryParams = {
         keyword: params.queryString || '',
         facilityId: params.facilityId,
@@ -259,7 +255,7 @@ export const useOrderStore = defineStore('order', {
         pageIndex: params.viewIndex
       } as any;
 
-      if ((userStore as any).getBopisProductStoreSettings('SHOW_SHIPPING_ORDERS')) {
+      if (useProductStore().isProductStoreSettingEnabled('SHOW_SHIPPING_ORDERS')) {
         queryParams = {
           shipmentMethodTypeId: 'STOREPICKUP',
           shipmentMethodTypeId_op: 'equals',
@@ -282,7 +278,7 @@ export const useOrderStore = defineStore('order', {
             order.shipGroups.flatMap((group: any) => group.items.map((item: any) => item.productId))
           );
 
-          await productStore.fetchProducts({ productIds });
+          await useProduct().fetchProducts({ productIds });
 
           let orders = ordersResp.map((order: any) => {
             const shipGroups = order.shipGroups.map((group: any) => ({
@@ -324,7 +320,7 @@ export const useOrderStore = defineStore('order', {
       const payload = {
         shipmentId: shipmentIds.join(','),
         shipmentId_op: 'in',
-        originalFacilityId: (useProductSettingsStore().getCurrentFacility?.facilityId || ""),
+        originalFacilityId: (useProductStore().getCurrentFacility?.facilityId || ""),
         statusId: shipmentStatusId,
         pageIndex: 0,
         pageSize: shipmentIds.length
@@ -374,7 +370,7 @@ export const useOrderStore = defineStore('order', {
       const orderId = payload.orderId;
       let currentOrder = {} as any;
 
-      const productStore = useProductStore();
+      const productStore = useProduct();
 
       try {
         const resp = await api({
@@ -417,7 +413,7 @@ export const useOrderStore = defineStore('order', {
             completedDate: data.statuses?.find((status: any) => status.statusId === "ORDER_COMPLETED")?.statusDatetime,
             paymentPreferences: sortedPaymentPreference
           };
-          const productSettingsStore = useProductSettingsStore();
+          const productSettingsStore = useProductStore();
           const currentFacilityId = (productSettingsStore.getCurrentFacility?.facilityId || "");
           const currentShipGroup = order.shipGroups.find((shipGroup: any) => shipGroup.shipGroupSeqId === payload.shipGroupSeqId && shipGroup.facilityId === currentFacilityId);
 
@@ -482,12 +478,12 @@ export const useOrderStore = defineStore('order', {
       if (params.viewIndex === 0) emitter.emit("presentLoader");
       let resp;
 
-      const productStore = useProductStore();
+      const productStore = useProduct();
 
       const userStore = useUserStore();
       const queryParams = {
         statusId: 'SHIPMENT_PACKED',
-        originFacilityId: (useProductSettingsStore().getCurrentFacility?.facilityId || ""),
+        originFacilityId: (useProductStore().getCurrentFacility?.facilityId || ""),
         shipmentTypeId: 'SALES_SHIPMENT',
         keyword: params.queryString || '',
         orderBy: '-orderDate',
@@ -495,7 +491,7 @@ export const useOrderStore = defineStore('order', {
         pageIndex: params.viewIndex || 0
       } as any
 
-      if (!(userStore as any).getBopisProductStoreSettings('SHOW_SHIPPING_ORDERS')) {
+      if (!useProductStore().isProductStoreSettingEnabled('SHOW_SHIPPING_ORDERS')) {
         queryParams.shipmentMethodTypeIds = 'STOREPICKUP'
       }
 
@@ -559,12 +555,12 @@ export const useOrderStore = defineStore('order', {
     async fetchCompletedOrders(params: any) {
       if (params.viewIndex === 0) emitter.emit("presentLoader");
 
-      const productStore = useProductStore();
+      const productStore = useProduct();
 
       const userStore = useUserStore();
       const queryParams = {
         statusId: 'SHIPMENT_SHIPPED',
-        originFacilityId: (useProductSettingsStore().getCurrentFacility?.facilityId || ""),
+        originFacilityId: (useProductStore().getCurrentFacility?.facilityId || ""),
         shipmentTypeId: 'SALES_SHIPMENT',
         keyword: params.queryString || '',
         orderBy: '-orderDate',
@@ -572,7 +568,7 @@ export const useOrderStore = defineStore('order', {
         pageIndex: params.viewIndex || 0
       } as any
 
-      if (!(userStore as any).getBopisProductStoreSettings('SHOW_SHIPPING_ORDERS')) {
+      if (!useProductStore().isProductStoreSettingEnabled('SHOW_SHIPPING_ORDERS')) {
         queryParams.shipmentMethodTypeIds = 'STOREPICKUP'
       }
 
@@ -829,7 +825,7 @@ export const useOrderStore = defineStore('order', {
       if (payload.viewIndex === 0) emitter.emit("presentLoader")
       let resp: any
       const params = {
-        orderFacilityId: (useProductSettingsStore().getCurrentFacility?.facilityId || ""),
+        orderFacilityId: (useProductStore().getCurrentFacility?.facilityId || ""),
         orderStatusId: 'ORDER_COMPLETED,ORDER_APPROVED',
         statusId: 'ITEM_COMPLETED,ITEM_APPROVED',
         shipmentMethodTypeId: 'SHIP_TO_STORE',
@@ -867,7 +863,7 @@ export const useOrderStore = defineStore('order', {
             return productIds
           });
           productIds = [...productIds]
-          const productStore = useProductStore();
+          const productStore = useProduct();
           await productStore.fetchProducts({ productIds })
 
           const total = resp.data.ordersCount;
@@ -893,7 +889,7 @@ export const useOrderStore = defineStore('order', {
       const params = {
         shipmentStatusId: "SHIPMENT_ARRIVED",
         shipmentMethodTypeId: "SHIP_TO_STORE",
-        orderFacilityId: (useProductSettingsStore().getCurrentFacility?.facilityId || ""),
+        orderFacilityId: (useProductStore().getCurrentFacility?.facilityId || ""),
         statusId: "ITEM_COMPLETED",
         orderStatusId: "ORDER_COMPLETED",
         pageSize: payload.viewSize ? payload.viewSize : import.meta.env.VITE_VIEW_SIZE,
@@ -929,7 +925,7 @@ export const useOrderStore = defineStore('order', {
             return productIds
           });
           productIds = [...productIds]
-          const productStore = useProductStore();
+          const productStore = useProduct();
           await productStore.fetchProducts({ productIds })
 
           const total = resp.data.ordersCount;
@@ -957,7 +953,7 @@ export const useOrderStore = defineStore('order', {
         shipmentMethodTypeId: "SHIP_TO_STORE",
         statusId: "ITEM_COMPLETED",
         orderStatusId: "ORDER_COMPLETED",
-        orderFacilityId: (useProductSettingsStore().getCurrentFacility?.facilityId || ""),
+        orderFacilityId: (useProductStore().getCurrentFacility?.facilityId || ""),
         pageSize: payload.viewSize ? payload.viewSize : import.meta.env.VITE_VIEW_SIZE,
         pageIndex: payload.viewIndex ? payload.viewIndex : 0
       } as any
@@ -991,7 +987,7 @@ export const useOrderStore = defineStore('order', {
             return productIds
           });
           productIds = [...productIds]
-          const productStore = useProductStore();
+          const productStore = useProduct();
           await productStore.fetchProducts({ productIds })
 
           const total = resp.data.ordersCount;
@@ -1035,7 +1031,7 @@ export const useOrderStore = defineStore('order', {
         if (!commonUtil.hasError(resp) && resp.data.count > 0) {
           rejectionHistory = resp.data.docs;
           const productIds = [...(resp.data.docs.reduce((ids: any, history: any) => ids.add(history.productId), new Set()))];
-          const productStore = useProductStore();
+          const productStore = useProduct();
           await productStore.fetchProducts({ productIds })
         } else {
           throw resp.data
@@ -1267,6 +1263,238 @@ export const useOrderStore = defineStore('order', {
         logger.error('Error fetching party information', err)
       }
       return this.carrierNames;
+    },
+    async fetchOrderAttributes(orderId: string): Promise<any> {
+      return api({
+        url: `oms/orders/${orderId}/attributes`,
+        method: "GET",
+      });
+    },
+    async createPicklist(payload: any): Promise<any> {
+      return api({
+        url: `/poorti/createOrderFulfillmentWave`,
+        method: "POST",
+        data: payload
+      });
+    },
+    async printPicklist(picklistId: string): Promise<any> {
+      try {
+        const resp = await api({
+          url: "/fop/apps/pdf/PrintPicklist",
+          method: "GET",
+          baseURL: commonUtil.getMaargBaseURL(),
+          responseType: "blob",
+          params: { picklistId }
+        });
+
+        if (!resp || commonUtil.hasError(resp)) {
+          throw resp?.data;
+        }
+
+        // Generate local file URL for the blob received
+        const pdfUrl = window.URL.createObjectURL(resp.data);
+        // Open the file in new tab
+        try {
+          (window as any).open(pdfUrl, "_blank").focus();
+        }
+        catch {
+          const { cogOutline } = await import('ionicons/icons');
+          commonUtil.showToast(translate('Unable to open as browser is blocking pop-ups.', { documentName: 'picklist' }), { icon: cogOutline });
+        }
+      } catch (err) {
+        commonUtil.showToast(translate('Failed to print picklist'))
+        logger.error("Failed to print picklist", err)
+      }
+    },
+    async printPackingSlip(shipmentIds: Array<string>): Promise<any> {
+      try {
+        const resp = await api({
+          url: "fop/apps/pdf/PrintPackingSlip",
+          baseURL: commonUtil.getMaargBaseURL(),
+          method: "GET",
+          params: {
+            shipmentId: shipmentIds
+          },
+          responseType: "blob"
+        });
+
+        if (!resp || commonUtil.hasError(resp)) {
+          throw resp?.data
+        }
+
+        // Generate local file URL for the blob received
+        const pdfUrl = window.URL.createObjectURL(resp.data);
+        // Open the file in new tab
+        try {
+          (window as any).open(pdfUrl, "_blank").focus();
+        }
+        catch {
+          const { cogOutline } = await import('ionicons/icons');
+          commonUtil.showToast(translate('Unable to open as browser is blocking pop-ups.', { documentName: 'packing slip' }), { icon: cogOutline });
+        }
+
+      } catch (err) {
+        commonUtil.showToast(translate('Failed to print packing slip'))
+        logger.error("Failed to load packing slip", err)
+      }
+    },
+    async sendPickupScheduledNotification(payload: any): Promise<any> {
+      payload = {
+        "emailType": "READY_FOR_PICKUP",
+        ...payload
+      }
+      return api({
+        url: "oms/orders/pickupScheduledNotification",
+        method: "post",
+        data: payload
+      });
+    },
+    async sendHandoverNotification(payload: any): Promise<any> {
+      return api({
+        url: "oms/orders/pickupScheduledNotification",
+        method: "post",
+        data: {
+          emailType: "HANDOVER_STS_ORDER",
+          ...payload
+        }
+      });
+    },
+    async handoverShipToStoreOrder(shipmentId: string): Promise<any> {
+      return api({
+        url: `/poorti/shipments/${shipmentId}`,
+        method: 'PUT',
+        data: {
+          statusId: 'SHIPMENT_DELIVERED',
+        }
+      });
+    },
+    async arrivedShipToStore(shipmentId: string): Promise<any> {
+      return api({
+        url: `/poorti/shipments/${shipmentId}`,
+        method: 'PUT',
+        data: {
+          statusId: 'SHIPMENT_ARRIVED',
+        }
+      });
+    },
+    async convertToShipToStore(payload: any): Promise<any> {
+      return api({
+        url: `/oms/orders/${payload.orderId}/shipToStore`,
+        method: 'POST',
+        data: {
+          shipGroupSeqId: payload.shipGroupSeqId,
+        }
+      });
+    },
+    async getShipToStoreOrdersMeta(params: any): Promise<any> {
+      return api({
+        url: 'oms/orders/shipToStore',
+        method: 'GET',
+        params
+      })
+    },
+    async printShippingLabelAndPackingSlip(shipmentIds: Array<string>): Promise<any> {
+      try {
+        // Get packing slip from the server
+        const resp: any = await api({
+          method: 'get',
+          url: 'LabelAndPackingSlip.pdf',
+          baseURL: commonUtil.getOmsURL(),
+          params: {
+            shipmentIds
+          },
+          responseType: "blob"
+        })
+
+        if (!resp || resp.status !== 200 || commonUtil.hasError(resp)) {
+          throw resp.data;
+        }
+
+        // Generate local file URL for the blob received
+        const pdfUrl = window.URL.createObjectURL(resp.data);
+        // Open the file in new tab
+        try {
+          (window as any).open(pdfUrl, "_blank").focus();
+        }
+        catch {
+          commonUtil.showToast(translate('Unable to open as browser is blocking pop-ups.', { documentName: 'shipping label and packing slip' }));
+        }
+
+      } catch (err) {
+        commonUtil.showToast(translate('Failed to print shipping label and packing slip'))
+        logger.error("Failed to load shipping label and packing slip", err)
+      }
+    },
+    async cancelOrder(payload: any): Promise<any> {
+      return api({
+        url: `oms/orders/${payload.orderId}/items/cancel`,
+        method: "post",
+        data: payload
+      });
+    },
+    async getBillingDetails(payload: any): Promise<any> {
+      return api({
+        url: `/poorti/orders/${payload.orderId}/billing`,
+        method: "GET"
+      });
+    },
+    async sendPickupNotification(payload: any): Promise<any> {
+      return await api({
+        url: `oms/orders/pickupScheduledNotification`,
+        method: "POST",
+        data: payload,
+      });
+    },
+    async getAvailablePickers(query: any): Promise<any> {
+      return api({
+        url: "solr-query",
+        method: "post",
+        baseURL: commonUtil.getOmsURL(),
+        data: query
+      });
+    },
+    async resetPicker(payload: any): Promise<any> {
+      return api({
+        url: "/service/resetPicker",
+        method: "post",
+        data: payload
+      })
+    },
+    async fetchJobInformation(payload: any): Promise<any> {
+      return api({
+        url: "/findJobs",
+        method: "get",
+        params: payload
+      });
+    },
+    async getProcessRefundStatus(payload: any): Promise<any> {
+      return api({
+        url: "performFind",
+        method: "post",
+        baseURL: commonUtil.getOmsURL(),
+        data: payload
+      });
+    },
+    async activateGiftCard(payload: any): Promise<any> {
+      return api({
+        url: "poorti/giftCardFulfillments",
+        method: "post",
+        data: payload
+      });
+    },
+    async ensurePartyRole(payload: any): Promise<any> {
+      return api({
+        url: "service/ensurePartyRole",
+        method: "post",
+        data: payload
+      });
+    },
+    async generateAccessToken(config: any): Promise<any> {
+      return client({
+        url: "/generateShopifyAccessToken",
+        method: "post",
+        ...config
+      });
     }
   }
 })
