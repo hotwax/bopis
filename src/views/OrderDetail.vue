@@ -356,20 +356,6 @@ import { useUserStore } from "@/store/user"
 const props = defineProps(['orderType', 'orderId', 'shipGroupSeqId']);
 const router = useRouter();
 
-const orderStore = useOrderStore();
-const {
-  convertToShipToStore,
-  createPicklist: createPicklistApi,
-  printPackingSlip: printPackingSlipApi,
-  printPicklist: printPicklistApi,
-  printShippingLabelAndPackingSlip: printShippingLabelAndPackingSlipApi,
-  rejectOrderItems,
-  sendPickupScheduledNotification,
-  ensurePartyRole,
-  fetchJobInformation,
-  getProcessRefundStatus
-} = orderStore;
-
 const rejectEntireOrderReasonId = ref("REJ_AVOID_ORD_SPLIT");
 const isCancelationSyncJobEnabled = ref(false);
 const isProcessRefundEnabled = ref(false);
@@ -467,25 +453,16 @@ async function fetchJobs() {
   }
 
   try {
-    const resp = await fetchJobInformation(params)
+    const resp = await useOrderStore().fetchJobInformation(params)
     if(!commonUtil.hasError(resp) && resp.data.count > 0) {
       isCancelationSyncJobEnabled.value = true;
       cancelJobNextRunTime.value = resp.data.docs[0].nextExecutionDateTime;
     }
 
-    const refundStatusResp = await getProcessRefundStatus({
-      "inputFields": {
-        "productStoreId": useProductStore().getCurrentEComStore.productStoreId,
-        "settingTypeEnumId": "PROCS_RFND_STUS",
-      },
-      "fieldList": ["settingValue"],
-      "noConditionFind": "Y",
-      "entityName": "ProductStoreSetting",
-      "viewSize": 1
-    })
+    const refundStatusResp = await useOrderStore().getProcessRefundStatus(useProductStore().getCurrentEComStore.productStoreId)
 
     if(!commonUtil.hasError(refundStatusResp) && refundStatusResp.data.count > 0) {
-      isProcessRefundEnabled.value = refundStatusResp.data.docs[0].settingValue === "true";
+      isProcessRefundEnabled.value = refundStatusResp.data.docs[0].processRefund === "Y";
     }
   } catch(err) {
     logger.error(err)
@@ -515,84 +492,42 @@ async function fetchCancelReasons() {
   await useOrderStore().fetchCancelReasons();
 }
 
-async function fetchOrderRouteSegmentInfo() {
-  let orderRouteSegment = []
+async function fetchShipmentStatusHistory() {
   let shipmentStatusInfo = []
   try {
-    const resp = await api({
-      url: "performFind",
-      method: "post",
-      baseURL: commonUtil.getOmsURL(),
-      data: {
-        inputFields: {
-          orderId: order.value.orderId,
-          shipGroupSeqId: order.value.shipGroup.shipGroupSeqId
-        },
-        fieldList: ["orderId", "shipGroupSeqId", "shipmentId", "shipmentStatusId", "trackingIdNumber"],
-        viewSize: 50,
-        entityName: "OrderShipmentAndRouteSegment"
-      }
-    }) as any
-
-    if(!commonUtil.hasError(resp) && resp.data?.docs.length) {
-      orderRouteSegment = resp.data.docs
-
-      if(resp.data.docs[0].shipmentId) {
-        const shipmentStatusResp = await api({
-          url: "performFind",
-          method: "post",
-          baseURL: commonUtil.getOmsURL(),
-          data: {
-            inputFields: {
-              shipmentId: resp.data.docs[0].shipmentId
-            },
-            fieldList: ["shipmentId", "statusId", "statusDate"],
-            viewSize: 50,
-            entityName: "ShipmentAndShipmentStatus"
-          }
-        }) as any
-
-        if(!commonUtil.hasError(shipmentStatusResp) && shipmentStatusResp.data?.docs.length) {
-          shipmentStatusInfo = shipmentStatusResp.data.docs
+      const shipmentStatusResp = await api({
+        url: `/poorti/shipments/${order.value.shipmentId}/statusHistory`,
+        method: "GET",
+        params: {
+          pageSize: 50
         }
+      }) as any
+
+      if(!commonUtil.hasError(shipmentStatusResp) && shipmentStatusResp.data?.length) {
+        shipmentStatusInfo = shipmentStatusResp.data
       }
-    }
   } catch(err) {
     logger.error("Failed to fetch route segment info for order")
   }
 
-  return {
-    orderRouteSegment,
-    shipmentStatusInfo
-  }
+  return shipmentStatusInfo
 }
 
 async function fetchOrderChangeHistory() {
   let orderChangeHistory = []
   try {
-    let payload = {
-      inputFields: {
-        orderId: order.value.orderId,
-        fromFacilityId_value: "PICKUP_REJECTED",
-        fromFacilityId_op: "equals",
-        fromFacilityId_grp :"1",
-        facilityId_value: "PICKUP_REJECTED",
-        facilityId_op: "equals",
-        facilityId_grp: "2"
-      },
-      entityName: "OrderFacilityChange",
-      orderBy: "changeDatetime DESC",
-      viewSize: 250,
-    }
-
     const resp = await api({
-      url: "performFind",
-      method: "post",
-      baseURL: commonUtil.getOmsURL(),
-      data: payload
+      url: `/oms/orders/${order.value.orderId}/facilityChange`,
+      method: "GET",
+      params: {
+        orderByField: "changeDatetime DESC",
+        pageSize: 100
+      }
     });
-    if(!commonUtil.hasError(resp) && resp.data.count) {
-      orderChangeHistory = resp.data.docs
+    if(!commonUtil.hasError(resp) && resp.data.length) {
+      orderChangeHistory = resp.data.filter((event: any) =>
+        event.facilityId === "PICKUP_REJECTED" || event.fromFacilityId === "PICKUP_REJECTED"
+      )
     } else {
       throw resp.data;
     }
@@ -606,27 +541,20 @@ async function fetchOrderChangeHistory() {
 async function fetchOrderCommunicationEvent() {
   let orderCommunicationEvent = []
   try {
-    let payload = {
-      inputFields: {
-        orderId: order.value.orderId,
-        subject: "pickup",
-        subject_op: "contains",
-        communicationEventTypeId: "EMAIL_COMMUNICATION"
-      },
-      entityName: "CommunicationEventAndOrder",
-      viewSize: 250,
-      orderBy: "entryDate ASC",
-      fieldList: ["communicationEventId", "entryDate", "orderId"]
-    }
-
     const resp = await api({
-      url: "performFind",
-      method: "post",
-      baseURL: commonUtil.getOmsURL(),
-      data: payload
+      url: "/oms/communicationEvents",
+      method: "GET",
+      params: {
+        orderIds: [order.value.orderId],
+        communicationEventTypeId: "EMAIL_COMMUNICATION",
+        pageIndex: 0,
+        pageSize: 50
+      }
     });
-    if(!commonUtil.hasError(resp) && resp.data.count) {
-      orderCommunicationEvent = resp.data.docs
+    if(!commonUtil.hasError(resp) && resp.data?.communicationEventList?.length) {
+      orderCommunicationEvent = resp.data.communicationEventList.filter((event: any) => {
+        return event.subject && event.subject.includes("pickup")
+      })
     } else {
       throw resp.data;
     }
@@ -640,12 +568,12 @@ async function fetchOrderCommunicationEvent() {
 async function prepareOrderTimeline(paramsToUpdate ?: any) {
   const timeline = []
 
-  const {orderRouteSegment, shipmentStatusInfo} = await fetchOrderRouteSegmentInfo();
+  const shipmentStatusInfo = await fetchShipmentStatusHistory();
 
   orderStatus.value = orderUtil.getOrderStatus({
     ...(order.value as any),
     ...paramsToUpdate
-  }, order.value.shipGroup, orderRouteSegment, props.orderType)
+  }, order.value.shipGroup, props.orderType)
 
   let orderChangeHistory = await fetchOrderChangeHistory();
   const orderPickupEmailCommnicationEvent = await fetchOrderCommunicationEvent();
@@ -798,10 +726,10 @@ async function createPicklist(orderRef: any, selectedPicker: any) {
         quantity: item.quantity
       }))
     };
-    resp = await createPicklistApi(payload);
+    resp = await useOrderStore().createPicklist(payload);
     if (!commonUtil.hasError(resp)) {
       commonUtil.showToast(translate("Picklist created successfully", { picklistId: resp.data.picklistId }));
-      await printPicklistApi(resp.data.picklistId)
+      await useOrderStore().printPicklist(resp.data.picklistId)
     } else {
       throw resp.data
     }
@@ -812,7 +740,7 @@ async function createPicklist(orderRef: any, selectedPicker: any) {
 
 async function printPicklist(orderRef: any, shipGroup: any) {
   if(!isTrackingEnabled.value) {
-    const resp = await ensurePartyRole({
+    const resp = await useOrderStore().ensurePartyRole({
       partyId: "_NA_",
       roleTypeId: "WAREHOUSE_PICKER",
     })
@@ -823,7 +751,7 @@ async function printPicklist(orderRef: any, shipGroup: any) {
     await createPicklist(orderRef, "_NA_")
     return;
   }
-  await printPicklistApi(shipGroup.picklistId)
+  await useOrderStore().printPicklist(shipGroup.picklistId)
 }
 
 async function assignPicker(orderRef: any, shipGroup: any, facilityId: any) {
@@ -959,7 +887,7 @@ async function rejectOrder() {
       items: itemsToReject
     };
     try {
-      const resp = await rejectOrderItems(payload);
+      const resp = await useOrderStore().rejectOrderItems(payload);
 
       if (!commonUtil.hasError(resp)) {
         const rejectedSeqIds = new Set(itemsToReject.map(i => i.orderItemSeqId));
@@ -1015,12 +943,12 @@ async function printPackingSlip(orderRef: any) {
   }
 
   orderRef.isGeneratingPackingSlip = true;
-  await printPackingSlipApi([orderRef.shipGroup.shipmentId]);
+  await useOrderStore().printPackingSlip([orderRef.shipGroup.shipmentId]);
   orderRef.isGeneratingPackingSlip = false;
 }
 
 async function printShippingLabelAndPackingSlip(orderRef: any) {
-  await printShippingLabelAndPackingSlipApi([orderRef.shipGroup.shipmentId])
+  await useOrderStore().printShippingLabelAndPackingSlip([orderRef.shipGroup.shipmentId])
 }
 
 async function openInventoryDetailPopover(Event: any, item: any){
@@ -1112,7 +1040,7 @@ async function sendReadyForPickupEmail(orderRef: any) {
         text: translate("Send"),
         handler: async () => {
           try {
-            const resp = await sendPickupScheduledNotification({ shipmentId: orderRef.shipmentId });
+            const resp = await useOrderStore().sendPickupScheduledNotification({ shipmentId: orderRef.shipmentId });
             if (!commonUtil.hasError(resp)) {
               commonUtil.showToast(translate("Email sent successfully"))
             } else {
@@ -1164,7 +1092,7 @@ async function confirmRequestTransfer(orderRef: any) {
 async function requestTransfer(orderRef: any) {
   emitter.emit("presentLoader");
   try {
-    const resp = await convertToShipToStore({
+    const resp = await useOrderStore().convertToShipToStore({
       orderId: orderRef.orderId,
       shipGroupSeqId: orderRef.shipGroup.shipGroupSeqId
     });

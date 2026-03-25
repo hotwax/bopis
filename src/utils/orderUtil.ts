@@ -43,13 +43,13 @@ const removeKitComponents = (items: any) => {
   return itemsWithoutKitComponents;
 }
 
-const getOrderStatus = (order: any, shipGroup: any, orderRouteSegment: any, orderType: string) => {
+const getOrderStatus = (order: any, shipGroup: any, orderType: string) => {
   if (order.orderStatusId === "ORDER_COMPLETED" || orderType === "completed") {
     return shipGroup?.shipmentMethodTypeId === "STOREPICKUP" ? "Picked up" : "Completed"
   }
 
-  if (orderRouteSegment?.length) {
-    return orderRouteSegment[0]?.shipmentStatusId === "SHIPMENT_PACKED" ? "Ready for pickup" : orderRouteSegment[0]?.shipmentStatusId === "SHIPMENT_APPROVED" && order.pickers ? "Picking" : "Reserved"
+  if (order.shipmentStatusId) {
+    return order.shipmentStatusId === "SHIPMENT_PACKED" ? "Ready for pickup" : order.shipmentStatusId === "SHIPMENT_APPROVED" && order.pickers ? "Picking" : "Reserved"
   }
 
   return "Reserved"

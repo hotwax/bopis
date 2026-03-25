@@ -59,7 +59,7 @@
 import { IonButtons, IonButton, IonContent, IonFab, IonFabButton, IonHeader, IonIcon, IonInfiniteScroll, IonInfiniteScrollContent, IonItem, IonLabel, IonList, IonListHeader, IonRadio, IonRadioGroup, IonSearchbar, IonSpinner, IonTitle, IonToolbar, alertController, modalController } from "@ionic/vue";
 import { onMounted, ref } from "vue";
 import { close, saveOutline } from "ionicons/icons";
-import { commonUtil, logger, translate } from '@common';
+import { commonUtil, logger, translate, useSolrSearch } from '@common';
 import { useOrderStore } from "@/store/order";
 
 const props = defineProps(['order'])
@@ -149,7 +149,7 @@ async function findPickers(vSize?: any, vIndex?: any) {
   let total = 0;
 
   try {
-    const resp = await orderStore.getAvailablePickers(payload);
+    const resp = await useSolrSearch().runSolrQuery(payload);
     if (resp.status === 200 && !commonUtil.hasError(resp) && resp.data.response.docs.length > 0) {
       const pickers = resp.data.response.docs.map((picker: any) => ({
         name: picker.groupName ? picker.groupName : (picker.firstName || picker.lastName)

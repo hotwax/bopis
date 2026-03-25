@@ -52,11 +52,11 @@ const isLoading = ref(true);
 const getProduct = (productId: string) => productStore.getProduct(productId);
 const order = computed(() => orderStore.getCurrent);
 const rejectReasons = computed(() => orderStore.getRejectReasons);
-const orderRejectionHistory = computed(() => orderStore.orderItemRejectionHistory);
+const orderRejectionHistory = computed(() => orderStore.getOrderItemRejectionHistory);
 const productIdentificationPref = computed(() => useProductStoreSettings().getProductIdentificationPref);
 
 onMounted(async () => {
-  await orderStore.getOrderItemRejectionHistory({ 
+  await orderStore.fetchOrderItemRejectionHistory({ 
     orderId: order.value.orderId, 
     rejectReasonEnumIds: rejectReasons.value.map((reason: any) => reason.enumId) 
   });

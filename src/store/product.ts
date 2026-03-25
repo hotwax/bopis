@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import { api, commonUtil, emitter, logger, translate } from '@common'
+import { api, commonUtil, emitter, logger, translate, useSolrSearch } from '@common'
 
 export const useProductStore = defineStore('product', {
   state: () => ({
@@ -21,34 +21,23 @@ export const useProductStore = defineStore('product', {
   actions: {
     async fetchProducts({ productIds }: { productIds: any }) {
       const cachedProductIds = Object.keys(this.cached);
-      const productIdFilter = productIds.reduce((filter: string, productId: any) => {
-        if (cachedProductIds.includes(productId)) {
-          return filter;
-        } else {
-          if (filter !== '') filter += ' OR '
-          return filter += productId;
-        }
-      }, '');
+      const filteredProductIds = productIds.filter(
+        (productId: any) => !cachedProductIds.includes(productId)
+      );
 
-      if (productIdFilter === '') return;
+      if (filteredProductIds.length === 0) return;
 
-      const resp = await api({
-        url: "searchProducts",
-        method: "post",
-        baseURL: commonUtil.getOmsURL(),
-        data: {
-          "filters": ['productId: (' + productIdFilter + ')'],
-          "viewSize": productIds.length
+      const resp = await useSolrSearch().searchProducts({
+        filters: {
+          productId: { value: filteredProductIds }
         },
-        cache: true
-      }) as any;
-      if (resp.status === 200 && resp.data.response && !commonUtil.hasError(resp)) {
-        const products = resp.data.response.docs;
-        if (resp.data) {
-          products.forEach((product: any) => {
-            this.cached[product.productId] = product
-          });
-        }
+        viewSize: filteredProductIds.length
+      })
+
+      if (resp.products.length) {
+        resp.products.forEach((product: any) => {
+          this.cached[product.productId] = product
+        });
       } else {
         logger.error('Something went wrong')
       }
@@ -58,21 +47,19 @@ export const useProductStore = defineStore('product', {
       if (payload.viewIndex === 0) emitter.emit("presentLoader");
       let resp;
       try {
-        resp = await api({
-          url: "searchProducts",
-          method: "post",
-          baseURL: commonUtil.getOmsURL(),
-          data: {
-            "viewSize": payload.viewSize,
-            "viewIndex": payload.viewIndex,
-            "keyword": payload.queryString,
-            "filters": ['isVirtual: true', 'isVariant: false'],
+        resp = await useSolrSearch().searchProducts({
+          filters: {
+            isVirtual: { value: 'true' },
+            isVariant: { value: 'false' }
           },
-          cache: true
-        }) as any;
-        if (resp.status === 200 && !commonUtil.hasError(resp) && resp.data.response?.numFound) {
-          let products = resp.data.response.docs;
-          const total = resp.data.response?.numFound;
+          viewSize: payload.viewSize,
+          viewIndex: payload.viewIndex,
+          keyword: payload.queryString,
+        })
+
+        if (resp.products.length) {
+          let products = resp.products;
+          const total = resp.total;
           if (payload.viewIndex && payload.viewIndex > 0) products = this.products.list.concat(products)
           this.products = {
             list: products,
@@ -114,24 +101,19 @@ export const useProductStore = defineStore('product', {
 
       emitter.emit("presentLoader");
       let resp;
-      let productFilterCondition: any = `groupId: ${payload.productId}`;
-      if (!isProductCached) productFilterCondition = `${productFilterCondition} OR productId: ${payload.productId}`;
       try {
-        resp = await api({
-          url: "searchProducts",
-          method: "post",
-          baseURL: commonUtil.getOmsURL(),
-          data: {
-            "filters": [productFilterCondition],
-            "viewSize": 50,
+        resp = await useSolrSearch().searchProducts({
+          filters: {
+            groupId: { value: payload.productId }
           },
-          cache: true
-        }) as any;
-        if (resp.status === 200 && !commonUtil.hasError(resp) && resp.data.response?.numFound) {
-          let variants = resp.data.response.docs;
+          viewSize: 50,
+        })
+
+        if (resp.products.length) {
+          let variants = resp.products;
           if (!isProductCached) {
-            product = resp.data.response.docs.find((product: any) => product.productId === payload.productId);
-            variants = resp.data.response.docs.filter((product: any) => product.productId !== payload.productId);
+            product = resp.products.find((product: any) => product.productId === payload.productId);
+            variants = resp.products.filter((product: any) => product.productId !== payload.productId);
           }
           product['variants'] = variants;
           this.current = product;
@@ -168,26 +150,21 @@ export const useProductStore = defineStore('product', {
       let resp;
       try {
         resp = await api({
-          url: "performFind",
-          method: "get",
-          baseURL: commonUtil.getOmsURL(),
-          params: {
-            "entityName": "ProductAssoc",
-            "inputFields": {
-              "productId": productId,
-              "productTypeId": "PRODUCT_COMPONENT"
+          url: `/oms/dataDocumentView`,
+          method: "post",
+          data: {
+            customParametersMap: {
+              productId,
+              pageIndex: 0,
+              pageSize: 100
             },
-            "fieldList": ["productId", "productIdTo", "productAssocTypeId"],
-            "viewIndex": 0,
-            "viewSize": 250,
-            "distinct": "Y",
-            "noConditionFind": "Y",
-            "filterByDate": "Y"
+            dataDocumentId: "ProductComponent",
+            filterByDate: true
           }
-        }) as any;
+        })
         if (!commonUtil.hasError(resp)) {
-          const productComponents = resp.data.docs;
-          const componentProductIds = productComponents.map((productComponent: any) => productComponent.productIdTo);
+          const productComponents = resp.data.entityValueList
+          const componentProductIds = productComponents.map((productComponent: any) => productComponent.productIdTo)
           await this.fetchProducts({ productIds: componentProductIds })
 
           product["productComponents"] = productComponents;

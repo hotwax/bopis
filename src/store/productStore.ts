@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import { api, commonUtil, logger, translate } from '@common'
+import { api, commonUtil, logger, translate, useSolrSearch } from '@common'
 import { useUserStore } from '@/store/user'
 
 export const useProductStore = defineStore('productStore', {
@@ -486,24 +486,14 @@ export const useProductStore = defineStore('productStore', {
     },
 
     async fetchProducts() {
-      const params = { viewSize: 10 }
-      try {
-        const products = await api({
-          baseURL: commonUtil.getOmsURL(),
-          url: "searchProducts",
-          method: "post",
-          data: params,
-          cache: true
-        }) as any;
+      const resp = await useSolrSearch().searchProducts({
+        viewSize: 10
+      }) as any;
+      const products = resp.products;
 
-        if (!commonUtil.hasError(products)) {
-          this.settings.productIdentifier.sampleProducts = products.data.response.docs;
-          this.shuffleProduct()
-        } else {
-          throw products.data
-        }
-      } catch (error: any) {
-        console.error(error)
+      if (products.length) {
+        this.settings.productIdentifier.sampleProducts = products;
+        this.shuffleProduct()
       }
     },
     shuffleProduct() {
@@ -520,27 +510,18 @@ export const useProductStore = defineStore('productStore', {
 
       if (!facilityIdFilter.length) return;
 
-      const payload = {
-        inputFields: {
-          facilityId: facilityIdFilter,
-          facilityId_op: "in"
-        },
-        viewSize: facilityIdFilter.length,
-        entityName: "Facility",
-        noConditionFind: 'Y',
-        distinct: "Y",
-        fieldList: ["facilityId", "facilityName"]
-      }
-
       try {
         const resp = await api({
-          url: "performFind",
-          method: "post",
-          baseURL: commonUtil.getOmsURL(),
-          data: payload
+          url: "/admin/facilities",
+          method: "GET",
+          params: {
+            facilityId: facilityIdFilter,
+            facilityId_op: "in",
+            pageSize: facilityIdFilter.length,
+          }
         });
-        if (!commonUtil.hasError(resp) && resp.data?.docs.length > 0) {
-          resp.data.docs.map((facility: any) => {
+        if (!commonUtil.hasError(resp) && resp.data?.length > 0) {
+          resp.data.map((facility: any) => {
             this.facilities[facility.facilityId] = facility["facilityName"]
           })
         } else {
@@ -554,26 +535,20 @@ export const useProductStore = defineStore('productStore', {
       this.facilities = {};
     },
     async fetchCurrentFacilityLatLon(facilityId: string) {
-      const payload = {
-        inputFields: {
-          facilityId
-        },
-        entityName: "FacilityContactDetailByPurpose",
-        orderBy: "fromDate DESC",
-        filterByDate: "Y",
-        fieldList: ["latitude", "longitude"],
-        viewSize: 5
-      }
-
       try {
         const resp = await api({
-          url: "performFind",
-          method: "post",
-          baseURL: commonUtil.getOmsURL(),
-          data: payload
+          url: "/oms/facilityContactMechs",
+          method: "GET",
+          params: {
+            facilityId,
+            contactMechTypeId: "POSTAL_ADDRESS",
+            contactMechPurposeTypeId: "PRIMARY_LOCATION",
+            viewSize: 5,
+            orderByField: "fromDate DESC",
+          }
         })
-        if (!commonUtil.hasError(resp) && resp.data?.docs.length > 0) {
-          const validCoords = resp.data.docs.find((doc: any) =>
+        if (!commonUtil.hasError(resp) && resp.data?.facilityContactMechs?.length > 0) {
+          const validCoords = resp.data.facilityContactMechs.find((doc: any) =>
             doc.latitude !== null && doc.longitude !== null
           )
           if (validCoords) {
@@ -623,25 +598,18 @@ export const useProductStore = defineStore('productStore', {
     async fetchCarriers() {
       try {
         const resp = await api({
-          url: "performFind",
+          url: `/oms/shippingGateways/carrierParties`,
           method: "get",
-          baseURL: commonUtil.getOmsURL(),
           params: {
-            "entityName": "CarrierShipmentMethodCount",
-            "inputFields": {
-              "roleTypeId": "CARRIER",
-              "partyTypeId": "PARTY_GROUP"
-            },
-            "fieldList": ["partyId", "roleTypeId", "groupName"],
+            "roleTypeId": "CARRIER",
+            "partyTypeId": "PARTY_GROUP",
             "viewIndex": 0,
             "viewSize": 250,
-            "distinct": "Y",
-            "noConditionFind": "Y",
-            "orderBy": "groupName"
+            "orderByField": "groupName"
           }
         }) as any;
-        if (!commonUtil.hasError(resp) && resp.data?.docs) {
-          this.carriers = resp.data.docs;
+        if (!commonUtil.hasError(resp) && resp.data) {
+          this.carriers = resp.data;
         } else {
           this.carriers = [];
         }
@@ -651,24 +619,26 @@ export const useProductStore = defineStore('productStore', {
     },
     async fetchProductStoreShipmentMethods(productStoreId: string) {
       try {
+        const params = {
+          customParametersMap: {
+            "productStoreId": productStoreId,
+            "shipmentMethodTypeId": "STOREPICKUP",
+            "shipmentMethodTypeId_op": "notEqual",
+            pageIndex: 0,
+            pageSize: 250
+          },
+          dataDocumentId: "ProductStoreShipmentMethod",
+          filterByDate: true
+        }
+
         const resp = await api({
-          url: "performFind",
-          method: "get",
-          baseURL: commonUtil.getOmsURL(),
-          params: {
-            "inputFields": {
-              "productStoreId": productStoreId,
-              "shipmentMethodTypeId": "STOREPICKUP",
-              "shipmentMethodTypeId_op": "notEqual"
-            },
-            "filterByDate": 'Y',
-            "entityName": "ProductStoreShipmentMethView",
-            "fieldList": ["productStoreShipMethId", "partyId", "shipmentMethodTypeId", "description"],
-            "viewSize": 250
-          }
-        }) as any;
-        if (!commonUtil.hasError(resp) && resp.data?.docs) {
-          this.availableShipmentMethods = resp.data.docs;
+          url: `/oms/dataDocumentView`,
+          method: "POST",
+          data: params
+        });
+
+        if (!commonUtil.hasError(resp) && resp.data?.entityValueList) {
+          this.availableShipmentMethods = resp.data.entityValueList;
         } else {
           this.availableShipmentMethods = [];
         }

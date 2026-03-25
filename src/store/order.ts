@@ -1,6 +1,6 @@
 import { defineStore } from "pinia";
 import { orderUtil } from '@/utils/orderUtil'
-import { api, client, commonUtil, emitter, logger, solrUtil, translate } from '@common';
+import { api, client, commonUtil, emitter, logger, useSolrSearch, translate } from '@common';
 import { useProductStore as useProductStore } from "@/store/productStore";
 import { useProductStore as useProduct } from "@/store/product";
 import { useUserStore } from "@/store/user";
@@ -141,7 +141,8 @@ export const useOrderStore = defineStore('order', {
     },
     async getOrderDetails(payload: any) {
       let resp;
-      const orderQueryPayload = solrUtil.prepareOrderQuery({
+      const { prepareOrderQuery } = useSolrSearch();
+      const orderQueryPayload = prepareOrderQuery({
         ...payload,
         orderStatusId: 'ORDER_APPROVED',
         orderTypeId: 'SALES_ORDER',
@@ -171,7 +172,8 @@ export const useOrderStore = defineStore('order', {
     async fetchOrderItems(payload: any) {
       let resp;
       const { productId, orderIds, ...params } = payload;
-      const orderQueryPayload = solrUtil.prepareOrderQuery({
+      const { prepareOrderQuery } = useSolrSearch();
+      const orderQueryPayload = prepareOrderQuery({
         ...params,
         orderIds,
         orderStatusId: 'ORDER_APPROVED',
@@ -1007,30 +1009,23 @@ export const useOrderStore = defineStore('order', {
       }
       return resp;
     },
-    async getOrderItemRejectionHistory(payload: any) {
+    async fetchOrderItemRejectionHistory(payload: any) {
       emitter.emit("presentLoader");
       let rejectionHistory = [] as any;
       try {
-        const params = {
-          inputFields: {
-            orderId: payload.orderId,
+        const resp = await api({
+          url: `/oms/orders/${payload.orderId}/facilityChange`,
+          method: 'GET',
+          params: {
             changeReasonEnumId: payload.rejectReasonEnumIds,
             changeReasonEnumId_op: "in",
-          },
-          fieldList: ['changeDatetime', 'changeUserLogin', 'productId', 'changeReasonEnumId'],
-          entityName: 'OrderFacilityChangeAndOrderItem',
-          orderBy: 'changeDatetime DESC',
-          viewSize: 20,
-        }
-        const resp = await api({
-          url: 'performFind',
-          method: 'POST',
-          baseURL: commonUtil.getOmsURL(),
-          data: params
+            viewSize: 20,
+            orderByField: 'changeDatetime DESC'
+          }
         });
-        if (!commonUtil.hasError(resp) && resp.data.count > 0) {
-          rejectionHistory = resp.data.docs;
-          const productIds = [...(resp.data.docs.reduce((ids: any, history: any) => ids.add(history.productId), new Set()))];
+        if (!commonUtil.hasError(resp) && resp.data?.length > 0) {
+          rejectionHistory = resp.data;
+          const productIds = [...(resp.data.reduce((ids: any, history: any) => ids.add(history.productId), new Set()))];
           const productStore = useProduct();
           await productStore.fetchProducts({ productIds })
         } else {
@@ -1192,27 +1187,14 @@ export const useOrderStore = defineStore('order', {
 
       if (!enumIdsFilter.length) return;
 
-      const payload = {
-        inputFields: {
-          enumId: enumIdsFilter,
-          enumId_op: "in"
-        },
-        viewSize: enumIdsFilter.length,
-        entityName: "Enumeration",
-        noConditionFind: 'Y',
-        distinct: "Y",
-        fieldList: ["enumId", "description"]
-      }
-
       try {
         const resp = await api({
-          url: "performFind",
-          method: "post",
-          baseURL: commonUtil.getOmsURL(),
-          data: payload
+          url: "/admin/enums",
+          method: "GET",
+          params: { enumId: enumIdsFilter, enumId_op: "in", pageSize: enumIdsFilter.length }
         });
-        if (!commonUtil.hasError(resp) && resp.data?.docs.length > 0) {
-          resp.data.docs.map((enumeration: any) => {
+        if (!commonUtil.hasError(resp) && resp.data?.length > 0) {
+          resp.data.map((enumeration: any) => {
             this.enumerations[enumeration.enumId] = enumeration["description"]
           })
         } else {
@@ -1395,29 +1377,26 @@ export const useOrderStore = defineStore('order', {
     },
     async printShippingLabelAndPackingSlip(shipmentIds: Array<string>): Promise<any> {
       try {
-        // Get packing slip from the server
-        const resp: any = await api({
-          method: 'get',
-          url: 'LabelAndPackingSlip.pdf',
-          baseURL: commonUtil.getOmsURL(),
+        const resp = await api({
+          url: "/fop/apps/pdf/PrintPackingSlipAndLabel",
+          method: "GET",
+          baseURL: commonUtil.getMaargBaseURL(),
           params: {
-            shipmentIds
+            shipmentId: shipmentIds
           },
           responseType: "blob"
-        })
+        }) as any;
 
         if (!resp || resp.status !== 200 || commonUtil.hasError(resp)) {
           throw resp.data;
         }
 
-        // Generate local file URL for the blob received
         const pdfUrl = window.URL.createObjectURL(resp.data);
-        // Open the file in new tab
         try {
           (window as any).open(pdfUrl, "_blank").focus();
         }
         catch {
-          commonUtil.showToast(translate('Unable to open as browser is blocking pop-ups.', { documentName: 'shipping label and packing slip' }));
+          commonUtil.showToast(translate('Unable to open as browser is blocking pop-ups.', { documentName: 'shipping label and packing slip' }), { icon: cogOutline });
         }
 
       } catch (err) {
@@ -1445,14 +1424,6 @@ export const useOrderStore = defineStore('order', {
         data: payload,
       });
     },
-    async getAvailablePickers(query: any): Promise<any> {
-      return api({
-        url: "solr-query",
-        method: "post",
-        baseURL: commonUtil.getOmsURL(),
-        data: query
-      });
-    },
     async resetPicker(payload: any): Promise<any> {
       return api({
         url: "/service/resetPicker",
@@ -1467,12 +1438,14 @@ export const useOrderStore = defineStore('order', {
         params: payload
       });
     },
-    async getProcessRefundStatus(payload: any): Promise<any> {
+    async getProcessRefundStatus(productStoreId: any): Promise<any> {
       return api({
-        url: "performFind",
-        method: "post",
-        baseURL: commonUtil.getOmsURL(),
-        data: payload
+        url: "/admin/shopifyShops",
+        method: "GET",
+        params: {
+          productStoreId: productStoreId,
+          pageSize: 1
+        }
       });
     },
     async activateGiftCard(payload: any): Promise<any> {

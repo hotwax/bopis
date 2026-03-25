@@ -70,7 +70,7 @@ import { IonButtons, IonButton, IonContent, IonFab, IonFabButton, IonHeader, Ion
 import { onMounted, ref } from "vue";
 import { closeOutline, saveOutline } from "ionicons/icons";
 import { useOrderStore } from '@/store/order'
-import { commonUtil, logger, translate } from "@common";
+import { commonUtil, logger, translate, useSolrSearch } from "@common";
 
 const orderStore = useOrderStore();
 
@@ -157,7 +157,7 @@ const getPicker = async (vSize?: any, vIndex?: any) => {
   let total = 0;
 
   try {
-    const resp = await orderStore.getAvailablePickers(payload);
+    const resp = await useSolrSearch().runSolrQuery(payload);
     if (resp.status === 200 && !commonUtil.hasError(resp) && resp.data.response.docs.length > 0) {
       const pickers = resp.data.response.docs.map((picker: any) => ({
         name: picker.groupName ? picker.groupName : (picker.firstName || picker.lastName)
