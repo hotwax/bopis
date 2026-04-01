@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import { api, commonUtil, logger, translate, useSolrSearch } from '@common'
+import { api, commonUtil, useEmbeddedAppStore, logger, translate, useSolrSearch } from '@common'
 import { useUserStore } from '@/store/user'
 
 export const useProductStore = defineStore('productStore', {
@@ -187,6 +187,27 @@ export const useProductStore = defineStore('productStore', {
               code: 'error',
               message: 'Failed to fetch facilities for group',
               serverResponse: error
+            })
+          }
+        }
+
+        // Only Location's facility for Shopify POS Users.
+        if (commonUtil.isAppEmbedded() && useEmbeddedAppStore().posContext.locationId) {
+          resp = await api({
+            url: "oms/shopifyShops/locations",
+            method: "GET",
+            params: {
+              locationId: useEmbeddedAppStore().posContext.locationId
+            }
+          });
+
+          const locations = resp.data;
+          facilityIds = locations.map((location: any) => location.facilityId);
+          if (!facilityIds.length) {
+            return Promise.reject({
+              code: 'error',
+              message: 'Failed to fetch user facilities',
+              serverResponse: resp.data
             })
           }
         }

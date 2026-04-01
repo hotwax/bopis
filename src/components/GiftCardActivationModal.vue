@@ -61,7 +61,7 @@ import { computed, ref } from "vue";
 import { cameraOutline, cardOutline, closeOutline, giftOutline, stopOutline } from "ionicons/icons";
 import { useProductStore as useProductStoreSettings } from '@/store/productStore'
 import { useOrderStore } from "@/store/order";
-import { commonUtil, logger, translate } from '@common';
+import { commonUtil, logger, translate, useShopify, useEmbeddedAppStore } from '@common';
 import { DateTime } from 'luxon';
 import { StreamBarcodeReader } from "vue-barcode-reader";
 import { useProductStore } from "@/store/product";
@@ -134,12 +134,21 @@ function getCreatedDateTime() {
 }
 
 async function scan() {
-  if (!(await commonUtil.hasWebcamAccess())) {
-    commonUtil.showToast(translate("Camera access not allowed, please check permissons."));
-    return;
-  } 
+  if (useEmbeddedAppStore().posContext.locationId) {
+    try {
+      const scannedCode = await useShopify().openPosScanner();
+      if (scannedCode) activationCode.value = scannedCode;
+    } catch(err) {
+      console.error("POS Scanner error:", err);
+    }
+  } else {
+    if (!(await commonUtil.hasWebcamAccess())) {
+      commonUtil.showToast(translate("Camera access not allowed, please check permissons."));
+      return;
+    } 
 
-  isCameraEnabled.value = true;
+    isCameraEnabled.value = true;
+  }
 }
 
 function stopScan() {

@@ -7,19 +7,34 @@
 <script setup lang="ts">
 import { IonApp, IonRouterOutlet, loadingController } from "@ionic/vue";
 import { computed, onMounted, onUnmounted, ref } from "vue";
-import { translate, emitter, logger, useNotificationStore } from "@common";
+import { translate, emitter, logger, useNotificationStore, initialise } from "@common";
 import { DateTime, Settings } from "luxon";
 import { useUserStore } from "@/store/user";
 import { useProductStore } from "@/store/productStore";
+import { useOrderStore } from "@/store/order";
 import { useAuth } from "@/composables/useAuth";
 import { firebaseUtil } from "@/utils/firebaseUtil";
+import router from "./router";
 
 const { isAuthenticated } = useAuth();
 const loader = ref<any>(null);
 
-
 const userProfile = computed(() => useUserStore().getUserProfile);
 const allNotificationPrefs = computed(() => useNotificationStore().getAllNotificationPrefs);
+
+const maxAge = import.meta.env.VITE_VUE_APP_CACHE_MAX_AGE ? parseInt(import.meta.env.VITE_VUE_APP_CACHE_MAX_AGE) : 0
+initialise({
+  cacheMaxAge: maxAge,
+  events: {
+    unauthorised: unauthorized,
+    responseError: () => {
+      setTimeout(() => dismissLoader(), 100);
+    },
+    queueTask: (payload: any) => {
+      emitter.emit("queueTask", payload);
+    }
+  }
+})
 
 const presentLoader = async (options = { message: "", backdropDismiss: false }) => {
   if (options.message && loader.value) dismissLoader();
@@ -70,4 +85,16 @@ onUnmounted(() => {
   emitter.off("presentLoader", (options: any) => presentLoader(options));
   emitter.off("dismissLoader", dismissLoader);
 });
+
+async function unauthorized() {
+  useAuth().logout({ isUserUnauthorised: true }).then((redirectionUrl) => {
+    // redirectionUrl is only present when SSO enables, thus when not present redirect user to login
+    useOrderStore().clearOrders();
+    if(!redirectionUrl) {
+      router.replace("/login");
+    } else {
+      window.location.href = redirectionUrl
+    }
+  })
+}
 </script>

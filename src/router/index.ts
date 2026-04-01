@@ -18,7 +18,11 @@ import Login from '@/views/Login.vue';
 const authGuard = async (to: any, from: any, next: any) => {
   const { isAuthenticated } = useAuth()
   if (!isAuthenticated.value) {
-    next('/login');
+    if (commonUtil.isAppEmbedded()) {
+      next('/shopify')
+    } else {
+      next('/login');
+    }
   } else {
     next()
   }
@@ -105,6 +109,11 @@ const routes: Array<RouteRecordRaw> = [
     name: "Notifications",
     component: Notifications,
     beforeEnter: authGuard,
+  },
+  {
+    path: '/install',
+    name: 'Install',
+    component: () => import('@/views/Install.vue')
   },
   {
     path: '/shopify',
