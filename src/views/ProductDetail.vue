@@ -139,7 +139,6 @@
 <script setup lang="ts">
 import { IonBackButton, IonBadge, IonButton, IonCard, IonChip, IonContent, IonHeader, IonItem, IonLabel, IonList, IonListHeader, IonNote, IonPage, IonRow, IonSegment, IonSegmentButton, IonTitle, IonThumbnail, IonToolbar, modalController } from "@ionic/vue";
 import { computed, onMounted, ref, getCurrentInstance } from "vue";
-import { useRoute } from 'vue-router';
 import { useProductStore } from "@/store/product";
 import { useUserStore } from "@/store/user";
 import { useStockStore } from "@/store/stock";
@@ -148,8 +147,9 @@ import { DxpShopifyImg, commonUtil, logger, translate } from "@common";
 import { sortSizes } from '@/apparel-sorter';
 import OtherStoresInventoryModal from "@/views/OtherStoresInventoryModal.vue";
 import { useProductStore as useProductStoreSettings } from "@/store/productStore";
+import router from "@/router";
 
-const route = useRoute();
+const route = router.currentRoute.value;
 
 const { proxy } = getCurrentInstance() as any;
 const $n = proxy?.$n;

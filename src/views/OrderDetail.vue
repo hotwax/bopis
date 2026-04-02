@@ -334,7 +334,7 @@
 import { alertController, IonBackButton, IonBadge, IonButton, IonButtons, IonCard, IonCardHeader, IonCardSubtitle, IonCardTitle, IonCheckbox, IonChip, IonContent, IonHeader, IonIcon, IonItem, IonList, IonPage, IonLabel, IonNote, IonSkeletonText, IonSpinner, IonThumbnail, IonTitle, IonToolbar, IonFab, IonFabButton, modalController, popoverController } from "@ionic/vue";
 import { onMounted, ref, computed } from "vue";
 import { banSharp, callOutline, cashOutline, closeOutline, closeCircleOutline, checkmarkCircleOutline, checkmarkDoneOutline, cubeOutline, gift, giftOutline, informationCircleOutline, locateOutline, mailOutline, personOutline, printOutline, pulseOutline, bagHandleOutline, timeOutline, ticketOutline, bagCheckOutline, swapHorizontalOutline, sunnyOutline, downloadOutline, trashOutline, chevronUpOutline, listOutline, caretDownOutline, warningOutline, personAddOutline, medkitOutline } from "ionicons/icons";
-import { useRouter } from 'vue-router'
+import router from "@/router";
 import OrderItemRejHistoryModal from '@/components/OrderItemRejHistoryModal.vue';
 import AssignPickerModal from "@/views/AssignPickerModal.vue";
 import EditPickerModal from "@/components/EditPickerModal.vue";
@@ -354,7 +354,6 @@ import { useUserStore } from "@/store/user"
 
 
 const props = defineProps(['orderType', 'orderId', 'shipGroupSeqId']);
-const router = useRouter();
 
 const rejectEntireOrderReasonId = ref("REJ_AVOID_ORD_SPLIT");
 const isCancelationSyncJobEnabled = ref(false);

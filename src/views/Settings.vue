@@ -21,8 +21,8 @@
               <ion-card-title>{{ userProfile?.userFullName }}</ion-card-title>
             </ion-card-header>
           </ion-item>
-          <ion-button color="danger" @click="logout()">{{ translate("Logout") }}</ion-button>
-          <ion-button :standalone-hidden="!useUserStore().hasPermission('COMMON_ADMIN')" fill="outline" @click="goToLaunchpad()">
+          <ion-button v-if="!commonUtil.isAppEmbedded()" color="danger" @click="logout()">{{ translate("Logout") }}</ion-button>
+          <ion-button v-if="!commonUtil.isAppEmbedded()" :standalone-hidden="!useUserStore().hasPermission('COMMON_ADMIN')" fill="outline" @click="goToLaunchpad()">
             {{ translate("Go to Launchpad") }}
             <ion-icon slot="end" :icon="openOutline" />
           </ion-button>
@@ -34,7 +34,7 @@
         <h1>{{ translate('OMS') }}</h1>
       </div>
       <section>
-        <DxpOmsInstanceNavigator />
+        <DxpOmsInstanceNavigator :is-embedded="commonUtil.isAppEmbedded()" />
         <DxpFacilitySwitcher @updateFacility="fetchFacilityDependencies" />
         <ion-card>
           <ion-card-header>

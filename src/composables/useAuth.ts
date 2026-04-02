@@ -114,7 +114,7 @@ export function useAuth() {
     // This only runs when token gets expired, since embedded app user can't logout on it's own,
     // token expiry on navigation is handled on the auth guard.
     if (commonUtil.isAppEmbedded()) {
-      redirectionUrl = window.location.origin + `/shopify?shop=${useEmbeddedAppStore().shop}&host=${useEmbeddedAppStore().host}&embedded=1`;
+      redirectionUrl = window.location.origin + `/shopify-login?shop=${useEmbeddedAppStore().shop}&host=${useEmbeddedAppStore().host}&embedded=1`;
       useEmbeddedAppStore().$reset();
     }
     useUserStore().$reset();
