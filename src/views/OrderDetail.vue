@@ -211,20 +211,20 @@
               <ion-list>
                 <ion-item>
                   <ion-icon :icon="mailOutline" slot="start" />
-                  <ion-label class="ion-text-wrap">{{ order.billingEmail || "-" }}</ion-label>
+                  <ion-label class="ion-text-wrap">{{ order.email || "-" }}</ion-label>
                 </ion-item>
                 <ion-item>
                   <ion-icon :icon="callOutline" slot="start" />
-                  <ion-label>{{ formatPhoneNumber(order.billingPhone?.countryCode, order.billingPhone?.areaCode, order.billingPhone?.contactNumber) || '-' }}</ion-label>
+                  <ion-label>{{ formatPhoneNumber(order.phone?.countryCode, order.phone?.areaCode, order.phone?.contactNumber) || '-' }}</ion-label>
                 </ion-item>
                 <ion-item lines="none">
                   <ion-icon :icon="cashOutline" slot="start" />
-                  <ion-label v-if="order.billingAddress" class="ion-text-wrap">
-                    {{ order.billingAddress.toName }}
-                    <p>{{ order.billingAddress.address1 }}</p>
-                    <p>{{ order.billingAddress.address2 }}</p>
-                    <p>{{ order.billingAddress.city }} {{ order.billingAddress.city && order.billingAddress.postalCode && ',' }} {{ order.billingAddress.postalCode }}</p>
-                    <p>{{ order.billingAddress.stateName }} {{ order.billingAddress.stateName && order.billingAddress.countryName && ',' }} {{ order.billingAddress.countryName }}</p>
+                  <ion-label v-if="order.address" class="ion-text-wrap">
+                    {{ order.address.toName }}
+                    <p>{{ order.address.address1 }}</p>
+                    <p>{{ order.address.address2 }}</p>
+                    <p>{{ order.address.city }} {{ order.address.city && order.address.postalCode && ',' }} {{ order.address.postalCode }}</p>
+                    <p>{{ order.address.stateName }} {{ order.address.stateName && order.address.countryName && ',' }} {{ order.address.countryName }}</p>
                   </ion-label>
                   <ion-label v-else>{{ "-" }}</ion-label>
                 </ion-item>

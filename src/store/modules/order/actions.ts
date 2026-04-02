@@ -280,6 +280,17 @@ const actions: ActionTree<OrderState , RootState> ={
         paymentPreferences: sortedPaymentPreference
       };
 
+      const hasObjectValue = (obj: any) => obj && Object.keys(obj).length > 0;
+
+      order.address = hasObjectValue(order.billingAddress) ? order.billingAddress :
+                      hasObjectValue(order.shippingAddress) ? order.shippingAddress : null;
+
+      order.email = order.billingEmail || order.orderEmail || null;
+
+      order.phone = hasObjectValue(order.billingPhone) ? order.billingPhone :
+                    hasObjectValue(order.shippingPhone) ? order.shippingPhone :
+                    hasObjectValue(order.orderPhone) ? order.orderPhone : null;
+
       // Assign currentShipGroup and related fields
       const currentFacilityId = getCurrentFacilityId();
       const currentShipGroup = order.shipGroups.find((shipGroup: any) => shipGroup.shipGroupSeqId === payload.shipGroupSeqId && shipGroup.facilityId === currentFacilityId);
