@@ -197,16 +197,16 @@ export const useProductStore = defineStore('productStore', {
             url: "oms/shopifyShops/locations",
             method: "GET",
             params: {
-              locationId: useEmbeddedAppStore().posContext.locationId
+              shopifyLocationId: useEmbeddedAppStore().posContext.locationId
             }
           });
 
           const locations = resp.data;
-          facilityIds = locations.map((location: any) => location.facilityId);
+          facilityIds = facilityIds.filter((facilityId: any) => facilityId === locations[0]?.facilityId)
           if (!facilityIds.length) {
             return Promise.reject({
               code: 'error',
-              message: 'Failed to fetch user facilities',
+              message: 'Failed to fetch user facilities for Shopify POS location',
               serverResponse: resp.data
             })
           }
