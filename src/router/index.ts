@@ -111,9 +111,9 @@ const routes: Array<RouteRecordRaw> = [
     beforeEnter: authGuard,
   },
   {
-    path: '/install',
-    name: 'Install',
-    component: () => import('@/views/Install.vue')
+    path: '/shopify-app-install',
+    name: 'ShopifyAppInstall',
+    component: () => import('@/views/ShopifyAppInstall.vue')
   },
   {
     path: '/shopify-login',
