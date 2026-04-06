@@ -201,8 +201,9 @@ export const useProductStore = defineStore('productStore', {
             }
           });
 
-          const locations = resp.data;
-          facilityIds = facilityIds.filter((facilityId: any) => facilityId === locations[0]?.facilityId)
+          const locationFacilityId = resp.data?.[0]?.facilityId
+          if (locationFacilityId) facilityIds = facilityIds.filter((id: any) => id === locationFacilityId)
+          else facilityIds = [];
           if (!facilityIds.length) {
             return Promise.reject({
               code: 'error',
