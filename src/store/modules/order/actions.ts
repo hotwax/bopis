@@ -286,8 +286,7 @@ const actions: ActionTree<OrderState , RootState> ={
       order.email = order.billingEmail || order.orderEmail || null;
 
       order.phone = hasObjectValue(order.billingPhone) ? order.billingPhone :
-                    hasObjectValue(order.shippingPhone) ? order.shippingPhone :
-                    hasObjectValue(order.orderPhone) ? order.orderPhone : null;
+                    hasObjectValue(order.shippingPhone) ? order.shippingPhone : null;
 
       // Assign currentShipGroup and related fields
       const currentFacilityId = getCurrentFacilityId();
