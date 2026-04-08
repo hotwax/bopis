@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import { api, commonUtil, logger, translate, useSolrSearch } from '@common'
+import { api, commonUtil, useEmbeddedAppStore, logger, translate, useSolrSearch } from '@common'
 import { useUserStore } from '@/store/user'
 
 export const useProductStore = defineStore('productStore', {
@@ -191,6 +191,24 @@ export const useProductStore = defineStore('productStore', {
           }
         }
 
+        // Only Location's facility for Shopify POS Users.
+        const shopifyLocationId = useEmbeddedAppStore().posContext.locationId
+        if (commonUtil.isAppEmbedded() && shopifyLocationId) {
+          const locationFacilityId = await this.fetchShopifyShopLocation({
+            shopifyLocationId,
+            pageSize: 1
+          })
+          if (locationFacilityId) facilityIds = facilityIds.filter((id: any) => id === locationFacilityId)
+          else facilityIds = [];
+          if (!facilityIds.length) {
+            return Promise.reject({
+              code: 'error',
+              message: 'Failed to fetch user facilities for Shopify POS location',
+              serverResponse: resp.data
+            })
+          }
+        }
+
         if (facilityIds.length) {
           filters = {
             facilityId: facilityIds.join(","),
@@ -234,25 +252,47 @@ export const useProductStore = defineStore('productStore', {
       this.currentFacility = payload;
     },
     async fetchFacilityPreference() {
-      const userStore = useUserStore();
+      if (!this.facilities.length) return;
+      let facilityId: string | undefined;
       try {
-        const preferredFacilityResp = await api({
-          url: "admin/user/preferences",
-          method: "GET",
-          params: {
+        const locationId = useEmbeddedAppStore().posContext.locationId;
+        if (commonUtil.isAppEmbedded() && locationId) {
+          facilityId = await this.fetchShopifyShopLocation({
+            shopifyLocationId: locationId,
             pageSize: 1,
-            userId: userStore.current.userId,
-            preferenceKey: "SELECTED_FACILITY"
-          },
-        }) as any;
-        const preferredFacilityId = preferredFacilityResp.data?.[0]?.preferenceValue;
-        if (preferredFacilityId) {
-          const currentFacility = this.facilities.find((facility: any) => facility.facilityId === preferredFacilityId);
-          currentFacility && this.setCurrentFacility(currentFacility)
+          });
+          if (!facilityId) {
+            throw new Error("Failed to fetch location information. Please contact the administrator.");
+          }
+        } else {
+          const preferredFacilityResp = await api({
+            url: "admin/user/preferences",
+            method: "GET",
+            params: {
+              pageSize: 1,
+              userId: useUserStore().current.userId,
+              preferenceKey: "SELECTED_FACILITY"
+            },
+          }) as any;
+        facilityId = preferredFacilityResp.data?.[0]?.preferenceValue;
         }
-      } catch (err) {
-        logger.error('Favourite facility not found', err)
+        if (facilityId) {
+          const facility = this.facilities.find((f: any) => f.facilityId === facilityId);
+          if (!facility && commonUtil.isAppEmbedded() && locationId) {
+            throw new Error(
+              "User is not associated with this location. Please contact the administrator."
+            );
+          }
+          if (facility) {
+            this.setCurrentFacility(facility)
+            return;
+          }
+        }
+      } catch (error) {
+        console.error("Failed to resolve facility preference:", error);
       }
+      // In case app is not embedded and user has no facility preference on server
+      this.setCurrentFacility(this.facilities[0]);
     },
     async fetchProductStores(currentFacilityId?: string) {
       try {
@@ -644,6 +684,14 @@ export const useProductStore = defineStore('productStore', {
         }
       } catch (err) {
         logger.error(err)
+      }
+    },
+    async fetchShopifyShopLocation(payload: { shopifyLocationId: string, pageSize: number }): Promise<any> {
+      try {
+        const resp = await api({ url: "oms/shopifyShops/locations", method: "GET", params: payload }) as any;
+        return Promise.resolve(resp.data[0]?.facilityId)
+      } catch(error) {
+        return Promise.reject({ code: "error", message: "Failed to fetch location information", serverResponse: error })
       }
     },
   },

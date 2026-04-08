@@ -152,7 +152,7 @@ import { alertController, IonBadge, IonButton, IonButtons, IonCard, IonContent, 
 import { onMounted, onUnmounted, ref, computed } from "vue";
 import ProductListItem from '@/components/ProductListItem.vue'
 import { mailOutline, notificationsOutline, printOutline, trailSignOutline } from "ionicons/icons";
-import { useRouter } from 'vue-router'
+import router from "@/router";
 import { commonUtil, emitter, logger, translate, useNotificationStore } from '@common'
 import { DateTime } from 'luxon';
 
@@ -162,8 +162,6 @@ import ProofOfDeliveryModal from "@/components/ProofOfDeliveryModal.vue";
 import { useUserStore } from "@/store/user";
 import { useOrderStore } from "@/store/order";
 import { useProductStore } from "@/store/productStore"
-
-const router = useRouter();
 
 const queryString = ref('');
 const isScrollingEnabled = ref(false);

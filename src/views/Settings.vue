@@ -21,8 +21,8 @@
               <ion-card-title>{{ userProfile?.userFullName }}</ion-card-title>
             </ion-card-header>
           </ion-item>
-          <ion-button color="danger" @click="logout()">{{ translate("Logout") }}</ion-button>
-          <ion-button :standalone-hidden="!useUserStore().hasPermission('COMMON_ADMIN')" fill="outline" @click="goToLaunchpad()">
+          <ion-button v-if="!commonUtil.isAppEmbedded()" color="danger" @click="logout()">{{ translate("Logout") }}</ion-button>
+          <ion-button v-if="!commonUtil.isAppEmbedded()" :standalone-hidden="!useUserStore().hasPermission('COMMON_ADMIN')" fill="outline" @click="goToLaunchpad()">
             {{ translate("Go to Launchpad") }}
             <ion-icon slot="end" :icon="openOutline" />
           </ion-button>
@@ -34,7 +34,7 @@
         <h1>{{ translate('OMS') }}</h1>
       </div>
       <section>
-        <DxpOmsInstanceNavigator />
+        <DxpOmsInstanceNavigator :is-embedded="commonUtil.isAppEmbedded()" />
         <DxpFacilitySwitcher @updateFacility="fetchFacilityDependencies" />
         <ion-card>
           <ion-card-header>
@@ -275,28 +275,7 @@ async function timeZoneUpdated(tzId: string) {
 
 
 async function logout() {
-  // remove firebase notification registration token -
-  // OMS and auth is required hence, removing it before logout (clearing state)
-  try {
-    await useNotificationStore().removeClientRegistrationToken(firebaseDeviceId.value, import.meta.env.VITE_NOTIF_APP_ID)
-  } catch (error) {
-    logger.error(error)
-  }
-
-  // clear facility lat lon and stores information state when facility changes
-  useProductStore().clearCurrentFacilityLatLon()
-  useProductStore().clearStoresInformation()
-  // Note: clearDeviceId was in util actions but I didn't see it in my migration. 
-  // Checking if I missed it.
-  
-  useAuth().logout({ isUserUnauthorised: false }).then((redirectionUrl) => {
-    // redirectionUrl is only present when SSO enables, thus when not present redirect user to login
-    if(!redirectionUrl) {
-      router.replace("/login");
-    } else {
-      window.location.href = redirectionUrl
-    }
-  })
+  useAuth().logout({ isUserUnauthorised: false });
 }
 
 function goToLaunchpad() {

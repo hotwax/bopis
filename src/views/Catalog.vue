@@ -38,12 +38,10 @@
 <script setup lang="ts">
 import { IonCard, IonContent, IonHeader, IonInfiniteScrollContent, IonInfiniteScroll, IonItem, IonLabel, IonPage, IonSearchbar, IonTitle, IonToolbar, onIonViewWillEnter } from '@ionic/vue';
 import { computed, ref } from 'vue';
-import { useRouter } from "vue-router";
 import { DxpShopifyImg, translate } from '@common'
 import { useProductStore } from "@/store/product";
 import { useOrderStore } from "@/store/order";
-
-const router = useRouter();
+import router from '@/router';
 
 const queryString = ref("");
 const isScrollingEnabled = ref(false);
