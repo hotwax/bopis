@@ -25,6 +25,7 @@
   "Bad review from friends/relatives": "Bad review from friends/relatives",
   "Browser TimeZone": "Browser TimeZone",
   "Browser time zone": "Browser time zone",
+  "Built: ": "Built: {builtDateTime}",
   "Catalog": "Catalog",
   "Camera access not allowed, please check permissons.": "Camera access not allowed, please check permissons.",
   "Cancel": "Cancel",

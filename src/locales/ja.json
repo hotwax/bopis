@@ -23,6 +23,7 @@
   "Bad review from friends/relatives": "Bad review from friends/relatives",
   "Browser TimeZone": "ブラウザーのタイムゾーン",
   "Browser time zone": "ブラウザーのタイムゾーン",
+  "Built: ": "Built: {builtDateTime}",
   "Catalog": "カタログ",
   "Camera access not allowed, please check permissons.": "Camera access not allowed, please check permissons.",
   "Cancel": "キャンセル",
