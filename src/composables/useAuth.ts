@@ -86,6 +86,20 @@ export function useAuth() {
   }
 
   const logout = async (payload?: any) => {
+    // remove firebase notification registration token -
+    // OMS and auth is required hence, removing it before logout (clearing state)
+    try {
+      await useNotificationStore().removeClientRegistrationToken(useNotificationStore().getFirebaseDeviceId, import.meta.env.VITE_NOTIF_APP_ID)
+    } catch (error) {
+      logger.error(error)
+    }
+
+    // clear facility lat lon and stores information state when facility changes
+    useProductStore().clearCurrentFacilityLatLon()
+    useProductStore().clearStoresInformation()
+    // Note: clearDeviceId was in util actions but I didn't see it in my migration. 
+    // Checking if I missed it.
+
     let redirectionUrl = "";
 
     if (!payload?.isUserUnauthorised) {

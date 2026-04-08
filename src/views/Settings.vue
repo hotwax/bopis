@@ -275,28 +275,7 @@ async function timeZoneUpdated(tzId: string) {
 
 
 async function logout() {
-  // remove firebase notification registration token -
-  // OMS and auth is required hence, removing it before logout (clearing state)
-  try {
-    await useNotificationStore().removeClientRegistrationToken(firebaseDeviceId.value, import.meta.env.VITE_NOTIF_APP_ID)
-  } catch (error) {
-    logger.error(error)
-  }
-
-  // clear facility lat lon and stores information state when facility changes
-  useProductStore().clearCurrentFacilityLatLon()
-  useProductStore().clearStoresInformation()
-  // Note: clearDeviceId was in util actions but I didn't see it in my migration. 
-  // Checking if I missed it.
-  
-  useAuth().logout({ isUserUnauthorised: false }).then((redirectionUrl) => {
-    // redirectionUrl is only present when SSO enables, thus when not present redirect user to login
-    if(!redirectionUrl) {
-      router.replace("/login");
-    } else {
-      window.location.href = redirectionUrl
-    }
-  })
+  useAuth().logout({ isUserUnauthorised: false });
 }
 
 function goToLaunchpad() {

@@ -19,7 +19,7 @@
 import { IonContent, IonItem, IonIcon, IonPage, onIonViewDidEnter, onIonViewDidLeave } from "@ionic/vue";
 import { ref } from "vue";
 import router from "@/router";
-import { emitter, translate, useNotificationStore, useShopify } from "@common";
+import { emitter, translate, useEmbeddedAppStore, useNotificationStore, useShopify } from "@common";
 import { useUserStore } from "@/store/user";
 import { useProductStore } from "@/store/productStore";
 import { firebaseUtil } from "@/utils/firebaseUtil";
@@ -58,6 +58,7 @@ onIonViewDidEnter(async () => {
   } catch (error: any) {
     console.error("Error during Shopify view initialization:", error);
     errorMessage.value = "Something went wrong, please contact administrator";
+    useEmbeddedAppStore().$reset();
   }
   emitter.emit("dismissLoader");
 });
