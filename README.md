@@ -142,3 +142,103 @@ If you have any questions or ideas feel free to join our <a href="https://discor
 # The license
 
 Bopis app is completely free and released under the Apache v2.0 License. Check <a href="https://github.com/hotwax/bopis/blob/main/LICENSE" target="_blank">LICENSE</a> for more details.
+----------------------------------------------------------------
+## Playwright Automation – Execution Guidelines
+
+This document explains how to run Playwright tests:
+On Local Machine
+Using CI/CD Pipeline
+
+**1. Prerequisites**
+
+Before running tests, make sure below tools are installed:
+Node.js (v16 or above recommended)
+npm (comes with Node)
+Git
+VS Code (recommended)
+Verify installation:
+node -v
+npm -v
+git --version
+
+**2. Project Setup (First Time Only)**
+**
+Clone the repository:
+git clone <repository-url>
+cd <project-folder>
+
+
+**Install dependencies:**
+
+npm install
+Install Playwright browsers:
+npx playwright install
+
+**Running Tests on Local Machine**
+**Run All Tests**
+npx playwright test
+
+**Run Specific Test File**
+npx playwright test tests/login.spec.js
+**Expand commentComment on line R148Resolved
+
+** Run in Headed Mode (Browser Visible)**
+npx playwright test --headed
+
+** Run in Specific Browser**
+npx playwright test --project=chromium
+
+
+Available projects (as defined in playwright.config.js):
+chromium/ firefox/ webkit
+
+Run in Debug Mode
+npx playwright test --debug
+OR add in test:
+await page.pause();
+
+ Generate and View Report
+
+After execution:
+npx playwright show-report
+Reports are available inside:
+playwright-report/
+**Environment Configuration**
+
+If using environment variables:
+Create .env file in root directory:
+BASE_URL=https://dev.example.com
+USERNAME=testuser
+PASSWORD=test123
+Make sure .env is added in .gitignore.
+
+**Running Tests via CI/CD**
+
+Tests automatically run on:
+Pull Request creation
+Push to main branch
+Pipeline file location:
+.github/workflows/playwright.yml
+
+**CI Execution Flow**
+
+Checkout code
+Install dependencies (npm install)
+Install browsers (npx playwright install --with-deps)
+Run tests (npx playwright test)
+Generate HTML report
+Upload test artifacts
+
+**Viewing CI Results**
+Go to GitHub → Actions
+Select latest workflow run
+Check:
+Test logs
+Failed test details
+Download report artifact
+
+**Parallel Execution**
+
+Tests run in parallel by default.
+To control workers:
+npx playwright test --workers=2
