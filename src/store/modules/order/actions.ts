@@ -3,7 +3,7 @@ import { ActionTree } from 'vuex'
 import RootState from '@/store/RootState'
 import OrderState from './OrderState'
 import * as types from './mutation-types'
-import { showToast, getCurrentFacilityId, getPickerName } from "@/utils";
+import { showToast, getCurrentFacilityId, getPickerName, hasObjectValue } from "@/utils";
 import { isKit, removeKitComponents } from '@/utils/order'
 import { hasError } from '@/adapter'
 import { translate } from "@hotwax/dxp-components";
@@ -279,6 +279,14 @@ const actions: ActionTree<OrderState , RootState> ={
         completedDate: data.statuses?.find((status: any) => status.statusId === "ORDER_COMPLETED")?.statusDatetime,
         paymentPreferences: sortedPaymentPreference
       };
+
+      order.address = hasObjectValue(order.billingAddress) ? order.billingAddress :
+                      hasObjectValue(order.shippingAddress) ? order.shippingAddress : null;
+
+      order.email = order.billingEmail || order.orderEmail || null;
+
+      order.phone = hasObjectValue(order.billingPhone) ? order.billingPhone :
+                    hasObjectValue(order.shippingPhone) ? order.shippingPhone : null;
 
       // Assign currentShipGroup and related fields
       const currentFacilityId = getCurrentFacilityId();

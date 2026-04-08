@@ -119,4 +119,6 @@ const getPickerName = (pickerGroupName: string, pickerFirstName: string, pickerL
   return pickerGroupName ? pickerGroupName : pickerFirstName ? `${pickerFirstName} ${pickerLastName ? pickerLastName : ''}`.trim() : '';
 }
 
-export { copyToClipboard, getCurrentTime, showToast, hasWebcamAccess, getFeature, formatPhoneNumber, getCurrentFacilityId, getColorByDesc, formatCurrency, getPickerName }
+const hasObjectValue = (obj: any) => obj && Object.keys(obj).length > 0;
+
+export { copyToClipboard, getCurrentTime, showToast, hasWebcamAccess, getFeature, formatPhoneNumber, getCurrentFacilityId, getColorByDesc, formatCurrency, getPickerName, hasObjectValue }
