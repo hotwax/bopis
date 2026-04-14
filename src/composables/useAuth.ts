@@ -86,27 +86,25 @@ export function useAuth() {
   }
 
   const logout = async (payload?: any) => {
-    // remove firebase notification registration token -
-    // OMS and auth is required hence, removing it before logout (clearing state)
-    try {
-      await useNotificationStore().removeClientRegistrationToken(useNotificationStore().getFirebaseDeviceId, import.meta.env.VITE_NOTIF_APP_ID)
-    } catch (error) {
-      logger.error(error)
-    }
-
-    // clear facility lat lon and stores information state when facility changes
-    useProductStore().clearCurrentFacilityLatLon()
-    useProductStore().clearStoresInformation()
-    // Note: clearDeviceId was in util actions but I didn't see it in my migration. 
-    // Checking if I missed it.
-
     let redirectionUrl = "";
-
     if (!payload?.isUserUnauthorised) {
       emitter.emit("presentLoader", {
         message: "Logging out",
         backdropDismiss: false,
       });
+
+      // remove firebase notification registration token -
+      // OMS and auth is required hence, removing it before logout (clearing state)
+      try {
+        await useNotificationStore().removeClientRegistrationToken(useNotificationStore().getFirebaseDeviceId, import.meta.env.VITE_NOTIF_APP_ID)
+        useNotificationStore().$reset();
+      } catch (error) {
+        logger.error(error)
+      }
+      // clear facility lat lon and stores information state when facility changes
+      useProductStore().clearCurrentFacilityLatLon()
+      useProductStore().clearStoresInformation()
+
       let resp;
       try {
         resp = await api({
@@ -130,9 +128,10 @@ export function useAuth() {
     // This only runs when token gets expired, since embedded app user can't logout on it's own,
     // token expiry on navigation is handled on the auth guard.
     if (commonUtil.isAppEmbedded()) {
-      redirectionUrl = window.location.origin + `/shopify-login?shop=${useEmbeddedAppStore().shop}&host=${useEmbeddedAppStore().host}&embedded=1`;
+      redirectionUrl = window.location.origin + `/shopify-login?shop=${useEmbeddedAppStore().getShop}&host=${useEmbeddedAppStore().getHost}&embedded=1`;
       useEmbeddedAppStore().$reset();
     }
+    useNotificationStore().clearNotificationState();
     useUserStore().$reset();
     useOrderStore().clearOrders();
     cookieHelper().remove('token');
