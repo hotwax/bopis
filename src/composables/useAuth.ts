@@ -96,7 +96,7 @@ export function useAuth() {
       // remove firebase notification registration token -
       // OMS and auth is required hence, removing it before logout (clearing state)
       try {
-        await useNotificationStore().removeClientRegistrationToken(useNotificationStore().getFirebaseDeviceId, import.meta.env.VITE_NOTIF_APP_ID)
+        if (useNotificationStore().getFirebaseDeviceId) await useNotificationStore().removeClientRegistrationToken(useNotificationStore().getFirebaseDeviceId, import.meta.env.VITE_NOTIF_APP_ID)
         useNotificationStore().$reset();
       } catch (error) {
         logger.error(error)
