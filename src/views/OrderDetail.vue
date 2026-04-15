@@ -458,7 +458,7 @@ async function fetchJobs() {
       cancelJobNextRunTime.value = resp.data.docs[0].nextExecutionDateTime;
     }
 
-    const refundStatusResp = await useOrderStore().getProcessRefundStatus(useProductStore().getCurrentEComStore.productStoreId)
+    const refundStatusResp = await useOrderStore().getProcessRefundStatus(useProductStore().getCurrentProductStore.productStoreId)
 
     if(!commonUtil.hasError(refundStatusResp) && refundStatusResp.data.count > 0) {
       isProcessRefundEnabled.value = refundStatusResp.data.docs[0].processRefund === "Y";

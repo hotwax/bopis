@@ -20,6 +20,9 @@ export default defineConfig({
       '@common': path.resolve(__dirname, '../../common')
     },
   },
+  server: {
+    port: 8100
+  },
   test: {
     globals: true,
     environment: 'jsdom'

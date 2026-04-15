@@ -223,7 +223,7 @@ const carriers = computed(() => useProductStore().getCarriers);
 const availableShipmentMethods = computed(() => useProductStore().getAvailableShipmentMethods);
 
 const userProfile = computed(() => useUserStore().getUserProfile);
-const currentEComStore = computed(() => useProductStore().getCurrentEComStore);
+const currentProductStore = computed(() => useProductStore().getCurrentProductStore);
 const isPartialOrderRejectionEnabled = computed(() => useProductStore().isPartialOrderRejectionEnabled);
 const isTrackingEnabled = computed(() => useProductStore().isTrackingEnabled);
 const isPrintPackingSlipEnabled = computed(() => useProductStore().isPrintPackingSlipEnabled);
@@ -248,10 +248,10 @@ onIonViewWillEnter(async () => {
   
   // Only fetch configuration when environment mapping exists
   await useProductStore().fetchCarriers();
-  await useProductStore().fetchProductStoreShipmentMethods(currentEComStore.value?.productStoreId);
+  await useProductStore().fetchProductStoreShipmentMethods(currentProductStore.value?.productStoreId);
 
   // fetching partial order rejection when entering setting page to have latest information
-  await useProductStore().fetchProductStoreSettings(currentEComStore.value.productStoreId)
+  await useProductStore().fetchProductStoreSettings(currentProductStore.value.productStoreId)
 
   // as notification prefs can also be updated from the notification pref modal,
   // latest state is fetched each time we open the settings page
@@ -259,12 +259,12 @@ onIonViewWillEnter(async () => {
 });
 
 async function fetchFacilityDependencies(facility: any) {
-  const previousEComStoreId = currentEComStore.value.productStoreId
+  const previousProductStoreId = currentProductStore.value.productStoreId
   await useProductStore().fetchProductStores(facility.facilityId)
 
-  if (previousEComStoreId !== (currentEComStore.value as any).productStoreId) {
-    await useProductStore().fetchEComStoreDependencies(currentEComStore.value.productStoreId)
-    await useProductStore().fetchProductStoreShipmentMethods(currentEComStore.value?.productStoreId);
+  if (previousProductStoreId !== (currentProductStore.value as any).productStoreId) {
+    await useProductStore().fetchProductStoreDependencies(currentProductStore.value.productStoreId)
+    await useProductStore().fetchProductStoreShipmentMethods(currentProductStore.value?.productStoreId);
   }
   await useNotificationStore().fetchNotificationPreferences(import.meta.env.VITE_NOTIF_ENUM_TYPE_ID, import.meta.env.VITE_NOTIF_APP_ID, userProfile.value?.userId, (enumId: string) => firebaseMessaging.generateTopicName(commonUtil.getOMSInstanceName(), (currentFacility.value as any)?.facilityId, enumId))
 }
@@ -284,7 +284,7 @@ function goToLaunchpad() {
 
 function setBopisProductStoreSettings(ev: any, enumId: any, value: any) {
   ev.stopImmediatePropagation();
-  useProductStore().setProductStoreSetting(currentEComStore.value?.productStoreId, enumId, (value ? "Y" : "N"))
+  useProductStore().setProductStoreSetting(currentProductStore.value?.productStoreId, enumId, (value ? "Y" : "N"))
 }
 
 async function openEditShipmentMethodModal() {
@@ -295,7 +295,7 @@ async function openEditShipmentMethodModal() {
 
   editShipmentMethodModal.onDidDismiss().then(async (result: any) => {
     if (result.data?.shippingMethod) {
-      await useProductStore().setProductStoreSetting(currentEComStore.value?.productStoreId, 'RF_SHIPPING_METHOD', result.data?.shippingMethod);
+      await useProductStore().setProductStoreSetting(currentProductStore.value?.productStoreId, 'RF_SHIPPING_METHOD', result.data?.shippingMethod);
     }
   })
 

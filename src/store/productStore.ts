@@ -9,7 +9,7 @@ export const useProductStore = defineStore('productStore', {
       facilityName: "",
       productStores: []
     } as any,
-    currentEComStore: {} as any,
+    currentProductStore: {} as any,
     settings: {
       partialOrderRejection: "",
       enableTracking: "",
@@ -52,7 +52,7 @@ export const useProductStore = defineStore('productStore', {
 
   getters: {
     getCurrentFacility: (state) => state.currentFacility,
-    getCurrentEComStore: (state) => state.currentEComStore,
+    getCurrentProductStore: (state) => state.currentProductStore,
     getProductStores(state) {
       return state.currentFacility?.productStores || []
     },
@@ -97,9 +97,9 @@ export const useProductStore = defineStore('productStore', {
     setCurrentFacility(facility: any) {
       this.currentFacility = facility
     },
-    async setCurrentEComStore(store: any) {
-      this.currentEComStore = store
-      await this.fetchEComStoreDependencies(store.productStoreId)
+    async setCurrentProductStore(store: any) {
+      this.currentProductStore = store
+      await this.fetchProductStoreDependencies(store.productStoreId)
     },
     async fetchUserFacilities() {
       const userStore = useUserStore();
@@ -222,6 +222,10 @@ export const useProductStore = defineStore('productStore', {
           method: "GET",
           params: {
             pageSize: 500,
+            facilityTypeId: "VIRTUAL_FACILITY",
+            facilityTypeId_not: "Y",
+            parentTypeId: "VIRTUAL_FACILITY",
+            parentTypeId_not: "Y",
             ...filters
           }
         }
@@ -274,7 +278,7 @@ export const useProductStore = defineStore('productStore', {
               preferenceKey: "SELECTED_FACILITY"
             },
           }) as any;
-        facilityId = preferredFacilityResp.data?.[0]?.preferenceValue;
+          facilityId = preferredFacilityResp.data?.[0]?.preferenceValue;
         }
         if (facilityId) {
           const facility = this.facilities.find((f: any) => f.facilityId === facilityId);
@@ -339,7 +343,7 @@ export const useProductStore = defineStore('productStore', {
           storeName: "None",
         });
 
-        this.setCurrentEComStore(this.currentFacility.productStores[0])
+        this.setCurrentProductStore(this.currentFacility.productStores[0])
       } catch (error: any) {
         logger.error("error", error);
         return Promise.reject(new Error(error));
@@ -360,20 +364,20 @@ export const useProductStore = defineStore('productStore', {
         const preferredStoreId = preferredStoreResp.data?.[0]?.preferenceValue
         if (preferredStoreId) {
           const store = this.currentFacility.productStores.find((store: any) => store.productStoreId === preferredStoreId);
-          store && this.setCurrentEComStore(store)
+          store && this.setCurrentProductStore(store)
         }
       } catch (err) {
         logger.error('Favourite product store not found', err)
       }
     },
-    async fetchEComStoreDependencies(productStoreId: string) {
+    async fetchProductStoreDependencies(productStoreId: string) {
       try {
         await this.fetchProductStoreSettings(productStoreId)
       } catch (err) {
         logger.error("error", err)
       }
     },
-    async setEComStorePreference(payload: any) {
+    async setProductStorePreference(payload: any) {
       const userStore = useUserStore();
       try {
         await api({
@@ -388,7 +392,7 @@ export const useProductStore = defineStore('productStore', {
       } catch (error) {
         console.error('error', error)
       }
-      this.currentEComStore = payload;
+      this.currentProductStore = payload;
     },
     async fetchProductStoreSettings(productStoreId: string) {
       const defaultProductStoreSettings = JSON.parse(import.meta.env.VITE_DEFAULT_PRODUCT_STORE_SETTINGS as string || '{}')
@@ -690,7 +694,7 @@ export const useProductStore = defineStore('productStore', {
       try {
         const resp = await api({ url: "oms/shopifyShops/locations", method: "GET", params: payload }) as any;
         return Promise.resolve(resp.data[0]?.facilityId)
-      } catch(error) {
+      } catch (error) {
         return Promise.reject({ code: "error", message: "Failed to fetch location information", serverResponse: error })
       }
     },

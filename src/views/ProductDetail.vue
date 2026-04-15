@@ -169,7 +169,7 @@ const currency = computed(() => useUserStore().getCurrency);
 const getInventoryInformation = computed(() => useStockStore().getInventoryInformation);
 const orders = computed(() => useOrderStore().getOrders);
 const getProduct = computed(() => useProductStore().getProduct);
-const currentEComStore = computed(() => useProductStoreSettings().getCurrentEComStore);
+const currentProductStore = computed(() => useProductStoreSettings().getCurrentProductStore);
 const productIdentificationPref = computed(() => useProductStoreSettings().getProductIdentificationPref);
 const currentFacility = computed(() => useProductStoreSettings().getCurrentFacility);
 
@@ -204,7 +204,7 @@ const checkInventory = async () => {
 
   try {
     const resp: any = await useStockStore().checkShippingInventory({
-      productStoreId: currentEComStore.value.productStoreId,
+      productStoreId: currentProductStore.value.productStoreId,
       productIds: currentVariant.value.productId,
     });
 
@@ -274,7 +274,7 @@ onMounted(async () => {
     getFeatures();
     await updateVariant();
   }
-  await useProductStoreSettings().fetchProductStoreSettings(useProductStoreSettings().getCurrentEComStore?.productStoreId);
+  await useProductStoreSettings().fetchProductStoreSettings(useProductStoreSettings().getCurrentProductStore?.productStoreId);
 });
 </script>
 

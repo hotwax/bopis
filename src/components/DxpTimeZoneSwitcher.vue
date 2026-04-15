@@ -164,7 +164,6 @@ onBeforeMount(async () => {
   await userStore.getAvailableTimeZones();
 
   if(userProfile.value && userProfile.value.timeZone) {
-    userStore.currentTimeZoneId = userProfile.value.timeZone
     timeZoneId.value = userProfile.value.timeZone
   }
 
