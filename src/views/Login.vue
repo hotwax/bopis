@@ -67,11 +67,10 @@ import Logo from '@/components/Logo.vue';
 import { arrowForwardOutline } from 'ionicons/icons'
 import { api, commonUtil, cookieHelper, translate } from "@common";
 import { useAuth } from "@/composables/useAuth";
-import { useRoute, useRouter } from "vue-router";
+import router from "@/router";
 
 const userStore = useUserStore();
-const router = useRouter();
-const route = useRoute();
+const route = router.currentRoute.value;
 
 // This is the best practice for defining composable instance, as this ensures in managing the reactive state properly
 const { loginOption, fetchLoginOptions, login: authLogin, clearAuth } = useAuth();

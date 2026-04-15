@@ -18,7 +18,7 @@
   </ion-card>
   <!-- Using inline modal(as recommended by ionic), also using it inline as the component inside modal is not getting mounted when using modalController -->
   <!-- Do not mount the modal when running in embedded mode-->
-  <ion-modal ref="facilityModal" trigger="open-facility-modal" @didPresent="loadFacilities()" @didDismiss="clearSearch()">
+  <ion-modal v-if="facilities?.length > 1" ref="facilityModal" trigger="open-facility-modal" @didPresent="loadFacilities()" @didDismiss="clearSearch()">
     <ion-header>
       <ion-toolbar>
         <ion-buttons slot="start">
