@@ -283,7 +283,7 @@ const actions: ActionTree<OrderState , RootState> ={
       order.address = hasObjectValue(order.billingAddress) ? order.billingAddress :
                       hasObjectValue(order.shippingAddress) ? order.shippingAddress : null;
 
-      order.email = order.billingEmail || order.orderEmail || null;
+      order.email = order.billingEmail || order.orderEmail || order.shippingEmail || null;
 
       order.phone = hasObjectValue(order.billingPhone) ? order.billingPhone :
                     hasObjectValue(order.shippingPhone) ? order.shippingPhone : null;
