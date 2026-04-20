@@ -7,11 +7,11 @@
 <script setup lang="ts">
 import { IonApp, IonRouterOutlet, loadingController } from "@ionic/vue";
 import { computed, onMounted, onUnmounted, ref } from "vue";
-import { translate, emitter, logger, useNotificationStore, initialise } from "@common";
+import { translate, emitter, logger, useNotificationStore } from "@common";
 import { Settings } from "luxon";
 import { useUserStore } from "@/store/user";
 import { useProductStore } from "@/store/productStore";
-import { useAuth } from "@/composables/useAuth";
+import { useAuth } from "@common/composables/auth";
 import { firebaseUtil } from "@/utils/firebaseUtil";
 
 const { isAuthenticated } = useAuth();
@@ -20,19 +20,7 @@ const loader = ref<any>(null);
 const userProfile = computed(() => useUserStore().getUserProfile);
 const allNotificationPrefs = computed(() => useNotificationStore().getAllNotificationPrefs);
 
-const maxAge = import.meta.env.VITE_CACHE_MAX_AGE ? parseInt(import.meta.env.VITE_CACHE_MAX_AGE) : 0
-initialise({
-  cacheMaxAge: maxAge,
-  events: {
-    unauthorised: useAuth().logout,
-    responseError: () => {
-      setTimeout(() => dismissLoader(), 100);
-    },
-    queueTask: (payload: any) => {
-      emitter.emit("queueTask", payload);
-    }
-  }
-})
+
 
 const presentLoader = async (options = { message: "", backdropDismiss: false }) => {
   if (options.message && loader.value) dismissLoader();

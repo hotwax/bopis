@@ -1,7 +1,12 @@
-import { api, i18n, commonUtil, cookieHelper, logger, translate } from "@common";
+import { api, i18n, commonUtil, cookieHelper, logger, translate, useNotificationStore, firebaseUtil, useEmbeddedAppStore } from "@common";
 import { defineStore } from "pinia"
 import { DateTime, Settings } from "luxon"
-import { useAuth } from "@/composables/useAuth";
+import { useAuth } from "@common/composables/auth";
+import router from "@/router";
+import { useProductStore as useProduct } from "@/store/product";
+import { useOrderStore } from "@/store/order";
+import { useStockStore } from "@/store/stock";
+import { useProductStore } from "@/store/productStore";
 
 interface UserState {
   permissions: any[]
@@ -214,6 +219,54 @@ export const useUserStore = defineStore("user", {
     },
     setUnreadNotificationsStatus(payload: any) {
       this.pwaState.updateExists = payload
+    },
+    async postLogin() {
+      try {
+        await this.fetchPermissions()
+        await this.fetchUserProfile()
+        await useProductStore().fetchUserFacilities()
+        await useProductStore().fetchFacilityPreference();
+        await useProductStore().fetchProductStores()
+        await useProductStore().fetchProductStorePreference();
+        await useProductStore().fetchProductStoreDependencies(useProductStore().getCurrentProductStore.productStoreId)
+
+        const notificationStore = useNotificationStore();
+        await notificationStore.fetchAllNotificationPrefs(import.meta.env.VITE_NOTIF_APP_ID as any, this.current.userId)
+        await firebaseUtil.initialiseFirebaseMessaging();
+
+        const facilityId = router.currentRoute.value.query.facilityId
+        if (facilityId) {
+          const facility = this.current.facilities.find((facility: any) => facility.facilityId === facilityId);
+          if (facility) {
+            useProductStore().currentFacility = facility
+          } else {
+            commonUtil.showToast(translate("Redirecting to home page due to incorrect information being passed."))
+          }
+        }
+      } catch (error: any) {
+        return Promise.reject(error);
+      }
+    },
+    async postLogout() {
+      try {
+        if (useNotificationStore().getFirebaseDeviceId) await useNotificationStore().removeClientRegistrationToken(useNotificationStore().getFirebaseDeviceId, import.meta.env.VITE_NOTIF_APP_ID as any)
+      } catch (error) {
+        logger.error(error)
+      }
+
+      if (commonUtil.isAppEmbedded()) {
+        setTimeout(() => {
+          window.location.href = window.location.origin + `/shopify-login?shop=${useEmbeddedAppStore().getShop}&host=${useEmbeddedAppStore().getHost}&embedded=1`;
+        }, 100);
+        useEmbeddedAppStore().$reset();
+      }
+
+      useNotificationStore().clearNotificationState();
+      this.$reset();
+      useOrderStore().$reset();
+      useProductStore().$reset();
+      useProduct().$reset();
+      useStockStore().$reset();
     }
   },
   persist: true

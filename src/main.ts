@@ -25,10 +25,11 @@ import "@common/css/settings.css"
 import "@common/css/theme.css"
 import './theme/variables.css';
 
-import { createDxpI18n, logger } from '@common';
+import { createDxpI18n, logger, initialiseConfig } from '@common';
 import { createPinia } from 'pinia'
 import piniaPluginPersistedstate from 'pinia-plugin-persistedstate'
 import localeMessages from '@/locales'
+import { useUserStore } from './store/user';
 
 const app = createApp(App)
 const pinia = createPinia();
@@ -46,6 +47,16 @@ app.use(IonicVue, {
   .use(pinia)
   .use(router)
   .use(i18n);
+
+initialiseConfig({
+  postLogin: useUserStore().postLogin,
+  postLogout: useUserStore().postLogout,
+  get oms() { return useUserStore().oms },
+  set oms(val) { useUserStore().oms = val },
+  get current() { return useUserStore().current },
+  set current(val) { useUserStore().current = val },
+  router: router
+})
 
 router.isReady().then(() => {
   app.mount('#app');

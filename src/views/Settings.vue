@@ -212,7 +212,7 @@ import { useUserStore } from '@/store/user';
 import { useOrderStore } from '@/store/order';
 import { useProductStore } from '@/store/productStore';
 import DxpAppVersionInfo from '@/components/DxpAppVersionInfo.vue';
-import { useAuth } from '@/composables/useAuth'
+import { useAuth } from '@common/composables/auth'
 import { firebaseUtil } from "@/utils/firebaseUtil"
 import router from '@/router';
 
