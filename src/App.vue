@@ -7,11 +7,10 @@
 <script setup lang="ts">
 import { IonApp, IonRouterOutlet, loadingController } from "@ionic/vue";
 import { computed, onMounted, onUnmounted, ref } from "vue";
-import { translate, emitter, logger, useNotificationStore } from "@common";
+import { translate, emitter, logger, useNotificationStore, useAuth } from "@common";
 import { Settings } from "luxon";
 import { useUserStore } from "@/store/user";
 import { useProductStore } from "@/store/productStore";
-import { useAuth } from "@common/composables/auth";
 import { firebaseUtil } from "@/utils/firebaseUtil";
 
 const { isAuthenticated } = useAuth();
