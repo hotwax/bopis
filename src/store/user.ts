@@ -1,12 +1,12 @@
-import { api, i18n, commonUtil, cookieHelper, logger, translate, useNotificationStore, firebaseUtil, useEmbeddedAppStore } from "@common";
+import { api, i18n, commonUtil, logger, translate, useNotificationStore, useEmbeddedAppStore, useAuth } from "@common";
 import { defineStore } from "pinia"
 import { DateTime, Settings } from "luxon"
-import { useAuth } from "@common/composables/auth";
 import router from "@/router";
 import { useProductStore as useProduct } from "@/store/product";
 import { useOrderStore } from "@/store/order";
 import { useStockStore } from "@/store/stock";
 import { useProductStore } from "@/store/productStore";
+import { firebaseUtil } from "@/utils/firebaseUtil";
 
 interface UserState {
   permissions: any[]

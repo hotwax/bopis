@@ -5,14 +5,9 @@ import OrderDetail from '@/views/OrderDetail.vue'
 import ProductDetail from '@/views/ProductDetail.vue'
 import ShipToStoreOrders from '@/views/ShipToStoreOrders.vue'
 import Notifications from '@/views/Notifications.vue'
-import ShopifyLogin from '@/views/ShopifyLogin.vue'
 
-import { commonUtil, translate } from '@common'
+import { translate, commonUtil, useAuth, ShopifyLogin, ShopifyAppInstall, Login } from '@common'
 import { useUserStore } from '@/store/user'
-
-import 'vue-router'
-import { useAuth } from '@common/composables/auth';
-import Login from '@common/components/Login.vue';
 
 
 const authGuard = async (to: any, from: any, next: any) => {
@@ -104,7 +99,7 @@ const routes: Array<RouteRecordRaw> = [
   {
     path: '/shopify-app-install',
     name: 'ShopifyAppInstall',
-    component: () => import('@/views/ShopifyAppInstall.vue')
+    component: ShopifyAppInstall
   },
   {
     path: '/shopify-login',

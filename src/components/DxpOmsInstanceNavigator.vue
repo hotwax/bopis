@@ -28,7 +28,7 @@ import {
   IonCardTitle,
   IonIcon
 } from '@ionic/vue';
-import { commonUtil, cookieHelper, translate } from "@common";
+import { commonUtil, translate } from "@common";
 import { openOutline } from 'ionicons/icons'
 
 const props = defineProps({
@@ -46,9 +46,7 @@ const props = defineProps({
   }
 });
 
-const cookie = cookieHelper();
-const token = cookie.get('token') as string
-const oms = cookie.get('oms') as string
+const oms = commonUtil.getOMSInstanceName()
 </script>
 
 <style scoped>
