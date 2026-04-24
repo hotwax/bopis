@@ -48,8 +48,8 @@
           <ion-select-option value="Friend">{{ translate("Friend") }}</ion-select-option>
         </ion-select>
       </ion-item>
-      <ion-item :lines="errors.phone ? 'none' : ''">
-        <ion-input v-model="form.phone" :label="translate('Phone')" label-placement="floating" type="tel" :disabled="isSubmitting || (sameAsBilling &&isPhonePrefilled)" :error-text="errors.phone" :class="{ 'ion-invalid': errors.phone, 'ion-touched': errors.phone }" />
+      <ion-item>
+        <ion-input v-model="form.phone" :label="translate('Phone')" label-placement="floating" type="tel" :disabled="isSubmitting || (sameAsBilling &&isPhonePrefilled)" />
       </ion-item>
       <ion-item :lines="errors.email ? 'none' : ''">
         <ion-input v-model="form.email" :label="translate('Email')" label-placement="floating" type="email" :disabled="isSubmitting || (sameAsBilling && isEmailPrefilled)" :error-text="errors.email" :class="{ 'ion-invalid': errors.email, 'ion-touched': errors.email }" />
@@ -157,8 +157,7 @@ const formSchema = z.object({
   name: z.string().trim().min(1, translate("Name is required")),
   idNumber: z.string().trim().min(1, translate("ID Number is required")),
   relationToCustomer: z.string().min(1, translate("Relation is required")),
-  email: z.email(translate("Please enter a valid email")).or(z.literal("")),
-  phone: z.string().regex(/^\+?\d{10,15}$/, translate("Please enter a valid phone or country code")).optional().or(z.literal(""))
+  email: z.email(translate("Please enter a valid email")).or(z.literal(""))
 });
 
 const getBillingDetails = async () => {
