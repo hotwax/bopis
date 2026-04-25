@@ -64,7 +64,7 @@ const prepareOrderQuery = (params: any) => {
 
   if (params.filters) {
     Object.keys(params.filters).forEach((key) => {
-      payload.json.filter.push(`${key}: ${escapeSolrQuery(params.filters[key])}`);
+      payload.json.filter.push(`${escapeSolrQuery(key)}: ${escapeSolrQuery(params.filters[key])}`);
     });
   }
   
