@@ -138,16 +138,14 @@ export default defineComponent({
     },
     async handleTopicSubscription() {
       const facilityId = this.currentFacility?.facilityId
-      const subscribeRequests = [] as any
-      this.notificationPrefToUpdate.subscribe.map(async (enumId: string) => {
+      const subscribeRequests = this.notificationPrefToUpdate.subscribe.map((enumId: string) => {
         const topicName = generateTopicName(facilityId, enumId)
-        await subscribeRequests.push(subscribeTopic(topicName, process.env.VUE_APP_NOTIF_APP_ID))
+        return subscribeTopic(topicName, process.env.VUE_APP_NOTIF_APP_ID)
       })
 
-      const unsubscribeRequests = [] as any
-      this.notificationPrefToUpdate.unsubscribe.map(async (enumId: string) => {
+      const unsubscribeRequests = this.notificationPrefToUpdate.unsubscribe.map((enumId: string) => {
         const topicName = generateTopicName(facilityId, enumId)
-        await unsubscribeRequests.push(unsubscribeTopic(topicName, process.env.VUE_APP_NOTIF_APP_ID))
+        return unsubscribeTopic(topicName, process.env.VUE_APP_NOTIF_APP_ID)
       })
 
       const responses = await Promise.allSettled([...subscribeRequests, ...unsubscribeRequests])
