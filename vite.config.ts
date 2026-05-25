@@ -4,12 +4,22 @@ import path from 'path'
 import { defineConfig } from 'vite'
 import { versionInfoUtil } from '../../common/utils/versionInfoUtil'
 import pkg from './package.json'
+import { VitePWA } from 'vite-plugin-pwa'
+import manifest from "./manifest.json"
 
 // https://vitejs.dev/config/
 export default defineConfig({
   plugins: [
     vue(),
-    legacy()
+    legacy(),
+    VitePWA({
+      registerType: "autoUpdate",
+      selfDestroying: true,
+      manifest: manifest as any,
+      devOptions: {
+        enabled: true
+      }
+    })
   ],
   define: {
     'import.meta.env.VITE_APP_VERSION_INFO': JSON.stringify(JSON.stringify(versionInfoUtil.getVersionInfo(pkg.version)))
