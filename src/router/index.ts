@@ -6,7 +6,8 @@ import ProductDetail from '@/views/ProductDetail.vue'
 import ShipToStoreOrders from '@/views/ShipToStoreOrders.vue'
 import Notifications from '@/views/Notifications.vue'
 
-import { translate, commonUtil, useAuth, ShopifyLogin, ShopifyAppInstall, Login } from '@common'
+import { translate, commonUtil, ShopifyLogin, ShopifyAppInstall, Login } from '@common'
+import { useAuth } from "@common/composables/useAuth";
 import { useUserStore } from '@/store/user'
 
 

@@ -25,6 +25,7 @@ export default defineConfig({
     'import.meta.env.VITE_APP_VERSION_INFO': JSON.stringify(JSON.stringify(versionInfoUtil.getVersionInfo(pkg.version)))
   },
   resolve: {
+    dedupe: ['vue', 'pinia'],
     alias: {
       '@': path.resolve(__dirname, 'src'),
       '@common': path.resolve(__dirname, '../../common')
