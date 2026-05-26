@@ -4,143 +4,70 @@
   </ion-app>
 </template>
 
-<script lang="ts">
-import { IonApp, IonRouterOutlet } from '@ionic/vue';
-import { defineComponent } from 'vue';
-import { loadingController } from '@ionic/vue';
-import emitter from "@/event-bus"
-import { mapGetters, useStore } from 'vuex';
-import { initialise, resetConfig } from '@/adapter'
-import { useRouter } from 'vue-router';
-import { initialiseFirebaseApp, translate, useAuthStore, useProductIdentificationStore } from "@hotwax/dxp-components";
-import logger from '@/logger'
-import { addNotification, storeClientRegistrationToken } from '@/utils/firebase';
-import { UtilService } from './services/UtilService';
+<script setup lang="ts">
+import { IonApp, IonRouterOutlet, loadingController } from "@ionic/vue";
+import { computed, onMounted, onUnmounted, ref } from "vue";
+import { translate, emitter, logger, useNotificationStore, useAuth } from "@common";
+import { Settings } from "luxon";
+import { useUserStore } from "@/store/user";
+import { useProductStore } from "@/store/productStore";
+import { firebaseUtil } from "@/utils/firebaseUtil";
 
-export default defineComponent({
-  name: 'App',
-  components: {
-    IonApp,
-    IonRouterOutlet
-  },
-  data() {
-    return {
-      loader: null as any,
-      maxAge: process.env.VUE_APP_CACHE_MAX_AGE ? parseInt(process.env.VUE_APP_CACHE_MAX_AGE) : 0,
-      appFirebaseConfig: JSON.parse(process.env.VUE_APP_FIREBASE_CONFIG),
-      appFirebaseVapidKey: process.env.VUE_APP_FIREBASE_VAPID_KEY,
-    }
-  },
-  methods: {
-    async presentLoader(options = { message: '', backdropDismiss: true }) {
-      // When having a custom message remove already existing loader
-      if(options.message && this.loader) this.dismissLoader();
+const { isAuthenticated } = useAuth();
+const loader = ref<any>(null);
 
-      // if currently loader is not present then creating a new loader
-      if (!this.loader) {
-        this.loader = await loadingController
-          .create({
-            message: options.message ? translate(options.message) : translate("Loading…"),
-            translucent: true,
-            backdropDismiss: options.backdropDismiss
-          });
-      }
-      this.loader.present();
-    },
-    dismissLoader() {
-      if (this.loader) {
-        this.loader.dismiss();
-        // on dismiss initializing the loader as null, so it can again be created
-        this.loader = null as any;
-      }
-    },
-    async unauthorised() {
-      const authStore = useAuthStore();
-      const isEmbedded = authStore.isEmbedded;
-      const shop = authStore.shop;
-      const host = authStore.host;
-      // Mark the user as unauthorised, this will help in not making the logout api call in actions
-      this.store.dispatch("user/logout", { isUserUnauthorised: true });
-      const redirectUrl = window.location.origin + '/login'
-      window.location.href = isEmbedded ? `${redirectUrl}?embedded=1&shop=${shop}&host=${host}` : `${process.env.VUE_APP_LOGIN_URL}?redirectUrl=${redirectUrl}`;
-    }
-  }, 
-  computed: {
-    ...mapGetters({
-      userToken: 'user/getUserToken',
-      instanceUrl: 'user/getInstanceUrl',
-      currentEComStore: 'user/getCurrentEComStore',
-      allNotificationPrefs: 'user/getAllNotificationPrefs'
-    })
-  },
-  created() {
-    initialise({
-      token: this.userToken,
-      instanceUrl: this.instanceUrl,
-      cacheMaxAge: this.maxAge,
-      events: {
-        unauthorised: this.unauthorised,
-        responseError: () => {
-          setTimeout(() => this.dismissLoader(), 100);
-        },
-        queueTask: (payload: any) => {
-          emitter.emit("queueTask", payload);
-        }
-      },
-      systemType: "MOQUI"
-    })
-  },
-  async mounted() {
-    // creating the loader on mounted as loadingController is taking too much time to create initially
-    this.loader = await loadingController
-      .create({
-        message: translate("Loading…"),
-        translucent: true,
-        backdropDismiss: true
-      });
-    emitter.on('presentLoader', this.presentLoader);
-    emitter.on('dismissLoader', this.dismissLoader);
+const userProfile = computed(() => useUserStore().getUserProfile);
+const allNotificationPrefs = computed(() => useNotificationStore().getAllNotificationPrefs);
 
-    
-    // If fetching identifier without checking token then on login the app stucks in a loop, as the mounted hook runs before
-    // token is available which results in api failure as unauthenticated, thus making logout call and then login call again and so on.
-    if(this.userToken) {
-      // The below block is added to handle the login flow in bopis app on refresh
-      // This is just a verification call so that app logouts correctly, becuase this is a moqui first app
-      try {
-        await UtilService.isEnumExists("BOPIS_PART_ODR_REJ")
-      } catch(err) {
-        logger.error(err)
-      }
-      // Get product identification from api using dxp-component
-      await useProductIdentificationStore().getIdentificationPref(this.currentEComStore?.productStoreId)
-        .catch((error) => logger.error(error));
 
-      // check if firebase configurations are there.
-      if (this.appFirebaseConfig && this.appFirebaseConfig.apiKey && this.allNotificationPrefs?.length) {
-        // initialising and connecting firebase app for notification support
-        await initialiseFirebaseApp(
-          this.appFirebaseConfig,
-          this.appFirebaseVapidKey,
-          storeClientRegistrationToken,
-          addNotification,
-        )
-      }
-    }
-  },
-  unmounted() {
-    emitter.off('presentLoader', this.presentLoader);
-    emitter.off('dismissLoader', this.dismissLoader);
-    resetConfig()
-  },
-  setup() {
-    const store = useStore();
-    const router = useRouter();
-    return {
-      router,
-      store,
-      translate
-    }
+
+const presentLoader = async (options = { message: "", backdropDismiss: false }) => {
+  if (options.message && loader.value) dismissLoader();
+
+  if (!loader.value) {
+    loader.value = await loadingController.create({
+      message: options.message ? translate(options.message) : (options.backdropDismiss ? translate("Click the backdrop to dismiss.") : translate("Loading...")),
+      translucent: true,
+      backdropDismiss: options.backdropDismiss || false
+    });
   }
+  loader.value.present();
+};
+
+const dismissLoader = () => {
+  if (loader.value) {
+    loader.value.dismiss();
+    loader.value = null;
+  }
+};
+
+onMounted(async () => {
+  loader.value = await loadingController.create({
+    message: translate("Loading..."),
+    translucent: true,
+    backdropDismiss: false
+  });
+
+  emitter.on("presentLoader", (options: any) => presentLoader(options));
+  emitter.on("dismissLoader", dismissLoader);
+
+  if (userProfile.value && userProfile.value.userTimeZone) {
+    Settings.defaultZone = userProfile.value.timeZone;
+  }
+
+  const currentProductStore: any = useProductStore().getCurrentProductStore;
+
+    if (isAuthenticated.value && currentProductStore?.productStoreId) {
+      await useProductStore().fetchProductStoreSettings(currentProductStore.productStoreId).catch((error) => logger.error(error));
+
+      if (allNotificationPrefs.value?.length) {
+        await firebaseUtil.initialiseFirebaseMessaging();
+      }
+    }
+});
+
+onUnmounted(() => {
+  emitter.off("presentLoader", (options: any) => presentLoader(options));
+  emitter.off("dismissLoader", dismissLoader);
 });
 </script>
