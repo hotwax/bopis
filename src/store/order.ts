@@ -415,6 +415,16 @@ export const useOrderStore = defineStore('order', {
             completedDate: data.statuses?.find((status: any) => status.statusId === "ORDER_COMPLETED")?.statusDatetime,
             paymentPreferences: sortedPaymentPreference
           };
+
+          const hasObjectValue = (obj: any) => obj && Object.keys(obj).length > 0;
+          order.address = hasObjectValue(order.billingAddress) ? order.billingAddress :
+                      hasObjectValue(order.shippingAddress) ? order.shippingAddress : null;
+
+          order.email = order.billingEmail || order.orderEmail || order.shippingEmail || null;
+
+          order.phone = hasObjectValue(order.billingPhone) ? order.billingPhone :
+                        hasObjectValue(order.shippingPhone) ? order.shippingPhone : null;
+
           const productSettingsStore = useProductStore();
           const currentFacilityId = (productSettingsStore.getCurrentFacility?.facilityId || "");
           const currentShipGroup = order.shipGroups.find((shipGroup: any) => shipGroup.shipGroupSeqId === payload.shipGroupSeqId && shipGroup.facilityId === currentFacilityId);
