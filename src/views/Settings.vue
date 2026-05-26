@@ -34,7 +34,7 @@
         <h1>{{ translate('OMS') }}</h1>
       </div>
       <section>
-        <DxpOmsInstanceNavigator :is-embedded="commonUtil.isAppEmbedded()" />
+        <DxpOmsInstanceNavigator :is-embedded="commonUtil.isAppEmbedded()" :hasOmsAccess="useUserStore().hasPermission('COMMERCEUSER_VIEW')"/>
         <DxpFacilitySwitcher @updateFacility="fetchFacilityDependencies" />
         <ion-card>
           <ion-card-header>
