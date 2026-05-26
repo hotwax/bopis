@@ -200,7 +200,8 @@ import { computed, onMounted, ref } from 'vue';
 import { openOutline } from 'ionicons/icons'
 import Image from '@/components/Image.vue';
 
-import { commonUtil, emitter, firebaseMessaging, logger, translate, useNotificationStore, useAuth } from '@common';
+import { commonUtil, emitter, firebaseMessaging, logger, translate, useNotificationStore } from '@common';
+import { useAuth } from "@common/composables/useAuth";
 import EditShipmentMethodModal from '@/components/EditShipmentMethodModal.vue';
 import DxpTimeZoneSwitcher from "@/components/DxpTimeZoneSwitcher.vue"
 import DxpOmsInstanceNavigator from "@/components/DxpOmsInstanceNavigator.vue";

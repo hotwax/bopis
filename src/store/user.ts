@@ -1,4 +1,5 @@
-import { api, i18n, commonUtil, logger, translate, useNotificationStore, useEmbeddedAppStore, useAuth } from "@common";
+import { api, i18n, commonUtil, logger, translate, useNotificationStore, useEmbeddedAppStore } from "@common";
+import { useAuth } from "@common/composables/useAuth";
 import { defineStore } from "pinia"
 import { DateTime, Settings } from "luxon"
 import router from "@/router";
