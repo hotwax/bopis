@@ -143,10 +143,14 @@ export const useOrderStore = defineStore('order', {
       let resp;
       const { prepareOrderQuery } = useSolrSearch();
       const orderQueryPayload = prepareOrderQuery({
-        ...payload,
-        orderStatusId: 'ORDER_APPROVED',
-        orderTypeId: 'SALES_ORDER',
-        '-fulfillmentStatus': '(Cancelled OR Rejected OR Completed)',
+        viewSize: payload.viewSize,
+        filters: {
+          facilityId: { value: payload.facilityId },
+          productId: { value: payload.productId },
+          orderStatusId: { value: 'ORDER_APPROVED' },
+          orderTypeId: { value: 'SALES_ORDER' },
+          '-fulfillmentStatus': { value: '(Cancelled OR Rejected OR Completed)' },
+        },
       })
 
       try {
@@ -169,9 +173,13 @@ export const useOrderStore = defineStore('order', {
       const { prepareOrderQuery } = useSolrSearch();
       const orderQueryPayload = prepareOrderQuery({
         ...params,
-        orderIds,
-        orderStatusId: 'ORDER_APPROVED',
-        orderTypeId: 'SALES_ORDER',
+        viewSize: payload.viewSize,
+        filters: {
+          facilityId: { value: payload.facilityId },
+          orderId: { value: orderIds },
+          orderStatusId: { value: 'ORDER_APPROVED' },
+          orderTypeId: { value: 'SALES_ORDER' },
+        }
       })
 
       try {

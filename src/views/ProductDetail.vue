@@ -174,7 +174,7 @@ const productIdentificationPref = computed(() => useProductStoreSettings().getPr
 const currentFacility = computed(() => useProductStoreSettings().getCurrentFacility);
 
 const getOrderDetails = async () => {
-  await useOrderStore().getOrderDetails({ viewSize: 200, facilityId: (useProductStoreSettings().getCurrentFacility as any)?.facilityId, productId: currentVariant.value.productId });
+  await useOrderStore().getOrderDetails({ viewSize: 250, facilityId: (useProductStoreSettings().getCurrentFacility as any)?.facilityId, productId: currentVariant.value.productId });
 };
 
 const applyFeature = async (feature: string, type: string) => {
