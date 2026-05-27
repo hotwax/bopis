@@ -143,20 +143,18 @@ export const useOrderStore = defineStore('order', {
       let resp;
       const { prepareOrderQuery } = useSolrSearch();
       const orderQueryPayload = prepareOrderQuery({
-        ...payload,
-        orderStatusId: 'ORDER_APPROVED',
-        orderTypeId: 'SALES_ORDER',
-        '-fulfillmentStatus': '(Cancelled OR Rejected OR Completed)',
+        viewSize: payload.viewSize,
+        filters: {
+          facilityId: { value: payload.facilityId },
+          productId: { value: payload.productId },
+          orderStatusId: { value: 'ORDER_APPROVED' },
+          orderTypeId: { value: 'SALES_ORDER' },
+          '-fulfillmentStatus': { value: '(Cancelled OR Rejected OR Completed)' },
+        },
       })
 
       try {
-        const baseURL = commonUtil.getMaargURL();
-        resp = await api({
-          url: "solr-query",
-          method: "post",
-          baseURL,
-          data: orderQueryPayload
-        });
+        resp = await useSolrSearch().runSolrQuery(orderQueryPayload);
         if (!commonUtil.hasError(resp) && resp.data.grouped?.orderId?.ngroups > 0) {
           const orderIds = resp.data.grouped?.orderId?.groups.map((order: any) => order.doclist.docs[0].orderId);
           await this.fetchOrderItems({ ...payload, orderIds });
@@ -175,19 +173,17 @@ export const useOrderStore = defineStore('order', {
       const { prepareOrderQuery } = useSolrSearch();
       const orderQueryPayload = prepareOrderQuery({
         ...params,
-        orderIds,
-        orderStatusId: 'ORDER_APPROVED',
-        orderTypeId: 'SALES_ORDER',
+        viewSize: payload.viewSize,
+        filters: {
+          facilityId: { value: payload.facilityId },
+          orderId: { value: orderIds },
+          orderStatusId: { value: 'ORDER_APPROVED' },
+          orderTypeId: { value: 'SALES_ORDER' },
+        }
       })
 
       try {
-        const baseURL = commonUtil.getMaargURL();
-        resp = await api({
-          url: "solr-query",
-          method: "post",
-          baseURL,
-          data: orderQueryPayload
-        });
+        resp = await useSolrSearch().runSolrQuery(orderQueryPayload);
         if (!commonUtil.hasError(resp) && resp.data.grouped?.orderId?.ngroups > 0) {
           const productIds: any = []
           const orders = resp.data.grouped?.orderId?.groups.map((order: any) => {
