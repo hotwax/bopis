@@ -340,7 +340,7 @@ import AssignPickerModal from "@/views/AssignPickerModal.vue";
 import EditPickerModal from "@/components/EditPickerModal.vue";
 
 import { DateTime } from "luxon";
-import { api, commonUtil, emitter, logger, translate } from '@common';
+import { api, commonUtil, DxpShopifyImg, emitter, logger, translate } from '@common';
 import { useProductStore } from "@/store/productStore";
 import InventoryDetailsPopover from '@/components/InventoryDetailsPopover.vue'
 import { orderUtil } from '@/utils/orderUtil'
