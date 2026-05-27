@@ -1,6 +1,13 @@
 import { defineStore } from 'pinia'
 import { api, commonUtil, useEmbeddedAppStore, logger, translate, useSolrSearch } from '@common'
 import { useUserStore } from '@/store/user'
+const defaultProductStoreSettings = JSON.parse(import.meta.env.VITE_DEFAULT_PRODUCT_STORE_SETTINGS as string || '{}')
+
+const getProductStoreSettingValue = (settings: any, settingTypeEnumId: string) => {
+  const stateKey = defaultProductStoreSettings[settingTypeEnumId]?.stateKey || settingTypeEnumId
+
+  return stateKey.split('.').reduce((current: any, key: string) => current?.[key], settings)
+}
 
 export const useProductStore = defineStore('productStore', {
   state: () => ({
@@ -57,7 +64,12 @@ export const useProductStore = defineStore('productStore', {
       return state.currentFacility?.productStores || []
     },
     getSettings: (state) => state.settings,
-    isProductStoreSettingEnabled: (state) => (settingName: string) => state.settings[settingName] === "Y",
+    isProductStoreSettingEnabled: (state) => (settingTypeEnumId: string) => {
+      const value = getProductStoreSettingValue(state.settings, settingTypeEnumId)
+      
+      return value === true || value === "Y" || value === "true"
+    },
+    
     isPartialOrderRejectionEnabled(): boolean {
       return this.isProductStoreSettingEnabled('partialOrderRejection')
     },
@@ -84,7 +96,12 @@ export const useProductStore = defineStore('productStore', {
     getProductIdentificationOptions: (state) => state.settings.productIdentifier.productIdentificationOptions,
     getBarcodeIdentifierOptions: (state) => state.settings.barcodeIdentifier.barcodeIdentifierOptions,
     getCurrentSampleProduct: (state) => state.settings.productIdentifier.currentSampleProduct,
-    isRerouteSettingEnabled: (state) => (settingName: string) => state.settings.rerouteFulfillment[settingName] === "Y",
+    isRerouteSettingEnabled: (state) => (settingTypeEnumId: string) => {
+      const value = getProductStoreSettingValue(state.settings, settingTypeEnumId)
+
+      return value === true || value === "Y" || value === "true"
+    },
+    
     getRerouteShipmentMethod: (state) => state.settings.rerouteFulfillment.shippingMethod,
     getFacilityName: (state) => (facilityId: string) => state.facilities[facilityId] ? state.facilities[facilityId] : facilityId,
     getFacilityLatLon: (state) => (facilityId: string) => state.facilitiesLatLng[facilityId] ? state.facilitiesLatLng[facilityId] : {},
@@ -333,13 +350,9 @@ export const useProductStore = defineStore('productStore', {
           ...this.currentFacility,
           productStores: stores
         }
-
-        this.currentFacility.productStores.push({
-          productStoreId: "",
-          storeName: "None",
-        });
-
-        this.setCurrentProductStore(this.currentFacility.productStores[0])
+        if (this.currentFacility.productStores?.length) {
+          this.setCurrentProductStore(this.currentFacility.productStores[0])
+        }
       } catch (error: any) {
         logger.error("error", error);
         return Promise.reject(new Error(error));
