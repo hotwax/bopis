@@ -612,7 +612,7 @@ export const useProductStore = defineStore('productStore', {
       }
       try {
         const resp = await api({
-          url: "storeLookup",
+          url: "api/stores",
           method: "post",
           data: payload
         })
