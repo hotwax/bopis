@@ -5,7 +5,7 @@
         <ion-back-button default-href="/" slot="start" />
         <ion-title>{{ translate("Order details") }}</ion-title>
         <ion-buttons slot="end">
-          <ion-button data-testid="resendmail-button" v-if="orderType === 'packed' && order.shipGroup.shipmentMethodTypeId === 'STOREPICKUP'" :disabled="!order?.orderId || !useUserStore().hasPermission('') || order.handovered || order.shipped" @click="sendReadyForPickupEmail(order)">
+          <ion-button data-testid="resendmail-button" v-if="orderType === 'packed' && order.shipGroup?.shipmentMethodTypeId === 'STOREPICKUP'" :disabled="!order?.orderId || !useUserStore().hasPermission('') || order.handovered || order.shipped" @click="sendReadyForPickupEmail(order)">
             <ion-icon slot="icon-only" :icon="mailOutline" />
           </ion-button>
           <ion-button data-testid="rejection-history-button" :disabled="!order?.orderId" @click="openOrderItemRejHistoryModal()">
@@ -14,7 +14,7 @@
           <ion-button data-testid="print-picklist-button" v-if="orderType === 'open' && isPrintPicklistsEnabled" :disabled="!order?.orderId || !useUserStore().hasPermission('') || order.handovered || order.shipped || !order.shipGroup?.items?.length"  @click="printPicklist(order, order.shipGroup)">
             <ion-icon slot="icon-only" :icon="printOutline" />
           </ion-button>
-          <ion-button data-testid="packing-slip-button" v-else-if="orderType === 'packed' && isPrintPackingSlipEnabled" :class="order.shipGroup.shipmentMethodTypeId !== 'STOREPICKUP' ? 'ion-hide-md-up' : ''" :disabled="!order?.orderId || !useUserStore().hasPermission('') || order.handovered || order.shipped || !order.shipGroup?.items?.length" @click="order.shipGroup.shipmentMethodTypeId === 'STOREPICKUP' ? printPackingSlip(order) : printShippingLabelAndPackingSlip(order)">
+          <ion-button data-testid="packing-slip-button" v-else-if="orderType === 'packed' && isPrintPackingSlipEnabled" :class="order.shipGroup?.shipmentMethodTypeId !== 'STOREPICKUP' ? 'ion-hide-md-up' : ''" :disabled="!order?.orderId || !useUserStore().hasPermission('') || order.handovered || order.shipped || !order.shipGroup?.items?.length" @click="order.shipGroup.shipmentMethodTypeId === 'STOREPICKUP' ? printPackingSlip(order) : printShippingLabelAndPackingSlip(order)">
             <ion-icon slot="icon-only" :icon="printOutline" />
           </ion-button>
         </ion-buttons>
