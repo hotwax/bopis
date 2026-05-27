@@ -253,7 +253,7 @@ export const useOrderStore = defineStore('order', {
         pageIndex: params.viewIndex
       } as any;
 
-      if (useProductStore().isProductStoreSettingEnabled('SHOW_SHIPPING_ORDERS')) {
+      if (useProductStore().isProductStoreSettingEnabled('showShippingOrders')) {
         queryParams = {
           shipmentMethodTypeId: 'STOREPICKUP',
           shipmentMethodTypeId_op: 'equals',
@@ -499,7 +499,7 @@ export const useOrderStore = defineStore('order', {
         pageIndex: params.viewIndex || 0
       } as any
 
-      if (!useProductStore().isProductStoreSettingEnabled('SHOW_SHIPPING_ORDERS')) {
+      if (!useProductStore().isProductStoreSettingEnabled('showShippingOrders')) {
         queryParams.shipmentMethodTypeIds = 'STOREPICKUP'
       }
 
@@ -576,7 +576,7 @@ export const useOrderStore = defineStore('order', {
         pageIndex: params.viewIndex || 0
       } as any
 
-      if (!useProductStore().isProductStoreSettingEnabled('SHOW_SHIPPING_ORDERS')) {
+      if (!useProductStore().isProductStoreSettingEnabled('showShippingOrders')) {
         queryParams.shipmentMethodTypeIds = 'STOREPICKUP'
       }
 
