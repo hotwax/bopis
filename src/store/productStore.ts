@@ -71,25 +71,25 @@ export const useProductStore = defineStore('productStore', {
     },
     
     isPartialOrderRejectionEnabled(): boolean {
-      return this.isProductStoreSettingEnabled('partialOrderRejection')
+      return this.isProductStoreSettingEnabled('BOPIS_PART_ODR_REJ')
     },
     isTrackingEnabled(): boolean {
-      return this.isProductStoreSettingEnabled('enableTracking')
+      return this.isProductStoreSettingEnabled('ENABLE_TRACKING')
     },
     isPrintPackingSlipEnabled(): boolean {
-      return this.isProductStoreSettingEnabled('printPackingSlip')
+      return this.isProductStoreSettingEnabled('PRINT_PACKING_SLIPS')
     },
     isPrintPicklistsEnabled(): boolean {
-      return this.isProductStoreSettingEnabled('printPicklists')
+      return this.isProductStoreSettingEnabled('PRINT_PICKLISTS')
     },
     isShowShippingOrdersEnabled(): boolean {
-      return this.isProductStoreSettingEnabled('showShippingOrders')
+      return this.isProductStoreSettingEnabled('SHOW_SHIPPING_ORDERS')
     },
     isRequestTransferEnabled(): boolean {
-      return this.isProductStoreSettingEnabled('requestTransfer')
+      return this.isProductStoreSettingEnabled('REQUEST_TRANSFER')
     },
     isHandoverProofEnabled(): boolean {
-      return this.isProductStoreSettingEnabled('handoverProof')
+      return this.isProductStoreSettingEnabled('HANDOVER_PROOF')
     },
     getProductIdentificationPref: (state) => state.settings.productIdentifier.productIdentificationPref,
     getBarcodeIdentifierPref: (state) => state.settings.barcodeIdentifier.barcodeIdentifierPref,
