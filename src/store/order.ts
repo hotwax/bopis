@@ -150,13 +150,7 @@ export const useOrderStore = defineStore('order', {
       })
 
       try {
-        const baseURL = commonUtil.getMaargURL();
-        resp = await api({
-          url: "solr-query",
-          method: "post",
-          baseURL,
-          data: orderQueryPayload
-        });
+        resp = await useSolrSearch().runSolrQuery(orderQueryPayload);
         if (!commonUtil.hasError(resp) && resp.data.grouped?.orderId?.ngroups > 0) {
           const orderIds = resp.data.grouped?.orderId?.groups.map((order: any) => order.doclist.docs[0].orderId);
           await this.fetchOrderItems({ ...payload, orderIds });
@@ -181,13 +175,7 @@ export const useOrderStore = defineStore('order', {
       })
 
       try {
-        const baseURL = commonUtil.getMaargURL();
-        resp = await api({
-          url: "solr-query",
-          method: "post",
-          baseURL,
-          data: orderQueryPayload
-        });
+        resp = await useSolrSearch().runSolrQuery(orderQueryPayload);
         if (!commonUtil.hasError(resp) && resp.data.grouped?.orderId?.ngroups > 0) {
           const productIds: any = []
           const orders = resp.data.grouped?.orderId?.groups.map((order: any) => {
