@@ -371,7 +371,6 @@ const getProduct = computed(() => useProduct().getProduct);
 const getInventoryInformation = computed(() => useStockStore().getInventoryInformation);
 const getCarrierName = (partyId: string) => useOrderStore().getCarrierName(partyId);
 const getFacilityName = (facilityId: string) => useProductStore().getFacilityName(facilityId);
-const isHandoverProofEnabled = computed(() => useProductStore().isHandoverProofEnabled)
 const isPrintPackingSlipEnabled = computed(() => useProductStore().isPrintPackingSlipEnabled)
 const isTrackingEnabled = computed(() => useProductStore().isTrackingEnabled)
 const isPrintPicklistsEnabled = computed(() => useProductStore().isPrintPicklistsEnabled)
@@ -729,6 +728,7 @@ async function createPicklist(orderRef: any, selectedPicker: any) {
     if (!commonUtil.hasError(resp)) {
       commonUtil.showToast(translate("Picklist created successfully", { picklistId: resp.data.picklistId }));
       await useOrderStore().printPicklist(resp.data.picklistId)
+      useOrderStore().updateCurrent({ order: {...orderRef, shipGroup: {...orderRef.shipGroup, picklistId: resp.data.picklistId, shipmentId: resp.data.shipmentIds?.[0]} } })
     } else {
       throw resp.data
     }
@@ -762,7 +762,8 @@ async function assignPicker(orderRef: any, shipGroup: any, facilityId: any) {
     if(result.data?.selectedPicker) {
       emitter.emit("presentLoader");
       await createPicklist(orderRef, result.data.selectedPicker);
-      await useOrderStore().packShipGroupItems({ order: orderRef, shipGroup })
+      const updatedOrder = order.value;
+      await useOrderStore().packShipGroupItems({ order: updatedOrder, shipGroup: updatedOrder.shipGroup })
       await getOrderDetail(props.orderId, props.shipGroupSeqId, props.orderType);
       emitter.emit("dismissLoader");
     }
