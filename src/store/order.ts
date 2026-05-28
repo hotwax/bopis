@@ -1441,7 +1441,8 @@ export const useOrderStore = defineStore('order', {
       return api({
         url: "/findJobs",
         method: "get",
-        params: payload
+        params: payload,
+        baseURL: commonUtil.getOmsURL()
       });
     },
     async getProcessRefundStatus(productStoreId: any): Promise<any> {
