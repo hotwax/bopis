@@ -3,6 +3,7 @@ import legacy from '@vitejs/plugin-legacy'
 import path from 'path'
 import { defineConfig } from 'vite'
 import { versionInfoUtil } from '../../common/utils/versionInfoUtil'
+import { localMoquiDiscoveryPlugin } from '../../common/vite/localMoquiDiscoveryPlugin'
 import pkg from './package.json'
 import { VitePWA } from 'vite-plugin-pwa'
 import manifest from "./manifest.json"
@@ -19,7 +20,8 @@ export default defineConfig({
       devOptions: {
         enabled: true
       }
-    })
+    }),
+    localMoquiDiscoveryPlugin()
   ],
   define: {
     'import.meta.env.VITE_APP_VERSION_INFO': JSON.stringify(JSON.stringify(versionInfoUtil.getVersionInfo(pkg.version)))
