@@ -1,8 +1,9 @@
 import vue from '@vitejs/plugin-vue'
+import { ideTraceVue } from 'chrome-ide-trace/vite'
 import legacy from '@vitejs/plugin-legacy'
 import path from 'path'
 import { defineConfig } from 'vite'
-import { versionInfoUtil } from '../../common/utils/versionInfoUtil'
+import { versionInfoUtil } from '../accxui/common/utils/versionInfoUtil'
 import pkg from './package.json'
 import { VitePWA } from 'vite-plugin-pwa'
 import manifest from "./manifest.json"
@@ -10,6 +11,7 @@ import manifest from "./manifest.json"
 // https://vitejs.dev/config/
 export default defineConfig({
   plugins: [
+    ideTraceVue(),
     vue(),
     legacy(),
     VitePWA({
@@ -28,7 +30,7 @@ export default defineConfig({
     dedupe: ['vue', 'pinia'],
     alias: {
       '@': path.resolve(__dirname, 'src'),
-      '@common': path.resolve(__dirname, '../../common')
+      '@common': path.resolve(__dirname, '../accxui/common')
     },
   },
   server: {
