@@ -511,7 +511,7 @@ const actions: ActionTree<OrderState , RootState> ={
 
       const resp = await OrderService.getCommunicationEvents({
         orderIds: filteredOrdersList,
-        communicationEventTypeId: "SYS_MSG_EMAIL_COMM",
+        communicationEventTypeId: "EMAIL_COMMUNICATION",
         reasonEnumId: "HANDOVER_PROOF",
       });
 
