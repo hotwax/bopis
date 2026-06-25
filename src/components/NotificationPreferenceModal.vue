@@ -138,10 +138,11 @@ export default defineComponent({
     },
     async handleTopicSubscription() {
       const facilityId = this.currentFacility?.facilityId
-       if (!facilityId) {
-    logger.error('Facility ID is missing, cannot subscribe to topics');
-    return;
-  }
+      if (!facilityId) {
+        logger.error('Facility ID is missing, cannot subscribe to topics');
+        showToast(translate('Notification preferences not updated. Please try again.'));
+        return;
+      }
       const subscribeRequests = this.notificationPrefToUpdate.subscribe.map((enumId: string) => {
         const topicName = generateTopicName(facilityId, enumId)
         return subscribeTopic(topicName, process.env.VUE_APP_NOTIF_APP_ID)
