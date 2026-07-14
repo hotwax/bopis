@@ -51,7 +51,9 @@
             <ion-icon slot="end" :icon="openOutline" />
           </ion-button>
         </ion-card>
-        <DxpFacilitySwitcher @updateFacility="updateFacility" />
+        <div data-testid="facility-switcher">
+          <DxpFacilitySwitcher @updateFacility="updateFacility" />
+        </div>
         <ion-card>
           <ion-card-header>
             <ion-card-subtitle>

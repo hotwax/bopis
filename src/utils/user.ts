@@ -1,4 +1,4 @@
-import { translate } from '@hotwax/dxp-components';
+// import { translate } from '@hotwax/dxp-components';
 import store from '@/store'
 import { loadingController } from '@ionic/vue'
 
@@ -12,7 +12,7 @@ const loader = {
     if (!loader.value) {
       loader.value = await loadingController
         .create({
-          message: translate(message),
+          message: message,
           translucent: false,
           backdropDismiss: false
         });

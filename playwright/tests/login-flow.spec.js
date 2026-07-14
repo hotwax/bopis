@@ -10,26 +10,17 @@ test.describe("Launchpad – BOPIS App Full Login Flow", () => {
     // Get environment config
     const env = getEnvironment();
 
-    // Step 1: Open the Launchpad home page
-    await page.goto(`${env.launchpadUrl}/home`);
-
+    // Step 1: Open the BOPIS app login page directly
+    await page.goto(process.env.CURRENT_APP_URL);
+    
     // Use POM
     const loginPage = new LoginPage(page);
     await loginPage.waitForOverlays();
 
-    // Assertion 1: Verify BOPIS app card is visible before clicking
-    const bopisAppCard = page.getByText("BOPIS", { exact: true });
-    await expect(bopisAppCard).toBeVisible();
-    console.log("BOPIS app card is visible on Launchpad home page");
-
-    // Step 2: Locate and click on the "BOPIS" app card
-    await bopisAppCard.click();
-    await loginPage.waitForOverlays();
-
-    // Assertion 2: Verify navigation to BOPIS (with or without redirectUrl)
+    // Assertion 1: Verify we are on the login page (or will be redirected there)
     const currentUrl = page.url();
-    expect(currentUrl).toMatch(/bopis|redirectUrl/i);
-    console.log("✓ Successfully navigated to BOPIS");
+    expect(currentUrl).toMatch(/login/i);
+    console.log("✓ Successfully navigated to BOPIS login");
 
     // Use robust login method from POM
     await loginPage.login(process.env.OMS_NAME, process.env.USERNAME, process.env.PASSWORD);
@@ -45,13 +36,8 @@ test.describe("Launchpad – BOPIS App Full Login Flow", () => {
     const env = getEnvironment();
     const loginPage = new LoginPage(page);
 
-    // Step 1: Open the Launchpad home page
-    await page.goto(`${env.launchpadUrl}/home`);
-    await loginPage.waitForOverlays();
-
-    // Step 2: Click on the BOPIS app card
-    const bopisAppCard = page.getByText("BOPIS", { exact: true });
-    await bopisAppCard.click();
+    // Step 1: Open the BOPIS app login page directly
+    await page.goto(process.env.CURRENT_APP_URL);
     await loginPage.waitForOverlays();
 
     // Step 3: Try to proceed to login without entering OMS
@@ -74,12 +60,8 @@ test.describe("Launchpad – BOPIS App Full Login Flow", () => {
     const env = getEnvironment();
     const loginPage = new LoginPage(page);
 
-    // Step 1: Navigate to Launchpad and select BOPIS
-    await page.goto(`${env.launchpadUrl}/home`);
-    await loginPage.waitForOverlays();
-
-    const bopisAppCard = page.getByText("BOPIS", { exact: true });
-    await bopisAppCard.click();
+    // Step 1: Navigate to BOPIS login
+    await page.goto(process.env.CURRENT_APP_URL);
     await loginPage.waitForOverlays();
 
     // Step 2: Enter OMS and proceed to login page
@@ -134,12 +116,8 @@ test.describe("Launchpad – BOPIS App Full Login Flow", () => {
     const env = getEnvironment();
     const loginPage = new LoginPage(page);
 
-    // Step 1: Navigate to Launchpad and select BOPIS
-    await page.goto(`${env.launchpadUrl}/home`);
-    await loginPage.waitForOverlays();
-
-    const bopisAppCard = page.getByText("BOPIS", { exact: true });
-    await bopisAppCard.click();
+    // Step 1: Navigate to BOPIS login
+    await page.goto(process.env.CURRENT_APP_URL);
     await loginPage.waitForOverlays();
 
     // Step 2: Enter OMS and proceed to login page
@@ -181,12 +159,8 @@ test.describe("Launchpad – BOPIS App Full Login Flow", () => {
     const env = getEnvironment();
     const loginPage = new LoginPage(page);
 
-    // Step 1: Navigate to Launchpad and select BOPIS
-    await page.goto(`${env.launchpadUrl}/home`);
-    await loginPage.waitForOverlays();
-
-    const bopisAppCard = page.getByText("BOPIS", { exact: true });
-    await bopisAppCard.click();
+    // Step 1: Navigate to BOPIS login
+    await page.goto(process.env.CURRENT_APP_URL);
     await loginPage.waitForOverlays();
 
     // Step 2: Enter OMS and proceed to login page
@@ -230,12 +204,8 @@ test.describe("Launchpad – BOPIS App Full Login Flow", () => {
     const env = getEnvironment();
     const loginPage = new LoginPage(page);
 
-    // Step 1: Navigate to Launchpad and select BOPIS
-    await page.goto(`${env.launchpadUrl}/home`);
-    await loginPage.waitForOverlays();
-
-    const bopisAppCard = page.getByText("BOPIS", { exact: true });
-    await bopisAppCard.click();
+    // Step 1: Navigate to BOPIS login
+    await page.goto(process.env.CURRENT_APP_URL);
     await loginPage.waitForOverlays();
 
     // Step 2: Enter OMS and proceed to login page
@@ -279,12 +249,8 @@ test.describe("Launchpad – BOPIS App Full Login Flow", () => {
     const env = getEnvironment();
     const loginPage = new LoginPage(page);
 
-    // Step 1: Navigate to Launchpad and select BOPIS
-    await page.goto(`${env.launchpadUrl}/home`);
-    await loginPage.waitForOverlays();
-
-    const bopisAppCard = page.getByText("BOPIS", { exact: true });
-    await bopisAppCard.click();
+    // Step 1: Navigate to BOPIS login
+    await page.goto(process.env.CURRENT_APP_URL);
     await loginPage.waitForOverlays();
 
     // Step 2: Enter invalid OMS

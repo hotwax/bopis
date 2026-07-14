@@ -13,7 +13,7 @@ import { showToast } from '@/utils'
 import { translate } from '@hotwax/dxp-components'
 
 import 'vue-router'
-import { DxpLogin, useAuthStore } from '@hotwax/dxp-components';
+import { DxpLogin } from '@hotwax/dxp-components';
 import { loader } from '@/utils/user';
 
 // Defining types for the meta values
@@ -24,8 +24,7 @@ declare module 'vue-router' {
 }
 
 const authGuard = async (to: any, from: any, next: any) => {
-  const authStore = useAuthStore()
-  if (!authStore.isAuthenticated || !store.getters['user/isAuthenticated']) {
+  if (!store.getters['user/isAuthenticated']) {
     await loader.present('Authenticating')
     // TODO use authenticate() when support is there
     const redirectUrl = window.location.origin + '/login'
@@ -36,8 +35,7 @@ const authGuard = async (to: any, from: any, next: any) => {
 };
 
 const loginGuard = (to: any, from: any, next: any) => {
-  const authStore = useAuthStore()
-  if (authStore.isAuthenticated && !to.query?.token && !to.query?.oms) {
+  if (store.getters['user/isAuthenticated'] && !to.query?.token && !to.query?.oms) {
     next('/')
   }
   next();

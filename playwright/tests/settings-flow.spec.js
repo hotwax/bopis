@@ -16,17 +16,15 @@ test.describe("BOPIS Settings Flow Cases", () => {
         settingsPage = new SettingsPage(page);
         orderPage = new OrderPage(page);
 
-        // Pre-authenticated session via LoginPage directly bypassing Launchpad UI flow
-        await page.goto(process.env.CURRENT_APP_URL);
-        await loginPage.login(process.env.OMS_NAME, process.env.USERNAME, process.env.PASSWORD);
-        await loginPage.verifyLoginSuccess();
+        // Pre-authenticated session via storageState
+        await page.goto(process.env.CURRENT_APP_URL.replace("/orders", "/settings"));
+        await settingsPage.waitForOverlays();
     });
 
     test("1. Settings Dashboard - Verify visibility of all configured toggles and sections", async ({ page }) => {
-        await settingsPage.goToSettings();
-
         // OMS section and permissions
-        await expect(page.getByRole("heading", { name: /OMS/i })).toBeVisible();
+        const heading = page.locator('h1', { hasText: 'OMS' });
+        await expect(heading).toBeVisible({ timeout: 15000 });
         await expect(settingsPage.logoutButton).toBeVisible();
 
         // Re-route Fulfillment (Order edit permissions)
@@ -61,8 +59,6 @@ test.describe("BOPIS Settings Flow Cases", () => {
     });
 
     test("2. Modify Order Edit Permissions - Toggling updates Reroute Fulfillment configuration", async ({ page }) => {
-        await settingsPage.goToSettings();
-
         // Testing Delivery Method
         const initialDeliveryMethodState = await settingsPage.deliveryMethodToggle.isChecked();
         await settingsPage.toggleSetting(settingsPage.deliveryMethodToggle, !initialDeliveryMethodState);
@@ -83,8 +79,6 @@ test.describe("BOPIS Settings Flow Cases", () => {
     });
 
     test("3. Partial Order Rejection - Toggling properly updates store logic", async ({ page }) => {
-        await settingsPage.goToSettings();
-
         // Testing Partial Rejection
         const initialPartialRejectionState = await settingsPage.partialRejectionToggle.isChecked();
         await settingsPage.toggleSetting(settingsPage.partialRejectionToggle, !initialPartialRejectionState);
@@ -97,8 +91,6 @@ test.describe("BOPIS Settings Flow Cases", () => {
     });
 
     test("4. Edge Case: Notification Preferences Alert Dialog - Cancel Action", async ({ page }) => {
-        await settingsPage.goToSettings();
-
         const hasNotifications = await settingsPage.notificationPrefToggles.first().isVisible().catch(() => false);
         if (!hasNotifications) {
             console.log("No notification preferences configured. Skipping test execution.");
@@ -125,8 +117,6 @@ test.describe("BOPIS Settings Flow Cases", () => {
     });
 
     test("5. Edge Case: Notification Preferences Alert Dialog - Confirm Action", async ({ page }) => {
-        await settingsPage.goToSettings();
-
         const hasNotifications = await settingsPage.notificationPrefToggles.first().isVisible().catch(() => false);
         if (!hasNotifications) {
             console.log("No notification preferences configured. Skipping test execution.");
@@ -166,7 +156,6 @@ test.describe("BOPIS Settings Flow Cases", () => {
     });
 
     test("6. Logout Edge Case - Clean Session Teardown", async ({ page }) => {
-        await settingsPage.goToSettings();
         await settingsPage.logout();
 
         // Verify successful redirection

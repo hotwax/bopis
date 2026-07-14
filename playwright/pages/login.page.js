@@ -3,7 +3,7 @@ import { expect } from "@playwright/test";
 export class LoginPage {
     constructor(page) {
         this.page = page;
-        this.omsInput = page.getByRole("textbox", { name: /oms/i });
+        this.omsInput = page.locator("input").first();
         this.nextButton = page.getByRole("button", { name: /next/i });
         this.usernameInput = page.getByRole("textbox", { name: /username|email|user/i });
         this.passwordInput = page.getByRole("textbox", { name: /password/i });
@@ -60,7 +60,9 @@ export class LoginPage {
         if (this.page.url().includes("tabs/orders")) return;
 
         await this.waitForOverlays();
-        const isUserVisible = await this.usernameInput.isVisible();
+        const isUserVisible = await this.usernameInput.waitFor({ state: "visible", timeout: 10000 })
+            .then(() => true)
+            .catch(() => false);
         if (isUserVisible) {
             await this.usernameInput.fill(username);
             await this.passwordInput.waitFor({ state: "visible" });
