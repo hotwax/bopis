@@ -18,6 +18,11 @@ const environments = {
     bopisUrl: "https://bopis-dev.hotwax.io",
     omsUrl: "https://oms-dev.hotwax.io",
   },
+  local: {
+    launchpadUrl: LAUNCHPAD_URL,
+    bopisUrl: "http://localhost:8080",
+    omsUrl: "https://oms-dev.hotwax.io",
+  },
   // UAT environment - uncomment when needed
   // uat: {
   //   launchpadUrl: LAUNCHPAD_URL,

@@ -3,28 +3,26 @@ import { expect } from "@playwright/test";
 export class OrderPage {
   constructor(page) {
     this.page = page;
-    // Tabs (using test-id as ion-segment-button doesn't have tab role)
-    this.openTabButton = page.getByTestId("open-segment-button");
-    this.packedTabButton = page.getByTestId("packed-segment-button");
-    this.completedTabButton = page.getByTestId("completed-segment-button");
+    // Tabs (using text because ion-segment-button data-testid might be missing)
+    this.openTabButton = page.locator('ion-segment-button', { hasText: /^Open$/i });
+    this.packedTabButton = page.locator('ion-segment-button', { hasText: /^Packed$/i });
+    this.completedTabButton = page.locator('ion-segment-button', { hasText: /^Completed$/i });
 
     // Order Cards
-    this.orderCards = this.page.locator('ion-card[data-testid="order-card"]');
+    this.orderCards = this.page.locator('ion-card.order-item');
     this.firstCard = this.orderCards.first();
 
-    this.openOrdersContainer = page.getByTestId("open-orders-container");
-    this.packedOrdersContainer = page.getByTestId("packed-orders-container");
-    this.completedOrdersContainer = page.getByTestId("completed-orders-container");
+    this.openOrdersContainer = page.locator('.orders');
+    this.packedOrdersContainer = page.locator('.orders');
+    this.completedOrdersContainer = page.locator('.orders');
 
     // Assign picker
-    this.assignPickerModal = page.getByTestId("assign-picker-modal-header");
-    this.assignPickerRadios = page.getByTestId("assign-picker-radio");
-    this.assignPickerSaveButton = page.getByTestId("assign-picker-save-button");
+    this.assignPickerModal = page.locator('ion-header', { hasText: /Assign picker/i });
+    this.assignPickerRadios = page.locator('ion-radio');
+    this.assignPickerSaveButton = page.locator('ion-button', { hasText: /Save/i });
     // Gift Card Elements
-    this.giftCardModal = page.getByTestId("giftcard-activation-modal-header");
-    this.giftCardActivationButton = page.getByTestId(
-      "gift-card-activation-button",
-    );
+    this.giftCardModal = page.locator('ion-header', { hasText: /Activate Gift Card/i });
+    this.giftCardActivationButton = page.locator('ion-button', { hasText: /Activate Gift Card/i });
     this.giftCardInput = page.getByTestId("giftcard-activation-input");
     this.giftCardLabel = page.getByTestId("giftcard-activation-label");
     this.giftCardSaveButton = page.getByTestId(

@@ -39,8 +39,9 @@ test.describe("BOPIS Negative Scenarios", () => {
     });
 
     test("Scenario 2: Handle missing 'Ready for Pickup' or modal failure", async ({ page }) => {
-        if (!areOpenOrdersAvailable) {
-            test.skip("No orders available to test detail page.");
+        await orderPage.goToOpenTab();
+        if (await orderPage.orderCards.count() === 0) {
+            test.skip(true, "No orders available to test detail page.");
         }
         
         await orderPage.goToOpenTab();
@@ -88,6 +89,10 @@ test.describe("BOPIS Negative Scenarios", () => {
         if (!areOpenOrdersAvailable) test.skip();
 
         await orderPage.goToOpenTab();
+        if (await orderPage.orderCards.count() === 0) {
+            test.skip(true, "No open orders available for picker-assignment negative scenario.");
+        }
+
         await orderPage.clickFirstOrderCard();
         await openDetail.markReadyForPickup();
 
@@ -134,6 +139,9 @@ test.describe("BOPIS Negative Scenarios", () => {
         if (!areOpenOrdersAvailable) test.skip();
 
         await orderPage.goToOpenTab();
+        if (await orderPage.orderCards.count() === 0) {
+            test.skip(true, "No orders available to test detail page.");
+        }
         await orderPage.clickFirstOrderCard();
 
         // Negative Check: Ensure tab opens
@@ -150,12 +158,14 @@ test.describe("BOPIS Negative Scenarios", () => {
         console.warn(`Popup opened unexpectedly: ${popup.url()}`);
         await expect(popup, "Invoice/Picklist tab should not open for this negative scenario").toBeFalsy();
     });
-
-
     test("Scenario 5: Validate Order State Persistence (MISMATCH CASE)", async ({ page }) => {
         if (!areOpenOrdersAvailable) test.skip();
 
         await orderPage.goToOpenTab();
+        if (await orderPage.orderCards.count() === 0) {
+            test.skip(true, "No open orders available for state-persistence negative scenario.");
+        }
+
         const orderName = await orderPage.getOrderName();
 
         // Negative Case: Check order does NOT exist in Completed tab yet

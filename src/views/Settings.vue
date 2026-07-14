@@ -21,7 +21,7 @@
               <ion-card-title>{{ userProfile?.userFullName }}</ion-card-title>
             </ion-card-header>
           </ion-item>
-          <ion-button v-if="!commonUtil.isAppEmbedded()" color="danger" @click="logout()">{{ translate("Logout") }}</ion-button>
+          <ion-button data-testid="logout-button" v-if="!commonUtil.isAppEmbedded()" color="danger" @click="logout()">{{ translate("Logout") }}</ion-button>
           <ion-button v-if="!commonUtil.isAppEmbedded()" :standalone-hidden="!useUserStore().hasPermission('COMMON_ADMIN')" fill="outline" @click="goToLaunchpad()">
             {{ translate("Go to Launchpad") }}
             <ion-icon slot="end" :icon="openOutline" />
@@ -35,7 +35,9 @@
       </div>
       <section>
         <DxpOmsInstanceNavigator :is-embedded="commonUtil.isAppEmbedded()" :has-oms-access="useUserStore().hasPermission('COMMERCEUSER_VIEW')"/>
-        <DxpFacilitySwitcher @updateFacility="fetchFacilityDependencies" />
+        <div data-testid="facility-switcher">
+          <DxpFacilitySwitcher @updateFacility="fetchFacilityDependencies" />
+        </div>
         <ion-card>
           <ion-card-header>
             <ion-card-subtitle>
@@ -49,20 +51,20 @@
             {{ translate('Control what your customers are allowed to edit on their order when they are editing their order on Re-route Fulfillment.') }}
           </ion-card-content>
           <ion-item lines="none">
-            <ion-toggle label-placement="start" :disabled="!useUserStore().hasPermission('COMMON_ADMIN')" :checked="isRerouteSettingEnabled('CUST_DLVRMTHD_UPDATE')" @click.prevent="setBopisProductStoreSettings($event, 'CUST_DLVRMTHD_UPDATE')">{{ translate("Delivery method") }}</ion-toggle>
+            <ion-toggle data-testid="delivery-method-toggle" label-placement="start" :disabled="!useUserStore().hasPermission('COMMON_ADMIN')" :checked="isRerouteSettingEnabled('CUST_DLVRMTHD_UPDATE')" @click.prevent="setBopisProductStoreSettings($event, 'CUST_DLVRMTHD_UPDATE')">{{ translate("Delivery method") }}</ion-toggle>
           </ion-item>
           <ion-item lines="none">
-            <ion-toggle label-placement="start" :disabled="!useUserStore().hasPermission('COMMON_ADMIN')" :checked="isRerouteSettingEnabled('CUST_DLVRADR_UPDATE')" @click.prevent="setBopisProductStoreSettings($event, 'CUST_DLVRADR_UPDATE')">{{ translate("Delivery address") }}</ion-toggle>
+            <ion-toggle data-testid="delivery-address-toggle" label-placement="start" :disabled="!useUserStore().hasPermission('COMMON_ADMIN')" :checked="isRerouteSettingEnabled('CUST_DLVRADR_UPDATE')" @click.prevent="setBopisProductStoreSettings($event, 'CUST_DLVRADR_UPDATE')">{{ translate("Delivery address") }}</ion-toggle>
           </ion-item>
           <ion-item lines="none">
-            <ion-toggle label-placement="start" :disabled="!useUserStore().hasPermission('COMMON_ADMIN')" :checked="isRerouteSettingEnabled('CUST_PCKUP_UPDATE')" @click.prevent="setBopisProductStoreSettings($event, 'CUST_PCKUP_UPDATE')">{{ translate("Pick up location") }}</ion-toggle>
+            <ion-toggle data-testid="pickup-location-toggle" label-placement="start" :disabled="!useUserStore().hasPermission('COMMON_ADMIN')" :checked="isRerouteSettingEnabled('CUST_PCKUP_UPDATE')" @click.prevent="setBopisProductStoreSettings($event, 'CUST_PCKUP_UPDATE')">{{ translate("Pick up location") }}</ion-toggle>
           </ion-item>
           <ion-item lines="none">
             <!-- <p>Uploading order cancelations to Shopify is currently disabled. Order cancelations in HotWax will not be synced to Shopify.</p> -->
-            <ion-toggle label-placement="start" :disabled="!useUserStore().hasPermission('COMMON_ADMIN')" :checked="isRerouteSettingEnabled('CUST_ALLOW_CNCL')" @click.prevent="setBopisProductStoreSettings($event, 'CUST_ALLOW_CNCL')">{{ translate("Cancel order before fulfillment") }}</ion-toggle>
+            <ion-toggle data-testid="cancel-order-toggle" label-placement="start" :disabled="!useUserStore().hasPermission('COMMON_ADMIN')" :checked="isRerouteSettingEnabled('CUST_ALLOW_CNCL')" @click.prevent="setBopisProductStoreSettings($event, 'CUST_ALLOW_CNCL')">{{ translate("Cancel order before fulfillment") }}</ion-toggle>
           </ion-item>
           <ion-item lines="none">
-            <ion-toggle label-placement="start" :disabled="!useUserStore().hasPermission('COMMON_ADMIN')" :checked="isRerouteSettingEnabled('CUST_ORD_ITEM_SPLIT')" @click.prevent="setBopisProductStoreSettings($event, 'CUST_ORD_ITEM_SPLIT')">{{ translate("Order item split") }}</ion-toggle>
+            <ion-toggle data-testid="order-item-split-toggle" label-placement="start" :disabled="!useUserStore().hasPermission('COMMON_ADMIN')" :checked="isRerouteSettingEnabled('CUST_ORD_ITEM_SPLIT')" @click.prevent="setBopisProductStoreSettings($event, 'CUST_ORD_ITEM_SPLIT')">{{ translate("Order item split") }}</ion-toggle>
           </ion-item>
           <ion-item lines="none">
             <ion-label v-if="Object.keys(getShipmentMethodConfig()).length > 0">
@@ -87,7 +89,7 @@
             {{ translate('Specify whether you reject a BOPIS order partially when any order item inventory is insufficient at the store.') }}
           </ion-card-content>
           <ion-item lines="none">
-            <ion-toggle label-placement="start" :disabled="!useUserStore().hasPermission('COMMON_ADMIN')" :checked="isProductStoreSettingEnabled('BOPIS_PART_ODR_REJ')" @click.prevent="setBopisProductStoreSettings($event, 'BOPIS_PART_ODR_REJ')">{{ translate("Allow partial rejection") }}</ion-toggle>
+            <ion-toggle data-testid="partial-rejection-toggle" label-placement="start" :disabled="!useUserStore().hasPermission('COMMON_ADMIN')" :checked="isProductStoreSettingEnabled('BOPIS_PART_ODR_REJ')" @click.prevent="setBopisProductStoreSettings($event, 'BOPIS_PART_ODR_REJ')">{{ translate("Allow partial rejection") }}</ion-toggle>
           </ion-item>
         </ion-card>
         
@@ -111,7 +113,7 @@
             {{ translate('Enabling this will show only shipping orders and hide all pickup orders.') }}
           </ion-card-content>
           <ion-item lines="none" :disabled="!useUserStore().hasPermission('COMMON_ADMIN')">
-            <ion-toggle label-placement="start" :checked="isProductStoreSettingEnabled('SHOW_SHIPPING_ORDERS')" @click.prevent="setBopisProductStoreSettings($event, 'SHOW_SHIPPING_ORDERS')">{{ translate("Show shipping orders") }}</ion-toggle>
+            <ion-toggle data-testid="show-shipping-orders-toggle" label-placement="start" :checked="isProductStoreSettingEnabled('SHOW_SHIPPING_ORDERS')" @click.prevent="setBopisProductStoreSettings($event, 'SHOW_SHIPPING_ORDERS')">{{ translate("Show shipping orders") }}</ion-toggle>
           </ion-item>
         </ion-card>
 
@@ -125,7 +127,7 @@
             {{ translate('Packing slips help customer reconcile their order against the delivered items.') }}
           </ion-card-content>
           <ion-item lines="none" :disabled="!useUserStore().hasPermission('COMMON_ADMIN')">
-            <ion-toggle label-placement="start" :checked="isProductStoreSettingEnabled('PRINT_PACKING_SLIPS')" @click.prevent="setBopisProductStoreSettings($event, 'PRINT_PACKING_SLIPS')">{{ translate("Generate packing slips") }}</ion-toggle>
+            <ion-toggle data-testid="generate-packing-slips-toggle" label-placement="start" :checked="isProductStoreSettingEnabled('PRINT_PACKING_SLIPS')" @click.prevent="setBopisProductStoreSettings($event, 'PRINT_PACKING_SLIPS')">{{ translate("Generate packing slips") }}</ion-toggle>
           </ion-item>
         </ion-card>
 
@@ -139,10 +141,10 @@
             {{ translate('Track who picked orders by entering picker IDs when packing an order.') }}
           </ion-card-content>
           <ion-item :disabled="!useUserStore().hasPermission('COMMON_ADMIN')">
-            <ion-toggle label-placement="start" :checked="isProductStoreSettingEnabled('ENABLE_TRACKING')" @click.prevent="setBopisProductStoreSettings($event, 'ENABLE_TRACKING')">{{ translate("Enable tracking") }}</ion-toggle>
+            <ion-toggle data-testid="enable-tracking-toggle" label-placement="start" :checked="isProductStoreSettingEnabled('ENABLE_TRACKING')" @click.prevent="setBopisProductStoreSettings($event, 'ENABLE_TRACKING')">{{ translate("Enable tracking") }}</ion-toggle>
           </ion-item>
           <ion-item lines="none" :disabled="!useUserStore().hasPermission('COMMON_ADMIN')">
-            <ion-toggle label-placement="start" :checked="isProductStoreSettingEnabled('PRINT_PICKLISTS')" @click.prevent="setBopisProductStoreSettings($event, 'PRINT_PICKLISTS')">{{ translate("Print picklists") }}</ion-toggle>
+            <ion-toggle data-testid="print-picklists-toggle" label-placement="start" :checked="isProductStoreSettingEnabled('PRINT_PICKLISTS')" @click.prevent="setBopisProductStoreSettings($event, 'PRINT_PICKLISTS')">{{ translate("Print picklists") }}</ion-toggle>
           </ion-item> 
         </ion-card>
 
@@ -156,7 +158,7 @@
             {{ translate('This will allow store associates to request the item from another store when it is not available in their current stock') }}
           </ion-card-content>
           <ion-item lines="none" :disabled="!useUserStore().hasPermission('BOPIS_REQUEST_TRANSFER_UPDATE')">
-            <ion-toggle label-placement="start" :checked="isProductStoreSettingEnabled('REQUEST_TRANSFER')" @click.prevent="setBopisProductStoreSettings($event, 'REQUEST_TRANSFER')">{{ translate("Show Request Transfer") }}</ion-toggle>
+            <ion-toggle data-testid="request-transfer-toggle" label-placement="start" :checked="isProductStoreSettingEnabled('REQUEST_TRANSFER')" @click.prevent="setBopisProductStoreSettings($event, 'REQUEST_TRANSFER')">{{ translate("Show Request Transfer") }}</ion-toggle>
           </ion-item>
         </ion-card>
 
@@ -170,7 +172,7 @@
             {{ translate('This will allow store associates to verify the delivery of pickup order') }}
           </ion-card-content>
           <ion-item lines="none">
-            <ion-toggle label-placement="start" :checked="isProductStoreSettingEnabled('HANDOVER_PROOF')" @click.prevent="setBopisProductStoreSettings($event, 'HANDOVER_PROOF')">{{ translate("Show proof of delivery") }}</ion-toggle>
+            <ion-toggle data-testid="proof-of-delivery-toggle" label-placement="start" :checked="isProductStoreSettingEnabled('HANDOVER_PROOF')" @click.prevent="setBopisProductStoreSettings($event, 'HANDOVER_PROOF')">{{ translate("Show proof of delivery") }}</ion-toggle>
           </ion-item>
         </ion-card>
 
