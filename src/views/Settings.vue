@@ -21,8 +21,8 @@
               <ion-card-title>{{ userProfile?.userFullName }}</ion-card-title>
             </ion-card-header>
           </ion-item>
-          <ion-button data-testid="logout-button" color="danger" @click="logout()">{{ translate("Logout") }}</ion-button>
-          <ion-button :standalone-hidden="!hasPermission(Actions.APP_PWA_STANDALONE_ACCESS)" fill="outline" @click="goToLaunchpad()">
+          <ion-button data-testid="logout-button" v-if="!commonUtil.isAppEmbedded()" color="danger" @click="logout()">{{ translate("Logout") }}</ion-button>
+          <ion-button v-if="!commonUtil.isAppEmbedded()" :standalone-hidden="!useUserStore().hasPermission('COMMON_ADMIN')" fill="outline" @click="goToLaunchpad()">
             {{ translate("Go to Launchpad") }}
             <ion-icon slot="end" :icon="openOutline" />
           </ion-button>
@@ -34,25 +34,9 @@
         <h1>{{ translate('OMS') }}</h1>
       </div>
       <section>
-        <ion-card>
-          <ion-card-header>
-            <ion-card-subtitle>
-              {{ translate("OMS instance") }}
-            </ion-card-subtitle>
-            <ion-card-title>
-              {{ oms }}
-            </ion-card-title>
-          </ion-card-header>
-          <ion-card-content>
-            {{ translate("This is the name of the OMS you are connected to right now. Make sure that you are connected to the right instance before proceeding.") }}
-          </ion-card-content>
-          <ion-button :disabled="!omsRedirectionUrl || !omsToken || !hasPermission(Actions.APP_COMMERCE_VIEW)" @click="goToOms(omsToken, omsRedirectionUrl)" fill="clear">
-            {{ translate("Go to OMS") }}
-            <ion-icon slot="end" :icon="openOutline" />
-          </ion-button>
-        </ion-card>
+        <DxpOmsInstanceNavigator :is-embedded="commonUtil.isAppEmbedded()" :has-oms-access="useUserStore().hasPermission('COMMERCEUSER_VIEW')"/>
         <div data-testid="facility-switcher">
-          <DxpFacilitySwitcher @updateFacility="updateFacility" />
+          <DxpFacilitySwitcher @updateFacility="fetchFacilityDependencies" />
         </div>
         <ion-card>
           <ion-card-header>
@@ -67,20 +51,20 @@
             {{ translate('Control what your customers are allowed to edit on their order when they are editing their order on Re-route Fulfillment.') }}
           </ion-card-content>
           <ion-item lines="none">
-            <ion-toggle data-testid="delivery-method-toggle" label-placement="start" :disabled="!hasPermission(Actions.APP_RF_CONFIG_UPDATE) || Object.keys(rerouteFulfillmentConfig.allowDeliveryMethodUpdate).length == 0" :checked="rerouteFulfillmentConfig.allowDeliveryMethodUpdate.settingValue" @ionChange="updateRerouteFulfillmentConfiguration(rerouteFulfillmentConfig.allowDeliveryMethodUpdate, $event.detail.checked)">{{ translate("Delivery method") }}</ion-toggle>
+            <ion-toggle data-testid="delivery-method-toggle" label-placement="start" :disabled="!useUserStore().hasPermission('COMMON_ADMIN')" :checked="isRerouteSettingEnabled('CUST_DLVRMTHD_UPDATE')" @click.prevent="setBopisProductStoreSettings($event, 'CUST_DLVRMTHD_UPDATE')">{{ translate("Delivery method") }}</ion-toggle>
           </ion-item>
           <ion-item lines="none">
-            <ion-toggle data-testid="delivery-address-toggle" label-placement="start" :disabled="!hasPermission(Actions.APP_RF_CONFIG_UPDATE) || Object.keys(rerouteFulfillmentConfig.allowDeliveryAddressUpdate).length == 0" :checked="rerouteFulfillmentConfig.allowDeliveryAddressUpdate.settingValue" @ionChange="updateRerouteFulfillmentConfiguration(rerouteFulfillmentConfig.allowDeliveryAddressUpdate, $event.detail.checked)">{{ translate("Delivery address") }}</ion-toggle>
+            <ion-toggle data-testid="delivery-address-toggle" label-placement="start" :disabled="!useUserStore().hasPermission('COMMON_ADMIN')" :checked="isRerouteSettingEnabled('CUST_DLVRADR_UPDATE')" @click.prevent="setBopisProductStoreSettings($event, 'CUST_DLVRADR_UPDATE')">{{ translate("Delivery address") }}</ion-toggle>
           </ion-item>
           <ion-item lines="none">
-            <ion-toggle data-testid="pickup-location-toggle" label-placement="start" :disabled="!hasPermission(Actions.APP_RF_CONFIG_UPDATE) || Object.keys(rerouteFulfillmentConfig.allowPickupUpdate).length == 0" :checked="rerouteFulfillmentConfig.allowPickupUpdate.settingValue" @ionChange="updateRerouteFulfillmentConfiguration(rerouteFulfillmentConfig.allowPickupUpdate, $event.detail.checked)">{{ translate("Pick up location") }}</ion-toggle>
+            <ion-toggle data-testid="pickup-location-toggle" label-placement="start" :disabled="!useUserStore().hasPermission('COMMON_ADMIN')" :checked="isRerouteSettingEnabled('CUST_PCKUP_UPDATE')" @click.prevent="setBopisProductStoreSettings($event, 'CUST_PCKUP_UPDATE')">{{ translate("Pick up location") }}</ion-toggle>
           </ion-item>
           <ion-item lines="none">
             <!-- <p>Uploading order cancelations to Shopify is currently disabled. Order cancelations in HotWax will not be synced to Shopify.</p> -->
-            <ion-toggle data-testid="cancel-order-toggle" label-placement="start" :disabled="!hasPermission(Actions.APP_RF_CONFIG_UPDATE) || Object.keys(rerouteFulfillmentConfig.allowCancel).length == 0" :checked="rerouteFulfillmentConfig.allowCancel.settingValue" @ionChange="updateRerouteFulfillmentConfiguration(rerouteFulfillmentConfig.allowCancel, $event.detail.checked)">{{ translate("Cancel order before fulfillment") }}</ion-toggle>
+            <ion-toggle data-testid="cancel-order-toggle" label-placement="start" :disabled="!useUserStore().hasPermission('COMMON_ADMIN')" :checked="isRerouteSettingEnabled('CUST_ALLOW_CNCL')" @click.prevent="setBopisProductStoreSettings($event, 'CUST_ALLOW_CNCL')">{{ translate("Cancel order before fulfillment") }}</ion-toggle>
           </ion-item>
           <ion-item lines="none">
-            <ion-toggle data-testid="order-item-split-toggle" label-placement="start" :disabled="!hasPermission(Actions.APP_RF_CONFIG_UPDATE) || Object.keys(rerouteFulfillmentConfig.orderItemSplit).length == 0" :checked="rerouteFulfillmentConfig.orderItemSplit.settingValue" @ionChange="updateRerouteFulfillmentConfiguration(rerouteFulfillmentConfig.orderItemSplit, $event.detail.checked)">{{ translate("Order item split") }}</ion-toggle>
+            <ion-toggle data-testid="order-item-split-toggle" label-placement="start" :disabled="!useUserStore().hasPermission('COMMON_ADMIN')" :checked="isRerouteSettingEnabled('CUST_ORD_ITEM_SPLIT')" @click.prevent="setBopisProductStoreSettings($event, 'CUST_ORD_ITEM_SPLIT')">{{ translate("Order item split") }}</ion-toggle>
           </ion-item>
           <ion-item lines="none">
             <ion-label v-if="Object.keys(getShipmentMethodConfig()).length > 0">
@@ -91,7 +75,7 @@
             <ion-label v-else>
               {{ translate('Shipment method') }}
             </ion-label>
-            <ion-button slot="end" fill="outline" color="dark" :disabled="!hasPermission(Actions.APP_RF_CONFIG_UPDATE) || Object.keys(rerouteFulfillmentConfig.shippingMethod).length == 0" @click="openEditShipmentMethodModal(rerouteFulfillmentConfig.shippingMethod)">{{ Object.keys(getShipmentMethodConfig()).length > 0 ? translate('Edit') : translate('Add')}}</ion-button>
+            <ion-button slot="end" fill="outline" color="dark" :disabled="!useUserStore().hasPermission('COMMON_ADMIN')" @click="openEditShipmentMethodModal()">{{ Object.keys(getShipmentMethodConfig()).length > 0 ? translate('Edit') : translate('Add')}}</ion-button>
           </ion-item>
         </ion-card>
 
@@ -105,24 +89,18 @@
             {{ translate('Specify whether you reject a BOPIS order partially when any order item inventory is insufficient at the store.') }}
           </ion-card-content>
           <ion-item lines="none">
-            <ion-toggle data-testid="partial-rejection-toggle" label-placement="start" :disabled="!hasPermission(Actions.APP_PARTIAL_ORDER_REJECTION_CONFIG_UPDATE)" :checked="partialOrderRejectionConfig.settingValue" @ionChange="updatePartialOrderRejectionConfig(partialOrderRejectionConfig, $event.detail.checked)">{{ translate("Allow partial rejection") }}</ion-toggle>
+            <ion-toggle data-testid="partial-rejection-toggle" label-placement="start" :disabled="!useUserStore().hasPermission('COMMON_ADMIN')" :checked="isProductStoreSettingEnabled('BOPIS_PART_ODR_REJ')" @click.prevent="setBopisProductStoreSettings($event, 'BOPIS_PART_ODR_REJ')">{{ translate("Allow partial rejection") }}</ion-toggle>
           </ion-item>
         </ion-card>
         
       </section>
 
       <hr />
-      <div class="section-header">
-        <h1>
-          {{ translate('App') }}
-          <p class="overline">{{ "Version: " + appVersion }}</p>
-        </h1>
-        <p class="overline">{{ "Built: " + getDateTime(appInfo.builtTime) }}</p>
-      </div>
+      <DxpAppVersionInfo/>
 
       <section>
         <DxpProductIdentifier />
-        <TimeZoneSwitcher @timeZoneUpdated="timeZoneUpdated" />
+        <DxpTimeZoneSwitcher @timeZoneUpdated="timeZoneUpdated" />
         <DxpLanguageSwitcher />
 
         <ion-card>
@@ -134,8 +112,8 @@
           <ion-card-content>
             {{ translate('Enabling this will show only shipping orders and hide all pickup orders.') }}
           </ion-card-content>
-          <ion-item lines="none" :disabled="!hasPermission(Actions.APP_SHOW_SHIPPING_ORD_PREF_UPDATE)">
-            <ion-toggle data-testid="show-shipping-orders-toggle" label-placement="start" :checked="getBopisProductStoreSettings('SHOW_SHIPPING_ORDERS')" @click.prevent="setBopisProductStoreSettings($event, 'SHOW_SHIPPING_ORDERS')">{{ translate("Show shipping orders") }}</ion-toggle>
+          <ion-item lines="none" :disabled="!useUserStore().hasPermission('COMMON_ADMIN')">
+            <ion-toggle data-testid="show-shipping-orders-toggle" label-placement="start" :checked="isProductStoreSettingEnabled('SHOW_SHIPPING_ORDERS')" @click.prevent="setBopisProductStoreSettings($event, 'SHOW_SHIPPING_ORDERS')">{{ translate("Show shipping orders") }}</ion-toggle>
           </ion-item>
         </ion-card>
 
@@ -148,8 +126,8 @@
           <ion-card-content>
             {{ translate('Packing slips help customer reconcile their order against the delivered items.') }}
           </ion-card-content>
-          <ion-item lines="none" :disabled="!hasPermission(Actions.APP_PRINT_PACKING_SLIP_PREF_UPDATE)">
-            <ion-toggle data-testid="generate-packing-slips-toggle" label-placement="start" :checked="getBopisProductStoreSettings('PRINT_PACKING_SLIPS')" @click.prevent="setBopisProductStoreSettings($event, 'PRINT_PACKING_SLIPS')">{{ translate("Generate packing slips") }}</ion-toggle>
+          <ion-item lines="none" :disabled="!useUserStore().hasPermission('COMMON_ADMIN')">
+            <ion-toggle data-testid="generate-packing-slips-toggle" label-placement="start" :checked="isProductStoreSettingEnabled('PRINT_PACKING_SLIPS')" @click.prevent="setBopisProductStoreSettings($event, 'PRINT_PACKING_SLIPS')">{{ translate("Generate packing slips") }}</ion-toggle>
           </ion-item>
         </ion-card>
 
@@ -162,15 +140,15 @@
           <ion-card-content>
             {{ translate('Track who picked orders by entering picker IDs when packing an order.') }}
           </ion-card-content>
-          <ion-item :disabled="!hasPermission(Actions.APP_ENABLE_TRACKING_PREF_UPDATE)">
-            <ion-toggle data-testid="enable-tracking-toggle" label-placement="start" :checked="getBopisProductStoreSettings('ENABLE_TRACKING')" @click.prevent="setBopisProductStoreSettings($event, 'ENABLE_TRACKING')">{{ translate("Enable tracking") }}</ion-toggle>
+          <ion-item :disabled="!useUserStore().hasPermission('COMMON_ADMIN')">
+            <ion-toggle data-testid="enable-tracking-toggle" label-placement="start" :checked="isProductStoreSettingEnabled('ENABLE_TRACKING')" @click.prevent="setBopisProductStoreSettings($event, 'ENABLE_TRACKING')">{{ translate("Enable tracking") }}</ion-toggle>
           </ion-item>
-          <ion-item lines="none" :disabled="!hasPermission(Actions.APP_PRINT_PICKLIST_PREF_UPDATE)">
-            <ion-toggle data-testid="print-picklists-toggle" label-placement="start" :checked="getBopisProductStoreSettings('PRINT_PICKLISTS')" @click.prevent="setBopisProductStoreSettings($event, 'PRINT_PICKLISTS')">{{ translate("Print picklists") }}</ion-toggle>
+          <ion-item lines="none" :disabled="!useUserStore().hasPermission('COMMON_ADMIN')">
+            <ion-toggle data-testid="print-picklists-toggle" label-placement="start" :checked="isProductStoreSettingEnabled('PRINT_PICKLISTS')" @click.prevent="setBopisProductStoreSettings($event, 'PRINT_PICKLISTS')">{{ translate("Print picklists") }}</ion-toggle>
           </ion-item> 
         </ion-card>
 
-        <ion-card v-if="hasPermission(Actions.APP_REQUEST_TRANSFER_UPDATE)">
+        <ion-card v-if="useUserStore().hasPermission('BOPIS_REQUEST_TRANSFER_UPDATE')">
           <ion-card-header>
             <ion-card-title>
               {{ translate("Request Transfer") }}
@@ -179,12 +157,12 @@
           <ion-card-content>
             {{ translate('This will allow store associates to request the item from another store when it is not available in their current stock') }}
           </ion-card-content>
-          <ion-item lines="none" :disabled="!hasPermission(Actions.APP_REQUEST_TRANSFER_UPDATE)">
-            <ion-toggle data-testid="request-transfer-toggle" label-placement="start" :checked="getBopisProductStoreSettings('REQUEST_TRANSFER')" @click.prevent="setBopisProductStoreSettings($event, 'REQUEST_TRANSFER')">{{ translate("Show Request Transfer") }}</ion-toggle>
+          <ion-item lines="none" :disabled="!useUserStore().hasPermission('BOPIS_REQUEST_TRANSFER_UPDATE')">
+            <ion-toggle data-testid="request-transfer-toggle" label-placement="start" :checked="isProductStoreSettingEnabled('REQUEST_TRANSFER')" @click.prevent="setBopisProductStoreSettings($event, 'REQUEST_TRANSFER')">{{ translate("Show Request Transfer") }}</ion-toggle>
           </ion-item>
         </ion-card>
 
-        <ion-card v-if="hasPermission(Actions.APP_PROOF_OF_DELIVERY_PREF_UPDATE)">
+        <ion-card v-if="useUserStore().hasPermission('BOPIS_POD_UPDATE')">
           <ion-card-header>
             <ion-card-title>
               {{ translate("Proof of delivery") }}
@@ -194,7 +172,7 @@
             {{ translate('This will allow store associates to verify the delivery of pickup order') }}
           </ion-card-content>
           <ion-item lines="none">
-            <ion-toggle data-testid="proof-of-delivery-toggle" label-placement="start" :checked="getBopisProductStoreSettings('HANDOVER_PROOF')" @click.prevent="setBopisProductStoreSettings($event, 'HANDOVER_PROOF')">{{ translate("Show proof of delivery") }}</ion-toggle>
+            <ion-toggle data-testid="proof-of-delivery-toggle" label-placement="start" :checked="isProductStoreSettingEnabled('HANDOVER_PROOF')" @click.prevent="setBopisProductStoreSettings($event, 'HANDOVER_PROOF')">{{ translate("Show proof of delivery") }}</ion-toggle>
           </ion-item>
         </ion-card>
 
@@ -209,7 +187,7 @@
           </ion-card-content>
           <ion-list>
             <ion-item :key="pref.enumId" v-for="pref in notificationPrefs" lines="none">
-              <ion-toggle :data-testid="'notification-pref-' + pref.enumId + '-toggle'" label-placement="start" @click.prevent="confirmNotificationPrefUpdate(pref.enumId, $event)" :checked="pref.isEnabled">{{ pref.description }}</ion-toggle>
+              <ion-toggle label-placement="start" @click.prevent="confirmNotificationPrefUpdate(pref.enumId, $event)" :checked="pref.isEnabled">{{ pref.description }}</ion-toggle>
             </ion-item>
           </ion-list>
         </ion-card>
@@ -218,401 +196,192 @@
   </ion-page>
 </template>
 
-<script lang="ts">
-import {
-  alertController,
-  IonAvatar,
-  IonButton,
-  IonCard,
-  IonCardContent,
-  IonCardHeader,
-  IonCardSubtitle,
-  IonCardTitle,
-  IonContent,
-  IonHeader,
-  IonIcon,
-  IonItem,
-  IonLabel,
-  IonList,
-  IonPage,
-  IonTitle,
-  IonToggle,
-  IonToolbar,
-  modalController
-} from '@ionic/vue';
-import { defineComponent, computed } from 'vue';
-import {
-  codeWorkingOutline,
-  ellipsisVertical,
-  openOutline,
-  personCircleOutline,
-  sendOutline,
-  storefrontOutline
-} from 'ionicons/icons'
-import { mapGetters, useStore } from 'vuex';
-import { useRouter } from 'vue-router';
+<script setup lang="ts">
+import { alertController, IonAvatar, IonButton, IonCard, IonCardContent, IonCardHeader, IonCardSubtitle, IonCardTitle, IonContent, IonHeader, IonIcon, IonItem, IonLabel, IonList, IonPage, IonTitle, IonToggle, IonToolbar, modalController, onIonViewWillEnter } from '@ionic/vue';
+import { computed, onMounted, ref } from 'vue';
+import { openOutline } from 'ionicons/icons'
 import Image from '@/components/Image.vue';
-import { DateTime } from 'luxon';
-import { UserService } from '@/services/UserService'
-import { showToast } from '@/utils';
-import { hasError, removeClientRegistrationToken, subscribeTopic, unsubscribeTopic } from '@/adapter'
-import { goToOms, initialiseFirebaseApp, translate, useUserStore } from "@hotwax/dxp-components";
-import { Actions, hasPermission } from '@/authorization'
-import { addNotification, generateTopicName, isFcmConfigured, storeClientRegistrationToken } from "@/utils/firebase";
-import emitter from "@/event-bus"
-import logger from '@/logger';
+
+import { commonUtil, emitter, firebaseMessaging, logger, translate, useNotificationStore } from '@common';
+import { useAuth } from "@common/composables/useAuth";
 import EditShipmentMethodModal from '@/components/EditShipmentMethodModal.vue';
-import TimeZoneSwitcher from "@/components/TimeZoneSwitcher.vue"
+import DxpTimeZoneSwitcher from "@/components/DxpTimeZoneSwitcher.vue"
+import DxpOmsInstanceNavigator from "@/components/DxpOmsInstanceNavigator.vue";
+import DxpProductIdentifier from "@/components/DxpProductIdentifier.vue";
+import DxpLanguageSwitcher from "@/components/DxpLanguageSwitcher.vue";
+import DxpFacilitySwitcher from "@/components/DxpFacilitySwitcher.vue";
 
-export default defineComponent({
-  name: 'Settings',
-  components: {
-    IonAvatar,
-    IonButton, 
-    IonCard,
-    IonCardContent,
-    IonCardHeader,
-    IonCardSubtitle,
-    IonCardTitle,
-    IonContent, 
-    IonHeader, 
-    IonIcon,
-    IonItem, 
-    IonLabel,
-    IonList,
-    IonPage, 
-    IonTitle,
-    IonToggle, 
-    IonToolbar,
-    Image,
-    TimeZoneSwitcher
-  },
-  data(){
-    return {
-      baseURL: process.env.VUE_APP_BASE_URL,
-      appInfo: (process.env.VUE_APP_VERSION_INFO ? JSON.parse(process.env.VUE_APP_VERSION_INFO) : {}) as any,
-      appVersion: "",
-      rerouteFulfillmentConfig: {
-        // TODO Remove fromDate and directly store values making it loosely coupled with OMS
-        allowDeliveryMethodUpdate: {},
-        allowDeliveryAddressUpdate: {},
-        allowPickupUpdate: {},
-        allowCancel: {},
-        shippingMethod: {},
-        orderItemSplit: {}
-      } as any,
-      carriers: [] as any,
-      availableShipmentMethods: [] as any,
-      rerouteFulfillmentConfigMapping: (process.env.VUE_APP_RF_CNFG_MPNG? JSON.parse(process.env.VUE_APP_RF_CNFG_MPNG) : {}) as any
-    }
-  },
-  computed: {
-    ...mapGetters({
-      userProfile: 'user/getUserProfile',
-      currentEComStore: 'user/getCurrentEComStore',
-      partialOrderRejectionConfig: 'user/getPartialOrderRejectionConfig',
-      firebaseDeviceId: 'user/getFirebaseDeviceId',
-      notificationPrefs: 'user/getNotificationPrefs',
-      allNotificationPrefs: 'user/getAllNotificationPrefs',
-      getBopisProductStoreSettings: "user/getBopisProductStoreSettings",
-      oms: "user/getInstanceUrl",
-      omsRedirectionUrl: "user/getOmsBaseUrl",
-      omsToken: "user/getUserToken"
-    })
-  },
-  mounted() {
-    this.appVersion = this.appInfo.branch ? (this.appInfo.branch + "-" + this.appInfo.revision) : this.appInfo.tag;
-  },
-  async ionViewWillEnter() {
-    // Clearing the current order as to correctly display the selected segment when moving to list page
-    this.store.dispatch("order/updateCurrent", { order: {}})
-    // Only fetch configuration when environment mapping exists
-    if (Object.keys(this.rerouteFulfillmentConfigMapping).length > 0) {
-      this.fetchCarriers()
-      this.getAvailableShipmentMethods();
-      this.getRerouteFulfillmentConfiguration();
-    }
+import { useUserStore } from '@/store/user';
+import { useOrderStore } from '@/store/order';
+import { useProductStore } from '@/store/productStore';
+import DxpAppVersionInfo from '@/components/DxpAppVersionInfo.vue';
+import { firebaseUtil } from "@/utils/firebaseUtil"
 
-    // fetching partial order rejection when entering setting page to have latest information
-    await this.store.dispatch('user/getPartialOrderRejectionConfig')
+const appInfo = ref(import.meta.env.VITE_VERSION_INFO ? JSON.parse(import.meta.env.VITE_VERSION_INFO) : {} as any);
+const appVersion = ref("");
 
-    // as notification prefs can also be updated from the notification pref modal,
-    // latest state is fetched each time we open the settings page
-    await this.store.dispatch('user/fetchNotificationPreferences')
-  },
-  methods: {
-    async updateFacility(facility: any) {
-      const previousEComStoreId = this.currentEComStore.productStoreId
-      await this.store.dispatch('user/setFacility', facility?.facilityId);
-      await this.store.dispatch('user/fetchNotificationPreferences')
-      if(Object.keys(this.rerouteFulfillmentConfigMapping).length > 0 && previousEComStoreId !== this.currentEComStore.productStoreId) {
-        this.getAvailableShipmentMethods();
-        this.getRerouteFulfillmentConfiguration();
-      }
-    },
-    async timeZoneUpdated(tzId: string) {
-      await this.store.dispatch("user/setUserTimeZone", tzId)
-    },
-    async logout () {
-      // remove firebase notification registration token -
-      // OMS and auth is required hence, removing it before logout (clearing state)
-      try {
-        await removeClientRegistrationToken(this.firebaseDeviceId, process.env.VUE_APP_NOTIF_APP_ID)
-      } catch (error) {
-        logger.error(error)
-      }
+const carriers = computed(() => useProductStore().getCarriers);
+const availableShipmentMethods = computed(() => useProductStore().getAvailableShipmentMethods);
 
-      // clear facility lat lon and stores information state when facility changes
-      this.store.dispatch("util/clearCurrentFacilityLatLon", {})
-      this.store.dispatch("util/clearStoresInformation", {})
-      this.store.dispatch("util/clearDeviceId", {})
+const userProfile = computed(() => useUserStore().getUserProfile);
+const currentProductStore = computed(() => useProductStore().getCurrentProductStore);
+const isProductStoreSettingEnabled = computed(() => useProductStore().isProductStoreSettingEnabled);
+const isRerouteSettingEnabled = computed(() => useProductStore().isRerouteSettingEnabled);
 
-      this.store.dispatch('user/logout', { isUserUnauthorised: false }).then((redirectionUrl) => {
-        // if not having redirection url then redirect the user to launchpad
-        if(!redirectionUrl) {
-          const redirectUrl = window.location.origin + '/login'
-          window.location.href = `${process.env.VUE_APP_LOGIN_URL}?isLoggedOut=true&redirectUrl=${redirectUrl}`
-        }
-      })
-    },
-    goToLaunchpad() {
-      window.location.href = `${process.env.VUE_APP_LOGIN_URL}`
-    },
-    setBopisProductStoreSettings (ev: any, enumId: any) {
-      ev.stopImmediatePropagation();
-      this.store.dispatch('user/setProductStoreSetting', { enumId, value: !this.getBopisProductStoreSettings(enumId) })
-    },
-    getDateTime(time: any) {
-      return DateTime.fromMillis(time).toLocaleString(DateTime.DATETIME_MED);
-    },
-    async openEditShipmentMethodModal(config: any) {
-      const editShipmentMethodModal = await modalController.create({
-        component: EditShipmentMethodModal,
-        componentProps: { currentcConfig: this.getShipmentMethodConfig(), carriers:  this.carriers, availableShipmentMethods: this.availableShipmentMethods }
-      });
-      
-      editShipmentMethodModal.onDidDismiss().then(async(result: any) => {
-        if(result.data?.shippingMethod) {
-          await this.updateRerouteFulfillmentConfiguration(config, result.data?.shippingMethod)
-        }
-      })
+const firebaseDeviceId = computed(() => useNotificationStore().getFirebaseDeviceId);
+const notificationPrefs = computed(() => useNotificationStore().getNotificationPrefs);
+const allNotificationPrefs = computed(() => useNotificationStore().getAllNotificationPrefs);
+const currentFacility = computed(() => useProductStore().getCurrentFacility);
 
-      return editShipmentMethodModal.present();
-    },
-    getShipmentMethodConfig() {
-      if (Object.keys(this.rerouteFulfillmentConfig.shippingMethod).length !== 0) {
-        try {
-          const shippingMethodConfig = this.rerouteFulfillmentConfig.shippingMethod.settingValue ? JSON.parse(this.rerouteFulfillmentConfig.shippingMethod.settingValue) : {};
-          if (Object.keys(shippingMethodConfig).length > 0) {
-            const shipmentMethodDesc = this.availableShipmentMethods.find((shipmentMethod: any) => shipmentMethod.shipmentMethodTypeId === shippingMethodConfig.shipmentMethodTypeId)?.description;
-            const carrierName = this.carriers.find((carrier: any) => carrier.partyId === shippingMethodConfig.carrierPartyId)?.groupName;
-            return { ...shippingMethodConfig, shipmentMethodDesc, carrierName };
-          }
-        } catch (error) {
-          console.error('Error parsing shipping method config:', error);
-          return {};
-        }
-      }
-      return {};
-    },
-    async fetchCarriers () {
-      this.availableShipmentMethods = [];
-      try {
-        const resp = await UserService.getRerouteFulfillmentConfig({
-          "entityName": "CarrierShipmentMethodCount",
-          "inputFields": {
-            "roleTypeId": "CARRIER",
-            "partyTypeId": "PARTY_GROUP"
-          },
-          "fieldList": ["partyId", "roleTypeId", "groupName"],
-          "viewIndex": 0,
-          "viewSize": 250,  // maximum records we could have
-          "distinct": "Y",
-          "noConditionFind": "Y",
-          "orderBy": "groupName"
-        }) as any;
-        if (!hasError(resp) && resp.data?.docs) {
-          this.carriers = resp.data.docs;
-        }
-      } catch(err) {
-        logger.error(err)
-      }
-    },
-    async getAvailableShipmentMethods () {
-      this.availableShipmentMethods = [];
-      try {
-        const resp = await UserService.getRerouteFulfillmentConfig({
-          "inputFields": {
-            "productStoreId": this.currentEComStore?.productStoreId,
-            "shipmentMethodTypeId": "STOREPICKUP",
-            "shipmentMethodTypeId_op": "notEqual"
-          },
-          "filterByDate": 'Y',
-          "entityName": "ProductStoreShipmentMethView",
-          "fieldList": ["productStoreShipMethId", "partyId", "shipmentMethodTypeId", "description"],
-          "viewSize": 250
-        }) as any;
-        if (!hasError(resp) && resp.data?.docs) {
-          this.availableShipmentMethods = resp.data.docs;
-        }
-      } catch(err) {
-        logger.error(err)
-      }
-    },
-    async getRerouteFulfillmentConfiguration(settingTypeEnumId?: any) {
-      try {
-        const payload = {
-          "inputFields": {
-            "productStoreId": this.currentEComStore?.productStoreId,
-            settingTypeEnumId
-          },
-          "entityName": "ProductStoreSetting",
-          "fieldList": ["settingTypeEnumId", "settingValue"],
-          "viewSize": 5
-        } as any
-
-        // get all values
-        if (!payload.inputFields.settingTypeEnumId) {
-          payload.inputFields.settingTypeEnumId = Object.values(this.rerouteFulfillmentConfigMapping);
-          payload.inputFields.settingTypeEnumId_op = "in"
-          payload.viewSize = Object.values(this.rerouteFulfillmentConfigMapping)?.length
-
-        }
-
-        const resp = await UserService.getRerouteFulfillmentConfig(payload) as any
-        if (!hasError(resp) && resp.data?.docs) {
-          const rerouteFulfillmentConfigMappingFlipped = Object.fromEntries(Object.entries(this.rerouteFulfillmentConfigMapping).map(([key, value]) => [value, key])) as any;
-          resp.data.docs.map((config: any) => {
-            this.rerouteFulfillmentConfig[rerouteFulfillmentConfigMappingFlipped[config.settingTypeEnumId]] = config;
-          })
-        } else {
-          Object.keys(this.rerouteFulfillmentConfigMapping).map((key) => {
-            this.rerouteFulfillmentConfig[key] = {};
-          });
-        }
-      } catch(err) {
-        logger.error(err)
-        Object.keys(this.rerouteFulfillmentConfigMapping).map((key) => {
-          this.rerouteFulfillmentConfig[key] = {};
-        });
-      }
-    },
-    async updateRerouteFulfillmentConfiguration(config: any, value: any) {
-      const params = {
-        "productStoreId": this.currentEComStore?.productStoreId,
-        "settingTypeEnumId": config.settingTypeEnumId,
-        "settingValue": value
-      }
-
-      try {
-        const resp = await UserService.updateRerouteFulfillmentConfig(params) as any
-        if(!hasError(resp)) {
-          showToast(translate('Configuration updated'))
-        } else {
-          showToast(translate('Failed to update configuration'))
-        }
-      } catch(err) {
-        showToast(translate('Failed to update configuration'))
-        logger.error(err)
-      }
-      // Fetch the updated configuration
-      await this.getRerouteFulfillmentConfiguration(config.settingTypeEnumId);
-    },
-    async updatePartialOrderRejectionConfig(config: any, value: any) {
-      const params = {
-        ...config,
-        "settingValue": value
-      }
-      await this.store.dispatch('user/updatePartialOrderRejectionConfig', params)
-    },
-    async updateNotificationPref(enumId: string) {
-      let isToggledOn = false;
-
-      try {
-        if (!isFcmConfigured()) {
-          logger.error("FCM is not configured.");
-          showToast(translate('Notification preferences not updated. Please try again.'))
-          return;
-        }
-
-        emitter.emit('presentLoader',  { backdropDismiss: false })
-        const facilityId = this.currentFacility?.facilityId
-        const topicName = generateTopicName(facilityId, enumId)
-
-        const notificationPref = this.notificationPrefs.find((pref: any) => pref.enumId === enumId)
-        notificationPref.isEnabled
-          ? await unsubscribeTopic(topicName, process.env.VUE_APP_NOTIF_APP_ID)
-          : await subscribeTopic(topicName, process.env.VUE_APP_NOTIF_APP_ID)
-
-        isToggledOn = !notificationPref.isEnabled
-        notificationPref.isEnabled = !notificationPref.isEnabled
-        await this.store.dispatch('user/updateNotificationPreferences', this.notificationPrefs)
-        showToast(translate('Notification preferences updated.'))
-      } catch (error) {
-        showToast(translate('Notification preferences not updated. Please try again.'))
-      } finally {
-        emitter.emit("dismissLoader")
-      }
-      
-      try {
-        if(!this.allNotificationPrefs.length && isToggledOn) {
-          await initialiseFirebaseApp(JSON.parse(process.env.VUE_APP_FIREBASE_CONFIG), process.env.VUE_APP_FIREBASE_VAPID_KEY, storeClientRegistrationToken, addNotification)
-        } else if(this.allNotificationPrefs.length == 1 && !isToggledOn) {
-          await removeClientRegistrationToken(this.firebaseDeviceId, process.env.VUE_APP_NOTIF_APP_ID)
-        }
-        await this.store.dispatch("user/fetchAllNotificationPrefs");
-      } catch(error) {
-        logger.error(error);
-      }
-    },
-    async confirmNotificationPrefUpdate(enumId: string, event: CustomEvent) {
-      event.stopImmediatePropagation();
-
-      const message = translate("Are you sure you want to update the notification preferences?");
-      const alert = await alertController.create({
-        header: translate("Update notification preferences"),
-        message,
-        buttons: [
-          {
-            text: translate("Cancel"),
-            role: "cancel"
-          },
-          {
-            text: translate("Confirm"),
-            handler: async () => {
-              // passing event reference for updation in case the API success
-              alertController.dismiss()
-              await this.updateNotificationPref(enumId)
-            }
-          }
-        ],
-      });
-      return alert.present();
-    }
-  },
-  setup () {
-    const store = useStore();
-    const router = useRouter();
-    const userStore = useUserStore()
-    let currentFacility: any = computed(() => userStore.getCurrentFacility) 
-
-    return {
-      Actions,
-      currentFacility,
-      ellipsisVertical,
-      goToOms,
-      hasPermission,
-      personCircleOutline,
-      router,
-      sendOutline,
-      store,
-      storefrontOutline,
-      codeWorkingOutline,
-      openOutline,
-      translate
-    }
-  }
+onMounted(() => {
+  appVersion.value = appInfo.value.branch ? (appInfo.value.branch + "-" + appInfo.value.revision) : appInfo.value.tag;
 });
+
+onIonViewWillEnter(async () => {
+  // Clearing the current order as to correctly display the selected segment when moving to list page
+  useOrderStore().updateCurrent({ order: {} })
+  
+  // Only fetch configuration when environment mapping exists
+  await useProductStore().fetchCarriers();
+  await useProductStore().fetchProductStoreShipmentMethods(currentProductStore.value?.productStoreId);
+
+  // fetching partial order rejection when entering setting page to have latest information
+  await useProductStore().fetchProductStoreSettings(currentProductStore.value.productStoreId)
+
+  // as notification prefs can also be updated from the notification pref modal,
+  // latest state is fetched each time we open the settings page
+  await useNotificationStore().fetchNotificationPreferences(import.meta.env.VITE_NOTIF_ENUM_TYPE_ID, import.meta.env.VITE_NOTIF_APP_ID, userProfile.value?.userId, (enumId: string) => firebaseMessaging.generateTopicName(commonUtil.getOMSInstanceName(), (currentFacility.value as any)?.facilityId, enumId))
+});
+
+async function fetchFacilityDependencies(facility: any) {
+  const previousProductStoreId = currentProductStore.value.productStoreId
+  await useProductStore().fetchProductStores(facility.facilityId)
+
+  if (previousProductStoreId !== (currentProductStore.value as any).productStoreId) {
+    await useProductStore().fetchProductStoreDependencies(currentProductStore.value.productStoreId)
+    await useProductStore().fetchProductStoreShipmentMethods(currentProductStore.value?.productStoreId);
+  }
+  await useNotificationStore().fetchNotificationPreferences(import.meta.env.VITE_NOTIF_ENUM_TYPE_ID, import.meta.env.VITE_NOTIF_APP_ID, userProfile.value?.userId, (enumId: string) => firebaseMessaging.generateTopicName(commonUtil.getOMSInstanceName(), (currentFacility.value as any)?.facilityId, enumId))
+}
+
+async function timeZoneUpdated(tzId: string) {
+  await useUserStore().setUserTimeZone(tzId)
+}
+
+
+async function logout() {
+  useAuth().logout({ isUserUnauthorised: false });
+}
+
+function goToLaunchpad() {
+  window.location.href = `${import.meta.env.VITE_LOGIN_URL}`
+}
+
+function setBopisProductStoreSettings(ev: any, enumId: string) {
+  ev.stopImmediatePropagation();
+  const value = !useProductStore().isProductStoreSettingEnabled(enumId);
+
+  useProductStore().setProductStoreSetting(currentProductStore.value?.productStoreId, enumId, (value ? "Y" : "N"))
+}
+
+async function openEditShipmentMethodModal() {
+  const editShipmentMethodModal = await modalController.create({
+    component: EditShipmentMethodModal,
+    componentProps: { currentcConfig: getShipmentMethodConfig(), carriers: carriers.value, availableShipmentMethods: availableShipmentMethods.value }
+  });
+
+  editShipmentMethodModal.onDidDismiss().then(async (result: any) => {
+    if (result.data?.shippingMethod) {
+      await useProductStore().setProductStoreSetting(currentProductStore.value?.productStoreId, 'RF_SHIPPING_METHOD', result.data?.shippingMethod);
+    }
+  })
+
+  return editShipmentMethodModal.present();
+}
+
+function getShipmentMethodConfig() {
+  const shippingMethodConfig = useProductStore().getRerouteShipmentMethod;
+  if (shippingMethodConfig && typeof shippingMethodConfig === 'object' && Object.keys(shippingMethodConfig).length > 0) {
+    try {
+      const shipmentMethodDesc = availableShipmentMethods.value.find((shipmentMethod: any) => shipmentMethod.shipmentMethodTypeId === shippingMethodConfig.shipmentMethodTypeId)?.description;
+      const carrierName = carriers.value.find((carrier: any) => carrier.partyId === shippingMethodConfig.carrierPartyId)?.groupName;
+      return { ...shippingMethodConfig, shipmentMethodDesc, carrierName };
+    } catch (error) {
+      console.error('Error parsing shipping method config:', error);
+      return {};
+    }
+  } else if (typeof shippingMethodConfig === 'string' && shippingMethodConfig !== '') {
+    return { shipmentMethodTypeId: shippingMethodConfig };
+  }
+  return {};
+}
+
+async function updateNotificationPref(enumId: string) {
+  let isToggledOn = false;
+  const notificationStore = useNotificationStore();
+
+  try {
+    if (!firebaseMessaging.isFcmConfigured(import.meta.env.VITE_FIREBASE_CONFIG)) {
+      logger.error("FCM is not configured.");
+      commonUtil.showToast(translate('Notification preferences not updated. Please try again.'))
+      return;
+    }
+
+    emitter.emit('presentLoader', { backdropDismiss: false })
+    const facilityId = (currentFacility.value as any)?.facilityId
+    const topicName = firebaseMessaging.generateTopicName(commonUtil.getOMSInstanceName(), facilityId, enumId)
+
+    const pref = notificationPrefs.value.find((p: any) => p.enumId === enumId)
+    pref.isEnabled
+      ? await notificationStore.unsubscribeTopic(topicName, import.meta.env.VITE_NOTIF_APP_ID)
+      : await notificationStore.subscribeTopic(topicName, import.meta.env.VITE_NOTIF_APP_ID)
+
+    isToggledOn = !pref.isEnabled
+    pref.isEnabled = !pref.isEnabled
+    notificationStore.setNotificationPrefs(notificationPrefs.value)
+    commonUtil.showToast(translate('Notification preferences updated.'))
+  } catch (error) {
+    commonUtil.showToast(translate('Notification preferences not updated. Please try again.'))
+  } finally {
+    emitter.emit("dismissLoader")
+  }
+
+  try {
+    if (!allNotificationPrefs.value.length && isToggledOn) {
+      await firebaseUtil.initialiseFirebaseMessaging();
+    } else if (allNotificationPrefs.value.length == 1 && !isToggledOn) {
+      await notificationStore.removeClientRegistrationToken(firebaseDeviceId.value, import.meta.env.VITE_NOTIF_APP_ID)
+    }
+    await notificationStore.fetchAllNotificationPrefs(import.meta.env.VITE_NOTIF_APP_ID, userProfile.value?.userId);
+  } catch (error) {
+    logger.error(error);
+  }
+}
+
+async function confirmNotificationPrefUpdate(enumId: string, event: CustomEvent) {
+  event.stopImmediatePropagation();
+
+  const message = translate("Are you sure you want to update the notification preferences?");
+  const alert = await alertController.create({
+    header: translate("Update notification preferences"),
+    message,
+    buttons: [
+      {
+        text: translate("Cancel"),
+        role: "cancel"
+      },
+      {
+        text: translate("Confirm"),
+        handler: async () => {
+          // passing event reference for updation in case the API success
+          alertController.dismiss()
+          await updateNotificationPref(enumId)
+        }
+      }
+    ],
+  });
+  return alert.present();
+}
 </script>
 
 <style scoped>

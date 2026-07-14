@@ -8,8 +8,7 @@ require('dotenv').config({ path: path.resolve(__dirname, '..', '.env') });
 
 // Set default app URL if not provided via environment
 process.env.LAUNCHPAD_URL = process.env.LAUNCHPAD_URL || "https://launchpad.hotwax.io";
-process.env.BOPIS_ORDERS_URL = process.env.BOPIS_ORDERS_URL || "https://bopis-dev.hotwax.io/tabs/orders";
-process.env.CURRENT_APP_URL = process.env.CURRENT_APP_URL || process.env.BOPIS_ORDERS_URL;
+process.env.CURRENT_APP_URL = process.env.CURRENT_APP_URL || "https://bopis-dev.hotwax.io/tabs/orders";
 process.env.OMS_NAME = process.env.OMS_NAME;
 
 process.env.BOPIS_USERNAME = process.env.BOPIS_USERNAME;

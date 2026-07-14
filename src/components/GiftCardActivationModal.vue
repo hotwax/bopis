@@ -29,10 +29,10 @@
       <ion-item lines="none">
         <ion-icon :icon="giftOutline" slot="start" />
         <ion-label>
-          {{ getProductIdentificationValue(productIdentificationPref.primaryId, getProduct(item.productId)) ? getProductIdentificationValue(productIdentificationPref.primaryId, getProduct(item.productId)) : item.productName }}
-          <p>{{ getProductIdentificationValue(productIdentificationPref.secondaryId, getProduct(item.productId)) }}</p>
+          {{ commonUtil.getProductIdentificationValue(productIdentificationPref.primaryId, getProduct(item.productId)) ? commonUtil.getProductIdentificationValue(productIdentificationPref.primaryId, getProduct(item.productId)) : item.productName }}
+          <p>{{ commonUtil.getProductIdentificationValue(productIdentificationPref.secondaryId, getProduct(item.productId)) }}</p>
         </ion-label>
-        <ion-label slot="end">{{ formatCurrency(item.unitPrice, currencyUom) }}</ion-label>
+        <ion-label slot="end">{{ commonUtil.formatCurrency(item.unitPrice, currencyUom) }}</ion-label>
       </ion-item>
 
       <div class="ion-margin" v-if="!item.isGCActivated">
@@ -55,160 +55,110 @@
   </ion-fab>
 </template>
 
-<script lang="ts">
-import {
-  IonButton,
-  IonButtons,
-  IonContent,
-  IonFab,
-  IonFabButton,
-  IonHeader,
-  IonIcon,
-  IonInput,
-  IonItem,
-  IonLabel,
-  IonList,
-  IonNote,
-  IonSpinner,
-  IonTitle,
-  IonToolbar,
-  alertController,
-  modalController
-} from "@ionic/vue";
-import { computed, defineComponent } from "vue";
-import { mapGetters, useStore } from "vuex";
-import { cameraOutline, cardOutline, closeOutline, giftOutline, saveOutline, stopOutline } from "ionicons/icons";
-import { getProductIdentificationValue, translate, useProductIdentificationStore } from '@hotwax/dxp-components'
-import { UtilService } from "@/services/UtilService";
-import { formatCurrency, hasWebcamAccess, showToast } from '@/utils';
-import { hasError } from '@/adapter'
-import logger from "@/logger";
+<script setup lang="ts">
+import { IonButton, IonButtons, IonContent, IonFab, IonFabButton, IonHeader, IonIcon, IonInput, IonItem, IonLabel, IonList, IonNote, IonSpinner, IonTitle, IonToolbar, alertController, modalController } from "@ionic/vue";
+import { computed, ref } from "vue";
+import { cameraOutline, cardOutline, closeOutline, giftOutline, stopOutline } from "ionicons/icons";
+import { useProductStore as useProductStoreSettings } from '@/store/productStore'
+import { useOrderStore } from "@/store/order";
+import { commonUtil, logger, translate, useShopify, useEmbeddedAppStore } from '@common';
 import { DateTime } from 'luxon';
 import { StreamBarcodeReader } from "vue-barcode-reader";
+import { useProductStore } from "@/store/product";
 
-export default defineComponent({
-  name: "GiftCardActivationModal",
-  components: {
-    IonButton,
-    IonButtons,
-    IonContent,
-    IonFab,
-    IonFabButton,
-    IonHeader,
-    IonIcon,
-    IonInput,
-    IonItem,
-    IonLabel,
-    IonList,
-    IonNote,
-    IonSpinner,
-    IonTitle,
-    IonToolbar,
-    StreamBarcodeReader
-  },
-  computed: {
-    ...mapGetters({
-      getProduct: 'product/getProduct',
-      userProfile: 'user/getUserProfile',
-    }),
-  },
-  data() {
-    return {
-      isLoading: false,
-      activationCode: "",
-      isCameraEnabled: false
-    }
-  },
-  props: ["item", "orderId", "customerId", "currencyUom"],
-  methods: {
-    closeModal(payload = {}) {
-      modalController.dismiss({ dismissed: true, ...payload })
-    },
-    async confirmSave() {
-      if(!this.activationCode.trim()) {
-        showToast(translate("Please enter a activation code."))
-        return;
-      }
+const props = defineProps(["item", "orderId", "customerId", "currencyUom"])
 
-      const alert = await alertController.create({
-        header: translate("Activate gift card"),
-        message: translate("This gift card code will be activated. The customer may also receive a notification about this activation. Please verify all information is entered correctly. This cannot be edited after activation.", { space: "<br /><br />" }),
-        buttons: [
-          {
-            text: translate("Cancel"),
-          },
-          {
-            text: translate("Activate"),
-            handler: async () => {
-              await this.activateGitCard()
-            }
-          }
-        ],
-      });
-      return alert.present();
-    },
-    async activateGitCard() {
-      try {
-        const resp = await UtilService.activateGiftCard({
-          orderId: this.orderId,
-          orderItemSeqId: this.item.orderItemSeqId,
-          amount: this.item.unitPrice,
-          typeEnumId: "GC_ACTIVATE",
-          cardNumber: this.activationCode.trim(),
-          partyId: this.customerId,
-          fulfillmentDate: Date.now()
-        })
-        
-        if(!hasError(resp)) {
-          showToast(translate("Gift card activated successfully."))
-          this.closeModal({ isGCActivated: true, item: this.item })
-        } else {
-          throw resp.data;
+const productStore = useProductStore()
+
+const isLoading = ref(false)
+const activationCode = ref("")
+const isCameraEnabled = ref(false)
+
+const productIdentificationPref = computed(() => useProductStoreSettings().getProductIdentificationPref)
+const getProduct = (productId: string) => productStore.getProduct(productId)
+
+function closeModal(payload = {}) {
+  modalController.dismiss({ dismissed: true, ...payload })
+}
+
+async function confirmSave() {
+  if (!activationCode.value.trim()) {
+    commonUtil.showToast(translate("Please enter a activation code."))
+    return;
+  }
+
+  const alert = await alertController.create({
+    header: translate("Activate gift card"),
+    message: translate("This gift card code will be activated. The customer may also receive a notification about this activation. Please verify all information is entered correctly. This cannot be edited after activation.", { space: "<br /><br />" }),
+    buttons: [
+      {
+        text: translate("Cancel"),
+      },
+      {
+        text: translate("Activate"),
+        handler: async () => {
+          await activateGitCard()
         }
-      } catch(error: any) {
-        showToast(translate("Failed to activate gift card."))
-        logger.error(error);
       }
-    },
-    getCreatedDateTime() {
-      return DateTime.fromMillis(this.item.gcInfo.fulfillmentDate).toFormat("dd MMMM yyyy hh:mm a ZZZZ");
-    },
-    async scan() {
-      if (!(await hasWebcamAccess())) {
-        showToast(translate("Camera access not allowed, please check permissons."));
-        return;
-      } 
+    ],
+  });
+  return alert.present();
+}
 
-      this.isCameraEnabled = true;
-    },
-    stopScan() {
-      this.isCameraEnabled = false
-    },
-    onDecode(result: any) {
-      if(result) this.activationCode = result
-      this.isCameraEnabled = false;
+async function activateGitCard() {
+  try {
+    const resp = await useOrderStore().activateGiftCard({
+      orderId: props.orderId,
+      orderItemSeqId: props.item.orderItemSeqId,
+      amount: props.item.unitPrice,
+      typeEnumId: "GC_ACTIVATE",
+      cardNumber: activationCode.value.trim(),
+      partyId: props.customerId,
+      fulfillmentDate: Date.now()
+    })
+    
+    if (!commonUtil.hasError(resp)) {
+      commonUtil.showToast(translate("Gift card activated successfully."))
+      closeModal({ isGCActivated: true, item: props.item })
+    } else {
+      throw resp.data;
     }
-  },
-  setup() {
-    const store = useStore()
-    const productIdentificationStore = useProductIdentificationStore();
-    let productIdentificationPref = computed(() => productIdentificationStore.getProductIdentificationPref)
+  } catch (error: any) {
+    commonUtil.showToast(translate("Failed to activate gift card."))
+    logger.error(error);
+  }
+}
 
-    return {
-      cameraOutline,
-      cardOutline,
-      closeOutline,
-      formatCurrency,
-      getProductIdentificationValue,
-      giftOutline,
-      productIdentificationPref,
-      saveOutline,
-      stopOutline,
-      store,
-      translate
-    };
-  },
-});
+function getCreatedDateTime() {
+  return DateTime.fromMillis(props.item.gcInfo.fulfillmentDate).toFormat("dd MMMM yyyy hh:mm a ZZZZ");
+}
+
+async function scan() {
+  if (useEmbeddedAppStore().getPosLocationId) {
+    try {
+      const scannedCode = await useShopify().openPosScanner();
+      if (scannedCode) activationCode.value = scannedCode;
+    } catch(err) {
+      console.error("POS Scanner error:", err);
+    }
+  } else {
+    if (!(await commonUtil.hasWebcamAccess())) {
+      commonUtil.showToast(translate("Camera access not allowed, please check permissons."));
+      return;
+    } 
+
+    isCameraEnabled.value = true;
+  }
+}
+
+function stopScan() {
+  isCameraEnabled.value = false
+}
+
+function onDecode(result: any) {
+  if (result) activationCode.value = result
+  isCameraEnabled.value = false;
+}
 </script>
 
 <style scoped>

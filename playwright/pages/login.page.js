@@ -24,26 +24,16 @@ export class LoginPage {
         await this.page.waitForLoadState("networkidle");
         console.log(`Current URL: ${this.page.url()}`);
 
-        // If already logged in, skip
-        if (this.page.url().includes("tabs/orders")) {
-            console.log("Already on Orders page, skipping login steps.");
-            return;
-        }
-
         // Wait for either OMS input, Username input, or Orders page
         try {
             await Promise.race([
                 this.omsInput.waitFor({ state: "visible", timeout: 10000 }),
                 this.usernameInput.waitFor({ state: "visible", timeout: 10000 }),
+                this.page.waitForURL(/login/, { timeout: 10000 }),
                 this.page.waitForURL(/tabs\/orders/, { timeout: 10000 })
             ]);
         } catch (e) {
             console.log("Timeout or redirection detected. Current URL:", this.page.url());
-        }
-
-        if (this.page.url().includes("tabs/orders")) {
-            console.log("Redirected to Orders page, skipping login.");
-            return;
         }
 
         // OMS Selection if visible
@@ -53,7 +43,7 @@ export class LoginPage {
             await this.waitForOverlays();
             await this.nextButton.click({ force: true });
             await this.page.waitForLoadState("networkidle");
-            await this.page.waitForTimeout(2000);
+            await this.page.waitForTimeout(5000);
         }
 
         // Authentication (skip if already on orders)
@@ -65,18 +55,12 @@ export class LoginPage {
             .catch(() => false);
         if (isUserVisible) {
             await this.usernameInput.fill(username);
-            await this.passwordInput.waitFor({ state: "visible" });
+            // await this.passwordInput.waitFor({ state: "visible" });
             await this.passwordInput.fill(password);
-            await this.waitForOverlays();
+            // await this.waitForOverlays();
             await this.loginButton.click({ force: true });
             await this.page.waitForLoadState("networkidle");
-            await this.page.waitForTimeout(2000);
-        }
-
-        // Some environments remain on tokenized login URL briefly; force app URL and re-check.
-        if (this.page.url().includes("/login")) {
-            await this.page.goto(process.env.CURRENT_APP_URL, { waitUntil: "domcontentloaded" }).catch(() => { });
-            await this.page.waitForLoadState("networkidle").catch(() => { });
+            await this.page.waitForTimeout(5000);
         }
     }
 
@@ -98,7 +82,6 @@ export class LoginPage {
         if (hasOmsInput || hasUserInput || hasPasswordInput) {
             throw new Error(`Login verification failed: still on auth form (${this.page.url()})`);
         }
-
         await expect(this.page).toHaveURL(/\/tabs\/orders/i, { timeout: 30000 });
     }
 }

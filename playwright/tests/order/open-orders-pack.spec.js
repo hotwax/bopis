@@ -1,12 +1,11 @@
 import { test, expect } from "../../fixtures";
 import { OpenOrderPage } from "../../pages/orders/open-orders.page";
 import { OrderPage } from "../../pages/orders/orders.page";
-import { loginToOrders } from "../../helpers/auth";
 
 // Pack order from list page when Tracking is  Enabled
 test("Open Orders Page: Pack Order When Tracking Enabled", async ({ page }) => {
+  await page.goto(process.env.CURRENT_APP_URL);
   // Scenario: list-page pack action where picker modal or alert can appear.
-  await loginToOrders(page);
   const orderPage = new OrderPage(page);
   const packOpenOrder = new OpenOrderPage(page);
   await orderPage.goToOpenTab();
@@ -54,8 +53,8 @@ test("Open Orders Page: Pack Order When Tracking Enabled", async ({ page }) => {
 test("Open Orders Page: Pack Order When Tracking Disabled", async ({
   page,
 }) => {
+  await page.goto(process.env.CURRENT_APP_URL);
   // Scenario: list-page pack action where direct confirmation is expected.
-  await loginToOrders(page);
 
   const packOpenOrder = new OpenOrderPage(page);
   const orderPage = new OrderPage(page);

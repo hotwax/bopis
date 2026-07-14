@@ -2,10 +2,9 @@ import { expect, test } from "../../fixtures";
 import { OpenOrderPage } from "../../pages/orders/open-orders.page";
 import { OrderDetailPage } from "../../pages/order-detail/order-detail.page";
 import { PackedOrderPage } from "../../pages/orders/pack-orders.page";
-import { loginToOrders } from "../../helpers/auth";
 
 test("Open Details Page: Edit Picker", async ({ page }) => {
-  await loginToOrders(page);
+  await page.goto(process.env.CURRENT_APP_URL);
 
   const openOrders = new OpenOrderPage(page);
   const detailPage = new OrderDetailPage(page);
@@ -31,8 +30,7 @@ test("Open Details Page: Edit Picker", async ({ page }) => {
 });
 
 test("Pack Details Page: Edit Picker", async ({ page }) => {
-  await loginToOrders(page);
-
+  await page.goto(process.env.CURRENT_APP_URL);
   const packedOrders = new PackedOrderPage(page);
   const detailPage = new OrderDetailPage(page);
 

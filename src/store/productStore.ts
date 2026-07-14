@@ -1,0 +1,712 @@
+import { defineStore } from 'pinia'
+import { api, commonUtil, useEmbeddedAppStore, logger, translate, useSolrSearch } from '@common'
+import { useUserStore } from '@/store/user'
+const defaultProductStoreSettings = JSON.parse(import.meta.env.VITE_DEFAULT_PRODUCT_STORE_SETTINGS as string || '{}')
+
+const getProductStoreSettingValue = (settings: any, settingTypeEnumId: string) => {
+  const stateKey = defaultProductStoreSettings[settingTypeEnumId]?.stateKey || settingTypeEnumId
+
+  return stateKey.split('.').reduce((current: any, key: string) => current?.[key], settings)
+}
+
+export const useProductStore = defineStore('productStore', {
+  state: () => ({
+    currentFacility: {
+      facilityId: "",
+      facilityName: "",
+      productStores: []
+    } as any,
+    currentProductStore: {} as any,
+    settings: {
+      partialOrderRejection: "",
+      enableTracking: "",
+      printPackingSlip: "",
+      printPicklists: "",
+      showShippingOrders: "",
+      requestTransfer: "",
+      handoverProof: "",
+      productIdentifier: {
+        productIdentificationPref: {
+          primaryId: '',
+          secondaryId: ''
+        },
+        productIdentificationOptions: [] as any[],
+        sampleProducts: [],
+        currentSampleProduct: null
+      },
+      barcodeIdentifier: {
+        barcodeIdentifierPref: "",
+        barcodeIdentifierOptions: [] as any[],
+      },
+      rerouteFulfillment: {
+        allowDeliveryMethodUpdate: "",
+        allowDeliveryAddressUpdate: "",
+        allowPickupUpdate: "",
+        allowCancel: "",
+        shippingMethod: {
+          carrierPartyId: "",
+          shipmentMethodTypeId: ""
+        },
+        orderItemSplit: ""
+      }
+    } as any,
+    facilities: {} as any,
+    facilitiesLatLng: {} as any,
+    storesInformation: [] as any,
+    carriers: [] as any[],
+    availableShipmentMethods: [] as any[]
+  }),
+
+  getters: {
+    getCurrentFacility: (state) => state.currentFacility,
+    getCurrentProductStore: (state) => state.currentProductStore,
+    getProductStores(state) {
+      return state.currentFacility?.productStores || []
+    },
+    getSettings: (state) => state.settings,
+    isProductStoreSettingEnabled: (state) => (settingTypeEnumId: string) => {
+      const value = getProductStoreSettingValue(state.settings, settingTypeEnumId)
+      
+      return value === true || value === "Y" || value === "true"
+    },
+    
+    isPartialOrderRejectionEnabled(): boolean {
+      return this.isProductStoreSettingEnabled('BOPIS_PART_ODR_REJ')
+    },
+    isTrackingEnabled(): boolean {
+      return this.isProductStoreSettingEnabled('ENABLE_TRACKING')
+    },
+    isPrintPackingSlipEnabled(): boolean {
+      return this.isProductStoreSettingEnabled('PRINT_PACKING_SLIPS')
+    },
+    isPrintPicklistsEnabled(): boolean {
+      return this.isProductStoreSettingEnabled('PRINT_PICKLISTS')
+    },
+    isShowShippingOrdersEnabled(): boolean {
+      return this.isProductStoreSettingEnabled('SHOW_SHIPPING_ORDERS')
+    },
+    isRequestTransferEnabled(): boolean {
+      return this.isProductStoreSettingEnabled('REQUEST_TRANSFER')
+    },
+    isHandoverProofEnabled(): boolean {
+      return this.isProductStoreSettingEnabled('HANDOVER_PROOF')
+    },
+    getProductIdentificationPref: (state) => state.settings.productIdentifier.productIdentificationPref,
+    getBarcodeIdentifierPref: (state) => state.settings.barcodeIdentifier.barcodeIdentifierPref,
+    getProductIdentificationOptions: (state) => state.settings.productIdentifier.productIdentificationOptions,
+    getBarcodeIdentifierOptions: (state) => state.settings.barcodeIdentifier.barcodeIdentifierOptions,
+    getCurrentSampleProduct: (state) => state.settings.productIdentifier.currentSampleProduct,
+    isRerouteSettingEnabled: (state) => (settingTypeEnumId: string) => {
+      const value = getProductStoreSettingValue(state.settings, settingTypeEnumId)
+
+      return value === true || value === "Y" || value === "true"
+    },
+    
+    getRerouteShipmentMethod: (state) => state.settings.rerouteFulfillment.shippingMethod,
+    getFacilityName: (state) => (facilityId: string) => state.facilities[facilityId] ? state.facilities[facilityId] : facilityId,
+    getFacilityLatLon: (state) => (facilityId: string) => state.facilitiesLatLng[facilityId] ? state.facilitiesLatLng[facilityId] : {},
+    getStoresInformation: (state) => state.storesInformation ? state.storesInformation : [],
+    getCarriers: (state) => state.carriers,
+    getAvailableShipmentMethods: (state) => state.availableShipmentMethods
+  },
+
+  actions: {
+    setCurrentFacility(facility: any) {
+      this.currentFacility = facility
+    },
+    async setCurrentProductStore(store: any) {
+      this.currentProductStore = store
+      await this.fetchProductStoreDependencies(store.productStoreId)
+    },
+    async fetchUserFacilities() {
+      const userStore = useUserStore();
+      const partyId = userStore.getUserProfile?.partyId;
+      const isAdminUser = userStore.hasPermission("STOREFULFILLMENT_ADMIN");
+      const facilityGroupId = "OMS_FULFILLMENT";
+
+      this.currentFacility = {
+        ...this.currentFacility,
+        productStores: []
+      };
+
+      let facilityIds: Array<string> = [];
+
+      try {
+        // 1. Fetch party-associated facilities for regular users
+        if (partyId && !isAdminUser) {
+          let partyResp: any;
+          try {
+            partyResp = await api({
+              url: `admin/user/${partyId}/facilities`,
+              method: "GET",
+              params: { pageSize: 500 }
+            } as any);
+          } catch (error) {
+            logger.error(error);
+            throw new Error(translate("Failed to fetch user facilities."));
+          }
+
+          // Filter out expired associations
+          const activePartyFacilities = partyResp.data.filter((facility: any) => !facility.thruDate);
+          facilityIds = activePartyFacilities.map((facility: any) => facility.facilityId);
+
+          if (!facilityIds.length) {
+            throw new Error(translate("User is not associated with any facility."));
+          }
+        }
+
+        // 2. Filter or Fetch Group-associated facilities (Fulfillment Group)
+        if (facilityGroupId) {
+          let groupFilters: any = {};
+          if (facilityIds.length) {
+            groupFilters = {
+              facilityId: facilityIds.join(","),
+              facilityId_op: "in",
+              pageSize: facilityIds.length
+            };
+          }
+
+          let groupResp: any;
+          try {
+            groupResp = await api({
+              url: "oms/groupFacilities",
+              method: "GET",
+              params: {
+                facilityGroupId,
+                pageSize: 500,
+                ...groupFilters
+              }
+            } as any);
+          } catch (error) {
+            logger.error(error);
+            throw new Error(translate("Failed to fetch fulfillment group facilities."));
+          }
+
+          const activeGroupFacilities = groupResp.data.filter((facility: any) => !facility.thruDate);
+          facilityIds = activeGroupFacilities.map((facility: any) => facility.facilityId);
+
+          if (!facilityIds.length) {
+            throw new Error(translate("No active facilities found in the fulfillment group."));
+          }
+        }
+
+        // 3. Shopify POS Location filtering (if embedded in POS)
+        const shopifyLocationId = useEmbeddedAppStore().getPosLocationId;
+        if (commonUtil.isAppEmbedded() && shopifyLocationId) {
+          let locationFacilityId: string | null = null;
+          try {
+            locationFacilityId = await this.fetchShopifyShopLocation({
+              shopifyLocationId,
+              pageSize: 1
+            });
+          } catch (error) {
+            logger.error(error);
+            throw new Error(translate("Failed to fetch user facilities for Shopify POS location."));
+          }
+
+          if (locationFacilityId) {
+            facilityIds = facilityIds.filter((id: any) => id === locationFacilityId);
+          } else {
+            facilityIds = [];
+          }
+
+          if (!facilityIds.length) {
+            throw new Error(translate("Failed to fetch user facilities for Shopify POS location."));
+          }
+        }
+
+        // 4. Fetch the final details for resolved facilities
+        let finalFilters: any = {};
+        if (facilityIds.length) {
+          finalFilters = {
+            facilityId: facilityIds.join(","),
+            facilityId_op: "in",
+            pageSize: facilityIds.length
+          };
+        }
+
+        let finalResp: any;
+        try {
+          finalResp = await api({
+            url: "admin/facilities",
+            method: "GET",
+            params: {
+              pageSize: 500,
+              facilityTypeId: "VIRTUAL_FACILITY",
+              facilityTypeId_not: "Y",
+              parentTypeId: "VIRTUAL_FACILITY",
+              parentTypeId_not: "Y",
+              ...finalFilters
+            }
+          });
+        } catch (error) {
+          logger.error(error);
+          throw new Error(translate("Failed to fetch user facilities."));
+        }
+
+        this.facilities = finalResp.data;
+        this.setCurrentFacility(finalResp.data[0]);
+
+      } catch (error: any) {
+        return Promise.reject(error);
+      }
+    },
+    async setFacilityPreference(payload: any) {
+      const userStore = useUserStore();
+      try {
+        await api({
+          url: "admin/user/preferences",
+          method: "PUT",
+          data: {
+            userId: userStore.getUserProfile.userId,
+            preferenceKey: 'SELECTED_FACILITY',
+            preferenceValue: payload.facilityId,
+          }
+        });
+      } catch (error) {
+        console.error('error', error)
+      }
+      this.currentFacility = payload;
+    },
+    async fetchFacilityPreference() {
+      if (!this.facilities.length) return;
+      let facilityId: string | undefined;
+      try {
+        const locationId = useEmbeddedAppStore().getPosLocationId;
+        if (commonUtil.isAppEmbedded() && locationId) {
+          facilityId = await this.fetchShopifyShopLocation({
+            shopifyLocationId: locationId,
+            pageSize: 1,
+          });
+          if (!facilityId) {
+            throw new Error("Failed to fetch location information. Please contact the administrator.");
+          }
+        } else {
+          const preferredFacilityResp = await api({
+            url: "admin/user/preferences",
+            method: "GET",
+            params: {
+              pageSize: 1,
+              userId: useUserStore().current.userId,
+              preferenceKey: "SELECTED_FACILITY"
+            },
+          }) as any;
+          facilityId = preferredFacilityResp.data?.[0]?.preferenceValue;
+        }
+        if (facilityId) {
+          const facility = this.facilities.find((f: any) => f.facilityId === facilityId);
+          if (!facility && commonUtil.isAppEmbedded() && locationId) {
+            throw new Error(
+              "User is not associated with this location. Please contact the administrator."
+            );
+          }
+          if (facility) {
+            this.setCurrentFacility(facility)
+            return;
+          }
+        }
+      } catch (error) {
+        console.error("Failed to resolve facility preference:", error);
+      }
+      // In case app is not embedded and user has no facility preference on server
+      this.setCurrentFacility(this.facilities[0]);
+    },
+    async fetchProductStores(currentFacilityId?: string) {
+      try {
+        const facilityId = currentFacilityId ?? this.currentFacility.facilityId;
+        const pageSize = 200;
+
+        const resp = await api({
+          url: `oms/facilities/${facilityId}/productStores`,
+          method: "GET",
+          params: {
+            pageSize,
+            facilityId
+          }
+        }) as any;
+
+        const stores = resp.data.filter((store: any) => !store.thruDate)
+
+        if (stores.length) {
+          // Fetching all stores for the store name
+          try {
+            const productStoresResp = await api({
+              url: "admin/productStores",
+              method: "GET",
+              params: {
+                pageSize: 200
+              }
+            }) as any;
+            const productStores = productStoresResp.data;
+            const productStoresMap = {} as any;
+            productStores.map((store: any) => productStoresMap[store.productStoreId] = store.storeName)
+            stores.map((store: any) => store.storeName = productStoresMap[store.productStoreId])
+          } catch (error) {
+            console.error(error);
+          }
+        }
+
+        this.currentFacility = {
+          ...this.currentFacility,
+          productStores: stores
+        }
+        if (this.currentFacility.productStores?.length) {
+          this.setCurrentProductStore(this.currentFacility.productStores[0])
+        }
+      } catch (error: any) {
+        logger.error("error", error);
+        return Promise.reject(new Error(error));
+      }
+    },
+    async fetchProductStorePreference() {
+      const userStore = useUserStore();
+      try {
+        const preferredStoreResp = await api({
+          url: "admin/user/preferences",
+          method: "GET",
+          params: {
+            pageSize: 1,
+            userId: userStore.current.userId,
+            preferenceKey: "SELECTED_BRAND"
+          },
+        }) as any;
+        const preferredStoreId = preferredStoreResp.data?.[0]?.preferenceValue
+        if (preferredStoreId) {
+          const store = this.currentFacility.productStores.find((store: any) => store.productStoreId === preferredStoreId);
+          store && this.setCurrentProductStore(store)
+        }
+      } catch (err) {
+        logger.error('Favourite product store not found', err)
+      }
+    },
+    async fetchProductStoreDependencies(productStoreId: string) {
+      try {
+        await this.fetchProductStoreSettings(productStoreId)
+      } catch (err) {
+        logger.error("error", err)
+      }
+    },
+    async setProductStorePreference(payload: any) {
+      const userStore = useUserStore();
+      try {
+        await api({
+          url: "admin/user/preferences",
+          method: "PUT",
+          data: {
+            userId: userStore.current.userId,
+            preferenceKey: 'SELECTED_BRAND',
+            preferenceValue: payload.productStoreId,
+          }
+        });
+      } catch (error) {
+        console.error('error', error)
+      }
+      this.currentProductStore = payload;
+    },
+    async fetchProductStoreSettings(productStoreId: string) {
+      const defaultProductStoreSettings = JSON.parse(import.meta.env.VITE_DEFAULT_PRODUCT_STORE_SETTINGS as string || '{}')
+      const productStoreSettings = {} as any
+
+      if (productStoreId) {
+        const payload = {
+          productStoreId,
+          settingTypeEnumId: Object.keys(defaultProductStoreSettings),
+          settingTypeEnumId_op: "in",
+          pageIndex: 0,
+          pageSize: 50
+        }
+        try {
+          const resp = await api({
+            url: `/oms/dataDocumentView`,
+            method: "POST",
+            data: {
+              dataDocumentId: "ProductStoreSetting",
+              customParametersMap: payload
+            }
+          }) as any
+
+          resp?.data?.entityValueList?.forEach((productSetting: any) => {
+            productStoreSettings[productSetting.settingTypeEnumId] = productSetting.settingValue
+          })
+        } catch (error) {
+          logger.error("Failed to fetch settings", error)
+        }
+      }
+
+      Object.entries(defaultProductStoreSettings).forEach(([settingTypeEnumId, setting]: any) => {
+        const { stateKey, value } = setting;
+        const settingValue = productStoreSettings[settingTypeEnumId];
+        let finalValue;
+        try {
+          finalValue = settingValue ? JSON.parse(settingValue) : value;
+        } catch (e) {
+          finalValue = settingValue; // fallback to raw value
+        }
+
+        const keys = stateKey.split('.');
+        let current = this.settings;
+
+        for (let i = 0; i < keys.length; i++) {
+          const key = keys[i];
+
+          if (i === keys.length - 1) {
+            current[key] = finalValue;
+          } else {
+            // ensure object exists at each level
+            if (!current[key] || typeof current[key] !== 'object') {
+              current[key] = {};
+            }
+            current = current[key];
+          }
+        }
+      })
+    },
+
+    async setProductStoreSetting(productStoreId: string, settingTypeEnumId: string, settingValue: any) {
+      const defaultProductStoreSettings = JSON.parse(import.meta.env.VITE_DEFAULT_PRODUCT_STORE_SETTINGS as string || '{}')
+
+      try {
+        const payloadSettingValue = typeof settingValue === 'object' ? JSON.stringify(settingValue) : settingValue;
+        const resp = await api({
+          url: `admin/productStores/${productStoreId}/settings`,
+          method: 'POST',
+          data: {
+            productStoreId,
+            settingTypeEnumId,
+            settingValue: payloadSettingValue
+          }
+        })
+        if (!commonUtil.hasError(resp)) {
+          const defaultSetting = defaultProductStoreSettings[settingTypeEnumId]
+          const { stateKey } = defaultSetting
+          const keys = stateKey.split('.');
+          let current = this.settings;
+
+          for (let i = 0; i < keys.length; i++) {
+            const key = keys[i];
+
+            if (i === keys.length - 1) {
+              current[key] = settingValue;
+            } else {
+              // ensure object exists at each level
+              if (!current[key] || typeof current[key] !== 'object') {
+                current[key] = {};
+              }
+              current = current[key];
+            }
+          }
+          commonUtil.showToast(translate('Product Store setting updated successfully.'))
+        } else {
+          throw resp
+        }
+      } catch (err) {
+        commonUtil.showToast(translate('Failed to update Product Store setting.'))
+        logger.error(err)
+      }
+    },
+
+    async prepareProductIdentifierOptions() {
+      //static identifications 
+      const productIdentificationOptions = [
+        { goodIdentificationTypeId: "productId", description: "Product ID" },
+        { goodIdentificationTypeId: "groupId", description: "Group ID" },
+        { goodIdentificationTypeId: "groupName", description: "Group Name" },
+        { goodIdentificationTypeId: "internalName", description: "Internal Name" },
+        { goodIdentificationTypeId: "parentProductName", description: "Parent Product Name" },
+        { goodIdentificationTypeId: "primaryProductCategoryName", description: "Primary Product Category Name" },
+        { goodIdentificationTypeId: "title", description: "Title" }
+      ]
+      //good identification types
+      let fetchedGoodIdentificationOptions = []
+      try {
+        const resp: any = await api({
+          url: "oms/goodIdentificationTypes",
+          method: "get",
+          params: {
+            parentTypeId: "HC_GOOD_ID_TYPE",
+            pageSize: 50
+          }
+        });
+
+        fetchedGoodIdentificationOptions = resp.data
+      } catch (error) {
+        console.error('Failed to fetch good identification types', error)
+      }
+
+      // Merge the arrays and remove duplicates
+      this.settings.productIdentifier.productIdentificationOptions = Array.from(new Set([...productIdentificationOptions, ...fetchedGoodIdentificationOptions])).sort();
+      this.settings.productIdentifier.goodIdentificationOptions = fetchedGoodIdentificationOptions
+    },
+
+    async fetchProducts() {
+      const resp = await useSolrSearch().searchProducts({
+        viewSize: 10
+      }) as any;
+      const products = resp.products;
+
+      if (products.length) {
+        this.settings.productIdentifier.sampleProducts = products;
+        this.shuffleProduct()
+      }
+    },
+    shuffleProduct() {
+      if (this.settings.productIdentifier.sampleProducts.length) {
+        const randomIndex = Math.floor(Math.random() * this.settings.productIdentifier.sampleProducts.length)
+        this.settings.productIdentifier.currentSampleProduct = this.settings.productIdentifier.sampleProducts[randomIndex]
+      } else {
+        this.settings.productIdentifier.currentSampleProduct = null
+      }
+    },
+    async fetchFacilities(facilityIds: any) {
+      const cachedFacilityIds = Object.keys(this.facilities);
+      const facilityIdFilter = [...new Set(facilityIds.filter((facilityId: any) => !cachedFacilityIds.includes(facilityId)))]
+
+      if (!facilityIdFilter.length) return;
+
+      try {
+        const resp = await api({
+          url: "/admin/facilities",
+          method: "GET",
+          params: {
+            facilityId: facilityIdFilter,
+            facilityId_op: "in",
+            pageSize: facilityIdFilter.length,
+          }
+        });
+        if (!commonUtil.hasError(resp) && resp.data?.length > 0) {
+          resp.data.map((facility: any) => {
+            this.facilities[facility.facilityId] = facility["facilityName"]
+          })
+        } else {
+          throw resp.data;
+        }
+      } catch (err) {
+        console.error("Failed to fetch facility information", err)
+      }
+    },
+    clearFacilities() {
+      this.facilities = {};
+    },
+    async fetchCurrentFacilityLatLon(facilityId: string) {
+      try {
+        const resp = await api({
+          url: "/oms/facilityContactMechs",
+          method: "GET",
+          params: {
+            facilityId,
+            contactMechTypeId: "POSTAL_ADDRESS",
+            contactMechPurposeTypeId: "PRIMARY_LOCATION",
+            viewSize: 5,
+            orderByField: "fromDate DESC",
+          }
+        })
+        if (!commonUtil.hasError(resp) && resp.data?.facilityContactMechs?.length > 0) {
+          const validCoords = resp.data.facilityContactMechs.find((doc: any) =>
+            doc.latitude !== null && doc.longitude !== null
+          )
+          if (validCoords) {
+            this.facilitiesLatLng[facilityId] = validCoords;
+          }
+        } else {
+          throw resp.data
+        }
+      } catch (err) {
+        logger.error("Failed to fetch facility lat/long information", err)
+      }
+    },
+    clearCurrentFacilityLatLon() {
+      this.facilitiesLatLng = {};
+    },
+    async fetchStoresInformation(point: any) {
+      const payload = {
+        viewSize: 250,
+        filters: ["storeType: RETAIL_STORE"],
+        point: `${point.latitude},${point.longitude}`
+      }
+      try {
+        const resp = await api({
+          url: "api/stores",
+          method: "post",
+          data: payload
+        })
+        if (!commonUtil.hasError(resp) && resp.data?.response?.docs?.length > 0) {
+          this.storesInformation = resp.data.response.docs;
+        } else {
+          throw resp.data
+        }
+      } catch (err) {
+        logger.error("Failed to fetch stores information by lat/lon", err)
+      }
+    },
+    clearStoresInformation() {
+      this.storesInformation = [];
+    },
+    async updateRerouteFulfillmentConfig(payload: any): Promise<any> {
+      return api({
+        url: `admin/productStores/${payload.productStoreId}/settings`,
+        method: "post",
+        data: payload
+      });
+    },
+    async fetchCarriers() {
+      try {
+        const resp = await api({
+          url: `/oms/shippingGateways/carrierParties`,
+          method: "get",
+          params: {
+            "roleTypeId": "CARRIER",
+            "partyTypeId": "PARTY_GROUP",
+            "viewIndex": 0,
+            "viewSize": 250,
+            "orderByField": "groupName"
+          }
+        }) as any;
+        if (!commonUtil.hasError(resp) && resp.data) {
+          this.carriers = resp.data;
+        } else {
+          this.carriers = [];
+        }
+      } catch (err) {
+        logger.error(err)
+      }
+    },
+    async fetchProductStoreShipmentMethods(productStoreId: string) {
+      try {
+        const params = {
+          customParametersMap: {
+            "productStoreId": productStoreId,
+            "shipmentMethodTypeId": "STOREPICKUP",
+            "shipmentMethodTypeId_op": "notEqual",
+            pageIndex: 0,
+            pageSize: 250
+          },
+          dataDocumentId: "ProductStoreShipmentMethod",
+          filterByDate: true
+        }
+
+        const resp = await api({
+          url: `/oms/dataDocumentView`,
+          method: "POST",
+          data: params
+        });
+
+        if (!commonUtil.hasError(resp) && resp.data?.entityValueList) {
+          this.availableShipmentMethods = resp.data.entityValueList;
+        } else {
+          this.availableShipmentMethods = [];
+        }
+      } catch (err) {
+        logger.error(err)
+      }
+    },
+    async fetchShopifyShopLocation(payload: { shopifyLocationId: string, pageSize: number }): Promise<any> {
+      try {
+        const resp = await api({ url: "oms/shopifyShops/locations", method: "GET", params: payload }) as any;
+        return Promise.resolve(resp.data[0]?.facilityId)
+      } catch (error) {
+        return Promise.reject({ code: "error", message: "Failed to fetch location information", serverResponse: error })
+      }
+    },
+  },
+  persist: true
+})

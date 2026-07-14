@@ -1,11 +1,10 @@
 import { test } from "../../fixtures";
 import { PackedOrderPage } from "../../pages/orders/pack-orders.page";
 import { PackedDetailPage } from "../../pages/order-detail/pack-order-detail.page";
-import { loginToOrders } from "../../helpers/auth";
 
 // Case 1: Generate Packing Slip from List Page
 test("Pack Orders Page: Generate Packing Slip", async ({ page }) => {
-  await loginToOrders(page);
+  await page.goto(process.env.CURRENT_APP_URL);
 
   const packedOrders = new PackedOrderPage(page);
   await packedOrders.goToPackedTab();
@@ -23,7 +22,7 @@ test("Pack Orders Page: Generate Packing Slip", async ({ page }) => {
 
 // Case 2: Generate Packing Slip from Detail Page
 test("Pack Details Page: Generate Packing Slip", async ({ page }) => {
-  await loginToOrders(page);
+  await page.goto(process.env.CURRENT_APP_URL);
 
   const packedOrders = new PackedOrderPage(page);
   const packedDetail = new PackedDetailPage(page);

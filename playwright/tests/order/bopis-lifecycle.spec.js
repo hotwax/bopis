@@ -2,7 +2,6 @@ import { test, expect } from "../../fixtures";
 import { OrderPage } from "../../pages/orders/orders.page";
 import { OpenDetailPage } from "../../pages/order-detail/open-order-detail.page";
 import { PackedDetailPage } from "../../pages/order-detail/pack-order-detail.page";
-import { loginToOrders } from "../../helpers/auth";
 
 /**
  * BOPIS End-to-End Lifecycle Test
@@ -16,6 +15,9 @@ import { loginToOrders } from "../../helpers/auth";
 test.describe("BOPIS Order Lifecycle", () => {
     // Increase timeout for the full lifecycle test
     test.setTimeout(180000);
+    test.beforeEach(async ({ page }) => {
+        await page.goto(process.env.CURRENT_APP_URL);
+    });
 
     test("Complete full order lifecycle: Open -> Packed -> Completed", async ({ page }) => {
         test.slow();
@@ -34,10 +36,6 @@ test.describe("BOPIS Order Lifecycle", () => {
             await page.bringToFront().catch(() => { });
         };
 
-        // 1. Direct login to Orders app
-        await loginToOrders(page);
-
-        // 2. Orders Page - Open Tab
         // Navigation is handled inside the POM methods
         console.log("Navigating to Open Orders tab...");
         await orderPage.goToOpenTab();
@@ -151,9 +149,6 @@ test.describe("BOPIS Order Lifecycle", () => {
     test("Verify graceful handling of empty order tabs", async ({ page }) => {
         test.setTimeout(60000);
         const orderPage = new OrderPage(page);
-
-        await loginToOrders(page);
-
 
         // Check tabs - if orderCard is not found, we verify empty state text/locators
         await orderPage.goToOpenTab();
