@@ -61,6 +61,7 @@ import { onMounted, ref } from "vue";
 import { close, saveOutline } from "ionicons/icons";
 import { commonUtil, logger, translate, useSolrSearch } from '@common';
 import { useOrderStore } from "@/store/order";
+import { DateTime } from "luxon";
 
 const props = defineProps(['order'])
 
@@ -198,10 +199,31 @@ async function confirmSave() {
 
 async function resetPicker() {
   const pickerId = selectedPicker.value.id
+  const oldPickerId = selectedPickerId.value
+
+  // Build the roles diff: expire the previously assigned picker and assign the newly selected one
+  const roles = [] as any[];
+  if(oldPickerId && oldPickerId !== pickerId) {
+    roles.push({
+      picklistId: props.order.picklistId,
+      partyId: oldPickerId,
+      roleTypeId: "WAREHOUSE_PICKER",
+      thruDate: DateTime.now().toMillis()
+    });
+  }
+  if(pickerId !== oldPickerId) {
+    roles.push({
+      picklistId: props.order.picklistId,
+      partyId: pickerId,
+      roleTypeId: "WAREHOUSE_PICKER",
+      fromDate: DateTime.now().toMillis()
+    });
+  }
+
   // Api call to remove already selected picker and assign new picker
   const resp = await orderStore.resetPicker({
-    pickerIds: pickerId,
-    picklistId: props.order.picklistId
+    picklistId: props.order.picklistId,
+    roles
   });
 
   if(resp.status === 200 && !commonUtil.hasError(resp)) {
