@@ -754,12 +754,14 @@ async function printPicklist(orderRef: any, shipGroup: any) {
 }
 
 async function assignPicker(orderRef: any, shipGroup: any, facilityId: any) {
+  console.log('(orderRef: any, shipGroup: any, facilityId: any', orderRef, shipGroup, facilityId)
   const assignPickerModal = await modalController.create({
     component: AssignPickerModal,
     componentProps: { order: orderRef, shipGroup, facilityId }
   });
   assignPickerModal.onDidDismiss().then(async(result: any) => {
     if(result.data?.selectedPicker) {
+      console.log('(orderRef: any, shipGroup: any, facilityId: any 11111', orderRef, shipGroup, facilityId)
       emitter.emit("presentLoader");
       await createPicklist(orderRef, result.data.selectedPicker);
       await useOrderStore().packShipGroupItems({ order: orderRef, shipGroup })
@@ -790,6 +792,7 @@ async function editPicker(orderRef: any) {
 }
 
 async function readyForPickup(orderData: any, shipGroup: any) {
+  console.log('isTrackingEnabled.value', isTrackingEnabled.value, shipGroup.picklistId)
   if (isTrackingEnabled.value && !shipGroup.picklistId) return assignPicker(orderData, shipGroup, (useProductStore().getCurrentFacility as any)?.facilityId);
   const pickup = shipGroup.shipmentMethodTypeId === 'STOREPICKUP';
   const header = pickup ? translate('Ready for pickup') : translate('Ready to ship');

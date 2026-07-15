@@ -19,7 +19,8 @@ interface UserState {
   timeZones: any[],
   localeOptions: any,
   locale: string,
-  oms: any
+  oms: any,
+  appVersion: string
 }
 
 export const useUserStore = defineStore("user", {
@@ -33,7 +34,8 @@ export const useUserStore = defineStore("user", {
     timeZones: [],
     localeOptions: import.meta.env.VITE_LOCALES ? JSON.parse(import.meta.env.VITE_LOCALES) : { "en-US": "English" },
     locale: 'en-US',
-    oms: ""
+    oms: "",
+    appVersion: ""
   }),
   getters: {
     getTimeZones: (state) => state.timeZones,
@@ -71,7 +73,8 @@ export const useUserStore = defineStore("user", {
       }
 
       return permissions.includes(permissionId);
-    }
+    },
+    getAppVersion: (state: UserState) => state.appVersion
   },
   actions: {
     updateUserInfo(payload: any) {
@@ -220,6 +223,9 @@ export const useUserStore = defineStore("user", {
     },
     setUnreadNotificationsStatus(payload: any) {
       this.pwaState.updateExists = payload
+    },
+    updateAppVersion(version: string) {
+      this.appVersion = version
     },
     async postLogin() {
       try {

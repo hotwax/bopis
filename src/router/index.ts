@@ -9,7 +9,7 @@ import Notifications from '@/views/Notifications.vue'
 import { translate, commonUtil, ShopifyLogin, ShopifyAppInstall, Login } from '@common'
 import { useAuth } from "@common/composables/useAuth";
 import { useUserStore } from '@/store/user'
-
+import { versionInfoUtil } from '@common/utils/versionInfoUtil'
 
 const authGuard = async (to: any, from: any, next: any) => {
   const { isAuthenticated } = useAuth()
@@ -109,12 +109,25 @@ const routes: Array<RouteRecordRaw> = [
   },
 ]
 
+const appVersion = window.location.pathname.split('/').slice(0, 2)[1];
+
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: routes as any
 })
 
 router.beforeEach((to, from) => {
+  console.log('appVersion.split(".")', appVersion.split("."))
+  if(appVersion.split(".")?.length === 3) {
+    if(useUserStore().appVersion && useUserStore().appVersion !== appVersion) {
+      console.log('replacing app version')
+      window.location.replace(window.location.pathname.replace(appVersion, useUserStore().appVersion))
+    } else if(appVersion) {
+      console.log('updated versions', appVersion)
+      useUserStore().updateAppVersion(appVersion)
+    }
+  }
+
   if (to.meta.permissionId && !useUserStore().hasPermission(to.meta.permissionId as any)) {
     let redirectToPath = from.path;
     // If the user has navigated from Login page or if it is page load, redirect user to settings page without showing any toast
