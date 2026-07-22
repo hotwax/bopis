@@ -143,10 +143,10 @@ const getPicker = async (vSize?: any, vIndex?: any) => {
 
   const payload = {
     "json": {
+      query,
       "params": {
         "rows": viewSize,
         "start": viewSize * (vIndex ? parseInt(vIndex) : 0),
-        "q": query,
         "defType" : "edismax",
         "qf": "firstName lastName groupName partyId externalId",
         "sort": "firstName asc"
