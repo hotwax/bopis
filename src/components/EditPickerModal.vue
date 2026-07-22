@@ -136,10 +136,10 @@ async function findPickers(vSize?: any, vIndex?: any) {
 
   const payload = {
     "json": {
+      query,
       "params": {
         "rows": viewSize,
         "start": (viewSize as any)*vIndex,
-        "q": query,
         "defType" : "edismax",
         "qf": "firstName lastName groupName partyId externalId",
         "sort": "firstName asc"
