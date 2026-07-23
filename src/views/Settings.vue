@@ -234,6 +234,8 @@ const allNotificationPrefs = computed(() => useNotificationStore().getAllNotific
 const currentFacility = computed(() => useProductStore().getCurrentFacility);
 
 onMounted(() => {
+  appVersion.value = import.meta.env.VITE_APP_BUILD ? import.meta.env.VITE_APP_BUILD : appInfo.value.branch ? (appInfo.value.branch + "-" + appInfo.value.revision) : appInfo.value.tag;
+  console.log('this.appVersion', appVersion.value, import.meta.env.VITE_APP_BUILD)
   appVersion.value = appInfo.value.branch ? (appInfo.value.branch + "-" + appInfo.value.revision) : appInfo.value.tag;
 });
 
