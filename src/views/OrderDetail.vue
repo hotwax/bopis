@@ -1041,7 +1041,7 @@ async function sendReadyForPickupEmail(orderRef: any) {
         handler: async () => {
           try {
             const resp = await useOrderStore().sendPickupScheduledNotification({ shipmentId: orderRef.shipmentId });
-            if (!commonUtil.hasError(resp) && resp.data?.success === "true") {
+            if (!commonUtil.hasError(resp) && resp.data?.success === true) {
               commonUtil.showToast(translate("Email sent successfully"))
             } else {
               commonUtil.showToast(translate("Something went wrong while sending the email."))
