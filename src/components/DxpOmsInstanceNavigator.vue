@@ -11,7 +11,7 @@
     <ion-card-content>
       {{ translate('This is the name of the OMS you are connected to right now. Make sure that you are connected to the right instance before proceeding.') }}
     </ion-card-content>
-    <ion-button v-if="!isEmbedded" :standalone-hidden="!hasStandAloneAccess" @click="commonUtil.goToOms" fill="clear" :disabled="!hasOmsAccess">
+    <ion-button v-if="!isEmbedded && !commonUtil.isMoqui()" :standalone-hidden="!hasStandAloneAccess" @click="commonUtil.goToOms" fill="clear" :disabled="!hasOmsAccess">
       {{ translate('Go to OMS') }}
       <ion-icon slot="end" :icon="openOutline" />
     </ion-button>
