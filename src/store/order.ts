@@ -742,7 +742,6 @@ export const useOrderStore = defineStore('order', {
       return resp;
     },
     async packShipGroupItems(payload: any) {
-      console.log('payload', payload)
       const params = {
         orderId: payload.order.orderId,
         facilityId: payload.shipGroup.facilityId,
