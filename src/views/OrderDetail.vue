@@ -215,8 +215,9 @@
                 </ion-item>
                 <ion-item>
                   <ion-icon :icon="callOutline" slot="start" />
-                  <ion-label>{{ commonUtil.formatPhoneNumber(order.phone?.countryCode, order.phone?.areaCode, order.phone?.contactNumber) || '-' }}</ion-label>
+                  <ion-label>{{ commonUtil.formatPhoneNumber(order.phone?.countryCode, order.phone?.areaCode, order.phone?.contactNumber) || order.phone?.contactNumber || (typeof order.phone === 'string' ? order.phone : null) || '-' }}</ion-label>
                 </ion-item>
+          
                 <ion-item lines="none">
                   <ion-icon :icon="cashOutline" slot="start" />
                   <ion-label v-if="order.address" class="ion-text-wrap">
@@ -480,6 +481,10 @@ async function getOrderDetail(orderId: any, shipGroupSeqId: any, orderType: any)
     shipGroupSeqId
   }
   await useOrderStore().getOrderDetail({ payload, orderType })
+  // console.log("OrderDetail Loaded Order Object:", order.value);
+  // console.log("OrderDetail Loaded Phone Object:", order.value?.phone);
+  // console.log("OrderDetail Loaded Address Object:", order.value?.address);
+  // console.log("OrderDetail Loaded Email String:", order.value?.email);
 }
 
 async function fetchRejectReasons() {
