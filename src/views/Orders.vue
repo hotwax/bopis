@@ -328,7 +328,7 @@ async function loadMoreProducts(event: any) {
 }
 
 async function readyForPickup(orderData: any, shipGroup: any) {
-  if (isTrackingEnabled && !shipGroup.picklistId) return assignPicker(orderData, shipGroup, (currentFacility.value as any)?.facilityId);
+  if (isTrackingEnabled.value && !shipGroup.picklistId) return assignPicker(orderData, shipGroup, (currentFacility.value as any)?.facilityId);
   const pickup = shipGroup.shipmentMethodTypeId === 'STOREPICKUP';
   const header = pickup ? translate('Ready for pickup') : translate('Ready to ship');
   const message = pickup ? translate('An email notification will be sent to that their order is ready for pickup. This order will also be moved to the packed orders tab.', { customerName: orderData.customerName, space: '<br/><br/>' }) : '';
@@ -446,7 +446,7 @@ async function printPicklist(orderData: any, shipGroup: any) {
     return;
   }
 
-  if (!isTrackingEnabled) {
+  if (!isTrackingEnabled.value) {
     try {
       const resp = await orderStore.ensurePartyRole({
         partyId: "_NA_",

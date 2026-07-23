@@ -3,7 +3,7 @@ import { expect } from "@playwright/test";
 export class LoginPage {
     constructor(page) {
         this.page = page;
-        this.omsInput = page.getByRole("textbox", { name: /oms/i });
+        this.omsInput = page.locator("input").first();
         this.nextButton = page.getByRole("button", { name: /next/i });
         this.usernameInput = page.getByRole("textbox", { name: /username|email|user/i });
         this.passwordInput = page.getByRole("textbox", { name: /password/i });
@@ -46,8 +46,13 @@ export class LoginPage {
             await this.page.waitForTimeout(5000);
         }
 
-        // await this.waitForOverlays();
-        const isUserVisible = await this.usernameInput.isVisible();
+        // Authentication (skip if already on orders)
+        if (this.page.url().includes("tabs/orders")) return;
+
+        await this.waitForOverlays();
+        const isUserVisible = await this.usernameInput.waitFor({ state: "visible", timeout: 10000 })
+            .then(() => true)
+            .catch(() => false);
         if (isUserVisible) {
             await this.usernameInput.fill(username);
             // await this.passwordInput.waitFor({ state: "visible" });
@@ -61,11 +66,22 @@ export class LoginPage {
 
 
     async verifyLoginSuccess() {
+        const onOrders = await this.page
+            .waitForURL(/\/tabs\/orders/i, { timeout: 30000 })
+            .then(() => true)
+            .catch(() => false);
+        if (onOrders) return;
+
+        // Fallback: force-open app URL and verify we are not prompted for credentials.
+        await this.page.goto(process.env.CURRENT_APP_URL, { waitUntil: "domcontentloaded" }).catch(() => { });
+        await this.page.waitForLoadState("networkidle").catch(() => { });
+
         const hasOmsInput = await this.omsInput.isVisible().catch(() => false);
         const hasUserInput = await this.usernameInput.isVisible().catch(() => false);
         const hasPasswordInput = await this.passwordInput.isVisible().catch(() => false);
         if (hasOmsInput || hasUserInput || hasPasswordInput) {
             throw new Error(`Login verification failed: still on auth form (${this.page.url()})`);
         }
+        await expect(this.page).toHaveURL(/\/tabs\/orders/i, { timeout: 30000 });
     }
 }

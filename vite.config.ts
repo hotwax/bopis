@@ -1,4 +1,5 @@
 import vue from '@vitejs/plugin-vue'
+import { ideTraceVue } from 'chrome-ide-trace/vite'
 import legacy from '@vitejs/plugin-legacy'
 import path from 'path'
 import { defineConfig, loadEnv } from 'vite'
@@ -18,6 +19,7 @@ export default defineConfig(({ mode }) => {
       outDir: appBuild ? `dist/${env.VITE_APP_BUILD}` : 'dist'
     },
     plugins: [
+      ideTraceVue(),
       vue(),
       legacy(),
       VitePWA({
@@ -33,7 +35,7 @@ export default defineConfig(({ mode }) => {
       'import.meta.env.VITE_APP_VERSION_INFO': JSON.stringify(JSON.stringify(versionInfoUtil.getVersionInfo(pkg.version)))
     },
     resolve: {
-      dedupe: ['vue', 'pinia', 'vue-router'],
+      dedupe: ['vue', 'vue-router', '@ionic/vue', '@ionic/vue-router', 'pinia', 'vue-i18n'],
       alias: {
         '@': path.resolve(__dirname, 'src'),
         '@common': path.resolve(__dirname, '../../common')

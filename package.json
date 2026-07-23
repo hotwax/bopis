@@ -1,6 +1,6 @@
 {
   "name": "bopis",
-  "version": "4.11.0",
+  "version": "5.0.0",
   "private": true,
   "description": "HotWax BOPIS app",
   "scripts": {
@@ -19,16 +19,17 @@
     "@ionic/core": "catalog:",
     "@ionic/vue": "catalog:",
     "@ionic/vue-router": "catalog:",
-    "vue-router": "catalog:",
     "firebase": "catalog:",
+    "ionicons": "catalog:",
     "luxon": "catalog:",
     "mitt": "catalog:",
     "pinia": "catalog:",
     "pinia-plugin-persistedstate": "catalog:",
     "register-service-worker": "catalog:",
     "vue": "catalog:",
-    "vue-logger-plugin": "catalog:",
     "vue-barcode-reader": "catalog:",
+    "vue-logger-plugin": "catalog:",
+    "vue-router": "catalog:",
     "zod": "^4.3.6"
   },
   "devDependencies": {
@@ -50,6 +51,7 @@
     "terser": "^5.30.0",
     "typescript": "catalog:",
     "vite": "catalog:",
+    "vite-plugin-pwa": "1.2.0",
     "vitest": "catalog:"
   }
 }

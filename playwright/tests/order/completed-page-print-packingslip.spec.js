@@ -8,13 +8,11 @@ test("Pack Orders Page: Generate Packing Slip", async ({ page }) => {
 
   const completedOrders = new CompletedOrdersPage(page);
   const orderPage = new OrderPage(page);
-  await orderPage.goToCompletedTab();
-
-  if (await orderPage.orderCards.count() === 0) {
-    test.skip(true, "No completed orders found");
+  await completedOrders.goToCompletedTab();
+  if (!await completedOrders.orderCards.first().isVisible()) {
+    test.skip(true, "No completed orders found in Dev env.");
     return;
   }
-
   await completedOrders.printCustomerLetter();
   await orderPage.handlePopupAndVerify();
 });

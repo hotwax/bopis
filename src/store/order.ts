@@ -1432,8 +1432,8 @@ export const useOrderStore = defineStore('order', {
     },
     async resetPicker(payload: any): Promise<any> {
       return api({
-        url: "/service/resetPicker",
-        method: "post",
+        url: `/poorti/picklists/${payload.picklistId}`,
+        method: "PUT",
         data: payload
       })
     },
@@ -1441,7 +1441,8 @@ export const useOrderStore = defineStore('order', {
       return api({
         url: "/findJobs",
         method: "get",
-        params: payload
+        params: payload,
+        baseURL: commonUtil.getOmsURL()
       });
     },
     async getProcessRefundStatus(productStoreId: any): Promise<any> {

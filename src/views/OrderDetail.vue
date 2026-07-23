@@ -5,7 +5,7 @@
         <ion-back-button default-href="/" slot="start" />
         <ion-title>{{ translate("Order details") }}</ion-title>
         <ion-buttons slot="end">
-          <ion-button data-testid="resendmail-button" v-if="orderType === 'packed' && order.shipGroup.shipmentMethodTypeId === 'STOREPICKUP'" :disabled="!order?.orderId || !useUserStore().hasPermission('') || order.handovered || order.shipped" @click="sendReadyForPickupEmail(order)">
+          <ion-button data-testid="resendmail-button" v-if="orderType === 'packed' && order.shipGroup?.shipmentMethodTypeId === 'STOREPICKUP'" :disabled="!order?.orderId || !useUserStore().hasPermission('') || order.handovered || order.shipped" @click="sendReadyForPickupEmail(order)">
             <ion-icon slot="icon-only" :icon="mailOutline" />
           </ion-button>
           <ion-button data-testid="rejection-history-button" :disabled="!order?.orderId" @click="openOrderItemRejHistoryModal()">
@@ -14,7 +14,7 @@
           <ion-button data-testid="print-picklist-button" v-if="orderType === 'open' && isPrintPicklistsEnabled" :disabled="!order?.orderId || !useUserStore().hasPermission('') || order.handovered || order.shipped || !order.shipGroup?.items?.length"  @click="printPicklist(order, order.shipGroup)">
             <ion-icon slot="icon-only" :icon="printOutline" />
           </ion-button>
-          <ion-button data-testid="packing-slip-button" v-else-if="orderType === 'packed' && isPrintPackingSlipEnabled" :class="order.shipGroup.shipmentMethodTypeId !== 'STOREPICKUP' ? 'ion-hide-md-up' : ''" :disabled="!order?.orderId || !useUserStore().hasPermission('') || order.handovered || order.shipped || !order.shipGroup?.items?.length" @click="order.shipGroup.shipmentMethodTypeId === 'STOREPICKUP' ? printPackingSlip(order) : printShippingLabelAndPackingSlip(order)">
+          <ion-button data-testid="packing-slip-button" v-else-if="orderType === 'packed' && isPrintPackingSlipEnabled" :class="order.shipGroup?.shipmentMethodTypeId !== 'STOREPICKUP' ? 'ion-hide-md-up' : ''" :disabled="!order?.orderId || !useUserStore().hasPermission('') || order.handovered || order.shipped || !order.shipGroup?.items?.length" @click="order.shipGroup.shipmentMethodTypeId === 'STOREPICKUP' ? printPackingSlip(order) : printShippingLabelAndPackingSlip(order)">
             <ion-icon slot="icon-only" :icon="printOutline" />
           </ion-button>
         </ion-buttons>
@@ -371,7 +371,6 @@ const getProduct = computed(() => useProduct().getProduct);
 const getInventoryInformation = computed(() => useStockStore().getInventoryInformation);
 const getCarrierName = (partyId: string) => useOrderStore().getCarrierName(partyId);
 const getFacilityName = (facilityId: string) => useProductStore().getFacilityName(facilityId);
-const isHandoverProofEnabled = computed(() => useProductStore().isHandoverProofEnabled)
 const isPrintPackingSlipEnabled = computed(() => useProductStore().isPrintPackingSlipEnabled)
 const isTrackingEnabled = computed(() => useProductStore().isTrackingEnabled)
 const isPrintPicklistsEnabled = computed(() => useProductStore().isPrintPicklistsEnabled)
@@ -729,6 +728,7 @@ async function createPicklist(orderRef: any, selectedPicker: any) {
     if (!commonUtil.hasError(resp)) {
       commonUtil.showToast(translate("Picklist created successfully", { picklistId: resp.data.picklistId }));
       await useOrderStore().printPicklist(resp.data.picklistId)
+      useOrderStore().updateCurrent({ order: {...orderRef, shipGroup: {...orderRef.shipGroup, picklistId: resp.data.picklistId, shipmentId: resp.data.shipmentIds?.[0]} } })
     } else {
       throw resp.data
     }
@@ -764,7 +764,8 @@ async function assignPicker(orderRef: any, shipGroup: any, facilityId: any) {
       console.log('(orderRef: any, shipGroup: any, facilityId: any 11111', orderRef, shipGroup, facilityId)
       emitter.emit("presentLoader");
       await createPicklist(orderRef, result.data.selectedPicker);
-      await useOrderStore().packShipGroupItems({ order: orderRef, shipGroup })
+      const updatedOrder = order.value;
+      await useOrderStore().packShipGroupItems({ order: updatedOrder, shipGroup: updatedOrder.shipGroup })
       await getOrderDetail(props.orderId, props.shipGroupSeqId, props.orderType);
       emitter.emit("dismissLoader");
     }
