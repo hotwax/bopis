@@ -409,7 +409,7 @@ export const useOrderStore = defineStore('order', {
                 ...item,
                 // productId: item.productId,
                 // quantity: item.quantity ?? item.itemQuantity,
-                itemStatusId: item.statusId,    // || item.itemStatusId,
+                itemStatusId: item.statusId,    
                 showKitComponents: false
               }))
             };
@@ -464,10 +464,6 @@ export const useOrderStore = defineStore('order', {
           } else {
             order.phone = null;
           }
-
-          // console.log("[DEBUG] getOrderDetail order.phone:", order.phone);
-          // console.log("[DEBUG] getOrderDetail order.address:", order.address);
-          // console.log("[DEBUG] getOrderDetail order.email:", order.email);
 
           const productSettingsStore = useProductStore();
           const currentFacilityId = (productSettingsStore.getCurrentFacility?.facilityId || "");

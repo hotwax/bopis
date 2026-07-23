@@ -481,10 +481,6 @@ async function getOrderDetail(orderId: any, shipGroupSeqId: any, orderType: any)
     shipGroupSeqId
   }
   await useOrderStore().getOrderDetail({ payload, orderType })
-  // console.log("OrderDetail Loaded Order Object:", order.value);
-  // console.log("OrderDetail Loaded Phone Object:", order.value?.phone);
-  // console.log("OrderDetail Loaded Address Object:", order.value?.address);
-  // console.log("OrderDetail Loaded Email String:", order.value?.email);
 }
 
 async function fetchRejectReasons() {
