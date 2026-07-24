@@ -372,58 +372,105 @@ export const useOrderStore = defineStore('order', {
 
       try {
         const resp = await api({
-          url: `oms/orders/${orderId}`,
+          url: "oms/orders",
           method: "get",
+          params: {
+            orderId,
+            dependentLevels: 1
+          }
         });
 
-        if (resp.status === 200 && !commonUtil.hasError(resp) && resp.data) {
-          const data = resp.data.orderDetail;
+        if (resp.status === 200 && !commonUtil.hasError(resp) && resp.data?.length) {
+          const data = resp.data[0];
+
+          if (!data || !data.shipGroups) {
+            logger.error("Order data or shipGroups missing in API response", resp);
+            return;
+          }
+
           const productIds = data.shipGroups.flatMap((group: any) =>
-            group.items.map((item: any) => item.productId)
-          );
+            (group.items || []).map((item: any) => item.productId)
+          ).filter(Boolean);
           await productStore.fetchProducts({ productIds });
 
-          const sortedPaymentPreference = [...data.paymentPreferences].sort((a: any, b: any) => (b.createdDate || 0) - (a.createdDate || 0));
+          const sortedPaymentPreference = [...(data.paymentPreferences || [])].sort(
+            (a: any, b: any) => (b.createdStamp || 0) - (a.createdStamp || 0)
+          );
 
           const shipGroups = data.shipGroups.map((group: any) => {
-            const validItems = group.items.filter(
-              (item: any) => item.itemStatusId !== 'ITEM_CANCELLED'
-            )
+            const validItems = (group.items || []).filter(
+              (item: any) => item.statusId !== 'ITEM_CANCELLED'
+            );
 
             return {
               ...group,
               category: orderUtil.getOrderCategory(group),
               items: orderUtil.removeKitComponents(validItems).map((item: any) => ({
                 ...item,
+                // productId: item.productId,
+                // quantity: item.quantity ?? item.itemQuantity,
+                itemStatusId: item.statusId,    
                 showKitComponents: false
               }))
             };
           });
 
+          // Extract customer details directly from new API roles
+          const customerRole = data.roles?.find((r: any) => r.roleTypeId === 'BILL_TO_CUSTOMER');
+          const customerPerson = customerRole?.person;
+          const customerName = customerRole?.partyGroup?.groupName || (customerPerson ? `${customerPerson.firstName || ''} ${customerPerson.lastName || ''}`.trim() : '');
+
           const order = {
             ...data,
             shipGroups,
-            statusId: data.orderStatusId,
-            customerId: data.partyId,
-            customerName: (`${data.customerFirstName || ""} ${data.customerLastName || ""}`).trim(),
-            shopifyOrderId: data.orderExternalId,
-            approvedDate: data.statuses?.find((status: any) => status.statusId === "ORDER_APPROVED")?.statusDatetime,
-            completedDate: data.statuses?.find((status: any) => status.statusId === "ORDER_COMPLETED")?.statusDatetime,
+            statusId: data.statusId,
+            customerId: data.billToPartyId,
+            customerName,
+            customer: {
+              name: customerName,
+              partyId: data.billToPartyId
+            },
+            shopifyOrderId: data.externalId,
+            approvedDate: data.statuses?.find((status: any) => status.statusId === "ORDER_APPROVED")?.createdStamp,
+            completedDate: data.statuses?.find((status: any) => status.statusId === "ORDER_COMPLETED")?.createdStamp,
             paymentPreferences: sortedPaymentPreference
           };
 
-          const hasObjectValue = (obj: any) => obj && Object.keys(obj).length > 0;
-          order.address = hasObjectValue(order.billingAddress) ? order.billingAddress :
-                      hasObjectValue(order.shippingAddress) ? order.shippingAddress : null;
+          // Extract address, email, phone with full schema support
+          const postalMech = data.contactMechs?.find((c: any) => 
+            c.contactMechTypeId === 'POSTAL_ADDRESS' || 
+            c.contactMech?.contactMechTypeId === 'POSTAL_ADDRESS' || 
+            c.postalAddress || 
+            c.contactMech?.postalAddress
+          );
+          order.address = postalMech?.postalAddress || postalMech?.contactMech?.postalAddress || (postalMech && (postalMech.address1 || postalMech.toName) ? postalMech : null);
 
-          order.email = order.billingEmail || order.orderEmail || order.shippingEmail || null;
+          const emailMech = data.contactMechs?.find((c: any) => c.contactMech?.contactMechTypeId === 'EMAIL_ADDRESS');
+          order.email = emailMech?.contactMech?.infoString || null;
 
-          order.phone = hasObjectValue(order.billingPhone) ? order.billingPhone :
-                        hasObjectValue(order.shippingPhone) ? order.shippingPhone : null;
+          const telecomMech = data.contactMechs?.find((c: any) => 
+            c.contactMechTypeId === 'TELECOM_NUMBER' || 
+            c.contactMech?.contactMechTypeId === 'TELECOM_NUMBER' || 
+            c.telecomNumber || 
+            c.contactMech?.telecomNumber
+          );
+          const telecomObj = telecomMech?.telecomNumber || telecomMech?.contactMech?.telecomNumber || telecomMech;
+          const phoneStr = telecomObj?.contactNumber || telecomObj?.infoString || (typeof telecomObj === 'string' ? telecomObj : null);
+
+          if (telecomObj && (telecomObj.contactNumber || telecomObj.areaCode)) {
+            order.phone = telecomObj;
+          } else if (phoneStr) {
+            order.phone = { countryCode: telecomObj?.countryCode || '', areaCode: telecomObj?.areaCode || '', contactNumber: phoneStr };
+          } else {
+            order.phone = null;
+          }
 
           const productSettingsStore = useProductStore();
           const currentFacilityId = (productSettingsStore.getCurrentFacility?.facilityId || "");
-          const currentShipGroup = order.shipGroups.find((shipGroup: any) => shipGroup.shipGroupSeqId === payload.shipGroupSeqId && shipGroup.facilityId === currentFacilityId);
+          const currentShipGroup = order.shipGroups.find((shipGroup: any) => 
+            (payload.shipGroupSeqId ? shipGroup.shipGroupSeqId === payload.shipGroupSeqId : true) &&
+            (shipGroup.facilityId ? shipGroup.facilityId === currentFacilityId : true)
+          ) || order.shipGroups.find((sg: any) => sg.shipGroupSeqId === payload.shipGroupSeqId) || order.shipGroups[0];
 
           if (currentShipGroup) {
             if (currentShipGroup.shipmentMethodTypeId === 'STOREPICKUP') {
@@ -454,8 +501,10 @@ export const useOrderStore = defineStore('order', {
           if (!order.shipGroup) {
             currentOrder.orderId = null;
           }
-          const partyIds = [...new Set(data.shipGroups.map((shipgroup: any) => shipgroup.carrierPartyId))] as string[];
-          await this.fetchCarrierInformation(partyIds);
+          const partyIds = [...new Set(data.shipGroups.map((shipgroup: any) => shipgroup.carrierPartyId).filter(Boolean))] as string[];
+          if (partyIds.length > 0) {
+            await this.fetchCarrierInformation(partyIds);
+          }
           this.updateCurrent({ order: { ...currentOrder, orderType } });
 
         } else {
