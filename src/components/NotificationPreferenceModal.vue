@@ -103,12 +103,12 @@ async function updateNotificationPref() {
 async function handleTopicSubscription() {
   const facilityId = (currentFacility.value as any)?.facilityId;
   const notificationStore = useNotificationStore();
-  const subscribeRequests = notificationPrefToUpdate.value.subscribe.map(async (enumId: string) => {
+  const subscribeRequests = notificationPrefToUpdate.value.subscribe.map((enumId: string) => {
     const topicName = firebaseMessaging.generateTopicName(commonUtil.getOMSInstanceName(), facilityId, enumId);
     return notificationStore.subscribeTopic(topicName, import.meta.env.VITE_NOTIF_APP_ID);
   });
 
-  const unsubscribeRequests = notificationPrefToUpdate.value.unsubscribe.map(async (enumId: string) => {
+  const unsubscribeRequests = notificationPrefToUpdate.value.unsubscribe.map((enumId: string) => {
     const topicName = firebaseMessaging.generateTopicName(commonUtil.getOMSInstanceName(), facilityId, enumId);
     return notificationStore.unsubscribeTopic(topicName, import.meta.env.VITE_NOTIF_APP_ID);
   });

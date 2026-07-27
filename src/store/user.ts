@@ -245,11 +245,13 @@ export const useUserStore = defineStore("user", {
         return Promise.reject(error);
       }
     },
-    async postLogout() {
+
+    async preLogout() {
       try {
-        if (useNotificationStore().getFirebaseDeviceId) await useNotificationStore().removeClientRegistrationToken(useNotificationStore().getFirebaseDeviceId, import.meta.env.VITE_NOTIF_APP_ID as any)
+        const notificationStore = useNotificationStore();
+        if (notificationStore.getFirebaseDeviceId) await notificationStore.removeClientRegistrationToken(notificationStore.getFirebaseDeviceId, import.meta.env.VITE_NOTIF_APP_ID as any);
       } catch (error) {
-        logger.error(error)
+        logger.error(error);
       }
 
       if (commonUtil.isAppEmbedded()) {
@@ -258,7 +260,8 @@ export const useUserStore = defineStore("user", {
         }, 100);
         useEmbeddedAppStore().$reset();
       }
-
+    },
+    async postLogout() {
       useNotificationStore().clearNotificationState();
       this.$reset();
       useOrderStore().$reset();
