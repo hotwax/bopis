@@ -20,7 +20,10 @@ interface UserState {
   localeOptions: any,
   locale: string,
   oms: any,
-  appVersion: string
+  // Three states, deliberately: undefined = not resolved yet (initial / just reset); "" = resolved,
+  // no version configured; "vX.Y.Z" = resolved, pinned to that version. The router guard depends on
+  // telling "not resolved yet" apart from "resolved: none" — collapsing them causes a redirect loop.
+  appVersion: string | undefined
 }
 
 export const useUserStore = defineStore("user", {
@@ -35,7 +38,7 @@ export const useUserStore = defineStore("user", {
     localeOptions: import.meta.env.VITE_LOCALES ? JSON.parse(import.meta.env.VITE_LOCALES) : { "en-US": "English" },
     locale: 'en-US',
     oms: "",
-    appVersion: ""
+    appVersion: undefined
   }),
   getters: {
     getTimeZones: (state) => state.timeZones,
@@ -215,9 +218,6 @@ export const useUserStore = defineStore("user", {
     setUnreadNotificationsStatus(payload: any) {
       this.pwaState.updateExists = payload
     },
-    updateAppVersion(version: string) {
-      this.appVersion = version
-    },
     async postLogin() {
       try {
         await this.fetchPermissions()
@@ -263,6 +263,8 @@ export const useUserStore = defineStore("user", {
     },
     async postLogout() {
       useNotificationStore().clearNotificationState();
+      // appVersion is preserved across this reset by useAuth().logout() (it's deployment config, not
+      // session state), so a plain $reset() is fine here.
       this.$reset();
       useOrderStore().$reset();
       useProductStore().$reset();

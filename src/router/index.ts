@@ -109,24 +109,15 @@ const routes: Array<RouteRecordRaw> = [
   },
 ]
 
-const appVersion = window.location.pathname.split('/').slice(0, 2)[1];
-
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: routes as any
 })
 
 router.beforeEach((to, from) => {
-  console.log('appVersion.split(".")', appVersion.split("."))
-  if(appVersion.split(".")?.length === 3) {
-    if(useUserStore().appVersion && useUserStore().appVersion !== appVersion) {
-      console.log('replacing app version')
-      window.location.replace(window.location.pathname.replace(appVersion, useUserStore().appVersion))
-    } else if(appVersion) {
-      console.log('updated versions', appVersion)
-      useUserStore().updateAppVersion(appVersion)
-    }
-  }
+  // Enforce the canonical version URL on every navigation (no-op until the version is resolved, or if
+  // already canonical). Redirect cancels this navigation. Logic lives in useAuth so it's shared.
+  if(useAuth().checkAppVersionRedirect()) return false;
 
   if (to.meta.permissionId && !useUserStore().hasPermission(to.meta.permissionId as any)) {
     let redirectToPath = from.path;
