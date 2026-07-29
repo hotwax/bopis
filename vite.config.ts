@@ -11,12 +11,12 @@ import manifest from "./manifest.json"
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '');
-  const appBuild = env.VITE_APP_BUILD
-  
+  const appBuild = JSON.parse(env.VITE_APP_VERSION_CONFIG).buildVersion
+
   return {
     base: appBuild ? `/${appBuild}/` : '/',
     build: {
-      outDir: appBuild ? `dist/${env.VITE_APP_BUILD}` : 'dist'
+      outDir: appBuild ? `dist/${appBuild}` : 'dist'
     },
     plugins: [
       ideTraceVue(),
