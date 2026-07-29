@@ -263,8 +263,6 @@ export const useUserStore = defineStore("user", {
     },
     async postLogout() {
       useNotificationStore().clearNotificationState();
-      // appVersion is preserved across this reset by useAuth().logout() (it's deployment config, not
-      // session state), so a plain $reset() is fine here.
       this.$reset();
       useOrderStore().$reset();
       useProductStore().$reset();
