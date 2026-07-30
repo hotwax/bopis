@@ -9,7 +9,7 @@ import Notifications from '@/views/Notifications.vue'
 import { translate, commonUtil, ShopifyLogin, ShopifyAppInstall, Login } from '@common'
 import { useAuth } from "@common/composables/useAuth";
 import { useUserStore } from '@/store/user'
-
+import { versionInfoUtil } from '@common/utils/versionInfoUtil'
 
 const authGuard = async (to: any, from: any, next: any) => {
   const { isAuthenticated } = useAuth()
@@ -115,6 +115,10 @@ const router = createRouter({
 })
 
 router.beforeEach((to, from) => {
+  // Enforce the canonical version URL on every navigation (no-op until the version is resolved, or if
+  // already canonical). Redirect cancels this navigation. Logic lives in useAuth so it's shared.
+  if(useAuth().checkAppVersionRedirect()) return false;
+
   if (to.meta.permissionId && !useUserStore().hasPermission(to.meta.permissionId as any)) {
     let redirectToPath = from.path;
     // If the user has navigated from Login page or if it is page load, redirect user to settings page without showing any toast

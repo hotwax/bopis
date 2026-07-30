@@ -19,7 +19,11 @@ interface UserState {
   timeZones: any[],
   localeOptions: any,
   locale: string,
-  oms: any
+  oms: any,
+  // Three states, deliberately: undefined = not resolved yet (initial / just reset); "" = resolved,
+  // no version configured; "vX.Y.Z" = resolved, pinned to that version. The router guard depends on
+  // telling "not resolved yet" apart from "resolved: none" — collapsing them causes a redirect loop.
+  appVersion: string | undefined
 }
 
 export const useUserStore = defineStore("user", {
@@ -33,7 +37,8 @@ export const useUserStore = defineStore("user", {
     timeZones: [],
     localeOptions: import.meta.env.VITE_LOCALES ? JSON.parse(import.meta.env.VITE_LOCALES) : { "en-US": "English" },
     locale: 'en-US',
-    oms: ""
+    oms: "",
+    appVersion: undefined
   }),
   getters: {
     getTimeZones: (state) => state.timeZones,
@@ -71,7 +76,8 @@ export const useUserStore = defineStore("user", {
       }
 
       return permissions.includes(permissionId);
-    }
+    },
+    getAppVersion: (state: UserState) => state.appVersion
   },
   actions: {
     updateUserInfo(payload: any) {
