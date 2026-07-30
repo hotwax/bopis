@@ -408,26 +408,22 @@ export const useProductStore = defineStore('productStore', {
       const productStoreSettings = {} as any
 
       if (productStoreId) {
-        const payload = {
-          productStoreId,
-          settingTypeEnumId: Object.keys(defaultProductStoreSettings),
-          settingTypeEnumId_op: "in",
-          pageIndex: 0,
-          pageSize: 50
-        }
         try {
           const resp = await api({
-            url: `/oms/dataDocumentView`,
-            method: "POST",
-            data: {
-              dataDocumentId: "ProductStoreSetting",
-              customParametersMap: payload
+            url: `/admin/productStores/${productStoreId}/settings`,
+            method: "GET",
+            params: {
+              settingTypeEnumId: Object.keys(defaultProductStoreSettings),
+              settingTypeEnumId_op: "in",
+              pageSize: 50
             }
           }) as any
 
-          resp?.data?.entityValueList?.forEach((productSetting: any) => {
-            productStoreSettings[productSetting.settingTypeEnumId] = productSetting.settingValue
-          })
+          if (!commonUtil.hasError(resp) && resp.data) {
+            resp.data.forEach((productSetting: any) => {
+              productStoreSettings[productSetting.settingTypeEnumId] = productSetting.settingValue
+            })
+          }
         } catch (error) {
           logger.error("Failed to fetch settings", error)
         }
