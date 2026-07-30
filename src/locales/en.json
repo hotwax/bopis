@@ -310,6 +310,7 @@
   "unit": "{ item } unit",
   "Update notification preferences": "Update notification preferences",
   "Verify that the items in the package are valid and the customer has received their order. Once the order is handed over to the customer it cannot be undone.": "Verify that the items in the package are valid and the customer has received their order.{ space }Once the order is handed over to the customer it cannot be undone.",
+  "Version: ": "Version: {appVersion}",
   "Enabling this will show only shipping orders and hide all pickup orders.": "Enabling this will show only shipping orders and hide all pickup orders.",
   "Yes": "Yes",
   "You do not have permission to access this page": "You do not have permission to access this page",
