@@ -345,13 +345,22 @@ async function readyForPickup(orderData: any, shipGroup: any) {
         handler: async () => {
           alert.dismiss();
           emitter.emit("presentLoader", { message: "Loading...", backdropDismiss: false });
-          let orderIndex;
-          if (!shipGroup.shipmentId) {
-            await printPicklist(orderData, shipGroup)
-            orderIndex = orders.value.findIndex((o: any) => o.orderId === orderData.orderId);
+          try {
+            let orderIndex;
+            if (!shipGroup.shipmentId) {
+              await printPicklist(orderData, shipGroup)
+              orderIndex = orders.value.findIndex((o: any) => o.orderId === orderData.orderId);
+            }
+            const currentOrder = orderIndex !== undefined && orderIndex >= 0 ? orders.value[orderIndex] : orderData;
+            const currentShipGroup = orderIndex !== undefined && orderIndex >= 0 ? orders.value[orderIndex].shipGroup : shipGroup;
+            if (currentShipGroup?.shipmentId || currentShipGroup?.picklistId) {
+              await useOrderStore().packShipGroupItems({ order: currentOrder, shipGroup: currentShipGroup });
+            }
+          } catch (err) {
+            logger.error("Error during ready for pickup:", err);
+          } finally {
+            emitter.emit("dismissLoader");
           }
-          await useOrderStore().packShipGroupItems({ order: orderIndex >= 0 ? orders.value[orderIndex] : orderData, shipGroup: orderIndex >= 0 ? orders.value[orderIndex].shipGroup : shipGroup })
-          emitter.emit("dismissLoader");
         }
       }]
     });
