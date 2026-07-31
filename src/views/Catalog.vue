@@ -117,4 +117,10 @@ main {
   grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
   align-items: start;
 }
+
+@media (min-width: 991px) {
+  ion-content {
+    --padding-bottom: 80px;
+  }
+}
 </style>
