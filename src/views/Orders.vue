@@ -655,5 +655,9 @@ ion-item {
   ion-header > div {
     display: flex;
   }
+
+  ion-content {
+    --padding-bottom: 80px;
+  }
 }
 </style>
