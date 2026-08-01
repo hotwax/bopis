@@ -412,7 +412,7 @@ async function sendReadyForPickupEmail(orderData: any) {
         handler: async () => {
           try {
             const resp = await orderStore.sendPickupScheduledNotification({ shipmentId: orderData.shipmentId });
-            if (!commonUtil.hasError(resp) && resp.data?.success === true) {
+            if (!commonUtil.hasError(resp) && resp.data?.success) {
               commonUtil.showToast(translate("Email sent successfully"))
             } else {
               commonUtil.showToast(translate("Something went wrong while sending the email."))
@@ -604,7 +604,7 @@ async function openProofOfDeliveryModal(orderData: any, isViewModeOnly: any) {
       // Send the proof of delivery email
       const resp = await orderStore.sendPickupNotification(data.proofOfDeliveryData);
 
-      if (commonUtil.hasError(resp) || resp.data?.success === false) {
+      if (commonUtil.hasError(resp) || !resp.data?.success) {
         logger.error("Pickup notification failed:", resp);
         commonUtil.showToast(translate("Details have been successfully saved, but failed to send email notification to the customer due to missing configuration."));
       } else {
