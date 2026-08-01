@@ -260,6 +260,8 @@ const scheduleOrderForPickup = async (shipmentId: string, order: any) => {
           const emailResp = await orderStore.sendPickupScheduledNotification({ shipmentId });
           if (!commonUtil.hasError(emailResp) && emailResp.data?.success === true) {
             commonUtil.showToast(translate('Order marked as ready for pickup, an email notification has been sent to the customer'));
+          } else {
+            commonUtil.showToast(translate('Order marked as ready for pickup but something went wrong while sending the email notification'));
           }
         } catch (error) {
           logger.error('Error sending pickup scheduled notification:', error);
