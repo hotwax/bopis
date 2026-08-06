@@ -37,7 +37,7 @@
             <ProductListItem v-for="item in order.items" :key="item.productId" :item="item" :isShipToStoreOrder=true />
 
             <div class="border-top">
-              <ion-button :disabled="!useUserStore().hasPermission('')|| order.shipmentStatusId!='SHIPMENT_SHIPPED'" fill="clear" @click.stop="confirmScheduleOrderForPickup(order)">
+              <ion-button :disabled="!useUserStore().hasPermission(Actions.APP_ORDER_UPDATE)|| order.shipmentStatusId!='SHIPMENT_SHIPPED'" fill="clear" @click.stop="confirmScheduleOrderForPickup(order)">
                 {{ translate("Arrived") }}
               </ion-button>
             </div>
@@ -60,7 +60,7 @@
             <ProductListItem v-for="item in order.items" :key="item.productId" :item="item" :isShipToStoreOrder=true />
 
             <div class="border-top">
-              <ion-button :disabled="!useUserStore().hasPermission('')" fill="clear" @click.stop="confirmHandoverOrder(order)">
+              <ion-button :disabled="!useUserStore().hasPermission(Actions.APP_ORDER_UPDATE)" fill="clear" @click.stop="confirmHandoverOrder(order)">
                 {{ translate("Handover") }}
               </ion-button>
               <ion-button fill="clear" slot="end" @click="sendReadyForPickupEmail(order)">
@@ -120,6 +120,7 @@ import { commonUtil, emitter, logger, translate } from "@common"
 
 import { DateTime } from 'luxon';
 import ProofOfDeliveryModal from "@/components/ProofOfDeliveryModal.vue";
+import Actions from "@/authorization/actions";
 
 const orderStore = useOrderStore();
 const queryString = ref('');

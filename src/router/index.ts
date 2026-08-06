@@ -10,6 +10,7 @@ import { translate, commonUtil, ShopifyLogin, ShopifyAppInstall, Login } from '@
 import { useAuth } from "@common/composables/useAuth";
 import { useUserStore } from '@/store/user'
 import { versionInfoUtil } from '@common/utils/versionInfoUtil'
+import Actions from "@/authorization/actions"
 
 const authGuard = async (to: any, from: any, next: any) => {
   const { isAuthenticated } = useAuth()
@@ -41,14 +42,14 @@ const routes: Array<RouteRecordRaw> = [
         path: 'orders',
         component: () => import('@/views/Orders.vue'),
         meta: {
-          permissionId: ""
+          permissionId: Actions.APP_ORDERS_VIEW
         }
       },
       {
         path: 'catalog',
         component: () => import('@/views/Catalog.vue'),
         meta: {
-          permissionId: ""
+          permissionId: Actions.APP_CATALOG_VIEW
         }
       },
       {
@@ -58,7 +59,7 @@ const routes: Array<RouteRecordRaw> = [
     ],
     beforeEnter: authGuard,
     meta: {
-      permissionId: ""
+      permissionId: Actions.APP_ORDERS_VIEW
     }
   },
   {
@@ -73,7 +74,7 @@ const routes: Array<RouteRecordRaw> = [
     beforeEnter: authGuard,
     props: true,
     meta: {
-      permissionId: ""
+      permissionId: Actions.APP_ORDER_DETAIL_VIEW
     }
   },
   {
@@ -82,7 +83,7 @@ const routes: Array<RouteRecordRaw> = [
     component: ProductDetail,
     beforeEnter: authGuard,
     meta: {
-      permissionId: ""
+      permissionId: Actions.APP_PRODUCT_DETAIL_VIEW
     }
   },
   {
