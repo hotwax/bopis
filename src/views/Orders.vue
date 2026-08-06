@@ -55,14 +55,14 @@
             <ProductListItem v-for="item in order.shipGroup.items" :key="item.productId" :item="item" />
                         
             <div class="border-top">
-              <ion-button :data-testid="order.shipGroup.shipmentMethodTypeId === 'STOREPICKUP' ? 'ready-pickup-button' : 'ready-ship-button'" :disabled="!useUserStore().hasPermission('')" fill="clear" @click.stop="readyForPickup(order, order.shipGroup)">
+              <ion-button :data-testid="order.shipGroup.shipmentMethodTypeId === 'STOREPICKUP' ? 'ready-pickup-button' : 'ready-ship-button'" :disabled="!useUserStore().hasPermission(Actions.APP_ORDER_UPDATE)" fill="clear" @click.stop="readyForPickup(order, order.shipGroup)">
                 {{ order.shipGroup?.shipmentMethodTypeId === 'STOREPICKUP' ? translate("Ready for pickup") : translate("Ready to ship") }}
               </ion-button>
               <div></div>
-              <ion-button data-testid="listpage-reject-button" v-if="order.shipGroup.shipmentMethodTypeId === 'STOREPICKUP' && !isRequestTransferEnabled" color="danger" :disabled="!useUserStore().hasPermission('')" fill="clear" @click.stop="openRejectOrderModal(order)">
+              <ion-button data-testid="listpage-reject-button" v-if="order.shipGroup.shipmentMethodTypeId === 'STOREPICKUP' && !isRequestTransferEnabled" color="danger" :disabled="!useUserStore().hasPermission(Actions.APP_ORDER_UPDATE)" fill="clear" @click.stop="openRejectOrderModal(order)">
                 {{ translate("Reject") }}
               </ion-button>
-              <ion-button data-testid="listpage-request-transfer-button" v-if="order.shipGroup.shipmentMethodTypeId === 'STOREPICKUP' && isRequestTransferEnabled" color="warning" :disabled="!useUserStore().hasPermission('')" fill="clear" @click.stop="confirmRequestTransfer(order)">
+              <ion-button data-testid="listpage-request-transfer-button" v-if="order.shipGroup.shipmentMethodTypeId === 'STOREPICKUP' && isRequestTransferEnabled" color="warning" :disabled="!useUserStore().hasPermission(Actions.APP_ORDER_UPDATE)" fill="clear" @click.stop="confirmRequestTransfer(order)">
                 {{ translate("Request Transfer") }}
               </ion-button>
               <ion-button size="default" v-if="isPrintPicklistsEnabled" slot="end" fill="clear" @click.stop="printPicklist(order, order.shipGroup)">
@@ -94,7 +94,7 @@
             <ProductListItem v-for="item in order.items" :key="item.productId" :item="item" :orderId="order.orderId" :customerId="order.customerId" :currencyUom="order.currencyUom" orderType="packed"/>
             <div class="border-top">
 
-              <ion-button data-testid="handover-button" :disabled="!useUserStore().hasPermission('')" fill="clear" @click.stop="deliverShipment(order)">
+              <ion-button data-testid="handover-button" :disabled="!useUserStore().hasPermission(Actions.APP_ORDER_UPDATE)" fill="clear" @click.stop="deliverShipment(order)">
                 {{ order.shipmentMethodTypeId === 'STOREPICKUP' ? translate("Handover") : translate("Ship") }}
               </ion-button>
               <ion-button size="default" data-testid="packing-slip-button" v-if="isPrintPackingSlipEnabled" fill="clear" slot="end" @click.stop="printPackingSlip(order)">
@@ -162,6 +162,7 @@ import ProofOfDeliveryModal from "@/components/ProofOfDeliveryModal.vue";
 import { useUserStore } from "@/store/user";
 import { useOrderStore } from "@/store/order";
 import { useProductStore } from "@/store/productStore"
+import Actions from "@/authorization/actions"
 
 const queryString = ref('');
 const isScrollingEnabled = ref(false);
@@ -281,7 +282,7 @@ async function getCompletedOrders(vSize?: any, vIndex?: any) {
   const viewSize = vSize ? vSize : import.meta.env.VITE_VIEW_SIZE;
   const viewIndex = vIndex ? vIndex : 0;
   await useOrderStore().fetchCompletedOrders({ viewSize, viewIndex, queryString: queryString.value, facilityId: (currentFacility.value as any)?.facilityId });
-  if (useUserStore().hasPermission('BOPIS_POD_UPDATE')) await useOrderStore().getCommunicationEvents({ orders: completedOrders.value });
+  if (useUserStore().hasPermission(Actions.APP_PROOF_OF_DELIVERY_PREF_UPDATE)) await useOrderStore().getCommunicationEvents({ orders: completedOrders.value });
 }
 
 function enableScrolling() {
