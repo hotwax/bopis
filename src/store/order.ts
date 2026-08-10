@@ -1464,7 +1464,7 @@ export const useOrderStore = defineStore('order', {
     },
     async ensurePartyRole(payload: any): Promise<any> {
       return api({
-        url: "service/ensurePartyRole",
+        url: `oms/parties/${payload.partyId}/roles`,
         method: "post",
         data: payload
       });
