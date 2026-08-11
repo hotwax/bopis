@@ -345,13 +345,7 @@ function segmentChanged(e: CustomEvent) {
 }
 
 async function searchOrders() {
-  if (segmentSelected.value === 'open') {
-    getPickupOrders()
-  } else if (segmentSelected.value === 'packed') {
-    getPackedOrders()
-  } else {
-    getCompletedOrders()
-  }
+  useOrderStore().searchedQuery = queryString.value.trim();
 }
 
 function selectSearchBarText(event: any) {

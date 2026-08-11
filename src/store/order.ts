@@ -38,6 +38,7 @@ export const useOrderStore = defineStore('order', {
         orderCount: 0
       }
     },
+    searchedQuery: "",
     orders: {} as any,
     communicationEvents: [] as any,
     rejectReasons: [] as any,
@@ -47,10 +48,28 @@ export const useOrderStore = defineStore('order', {
   }),
   getters: {
     getOrders: (state) => state.orders,
-    getOpenOrders: (state) => [...state.open.list].sort((a: any, b: any) => b.orderDate - a.orderDate),
+    getOpenOrders: (state) => {
+      let orders = [...state.open.list].sort((a: any, b: any) => b.orderDate - a.orderDate)
+      if(state.searchedQuery && orders.length) {
+        orders = orders.filter(order => order.orderId.toLowerCase().includes(state.searchedQuery.toLowerCase()) || order.orderName.toLowerCase().includes(state.searchedQuery.toLowerCase()))
+      }
+      return orders;
+    },
     getCurrent: (state) => JSON.parse(JSON.stringify(state.current)),
-    getPackedOrders: (state) => [...state.packed.list].sort((a: any, b: any) => b.orderDate - a.orderDate),
-    getCompletedOrders: (state) => [...state.completed.list].sort((a: any, b: any) => b.orderDate - a.orderDate),
+    getPackedOrders: (state) => {
+      let orders = [...state.packed.list].sort((a: any, b: any) => b.orderDate - a.orderDate)
+      if(state.searchedQuery && orders.length) {
+        orders = orders.filter(order => order.orderId.toLowerCase().includes(state.searchedQuery.toLowerCase()) || order.orderName.toLowerCase().includes(state.searchedQuery.toLowerCase()))
+      }
+      return orders;
+    },
+    getCompletedOrders: (state) => {
+      let orders = [...state.completed.list].sort((a: any, b: any) => b.orderDate - a.orderDate)
+      if(state.searchedQuery && orders.length) {
+        orders = orders.filter(order => order.orderId.toLowerCase().includes(state.searchedQuery.toLowerCase()) || order.orderName.toLowerCase().includes(state.searchedQuery.toLowerCase()))
+      }
+      return orders
+    },
     getShipToStoreIncomingOrders: (state) => state.shipToStore.incoming.list,
     isShipToStoreIncmngOrdrsScrlbl: (state) => state.shipToStore.incoming.orderCount > 0 && state.shipToStore.incoming.orderCount < state.shipToStore.incoming.total,
     getShipToStoreReadyForPickupOrders: (state) => state.shipToStore.readyForPickup.list,
