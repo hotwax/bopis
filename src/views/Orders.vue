@@ -287,7 +287,7 @@ async function getCompletedOrders(vSize?: any, vIndex?: any) {
   if(useProductStore().isProductStoreSettingEnabled('SHOW_SHIPPING_ORDERS')) {
     await useOrderStore().fetchCompletedOrders({ viewSize, viewIndex, queryString: queryString.value, facilityId: (currentFacility.value as any)?.facilityId });
   }
-  // if (useUserStore().hasPermission(Actions.APP_PROOF_OF_DELIVERY_PREF_UPDATE)) await useOrderStore().getCommunicationEvents({ orders: completedOrders.value });
+  if (useUserStore().hasPermission(Actions.APP_PROOF_OF_DELIVERY_PREF_UPDATE)) await useOrderStore().fetchCommunicationEvents({ orders: completedOrders.value });
   emitter.emit("dismissLoader")
 }
 
@@ -567,7 +567,7 @@ async function openProofOfDeliveryModal(orderData: any, isViewModeOnly: any) {
         logger.error("Pickup notification failed:", resp);
         commonUtil.showToast(translate("Unable to save the details. Please try again."));
       } else {
-        await useOrderStore().getCommunicationEvents({ orders: [order.value] });
+        await useOrderStore().fetchCommunicationEvents({ orders: [order.value] });
         commonUtil.showToast(translate("Details have been successfully saved, and an email has been sent to the customer."));
       }
     } catch (err) {

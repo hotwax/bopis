@@ -638,7 +638,7 @@ export const useOrderStore = defineStore('order', {
         commonUtil.showToast(translate("Something went wrong"));
       }
     },
-    async getCommunicationEvents(params: any) {
+    async fetchCommunicationEvents(params: any) {
       try {
         const completedOrdersList = params.orders.map((completedOrderData: any) => completedOrderData.orderId);
         const orderCommunicationEvents = this.communicationEvents;
@@ -660,8 +660,7 @@ export const useOrderStore = defineStore('order', {
         });
 
         if (!commonUtil.hasError(resp) && resp.data && resp.data.communicationEventList) {
-          const mergedOrdersList = [...orderCommunicationEvents, ...(resp.data.communicationEventList || [])];
-          this.communicationEvents = mergedOrdersList;
+          this.communicationEvents = [...orderCommunicationEvents, ...(resp.data.communicationEventList || [])];
           return resp.data.communicationEventList;
         } else {
           throw resp.data;
