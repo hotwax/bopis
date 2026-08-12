@@ -443,7 +443,7 @@ async function fetchJobs() {
     "inputFields": {
       "statusId": "SERVICE_PENDING",
       "statusId_op": "equals",
-      "systemJobEnumId": "JOB_EXP_CAN_S_ORD",
+      "systemJobEnumId": "JOB_UL_CNCLD_ORD",
       "systemJobEnumId_op": "equals"
     },
     "fieldList": ["systemJobEnumId", "statusId", "tempExprId", "nextExecutionDateTime"],
