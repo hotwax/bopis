@@ -194,7 +194,7 @@ onIonViewWillEnter(() => {
   queryString.value = '';
 
   segmentSelected.value = order.value?.orderType || "open"
-
+  searchOrders()
   if (segmentSelected.value === 'open') {
     getPickupOrders()
   } else if (segmentSelected.value === 'packed') {
@@ -287,7 +287,7 @@ async function getCompletedOrders(vSize?: any, vIndex?: any) {
   if(useProductStore().isProductStoreSettingEnabled('SHOW_SHIPPING_ORDERS')) {
     await useOrderStore().fetchCompletedOrders({ viewSize, viewIndex, queryString: queryString.value, facilityId: (currentFacility.value as any)?.facilityId });
   }
-  if (useUserStore().hasPermission(Actions.APP_PROOF_OF_DELIVERY_PREF_UPDATE)) await useOrderStore().getCommunicationEvents({ orders: completedOrders.value });
+  // if (useUserStore().hasPermission(Actions.APP_PROOF_OF_DELIVERY_PREF_UPDATE)) await useOrderStore().getCommunicationEvents({ orders: completedOrders.value });
   emitter.emit("dismissLoader")
 }
 
@@ -334,6 +334,7 @@ async function deliverShipment(orderData: any) {
 function segmentChanged(e: CustomEvent) {
   queryString.value = ''
   segmentSelected.value = e.detail.value
+  searchOrders()
 
   if (segmentSelected.value === 'open') {
     getPickupOrders()
