@@ -637,7 +637,7 @@ export const useOrderStore = defineStore('order', {
         emitter.emit("dismissLoader");
       }
     },
-    async getCommunicationEvents(params: any) {
+    async fetchCommunicationEvents(params: any) {
       try {
         const completedOrdersList = params.orders.map((completedOrderData: any) => completedOrderData.orderId);
         const orderCommunicationEvents = this.communicationEvents;
