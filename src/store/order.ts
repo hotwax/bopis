@@ -38,7 +38,6 @@ export const useOrderStore = defineStore('order', {
         orderCount: 0
       }
     },
-    searchedQuery: "",
     orders: {} as any,
     communicationEvents: [] as any,
     rejectReasons: [] as any,
@@ -48,28 +47,13 @@ export const useOrderStore = defineStore('order', {
   }),
   getters: {
     getOrders: (state) => state.orders,
-    getOpenOrders: (state) => {
-      let orders = [...state.open.list].sort((a: any, b: any) => b.orderDate - a.orderDate)
-      if(state.searchedQuery && orders.length) {
-        orders = orders.filter(order => order.orderId.toLowerCase().includes(state.searchedQuery.toLowerCase()) || order.orderName.toLowerCase().includes(state.searchedQuery.toLowerCase()))
-      }
-      return orders;
-    },
+    getOpenOrders: (state) => state.open.list,
     getCurrent: (state) => JSON.parse(JSON.stringify(state.current)),
-    getPackedOrders: (state) => {
-      let orders = [...state.packed.list].sort((a: any, b: any) => b.orderDate - a.orderDate)
-      if(state.searchedQuery && orders.length) {
-        orders = orders.filter(order => order.orderId.toLowerCase().includes(state.searchedQuery.toLowerCase()) || order.orderName.toLowerCase().includes(state.searchedQuery.toLowerCase()))
-      }
-      return orders;
-    },
-    getCompletedOrders: (state) => {
-      let orders = [...state.completed.list].sort((a: any, b: any) => b.orderDate - a.orderDate)
-      if(state.searchedQuery && orders.length) {
-        orders = orders.filter(order => order.orderId.toLowerCase().includes(state.searchedQuery.toLowerCase()) || order.orderName.toLowerCase().includes(state.searchedQuery.toLowerCase()))
-      }
-      return orders
-    },
+    getPackedOrders: (state) => state.packed.list,
+    isPackedOrdersScrollable: (state) => state.packed.list.length > 0 && state.packed.list.length < state.packed.total,
+    isOpenOrdersScrollable: (state) => state.open.list.length > 0 && state.open.list.length < state.open.total,
+    getCompletedOrders: (state) => state.completed.list,
+    isCompletedOrdersScrollable: (state) => state.completed.list.length > 0 && state.completed.list.length < state.completed.total,
     getShipToStoreIncomingOrders: (state) => state.shipToStore.incoming.list,
     isShipToStoreIncmngOrdrsScrlbl: (state) => state.shipToStore.incoming.orderCount > 0 && state.shipToStore.incoming.orderCount < state.shipToStore.incoming.total,
     getShipToStoreReadyForPickupOrders: (state) => state.shipToStore.readyForPickup.list,
@@ -256,6 +240,8 @@ export const useOrderStore = defineStore('order', {
       return resp;
     },
     async fetchOpenOrders(params: any) {
+      if (params.viewIndex === 0) emitter.emit("presentLoader");
+
       let queryParams = {
         keyword: params.queryString || '',
         facilityId: params.facilityId,
@@ -263,11 +249,11 @@ export const useOrderStore = defineStore('order', {
         shipmentStatusId: 'SHIPMENT_INPUT,SHIPMENT_PACKED,SHIPMENT_SHIPPED',
         shipmentStatusId_op: 'in',
         shipmentStatusId_not: 'Y',
-        pageSize: 200,
+        pageSize: import.meta.env.VITE_VIEW_SIZE,
         pageIndex: params.viewIndex
       } as any;
 
-      if (params.showShippingOrders) {
+      if (useProductStore().isProductStoreSettingEnabled('SHOW_SHIPPING_ORDERS')) {
         queryParams = {
           shipmentMethodTypeId: 'STOREPICKUP',
           shipmentMethodTypeId_op: 'equals',
@@ -277,8 +263,6 @@ export const useOrderStore = defineStore('order', {
       }
 
       try {
-        let total = 0;
-        do {
         const resp = await api({
           url: "oms/orders/pickup",
           method: "get",
@@ -309,17 +293,24 @@ export const useOrderStore = defineStore('order', {
             };
           });
 
-          total = resp.data.ordersCount;
-          orders = this.open.list.concat(orders);
+          const total = resp.data.ordersCount;
+
+          if (params.viewIndex && params.viewIndex > 0) {
+            orders = this.open.list.concat(orders);
+          }
 
           this.open = { list: orders, total };
-          queryParams["pageIndex"]++
+          emitter.emit("dismissLoader");
         } else {
           this.open = { list: [], total: 0 };
         }
-        } while(this.open.list.length < total)
+
+        emitter.emit("dismissLoader");
+        return resp;
+
       } catch (err) {
         logger.error(err);
+        emitter.emit("dismissLoader");
         commonUtil.showToast(translate("Something went wrong"));
       }
     },
@@ -492,26 +483,27 @@ export const useOrderStore = defineStore('order', {
       this.current = order;
     },
     async fetchPackedOrders(params: any) {
+      if (params.viewIndex === 0) emitter.emit("presentLoader");
       let resp;
 
       const productStore = useProduct();
+
+      const userStore = useUserStore();
       const queryParams = {
         statusId: 'SHIPMENT_PACKED',
         originFacilityId: (useProductStore().getCurrentFacility?.facilityId || ""),
         shipmentTypeId: 'SALES_SHIPMENT',
         keyword: params.queryString || '',
         orderBy: '-orderDate',
-        pageSize: 200,
+        pageSize: import.meta.env.VITE_VIEW_SIZE,
         pageIndex: params.viewIndex || 0
       } as any
 
-      if (params.shipmentMethodTypeIds) {
-        queryParams.shipmentMethodTypeIds = params.shipmentMethodTypeIds
+      if (!useProductStore().isProductStoreSettingEnabled('SHOW_SHIPPING_ORDERS')) {
+        queryParams.shipmentMethodTypeIds = 'STOREPICKUP'
       }
 
       try {
-        let total = 0;
-        do {
         resp = await api({
           url: `/poorti/shipments`,
           method: "GET",
@@ -524,7 +516,7 @@ export const useOrderStore = defineStore('order', {
 
           const pickers = await this.fetchPickersInformation({ shipmentIds, shipmentStatusId: 'SHIPMENT_PACKED' });
 
-          total = total || resp.data.shipmentCount;
+          let total = resp.data.shipmentCount;
           let orders = shipments.map((shipment: any) => {
             const validItems = shipment.items.filter((item: any) => item.orderItemStatusId !== 'ITEM_CANCELLED');
             if (validItems.length === 0) {
@@ -552,40 +544,44 @@ export const useOrderStore = defineStore('order', {
             currentOrders: orders
           });
 
-          orders = this.packed.list.concat(packedOrders);
+          orders = params.viewIndex && params.viewIndex > 0 ? this.packed.list.concat(packedOrders) : packedOrders;
           this.packed = { list: orders, total };
-          queryParams["pageIndex"]++;
+
+          if (params.viewIndex === 0) emitter.emit("dismissLoader");
         } else {
           this.packed = { list: [], total: 0 };
         }
 
-        } while(this.packed.list.length < total)
+        emitter.emit("dismissLoader");
+        return resp;
       } catch (err) {
         logger.error(err);
         commonUtil.showToast(translate("Something went wrong"));
+        emitter.emit("dismissLoader");
       }
     },
     async fetchCompletedOrders(params: any) {
+      if (params.viewIndex === 0) emitter.emit("presentLoader");
+
       const productStore = useProduct();
 
+      const userStore = useUserStore();
       const queryParams = {
         statusId: 'SHIPMENT_SHIPPED',
         originFacilityId: (useProductStore().getCurrentFacility?.facilityId || ""),
         shipmentTypeId: 'SALES_SHIPMENT',
         keyword: params.queryString || '',
         orderBy: '-orderDate',
-        pageSize: 200,
+        pageSize: import.meta.env.VITE_VIEW_SIZE,
         pageIndex: params.viewIndex || 0
       } as any
 
-      if (params.shipmentMethodTypeIds) {
-        queryParams.shipmentMethodTypeIds = params.shipmentMethodTypeIds
+      if (!useProductStore().isProductStoreSettingEnabled('SHOW_SHIPPING_ORDERS')) {
+        queryParams.shipmentMethodTypeIds = 'STOREPICKUP'
       }
 
       try {
-        let resp, total = 0;
-        do{
-        resp = await api({
+        const resp = await api({
           url: `/poorti/shipments`,
           method: "GET",
           params: queryParams
@@ -598,7 +594,7 @@ export const useOrderStore = defineStore('order', {
 
           const pickers = await this.fetchPickersInformation({ shipmentIds, shipmentStatusId: 'SHIPMENT_SHIPPED' });
 
-          total = resp.data.shipmentCount;
+          let total = resp.data.shipmentCount;
           let orders = shipments.map((shipment: any) => {
             const validItems = shipment.items.filter((item: any) => item.orderItemStatusId !== 'ITEM_CANCELLED');
             if (validItems.length === 0) {
@@ -626,19 +622,22 @@ export const useOrderStore = defineStore('order', {
             currentOrders: orders
           });
 
-          orders = this.completed.list.concat(completedOrders);
+          orders = params.viewIndex && params.viewIndex > 0 ? this.completed.list.concat(completedOrders) : completedOrders;
           this.completed = { list: orders, total };
-          queryParams["pageIndex"]++;
+          if (params.viewIndex === 0) emitter.emit("dismissLoader");
         } else {
           this.completed = { list: [], total: 0 };
         }
-        } while(this.completed.list.length < total)
+
+        emitter.emit("dismissLoader");
+        return resp;
       } catch (err) {
         logger.error(err);
         commonUtil.showToast(translate("Something went wrong"));
+        emitter.emit("dismissLoader");
       }
     },
-    async fetchCommunicationEvents(params: any) {
+    async getCommunicationEvents(params: any) {
       try {
         const completedOrdersList = params.orders.map((completedOrderData: any) => completedOrderData.orderId);
         const orderCommunicationEvents = this.communicationEvents;
@@ -660,7 +659,8 @@ export const useOrderStore = defineStore('order', {
         });
 
         if (!commonUtil.hasError(resp) && resp.data && resp.data.communicationEventList) {
-          this.communicationEvents = [...orderCommunicationEvents, ...(resp.data.communicationEventList || [])];
+          const mergedOrdersList = [...orderCommunicationEvents, ...(resp.data.communicationEventList || [])];
+          this.communicationEvents = mergedOrdersList;
           return resp.data.communicationEventList;
         } else {
           throw resp.data;

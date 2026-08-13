@@ -163,7 +163,7 @@ const getCompletedOrders = async (vSize?: any, vIndex?: any) => {
   const viewSize = vSize ? vSize : (import.meta.env.VITE_VIEW_SIZE as any);
   const viewIndex = vIndex ? vIndex : 0;
   await (useOrderStore() as any).getShipToStoreCompletedOrders({ viewSize, viewIndex, queryString: queryString.value, facilityId: (useProductStore().getCurrentFacility as any)?.facilityId });
-  await (useOrderStore() as any).fetchCommunicationEvents({ orders: completedOrders.value });
+  await (useOrderStore() as any).getCommunicationEvents({ orders: completedOrders.value });
 };
 
 const refreshOrders = async (event: any) => {
@@ -406,7 +406,7 @@ const openProofOfDeliveryModal = async (order: any, isViewModeOnly: any) => {
         logger.error("Pickup notification failed:", resp);
         commonUtil.showToast(translate("Unable to save the details. Please try again."));
       } else {
-        await (useOrderStore() as any).fetchCommunicationEvents({ orders: [order] });
+        await (useOrderStore() as any).getCommunicationEvents({ orders: [order] });
         commonUtil.showToast(translate("Details have been successfully saved, and an email has been sent to the customer."));
       }
     } catch (err) {
