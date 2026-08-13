@@ -1,4 +1,4 @@
-import { api, i18n, commonUtil, logger, translate, useNotificationStore, useEmbeddedAppStore } from "@common";
+import { api, i18n, commonUtil, logger, translate, useNotificationStore } from "@common";
 import { useAuth } from "@common/composables/useAuth";
 import { defineStore } from "pinia"
 import { DateTime, Settings } from "luxon"
@@ -252,13 +252,6 @@ export const useUserStore = defineStore("user", {
         if (notificationStore.getFirebaseDeviceId) await notificationStore.removeClientRegistrationToken(notificationStore.getFirebaseDeviceId, import.meta.env.VITE_NOTIF_APP_ID as any);
       } catch (error) {
         logger.error(error);
-      }
-
-      if (commonUtil.isAppEmbedded()) {
-        setTimeout(() => {
-          window.location.href = window.location.origin + `/shopify-login?shop=${useEmbeddedAppStore().getShop}&host=${useEmbeddedAppStore().getHost}&embedded=1`;
-        }, 100);
-        useEmbeddedAppStore().$reset();
       }
     },
     async postLogout() {
