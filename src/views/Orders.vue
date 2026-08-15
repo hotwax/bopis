@@ -1,6 +1,6 @@
 <template>
   <ion-page>
-    <ion-header :translucent="true">
+    <ion-header>
       <ion-toolbar>
         <ion-title>{{ (currentFacility as any)?.facilityName ? (currentFacility as any)?.facilityName : (currentFacility as any)?.facilityId }}</ion-title>
         <ion-buttons slot="end">

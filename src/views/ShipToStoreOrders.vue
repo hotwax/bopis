@@ -1,6 +1,6 @@
 <template>
   <ion-page>
-    <ion-header :translucent="true">
+    <ion-header>
       <ion-toolbar>
         <ion-back-button default-href="/" slot="start" />
         <ion-title>{{ translate("Ship to Store") }}</ion-title>
