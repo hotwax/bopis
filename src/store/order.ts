@@ -653,7 +653,7 @@ export const useOrderStore = defineStore('order', {
           method: "GET",
           params: {
             orderIds: filteredOrdersList,
-            communicationEventTypeId: "SYS_MSG_EMAIL_COMM",
+            communicationEventTypeId: "EMAIL_COMMUNICATION",
             reasonEnumId: "HANDOVER_PROOF",
           }
         });
