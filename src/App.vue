@@ -28,7 +28,6 @@ const presentLoader = async (options = { message: "", backdropDismiss: false }) 
   if (!loader.value) {
     loader.value = await loadingController.create({
       message: options.message ? translate(options.message) : (options.backdropDismiss ? translate("Click the backdrop to dismiss.") : translate("Loading...")),
-      translucent: true,
       backdropDismiss: options.backdropDismiss || false
     });
   }
@@ -45,7 +44,6 @@ const dismissLoader = () => {
 onMounted(async () => {
   loader.value = await loadingController.create({
     message: translate("Loading..."),
-    translucent: true,
     backdropDismiss: false
   });
 

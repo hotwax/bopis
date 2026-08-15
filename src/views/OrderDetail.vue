@@ -978,7 +978,6 @@ async function openRejectReasonPopover(ev: Event, item: any, orderRef: any) {
   const reportIssuePopover = await popoverController.create({
     component: ReportAnIssuePopover,
     event: ev,
-    translucent: true,
     showBackdrop: false,
   });
 
@@ -998,7 +997,6 @@ async function openCancelReasonPopover(ev: Event, item: any, orderRef: any) {
       reasonType: "cancel"
     },
     event: ev,
-    translucent: true,
     showBackdrop: false,
   });
 
