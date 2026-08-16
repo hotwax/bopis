@@ -259,8 +259,10 @@ const scheduleOrderForPickup = async (shipmentId: string, order: any) => {
       if (isLastShipGroup) {
         try {
           const emailResp = await orderStore.sendPickupScheduledNotification({ shipmentId });
-          if (!commonUtil.hasError(emailResp)) {
+          if (!commonUtil.hasError(emailResp) && emailResp.data?.success) {
             commonUtil.showToast(translate('Order marked as ready for pickup, an email notification has been sent to the customer'));
+          } else {
+            commonUtil.showToast(translate('Order marked as ready for pickup but something went wrong while sending the email notification'));
           }
         } catch (error) {
           logger.error('Error sending pickup scheduled notification:', error);
@@ -320,7 +322,7 @@ const handoverOrder = async (shipmentId: string, order: any) => {
       if (isLastShipGroup) {
         try {
           const emailResp = await orderStore.sendHandoverNotification({ shipmentId });
-          if (!commonUtil.hasError(emailResp)) {
+          if (!commonUtil.hasError(emailResp) && emailResp.data?.success) {
             commonUtil.showToast(translate('Order handed over successfully and order completion email has been sent'));
           } else {
             logger.error('Error sending handover notification:', emailResp);
@@ -373,7 +375,7 @@ const sendReadyForPickupEmail = async (order: any) => {
       handler: async () => {
         try {
           const resp = await orderStore.sendPickupScheduledNotification({ shipmentId: order.shipmentId });
-          if (!commonUtil.hasError(resp)) {
+          if (!commonUtil.hasError(resp) && resp.data?.success) {
             commonUtil.showToast(translate("Email sent successfully"));
           } else {
             commonUtil.showToast(translate("Something went wrong while sending the email."));
@@ -402,9 +404,9 @@ const openProofOfDeliveryModal = async (order: any, isViewModeOnly: any) => {
     emitter.emit("presentLoader");
     try {
       const resp = await orderStore.sendPickupNotification(data.proofOfDeliveryData);
-      if (commonUtil.hasError(resp)) {
+      if (commonUtil.hasError(resp) || !resp.data?.success){
         logger.error("Pickup notification failed:", resp);
-        commonUtil.showToast(translate("Unable to save the details. Please try again."));
+        commonUtil.showToast(translate("Details have been successfully saved, but failed to send email notification to the customer due to missing configuration."));
       } else {
         await (useOrderStore() as any).fetchCommunicationEvents({ orders: [order] });
         commonUtil.showToast(translate("Details have been successfully saved, and an email has been sent to the customer."));

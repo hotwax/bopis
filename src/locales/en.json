@@ -156,6 +156,7 @@
   "Order completed": "Order completed",
   "Order delivered to": "Order delivered to { customerName }",
   "Order details": "Order details",
+  "Order Details have been successfully saved, but failed to send email notification to the customer due to missing configuration.": "Order Details have been successfully saved, but failed to send email notification to the customer due to missing configuration.",
   "Order edit permissions": "Order edit permissions",
   "Order is now ready to handover.": "Order is now ready to handover.",
   "Order is now ready to be shipped.": "Order is now ready to be shipped.",
