@@ -1,5 +1,5 @@
 const escapeSolrQuery = (query: any) => {
-  if (typeof query !== 'string') query = query ? String(query) : ''
+  query = (query ?? '').toString();
   return query.replace(/([+\-!(){}\[\]^"~*?:\/\\|&])/g, "\\$1");
 }
 
@@ -51,7 +51,12 @@ const prepareOrderQuery = (params: any) => {
   }
 
   if (params['-fulfillmentStatus']) {
-    payload.json.filter.push(`-fulfillmentStatus: ${escapeSolrQuery(params['-fulfillmentStatus'])}`)
+    const fulfillmentStatus = params['-fulfillmentStatus'];
+    if (typeof fulfillmentStatus === 'string' && (fulfillmentStatus.includes(' OR ') || fulfillmentStatus.includes(' AND ') || (fulfillmentStatus.startsWith('(') && fulfillmentStatus.endsWith(')')))) {
+      payload.json.filter.push(`-fulfillmentStatus: ${fulfillmentStatus}`)
+    } else {
+      payload.json.filter.push(`-fulfillmentStatus: ${escapeSolrQuery(fulfillmentStatus)}`)
+    }
   }
 
   if (params.facilityId) {
