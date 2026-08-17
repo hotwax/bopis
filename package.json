@@ -1,6 +1,6 @@
 {
   "name": "bopis",
-  "version": "5.2.0",
+  "version": "v5.2.1",
   "private": true,
   "description": "HotWax BOPIS app",
   "scripts": {
