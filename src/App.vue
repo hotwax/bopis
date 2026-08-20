@@ -7,7 +7,7 @@
 <script setup lang="ts">
 import { IonApp, IonRouterOutlet, loadingController } from "@ionic/vue";
 import { computed, onMounted, onUnmounted, ref } from "vue";
-import { translate, emitter, logger, useNotificationStore } from "@common";
+import { translate, emitter, logger, useNotificationStore, i18n } from "@common";
 import { useAuth } from "@common/composables/useAuth";
 import { Settings } from "luxon";
 import { useUserStore } from "@/store/user";
@@ -52,6 +52,10 @@ onMounted(async () => {
 
   if (userProfile.value && userProfile.value.userTimeZone) {
     Settings.defaultZone = userProfile.value.timeZone;
+  }
+
+  if(userProfile.value?.userId) {
+    i18n.global.locale.value = useUserStore().getLocale
   }
 
   const currentProductStore: any = useProductStore().getCurrentProductStore;

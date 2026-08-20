@@ -106,6 +106,18 @@ export const useUserStore = defineStore("user", {
         if (this.current.timeZone) {
           Settings.defaultZone = this.current.timeZone;
         }
+
+        if(this.current.locale) {
+          const localeOptions = Object.keys(this.localeOptions)
+          // If exact locale is not found, try to match the first two characters i.e primary code
+          const matchingLocale = localeOptions.find((option: string) => option === this.current.locale) ||
+            localeOptions.find((option: string) => option.slice(0, 2) === this.current.locale.slice(0, 2))
+
+          if(matchingLocale) {
+            i18n.global.locale.value = matchingLocale
+            this.locale = matchingLocale
+          }
+        }
       } catch (error: any) {
         commonUtil.showToast(translate("Failed to fetch user profile information"));
         console.error("error", error);
