@@ -538,6 +538,10 @@ async function fetchOrderChangeHistory() {
 }
 
 async function fetchOrderCommunicationEvent() {
+  if(!order.value.orderId) {
+    logger.error("Failed to fetch communication events as order id is missing")
+    return;
+  }
   let orderCommunicationEvent = []
   try {
     const resp = await api({
