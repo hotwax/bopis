@@ -540,7 +540,7 @@ async function fetchOrderChangeHistory() {
 async function fetchOrderCommunicationEvent() {
   if(!order.value.orderId) {
     logger.error("Not fetching communication events as order id not found")
-    return;
+    return [];
   }
 
   let orderCommunicationEvent = []
