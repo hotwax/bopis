@@ -50,10 +50,10 @@
             <div>
               <ion-segment :value="selectedSegment">
                 <ion-segment-button value="inStore" @click="selectedSegment = 'inStore'">
-                  <ion-label>In Store</ion-label>
+                  <ion-label>{{ translate("In Store") }}</ion-label>
                 </ion-segment-button>
                 <ion-segment-button value="otherLocations" @click="selectedSegment = 'otherLocations'">
-                  <ion-label>Other Locations</ion-label>
+                  <ion-label>{{ translate("Other Locations") }}</ion-label>
                 </ion-segment-button>
               </ion-segment>
   

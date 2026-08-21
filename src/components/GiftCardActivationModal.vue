@@ -143,7 +143,7 @@ async function scan() {
     }
   } else {
     if (!(await commonUtil.hasWebcamAccess())) {
-      commonUtil.showToast(translate("Camera access not allowed, please check permissons."));
+      commonUtil.showToast(translate("Camera access not allowed, please check permissions."));
       return;
     } 
 
