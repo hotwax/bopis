@@ -446,7 +446,7 @@ async function fetchJobs() {
       "systemJobEnumId": "JOB_UL_CNCLD_ORD",
       "systemJobEnumId_op": "equals"
     },
-    "fieldList": ["systemJobEnumId", "statusId", "tempExprId", "nextExecutionDateTime"],
+    "fieldList": ["systemJobEnumId", "statusId", "tempExprId", "runTime"],
     "noConditionFind": "Y",
     "viewSize": 1
   }
@@ -455,7 +455,7 @@ async function fetchJobs() {
     const resp = await useOrderStore().fetchJobInformation(params)
     if(!commonUtil.hasError(resp) && resp.data.count > 0) {
       isCancelationSyncJobEnabled.value = true;
-      cancelJobNextRunTime.value = resp.data.docs[0].nextExecutionDateTime;
+      cancelJobNextRunTime.value = resp.data.docs[0].runTime;
     }
 
     const refundStatusResp = await useOrderStore().getProcessRefundStatus(useProductStore().getCurrentProductStore.productStoreId)
