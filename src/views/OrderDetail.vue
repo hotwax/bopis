@@ -215,8 +215,9 @@
                 </ion-item>
                 <ion-item>
                   <ion-icon :icon="callOutline" slot="start" />
-                  <ion-label>{{ commonUtil.formatPhoneNumber(order.phone?.countryCode, order.phone?.areaCode, order.phone?.contactNumber) || '-' }}</ion-label>
+                  <ion-label>{{ commonUtil.formatPhoneNumber(order.phone?.countryCode, order.phone?.areaCode, order.phone?.contactNumber) || order.phone?.contactNumber || (typeof order.phone === 'string' ? order.phone : null) || '-' }}</ion-label>
                 </ion-item>
+          
                 <ion-item lines="none">
                   <ion-icon :icon="cashOutline" slot="start" />
                   <ion-label v-if="order.address" class="ion-text-wrap">
