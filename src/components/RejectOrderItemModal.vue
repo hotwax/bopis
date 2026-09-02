@@ -29,6 +29,7 @@
           <h2>{{ commonUtil.getProductIdentificationValue(productIdentificationPref.primaryId, getProduct(item.productId))|| getProduct(item.productId).productName }}
           </h2>
           <p>{{ commonUtil.getProductIdentificationValue(productIdentificationPref.secondaryId, getProduct(item.productId)) }}</p>
+          <p>{{ commonUtil.getFeatures(getProduct(item.productId).productFeatures) }}</p>
           <ion-badge color="dark" v-if="orderUtil.isKit(item)">{{ translate("Kit") }}</ion-badge>
         </ion-label>
 
