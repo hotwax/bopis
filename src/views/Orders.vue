@@ -505,7 +505,7 @@ async function createPicklist(orderData: any, selectedPicker: any) {
     resp = await orderStore.createPicklist(payload);
     if (!commonUtil.hasError(resp)) {
       // generating picklist after creating a new picklist
-      await orderStore.printPicklist(resp.data.picklistId)
+      await orderStore.printPicklist(resp.data.picklistId, orderData.orderId)
       const currentOrders = JSON.parse(JSON.stringify(orders.value))
       const orderIndex = currentOrders.findIndex((o: any) => o.orderId === orderData.orderId);
       let orderShipGroups = currentOrders[orderIndex].shipGroups || [];
