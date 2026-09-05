@@ -159,7 +159,7 @@
           <p v-if="!order.shipGroup?.items?.length && orderType === 'open'" class="empty-state">{{ translate("All order items are rejected") }}</p>
           <p v-if="!order.shipGroup?.items?.length && orderType === 'packed'" class="empty-state">{{ translate("All order items are cancelled") }}</p>
 
-          <template v-if="orderType === 'packed'">
+          <!-- <template v-if="orderType === 'packed'">
             <ion-item lines="none" v-if="isCancelationSyncJobEnabled && isProcessRefundEnabled">
               <ion-icon slot="start" :icon="checkmarkDoneOutline"/>
               <ion-label>
@@ -178,7 +178,7 @@
                 {{ translate("Cancellation and refund sync to Shopify is not enabled.") }}
               </ion-label>
             </ion-item>
-          </template>
+          </template> -->
 
           <ion-item lines="none" v-if="orderType === 'open' && order.shipGroup?.items?.length">
             <ion-button data-testid="ready-pickup-button" size="default" :disabled="!useUserStore().hasPermission(Actions.APP_ORDER_UPDATE) || order.readyToHandover || order.readyToShip || order.rejected || hasRejectedItems" @click="readyForPickup(order, order.shipGroup)">
@@ -760,14 +760,12 @@ async function printPicklist(orderRef: any, shipGroup: any) {
 }
 
 async function assignPicker(orderRef: any, shipGroup: any, facilityId: any) {
-  console.log('(orderRef: any, shipGroup: any, facilityId: any', orderRef, shipGroup, facilityId)
   const assignPickerModal = await modalController.create({
     component: AssignPickerModal,
     componentProps: { order: orderRef, shipGroup, facilityId }
   });
   assignPickerModal.onDidDismiss().then(async(result: any) => {
     if(result.data?.selectedPicker) {
-      console.log('(orderRef: any, shipGroup: any, facilityId: any 11111', orderRef, shipGroup, facilityId)
       emitter.emit("presentLoader");
       await createPicklist(orderRef, result.data.selectedPicker);
       const updatedOrder = order.value;
@@ -799,7 +797,6 @@ async function editPicker(orderRef: any) {
 }
 
 async function readyForPickup(orderData: any, shipGroup: any) {
-  console.log('isTrackingEnabled.value', isTrackingEnabled.value, shipGroup.picklistId)
   if (isTrackingEnabled.value && !shipGroup.picklistId) return assignPicker(orderData, shipGroup, (useProductStore().getCurrentFacility as any)?.facilityId);
   const pickup = shipGroup.shipmentMethodTypeId === 'STOREPICKUP';
   const header = pickup ? translate('Ready for pickup') : translate('Ready to ship');

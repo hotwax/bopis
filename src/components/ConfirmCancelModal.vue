@@ -30,7 +30,7 @@
         <ion-note slot="end">{{ commonUtil.formatCurrency(orderTotal, order.currencyUom) }}</ion-note>
       </ion-item>
 
-      <ion-item lines="full" v-if="isCancelationSyncJobEnabled && isProcessRefundEnabled">
+      <!-- <ion-item lines="full" v-if="isCancelationSyncJobEnabled && isProcessRefundEnabled">
         <ion-label>
           {{ translate("Estimated time to refund customer on Shopify") }}
           <p>{{ translate("Showing the next estimated time to sync cancellation to Shopify") }}</p>
@@ -49,7 +49,7 @@
           {{ translate("Cancellation not syncing to Shopify") }}
           <p>{{ translate("Cancellation and refund sync to Shopify is not enabled.") }}</p>
         </ion-label>
-      </ion-item>
+      </ion-item> -->
     </ion-list>
 
     <ion-button class="ion-margin" color="danger" @click="cancelOrder">
