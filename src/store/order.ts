@@ -4,6 +4,7 @@ import { api, client, commonUtil, emitter, logger, useSolrSearch, translate } fr
 import { useProductStore as useProductStore } from "@/store/productStore";
 import { useProductStore as useProduct } from "@/store/product";
 import { useUserStore } from "@/store/user";
+import Actions from "@/authorization/actions"
 
 export const useOrderStore = defineStore('order', {
   state: () => ({
@@ -1265,15 +1266,31 @@ export const useOrderStore = defineStore('order', {
         data: payload
       });
     },
-    async printPicklist(picklistId: string): Promise<any> {
+    async printPicklist(picklistId: string, orderId: string): Promise<any> {
       try {
-        const resp = await api({
-          url: "/fop/apps/pdf/PrintPicklist",
-          method: "GET",
-          baseURL: commonUtil.getMaargBaseURL(),
-          responseType: "blob",
-          params: { picklistId }
-        });
+        let resp = null;
+        const maarg = commonUtil.getMaargBaseURL()
+        let maargURL = ""
+        if (maarg) {
+          maargURL = maarg.startsWith('http') ? maarg.includes('/rest/s1') ? maarg.replace("'/rest/s1'", "") : maarg : `https://${maarg}.hotwax.io/`;
+        }
+        if (useUserStore().hasPermission(Actions.PRINT_CUSTOMER_RECEIPT)) {
+          resp = await api({
+            url: `/fop/apps/pdf/PrintReceipt`,
+            method: "GET",
+            baseURL: maargURL,
+            responseType: "blob",
+            params: { orderId, filename: `Receipt-${orderId}.pdf` }
+          });
+        } else {
+          resp = await api({
+            url: "/fop/apps/pdf/PrintPicklist",
+            method: "GET",
+            baseURL: commonUtil.getMaargBaseURL(),
+            responseType: "blob",
+            params: { picklistId }
+          });
+        }
 
         if (!resp || commonUtil.hasError(resp)) {
           throw resp?.data;
