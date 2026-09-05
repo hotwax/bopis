@@ -28,7 +28,7 @@
         </ion-segment>
       </div>    
     </ion-header>
-    <ion-content ref="contentRef" :scroll-events="true" @ionScroll="enableScrolling()">
+    <ion-content>
       <div data-testid="open-orders-container" v-if="segmentSelected === 'open' && orders.length">
 
         <div v-for="(order, index) in getOrdersByPart(orders)" :key="index" v-show="order.shipGroups.length > 0">
@@ -138,17 +138,12 @@
       <ion-refresher slot="fixed" @ionRefresh="refreshOrders($event)">
         <ion-refresher-content pullingIcon="crescent" refreshingSpinner="crescent" />
       </ion-refresher>
-      <ion-infinite-scroll @ionInfinite="loadMoreProducts($event)" threshold="100px" 
-        v-show="(segmentSelected === 'open' ? isOpenOrdersScrollable : segmentSelected === 'packed' ? isPackedOrdersScrollable : isCompletedOrdersScrollable)"
-        ref="infiniteScrollRef">
-        <ion-infinite-scroll-content loading-spinner="crescent" :loading-text="translate('Loading')" />
-      </ion-infinite-scroll>
     </ion-content>
   </ion-page>
 </template>
 
 <script setup lang="ts">
-import { alertController, IonBadge, IonButton, IonButtons, IonCard, IonContent, IonHeader, IonIcon, IonInfiniteScroll, IonInfiniteScrollContent, IonItem, IonLabel, IonPage, IonRefresher, IonRefresherContent, IonSearchbar, IonSegment, IonSegmentButton, IonTitle, IonToolbar, modalController, onIonViewWillEnter } from "@ionic/vue";
+import { alertController, IonBadge, IonButton, IonButtons, IonCard, IonContent, IonHeader, IonIcon, IonItem, IonLabel, IonPage, IonRefresher, IonRefresherContent, IonSearchbar, IonSegment, IonSegmentButton, IonTitle, IonToolbar, modalController, onIonViewWillEnter } from "@ionic/vue";
 import { onMounted, onUnmounted, ref, computed } from "vue";
 import ProductListItem from '@/components/ProductListItem.vue'
 import { mailOutline, notificationsOutline, printOutline, trailSignOutline } from "ionicons/icons";
@@ -165,17 +160,11 @@ import { useProductStore } from "@/store/productStore"
 import Actions from "@/authorization/actions"
 
 const queryString = ref('');
-const isScrollingEnabled = ref(false);
 const segmentSelected = ref('open');
-const contentRef = ref(null as any);
-const infiniteScrollRef = ref(null as any);
 
 const orders = computed(() => useOrderStore().getOpenOrders);
 const packedOrders = computed(() => useOrderStore().getPackedOrders);
 const completedOrders = computed(() => useOrderStore().getCompletedOrders);
-const isPackedOrdersScrollable = computed(() => useOrderStore().isPackedOrdersScrollable);
-const isOpenOrdersScrollable = computed(() => useOrderStore().isOpenOrdersScrollable);
-const isCompletedOrdersScrollable = computed(() => useOrderStore().isCompletedOrdersScrollable);
 const notifications = computed(() => useNotificationStore().getNotifications);
 const unreadNotificationsStatus = computed(() => useNotificationStore().hasUnreadNotifications);
 const isHandoverProofEnabled = computed(() => useProductStore().isHandoverProofEnabled)
@@ -202,11 +191,10 @@ onUnmounted(() => {
 });
 
 onIonViewWillEnter(() => {
-  isScrollingEnabled.value = false;
   queryString.value = '';
 
   segmentSelected.value = order.value?.orderType || "open"
-
+  searchOrders()
   if (segmentSelected.value === 'open') {
     getPickupOrders()
   } else if (segmentSelected.value === 'packed') {
@@ -269,63 +257,38 @@ async function viewOrder(orderData: any, shipGroupSeqId: any, orderType: any) {
 async function getPickupOrders(vSize?: any, vIndex?: any) {
   const viewSize = vSize ? vSize : import.meta.env.VITE_VIEW_SIZE;
   const viewIndex = vIndex ? vIndex : 0;
+  emitter.emit("presentLoader")
+  useOrderStore().clearOrders();
   await useOrderStore().fetchOpenOrders({ viewSize, viewIndex, queryString: queryString.value, facilityId: (currentFacility.value as any)?.facilityId });
+  if(useProductStore().isProductStoreSettingEnabled('SHOW_SHIPPING_ORDERS')) {
+    await useOrderStore().fetchOpenOrders({ viewSize, viewIndex, queryString: queryString.value, facilityId: (currentFacility.value as any)?.facilityId, showShippingOrders: true });
+  }
+  emitter.emit("dismissLoader")
 }
 
 async function getPackedOrders(vSize?: any, vIndex?: any) {
   const viewSize = vSize ? vSize : import.meta.env.VITE_VIEW_SIZE;
   const viewIndex = vIndex ? vIndex : 0;
-  await useOrderStore().fetchPackedOrders({ viewSize, viewIndex, queryString: queryString.value, facilityId: (currentFacility.value as any)?.facilityId });
+  emitter.emit("presentLoader")
+  useOrderStore().clearOrders();
+  await useOrderStore().fetchPackedOrders({ viewSize, viewIndex, queryString: queryString.value, facilityId: (currentFacility.value as any)?.facilityId, shipmentMethodTypeIds: "STOREPICKUP" });
+  if(useProductStore().isProductStoreSettingEnabled('SHOW_SHIPPING_ORDERS')) {
+    await useOrderStore().fetchPackedOrders({ viewSize, viewIndex, queryString: queryString.value, facilityId: (currentFacility.value as any)?.facilityId });
+  }
+  emitter.emit("dismissLoader")
 }
 
 async function getCompletedOrders(vSize?: any, vIndex?: any) {
   const viewSize = vSize ? vSize : import.meta.env.VITE_VIEW_SIZE;
   const viewIndex = vIndex ? vIndex : 0;
-  await useOrderStore().fetchCompletedOrders({ viewSize, viewIndex, queryString: queryString.value, facilityId: (currentFacility.value as any)?.facilityId });
+  emitter.emit("presentLoader")
+  useOrderStore().clearOrders();
+  await useOrderStore().fetchCompletedOrders({ viewSize, viewIndex, queryString: queryString.value, facilityId: (currentFacility.value as any)?.facilityId, shipmentMethodTypeIds: "STOREPICKUP" });
+  if(useProductStore().isProductStoreSettingEnabled('SHOW_SHIPPING_ORDERS')) {
+    await useOrderStore().fetchCompletedOrders({ viewSize, viewIndex, queryString: queryString.value, facilityId: (currentFacility.value as any)?.facilityId });
+  }
   if (useUserStore().hasPermission(Actions.APP_PROOF_OF_DELIVERY_PREF_UPDATE)) await useOrderStore().fetchCommunicationEvents({ orders: completedOrders.value });
-}
-
-function enableScrolling() {
-  const parentElement = contentRef.value?.$el
-  if(!parentElement) return;
-  const scrollEl = parentElement.shadowRoot?.querySelector("div[part='scroll']")
-  if(!scrollEl) return;
-  
-  let scrollHeight = scrollEl.scrollHeight, infiniteHeight = infiniteScrollRef.value?.$el.offsetHeight, scrollTop = scrollEl.scrollTop, threshold = 100, height = scrollEl.offsetHeight
-  const distanceFromInfinite = scrollHeight - infiniteHeight - scrollTop - threshold - height
-  if (distanceFromInfinite < 0) {
-    isScrollingEnabled.value = false;
-  } else {
-    isScrollingEnabled.value = true;
-  }
-}
-
-async function loadMoreProducts(event: any) {
-  if (!(isScrollingEnabled.value && (segmentSelected.value === 'open' ? isOpenOrdersScrollable.value : segmentSelected.value === 'packed' ? isPackedOrdersScrollable.value : isCompletedOrdersScrollable.value))) {
-    await event.target.complete();
-  }
-  if (segmentSelected.value === 'open') {
-    getPickupOrders(
-      undefined,
-      Math.ceil(orders.value.length / (import.meta.env.VITE_VIEW_SIZE as any)).toString()
-    ).then(async () => {
-      await event.target.complete();
-    });
-  } else if (segmentSelected.value === 'packed') {
-    getPackedOrders(
-      undefined,
-      Math.ceil(packedOrders.value.length / (import.meta.env.VITE_VIEW_SIZE as any)).toString()
-    ).then(async () => {
-      await event.target.complete();
-    });
-  } else {
-    getCompletedOrders(
-      undefined,
-      Math.ceil(completedOrders.value.length / (import.meta.env.VITE_VIEW_SIZE as any)).toString()
-    ).then(async () => {
-      await event.target.complete();
-    });
-  }
+  emitter.emit("dismissLoader")
 }
 
 async function readyForPickup(orderData: any, shipGroup: any) {
@@ -371,6 +334,7 @@ async function deliverShipment(orderData: any) {
 function segmentChanged(e: CustomEvent) {
   queryString.value = ''
   segmentSelected.value = e.detail.value
+  searchOrders()
 
   if (segmentSelected.value === 'open') {
     getPickupOrders()
@@ -382,13 +346,7 @@ function segmentChanged(e: CustomEvent) {
 }
 
 async function searchOrders() {
-  if (segmentSelected.value === 'open') {
-    getPickupOrders()
-  } else if (segmentSelected.value === 'packed') {
-    getPackedOrders()
-  } else {
-    getCompletedOrders()
-  }
+  useOrderStore().searchedQuery = queryString.value.trim();
 }
 
 function selectSearchBarText(event: any) {
