@@ -16,9 +16,8 @@
           <DxpShopifyImg :src="getProduct(item.productId).mainImageUrl" size="small" />
         </ion-thumbnail>
         <ion-label>
-          <h2>{{ commonUtil.getProductIdentificationValue(productIdentificationPref.primaryId, getProduct(item.productId)) }}</h2>
+          <h2>{{ commonUtil.getProductIdentificationValue(productIdentificationPref.primaryId, getProduct(item.productId)) }} - {{ commonUtil.getFeatures(getProduct(item.productId).productFeatures) }}</h2>
           <h5>{{ commonUtil.getProductIdentificationValue(productIdentificationPref.secondaryId, getProduct(item.productId)) }}</h5>
-          <h5>{{ commonUtil.getFeatures(getProduct(item.productId).productFeatures) }}</h5>
         </ion-label>
         <ion-label slot="end" class="ion-text-right">
           <h2>{{ getRejectReasonDescription(item.changeReasonEnumId) }}</h2>

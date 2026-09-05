@@ -76,9 +76,8 @@
                   <DxpShopifyImg :src="getProduct(item.productId).mainImageUrl" size="small" />
                 </ion-thumbnail>
                 <ion-label class="ion-text-wrap">
-                  <h2>{{ commonUtil.getProductIdentificationValue(productIdentificationPref.primaryId, getProduct(item.productId)) ? commonUtil.getProductIdentificationValue(productIdentificationPref.primaryId, getProduct(item.productId)) : getProduct(item.productId).productName }}</h2>
+                  <h2>{{ commonUtil.getProductIdentificationValue(productIdentificationPref.primaryId, getProduct(item.productId)) ? commonUtil.getProductIdentificationValue(productIdentificationPref.primaryId, getProduct(item.productId)) : getProduct(item.productId).productName }} - {{ commonUtil.getFeatures(getProduct(item.productId).productFeatures) }}</h2>
                   <p class="ion-text-wrap">{{ commonUtil.getProductIdentificationValue(productIdentificationPref.secondaryId, getProduct(item.productId)) }}</p>
-                  <p class="ion-text-wrap">{{ commonUtil.getFeatures(getProduct(item.productId).productFeatures) }}</p>
                   <ion-badge color="dark" v-if="orderUtil.isKit(item)">{{ translate("Kit") }}</ion-badge>
                 </ion-label>
 
@@ -149,8 +148,7 @@
                     </ion-thumbnail>
                     <ion-label>
                       <p class="overline">{{ commonUtil.getProductIdentificationValue(productIdentificationPref.secondaryId, getProduct(productComponent.productIdTo)) }}</p>
-                      {{ commonUtil.getProductIdentificationValue(productIdentificationPref.primaryId, getProduct(productComponent.productIdTo)) ? commonUtil.getProductIdentificationValue(productIdentificationPref.primaryId, getProduct(productComponent.productIdTo)) : productComponent.productIdTo }}
-                      <p>{{ commonUtil.getFeatures(getProduct(productComponent.productIdTo).productFeatures) }}</p>
+                      {{ commonUtil.getProductIdentificationValue(productIdentificationPref.primaryId, getProduct(productComponent.productIdTo)) ? commonUtil.getProductIdentificationValue(productIdentificationPref.primaryId, getProduct(productComponent.productIdTo)) : productComponent.productIdTo }} - {{ commonUtil.getFeatures(getProduct(productComponent.productIdTo).productFeatures) }}
                     </ion-label>
                     <ion-checkbox slot="end" aria-label="Rejection Reason kit component" v-if="item.rejectReason || isEntireOrderRejectionEnabled()" :checked="item.rejectedComponents?.includes(productComponent.productIdTo)" @ionChange="rejectKitComponent(order, item, productComponent.productIdTo)" color="danger"/>
                   </ion-item>
@@ -293,9 +291,8 @@
                     <DxpShopifyImg :src="getProduct(item.productId).mainImageUrl" size="small"/>
                   </ion-thumbnail>
                   <ion-label class="ion-text-wrap">
-                    <h2>{{ commonUtil.getProductIdentificationValue(productIdentificationPref.primaryId, getProduct(item.productId)) ? commonUtil.getProductIdentificationValue(productIdentificationPref.primaryId, getProduct(item.productId)) : getProduct(item.productId).productName }}</h2>
+                    <h2>{{ commonUtil.getProductIdentificationValue(productIdentificationPref.primaryId, getProduct(item.productId)) ? commonUtil.getProductIdentificationValue(productIdentificationPref.primaryId, getProduct(item.productId)) : getProduct(item.productId).productName }} - {{ commonUtil.getFeatures(getProduct(item.productId).productFeatures) }}</h2>
                     <p class="ion-text-wrap">{{ commonUtil.getProductIdentificationValue(productIdentificationPref.secondaryId, getProduct(item.productId)) }}</p>
-                    <p class="ion-text-wrap">{{ commonUtil.getFeatures(getProduct(item.productId).productFeatures) }}</p>
                     <ion-badge class="kit-badge" color="dark" v-if="orderUtil.isKit(item)">{{ translate("Kit") }}</ion-badge>
                   </ion-label>
 

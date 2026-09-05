@@ -29,9 +29,8 @@
       <ion-item lines="none">
         <ion-icon :icon="giftOutline" slot="start" />
         <ion-label>
-          {{ commonUtil.getProductIdentificationValue(productIdentificationPref.primaryId, getProduct(item.productId)) ? commonUtil.getProductIdentificationValue(productIdentificationPref.primaryId, getProduct(item.productId)) : item.productName }}
+          {{ commonUtil.getProductIdentificationValue(productIdentificationPref.primaryId, getProduct(item.productId)) ? commonUtil.getProductIdentificationValue(productIdentificationPref.primaryId, getProduct(item.productId)) : item.productName }} - {{ commonUtil.getFeatures(getProduct(item.productId).productFeatures) }}
           <p>{{ commonUtil.getProductIdentificationValue(productIdentificationPref.secondaryId, getProduct(item.productId)) }}</p>
-          <p>{{ commonUtil.getFeatures(getProduct(item.productId).productFeatures) }}</p>
         </ion-label>
         <ion-label slot="end">{{ commonUtil.formatCurrency(item.unitPrice, currencyUom) }}</ion-label>
       </ion-item>

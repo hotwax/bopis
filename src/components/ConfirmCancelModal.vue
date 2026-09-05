@@ -17,9 +17,8 @@
           <DxpShopifyImg :src="getProduct(item.productId).mainImageUrl" size="small" />
         </ion-thumbnail>
         <ion-label class="ion-text-wrap">
-          <h2>{{ commonUtil.getProductIdentificationValue(productIdentificationPref.primaryId, getProduct(item.productId)) ? commonUtil.getProductIdentificationValue(productIdentificationPref.primaryId, getProduct(item.productId)) : getProduct(item.productId).productName }}</h2>
+          <h2>{{ commonUtil.getProductIdentificationValue(productIdentificationPref.primaryId, getProduct(item.productId)) ? commonUtil.getProductIdentificationValue(productIdentificationPref.primaryId, getProduct(item.productId)) : getProduct(item.productId).productName }} - {{ commonUtil.getFeatures(getProduct(item.productId).productFeatures) }}</h2>
           <p class="ion-text-wrap">{{ commonUtil.getProductIdentificationValue(productIdentificationPref.secondaryId, getProduct(item.productId)) }}</p>
-          <p class="ion-text-wrap">{{ commonUtil.getFeatures(getProduct(item.productId).productFeatures) }}</p>
           <p class="ion-text-wrap">{{ getCancelReasonDescription(item.cancelReason) }}</p>
           <ion-badge color="dark" v-if="orderUtil.isKit(item)">{{ translate("Kit") }}</ion-badge>
         </ion-label>
