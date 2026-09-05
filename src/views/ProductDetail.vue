@@ -19,9 +19,8 @@
             <ion-item lines="none">
               <ion-label class="ion-text-wrap">
                 <p class="overline">{{ currentVariant.brandName }}</p>
-                <h1>{{ commonUtil.getProductIdentificationValue(productIdentificationPref.primaryId, currentVariant) }}</h1>
+                <h1>{{ commonUtil.getProductIdentificationValue(productIdentificationPref.primaryId, currentVariant) }} - {{ commonUtil.getFeatures(currentVariant.productFeatures) }}</h1>
                 <h2>{{ commonUtil.getProductIdentificationValue(productIdentificationPref.secondaryId, currentVariant) }}</h2>
-                <h2>{{ commonUtil.getFeatures(currentVariant.productFeatures) }}</h2>
               </ion-label>
               <!-- Price is given undefined to $n funtction on first render, hence, conditional rendering with empty string -->
               <ion-note slot="end">{{ currentVariant.LIST_PRICE_PURCHASE_USD_STORE_GROUP_price ? $n(currentVariant.LIST_PRICE_PURCHASE_USD_STORE_GROUP_price, 'currency', currency ) : '' }}</ion-note>
@@ -110,9 +109,8 @@
                   <DxpShopifyImg :src="getProduct(order.currentItem.productId).mainImageUrl" size="small" />
                 </ion-thumbnail>
                 <ion-label class="ion-text-wrap">
-                  <h2>{{ commonUtil.getProductIdentificationValue(productIdentificationPref.primaryId, getProduct(order.currentItem.productId)) ? commonUtil.getProductIdentificationValue(productIdentificationPref.primaryId, getProduct(order.currentItem.productId)) : order.currentItem.productId }}</h2>
+                  <h2>{{ commonUtil.getProductIdentificationValue(productIdentificationPref.primaryId, getProduct(order.currentItem.productId)) ? commonUtil.getProductIdentificationValue(productIdentificationPref.primaryId, getProduct(order.currentItem.productId)) : order.currentItem.productId }} - {{ commonUtil.getFeatures(getProduct(order.currentItem.productId).productFeatures) }}</h2>
                   <p class="ion-text-wrap">{{ commonUtil.getProductIdentificationValue(productIdentificationPref.secondaryId, getProduct(order.currentItem.productId)) }}</p>
-                  <p class="ion-text-wrap">{{ commonUtil.getFeatures(getProduct(order.currentItem.productId).productFeatures) }}</p>
                 </ion-label>
                 <ion-note slot="end">{{ translate(order.currentItem.quantity == 1 ? "unit" : "units", { item: order.currentItem.quantity }) }}</ion-note>
               </ion-item>
@@ -125,9 +123,8 @@
                   <DxpShopifyImg :src="getProduct(item.productId).mainImageUrl" size="small" />
                 </ion-thumbnail>
                 <ion-label class="ion-text-wrap" >
-                  <h2>{{ commonUtil.getProductIdentificationValue(productIdentificationPref.primaryId, getProduct(item.productId)) ? commonUtil.getProductIdentificationValue(productIdentificationPref.primaryId, getProduct(item.productId)) : item.productId }}</h2>
+                  <h2>{{ commonUtil.getProductIdentificationValue(productIdentificationPref.primaryId, getProduct(item.productId)) ? commonUtil.getProductIdentificationValue(productIdentificationPref.primaryId, getProduct(item.productId)) : item.productId }} - {{ commonUtil.getFeatures(getProduct(item.productId).productFeatures) }}</h2>
                   <p class="ion-text-wrap">{{ commonUtil.getProductIdentificationValue(productIdentificationPref.secondaryId, getProduct(item.productId)) }}</p>
-                  <p class="ion-text-wrap">{{ commonUtil.getFeatures(getProduct(item.productId).productFeatures) }}</p>
                 </ion-label>
                 <ion-note slot="end">{{ translate(item.quantity == 1 ? "unit" : "units", { item: item.quantity }) }}</ion-note>
               </ion-item>
