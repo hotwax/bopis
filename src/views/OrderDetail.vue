@@ -386,7 +386,7 @@ const productIdentificationPref = computed(() => useProductStore().getProductIde
 const currentFacility = computed(() => useProductStore().getCurrentFacility);
 
 function isEntireOrderRejectionEnabled() {
-  return !isPartialOrderRejectionEnabled.value
+  return !isPartialOrderRejectionEnabled.value && hasRejectedItems.value
 }
 
 function formatDateTime(date: any) {
