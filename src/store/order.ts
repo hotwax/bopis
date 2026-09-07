@@ -286,7 +286,7 @@ export const useOrderStore = defineStore('order', {
           params: queryParams
         });
 
-        if (resp.status === 200 && !commonUtil.hasError(resp) && resp?.data?.orders.length > 0) {
+        if (resp.status === 200 && !commonUtil.hasError(resp)) {
           const ordersResp = resp.data.orders;
 
           const productIds = ordersResp.flatMap((order: any) =>
