@@ -101,9 +101,9 @@
                 <ion-icon slot="icon-only" :icon="printOutline" />
               </ion-button>
 
-              <ion-button size="default" data-testid="resend-email-button" v-if="order.shipmentMethodTypeId === 'STOREPICKUP'" fill="clear" slot="end" @click.stop="sendReadyForPickupEmail(order)">
+              <!-- <ion-button size="default" data-testid="resend-email-button" v-if="order.shipmentMethodTypeId === 'STOREPICKUP'" fill="clear" slot="end" @click.stop="sendReadyForPickupEmail(order)">
                 <ion-icon slot="icon-only" :icon="mailOutline" />
-              </ion-button>
+              </ion-button> -->
             </div>
           </ion-card>
         </div>
