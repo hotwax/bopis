@@ -38,7 +38,7 @@
         <div data-testid="facility-switcher">
           <DxpFacilitySwitcher @updateFacility="fetchFacilityDependencies" />
         </div>
-        <ion-card>
+        <!-- <ion-card>
           <ion-card-header>
             <ion-card-subtitle>
               {{ translate("Re-route Fulfillment") }}
@@ -60,7 +60,7 @@
             <ion-toggle data-testid="pickup-location-toggle" label-placement="start" :disabled="!useUserStore().hasPermission(Actions.APP_RF_CONFIG_UPDATE)" :checked="isRerouteSettingEnabled('CUST_PCKUP_UPDATE')" @click.prevent="setBopisProductStoreSettings($event, 'CUST_PCKUP_UPDATE')">{{ translate("Pick up location") }}</ion-toggle>
           </ion-item>
           <ion-item lines="none">
-            <!-- <p>Uploading order cancelations to Shopify is currently disabled. Order cancelations in HotWax will not be synced to Shopify.</p> -->
+            <p>Uploading order cancelations to Shopify is currently disabled. Order cancelations in HotWax will not be synced to Shopify.</p>
             <ion-toggle data-testid="cancel-order-toggle" label-placement="start" :disabled="!useUserStore().hasPermission(Actions.APP_RF_CONFIG_UPDATE)" :checked="isRerouteSettingEnabled('CUST_ALLOW_CNCL')" @click.prevent="setBopisProductStoreSettings($event, 'CUST_ALLOW_CNCL')">{{ translate("Cancel order before fulfillment") }}</ion-toggle>
           </ion-item>
           <ion-item lines="none">
@@ -77,9 +77,9 @@
             </ion-label>
             <ion-button slot="end" fill="outline" color="dark" :disabled="!useUserStore().hasPermission(Actions.APP_RF_CONFIG_UPDATE)" @click="openEditShipmentMethodModal()">{{ Object.keys(getShipmentMethodConfig()).length > 0 ? translate('Edit') : translate('Add')}}</ion-button>
           </ion-item>
-        </ion-card>
+        </ion-card> -->
 
-        <ion-card>
+        <!-- <ion-card>
           <ion-card-header>
             <ion-card-title>
               {{ translate("Partial Order rejection") }}
@@ -91,7 +91,7 @@
           <ion-item lines="none">
             <ion-toggle data-testid="partial-rejection-toggle" label-placement="start" :disabled="!useUserStore().hasPermission(Actions.APP_PARTIAL_ORDER_REJECTION_CONFIG_UPDATE)" :checked="isProductStoreSettingEnabled('BOPIS_PART_ODR_REJ')" @click.prevent="setBopisProductStoreSettings($event, 'BOPIS_PART_ODR_REJ')">{{ translate("Allow partial rejection") }}</ion-toggle>
           </ion-item>
-        </ion-card>
+        </ion-card> -->
         
       </section>
 
@@ -99,11 +99,11 @@
       <DxpAppVersionInfo/>
 
       <section>
-        <DxpProductIdentifier />
-        <DxpTimeZoneSwitcher @timeZoneUpdated="timeZoneUpdated" />
-        <DxpLanguageSwitcher />
+        <DxpProductIdentifier v-if="useUserStore().hasPermission(Actions.APP_ADMIN_ACCESS)" />
+        <DxpTimeZoneSwitcher v-if="useUserStore().hasPermission(Actions.APP_ADMIN_ACCESS)" @timeZoneUpdated="timeZoneUpdated" />
+        <!-- <DxpLanguageSwitcher /> -->
 
-        <ion-card>
+        <ion-card v-if="useUserStore().hasPermission(Actions.APP_ADMIN_ACCESS)">
           <ion-card-header>
             <ion-card-title>
               {{ translate("Shipping orders") }}
@@ -117,7 +117,7 @@
           </ion-item>
         </ion-card>
 
-        <ion-card>
+        <!-- <ion-card>
           <ion-card-header>
             <ion-card-title>
               {{ translate("Packing Slip") }}
@@ -129,9 +129,9 @@
           <ion-item lines="none" :disabled="!useUserStore().hasPermission(Actions.APP_PRINT_PACKING_SLIP_PREF_UPDATE)">
             <ion-toggle data-testid="generate-packing-slips-toggle" label-placement="start" :checked="isProductStoreSettingEnabled('PRINT_PACKING_SLIPS')" @click.prevent="setBopisProductStoreSettings($event, 'PRINT_PACKING_SLIPS')">{{ translate("Generate packing slips") }}</ion-toggle>
           </ion-item>
-        </ion-card>
+        </ion-card> -->
 
-        <ion-card>
+        <!-- <ion-card>
           <ion-card-header>
             <ion-card-title>
               {{ translate("Track Pickers") }}
@@ -146,9 +146,9 @@
           <ion-item lines="none" :disabled="!useUserStore().hasPermission(Actions.APP_PRINT_PICKLIST_PREF_UPDATE)">
             <ion-toggle data-testid="print-picklists-toggle" label-placement="start" :checked="isProductStoreSettingEnabled('PRINT_PICKLISTS')" @click.prevent="setBopisProductStoreSettings($event, 'PRINT_PICKLISTS')">{{ translate("Print picklists") }}</ion-toggle>
           </ion-item> 
-        </ion-card>
+        </ion-card> -->
 
-        <ion-card v-if="useUserStore().hasPermission(Actions.APP_REQUEST_TRANSFER_UPDATE)">
+        <!-- <ion-card v-if="useUserStore().hasPermission(Actions.APP_REQUEST_TRANSFER_UPDATE)">
           <ion-card-header>
             <ion-card-title>
               {{ translate("Request Transfer") }}
@@ -160,9 +160,9 @@
           <ion-item lines="none" :disabled="!useUserStore().hasPermission(Actions.APP_REQUEST_TRANSFER_UPDATE)">
             <ion-toggle data-testid="request-transfer-toggle" label-placement="start" :checked="isProductStoreSettingEnabled('REQUEST_TRANSFER')" @click.prevent="setBopisProductStoreSettings($event, 'REQUEST_TRANSFER')">{{ translate("Show Request Transfer") }}</ion-toggle>
           </ion-item>
-        </ion-card>
+        </ion-card> -->
 
-        <ion-card v-if="useUserStore().hasPermission(Actions.APP_PROOF_OF_DELIVERY_PREF_UPDATE)">
+        <!-- <ion-card v-if="useUserStore().hasPermission(Actions.APP_PROOF_OF_DELIVERY_PREF_UPDATE)">
           <ion-card-header>
             <ion-card-title>
               {{ translate("Proof of delivery") }}
@@ -174,7 +174,7 @@
           <ion-item lines="none">
             <ion-toggle data-testid="proof-of-delivery-toggle" label-placement="start" :checked="isProductStoreSettingEnabled('HANDOVER_PROOF')" @click.prevent="setBopisProductStoreSettings($event, 'HANDOVER_PROOF')">{{ translate("Show proof of delivery") }}</ion-toggle>
           </ion-item>
-        </ion-card>
+        </ion-card> -->
 
         <ion-card v-if="notificationPrefs.length">
           <ion-card-header>
