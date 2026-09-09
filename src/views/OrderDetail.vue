@@ -733,7 +733,7 @@ async function createPicklist(orderRef: any, selectedPicker: any) {
     resp = await useOrderStore().createPicklist(payload);
     if (!commonUtil.hasError(resp)) {
       commonUtil.showToast(translate("Picklist created successfully", { picklistId: resp.data.picklistId }));
-      await useOrderStore().printPicklist(resp.data.picklistId)
+      await useOrderStore().printPicklist(resp.data.picklistId, orderRef.orderId)
       useOrderStore().updateCurrent({ order: {...orderRef, shipGroup: {...orderRef.shipGroup, picklistId: resp.data.picklistId, shipmentId: resp.data.shipmentIds?.[0]} } })
     } else {
       throw resp.data
@@ -756,7 +756,8 @@ async function printPicklist(orderRef: any, shipGroup: any) {
     await createPicklist(orderRef, "_NA_")
     return;
   }
-  await useOrderStore().printPicklist(shipGroup.picklistId)
+  await createPicklist(orderRef, "_NA_")
+  await useOrderStore().printPicklist(shipGroup.picklistId, orderRef.orderId)
 }
 
 async function assignPicker(orderRef: any, shipGroup: any, facilityId: any) {
@@ -817,7 +818,8 @@ async function readyForPickup(orderData: any, shipGroup: any) {
           if (!shipGroup.shipmentId) {
             await printPicklist(orderData, shipGroup)
           }
-          await useOrderStore().packShipGroupItems({ order: orderData, shipGroup }).then(async (resp: any) => {
+          const updatedOrder = order.value;
+          await useOrderStore().packShipGroupItems({ order: orderData, shipGroup: updatedOrder.shipGroup }).then(async (resp: any) => {
             if (!commonUtil.hasError(resp)) {
               await getOrderDetail(props.orderId, props.shipGroupSeqId, props.orderType);
               prepareOrderTimeline({ statusId: "SHIPMENT_PACKED" });
@@ -890,7 +892,9 @@ async function rejectOrder() {
     const payload = {
       orderId: orderRef.orderId,
       rejectToFacilityId,
-      items: itemsToReject
+      shipGroup: {
+        items: itemsToReject
+      }
     };
     try {
       const resp = await useOrderStore().rejectOrderItems(payload);
