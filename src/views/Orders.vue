@@ -59,8 +59,8 @@
                 {{ order.shipGroup?.shipmentMethodTypeId === 'STOREPICKUP' ? translate("Ready for pickup") : translate("Ready to ship") }}
               </ion-button>
               <div></div>
-              <ion-button data-testid="listpage-reject-button" v-if="order.shipGroup.shipmentMethodTypeId === 'STOREPICKUP' && !isRequestTransferEnabled" color="danger" :disabled="!useUserStore().hasPermission(Actions.APP_ORDER_UPDATE)" fill="clear" @click.stop="openRejectOrderModal(order)">
-                {{ translate("Reject") }}
+              <ion-button data-testid="listpage-cancel-button" color="danger" :disabled="!useUserStore().hasPermission(Actions.APP_ORDER_UPDATE)" fill="clear" @click.stop="openRejectOrderModal(order)">
+                {{ translate("Cancel") }}
               </ion-button>
               <ion-button data-testid="listpage-request-transfer-button" v-if="order.shipGroup.shipmentMethodTypeId === 'STOREPICKUP' && isRequestTransferEnabled" color="warning" :disabled="!useUserStore().hasPermission(Actions.APP_ORDER_UPDATE)" fill="clear" @click.stop="confirmRequestTransfer(order)">
                 {{ translate("Request Transfer") }}

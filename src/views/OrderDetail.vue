@@ -8,9 +8,9 @@
           <!-- <ion-button data-testid="resendmail-button" v-if="orderType === 'packed' && order.shipGroup?.shipmentMethodTypeId === 'STOREPICKUP'" :disabled="!order?.orderId || !useUserStore().hasPermission(Actions.APP_ORDER_UPDATE) || order.handovered || order.shipped" @click="sendReadyForPickupEmail(order)">
             <ion-icon slot="icon-only" :icon="mailOutline" />
           </ion-button> -->
-          <ion-button data-testid="rejection-history-button" :disabled="!order?.orderId" @click="openOrderItemRejHistoryModal()">
+          <!-- <ion-button data-testid="rejection-history-button" :disabled="!order?.orderId" @click="openOrderItemRejHistoryModal()">
             <ion-icon slot="icon-only" :icon="timeOutline" />
-          </ion-button>
+          </ion-button> -->
           <ion-button data-testid="print-picklist-button" v-if="orderType === 'open' && isPrintPicklistsEnabled" :disabled="!order?.orderId || !useUserStore().hasPermission(Actions.APP_ORDER_UPDATE) || order.handovered || order.shipped || !order.shipGroup?.items?.length"  @click="printPicklist(order, order.shipGroup)">
             <ion-icon slot="icon-only" :icon="printOutline" />
           </ion-button>
@@ -84,17 +84,29 @@
                 <div class="product-metadata" slot="end">
                   <!-- Order item rejection flow -->
                   <template v-if="orderType === 'open' && !(order.readyToHandover || order.readyToShip) && !isRequestTransferEnabled">
-                    <ion-chip data-testid="change-rejection-reason-chip" v-if="item.rejectReason" outline color="danger" @click.stop="openRejectReasonPopover($event, item, order)">
+                    <!-- <ion-chip data-testid="change-rejection-reason-chip" v-if="item.rejectReason" outline color="danger" @click.stop="openRejectReasonPopover($event, item, order)">
                       <ion-icon data-testid="void-rejection-reason-icon" :icon="closeCircleOutline" @click.stop="removeRejectionReason(item, order)"/>
                       <ion-label>{{ getRejectionReasonDescription(item.rejectReason) }}</ion-label>
                       <ion-icon :icon="caretDownOutline"/>
-                    </ion-chip>
-                    <ion-chip v-else-if="isEntireOrderRejectionEnabled()" outline color="danger" @click.stop="openRejectReasonPopover($event, item, order)">
-                      <ion-label>{{ getRejectionReasonDescription(rejectEntireOrderReasonId) ? getRejectionReasonDescription(rejectEntireOrderReasonId) : translate("Reject to avoid order split (no variance)") }}</ion-label>
+                    </ion-chip> -->
+                    <ion-chip data-testid="change-cancel-reason-chip" v-if="item.cancelReason" outline color="danger" @click.stop="openCancelReasonPopover($event, item, order)">
+                      <ion-icon data-testid="void-cancel-reason-icon" :icon="closeCircleOutline" @click.stop="removeCancellationReason(item, order)"/>
+                      <ion-label>{{ getCancelReasonDescription(item.cancelReason) }}</ion-label>
                       <ion-icon :icon="caretDownOutline"/>
                     </ion-chip>
-                    <ion-button data-testid="select-rejected-item-button" v-else slot="end" color="danger" fill="clear" size="default" @click.stop="openRejectReasonPopover($event, item, order)">
+                    <!-- <ion-chip v-else-if="isEntireOrderRejectionEnabled()" outline color="danger" @click.stop="openRejectReasonPopover($event, item, order)">
+                      <ion-label>{{ getRejectionReasonDescription(rejectEntireOrderReasonId) ? getRejectionReasonDescription(rejectEntireOrderReasonId) : translate("Reject to avoid order split (no variance)") }}</ion-label>
+                      <ion-icon :icon="caretDownOutline"/>
+                    </ion-chip> -->
+                    <ion-chip v-else-if="isEntireOrderRejectionEnabled()" outline color="danger" @click.stop="openCancelReasonPopover($event, item, order)">
+                      <ion-label>{{ getCancelReasonDescription(rejectEntireOrderReasonId) ? getCancelReasonDescription(rejectEntireOrderReasonId) : translate("Reject to avoid order split (no variance)") }}</ion-label>
+                      <ion-icon :icon="caretDownOutline"/>
+                    </ion-chip>
+                    <!-- <ion-button data-testid="select-rejected-item-button" v-else slot="end" color="danger" fill="clear" size="default" @click.stop="openRejectReasonPopover($event, item, order)">
                       <ion-icon slot="icon-only" :icon="trashOutline"/>
+                    </ion-button> -->
+                    <ion-button data-testid="select-cancel-item-button" v-else slot="end" color="danger" fill="clear" size="small" :disabled="!useUserStore().hasPermission(Actions.APP_CANCEL_BOPIS_ORDER)" @click.stop="openCancelReasonPopover($event, item, order)">
+                      {{ translate("Cancel") }}
                     </ion-button>
                   </template>
                   <!-- Order item calcelation flow -->
@@ -156,8 +168,7 @@
               </div>
             </div>
           </ion-card>
-          <p v-if="!order.shipGroup?.items?.length && orderType === 'open'" class="empty-state">{{ translate("All order items are rejected") }}</p>
-          <p v-if="!order.shipGroup?.items?.length && orderType === 'packed'" class="empty-state">{{ translate("All order items are cancelled") }}</p>
+          <p v-if="!order.shipGroup?.items?.length" class="empty-state">{{ translate("All order items are cancelled") }}</p>
 
           <!-- <template v-if="orderType === 'packed'">
             <ion-item lines="none" v-if="isCancelationSyncJobEnabled && isProcessRefundEnabled">
@@ -185,8 +196,11 @@
               <ion-icon slot="start" :icon="bagCheckOutline"/>
               {{ order?.shipGroup.shipmentMethodTypeId === 'STOREPICKUP' ? translate("Ready for pickup") : translate("Ready to ship") }}
             </ion-button>
-            <ion-button data-testid="submit-rejected-items-button" v-if="!isRequestTransferEnabled" size="default" :disabled="!useUserStore().hasPermission(Actions.APP_ORDER_UPDATE) || order.readyToHandover || order.readyToShip || order.rejected || !hasRejectedItems" color="danger" fill="outline" @click="rejectOrder()">
+            <!-- <ion-button data-testid="submit-rejected-items-button" v-if="!isRequestTransferEnabled" size="default" :disabled="!useUserStore().hasPermission(Actions.APP_ORDER_UPDATE) || order.readyToHandover || order.readyToShip || order.rejected || !hasRejectedItems" color="danger" fill="outline" @click="rejectOrder()">
               {{ translate("Reject Items") }}
+            </ion-button> -->
+            <ion-button data-testid="submit-cancel-items-button" color="danger" size="default" :disabled="!useUserStore().hasPermission(Actions.APP_ORDER_UPDATE)||!useUserStore().hasPermission(Actions.APP_CANCEL_BOPIS_ORDER) || order.rejected || !hasCancelledItems" expand="block" fill="outline" @click="cancelOrder(order)">
+              {{ translate("Cancel items") }}
             </ion-button>
             <ion-button fill="outline" data-testid="request-transfer-button" v-if="isRequestTransferEnabled" size="default" color="warning" :disabled="!useUserStore().hasPermission(Actions.APP_ORDER_UPDATE) || !canRequestTransfer(order)" @click="confirmRequestTransfer(order)">
               <ion-icon slot="start" :icon="swapHorizontalOutline"/>
