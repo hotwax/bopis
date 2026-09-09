@@ -6,19 +6,11 @@
           <ion-icon slot="icon-only" :icon="closeOutline" />
         </ion-button>
       </ion-buttons>
-      <ion-title>{{ translate("Reject Order") }}</ion-title>
+      <ion-title>{{ translate("Cancel Order") }}</ion-title>
     </ion-toolbar>
   </ion-header>
 
   <ion-content class="ion-padding">
-    <!-- Warning banner if partial rejection is disabled and any item is marked for rejection -->
-    <ion-item v-if="showRejectionWarning" lines="none" class="ion-item-banner ion-margin-vertical">
-      <ion-icon :icon="warningOutline" slot="start" color="danger" />
-      <ion-label class="ion-item-banner">
-        {{ translate('Partial Order rejection is disabled') }}
-      </ion-label>
-    </ion-item>
-
     <div v-for="item in orderProps?.shipGroup?.items" :key="item.orderItemSeqId">
       <ion-item lines="none">
         <ion-thumbnail slot="start">
@@ -31,8 +23,8 @@
           <ion-badge color="dark" v-if="orderUtil.isKit(item)">{{ translate("Kit") }}</ion-badge>
         </ion-label>
 
-        <ion-select data-testid="rejection-reason-modal-button" slot="end" :placeholder="translate('Reason')" interface="popover" v-model="item.rejectReasonId" @ionChange="onReasonChange($event, item)">
-          <ion-select-option data-testid="select-rejection-reason-option" v-for="reason in rejectReasons" :key="reason.enumId" :value="reason.enumId">{{ reason.enumDescription ?? reason.description }}</ion-select-option>
+        <ion-select data-testid="rejection-reason-modal-button" slot="end" :placeholder="translate('Reason')" interface="popover" v-model="item.cancelReason" @ionChange="onReasonChange($event, item)">
+          <ion-select-option data-testid="select-rejection-reason-option" v-for="reason in cancelReasons" :key="reason.enumId" :value="reason.enumId">{{ reason.enumDescription ?? reason.description }}</ion-select-option>
         </ion-select>
       </ion-item>
     </div>
@@ -48,7 +40,7 @@
 import { IonButton, IonButtons, IonContent, IonHeader, IonIcon, IonTitle, IonToolbar, IonSelect, IonSelectOption, IonItem, IonThumbnail, IonLabel, IonFab, IonFabButton, IonBadge, alertController, modalController } from '@ionic/vue';
 import { closeOutline, warningOutline, trashOutline } from 'ionicons/icons';
 import { computed, onMounted, ref } from 'vue';
-import { DxpShopifyImg, translate, commonUtil } from '@common';
+import { DxpShopifyImg, translate, commonUtil, logger } from '@common';
 import { useProductStore as useProductStoreSettings } from '@/store/productStore'
 import { orderUtil } from '@/utils/orderUtil';
 import { useOrderStore } from '@/store/order';
@@ -71,32 +63,26 @@ const props = defineProps({
 })
 
 const orderStore = useOrderStore();
-const userStore = useUserStore();
 
 const rejectEntireOrderReasonId = ref("REJ_AVOID_ORD_SPLIT");
 
 const getProduct = (productId: string) => useProduct().getProduct(productId);
-const rejectReasons = computed(() => orderStore.getRejectReasons);
+const cancelReasons = computed(() => orderStore.getCancelReasons);
 const isPartialOrderRejectionEnabled = computed(() => useProductStoreSettings().isPartialOrderRejectionEnabled);
 const productIdentificationPref = computed(() => useProductStoreSettings().getProductIdentificationPref);
-
-const showRejectionWarning = computed(() => {
-  const hasRejectedItems = !!props.orderProps?.shipGroup?.items?.some((item: any) => !!item.rejectReasonId);
-  return !isPartialOrderRejectionEnabled.value && hasRejectedItems;
-});
 
 const canConfirm = computed(() => {
   const items = props.orderProps?.shipGroup?.items;
   if (!items) return false;
   if (isPartialOrderRejectionEnabled.value) {
-    return items.some((item: any) => !!item.rejectReasonId);
+    return items.some((item: any) => !!item.cancelReason);
   } else {
-    return items.every((item: any) => !!item.rejectReasonId);
+    return items.every((item: any) => !!item.cancelReason);
   }
 });
 
 onMounted(() => {
-  orderStore.fetchRejectReasons();
+  orderStore.fetchCancelReasons();
 });
 
 function onReasonChange(event: any, selectedItem: any) {
@@ -104,12 +90,12 @@ function onReasonChange(event: any, selectedItem: any) {
   const items = props.orderProps?.shipGroup?.items;
   if (!isPartialOrderRejectionEnabled.value && items) {
     items.forEach((item: any) => {
-      item.rejectReasonId = item.orderItemSeqId === selectedItem.orderItemSeqId
+      item.cancelReason = item.orderItemSeqId === selectedItem.orderItemSeqId
         ? selectedValue
         : rejectEntireOrderReasonId.value;
     });
   } else {
-    selectedItem.rejectReasonId = selectedValue;
+    selectedItem.cancelReason = selectedValue;
   }
 }
 
@@ -119,32 +105,48 @@ function closeModal() {
 
 async function confirmSave() {
   const alert = await alertController.create({
-    header: translate('Reject Order'),
+    header: translate('Cancel Order'),
     message: translate('This order will be removed from your dashboard. This action cannot be undone.'),
     buttons: [
       {
-        text: translate('Cancel'),
+        text: translate("Don't Cancel"),
         role: 'cancel'
       },
       {
-        text: translate('Reject'),
+        text: translate('Cancel'),
         handler: async () => {
-          const updatedItems = (props.orderProps?.shipGroup?.items ?? [])
-            .filter((item: any) => item.rejectReasonId)
+          const itemsPayload = (props.orderProps?.shipGroup?.items ?? [])
+            .filter((item: any) => item.cancelReason)
             .map((item: any) => ({
-              ...item,
-              maySplit: 'Y',
-              reason: item.rejectReasonId
+              orderItemSeqId: item.orderItemSeqId,
+              shipGroupSeqId: item.shipGroupSeqId,
+              reason: item.cancelReason,
+              comment: item.comment || ''
             }));
-          const shipGroup = { ...props.orderProps?.shipGroup, items: updatedItems };
-          const resp = await orderStore.rejectItems({
+
+          const payload = {
             orderId: props.orderProps?.orderId,
-            orderName: props.orderProps?.orderName,
-            shipGroup,
-            isEntireOrderRejected: (props.orderProps?.shipGroup?.items?.length === updatedItems.length)
-          });
-            await orderStore.fetchOpenOrders({ viewSize: import.meta.env.VITE_VIEW_SIZE, viewIndex: 0, queryString: '', facilityId: (useProductStoreSettings().getCurrentFacility as any)?.facilityId });
-          closeModal();              
+            items: itemsPayload
+          };
+
+          let cancelledResponse;
+
+          try {
+            cancelledResponse = await orderStore.cancelOrder(payload);
+
+            if (commonUtil.hasError(cancelledResponse)) {
+              throw cancelledResponse.data;
+            }
+
+            const toastMessage = props.orderProps?.shipGroup?.items?.length === itemsPayload.length ? translate('All items have been cancelled.') : translate('Some items have been cancelled.');
+            commonUtil.showToast(toastMessage);
+          } catch (err) {
+            logger.error("Error cancelling order items", err);
+          }
+
+          await orderStore.fetchOpenOrders({ viewSize: import.meta.env.VITE_VIEW_SIZE, viewIndex: 0, queryString: '', facilityId: (useProductStoreSettings().getCurrentFacility as any)?.facilityId });
+          await orderStore.fetchOpenOrders({ viewSize: import.meta.env.VITE_VIEW_SIZE, viewIndex: 0, queryString: '', facilityId: (useProductStoreSettings().getCurrentFacility as any)?.facilityId, showShippingOrders: true });
+          closeModal();
         }
       }
     ]
