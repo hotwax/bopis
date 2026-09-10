@@ -258,6 +258,10 @@ export const useOrderStore = defineStore('order', {
       return resp;
     },
     async fetchOpenOrders(params: any) {
+      if(params.forceFetch) {
+        this.open = { list: [], total: 0 };
+      }
+
       let queryParams = {
         keyword: params.queryString || '',
         facilityId: params.facilityId,
@@ -495,6 +499,10 @@ export const useOrderStore = defineStore('order', {
     },
     async fetchPackedOrders(params: any) {
       let resp;
+
+      if(params.forceFetch) {
+        this.packed = { list: [], total: 0 };
+      }
 
       const productStore = useProduct();
       const queryParams = {
