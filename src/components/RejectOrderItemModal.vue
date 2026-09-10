@@ -59,6 +59,9 @@ const props = defineProps({
       [key: string]: any;
     },
     required: true
+  },
+  selectedSegment: {
+    type: String
   }
 })
 
@@ -115,6 +118,7 @@ async function confirmSave() {
       {
         text: translate('Cancel'),
         handler: async () => {
+          closeModal();
           const itemsPayload = (props.orderProps?.shipGroup?.items ?? [])
             .filter((item: any) => item.cancelReason)
             .map((item: any) => ({
@@ -144,9 +148,13 @@ async function confirmSave() {
             logger.error("Error cancelling order items", err);
           }
 
-          await orderStore.fetchOpenOrders({ viewSize: import.meta.env.VITE_VIEW_SIZE, viewIndex: 0, queryString: '', facilityId: (useProductStoreSettings().getCurrentFacility as any)?.facilityId });
-          await orderStore.fetchOpenOrders({ viewSize: import.meta.env.VITE_VIEW_SIZE, viewIndex: 0, queryString: '', facilityId: (useProductStoreSettings().getCurrentFacility as any)?.facilityId, showShippingOrders: true });
-          closeModal();
+          if(props.selectedSegment === "packed") {
+            await orderStore.fetchPackedOrders({ viewSize: import.meta.env.VITE_VIEW_SIZE, viewIndex: 0, queryString: '', facilityId: (useProductStoreSettings().getCurrentFacility as any)?.facilityId, shipmentMethodTypeIds: "STOREPICKUP", forceFetch: true });
+            await orderStore.fetchPackedOrders({ viewSize: import.meta.env.VITE_VIEW_SIZE, viewIndex: 0, queryString: '', facilityId: (useProductStoreSettings().getCurrentFacility as any)?.facilityId });
+          } else {
+            await orderStore.fetchOpenOrders({ viewSize: import.meta.env.VITE_VIEW_SIZE, viewIndex: 0, queryString: '', facilityId: (useProductStoreSettings().getCurrentFacility as any)?.facilityId, forceFetch: true });
+            await orderStore.fetchOpenOrders({ viewSize: import.meta.env.VITE_VIEW_SIZE, viewIndex: 0, queryString: '', facilityId: (useProductStoreSettings().getCurrentFacility as any)?.facilityId, showShippingOrders: true });
+          }
         }
       }
     ]
