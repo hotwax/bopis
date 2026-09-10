@@ -194,7 +194,6 @@ onMounted(() => {
 });
 
 onUnmounted(() => {
-  console.log('eadfdjfmkjmkmkving page')
   emitter.off("refreshPickupOrders", getPickupOrders);
   stopAutoRefresh()
 });
@@ -216,7 +215,6 @@ onIonViewWillEnter(() => {
 });
 
 onIonViewDidLeave(() => {
-  console.log('eaving page')
   stopAutoRefresh()
 });
 
@@ -243,7 +241,6 @@ function startAutoRefresh() {
 }
 
 function stopAutoRefresh() {
-  console.log('skjdnfksjdnf stop')
   if(autoRefreshTimer) clearInterval(autoRefreshTimer)
   autoRefreshTimer = null;
 }

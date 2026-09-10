@@ -7,7 +7,6 @@
   "All items were rejected from the order": "Todos los artículos fueron rechazados del pedido",
   "All items were rejected from the order.": "All items were rejected from the order {orderId}.",
   "All order items are cancelled": "All order items are cancelled",
-  "All order items are rejected": "Todos los artículos del pedido son rechazados",
   "Allow partial rejection": "Permitir rechazo parcial",
   "An email notification will be sent to that their order is ready for pickup.": "Se enviará una notificación por correo electrónico a {customerName} de que su pedido está listo para recoger.",
   "An email notification will be sent to that their order is ready for pickup. This order will also be moved to the packed orders tab.": "Se enviará una notificación por correo electrónico a {customerName} de que su pedido está listo para recoger.{ space } Este pedido también se moverá a la pestaña de pedidos empacados.",
