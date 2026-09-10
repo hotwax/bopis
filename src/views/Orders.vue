@@ -97,6 +97,9 @@
               <ion-button data-testid="handover-button" :disabled="!useUserStore().hasPermission(Actions.APP_ORDER_UPDATE)" fill="clear" @click.stop="deliverShipment(order)">
                 {{ order.shipmentMethodTypeId === 'STOREPICKUP' ? translate("Handover") : translate("Ship") }}
               </ion-button>
+              <ion-button data-testid="listpage-cancel-button" color="danger" :disabled="!useUserStore().hasPermission(Actions.APP_ORDER_UPDATE)" fill="clear" @click.stop="openRejectOrderModal(order)">
+                {{ translate("Cancel") }}
+              </ion-button>
               <ion-button size="default" data-testid="packing-slip-button" v-if="isPrintPackingSlipEnabled" fill="clear" slot="end" @click.stop="printPackingSlip(order)">
                 <ion-icon slot="icon-only" :icon="printOutline" />
               </ion-button>
@@ -539,7 +542,15 @@ async function openRejectOrderModal(orderData: any) {
   const rejectOrderModal = await modalController.create({
     component: RejectOrderItemModal,
     componentProps: {
-      orderProps: orderData,
+      orderProps: {
+        // Adding ship group here because when this function is called from packed section, we are not having shipGroup and directly having items
+        // but in case of open section we are having shipGroup, thus giving priority to orderData.shipGroup
+        shipGroup: {
+          items: orderData.items
+        },
+        ...orderData,
+      },
+      selectedSegment: segmentSelected.value
     }
   })
   return rejectOrderModal.present()

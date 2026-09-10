@@ -11,6 +11,10 @@
   </ion-header>
 
   <ion-content class="ion-padding">
+    <ion-label v-if="!isPartialOrderRejectionEnabled">
+      {{ "All order items will be rejected" }}
+      <p>{{ "Items without a reason being selected will be cancelled with default rejection reason" }}</p>
+    </ion-label>
     <div v-for="item in orderProps?.shipGroup?.items" :key="item.orderItemSeqId">
       <ion-item lines="none">
         <ion-thumbnail slot="start">
@@ -53,6 +57,7 @@ const props = defineProps({
       orderId: string;
       orderName: string;
       shipGroup?: {
+        shipmentMethodTypeId: string;
         shipGroupSeqId: string;
         items?: any[];
       };
@@ -71,7 +76,7 @@ const rejectEntireOrderReasonId = ref("REJ_AVOID_ORD_SPLIT");
 
 const getProduct = (productId: string) => useProduct().getProduct(productId);
 const cancelReasons = computed(() => orderStore.getCancelReasons);
-const isPartialOrderRejectionEnabled = computed(() => useProductStoreSettings().isPartialOrderRejectionEnabled);
+const isPartialOrderRejectionEnabled = computed(() => props.orderProps.shipGroup?.shipmentMethodTypeId === "STOREPICKUP");
 const productIdentificationPref = computed(() => useProductStoreSettings().getProductIdentificationPref);
 
 const canConfirm = computed(() => {
@@ -91,7 +96,7 @@ onMounted(() => {
 function onReasonChange(event: any, selectedItem: any) {
   const selectedValue = event.detail.value;
   const items = props.orderProps?.shipGroup?.items;
-  if (!isPartialOrderRejectionEnabled.value && items) {
+  if (!isPartialOrderRejectionEnabled.value && items?.length) {
     items.forEach((item: any) => {
       item.cancelReason = item.orderItemSeqId === selectedItem.orderItemSeqId
         ? selectedValue

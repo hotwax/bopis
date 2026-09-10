@@ -98,7 +98,7 @@
                       <ion-label>{{ getRejectionReasonDescription(rejectEntireOrderReasonId) ? getRejectionReasonDescription(rejectEntireOrderReasonId) : translate("Reject to avoid order split (no variance)") }}</ion-label>
                       <ion-icon :icon="caretDownOutline"/>
                     </ion-chip> -->
-                    <ion-chip v-else-if="isEntireOrderRejectionEnabled()" outline color="danger" @click.stop="openCancelReasonPopover($event, item, order)">
+                    <ion-chip v-else-if="isEntireOrderRejectionEnabled(order.shipGroup)" outline color="danger" @click.stop="openCancelReasonPopover($event, item, order)">
                       <ion-label>{{ getCancelReasonDescription(rejectEntireOrderReasonId) ? getCancelReasonDescription(rejectEntireOrderReasonId) : translate("Reject to avoid order split (no variance)") }}</ion-label>
                       <ion-icon :icon="caretDownOutline"/>
                     </ion-chip>
@@ -162,7 +162,7 @@
                       <p class="overline">{{ commonUtil.getProductIdentificationValue(productIdentificationPref.secondaryId, getProduct(productComponent.productIdTo)) }}</p>
                       {{ commonUtil.getProductIdentificationValue(productIdentificationPref.primaryId, getProduct(productComponent.productIdTo)) ? commonUtil.getProductIdentificationValue(productIdentificationPref.primaryId, getProduct(productComponent.productIdTo)) : productComponent.productIdTo }} - {{ commonUtil.getFeatures(getProduct(productComponent.productIdTo).productFeatures) }}
                     </ion-label>
-                    <ion-checkbox slot="end" aria-label="Rejection Reason kit component" v-if="item.rejectReason || isEntireOrderRejectionEnabled()" :checked="item.rejectedComponents?.includes(productComponent.productIdTo)" @ionChange="rejectKitComponent(order, item, productComponent.productIdTo)" color="danger"/>
+                    <ion-checkbox slot="end" aria-label="Rejection Reason kit component" v-if="item.rejectReason || isEntireOrderRejectionEnabled(order.shipGroup)" :checked="item.rejectedComponents?.includes(productComponent.productIdTo)" @ionChange="rejectKitComponent(order, item, productComponent.productIdTo)" color="danger"/>
                   </ion-item>
                 </template>
               </div>
@@ -390,14 +390,14 @@ const isPrintPackingSlipEnabled = computed(() => useProductStore().isPrintPackin
 const isTrackingEnabled = computed(() => useProductStore().isTrackingEnabled)
 const isPrintPicklistsEnabled = computed(() => useProductStore().isPrintPicklistsEnabled)
 const isRequestTransferEnabled = computed(() => useProductStore().isRequestTransferEnabled)
-const isPartialOrderRejectionEnabled = computed(() => useProductStore().isPartialOrderRejectionEnabled)
+const isPartialOrderRejectionEnabled = computed(() => (order: any) => order.shipGroup?.shipmentMethodTypeId === "STOREPICKUP");
 const rejectReasons = computed(() => useOrderStore().getRejectReasons);
 const cancelReasons = computed(() => useOrderStore().getCancelReasons);
 const productIdentificationPref = computed(() => useProductStore().getProductIdentificationPref);
 const currentFacility = computed(() => useProductStore().getCurrentFacility);
 
-function isEntireOrderRejectionEnabled() {
-  return !isPartialOrderRejectionEnabled.value && hasRejectedItems.value
+function isEntireOrderRejectionEnabled(shipGroup: any) {
+  return shipGroup?.shipmentMethodTypeId !== "STOREPICKUP" && hasRejectedItems.value
 }
 
 function formatDateTime(date: any) {
@@ -884,7 +884,7 @@ async function rejectOrder() {
   emitter.emit("presentLoader");
 
   let orderRef = JSON.parse(JSON.stringify(order.value))
-  const isEntireOrderRejectionValue = isEntireOrderRejectionEnabled();
+  const isEntireOrderRejectionValue = isEntireOrderRejectionEnabled(orderRef.shipGroup);
   const rejectToFacilityId = orderRef.shipGroup.shipmentMethodTypeId === "STOREPICKUP" ? "PICKUP_REJECTED" : "REJECTED_ITM_PARKING";
   const itemsToReject: any[] = [];
   
