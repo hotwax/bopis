@@ -8,7 +8,7 @@ const initialiseFirebaseMessaging = async () => {
   const appFirebaseConfig = JSON.parse(import.meta.env.VITE_FIREBASE_CONFIG as any);
   const appFirebaseVapidKey = import.meta.env.VITE_FIREBASE_VAPID_KEY;
 
-  if (appFirebaseConfig && appFirebaseConfig.apiKey && notificationStore.getAllNotificationPrefs?.length) {
+  if (appFirebaseConfig && appFirebaseConfig.apiKey) {
     await firebaseMessaging.initialiseFirebaseApp(
       appFirebaseConfig,
       appFirebaseVapidKey,

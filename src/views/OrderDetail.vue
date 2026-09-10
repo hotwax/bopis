@@ -5,12 +5,12 @@
         <ion-back-button default-href="/" slot="start" />
         <ion-title>{{ translate("Order details") }}</ion-title>
         <ion-buttons slot="end">
-          <ion-button data-testid="resendmail-button" v-if="orderType === 'packed' && order.shipGroup?.shipmentMethodTypeId === 'STOREPICKUP'" :disabled="!order?.orderId || !useUserStore().hasPermission(Actions.APP_ORDER_UPDATE) || order.handovered || order.shipped" @click="sendReadyForPickupEmail(order)">
+          <!-- <ion-button data-testid="resendmail-button" v-if="orderType === 'packed' && order.shipGroup?.shipmentMethodTypeId === 'STOREPICKUP'" :disabled="!order?.orderId || !useUserStore().hasPermission(Actions.APP_ORDER_UPDATE) || order.handovered || order.shipped" @click="sendReadyForPickupEmail(order)">
             <ion-icon slot="icon-only" :icon="mailOutline" />
-          </ion-button>
-          <ion-button data-testid="rejection-history-button" :disabled="!order?.orderId" @click="openOrderItemRejHistoryModal()">
+          </ion-button> -->
+          <!-- <ion-button data-testid="rejection-history-button" :disabled="!order?.orderId" @click="openOrderItemRejHistoryModal()">
             <ion-icon slot="icon-only" :icon="timeOutline" />
-          </ion-button>
+          </ion-button> -->
           <ion-button data-testid="print-picklist-button" v-if="orderType === 'open' && isPrintPicklistsEnabled" :disabled="!order?.orderId || !useUserStore().hasPermission(Actions.APP_ORDER_UPDATE) || order.handovered || order.shipped || !order.shipGroup?.items?.length"  @click="printPicklist(order, order.shipGroup)">
             <ion-icon slot="icon-only" :icon="printOutline" />
           </ion-button>
@@ -84,17 +84,29 @@
                 <div class="product-metadata" slot="end">
                   <!-- Order item rejection flow -->
                   <template v-if="orderType === 'open' && !(order.readyToHandover || order.readyToShip) && !isRequestTransferEnabled">
-                    <ion-chip data-testid="change-rejection-reason-chip" v-if="item.rejectReason" outline color="danger" @click.stop="openRejectReasonPopover($event, item, order)">
+                    <!-- <ion-chip data-testid="change-rejection-reason-chip" v-if="item.rejectReason" outline color="danger" @click.stop="openRejectReasonPopover($event, item, order)">
                       <ion-icon data-testid="void-rejection-reason-icon" :icon="closeCircleOutline" @click.stop="removeRejectionReason(item, order)"/>
                       <ion-label>{{ getRejectionReasonDescription(item.rejectReason) }}</ion-label>
                       <ion-icon :icon="caretDownOutline"/>
-                    </ion-chip>
-                    <ion-chip v-else-if="isEntireOrderRejectionEnabled()" outline color="danger" @click.stop="openRejectReasonPopover($event, item, order)">
-                      <ion-label>{{ getRejectionReasonDescription(rejectEntireOrderReasonId) ? getRejectionReasonDescription(rejectEntireOrderReasonId) : translate("Reject to avoid order split (no variance)") }}</ion-label>
+                    </ion-chip> -->
+                    <ion-chip data-testid="change-cancel-reason-chip" v-if="item.cancelReason" outline color="danger" @click.stop="openCancelReasonPopover($event, item, order)">
+                      <ion-icon data-testid="void-cancel-reason-icon" :icon="closeCircleOutline" @click.stop="removeCancellationReason(item, order)"/>
+                      <ion-label>{{ getCancelReasonDescription(item.cancelReason) }}</ion-label>
                       <ion-icon :icon="caretDownOutline"/>
                     </ion-chip>
-                    <ion-button data-testid="select-rejected-item-button" v-else slot="end" color="danger" fill="clear" size="default" @click.stop="openRejectReasonPopover($event, item, order)">
+                    <!-- <ion-chip v-else-if="isEntireOrderRejectionEnabled()" outline color="danger" @click.stop="openRejectReasonPopover($event, item, order)">
+                      <ion-label>{{ getRejectionReasonDescription(rejectEntireOrderReasonId) ? getRejectionReasonDescription(rejectEntireOrderReasonId) : translate("Reject to avoid order split (no variance)") }}</ion-label>
+                      <ion-icon :icon="caretDownOutline"/>
+                    </ion-chip> -->
+                    <ion-chip v-else-if="isEntireOrderRejectionEnabled(order.shipGroup)" outline color="danger" @click.stop="openCancelReasonPopover($event, item, order)">
+                      <ion-label>{{ getCancelReasonDescription(rejectEntireOrderReasonId) ? getCancelReasonDescription(rejectEntireOrderReasonId) : translate("Reject to avoid order split (no variance)") }}</ion-label>
+                      <ion-icon :icon="caretDownOutline"/>
+                    </ion-chip>
+                    <!-- <ion-button data-testid="select-rejected-item-button" v-else slot="end" color="danger" fill="clear" size="default" @click.stop="openRejectReasonPopover($event, item, order)">
                       <ion-icon slot="icon-only" :icon="trashOutline"/>
+                    </ion-button> -->
+                    <ion-button data-testid="select-cancel-item-button" v-else slot="end" color="danger" fill="clear" size="small" :disabled="!useUserStore().hasPermission(Actions.APP_CANCEL_BOPIS_ORDER)" @click.stop="openCancelReasonPopover($event, item, order)">
+                      {{ translate("Cancel") }}
                     </ion-button>
                   </template>
                   <!-- Order item calcelation flow -->
@@ -117,9 +129,9 @@
                       <ion-icon slot="icon-only" :icon="informationCircleOutline" color="medium" />
                     </ion-button>
                   </div>
-                  <ion-button size="default" data-testid="qoh-button" v-else fill="clear" @click.stop="fetchProductInventory(item.productId, order.shipGroupSeqId)">
+                  <!-- <ion-button size="default" data-testid="qoh-button" v-else fill="clear" @click.stop="fetchProductInventory(item.productId, order.shipGroupSeqId)">
                     <ion-icon color="medium" slot="icon-only" :icon="cubeOutline" />
-                  </ion-button>
+                  </ion-button> -->
 
                   <ion-button data-testid="gift-card-activation-button" :disabled="order.handovered || order.shipped || order.cancelled || hasCancelledItems" v-if="(orderType === 'packed' || orderType === 'completed') && getProduct(item.productId).productTypeId === 'GIFT_CARD'" color="medium" fill="clear" size="default" @click.stop="openGiftCardActivationModal(item)">
                     <ion-icon slot="icon-only" :icon="item.isGCActivated ? gift : giftOutline"/>
@@ -150,16 +162,15 @@
                       <p class="overline">{{ commonUtil.getProductIdentificationValue(productIdentificationPref.secondaryId, getProduct(productComponent.productIdTo)) }}</p>
                       {{ commonUtil.getProductIdentificationValue(productIdentificationPref.primaryId, getProduct(productComponent.productIdTo)) ? commonUtil.getProductIdentificationValue(productIdentificationPref.primaryId, getProduct(productComponent.productIdTo)) : productComponent.productIdTo }} - {{ commonUtil.getFeatures(getProduct(productComponent.productIdTo).productFeatures) }}
                     </ion-label>
-                    <ion-checkbox slot="end" aria-label="Rejection Reason kit component" v-if="item.rejectReason || isEntireOrderRejectionEnabled()" :checked="item.rejectedComponents?.includes(productComponent.productIdTo)" @ionChange="rejectKitComponent(order, item, productComponent.productIdTo)" color="danger"/>
+                    <ion-checkbox slot="end" aria-label="Rejection Reason kit component" v-if="item.rejectReason || isEntireOrderRejectionEnabled(order.shipGroup)" :checked="item.rejectedComponents?.includes(productComponent.productIdTo)" @ionChange="rejectKitComponent(order, item, productComponent.productIdTo)" color="danger"/>
                   </ion-item>
                 </template>
               </div>
             </div>
           </ion-card>
-          <p v-if="!order.shipGroup?.items?.length && orderType === 'open'" class="empty-state">{{ translate("All order items are rejected") }}</p>
-          <p v-if="!order.shipGroup?.items?.length && orderType === 'packed'" class="empty-state">{{ translate("All order items are cancelled") }}</p>
+          <p v-if="!order.shipGroup?.items?.length" class="empty-state">{{ translate("All order items are cancelled") }}</p>
 
-          <template v-if="orderType === 'packed'">
+          <!-- <template v-if="orderType === 'packed'">
             <ion-item lines="none" v-if="isCancelationSyncJobEnabled && isProcessRefundEnabled">
               <ion-icon slot="start" :icon="checkmarkDoneOutline"/>
               <ion-label>
@@ -178,15 +189,18 @@
                 {{ translate("Cancellation and refund sync to Shopify is not enabled.") }}
               </ion-label>
             </ion-item>
-          </template>
+          </template> -->
 
           <ion-item lines="none" v-if="orderType === 'open' && order.shipGroup?.items?.length">
             <ion-button data-testid="ready-pickup-button" size="default" :disabled="!useUserStore().hasPermission(Actions.APP_ORDER_UPDATE) || order.readyToHandover || order.readyToShip || order.rejected || hasRejectedItems" @click="readyForPickup(order, order.shipGroup)">
               <ion-icon slot="start" :icon="bagCheckOutline"/>
               {{ order?.shipGroup.shipmentMethodTypeId === 'STOREPICKUP' ? translate("Ready for pickup") : translate("Ready to ship") }}
             </ion-button>
-            <ion-button data-testid="submit-rejected-items-button" v-if="!isRequestTransferEnabled" size="default" :disabled="!useUserStore().hasPermission(Actions.APP_ORDER_UPDATE) || order.readyToHandover || order.readyToShip || order.rejected || !hasRejectedItems" color="danger" fill="outline" @click="rejectOrder()">
+            <!-- <ion-button data-testid="submit-rejected-items-button" v-if="!isRequestTransferEnabled" size="default" :disabled="!useUserStore().hasPermission(Actions.APP_ORDER_UPDATE) || order.readyToHandover || order.readyToShip || order.rejected || !hasRejectedItems" color="danger" fill="outline" @click="rejectOrder()">
               {{ translate("Reject Items") }}
+            </ion-button> -->
+            <ion-button data-testid="submit-cancel-items-button" color="danger" size="default" :disabled="!useUserStore().hasPermission(Actions.APP_ORDER_UPDATE)||!useUserStore().hasPermission(Actions.APP_CANCEL_BOPIS_ORDER) || order.rejected || !hasCancelledItems" expand="block" fill="outline" @click="cancelOrder(order)">
+              {{ translate("Cancel items") }}
             </ion-button>
             <ion-button fill="outline" data-testid="request-transfer-button" v-if="isRequestTransferEnabled" size="default" color="warning" :disabled="!useUserStore().hasPermission(Actions.APP_ORDER_UPDATE) || !canRequestTransfer(order)" @click="confirmRequestTransfer(order)">
               <ion-icon slot="start" :icon="swapHorizontalOutline"/>
@@ -300,9 +314,9 @@
                     <ion-spinner v-if="item.isFetchingStock" color="medium" name="crescent" />
                     <div v-else-if="getInventoryInformation(item.productId).quantityOnHand >= 0" class="atp-info">
                       <ion-note slot="end"> {{ translate("on hand", { count: getInventoryInformation(item.productId).quantityOnHand ?? '0' }) }} </ion-note>
-                      <ion-button size="default" fill="clear" @click.stop="openInventoryDetailPopover($event, item)">
+                      <!-- <ion-button size="default" fill="clear" @click.stop="openInventoryDetailPopover($event, item)">
                         <ion-icon slot="icon-only" :icon="informationCircleOutline" color="medium" />
-                      </ion-button>
+                      </ion-button> -->
                     </div>
                     <ion-button size="default" v-else fill="clear" @click.stop="fetchProductInventory(item.productId, shipGroup.shipGroupSeqId)">
                       <ion-icon color="medium" slot="icon-only" :icon="cubeOutline" />
@@ -376,14 +390,14 @@ const isPrintPackingSlipEnabled = computed(() => useProductStore().isPrintPackin
 const isTrackingEnabled = computed(() => useProductStore().isTrackingEnabled)
 const isPrintPicklistsEnabled = computed(() => useProductStore().isPrintPicklistsEnabled)
 const isRequestTransferEnabled = computed(() => useProductStore().isRequestTransferEnabled)
-const isPartialOrderRejectionEnabled = computed(() => useProductStore().isPartialOrderRejectionEnabled)
+const isPartialOrderRejectionEnabled = computed(() => (order: any) => order.shipGroup?.shipmentMethodTypeId === "STOREPICKUP");
 const rejectReasons = computed(() => useOrderStore().getRejectReasons);
 const cancelReasons = computed(() => useOrderStore().getCancelReasons);
 const productIdentificationPref = computed(() => useProductStore().getProductIdentificationPref);
 const currentFacility = computed(() => useProductStore().getCurrentFacility);
 
-function isEntireOrderRejectionEnabled() {
-  return !isPartialOrderRejectionEnabled.value
+function isEntireOrderRejectionEnabled(shipGroup: any) {
+  return shipGroup?.shipmentMethodTypeId !== "STOREPICKUP" && hasRejectedItems.value
 }
 
 function formatDateTime(date: any) {
@@ -733,7 +747,7 @@ async function createPicklist(orderRef: any, selectedPicker: any) {
     resp = await useOrderStore().createPicklist(payload);
     if (!commonUtil.hasError(resp)) {
       commonUtil.showToast(translate("Picklist created successfully", { picklistId: resp.data.picklistId }));
-      await useOrderStore().printPicklist(resp.data.picklistId)
+      await useOrderStore().printPicklist(resp.data.picklistId, orderRef.orderId)
       useOrderStore().updateCurrent({ order: {...orderRef, shipGroup: {...orderRef.shipGroup, picklistId: resp.data.picklistId, shipmentId: resp.data.shipmentIds?.[0]} } })
     } else {
       throw resp.data
@@ -756,18 +770,17 @@ async function printPicklist(orderRef: any, shipGroup: any) {
     await createPicklist(orderRef, "_NA_")
     return;
   }
-  await useOrderStore().printPicklist(shipGroup.picklistId)
+  await createPicklist(orderRef, "_NA_")
+  await useOrderStore().printPicklist(shipGroup.picklistId, orderRef.orderId)
 }
 
 async function assignPicker(orderRef: any, shipGroup: any, facilityId: any) {
-  console.log('(orderRef: any, shipGroup: any, facilityId: any', orderRef, shipGroup, facilityId)
   const assignPickerModal = await modalController.create({
     component: AssignPickerModal,
     componentProps: { order: orderRef, shipGroup, facilityId }
   });
   assignPickerModal.onDidDismiss().then(async(result: any) => {
     if(result.data?.selectedPicker) {
-      console.log('(orderRef: any, shipGroup: any, facilityId: any 11111', orderRef, shipGroup, facilityId)
       emitter.emit("presentLoader");
       await createPicklist(orderRef, result.data.selectedPicker);
       const updatedOrder = order.value;
@@ -799,7 +812,6 @@ async function editPicker(orderRef: any) {
 }
 
 async function readyForPickup(orderData: any, shipGroup: any) {
-  console.log('isTrackingEnabled.value', isTrackingEnabled.value, shipGroup.picklistId)
   if (isTrackingEnabled.value && !shipGroup.picklistId) return assignPicker(orderData, shipGroup, (useProductStore().getCurrentFacility as any)?.facilityId);
   const pickup = shipGroup.shipmentMethodTypeId === 'STOREPICKUP';
   const header = pickup ? translate('Ready for pickup') : translate('Ready to ship');
@@ -820,7 +832,8 @@ async function readyForPickup(orderData: any, shipGroup: any) {
           if (!shipGroup.shipmentId) {
             await printPicklist(orderData, shipGroup)
           }
-          await useOrderStore().packShipGroupItems({ order: orderData, shipGroup }).then(async (resp: any) => {
+          const updatedOrder = order.value;
+          await useOrderStore().packShipGroupItems({ order: orderData, shipGroup: updatedOrder.shipGroup }).then(async (resp: any) => {
             if (!commonUtil.hasError(resp)) {
               await getOrderDetail(props.orderId, props.shipGroupSeqId, props.orderType);
               prepareOrderTimeline({ statusId: "SHIPMENT_PACKED" });
@@ -871,7 +884,7 @@ async function rejectOrder() {
   emitter.emit("presentLoader");
 
   let orderRef = JSON.parse(JSON.stringify(order.value))
-  const isEntireOrderRejectionValue = isEntireOrderRejectionEnabled();
+  const isEntireOrderRejectionValue = isEntireOrderRejectionEnabled(orderRef.shipGroup);
   const rejectToFacilityId = orderRef.shipGroup.shipmentMethodTypeId === "STOREPICKUP" ? "PICKUP_REJECTED" : "REJECTED_ITM_PARKING";
   const itemsToReject: any[] = [];
   
@@ -893,7 +906,9 @@ async function rejectOrder() {
     const payload = {
       orderId: orderRef.orderId,
       rejectToFacilityId,
-      items: itemsToReject
+      shipGroup: {
+        items: itemsToReject
+      }
     };
     try {
       const resp = await useOrderStore().rejectOrderItems(payload);

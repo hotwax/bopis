@@ -22,6 +22,7 @@
     "ionicons": "catalog:",
     "luxon": "catalog:",
     "mitt": "catalog:",
+    "pdfjs-dist": "6.2.108",
     "pinia": "catalog:",
     "pinia-plugin-persistedstate": "catalog:",
     "register-service-worker": "catalog:",

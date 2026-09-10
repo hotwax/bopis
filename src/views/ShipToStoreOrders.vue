@@ -63,9 +63,9 @@
               <ion-button :disabled="!useUserStore().hasPermission(Actions.APP_ORDER_UPDATE)" fill="clear" @click.stop="confirmHandoverOrder(order)">
                 {{ translate("Handover") }}
               </ion-button>
-              <ion-button fill="clear" slot="end" @click="sendReadyForPickupEmail(order)">
+              <!-- <ion-button fill="clear" slot="end" @click="sendReadyForPickupEmail(order)">
                 <ion-icon slot="icon-only" :icon="mailOutline" />
-              </ion-button>
+              </ion-button> -->
             </div>
           </ion-card>
         </div>
