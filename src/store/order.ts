@@ -1,4 +1,5 @@
 import { defineStore } from "pinia";
+import { useEposPrinter } from "@/composables/useEposPrinter";
 import { orderUtil } from '@/utils/orderUtil'
 import { api, client, commonUtil, emitter, logger, useSolrSearch, translate } from '@common';
 import { useProductStore as useProductStore } from "@/store/productStore";
@@ -1294,6 +1295,22 @@ export const useOrderStore = defineStore('order', {
 
         if (!resp || commonUtil.hasError(resp)) {
           throw resp?.data;
+        }
+
+        const eposHost = import.meta.env.VITE_EPOS_HOST;
+
+        if(eposHost) {
+          try {
+            await useEposPrinter().printPdf({ host: eposHost }, resp.data);
+            commonUtil.showToast(translate("Customer receipt sent to printer."))
+
+            return;
+          } catch (err) {
+            // Fall through to the browser so the slip is still reachable when
+            // the printer is offline, out of paper or misconfigured.
+            logger.error("Failed to print customer receipt on the network printer", err)
+            commonUtil.showToast(translate("Could not print."))
+          }
         }
 
         // Generate local file URL for the blob received

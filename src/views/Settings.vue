@@ -191,6 +191,17 @@
             </ion-item>
           </ion-list>
         </ion-card>
+
+        <ion-card>
+          <ion-card-header>
+            <ion-card-title>
+              {{ translate("Test Print") }}
+            </ion-card-title>
+          </ion-card-header>
+          <ion-card-content>
+            <ion-button @click="testPrint()">{{ translate("Print") }}</ion-button>
+          </ion-card-content>
+        </ion-card>
       </section>
     </ion-content>
   </ion-page>
@@ -211,6 +222,7 @@ import DxpProductIdentifier from "@/components/DxpProductIdentifier.vue";
 import DxpLanguageSwitcher from "@/components/DxpLanguageSwitcher.vue";
 import DxpFacilitySwitcher from "@/components/DxpFacilitySwitcher.vue";
 
+import { useEposPrinter } from "@/composables/useEposPrinter";
 import { useUserStore } from '@/store/user';
 import { useOrderStore } from '@/store/order';
 import { useProductStore } from '@/store/productStore';
@@ -383,6 +395,24 @@ async function confirmNotificationPrefUpdate(enumId: string, event: CustomEvent)
     ],
   });
   return alert.present();
+}
+
+async function testPrint() {
+  const host = import.meta.env.VITE_EPOS_HOST;
+
+  if(!host) {
+    commonUtil.showToast(translate("No printer configured."))
+
+    return;
+  }
+
+  try {
+    await useEposPrinter().testPrint({ host });
+    commonUtil.showToast(translate("Test print sent to printer."))
+  } catch (err: any) {
+    logger.error("Test print failed", err)
+    commonUtil.showToast(err.message || translate("Could not print. Please check the printer."))
+  }
 }
 </script>
 
