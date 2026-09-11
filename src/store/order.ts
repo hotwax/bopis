@@ -829,7 +829,7 @@ export const useOrderStore = defineStore('order', {
         return err as any
       }
     },
-    async getShipToStoreIncomingOrders(payload: any) {
+    async fetchShipToStoreIncomingOrders(payload: any) {
       if (payload.viewIndex === 0) emitter.emit("presentLoader")
       let resp: any
       const params = {
@@ -891,7 +891,7 @@ export const useOrderStore = defineStore('order', {
       }
       return resp;
     },
-    async getShipToStoreReadyForPickupOrders(payload: any) {
+    async fetchShipToStoreReadyForPickupOrders(payload: any) {
       if (payload.viewIndex === 0) emitter.emit("presentLoader")
       let resp: any
       const params = {
@@ -953,7 +953,7 @@ export const useOrderStore = defineStore('order', {
       }
       return resp;
     },
-    async getShipToStoreCompletedOrders(payload: any) {
+    async fetchShipToStoreCompletedOrders(payload: any) {
       if (payload.viewIndex === 0) emitter.emit("presentLoader")
       let resp: any
       const params = {

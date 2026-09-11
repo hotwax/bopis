@@ -150,19 +150,19 @@ const getDateTime = (time: any) => {
 const getIncomingOrders = async (vSize?: any, vIndex?: any) => {
   const viewSize = vSize ? vSize : (import.meta.env.VITE_VIEW_SIZE as any);
   const viewIndex = vIndex ? vIndex : 0;
-  await (useOrderStore() as any).getShipToStoreIncomingOrders({ viewSize, viewIndex, queryString: queryString.value, facilityId: (useProductStore().getCurrentFacility as any)?.facilityId });
+  await (useOrderStore() as any).fetchShipToStoreIncomingOrders({ viewSize, viewIndex, queryString: queryString.value, facilityId: (useProductStore().getCurrentFacility as any)?.facilityId });
 };
 
 const getReadyForPickupOrders = async (vSize?: any, vIndex?: any) => {
   const viewSize = vSize ? vSize : (import.meta.env.VITE_VIEW_SIZE as any);
   const viewIndex = vIndex ? vIndex : 0;
-  await (useOrderStore() as any).getReadyForPickupOrders({ viewSize, viewIndex, queryString: queryString.value, facilityId: (useProductStore().getCurrentFacility as any)?.facilityId });
+  await (useOrderStore() as any).fetchShipToStoreReadyForPickupOrders({ viewSize, viewIndex, queryString: queryString.value, facilityId: (useProductStore().getCurrentFacility as any)?.facilityId });
 };
 
 const getCompletedOrders = async (vSize?: any, vIndex?: any) => {
   const viewSize = vSize ? vSize : (import.meta.env.VITE_VIEW_SIZE as any);
   const viewIndex = vIndex ? vIndex : 0;
-  await (useOrderStore() as any).getShipToStoreCompletedOrders({ viewSize, viewIndex, queryString: queryString.value, facilityId: (useProductStore().getCurrentFacility as any)?.facilityId });
+  await (useOrderStore() as any).fetchShipToStoreCompletedOrders({ viewSize, viewIndex, queryString: queryString.value, facilityId: (useProductStore().getCurrentFacility as any)?.facilityId });
   await (useOrderStore() as any).fetchCommunicationEvents({ orders: completedOrders.value });
 };
 
