@@ -192,7 +192,7 @@
           </template> -->
 
           <ion-item lines="none" v-if="orderType === 'open' && order.shipGroup?.items?.length">
-            <ion-button data-testid="ready-pickup-button" size="default" :disabled="!useUserStore().hasPermission(Actions.APP_ORDER_UPDATE) || order.readyToHandover || order.readyToShip || order.rejected || hasRejectedItems" @click="readyForPickup(order, order.shipGroup)">
+            <ion-button data-testid="ready-pickup-button" size="default" :disabled="!useUserStore().hasPermission(Actions.APP_ORDER_UPDATE) || order.readyToHandover || order.readyToShip || order.rejected || hasCancelledItems" @click="readyForPickup(order, order.shipGroup)">
               <ion-icon slot="start" :icon="bagCheckOutline"/>
               {{ order?.shipGroup.shipmentMethodTypeId === 'STOREPICKUP' ? translate("Ready for pickup") : translate("Ready to ship") }}
             </ion-button>
@@ -397,7 +397,7 @@ const productIdentificationPref = computed(() => useProductStore().getProductIde
 const currentFacility = computed(() => useProductStore().getCurrentFacility);
 
 function isEntireOrderRejectionEnabled(shipGroup: any) {
-  return shipGroup?.shipmentMethodTypeId !== "STOREPICKUP" && hasRejectedItems.value
+  return shipGroup?.shipmentMethodTypeId !== "STOREPICKUP" && hasCancelledItems.value
 }
 
 function formatDateTime(date: any) {
@@ -1165,16 +1165,16 @@ onMounted(async () => {
   emitter.emit("presentLoader")
   await getOrderDetail(props.orderId, props.shipGroupSeqId, props.orderType);
 
-  await fetchRejectReasons()
+  // await fetchRejectReasons()
   await fetchCancelReasons()
 
-  if(props.orderType === "packed") {
-    fetchJobs();
-    hasCancelledItems.value = order.value.shipGroup?.items.some((item: any) => item.cancelReason);
-  }
-  if(props.orderType === "open") {
-    hasRejectedItems.value = order.value.shipGroup?.items.some((item: any) => item.rejectReason);
-  }
+  // if(props.orderType === "packed") {
+  //   fetchJobs();
+  // }
+  hasCancelledItems.value = order.value.shipGroup?.items.some((item: any) => item.cancelReason);
+  // if(props.orderType === "open") {
+  //   hasRejectedItems.value = order.value.shipGroup?.items.some((item: any) => item.rejectReason);
+  // }
 
   await prepareOrderTimeline();
 

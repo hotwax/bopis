@@ -84,7 +84,16 @@ const productIdentificationPref = computed(() => useProductStoreSettings().getPr
 
 onMounted(() => {
   currentOrder.value = JSON.parse(JSON.stringify(props.order))
-  cancelledItems.value = currentOrder.value.shipGroup.items.filter((item: any) => item.cancelReason)
+
+  if(currentOrder.value.shipGroup.shipmentMethodTypeId === "STOREPICKUP") {
+    cancelledItems.value = currentOrder.value.shipGroup.items.filter((item: any) => item.cancelReason)
+  } else {
+    cancelledItems.value = currentOrder.value.shipGroup.items.map((item: any) => ({
+      ...item,
+      cancelReason: item.cancelReason || "REJ_AVOID_ORD_SPLIT"
+    }))
+  }
+
   orderTotal.value = cancelledItems.value.reduce((total: any, item: any) => getProduct(item.productId).LIST_PRICE_PURCHASE_USD_STORE_GROUP_price + total, 0)
   const timeDiff = DateTime.fromMillis(props.cancelJobNextRunTime).diff(DateTime.local());
   runTimeDiff.value = DateTime.local().plus(timeDiff).toRelative() || "";

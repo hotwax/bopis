@@ -66,7 +66,7 @@
                 {{ translate("Request Transfer") }}
               </ion-button>
               <ion-button size="default" slot="end" fill="clear" @click.stop="printPicklist(order, order.shipGroup)">
-                  <ion-icon :icon="printOutline" slot="icon-only" />
+                <ion-icon :icon="printOutline" slot="icon-only" />
               </ion-button>
             </div>
           </ion-card>
@@ -100,8 +100,11 @@
               <ion-button data-testid="listpage-cancel-button" color="danger" :disabled="!useUserStore().hasPermission(Actions.APP_ORDER_UPDATE)" fill="clear" @click.stop="openRejectOrderModal(order)">
                 {{ translate("Cancel") }}
               </ion-button>
-              <ion-button size="default" data-testid="packing-slip-button" v-if="isPrintPackingSlipEnabled" fill="clear" slot="end" @click.stop="printPackingSlip(order)">
+              <!-- <ion-button size="default" data-testid="packing-slip-button" v-if="isPrintPackingSlipEnabled" fill="clear" slot="end" @click.stop="printPackingSlip(order)">
                 <ion-icon slot="icon-only" :icon="printOutline" />
+              </ion-button> -->
+              <ion-button size="default" slot="end" fill="clear" @click.stop="printReceipt(order.orderId)">
+                <ion-icon :icon="printOutline" slot="icon-only" />
               </ion-button>
 
               <!-- <ion-button size="default" data-testid="resend-email-button" v-if="order.shipmentMethodTypeId === 'STOREPICKUP'" fill="clear" slot="end" @click.stop="sendReadyForPickupEmail(order)">
@@ -627,6 +630,10 @@ async function openProofOfDeliveryModal(orderData: any, isViewModeOnly: any) {
       emitter.emit("dismissLoader");
     }
   }
+}
+
+async function printReceipt(orderId: string) {
+  await orderStore.printPicklist("", orderId)
 }
 </script>
 
