@@ -398,16 +398,16 @@ async function confirmNotificationPrefUpdate(enumId: string, event: CustomEvent)
 }
 
 async function testPrint() {
-  const host = import.meta.env.VITE_EPOS_HOST;
+  const printer = useEposPrinter().configFromEnv();
 
-  if(!host) {
+  if(!printer) {
     commonUtil.showToast(translate("No printer configured."))
 
     return;
   }
 
   try {
-    await useEposPrinter().testPrint({ host });
+    await useEposPrinter().testPrint(printer);
     commonUtil.showToast(translate("Test print sent to printer."))
   } catch (err: any) {
     logger.error("Test print failed", err)

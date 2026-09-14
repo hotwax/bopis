@@ -1,26 +1,38 @@
 import { logger } from "@common";
 
 /**
- * Epson ePOS-Device printing over the network.
+ * Epson ePOS-Print: receipt XML posted over HTTP to the printer's own service.
  *
- * Targets TM printers that expose the ePOS service in firmware (TM-m30II,
- * TM-m30III and similar). The SDK is loaded from public/epos-2.27.0.js via a
- * script tag in index.html, so it arrives on `window.epson` rather than as a
- * module import.
+ * ePOS-Print is the transport every ePOS-capable TM printer understands — a
+ * TM-T88V with a UB-E04 card, a TM-T88VII, and the TM-m30 series alike — which
+ * keeps one code path across mixed hardware. The alternative, ePOS-Device over
+ * WebSocket, is only available on printers with the service in firmware.
  *
- * Connections are opened per job and always torn down: the printer accepts a
- * small number of concurrent sessions, and leaked ones make it unreachable
- * until it is power cycled.
+ * The SDK is loaded from public/epos-2.27.0.js via a script tag in index.html,
+ * so it arrives on `window.epson` rather than as a module import.
  */
 
 export interface EposPrinterConfig {
-  /** Printer IP address or hostname. */
+  /**
+   * Printer host, optionally with a port: "192.168.1.50" for a real printer,
+   * "localhost:8008" for the local mock. This is the only value that differs
+   * between a development machine and a store.
+   */
   host: string;
-  /** 8043 for SSL (required from an https page), 8008 for plaintext. */
-  port?: number;
+  /** https rather than http. Required from a page served over https. */
+  ssl?: boolean;
+  /**
+   * Printable width in dots. Model-dependent, and getting it wrong clips the
+   * right edge of rasterised documents:
+   *   512 — TM-T88 series (V, VI, VII), 180 dpi
+   *   576 — TM-m30 series (m30II, m30III), 203 dpi
+   * Defaults to 512, the narrower of the two: printing narrow on a wide
+   * printer leaves a margin, while printing wide on a narrow one loses content.
+   */
+  widthDots?: number;
   /** Device id. TM printers use "local_printer". */
   devid?: string;
-  /** Per-job timeout in ms, applied to both connect and print. */
+  /** Per-job timeout in ms. */
   timeout?: number;
 }
 
@@ -31,12 +43,14 @@ export interface EposPrintResult {
   battery: number;
 }
 
-/** Builds the receipt. Called with the SDK's printer object. */
-export type EposJob = (printer: any) => void;
+/** Builds the receipt. Called with the SDK's ePOSBuilder. */
+export type EposJob = (builder: any) => void;
 
-const DEFAULT_PORT = 8043;
 const DEFAULT_DEVID = "local_printer";
 const DEFAULT_TIMEOUT = 60000;
+
+/** TM-T88 series printable width on an 80mm roll: 72.2mm at 180 dpi. */
+const DEFAULT_WIDTH_DOTS = 512;
 
 /** Status bits from the SDK, most user-actionable first. */
 const ASB_FLAGS: Array<[number, string]> = [
@@ -60,9 +74,17 @@ const describeStatus = (status: number): string[] => ASB_FLAGS
   .filter(([bit]) => (status & bit) !== 0)
   .map(([, label]) => label);
 
+const serviceUrl = (config: EposPrinterConfig): string => {
+  const scheme = config.ssl ? "https" : "http";
+  const devid = config.devid ?? DEFAULT_DEVID;
+  const timeout = config.timeout ?? DEFAULT_TIMEOUT;
+
+  return `${scheme}://${config.host}/cgi-bin/epos/service.cgi?devid=${devid}&timeout=${timeout}`;
+}
+
 /**
- * Serialises jobs per host. Two prints to the same printer at once will
- * collide on the connection limit, so they queue instead.
+ * Serialises jobs per host. The printer handles one job at a time, and
+ * overlapping posts produce interleaved or dropped output.
  */
 const queues = new Map<string, Promise<any>>();
 
@@ -85,58 +107,11 @@ const withTimeout = <T>(promise: Promise<T>, ms: number, message: string): Promi
   return Promise.race([promise, timeout]).finally(() => clearTimeout(timer)) as Promise<T>;
 }
 
-const connect = (config: EposPrinterConfig): Promise<any> => {
+const post = (config: EposPrinterConfig, xml: string): Promise<EposPrintResult> => {
   return new Promise((resolve, reject) => {
-    if(!window.epson) {
-      reject(new Error("ePOS SDK not loaded"));
+    const eposPrint = new window.epson.ePOSPrint(serviceUrl(config));
 
-      return;
-    }
-
-    const device = new window.epson.ePOSDevice();
-
-    device.connect(
-      config.host,
-      config.port ?? DEFAULT_PORT,
-      (result: string) => {
-        // The SDK reports SSL_CONNECT_OK when the session is encrypted.
-        if(result === "OK" || result === "SSL_CONNECT_OK") {
-          resolve(device);
-
-          return;
-        }
-
-        reject(new Error(`Could not reach printer at ${config.host}: ${result}`));
-      },
-      { eposprint: true }
-    );
-  });
-}
-
-const createPrinter = (device: any, config: EposPrinterConfig): Promise<any> => {
-  return new Promise((resolve, reject) => {
-    device.createDevice(
-      config.devid ?? DEFAULT_DEVID,
-      device.DEVICE_TYPE_PRINTER,
-      { crypto: false, buffer: false },
-      // createDevice is asynchronous; the printer arrives here, not as a return value.
-      (printer: any, code: string) => {
-        if(!printer) {
-          reject(new Error(`Could not open printer: ${code}`));
-
-          return;
-        }
-
-        printer.timeout = config.timeout ?? DEFAULT_TIMEOUT;
-        resolve(printer);
-      }
-    );
-  });
-}
-
-const send = (printer: any): Promise<EposPrintResult> => {
-  return new Promise((resolve, reject) => {
-    printer.onreceive = (res: any) => {
+    eposPrint.onreceive = (res: any) => {
       const result: EposPrintResult = {
         success: res.success,
         code: res.code,
@@ -154,94 +129,50 @@ const send = (printer: any): Promise<EposPrintResult> => {
 
       reject(new Error(conditions.length ? conditions.join(", ") : `Print failed: ${res.code}`));
     };
-    printer.onerror = (err: any) => reject(new Error(`Print failed: ${err?.status ?? err}`));
-    printer.send();
+
+    // Transport-level failure: wrong host, service disabled, TLS rejected.
+    eposPrint.onerror = (err: any) => {
+      reject(new Error(`Could not reach printer at ${config.host}: ${err?.status ?? err}`));
+    };
+
+    eposPrint.send(xml);
   });
 }
 
-const teardown = async (device: any, printer: any): Promise<void> => {
-  try {
-    if(printer) {
-      await new Promise<void>((resolve) => device.deleteDevice(printer, () => resolve()));
-    }
-
-    device.disconnect();
-  } catch (err) {
-    // Teardown failures must not mask the print result.
-    logger.warn("Failed to release printer connection", err);
-  }
-}
-
-/**
- * Opens a connection, runs the job, and releases the connection either way.
- */
+/** Builds a receipt with the SDK's builder and posts it to the printer. */
 const printReceipt = (config: EposPrinterConfig, job: EposJob): Promise<EposPrintResult> => {
-  const timeout = config.timeout ?? DEFAULT_TIMEOUT;
-
   return enqueue(config.host, async () => {
-    const device = await withTimeout(
-      connect(config),
-      timeout,
-      `Timed out connecting to printer at ${config.host}`
-    );
-
-    let printer: any = null;
-
-    try {
-      printer = await createPrinter(device, config);
-      job(printer);
-
-      return await send(printer);
-    } finally {
-      await teardown(device, printer);
+    if(!window.epson) {
+      throw new Error("ePOS SDK not loaded");
     }
+
+    const builder = new window.epson.ePOSBuilder();
+
+    job(builder);
+
+    return await withTimeout(
+      post(config, builder.toString()),
+      config.timeout ?? DEFAULT_TIMEOUT,
+      `Timed out printing at ${config.host}`
+    );
   });
 }
-
-/** Prints a short sheet to confirm a printer is configured correctly. */
-const testPrint = async (config: EposPrinterConfig): Promise<EposPrintResult> => {
-  const result = await printReceipt(config, (printer) => {
-    printer.addTextAlign(printer.ALIGN_CENTER);
-    printer.addTextDouble(true, true);
-    printer.addText("HotWax Commerce\n");
-    printer.addTextDouble(false, false);
-    printer.addText("Test print\n");
-    printer.addText(`${config.host}\n`);
-    printer.addFeedLine(3);
-    printer.addCut(printer.CUT_FEED);
-  });
-
-  logger.log(`Test print sent to ${config.host}`, result);
-
-  return result;
-}
-
-/**
- * Reports what is wrong with a printer, if anything.
- * Prints nothing: an empty job still returns the printer's status.
- */
-const getStatus = async (config: EposPrinterConfig): Promise<string[]> => {
-  const result = await printReceipt(config, () => undefined);
-
-  return describeStatus(result.status);
-}
-
-/**
- * Printable width of an 80mm roll at 203 dpi. The roll is 80mm wide but loses
- * 4mm to each margin, so an 80mm PDF is scaled to 90% rather than clipped.
- */
-const PRINTABLE_DOTS = 576;
 
 let pdfjs: Promise<any> | null = null;
 
 /** Loaded on first use, so pdf.js stays out of the main bundle. */
 const loadPdfjs = (): Promise<any> => {
   if(!pdfjs) {
-    pdfjs = Promise.all([
-      import("pdfjs-dist"),
-      import("pdfjs-dist/build/pdf.worker.min.mjs?worker")
-    ]).then(([lib, worker]) => {
-      lib.GlobalWorkerOptions.workerPort = new worker.default();
+    // The worker is served from public/ rather than imported. Importing it —
+    // with ?worker or ?url — routes it through Vite's transform pipeline, which
+    // injects client code referencing `document`; that throws inside the worker,
+    // the worker never signals ready, and getDocument() hangs forever.
+    // public/ is served verbatim, so pdf.js's own worker build stays intact.
+    // Keep public/pdf.worker.min.mjs in step with the pinned pdfjs-dist version.
+    pdfjs = import("pdfjs-dist").then((lib) => {
+      const workerUrl = `${import.meta.env.BASE_URL}pdf.worker.min.mjs`;
+
+      lib.GlobalWorkerOptions.workerPort = new Worker(workerUrl, { type: "module" });
 
       return lib;
     });
@@ -257,14 +188,14 @@ const loadPdfjs = (): Promise<any> => {
  * scales to roughly a third and prints illegibly, so check the page size before
  * sending one here.
  */
-const renderPdf = async (blob: Blob): Promise<HTMLCanvasElement[]> => {
+const renderPdf = async (blob: Blob, widthDots: number): Promise<HTMLCanvasElement[]> => {
   const lib = await loadPdfjs();
   const pdf = await lib.getDocument({ data: await blob.arrayBuffer() }).promise;
   const canvases: HTMLCanvasElement[] = [];
 
   for(let pageNumber = 1; pageNumber <= pdf.numPages; pageNumber++) {
     const page = await pdf.getPage(pageNumber);
-    const scale = PRINTABLE_DOTS / page.getViewport({ scale: 1 }).width;
+    const scale = widthDots / page.getViewport({ scale: 1 }).width;
     const viewport = page.getViewport({ scale });
 
     const canvas = document.createElement("canvas");
@@ -296,33 +227,83 @@ const renderPdf = async (blob: Blob): Promise<HTMLCanvasElement[]> => {
  * data is available, addBarcode/addSymbol give a better result.
  */
 const printPdf = async (config: EposPrinterConfig, blob: Blob): Promise<EposPrintResult> => {
-  // Rendering finishes before the connection opens: the job callback runs
-  // inside the connection lifecycle and must not block on I/O.
   const pages = await withTimeout(
-    renderPdf(blob),
+    renderPdf(blob, config.widthDots ?? DEFAULT_WIDTH_DOTS),
     config.timeout ?? DEFAULT_TIMEOUT,
     "Timed out rendering the document for printing"
   );
 
-  return printReceipt(config, (printer) => {
+  return printReceipt(config, (builder) => {
     // Threshold rather than the default dither: a packing slip is text and line
     // art, and dithering turns small glyphs into speckle.
-    printer.halftone = printer.HALFTONE_THRESHOLD;
-    printer.brightness = 1;
+    builder.halftone = builder.HALFTONE_THRESHOLD;
+    builder.brightness = 1;
 
     pages.forEach((canvas) => {
-      printer.addImage(
+      builder.addImage(
         canvas.getContext("2d"), 0, 0, canvas.width, canvas.height,
-        printer.COLOR_1, printer.MODE_MONO
+        builder.COLOR_1, builder.MODE_MONO
       );
     });
 
-    printer.addCut(printer.CUT_FEED);
+    builder.addCut(builder.CUT_FEED);
   });
+}
+
+/** Prints a short sheet to confirm a printer is configured correctly. */
+const testPrint = async (config: EposPrinterConfig): Promise<EposPrintResult> => {
+  const result = await printReceipt(config, (builder) => {
+    builder.addTextAlign(builder.ALIGN_CENTER);
+    builder.addTextDouble(true, true);
+    builder.addText("HotWax Commerce\n");
+    builder.addTextDouble(false, false);
+    builder.addText("Test print\n");
+    builder.addText(`${config.host}\n`);
+    builder.addFeedLine(3);
+    builder.addCut(builder.CUT_FEED);
+  });
+
+  logger.log(`Test print sent to ${config.host}`, result);
+
+  return result;
+}
+
+/**
+ * Reports what is wrong with a printer, if anything.
+ * Prints nothing: an empty job still returns the printer's status.
+ */
+const getStatus = async (config: EposPrinterConfig): Promise<string[]> => {
+  const result = await printReceipt(config, () => undefined);
+
+  return describeStatus(result.status);
+}
+
+/**
+ * Printer configuration from the environment.
+ *
+ * A stopgap: a printer belongs to a counter, so this should become per-facility
+ * configuration rather than a build-time variable. Returns null when no printer
+ * is configured, which callers treat as "fall back to the browser".
+ */
+const configFromEnv = (): EposPrinterConfig | null => {
+  const host = import.meta.env.VITE_EPOS_HOST;
+
+  if(!host) {
+    return null;
+  }
+
+  const widthDots = Number(import.meta.env.VITE_EPOS_WIDTH_DOTS);
+
+  return {
+    host,
+    ssl: import.meta.env.VITE_EPOS_SSL === "true",
+    widthDots: Number.isFinite(widthDots) && widthDots > 0 ? widthDots : undefined
+  };
 }
 
 export const useEposPrinter = () => {
   return {
+    configFromEnv,
     printReceipt,
     printPdf,
     testPrint,

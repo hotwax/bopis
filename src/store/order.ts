@@ -1305,11 +1305,15 @@ export const useOrderStore = defineStore('order', {
           throw resp?.data;
         }
 
-        const eposHost = import.meta.env.VITE_EPOS_HOST;
+        console.log('Initiating EPOS print', useEposPrinter().configFromEnv())
 
-        if(eposHost) {
+        const printer = useEposPrinter().configFromEnv();
+
+        if(printer) {
           try {
-            await useEposPrinter().printPdf({ host: eposHost }, resp.data);
+            await useEposPrinter().printPdf(printer, resp.data);
+
+            console.log('Data sent to printer')
             commonUtil.showToast(translate("Customer receipt sent to printer."))
 
             return;
