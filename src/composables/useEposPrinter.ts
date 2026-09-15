@@ -107,6 +107,32 @@ const withTimeout = <T>(promise: Promise<T>, ms: number, message: string): Promi
   return Promise.race([promise, timeout]).finally(() => clearTimeout(timer)) as Promise<T>;
 }
 
+/**
+ * Turns the SDK's transport failure into something actionable.
+ *
+ * The status is the underlying XHR status, and 0 — meaning no response reached
+ * the browser at all — is by far the most common and least informative value.
+ */
+const explainTransportError = (err: any): string => {
+  const status = err?.status;
+
+  if(status === 0 || status === undefined) {
+    return "No response. Check the printer is switched on, that its address is " +
+      "correct, and that this device is on the same network.";
+  }
+
+  if(status === 404) {
+    return "The printer answered but has no ePOS-Print service. Enable " +
+      "ePOS-Print in its Web Config, or check the model supports it.";
+  }
+
+  if(status === 401 || status === 403) {
+    return `The printer refused the request (${status}). It may require authentication.`;
+  }
+
+  return `The printer responded with status ${status}.`;
+}
+
 const post = (config: EposPrinterConfig, xml: string): Promise<EposPrintResult> => {
   return new Promise((resolve, reject) => {
     const eposPrint = new window.epson.ePOSPrint(serviceUrl(config));
@@ -132,7 +158,7 @@ const post = (config: EposPrinterConfig, xml: string): Promise<EposPrintResult> 
 
     // Transport-level failure: wrong host, service disabled, TLS rejected.
     eposPrint.onerror = (err: any) => {
-      reject(new Error(`Could not reach printer at ${config.host}: ${err?.status ?? err}`));
+      reject(new Error(`Could not reach printer at ${config.host}. ${explainTransportError(err)}`));
     };
 
     eposPrint.send(xml);

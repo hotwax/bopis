@@ -1305,6 +1305,7 @@ export const useOrderStore = defineStore('order', {
           throw resp?.data;
         }
 
+        commonUtil.showToast("Initiating EPOS print")
         console.log('Initiating EPOS print', useEposPrinter().configFromEnv())
 
         const printer = useEposPrinter().configFromEnv();

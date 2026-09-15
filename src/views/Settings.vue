@@ -353,7 +353,7 @@ async function updateNotificationPref(enumId: string) {
     isToggledOn = !pref.isEnabled
     pref.isEnabled = !pref.isEnabled
     notificationStore.setNotificationPrefs(notificationPrefs.value)
-    commonUtil.showToast(translate('Notification preferences updated.'))
+    commonUtil.showToast(translate('Notification preferences updated successfully, trigger notifications.'))
   } catch (error) {
     commonUtil.showToast(translate('Notification preferences not updated. Please try again.'))
   } finally {
