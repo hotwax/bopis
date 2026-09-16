@@ -34,6 +34,7 @@ import { closeOutline, save } from "ionicons/icons";
 import { commonUtil, emitter, firebaseMessaging, logger, translate, useNotificationStore } from '@common';
 import { useProductStore } from "@/store/productStore";
 import { useUserStore as usePiniaUserStore } from "@/store/user";
+import { firebaseUtil } from "@/utils/firebaseUtil";
 
 const userStore = usePiniaUserStore();
 const notificationPrefs = computed(() => useNotificationStore().getNotificationPrefs);
@@ -103,6 +104,14 @@ async function updateNotificationPref() {
 async function handleTopicSubscription() {
   const facilityId = (currentFacility.value as any)?.facilityId;
   const notificationStore = useNotificationStore();
+
+  // Same ordering rule as the Settings toggle: the device must hold a registration token
+  // before any topic is subscribed, otherwise the token never joins the topic. This screen
+  // previously subscribed topics without ever registering the device at all.
+  if (notificationPrefToUpdate.value.subscribe.length) {
+    await firebaseUtil.initialiseFirebaseMessaging(true);
+  }
+
   const subscribeRequests = notificationPrefToUpdate.value.subscribe.map((enumId: string) => {
     const topicName = firebaseMessaging.generateTopicName(commonUtil.getOMSInstanceName(), facilityId, enumId);
     return notificationStore.subscribeTopic(topicName, import.meta.env.VITE_NOTIF_APP_ID);
