@@ -335,12 +335,20 @@ async function updateNotificationPref(enumId: string) {
     const topicName = firebaseMessaging.generateTopicName(commonUtil.getOMSInstanceName(), facilityId, enumId)
 
     const pref = notificationPrefs.value.find((p: any) => p.enumId === enumId)
-    pref.isEnabled
-      ? await notificationStore.unsubscribeTopic(topicName, import.meta.env.VITE_NOTIF_APP_ID)
-      : await notificationStore.subscribeTopic(topicName, import.meta.env.VITE_NOTIF_APP_ID)
+    const isTurningOn = !pref.isEnabled
 
-    isToggledOn = !pref.isEnabled
-    pref.isEnabled = !pref.isEnabled
+    // Register this device before subscribing. The backend attaches a topic to the tokens it
+    // already knows about, so subscribing first leaves a first-time user's token out of the
+    // topic: the subscription and the token both look healthy afterwards while nothing is
+    // ever delivered to the device.
+    if (isTurningOn) await firebaseUtil.initialiseFirebaseMessaging(true)
+
+    isTurningOn
+      ? await notificationStore.subscribeTopic(topicName, import.meta.env.VITE_NOTIF_APP_ID)
+      : await notificationStore.unsubscribeTopic(topicName, import.meta.env.VITE_NOTIF_APP_ID)
+
+    isToggledOn = isTurningOn
+    pref.isEnabled = isTurningOn
     notificationStore.setNotificationPrefs(notificationPrefs.value)
     commonUtil.showToast(translate('Notification preferences updated.'))
   } catch (error) {
@@ -350,9 +358,7 @@ async function updateNotificationPref(enumId: string) {
   }
 
   try {
-    if (!allNotificationPrefs.value.length && isToggledOn) {
-      await firebaseUtil.initialiseFirebaseMessaging();
-    } else if (allNotificationPrefs.value.length == 1 && !isToggledOn) {
+    if (allNotificationPrefs.value.length == 1 && !isToggledOn) {
       await notificationStore.removeClientRegistrationToken(firebaseDeviceId.value, import.meta.env.VITE_NOTIF_APP_ID)
     }
     await notificationStore.fetchAllNotificationPrefs(import.meta.env.VITE_NOTIF_APP_ID, userProfile.value?.userId);
