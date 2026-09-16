@@ -1,4 +1,5 @@
 import { defineStore } from "pinia";
+import { useEposPrinter } from "@/composables/useEposPrinter";
 import { orderUtil } from '@/utils/orderUtil'
 import { api, client, commonUtil, emitter, logger, useSolrSearch, translate } from '@common';
 import { useProductStore as useProductStore } from "@/store/productStore";
@@ -257,6 +258,10 @@ export const useOrderStore = defineStore('order', {
       return resp;
     },
     async fetchOpenOrders(params: any) {
+      if(params.forceFetch) {
+        this.open = { list: [], total: 0 };
+      }
+
       let queryParams = {
         keyword: params.queryString || '',
         facilityId: params.facilityId,
@@ -286,7 +291,7 @@ export const useOrderStore = defineStore('order', {
           params: queryParams
         });
 
-        if (resp.status === 200 && !commonUtil.hasError(resp) && resp?.data?.orders.length > 0) {
+        if (resp.status === 200 && !commonUtil.hasError(resp)) {
           const ordersResp = resp.data.orders;
 
           const productIds = ordersResp.flatMap((order: any) =>
@@ -494,6 +499,10 @@ export const useOrderStore = defineStore('order', {
     },
     async fetchPackedOrders(params: any) {
       let resp;
+
+      if(params.forceFetch) {
+        this.packed = { list: [], total: 0 };
+      }
 
       const productStore = useProduct();
       const queryParams = {
@@ -1294,6 +1303,27 @@ export const useOrderStore = defineStore('order', {
 
         if (!resp || commonUtil.hasError(resp)) {
           throw resp?.data;
+        }
+
+        commonUtil.showToast("Initiating EPOS print")
+        console.log('Initiating EPOS print', useEposPrinter().configFromEnv())
+
+        const printer = useEposPrinter().configFromEnv();
+
+        if(printer) {
+          try {
+            await useEposPrinter().printPdf(printer, resp.data);
+
+            console.log('Data sent to printer')
+            commonUtil.showToast(translate("Customer receipt sent to printer."))
+
+            return;
+          } catch (err) {
+            // Fall through to the browser so the slip is still reachable when
+            // the printer is offline, out of paper or misconfigured.
+            logger.error("Failed to print customer receipt on the network printer", err)
+            commonUtil.showToast(translate("Could not print."))
+          }
         }
 
         // Generate local file URL for the blob received

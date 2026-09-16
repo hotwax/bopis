@@ -1,14 +1,16 @@
-import { firebaseMessaging, useNotificationStore } from "@common";
+import { firebaseMessaging, logger, useNotificationStore } from "@common";
 import { DateTime } from "luxon";
 
 const initialiseFirebaseMessaging = async () => {
+  console.log('Initializing firebase')
   const notificationStore = useNotificationStore();
-  if (notificationStore.isFirebaseInitialised) return;
+
+  // if (notificationStore.isFirebaseInitialised) return;
 
   const appFirebaseConfig = JSON.parse(import.meta.env.VITE_FIREBASE_CONFIG as any);
   const appFirebaseVapidKey = import.meta.env.VITE_FIREBASE_VAPID_KEY;
 
-  if (appFirebaseConfig && appFirebaseConfig.apiKey && notificationStore.getAllNotificationPrefs?.length) {
+  if (appFirebaseConfig && appFirebaseConfig.apiKey) {
     await firebaseMessaging.initialiseFirebaseApp(
       appFirebaseConfig,
       appFirebaseVapidKey,
@@ -18,8 +20,11 @@ const initialiseFirebaseMessaging = async () => {
       (notification: any) => {
         notificationStore.addNotification({...notification.notification, isForeground: notification.isForeground, time: DateTime.now().toMillis()});
       }
-    );
-    notificationStore.isFirebaseInitialised = true;
+    ).then(() => {
+      notificationStore.isFirebaseInitialised = true;
+    }).catch((err) => {
+      logger.error("Failed to initialize notifications", err)
+    });
   }
 }
 
