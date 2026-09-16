@@ -191,6 +191,20 @@
             </ion-item>
           </ion-list>
         </ion-card>
+
+        <ion-card>
+          <ion-card-header>
+            <ion-card-title>
+              {{ translate("Notification diagnostics") }}
+            </ion-card-title>
+          </ion-card-header>
+          <ion-card-content>
+            {{ translate('Check why notifications are not arriving on this device, and register it from here.') }}
+          </ion-card-content>
+          <ion-item lines="none">
+            <ion-button fill="outline" @click="openNotificationDiagnostics()">{{ translate("Open diagnostics") }}</ion-button>
+          </ion-item>
+        </ion-card>
       </section>
     </ion-content>
   </ion-page>
@@ -205,6 +219,7 @@ import Image from '@/components/Image.vue';
 import { commonUtil, emitter, firebaseMessaging, logger, translate, useNotificationStore } from '@common';
 import { useAuth } from "@common/composables/useAuth";
 import EditShipmentMethodModal from '@/components/EditShipmentMethodModal.vue';
+import NotificationDiagnosticsModal from '@/components/NotificationDiagnosticsModal.vue';
 import DxpTimeZoneSwitcher from "@/components/DxpTimeZoneSwitcher.vue"
 import DxpOmsInstanceNavigator from "@/components/DxpOmsInstanceNavigator.vue";
 import DxpProductIdentifier from "@/components/DxpProductIdentifier.vue";
@@ -317,6 +332,13 @@ function getShipmentMethodConfig() {
     return { shipmentMethodTypeId: shippingMethodConfig };
   }
   return {};
+}
+
+async function openNotificationDiagnostics() {
+  const diagnosticsModal = await modalController.create({
+    component: NotificationDiagnosticsModal
+  });
+  return diagnosticsModal.present();
 }
 
 async function updateNotificationPref(enumId: string) {
