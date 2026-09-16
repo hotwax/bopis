@@ -7,7 +7,6 @@
   "All items were rejected from the order": "注文の全商品が拒否されました",
   "All items were rejected from the order.": "All items were rejected from the order {orderId}.",
   "All order items are cancelled": "All order items are cancelled",
-  "All order items are rejected": "全注文商品が拒否されました",
   "Allow partial rejection": "部分的な拒否を許可します",
   "An email notification will be sent to that their order is ready for pickup.": "{ customerName }様宛に注文の受け取り準備が完了したことをお知らするメールが送信されます。",
   "An email notification will be sent to that their order is ready for pickup. This order will also be moved to the packed orders tab.": "{ customerName }様宛に注文の受け取り準備が完了したことをお知らするメールが送信されます。{ space } この注文は「梱包済み注文」タブに移動されます.",
