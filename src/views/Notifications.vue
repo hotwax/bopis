@@ -10,12 +10,12 @@
     <ion-content>
       <main>
           <ion-list v-if="notifications.length">
-            <ion-item v-for="(notification, index) in notifications" :key="index">
+            <ion-item v-for="notification in notifications" :key="notification.notificationId">
               <ion-label class="ion-text-wrap">
-                <h3>{{ notification.data.title }}</h3>
-                <p>{{ notification.data.body }}</p>
+                <h3>{{ notification.title }}</h3>
+                <p>{{ notification.body }}</p>
               </ion-label>
-              <ion-note slot="end">{{ timeTillNotification(notification.time) }}</ion-note>
+              <ion-note slot="end">{{ timeTillNotification(notification.receivedAt) }}</ion-note>
             </ion-item>
           </ion-list>
           <div v-else class="ion-text-center">
@@ -32,14 +32,23 @@
 </template>
 
 <script setup lang="ts">
-import { IonBackButton, IonContent, IonFab, IonFabButton, IonHeader, IonIcon, IonItem, IonLabel, IonList, IonNote, IonPage, IonTitle, IonToolbar, modalController } from "@ionic/vue";
+import { IonBackButton, IonContent, IonFab, IonFabButton, IonHeader, IonIcon, IonItem, IonLabel, IonList, IonNote, IonPage, IonTitle, IonToolbar, modalController, onIonViewWillEnter } from "@ionic/vue";
 import { cogOutline } from 'ionicons/icons';
 import { computed } from "vue";
 import { DateTime } from "luxon";
 import NotificationPreferenceModal from '@/components/NotificationPreferenceModal.vue'
 import { translate } from "@common";
-import { useNotificationStore } from "@common";
-const notifications = computed(() => useNotificationStore().getNotifications);
+import { useNotificationHistoryStore } from "@/store/notificationHistory";
+
+const notificationHistoryStore = useNotificationHistoryStore();
+const notifications = computed(() => notificationHistoryStore.getNotifications);
+
+onIonViewWillEnter(async () => {
+  // Re-read on every entry: history persists across logins, so the in-memory copy can belong to
+  // a previous session or a different OMS instance.
+  await notificationHistoryStore.hydrate();
+  await notificationHistoryStore.markAllRead();
+});
 
 async function openNotificationSettings() {
   const timeZoneModal = await modalController.create({

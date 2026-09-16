@@ -8,6 +8,7 @@ import { useOrderStore } from "@/store/order";
 import { useStockStore } from "@/store/stock";
 import { useProductStore } from "@/store/productStore";
 import { firebaseUtil } from "@/utils/firebaseUtil";
+import { useNotificationHistoryStore } from "@/store/notificationHistory";
 
 interface UserState {
   permissions: any[]
@@ -268,6 +269,9 @@ export const useUserStore = defineStore("user", {
     },
     async postLogout() {
       useNotificationStore().clearNotificationState();
+      // Only the in-memory copy is dropped; the stored history is kept on purpose so it is still
+      // there after the next login, and a tenant switch never shows the previous tenant's list.
+      useNotificationHistoryStore().$reset();
       this.$reset();
       useOrderStore().$reset();
       useProductStore().$reset();
