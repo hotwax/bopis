@@ -364,6 +364,7 @@
   "Username": "ユーザーネーム",
   "Verify that the items in the package are valid and the customer has received their order. Once the order is handed over to the customer it cannot be undone.": "Verify that the items in the package are valid and the customer has received their order.{ space }Once the order is handed over to the customer it cannot be undone.",
   "Version: ": "Version: {appVersion}",
+  "View": "表示",
   "View Proof of Delivery": "View Proof of Delivery",
   "Warehouse": "倉庫",
   "wednesday": "Wednesday",

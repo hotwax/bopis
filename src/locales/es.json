@@ -371,6 +371,7 @@
   "Username": "Nombre de usuario",
   "Verify that the items in the package are valid and the customer has received their order. Once the order is handed over to the customer it cannot be undone.": "Verify that the items in the package are valid and the customer has received their order.{ space }Once the order is handed over to the customer it cannot be undone.",
   "Version: ": "Version: {appVersion}",
+  "View": "Ver",
   "View Proof of Delivery": "View Proof of Delivery",
   "Warehouse": "Almacén",
   "wednesday": "Wednesday",
