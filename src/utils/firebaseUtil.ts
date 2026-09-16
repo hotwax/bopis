@@ -1,4 +1,4 @@
-import { api, commonUtil, firebaseMessaging, logger, useNotificationStore } from "@common";
+import { api, commonUtil, firebaseMessaging, logger, translate, useNotificationStore } from "@common";
 import { DateTime } from "luxon";
 import { getApp, getApps } from "firebase/app";
 import { getMessaging, getToken, isSupported } from "firebase/messaging";
@@ -169,6 +169,41 @@ function attachResumeWatcher() {
     if (document.visibilityState === "visible") refreshRegistrationToken();
   });
   window.addEventListener("focus", () => refreshRegistrationToken());
+}
+
+import router from "@/router";
+
+const NOTIFICATIONS_PATH = "/notifications";
+
+/**
+ * Backend copy has no length limit, so it is trimmed to keep the toast about four lines tall
+ * next to its buttons at phone width. The notifications page carries the untrimmed text.
+ */
+const TOAST_MAX_LENGTH = 100;
+
+function buildToastMessage(payload: any) {
+  const title = payload?.data?.title?.trim() || "";
+  const body = payload?.data?.body?.trim() || "";
+
+  // title and body are backend copy, not app strings, so only the fallback is translated.
+  const message = [title, body].filter(Boolean).join(": ");
+  if (!message) return translate("New notification received.");
+
+  return message.length > TOAST_MAX_LENGTH ? `${message.slice(0, TOAST_MAX_LENGTH - 1).trimEnd()}\u2026` : message;
+}
+
+async function showNotificationToast(payload: any) {
+  await commonUtil.showToast(buildToastMessage(payload), {
+    canDismiss: true,
+    buttons: [{
+      text: translate("View"),
+      handler: () => {
+        // Which order the message is about is not in the payload, so the bell page is as specific
+        // as this can get.
+        if (router.currentRoute.value.path !== NOTIFICATIONS_PATH) router.push({ path: NOTIFICATIONS_PATH });
+      }
+    }]
+  });
 }
 
 /**
@@ -350,8 +385,15 @@ const initialiseFirebaseMessaging = async (): Promise<boolean> => {
         // app was closed: registerToken replaces the row when the token no longer matches.
         tokenRegistered = await registerToken(token);
       },
-      (notification: any) => {
-        notificationStore.addNotification({...notification.notification, isForeground: notification.isForeground, time: DateTime.now().toMillis()});
+      async (notification: any) => {
+        // The shared store shows a fixed "New notification received." toast for an entry flagged as
+        // foreground. This app shows its own toast carrying the message instead, so the flag is left
+        // off the stored entry; nothing else reads it.
+        notificationStore.addNotification({ ...notification.notification, time: DateTime.now().toMillis() });
+        // Background messages already surface through the service worker's system notification.
+        if (notification.isForeground) {
+          await showNotificationToast(notification.notification);
+        }
       }
     ).then(() => {
       // Only a token the backend accepted makes this device initialised. initialiseFirebaseApp also
