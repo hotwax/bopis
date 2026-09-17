@@ -190,6 +190,29 @@
               <ion-toggle label-placement="start" @click.prevent="confirmNotificationPrefUpdate(pref.enumId, $event)" :checked="pref.isEnabled">{{ pref.description }}</ion-toggle>
             </ion-item>
           </ion-list>
+
+          <!--
+            The permission prompt only appears from a real tap, so this is the one place it can be
+            asked for. Without it, a device that has never granted would silently never be asked.
+          -->
+          <template v-if="notificationPermission === 'default'">
+            <ion-item lines="none">
+              <ion-label class="ion-text-wrap">
+                <p>{{ translate("This device has not been allowed to show notifications yet.") }}</p>
+              </ion-label>
+            </ion-item>
+            <ion-item lines="none">
+              <ion-button fill="outline" :disabled="isEnablingNotifications" @click="enableNotificationsOnThisDevice()">
+                {{ translate("Allow notifications on this device") }}
+              </ion-button>
+            </ion-item>
+          </template>
+
+          <ion-item v-else-if="notificationPermission === 'denied'" lines="none">
+            <ion-label class="ion-text-wrap">
+              <p>{{ translate("Notifications are blocked for this app. The app must be removed from the Home Screen and added again before it can ask a second time.") }}</p>
+            </ion-label>
+          </ion-item>
         </ion-card>
 
         <ion-card>
@@ -257,6 +280,9 @@ const currentProductStore = computed(() => useProductStore().getCurrentProductSt
 const isProductStoreSettingEnabled = computed(() => useProductStore().isProductStoreSettingEnabled);
 const isRerouteSettingEnabled = computed(() => useProductStore().isRerouteSettingEnabled);
 
+const notificationPermission = ref(typeof Notification !== "undefined" ? Notification.permission : "unsupported");
+const isEnablingNotifications = ref(false);
+
 const firebaseDeviceId = computed(() => useNotificationStore().getFirebaseDeviceId);
 const notificationPrefs = computed(() => useNotificationStore().getNotificationPrefs);
 const allNotificationPrefs = computed(() => useNotificationStore().getAllNotificationPrefs);
@@ -268,6 +294,9 @@ onMounted(() => {
 });
 
 onIonViewWillEnter(async () => {
+  // Permission can change outside this screen (system settings, the diagnostics modal),
+  // so re-read it on entry rather than trusting the value captured at setup.
+  notificationPermission.value = typeof Notification !== "undefined" ? Notification.permission : "unsupported";
   // Clearing the current order as to correctly display the selected segment when moving to list page
   useOrderStore().updateCurrent({ order: {} })
   
@@ -358,6 +387,28 @@ async function openLogs() {
     component: LogsModal
   });
   return logsModal.present();
+}
+
+/**
+ * Ask for notification permission and register the device.
+ *
+ * Runs from a tap on purpose: that is the only context in which iOS will show the prompt at all.
+ * Login and app mount deliberately skip this, so this button is the sole path to a first grant.
+ */
+async function enableNotificationsOnThisDevice() {
+  isEnablingNotifications.value = true;
+  try {
+    await firebaseUtil.initialiseFirebaseMessaging();
+  } catch (error) {
+    logger.error(error);
+  } finally {
+    notificationPermission.value = typeof Notification !== "undefined" ? Notification.permission : "unsupported";
+    isEnablingNotifications.value = false;
+  }
+
+  commonUtil.showToast(translate(notificationPermission.value === "granted"
+    ? "Notifications are now allowed on this device."
+    : "Notifications were not allowed on this device."));
 }
 
 async function updateNotificationPref(enumId: string) {
