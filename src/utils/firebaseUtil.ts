@@ -1,5 +1,6 @@
 import { api, commonUtil, firebaseMessaging, logger, translate, useNotificationStore } from "@common";
 import { useNotificationHistoryStore } from "@/store/notificationHistory";
+import { showForegroundSystemNotification, speakNewOrder } from "@/utils/notificationAlert";
 import { getApp, getApps } from "firebase/app";
 import { getMessaging, getToken } from "firebase/messaging";
 
@@ -238,8 +239,12 @@ const initialiseFirebaseMessaging = async () => {
         // History is owned by this app's IndexedDB store rather than the persisted `@common`
         // store, so that it survives logout instead of being wiped with the session.
         await useNotificationHistoryStore().addNotification(notification.notification);
-        // Background messages already surface through the service worker's system notification.
         if (notification.isForeground) {
+          // Background messages already surface through the service worker. Foreground messages
+          // need the same system-level alert because a store associate may be looking at another
+          // application view when the order arrives.
+          await showForegroundSystemNotification(notification.notification);
+          speakNewOrder();
           await showNotificationToast(notification.notification);
         }
       }

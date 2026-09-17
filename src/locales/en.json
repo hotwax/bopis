@@ -409,5 +409,9 @@
   "Server-side subscriptions": "Server-side subscriptions",
   "Service workers": "Service workers",
   "Show a local test notification": "Show a local test notification",
-  "Verdict": "Verdict"
+  "Verdict": "Verdict",
+  "Speak new order alerts": "Speak new order alerts",
+  "Test notification sound": "Test notification sound",
+  "Notification sound played.": "Notification sound played.",
+  "Notification sound is unavailable or disabled.": "Notification sound is unavailable or disabled."
 }

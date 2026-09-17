@@ -189,6 +189,16 @@
             <ion-item :key="pref.enumId" v-for="pref in notificationPrefs" lines="none">
               <ion-toggle label-placement="start" @click.prevent="confirmNotificationPrefUpdate(pref.enumId, $event)" :checked="pref.isEnabled">{{ pref.description }}</ion-toggle>
             </ion-item>
+            <ion-item lines="none">
+              <ion-toggle data-testid="notification-sound-toggle" label-placement="start" :checked="notificationSoundEnabled" @ionChange="updateNotificationSound($event)">
+                {{ translate("Speak new order alerts") }}
+              </ion-toggle>
+            </ion-item>
+            <ion-item lines="none">
+              <ion-button fill="outline" data-testid="notification-sound-test" @click="testNotificationSound()">
+                {{ translate("Test notification sound") }}
+              </ion-button>
+            </ion-item>
           </ion-list>
         </ion-card>
 
@@ -244,6 +254,7 @@ import { useOrderStore } from '@/store/order';
 import { useProductStore } from '@/store/productStore';
 import DxpAppVersionInfo from '@/components/DxpAppVersionInfo.vue';
 import { firebaseUtil } from "@/utils/firebaseUtil"
+import { isNotificationSoundEnabled, setNotificationSoundEnabled, speakNewOrder } from "@/utils/notificationAlert";
 import Actions from "@/authorization/actions"
 
 const appInfo = ref(import.meta.env.VITE_VERSION_INFO ? JSON.parse(import.meta.env.VITE_VERSION_INFO) : {} as any);
@@ -256,6 +267,7 @@ const userProfile = computed(() => useUserStore().getUserProfile);
 const currentProductStore = computed(() => useProductStore().getCurrentProductStore);
 const isProductStoreSettingEnabled = computed(() => useProductStore().isProductStoreSettingEnabled);
 const isRerouteSettingEnabled = computed(() => useProductStore().isRerouteSettingEnabled);
+const notificationSoundEnabled = ref(isNotificationSoundEnabled());
 
 const firebaseDeviceId = computed(() => useNotificationStore().getFirebaseDeviceId);
 const notificationPrefs = computed(() => useNotificationStore().getNotificationPrefs);
@@ -358,6 +370,16 @@ async function openLogs() {
     component: LogsModal
   });
   return logsModal.present();
+}
+
+function updateNotificationSound(event: CustomEvent) {
+  notificationSoundEnabled.value = Boolean(event.detail?.checked);
+  setNotificationSoundEnabled(notificationSoundEnabled.value);
+}
+
+function testNotificationSound() {
+  const played = speakNewOrder();
+  commonUtil.showToast(translate(played ? "Notification sound played." : "Notification sound is unavailable or disabled."));
 }
 
 async function updateNotificationPref(enumId: string) {
