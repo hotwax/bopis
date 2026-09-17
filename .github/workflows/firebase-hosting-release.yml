@@ -6,6 +6,8 @@ name: Deploy to Firebase Hosting on release
   push:
     tags:        
       - '*' # Push events to every tag not containing / Refer https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#patterns-to-match-branches-and-tags
+    branches:
+      - v5.3.0-ls
 jobs:
   call-workflow-in-another-repo:
     uses: hotwax/accxui/.github/workflows/common-firebase-hosting-release.yml@main
@@ -13,7 +15,6 @@ jobs:
       config-path: .github/labeler.yml
       app: hotwax/bopis
       appDir: bopis
-      accxuiVersion: v1.5.0
     secrets:
       envPAT: ${{ secrets.envPAT }}
       HOTWAX_PUBLIC_SECRET: ${{ secrets.HOTWAX_PUBLIC_SECRET }}

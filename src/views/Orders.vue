@@ -60,14 +60,14 @@
                 {{ order.shipGroup?.shipmentMethodTypeId === 'STOREPICKUP' ? translate("Ready for pickup") : translate("Ready to ship") }}
               </ion-button>
               <div></div>
-              <ion-button data-testid="listpage-reject-button" v-if="order.shipGroup.shipmentMethodTypeId === 'STOREPICKUP' && !isRequestTransferEnabled" color="danger" :disabled="!useUserStore().hasPermission(Actions.APP_ORDER_UPDATE)" fill="clear" @click.stop="openRejectOrderModal(order)">
-                {{ translate("Reject") }}
+              <ion-button data-testid="listpage-cancel-button" color="danger" :disabled="!useUserStore().hasPermission(Actions.APP_ORDER_UPDATE)" fill="clear" @click.stop="openRejectOrderModal(order)">
+                {{ translate("Cancel") }}
               </ion-button>
               <ion-button data-testid="listpage-request-transfer-button" v-if="order.shipGroup.shipmentMethodTypeId === 'STOREPICKUP' && isRequestTransferEnabled" color="warning" :disabled="!useUserStore().hasPermission(Actions.APP_ORDER_UPDATE)" fill="clear" @click.stop="confirmRequestTransfer(order)">
                 {{ translate("Request Transfer") }}
               </ion-button>
               <ion-button size="default" slot="end" fill="clear" @click.stop="printPicklist(order, order.shipGroup)">
-                  <ion-icon :icon="printOutline" slot="icon-only" />
+                <ion-icon :icon="printOutline" slot="icon-only" />
               </ion-button>
             </div>
           </ion-card>
@@ -98,13 +98,19 @@
               <ion-button data-testid="handover-button" :disabled="!useUserStore().hasPermission(Actions.APP_ORDER_UPDATE)" fill="clear" @click.stop="deliverShipment(order)">
                 {{ order.shipmentMethodTypeId === 'STOREPICKUP' ? translate("Handover") : translate("Ship") }}
               </ion-button>
-              <ion-button size="default" data-testid="packing-slip-button" v-if="isPrintPackingSlipEnabled" fill="clear" slot="end" @click.stop="printPackingSlip(order)">
+              <ion-button data-testid="listpage-cancel-button" color="danger" :disabled="!useUserStore().hasPermission(Actions.APP_ORDER_UPDATE)" fill="clear" @click.stop="openRejectOrderModal(order)">
+                {{ translate("Cancel") }}
+              </ion-button>
+              <!-- <ion-button size="default" data-testid="packing-slip-button" v-if="isPrintPackingSlipEnabled" fill="clear" slot="end" @click.stop="printPackingSlip(order)">
                 <ion-icon slot="icon-only" :icon="printOutline" />
+              </ion-button> -->
+              <ion-button size="default" slot="end" fill="clear" @click.stop="printReceipt(order.orderId)">
+                <ion-icon :icon="printOutline" slot="icon-only" />
               </ion-button>
 
-              <ion-button size="default" data-testid="resend-email-button" v-if="order.shipmentMethodTypeId === 'STOREPICKUP'" fill="clear" slot="end" @click.stop="sendReadyForPickupEmail(order)">
+              <!-- <ion-button size="default" data-testid="resend-email-button" v-if="order.shipmentMethodTypeId === 'STOREPICKUP'" fill="clear" slot="end" @click.stop="sendReadyForPickupEmail(order)">
                 <ion-icon slot="icon-only" :icon="mailOutline" />
-              </ion-button>
+              </ion-button> -->
             </div>
           </ion-card>
         </div>
@@ -144,7 +150,7 @@
 </template>
 
 <script setup lang="ts">
-import { alertController, IonBadge, IonButton, IonButtons, IonCard, IonContent, IonHeader, IonIcon, IonItem, IonLabel, IonPage, IonRefresher, IonRefresherContent, IonSearchbar, IonSegment, IonSegmentButton, IonTitle, IonToolbar, modalController, onIonViewWillEnter } from "@ionic/vue";
+import { alertController, IonBadge, IonButton, IonButtons, IonCard, IonContent, IonHeader, IonIcon, IonItem, IonLabel, IonPage, IonRefresher, IonRefresherContent, IonSearchbar, IonSegment, IonSegmentButton, IonTitle, IonToolbar, modalController, onIonViewDidLeave, onIonViewWillEnter, onIonViewWillLeave } from "@ionic/vue";
 import { onMounted, onUnmounted, ref, computed } from "vue";
 import ProductListItem from '@/components/ProductListItem.vue'
 import { mailOutline, notificationsOutline, printOutline, trailSignOutline } from "ionicons/icons";
@@ -179,6 +185,10 @@ const currentFacility = computed(() => useProductStore().getCurrentFacility);
 
 const orderStore = useOrderStore();
 
+const AUTO_REFRESH_INTERVAL = 60000;
+let autoRefreshTimer: ReturnType<typeof setInterval> | null = null;
+let isAutoRefreshing = false;
+
 const communicationEventOrderIds = computed(() => {
   return new Set((communicationEvents.value || []).map((e: any) => e.orderId));
 });
@@ -189,6 +199,7 @@ onMounted(() => {
 
 onUnmounted(() => {
   emitter.off("refreshPickupOrders", getPickupOrders);
+  stopAutoRefresh()
 });
 
 onIonViewWillEnter(() => {
@@ -207,7 +218,40 @@ onIonViewWillEnter(() => {
   } else {
     getCompletedOrders()
   }
+
+  startAutoRefresh()
 });
+
+onIonViewDidLeave(() => {
+  stopAutoRefresh()
+});
+
+async function autoRefreshOrders() {
+  if(isAutoRefreshing) return;
+  isAutoRefreshing = true;
+
+  try {
+    if(segmentSelected.value === 'open') {
+      await getPickupOrders(undefined, undefined, false)
+    } else if(segmentSelected.value === 'packed') {
+      await getPackedOrders(undefined, undefined, false)
+    } else {
+      await getCompletedOrders(undefined, undefined, false)
+    }
+  } finally {
+    isAutoRefreshing = false;
+  }
+}
+
+function startAutoRefresh() {
+  stopAutoRefresh()
+  autoRefreshTimer = setInterval(autoRefreshOrders, AUTO_REFRESH_INTERVAL)
+}
+
+function stopAutoRefresh() {
+  if(autoRefreshTimer) clearInterval(autoRefreshTimer)
+  autoRefreshTimer = null;
+}
 
 async function assignPicker(order: any, shipGroup: any, facilityId: any) {
   const assignPickerModal = await modalController.create({
@@ -254,46 +298,47 @@ async function refreshOrders(event: any) {
 }
 
 async function viewOrder(orderData: any, shipGroupSeqId: any, orderType: any) {
+  stopAutoRefresh()
   orderData['orderType'] = orderType
   await useOrderStore().updateCurrent({ order: orderData })
   router.push({ path: `/orderdetail/${orderType}/${orderData.orderId}/${shipGroupSeqId}` })
 }
 
-async function getPickupOrders(vSize?: any, vIndex?: any) {
+async function getPickupOrders(vSize?: any, vIndex?: any, showLoader = true) {
   const viewSize = vSize ? vSize : import.meta.env.VITE_VIEW_SIZE;
   const viewIndex = vIndex ? vIndex : 0;
-  emitter.emit("presentLoader")
+  if (showLoader) emitter.emit("presentLoader")
   useOrderStore().clearOrders();
   await useOrderStore().fetchOpenOrders({ viewSize, viewIndex, queryString: queryString.value, facilityId: (currentFacility.value as any)?.facilityId });
   if(useProductStore().isProductStoreSettingEnabled('SHOW_SHIPPING_ORDERS')) {
     await useOrderStore().fetchOpenOrders({ viewSize, viewIndex, queryString: queryString.value, facilityId: (currentFacility.value as any)?.facilityId, showShippingOrders: true });
   }
-  emitter.emit("dismissLoader")
+  if (showLoader) emitter.emit("dismissLoader")
 }
 
-async function getPackedOrders(vSize?: any, vIndex?: any) {
+async function getPackedOrders(vSize?: any, vIndex?: any, showLoader = true) {
   const viewSize = vSize ? vSize : import.meta.env.VITE_VIEW_SIZE;
   const viewIndex = vIndex ? vIndex : 0;
-  emitter.emit("presentLoader")
+  if (showLoader) emitter.emit("presentLoader")
   useOrderStore().clearOrders();
   await useOrderStore().fetchPackedOrders({ viewSize, viewIndex, queryString: queryString.value, facilityId: (currentFacility.value as any)?.facilityId, shipmentMethodTypeIds: "STOREPICKUP" });
   if(useProductStore().isProductStoreSettingEnabled('SHOW_SHIPPING_ORDERS')) {
     await useOrderStore().fetchPackedOrders({ viewSize, viewIndex, queryString: queryString.value, facilityId: (currentFacility.value as any)?.facilityId });
   }
-  emitter.emit("dismissLoader")
+  if (showLoader) emitter.emit("dismissLoader")
 }
 
-async function getCompletedOrders(vSize?: any, vIndex?: any) {
+async function getCompletedOrders(vSize?: any, vIndex?: any, showLoader = true) {
   const viewSize = vSize ? vSize : import.meta.env.VITE_VIEW_SIZE;
   const viewIndex = vIndex ? vIndex : 0;
-  emitter.emit("presentLoader")
+  if (showLoader) emitter.emit("presentLoader")
   useOrderStore().clearOrders();
   await useOrderStore().fetchCompletedOrders({ viewSize, viewIndex, queryString: queryString.value, facilityId: (currentFacility.value as any)?.facilityId, shipmentMethodTypeIds: "STOREPICKUP" });
   if(useProductStore().isProductStoreSettingEnabled('SHOW_SHIPPING_ORDERS')) {
     await useOrderStore().fetchCompletedOrders({ viewSize, viewIndex, queryString: queryString.value, facilityId: (currentFacility.value as any)?.facilityId });
   }
   if (useUserStore().hasPermission(Actions.APP_PROOF_OF_DELIVERY_PREF_UPDATE)) await useOrderStore().fetchCommunicationEvents({ orders: completedOrders.value });
-  emitter.emit("dismissLoader")
+  if (showLoader) emitter.emit("dismissLoader")
 }
 
 async function readyForPickup(orderData: any, shipGroup: any) {
@@ -501,7 +546,15 @@ async function openRejectOrderModal(orderData: any) {
   const rejectOrderModal = await modalController.create({
     component: RejectOrderItemModal,
     componentProps: {
-      orderProps: orderData,
+      orderProps: {
+        // Adding ship group here because when this function is called from packed section, we are not having shipGroup and directly having items
+        // but in case of open section we are having shipGroup, thus giving priority to orderData.shipGroup
+        shipGroup: {
+          items: orderData.items
+        },
+        ...orderData,
+      },
+      selectedSegment: segmentSelected.value
     }
   })
   return rejectOrderModal.present()
@@ -581,6 +634,10 @@ async function openProofOfDeliveryModal(orderData: any, isViewModeOnly: any) {
       emitter.emit("dismissLoader");
     }
   }
+}
+
+async function printReceipt(orderId: string) {
+  await orderStore.printPicklist("", orderId)
 }
 </script>
 
