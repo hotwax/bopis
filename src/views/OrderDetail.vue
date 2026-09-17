@@ -747,13 +747,22 @@ async function createPicklist(orderRef: any, selectedPicker: any) {
 }
 
 async function printPicklist(orderRef: any, shipGroup: any) {
+  if (shipGroup.picklistId) {
+    await useOrderStore().printPicklist(shipGroup.picklistId);
+    return;
+  }
   if(!isTrackingEnabled.value) {
-    const resp = await useOrderStore().ensurePartyRole({
-      partyId: "_NA_",
-      roleTypeId: "WAREHOUSE_PICKER",
-    })
-    if(commonUtil.hasError(resp)) {
-      commonUtil.showToast(translate("Something went wrong"))
+    try {
+      const resp = await useOrderStore().ensurePartyRole({
+        partyId: "_NA_",
+        roleTypeId: "WAREHOUSE_PICKER",
+      })
+      if(commonUtil.hasError(resp)) {
+        throw resp.data;
+      }
+    } catch (error) {
+      commonUtil.showToast(translate("Something went wrong. Picklist can not be created."));
+      logger.error(error)
       return;
     }
     await createPicklist(orderRef, "_NA_")
@@ -820,16 +829,22 @@ async function readyForPickup(orderData: any, shipGroup: any) {
         handler: async () => {
           alert.dismiss();
           emitter.emit("presentLoader", { message: "Loading...", backdropDismiss: false });
-          if (!shipGroup.shipmentId) {
-            await printPicklist(orderData, shipGroup)
-          }
-          await useOrderStore().packShipGroupItems({ order: orderData, shipGroup }).then(async (resp: any) => {
-            if (!commonUtil.hasError(resp)) {
-              await getOrderDetail(props.orderId, props.shipGroupSeqId, props.orderType);
-              prepareOrderTimeline({ statusId: "SHIPMENT_PACKED" });
+          try {
+            if (!shipGroup.shipmentId) {
+              await printPicklist(orderData, shipGroup)
             }
-          })
-          emitter.emit("dismissLoader");
+            if (shipGroup.shipmentId || shipGroup.picklistId) {
+              const resp = await useOrderStore().packShipGroupItems({ order: orderData, shipGroup });
+              if (!commonUtil.hasError(resp)) {
+                await getOrderDetail(props.orderId, props.shipGroupSeqId, props.orderType);
+                prepareOrderTimeline({ statusId: "SHIPMENT_PACKED" });
+              }
+            }
+          } catch (err) {
+            logger.error("Error during ready for pickup:", err);
+          } finally {
+            emitter.emit("dismissLoader");
+          }
         }
       }]
     });
