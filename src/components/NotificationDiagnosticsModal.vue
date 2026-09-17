@@ -503,6 +503,7 @@ async function refresh() {
 }
 
 async function registerDevice() {
+  logger.warn("Hard register");
   isBusy.value = true;
   steps.value = [];
   const push = (label: string, ok: boolean, detail?: string) => steps.value.push({ label, ok, detail });
