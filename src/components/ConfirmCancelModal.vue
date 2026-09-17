@@ -65,7 +65,7 @@ import { computed, onMounted, ref } from "vue";
 import { closeOutline } from "ionicons/icons";
 import { useProductStore as useProductStoreSettings } from "@/store/productStore";
 import { orderUtil } from '@/utils/orderUtil'
-import { commonUtil, emitter, translate, logger } from "@common"
+import { commonUtil, DxpShopifyImg, emitter, translate, logger } from "@common"
 import { DateTime } from "luxon";
 
 import { useOrderStore } from "@/store/order";
