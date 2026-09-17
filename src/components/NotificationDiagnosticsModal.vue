@@ -6,7 +6,7 @@
           <ion-icon slot="icon-only" :icon="closeOutline" />
         </ion-button>
       </ion-buttons>
-      <ion-title>{{ translate("Notification diagnostics") }}</ion-title>
+      <ion-title>{{ translate("Notification Diagnostics") }}</ion-title>
       <ion-buttons slot="end">
         <ion-button :disabled="isBusy" @click="refresh">
           <ion-icon slot="icon-only" :icon="refreshOutline" />
