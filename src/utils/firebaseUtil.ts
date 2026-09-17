@@ -171,8 +171,6 @@ function attachResumeWatcher() {
   window.addEventListener("focus", () => refreshRegistrationToken());
 }
 
-import router from "@/router";
-
 const NOTIFICATIONS_PATH = "/notifications";
 
 /**
@@ -197,9 +195,12 @@ async function showNotificationToast(payload: any) {
     canDismiss: true,
     buttons: [{
       text: translate("View"),
-      handler: () => {
-        // Which order the message is about is not in the payload, so the bell page is as specific
-        // as this can get.
+      handler: async () => {
+        // Loaded on tap rather than imported at module scope: the router pulls in every view, and a
+        // token utility must not carry that graph — it is imported by login and by unit tests that
+        // mock @common. Which order the message is about is not in the payload, so the bell page
+        // is as specific as this can get.
+        const { default: router } = await import("@/router");
         if (router.currentRoute.value.path !== NOTIFICATIONS_PATH) router.push({ path: NOTIFICATIONS_PATH });
       }
     }]
