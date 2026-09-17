@@ -103,7 +103,7 @@ const isBusy = ref(false);
 const steps = ref<Step[]>([]);
 
 const env = ref({ hasConfig: false, projectId: "-", hasVapid: false });
-const platform = ref({ standalone: "-", userAgent: "-", iosVersion: "-" });
+const platform = ref({ standalone: "-", userAgent: "-", iosVersion: "-", isApplePush: false, osNumber: null as number | null });
 const support = ref({ fcmSupported: "-", notificationApi: false, serviceWorkerApi: false, pushManagerApi: false, permission: "-" });
 const workers = ref<Row[]>([]);
 const pushSub = ref({ exists: "-", endpointHost: "-" });
@@ -158,6 +158,15 @@ const verdict = computed(() => {
     out.push({ text: "Firebase reports push is NOT supported in this context.", ok: false });
   } else if (support.value.fcmSupported === "true") {
     out.push({ text: "Firebase reports push is supported here.", ok: true });
+  }
+
+  if (platform.value.isApplePush) {
+    const osNumber = platform.value.osNumber;
+    if (osNumber !== null && osNumber < MIN_PUSH_OS) {
+      out.push({ text: `This device runs ${platform.value.iosVersion}. Web push needs ${MIN_PUSH_OS} or later, so it cannot receive notifications at all.`, ok: false });
+    } else if (osNumber === null) {
+      out.push({ text: "Apple device detected but the version could not be read. Web push needs 16.4 or later.", ok: false, warn: true });
+    }
   }
 
   if (support.value.permission === "denied") {
@@ -262,15 +271,46 @@ function readEnv() {
   };
 }
 
+/** Web Push arrived on iOS and iPadOS in 16.4; anything older cannot receive it at all. */
+const MIN_PUSH_OS = 16.4;
+
 function readPlatform() {
   const ua = navigator.userAgent;
   const standalone = window.matchMedia?.("(display-mode: standalone)")?.matches || (navigator as any).standalone === true;
-  const match = ua.match(/OS (\d+)[_.](\d+)/);
+
+  /*
+   * iPadOS 13 and later deliberately send a DESKTOP macOS user agent so sites serve the desktop
+   * layout. There is no "iPad" string and no "OS 26_5" in it, so matching the classic iPhone
+   * pattern reports "(not iOS)" on exactly the devices this screen exists to diagnose.
+   *
+   * The reliable tell is a Mac platform that also reports touch points: a real Mac reports 0.
+   * The version then comes from Safari's own Version/ token, which tracks the OS version on
+   * iPadOS (verified against a device reporting 26.5 over the USB debug bridge).
+   */
+  const isIpadOS = /Mac/.test((navigator as any).platform ?? "") && (navigator.maxTouchPoints ?? 0) > 1;
+  const isPhoneOrLegacyIpad = /iPad|iPhone|iPod/.test(ua);
+
+  const legacy = ua.match(/OS (\d+)[_.](\d+)/);
+  const safariVersion = ua.match(/Version\/(\d+)\.(\d+)/);
+
+  let osVersion = "(not iOS or iPadOS)";
+  if (isPhoneOrLegacyIpad && legacy) osVersion = `${legacy[1]}.${legacy[2]} (iOS)`;
+  else if (isIpadOS && safariVersion) osVersion = `${safariVersion[1]}.${safariVersion[2]} (iPadOS)`;
+  else if (isIpadOS) osVersion = "iPadOS, version unknown";
+
   platform.value = {
     standalone: String(!!standalone),
     userAgent: ua,
-    iosVersion: match ? `${match[1]}.${match[2]}` : "(not iOS)"
+    iosVersion: osVersion,
+    isApplePush: isIpadOS || isPhoneOrLegacyIpad,
+    osNumber: parseOsNumber(osVersion)
   };
+}
+
+/** Numeric form of the detected version, or null when it could not be determined. */
+function parseOsNumber(osVersion: string) {
+  const match = osVersion.match(/^(\d+)\.(\d+)/);
+  return match ? Number(`${match[1]}.${match[2]}`) : null;
 }
 
 async function readSupport() {
@@ -431,9 +471,10 @@ async function showLocalTestNotification() {
 
     // Do NOT use navigator.serviceWorker.ready: it only settles for a worker controlling this
     // page's scope, and Firebase registers its worker under /firebase-cloud-messaging-push-scope.
-    let registrations: any[] = [];
+    // getRegistrations() returns a readonly array; copy it so the local stays mutable.
+    let registrations: ServiceWorkerRegistration[] = [];
     try {
-      registrations = (await navigator.serviceWorker?.getRegistrations?.()) ?? [];
+      registrations = [...((await navigator.serviceWorker?.getRegistrations?.()) ?? [])];
     } catch (error: any) {
       push("Could not list service workers", false, String(error?.message || error));
     }
