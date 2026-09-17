@@ -34,6 +34,7 @@ import { closeOutline, save } from "ionicons/icons";
 import { commonUtil, emitter, firebaseMessaging, logger, translate, useNotificationStore } from '@common';
 import { useProductStore } from "@/store/productStore";
 import { useUserStore as usePiniaUserStore } from "@/store/user";
+import { firebaseUtil } from "@/utils/firebaseUtil";
 
 const userStore = usePiniaUserStore();
 const notificationPrefs = computed(() => useNotificationStore().getNotificationPrefs);
@@ -103,6 +104,23 @@ async function updateNotificationPref() {
 async function handleTopicSubscription() {
   const facilityId = (currentFacility.value as any)?.facilityId;
   const notificationStore = useNotificationStore();
+
+  /*
+   * subscribe#Topic only attaches tokens the backend already knows about, and this screen never
+   * registered the device. A user who sets their preferences here therefore creates topic
+   * subscriptions with no token behind them and receives nothing until their next login, when
+   * the login path finally registers and back-fills. Register first so it works immediately.
+   *
+   * Only when this device has no token yet. The initialisation guard in firebaseUtil is
+   * currently commented out, so every call attaches another foreground onMessage listener and an
+   * already-registered user would accumulate a duplicate for each save, with later notifications
+   * landing in the store several times over. getFirebaseDeviceId is set once a token has been
+   * stored, so it answers "has this device registered" without re-entering initialisation.
+   */
+  if (notificationPrefToUpdate.value.subscribe.length && !notificationStore.getFirebaseDeviceId) {
+    await firebaseUtil.initialiseFirebaseMessaging();
+  }
+
   const subscribeRequests = notificationPrefToUpdate.value.subscribe.map((enumId: string) => {
     const topicName = firebaseMessaging.generateTopicName(commonUtil.getOMSInstanceName(), facilityId, enumId);
     return notificationStore.subscribeTopic(topicName, import.meta.env.VITE_NOTIF_APP_ID);
