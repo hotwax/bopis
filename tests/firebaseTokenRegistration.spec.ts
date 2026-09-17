@@ -88,16 +88,46 @@ describe("registerToken", () => {
     expect(storage.getItem(CACHE_KEY)).toBeNull();
   });
 
-  it("still registers when a delete fails, since a missing row is a fine reason to fail", async () => {
+  it("still registers when the delete reports the row is simply missing", async () => {
     storage.setItem(CACHE_KEY, "OLD_TOKEN");
     api.mockImplementation(async (cfg: any) => {
-      if (cfg.method === "delete") throw new Error("404");
+      if (cfg.method === "delete") throw { response: { status: 404 } };
       return { data: {} };
     });
 
     const ok = await registerToken("NEW_TOKEN");
 
+    expect(calls()).toEqual(["delete", "post"]);
     expect(ok).toBe(true);
     expect(storage.getItem(CACHE_KEY)).toBe("NEW_TOKEN");
+  });
+
+  it("aborts when the delete fails for any reason other than a missing row", async () => {
+    // A 500 or a dropped connection leaves the old row possibly intact. Posting then is a silent
+    // no-op server side, and caching the new token would stop every future retry.
+    storage.setItem(CACHE_KEY, "OLD_TOKEN");
+    api.mockImplementation(async (cfg: any) => {
+      if (cfg.method === "delete") throw { response: { status: 500 } };
+      return { data: {} };
+    });
+
+    const ok = await registerToken("NEW_TOKEN");
+
+    expect(calls()).toEqual(["delete"]);
+    expect(ok).toBe(false);
+    expect(storage.getItem(CACHE_KEY)).toBeNull();
+  });
+
+  it("aborts when the delete fails with no status at all, such as a dropped connection", async () => {
+    storage.setItem(CACHE_KEY, "OLD_TOKEN");
+    api.mockImplementation(async (cfg: any) => {
+      if (cfg.method === "delete") throw new Error("Network Error");
+      return { data: {} };
+    });
+
+    const ok = await registerToken("NEW_TOKEN");
+
+    expect(calls()).toEqual(["delete"]);
+    expect(ok).toBe(false);
   });
 });

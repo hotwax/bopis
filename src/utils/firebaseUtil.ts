@@ -60,6 +60,22 @@ function clearRegisteredToken() {
  * failure. We must not cache a token the backend never accepted. Worth fixing in `common` so the
  * actions report a result; until then this path needs to see the response itself.
  */
+/**
+ * Only a confirmed "there is no such row" makes it safe to carry on to the POST.
+ *
+ * Any other failure — network, 5xx, auth — leaves us unable to say whether the backend still
+ * holds the old token. store#ClientRegistrationToken would then silently keep that row while we
+ * recorded the new token as registered, and every later resume would short-circuit on the match.
+ */
+function isMissingRow(error: any) {
+  const status = error?.response?.status ?? error?.status;
+  if (status === 404) return true;
+  // A real status that is not 404 is a definite answer, and it is not "missing".
+  if (typeof status === "number") return false;
+  const detail = JSON.stringify(error?.response?.data ?? error?.data ?? error?.message ?? "");
+  return /not[\s_-]*found|does not exist/i.test(detail);
+}
+
 /** Exported for tests: this is the decision the three review comments were about. */
 export async function registerToken(token: string) {
   const notificationStore = useNotificationStore();
@@ -73,16 +89,23 @@ export async function registerToken(token: string) {
     try {
       const resp: any = await api({ url: "firebase/token", method: "delete", data: { deviceId, applicationId } });
       // api() resolves with an error BODY as well as throwing, so a bare try/catch is not enough.
-      if (commonUtil.hasError(resp)) throw resp.data;
+      if (commonUtil.hasError(resp)) throw resp;
     } catch (error) {
-      // A missing row is a fine reason to fail here, so keep going and let the store decide.
-      logger.warn("Could not remove the previous registration token", error);
+      if (!isMissingRow(error)) {
+        // Stop rather than post into the dark: the row may well still hold the old token, the
+        // POST would be a silent no-op against it, and caching the new token here would end all
+        // future retries. Clearing the cache keeps the next resume on the replace path.
+        clearRegisteredToken();
+        logger.error("Could not remove the previous registration token; leaving it unreplaced", error);
+        return false;
+      }
+      logger.warn("No previous registration token to remove", error);
     }
   }
 
   try {
     const resp: any = await api({ url: "firebase/token", method: "post", data: { registrationToken: token, deviceId, applicationId } });
-    if (commonUtil.hasError(resp)) throw resp.data;
+    if (commonUtil.hasError(resp)) throw resp;
   } catch (error) {
     // Clear rather than record: an empty cache forces the next attempt back down the
     // delete-then-store path, instead of trusting a write the backend never accepted.
