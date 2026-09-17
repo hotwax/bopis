@@ -30,6 +30,10 @@ import { createPinia } from 'pinia'
 import piniaPluginPersistedstate from 'pinia-plugin-persistedstate'
 import localeMessages from '@/locales'
 import { useUserStore } from './store/user';
+import { faroUtil } from '@/utils/faroUtil';
+import { logStore } from '@/utils/logStore';
+
+faroUtil.initialiseFaro()
 
 const app = createApp(App)
 const pinia = createPinia();
@@ -42,7 +46,8 @@ app.use(IonicVue, {
   innerHTMLTemplatesEnabled: true
 })
   .use(logger, {
-    level: import.meta.env.VITE_DEFAULT_LOG_LEVEL
+    level: import.meta.env.VITE_DEFAULT_LOG_LEVEL,
+    afterHooks: [faroUtil.faroLoggerHook, logStore.logStoreHook]
   })
   .use(pinia)
   .use(router)

@@ -1,0 +1,897 @@
+<template>
+  <ion-header>
+    <ion-toolbar>
+      <ion-buttons slot="start">
+        <ion-button @click="closeModal">
+          <ion-icon slot="icon-only" :icon="closeOutline" />
+        </ion-button>
+      </ion-buttons>
+      <ion-title>{{ translate("Notification diagnostics") }}</ion-title>
+      <ion-buttons slot="end">
+        <ion-button :disabled="isBusy" @click="refresh">
+          <ion-icon slot="icon-only" :icon="refreshOutline" />
+        </ion-button>
+      </ion-buttons>
+    </ion-toolbar>
+  </ion-header>
+
+  <ion-content>
+    <ion-card>
+      <ion-card-header>
+        <ion-card-title>{{ translate("Verdict") }}</ion-card-title>
+      </ion-card-header>
+      <ion-card-content>
+        <p v-for="(line, index) in verdict" :key="index" class="verdict-line">
+          <ion-icon :icon="line.ok ? checkmarkCircleOutline : (line.warn ? alertCircleOutline : closeCircleOutline)"
+            :color="line.ok ? 'success' : (line.warn ? 'warning' : 'danger')" />
+          <span>{{ line.text }}</span>
+        </p>
+      </ion-card-content>
+    </ion-card>
+
+    <ion-card>
+      <ion-card-header>
+        <ion-card-title>{{ translate("Actions") }}</ion-card-title>
+      </ion-card-header>
+      <ion-card-content>
+        {{ translate("Run these on the device that is not receiving notifications. Each step reports its own result.") }}
+      </ion-card-content>
+      <ion-list>
+        <ion-item lines="none">
+          <ion-button expand="block" fill="outline" :disabled="isBusy" @click="registerDevice">
+            {{ translate("Request permission and register this device") }}
+          </ion-button>
+        </ion-item>
+        <ion-item lines="none">
+          <ion-button expand="block" fill="outline" :disabled="isBusy" @click="showLocalTestNotification">
+            {{ translate("Show a local test notification") }}
+          </ion-button>
+        </ion-item>
+        <ion-item lines="none">
+          <ion-button expand="block" fill="outline" color="warning" :disabled="isBusy" @click="repairServiceWorker">
+            {{ translate("Repair the push service worker") }}
+          </ion-button>
+        </ion-item>
+        <ion-item lines="none">
+          <ion-button expand="block" fill="outline" color="warning" :disabled="isBusy" @click="resubscribeTopics">
+            {{ translate("Re-subscribe topics for this device") }}
+          </ion-button>
+        </ion-item>
+        <ion-item lines="none">
+          <ion-button expand="block" fill="outline" color="medium" :disabled="isBusy" @click="copyReport">
+            {{ translate("Copy full report") }}
+          </ion-button>
+        </ion-item>
+      </ion-list>
+      <ion-card-content v-if="steps.length">
+        <p v-for="(step, index) in steps" :key="index" class="verdict-line">
+          <ion-icon :icon="step.ok ? checkmarkCircleOutline : closeCircleOutline"
+            :color="step.ok ? 'success' : 'danger'" />
+          <span>{{ step.label }}<template v-if="step.detail"> — {{ step.detail }}</template></span>
+        </p>
+      </ion-card-content>
+    </ion-card>
+
+    <ion-card v-for="group in groups" :key="group.title">
+      <ion-card-header>
+        <ion-card-title>{{ group.title }}</ion-card-title>
+      </ion-card-header>
+      <ion-list>
+        <ion-item v-for="row in group.rows" :key="row.label" lines="full">
+          <ion-label>
+            <p>{{ row.label }}</p>
+            <h3 class="value">{{ row.value }}</h3>
+          </ion-label>
+        </ion-item>
+      </ion-list>
+    </ion-card>
+  </ion-content>
+</template>
+
+<script setup lang="ts">
+import {
+  IonButton, IonButtons, IonCard, IonCardContent, IonCardHeader, IonCardTitle, IonContent,
+  IonHeader, IonIcon, IonItem, IonLabel, IonList, IonTitle, IonToolbar, modalController
+} from "@ionic/vue";
+import { computed, onMounted, ref } from "vue";
+import {
+  alertCircleOutline, checkmarkCircleOutline, closeCircleOutline, closeOutline, refreshOutline
+} from "ionicons/icons";
+import { api, commonUtil, firebaseMessaging, logger, translate, useNotificationStore } from "@common";
+import { useUserStore } from "@/store/user";
+import { useProductStore } from "@/store/productStore";
+
+type Row = { label: string; value: string };
+type Step = { label: string; ok: boolean; detail?: string };
+
+const isBusy = ref(false);
+const steps = ref<Step[]>([]);
+
+const env = ref({ hasConfig: false, projectId: "-", hasVapid: false });
+const platform = ref({ standalone: "-", userAgent: "-", iosVersion: "-", isApplePush: false, osNumber: null as number | null });
+const support = ref({ fcmSupported: "-", notificationApi: false, serviceWorkerApi: false, pushManagerApi: false, permission: "-" });
+const workers = ref<Row[]>([]);
+const pushSub = ref({ exists: "-", endpointHost: "-" });
+
+const appState = computed(() => {
+  const store = useNotificationStore();
+  const facility: any = useProductStore().getCurrentFacility;
+  const profile: any = useUserStore().getUserProfile;
+  return {
+    isFirebaseInitialised: String(store.isFirebaseInitialised),
+    firebaseDeviceId: store.getFirebaseDeviceId || "(none)",
+    subscribedTopicCount: String(store.getAllNotificationPrefs?.length ?? 0),
+    // Counted separately below, the raw count spans every facility
+    omsInstanceName: commonUtil.getOMSInstanceName() || "(unknown)",
+    facilityId: facility?.facilityId || "(none)",
+    userId: profile?.userId || "(none)",
+    appId: import.meta.env.VITE_NOTIF_APP_ID || "(unset)"
+  };
+});
+
+const expectedTopics = computed(() => {
+  const store = useNotificationStore();
+  const facility: any = useProductStore().getCurrentFacility;
+  const oms = commonUtil.getOMSInstanceName();
+  const prefs = store.getNotificationPrefs || [];
+  if (!prefs.length) return [{ label: "Expected topics", value: "(no preferences loaded)" }];
+  return prefs.map((pref: any) => ({
+    label: `${pref.enumId}${pref.isEnabled ? " (on)" : " (off)"}`,
+    value: firebaseMessaging.generateTopicName(oms, facility?.facilityId, pref.enumId)
+  }));
+});
+
+// firebase/user/notificationtopic filters by application and user only, so the
+// response carries every facility this user has ever enabled notifications at.
+// Topic names are `${oms}-${facilityId}-${enumId}`, so the current facility's
+// rows can be separated here. The trailing hyphen matters: without it facility
+// STORE1 also matches STORE10.
+const facilityTopicPrefix = computed(() => {
+  const facility: any = useProductStore().getCurrentFacility;
+  const oms = commonUtil.getOMSInstanceName();
+  return facility?.facilityId ? `${oms}-${facility.facilityId}-` : "";
+});
+
+const subscriptionSplit = computed(() => {
+  const all = useNotificationStore().getAllNotificationPrefs || [];
+  const prefix = facilityTopicPrefix.value;
+  if (!prefix) return { thisFacility: [], otherFacilities: all };
+  return {
+    thisFacility: all.filter((pref: any) => String(pref?.topic || "").startsWith(prefix)),
+    otherFacilities: all.filter((pref: any) => !String(pref?.topic || "").startsWith(prefix))
+  };
+});
+
+// The whole row is rendered, not just `topic`. The endpoint's exact shape is not
+// documented anywhere in this repo, and whether it carries a device identifier
+// decides whether per-device filtering is possible at all.
+const rowValue = (pref: any) => {
+  try {
+    return JSON.stringify(pref);
+  } catch (error) {
+    logger.error("Notification diagnostics could not serialise a subscription row", error);
+    return String(pref);
+  }
+};
+
+const subscribedTopics = computed(() => {
+  const { thisFacility } = subscriptionSplit.value;
+  if (!facilityTopicPrefix.value) return [{ label: "Server-side subscriptions", value: "(no facility selected, cannot scope this list)" }];
+  if (!thisFacility.length) return [{ label: "This facility", value: "(none) — nothing is subscribed for the current facility" }];
+  return thisFacility.map((pref: any, index: number) => ({
+    label: `Subscription ${index + 1}`,
+    value: rowValue(pref)
+  }));
+});
+
+const otherFacilitySubscriptions = computed(() => {
+  const { otherFacilities } = subscriptionSplit.value;
+  if (!otherFacilities.length) return [{ label: "Other facilities", value: "(none)" }];
+  return otherFacilities.map((pref: any, index: number) => ({
+    label: `Other ${index + 1}`,
+    value: rowValue(pref)
+  }));
+});
+
+const verdict = computed(() => {
+  const out: { text: string; ok: boolean; warn?: boolean }[] = [];
+  const state = appState.value;
+
+  if (platform.value.standalone === "false") {
+    out.push({ text: "Opened in a browser tab, not the Home Screen app. On iOS, push only works from the installed Home Screen app.", ok: false });
+  } else if (platform.value.standalone === "true") {
+    out.push({ text: "Running as an installed Home Screen app.", ok: true });
+  }
+
+  if (support.value.fcmSupported === "false") {
+    out.push({ text: "Firebase reports push is NOT supported in this context.", ok: false });
+  } else if (support.value.fcmSupported === "true") {
+    out.push({ text: "Firebase reports push is supported here.", ok: true });
+  }
+
+  if (platform.value.isApplePush) {
+    const osNumber = platform.value.osNumber;
+    if (osNumber !== null && osNumber < MIN_PUSH_OS) {
+      out.push({ text: `This device runs ${platform.value.iosVersion}. Web push needs ${MIN_PUSH_OS} or later, so it cannot receive notifications at all.`, ok: false });
+    } else if (osNumber === null) {
+      out.push({ text: "Apple device detected but the version could not be read. Web push needs 16.4 or later.", ok: false, warn: true });
+    }
+  }
+
+  if (support.value.permission === "denied") {
+    out.push({ text: "Notification permission is DENIED. iOS will not re-prompt; the Home Screen app must be deleted and re-added.", ok: false });
+  } else if (support.value.permission === "default") {
+    out.push({ text: "Permission not yet requested. Use the register button below, which asks from a real tap.", ok: false, warn: true });
+  } else if (support.value.permission === "granted") {
+    out.push({ text: "Notification permission is granted.", ok: true });
+  }
+
+  if (!env.value.hasConfig) out.push({ text: "Firebase config is missing from this build.", ok: false });
+  if (!env.value.hasVapid) out.push({ text: "VAPID key is missing from this build.", ok: false });
+
+  if (state.isFirebaseInitialised === "true" && state.firebaseDeviceId === "(none)") {
+    out.push({ text: "App thinks Firebase is already initialised but holds no device id, so it will skip registering. Use the register button to force it.", ok: false });
+  }
+
+  if (state.firebaseDeviceId === "(none)") {
+    out.push({ text: "No device id stored, so no token was ever sent to the backend.", ok: false });
+  } else {
+    out.push({ text: `Device id ${state.firebaseDeviceId} stored locally. Backend must show a token for it.`, ok: true });
+  }
+
+  const thisFacilityCount = subscriptionSplit.value.thisFacility.length;
+  const otherCount = subscriptionSplit.value.otherFacilities.length;
+
+  if (!thisFacilityCount) {
+    out.push({
+      text: otherCount
+        ? `No subscriptions for this facility. ${otherCount} exist for other facilities, which deliver nothing here — re-subscribe topics below.`
+        : "No server-side topic subscriptions for this user, so nothing would be delivered even with a valid token.",
+      ok: false
+    });
+  } else {
+    out.push({ text: `${thisFacilityCount} server-side topic subscription(s) for this facility.`, ok: true });
+    if (otherCount) {
+      // ok must be false for the template to pick the warning icon and colour
+      out.push({ text: `${otherCount} subscription(s) belong to other facilities and are ignored here.`, ok: false, warn: true });
+    }
+  }
+
+  if (pushSub.value.exists === "false") {
+    out.push({ text: "Browser has no push subscription. The token handshake never completed on this device.", ok: false });
+  } else if (pushSub.value.exists === "true") {
+    out.push({ text: `Browser push subscription exists (${pushSub.value.endpointHost}).`, ok: true });
+  }
+
+  return out;
+});
+
+const groups = computed(() => [
+  {
+    title: translate("Install context"),
+    rows: [
+      { label: "Installed Home Screen app (standalone)", value: platform.value.standalone },
+      { label: "iOS version", value: platform.value.iosVersion },
+      { label: "User agent", value: platform.value.userAgent }
+    ]
+  },
+  {
+    title: translate("Push support"),
+    rows: [
+      { label: "Firebase isSupported()", value: support.value.fcmSupported },
+      { label: "Notification permission", value: support.value.permission },
+      { label: "Notification API", value: String(support.value.notificationApi) },
+      { label: "ServiceWorker API", value: String(support.value.serviceWorkerApi) },
+      { label: "PushManager API", value: String(support.value.pushManagerApi) }
+    ]
+  },
+  {
+    title: translate("Build config"),
+    rows: [
+      { label: "Firebase config present", value: String(env.value.hasConfig) },
+      { label: "Firebase projectId", value: env.value.projectId },
+      { label: "VAPID key present", value: String(env.value.hasVapid) }
+    ]
+  },
+  {
+    title: translate("App state"),
+    rows: [
+      { label: "isFirebaseInitialised (persisted)", value: appState.value.isFirebaseInitialised },
+      { label: "Device id", value: appState.value.firebaseDeviceId },
+      { label: "OMS instance name", value: appState.value.omsInstanceName },
+      { label: "Facility", value: appState.value.facilityId },
+      { label: "User", value: appState.value.userId },
+      { label: "Notification app id", value: appState.value.appId }
+    ]
+  },
+  { title: translate("Service workers"), rows: workers.value.length ? workers.value : [{ label: "Registrations", value: "(none)" }] },
+  {
+    title: translate("Browser push subscription"),
+    rows: [
+      { label: "Subscription exists", value: pushSub.value.exists },
+      { label: "Endpoint host", value: pushSub.value.endpointHost }
+    ]
+  },
+  { title: translate("Expected topic names"), rows: expectedTopics.value },
+  { title: translate("Server-side subscriptions (this facility)"), rows: subscribedTopics.value },
+  { title: translate("Server-side subscriptions (other facilities)"), rows: otherFacilitySubscriptions.value }
+]);
+
+function readEnv() {
+  const rawConfig = import.meta.env.VITE_FIREBASE_CONFIG;
+  const vapid = import.meta.env.VITE_FIREBASE_VAPID_KEY;
+  let parsed: any = null;
+  try {
+    parsed = rawConfig ? JSON.parse(rawConfig) : null;
+  } catch (error) {
+    logger.error("Notification diagnostics could not parse VITE_FIREBASE_CONFIG", error);
+    parsed = null;
+  }
+  env.value = {
+    hasConfig: !!(parsed && parsed.apiKey),
+    projectId: parsed?.projectId || "(unset)",
+    hasVapid: !!(vapid && String(vapid).length > 20)
+  };
+}
+
+/** Web Push arrived on iOS and iPadOS in 16.4; anything older cannot receive it at all. */
+const MIN_PUSH_OS = 16.4;
+
+function readPlatform() {
+  const ua = navigator.userAgent;
+  const standalone = window.matchMedia?.("(display-mode: standalone)")?.matches || (navigator as any).standalone === true;
+
+  /*
+   * iPadOS 13 and later deliberately send a DESKTOP macOS user agent so sites serve the desktop
+   * layout. There is no "iPad" string and no "OS 26_5" in it, so matching the classic iPhone
+   * pattern reports "(not iOS)" on exactly the devices this screen exists to diagnose.
+   *
+   * The reliable tell is a Mac platform that also reports touch points: a real Mac reports 0.
+   * The version then comes from Safari's own Version/ token, which tracks the OS version on
+   * iPadOS (verified against a device reporting 26.5 over the USB debug bridge).
+   */
+  const isIpadOS = /Mac/.test((navigator as any).platform ?? "") && (navigator.maxTouchPoints ?? 0) > 1;
+  const isPhoneOrLegacyIpad = /iPad|iPhone|iPod/.test(ua);
+
+  const legacy = ua.match(/OS (\d+)[_.](\d+)/);
+  const safariVersion = ua.match(/Version\/(\d+)\.(\d+)/);
+
+  /*
+   * Some iPads send BOTH a frozen "CPU OS 18_7" token and a current "Version/26.5" token, so
+   * trusting the legacy match alone under-reports the OS by years. Safari's version never trails
+   * the OS on these devices, so take whichever is higher and note when they disagree.
+   */
+  const legacyNum = legacy ? Number(`${legacy[1]}.${legacy[2]}`) : null;
+  const safariNum = safariVersion ? Number(`${safariVersion[1]}.${safariVersion[2]}`) : null;
+
+  let osVersion = "(not iOS or iPadOS)";
+  if (isPhoneOrLegacyIpad || isIpadOS) {
+    const best = Math.max(legacyNum ?? 0, safariNum ?? 0);
+    const label = isIpadOS && !isPhoneOrLegacyIpad ? "iPadOS" : "iOS/iPadOS";
+    if (best > 0) {
+      const disagrees = legacyNum && safariNum && legacyNum !== safariNum;
+      osVersion = `${best} (${label})${disagrees ? ` — UA also claims ${legacyNum}` : ""}`;
+    } else {
+      osVersion = `${label}, version unknown`;
+    }
+  }
+
+  platform.value = {
+    standalone: String(!!standalone),
+    userAgent: ua,
+    iosVersion: osVersion,
+    isApplePush: isIpadOS || isPhoneOrLegacyIpad,
+    osNumber: parseOsNumber(osVersion)
+  };
+}
+
+/** Numeric form of the detected version, or null when it could not be determined. */
+function parseOsNumber(osVersion: string) {
+  const match = osVersion.match(/^(\d+)\.(\d+)/);
+  return match ? Number(`${match[1]}.${match[2]}`) : null;
+}
+
+async function readSupport() {
+  let supported = "(unknown)";
+  try {
+    const { isSupported } = await import("firebase/messaging");
+    supported = String(await isSupported());
+  } catch (error: any) {
+    logger.error("Notification diagnostics failed to resolve firebase isSupported()", error);
+    supported = `error: ${error?.message || error}`;
+  }
+  support.value = {
+    fcmSupported: supported,
+    notificationApi: typeof window !== "undefined" && "Notification" in window,
+    serviceWorkerApi: "serviceWorker" in navigator,
+    pushManagerApi: typeof window !== "undefined" && "PushManager" in window,
+    permission: "Notification" in window ? Notification.permission : "(no Notification API)"
+  };
+}
+
+async function readWorkers() {
+  const rows: Row[] = [];
+  let subscription: any = null;
+  try {
+    const registrations = await navigator.serviceWorker?.getRegistrations?.() ?? [];
+    registrations.forEach((registration: any, index: number) => {
+      const worker = registration.active || registration.waiting || registration.installing;
+      rows.push({
+        label: `SW ${index + 1} scope`,
+        value: `${registration.scope} — script ${worker?.scriptURL || "(none)"} — state ${worker?.state || "(none)"}`
+      });
+      if (!subscription && registration.pushManager) subscription = registration;
+    });
+
+    let found: any = null;
+    for (const registration of registrations as any[]) {
+      try {
+        const existing = await registration.pushManager?.getSubscription?.();
+        if (existing) { found = existing; break; }
+      } catch (error) {
+        // A scope may legitimately not allow push, so this is not fatal, but it
+        // is worth seeing when nothing turns up at all.
+        logger.error("Notification diagnostics could not read a push subscription for a registration", error);
+      }
+    }
+    pushSub.value = found
+      ? { exists: "true", endpointHost: (() => {
+          try {
+            return new URL(found.endpoint).host;
+          } catch (error) {
+            logger.error("Notification diagnostics could not parse the push endpoint", error);
+            return "(unparseable)";
+          }
+        })() }
+      : { exists: "false", endpointHost: "(none)" };
+  } catch (error: any) {
+    logger.error("Notification diagnostics failed to read service worker registrations", error);
+    rows.push({ label: "Service worker read failed", value: String(error?.message || error) });
+    pushSub.value = { exists: "(unknown)", endpointHost: "(unknown)" };
+  }
+  workers.value = rows;
+}
+
+// Everything the store provides would otherwise show whatever was last loaded at
+// login, which is misleading on a screen whose entire purpose is reporting current
+// state. Both store actions already swallow their own errors, the wrappers here
+// only guard against an unexpected throw leaving the modal half refreshed.
+async function readServerState() {
+  const appId = import.meta.env.VITE_NOTIF_APP_ID;
+  const userId = (useUserStore().getUserProfile as any)?.userId;
+  const facility: any = useProductStore().getCurrentFacility;
+
+  if (!appId || !userId) {
+    logger.error("Notification diagnostics cannot refresh server state, missing app id or user id", { appId, userId });
+    return;
+  }
+
+  const store = useNotificationStore();
+
+  try {
+    await store.fetchAllNotificationPrefs(appId, userId);
+  } catch (error) {
+    logger.error("Notification diagnostics failed to fetch server side topic subscriptions", error);
+  }
+
+  try {
+    await store.fetchNotificationPreferences(
+      import.meta.env.VITE_NOTIF_ENUM_TYPE_ID,
+      appId,
+      userId,
+      (enumId: string) => firebaseMessaging.generateTopicName(commonUtil.getOMSInstanceName(), facility?.facilityId, enumId)
+    );
+  } catch (error) {
+    logger.error("Notification diagnostics failed to fetch notification preferences", error);
+  }
+}
+
+async function refresh() {
+  isBusy.value = true;
+
+  try {
+    readEnv();
+    readPlatform();
+    await readSupport();
+    await readWorkers();
+    await readServerState();
+  } catch (error) {
+    logger.error("Notification diagnostics refresh failed", error);
+  } finally {
+    isBusy.value = false;
+  }
+}
+
+async function registerDevice() {
+  logger.warn("Hard register");
+  isBusy.value = true;
+  steps.value = [];
+  const push = (label: string, ok: boolean, detail?: string) => steps.value.push({ label, ok, detail });
+
+  try {
+    const { isSupported, getMessaging, getToken } = await import("firebase/messaging");
+    const { initializeApp, getApps, getApp } = await import("firebase/app");
+
+    const supported = await isSupported();
+    push("Push supported in this context", supported, supported ? undefined : "iOS needs the Home Screen app over HTTPS");
+    if (!supported) return;
+
+    let config: any = null;
+    try {
+      config = JSON.parse(import.meta.env.VITE_FIREBASE_CONFIG);
+    } catch (error) {
+      logger.error("Register device could not parse VITE_FIREBASE_CONFIG", error);
+      config = null;
+    }
+    const vapidKey = import.meta.env.VITE_FIREBASE_VAPID_KEY;
+    push("Firebase config present", !!config?.apiKey, config?.projectId);
+    push("VAPID key present", !!vapidKey);
+    if (!config?.apiKey || !vapidKey) return;
+
+    // Must run inside this tap: iOS only shows the prompt for a user gesture.
+    const permission = await Notification.requestPermission();
+    push(`Permission result: ${permission}`, permission === "granted",
+      permission === "denied" ? "Delete and re-add the Home Screen app to be asked again" : undefined);
+    if (permission !== "granted") return;
+
+    const app = getApps().length ? getApp() : initializeApp(config);
+    const messaging = getMessaging(app);
+
+    let token = "";
+    try {
+      token = await getToken(messaging, { vapidKey });
+      push("FCM token obtained", !!token, token ? `${token.slice(0, 12)}…${token.slice(-6)}` : "empty token");
+    } catch (error: any) {
+      logger.error("Register device failed to obtain an FCM token", error);
+      push("FCM token request failed", false, String(error?.message || error));
+      return;
+    }
+    if (!token) return;
+
+    const store = useNotificationStore();
+    const deviceId = firebaseMessaging.generateDeviceId(store.getFirebaseDeviceId);
+    try {
+      await api({
+        url: "firebase/token",
+        method: "post",
+        data: { registrationToken: token, deviceId, applicationId: import.meta.env.VITE_NOTIF_APP_ID }
+      });
+      store.setFirebaseDeviceId(deviceId);
+      store.isFirebaseInitialised = true;
+      push("Token sent to backend", true, `deviceId ${deviceId}`);
+    } catch (error: any) {
+      logger.error("Register device: backend rejected the registration token", error);
+      push("Backend rejected the token", false, `${error?.response?.status || ""} ${error?.message || error}`.trim());
+      return;
+    }
+
+    try {
+      await store.fetchAllNotificationPrefs(import.meta.env.VITE_NOTIF_APP_ID, (useUserStore().getUserProfile as any)?.userId);
+      const count = store.getAllNotificationPrefs?.length ?? 0;
+      push("Server-side topic subscriptions", count > 0, `${count} found`);
+    } catch (error: any) {
+      logger.error("Register device could not read topic subscriptions", error);
+      push("Could not read topic subscriptions", false, String(error?.message || error));
+    }
+  } catch (error: any) {
+    logger.error("Register device failed unexpectedly", error);
+    push("Unexpected failure", false, String(error?.message || error));
+  } finally {
+    isBusy.value = false;
+    await refresh();
+  }
+}
+
+async function showLocalTestNotification() {
+  isBusy.value = true;
+  const push = (label: string, ok: boolean, detail?: string) => steps.value.push({ label, ok, detail });
+  // Pushed synchronously so a click is always acknowledged on screen, even if an await below stalls.
+  steps.value = [{ label: "Test started", ok: true, detail: new Date().toLocaleTimeString() }];
+
+  logger.warn("Notification.permission", Notification.permission)
+
+  try {
+    if (!("Notification" in window)) {
+      logger.error("No Notification API in this context")
+      push("No Notification API in this context", false);
+      return;
+    }
+    if (Notification.permission === "denied") {
+      logger.error("Permission is denied")
+      push("Permission is denied", false, "Reset notifications for this site in browser settings, or delete and re-add the Home Screen app on iOS");
+      return;
+    }
+    if (Notification.permission === "default") {
+      // Safe here: this runs inside the button tap, which is what iOS requires.
+      const result = await Notification.requestPermission();
+      logger.error(`Permission requested: ${result}`)
+      push(`Permission requested: ${result}`, result === "granted");
+      if (result !== "granted") return;
+    }
+
+    const tag = `hotwax-test-${Date.now()}`;
+    const options: any = {
+      body: "If you can see this, the device can display notifications. Server delivery is a separate step.",
+      icon: "/img/icons/msapplication-icon-144x144.png",
+      tag,
+      data: { click_action: "/notifications" }
+    };
+
+    // Do NOT use navigator.serviceWorker.ready: it only settles for a worker controlling this
+    // page's scope, and Firebase registers its worker under /firebase-cloud-messaging-push-scope.
+    // getRegistrations() returns a readonly array; copy it so the local stays mutable.
+    let registrations: ServiceWorkerRegistration[] = [];
+    try {
+      registrations = [...((await navigator.serviceWorker?.getRegistrations?.()) ?? [])];
+    } catch (error: any) {
+      logger.error("Local test notification could not list service workers", error);
+      push("Could not list service workers", false, String(error?.message || error));
+    }
+
+    const usable = registrations.filter((registration: any) => typeof registration.showNotification === "function");
+    push(`Service workers available: ${usable.length}`, usable.length > 0,
+      usable.map((registration: any) => registration.scope).join(", ") || "none registered");
+
+    let shown = false;
+    for (const registration of usable) {
+      try {
+        await registration.showNotification("HotWax BOPIS test", options);
+        // showNotification resolves even when the OS suppresses the banner, so read it back.
+        // showNotification resolving means the OS accepted it. Do not treat the readback as pass/fail:
+        // when the OS owns the alert (macOS native delivery, iOS) getNotifications legitimately returns 0.
+        push("Handed to the operating system", true, `scope ${registration.scope}`);
+        const live = await registration.getNotifications({ tag });
+        push(`Readback found ${live.length}`, true,
+          live.length ? "still owned by the page" : "zero is normal when the OS owns the alert");
+        push("If no banner appeared, the device is suppressing it", false,
+          "The app did its job. Check the per-app alert style (must not be None), Allow Notifications, Focus / Do Not Disturb, and Scheduled Summary. A web page cannot read these, so they must be checked on the device itself.");
+        shown = true;
+        break;
+      } catch (error: any) {
+        logger.error(`Local test notification failed on scope ${registration.scope}`, error);
+        push(`showNotification failed on ${registration.scope}`, false, String(error?.message || error));
+      }
+    }
+
+    if (!shown) {
+      try {
+        const direct = new Notification("HotWax BOPIS test (direct)", options);
+        push("Fell back to the Notification constructor", true,
+          "Displayed without a service worker. iOS web apps do not support this path, desktop browsers do.");
+        setTimeout(() => direct.close(), 8000);
+      } catch (error: any) {
+        logger.error("Local test notification fell through to the Notification constructor and that failed too", error);
+        push("Direct notification failed too", false, String(error?.message || error));
+        push("Nothing could display on this device", false,
+          "Permission is granted, so this is almost certainly blocked at the operating system level, not by the app.");
+      }
+    }
+  } catch (error: any) {
+    logger.error("Local test notification failed unexpectedly", error);
+    push("Local notification failed", false, String(error?.message || error));
+  } finally {
+    isBusy.value = false;
+    await refresh();
+  }
+}
+
+// The Firebase SDK hardcodes both of these, so registering at exactly this path
+// and scope means getToken() reuses what we register here instead of making its own.
+const FCM_SW_PATH = "/firebase-messaging-sw.js";
+const FCM_SW_SCOPE = "/firebase-cloud-messaging-push-scope";
+
+// getToken() calls pushManager.subscribe() immediately after registering, without
+// waiting for the worker to reach "activated". Subscribing against a registration
+// whose active worker is still null throws AbortError, which is why a device can
+// fail here forever while everything else looks healthy.
+function waitForActivation(registration: any, timeoutMs = 10000): Promise<boolean> {
+  if (registration.active) return Promise.resolve(true);
+
+  const worker = registration.installing || registration.waiting;
+  if (!worker) return Promise.resolve(false);
+
+  return new Promise<boolean>((resolve) => {
+    const done = (value: boolean) => {
+      worker.removeEventListener("statechange", onStateChange);
+      clearTimeout(timer);
+      resolve(value);
+    };
+    const onStateChange = () => {
+      if (worker.state === "activated") done(true);
+      else if (worker.state === "redundant") done(false);
+    };
+    const timer = setTimeout(() => done(!!registration.active), timeoutMs);
+
+    worker.addEventListener("statechange", onStateChange);
+  });
+}
+
+async function repairServiceWorker() {
+  isBusy.value = true;
+  const push = (label: string, ok: boolean, detail?: string) => steps.value.push({ label, ok, detail });
+  steps.value = [{ label: "Service worker repair started", ok: true, detail: new Date().toLocaleTimeString() }];
+
+  try {
+    if (!("serviceWorker" in navigator)) {
+      push("No service worker support in this context", false, "Push cannot work here at all");
+      return;
+    }
+
+    const registrations = (await navigator.serviceWorker.getRegistrations()) ?? [];
+    const existing = registrations.find((registration: any) =>
+      registration.scope.includes("firebase-cloud-messaging-push-scope")
+      || (registration.active || registration.waiting || registration.installing)?.scriptURL?.includes("firebase-messaging-sw.js"));
+
+    let mustReregister = true;
+
+    if (existing) {
+      const worker = existing.active || existing.waiting || existing.installing;
+      push("Existing push worker found", true, `${existing.scope} — state ${worker?.state ?? "none"}`);
+
+      // Cheapest repair first: an update picks up a changed script without dropping
+      // the push subscription, which an unregister would destroy.
+      try {
+        await existing.update();
+        push("Update check completed", true);
+      } catch (error: any) {
+        logger.error("Service worker repair: update check failed", error);
+        push("Update check failed", false, String(error?.message || error));
+      }
+
+      if (existing.active && !existing.waiting) {
+        push("Worker is active and current", true, "Nothing to repair, the subscription was left intact");
+        mustReregister = false;
+      } else if (existing.waiting) {
+        push("A newer worker is stuck waiting", false, "firebase-messaging-sw.js has no skipWaiting, so it will not take over on its own");
+      } else {
+        push("Worker is not active", false, `state ${worker?.state ?? "none"}`);
+      }
+
+      if (mustReregister) {
+        try {
+          await existing.unregister();
+          push("Unregistered the broken worker", true, "This also drops the push subscription");
+        } catch (error: any) {
+          logger.error("Service worker repair could not unregister the existing worker", error);
+          push("Could not unregister", false, String(error?.message || error));
+        }
+      }
+    } else {
+      push("No push worker is registered", false, "getToken() would have to create one from scratch");
+    }
+
+    if (!mustReregister) return;
+
+    let registration: any = null;
+    try {
+      registration = await navigator.serviceWorker.register(FCM_SW_PATH, { scope: FCM_SW_SCOPE });
+      push("Re-registered", true, registration.scope);
+    } catch (error: any) {
+      // A failure here is usually the script 404ing, being served as HTML by an
+      // SPA fallback, or importScripts to gstatic being blocked on this network.
+      logger.error("Service worker repair failed to register firebase-messaging-sw.js", error);
+      push("Registration failed", false, String(error?.message || error));
+      return;
+    }
+
+    const activated = await waitForActivation(registration);
+    push(activated ? "Worker reached activated" : "Worker never activated", activated,
+      activated ? undefined : "Check that the script is served as JavaScript and that gstatic.com is reachable");
+
+    if (activated) {
+      push("Now re-register this device", false,
+        "Unregistering dropped the push subscription, so the stored token is dead. Run the register step above, then re-subscribe topics.");
+    }
+  } catch (error: any) {
+    logger.error("Service worker repair failed unexpectedly", error);
+    push("Repair failed", false, String(error?.message || error));
+  } finally {
+    isBusy.value = false;
+    await refresh();
+  }
+}
+
+async function resubscribeTopics() {
+  isBusy.value = true;
+  const push = (label: string, ok: boolean, detail?: string) => steps.value.push({ label, ok, detail });
+  steps.value = [{ label: "Re-subscribe started", ok: true, detail: new Date().toLocaleTimeString() }];
+
+  try {
+    const store = useNotificationStore();
+    const appId = import.meta.env.VITE_NOTIF_APP_ID;
+    const userId = (useUserStore().getUserProfile as any)?.userId;
+    const facility: any = useProductStore().getCurrentFacility;
+    const oms = commonUtil.getOMSInstanceName();
+
+    if (!store.getFirebaseDeviceId) {
+      push("No device token registered yet", false, "Run the register step first, then re-subscribe");
+      return;
+    }
+    push("Device token present", true, store.getFirebaseDeviceId);
+
+    const enabled = (store.getNotificationPrefs || []).filter((pref: any) => pref.isEnabled);
+    if (!enabled.length) {
+      push("No preferences are switched on", false, "Turn one on in Settings first");
+      return;
+    }
+
+    // The app subscribes the topic BEFORE the device token exists, so the token never joins
+    // the topic. Unsubscribing and resubscribing now that a token is registered repairs it.
+    for (const pref of enabled) {
+      const topicName = firebaseMessaging.generateTopicName(oms, facility?.facilityId, pref.enumId);
+      try {
+        await api({ url: "firebase/topic", method: "delete", data: { topicName, applicationId: appId } });
+        await api({ url: "firebase/topic", method: "post", data: { topicName, applicationId: appId } });
+        push(`Re-subscribed ${pref.enumId}`, true, topicName);
+      } catch (error: any) {
+        logger.error(`Re-subscribe failed for topic ${topicName}`, error);
+        push(`Failed on ${pref.enumId}`, false, `${error?.response?.status || ""} ${error?.message || error}`.trim());
+      }
+    }
+
+    try {
+      await store.fetchAllNotificationPrefs(appId, userId);
+      push("Server-side subscriptions now", true, String(store.getAllNotificationPrefs?.length ?? 0));
+    } catch (error: any) {
+      logger.error("Re-subscribe could not re-read server side subscriptions", error);
+      push("Could not re-read subscriptions", false, String(error?.message || error));
+    }
+    push("Now place a test order", true, "A notification should arrive without reloading");
+  } catch (error: any) {
+    logger.error("Re-subscribe topics failed unexpectedly", error);
+    push("Re-subscribe failed", false, String(error?.message || error));
+  } finally {
+    isBusy.value = false;
+    await refresh();
+  }
+}
+
+function buildReportText() {
+  const lines: string[] = ["HotWax BOPIS notification diagnostics", new Date().toISOString(), ""];
+  lines.push("VERDICT");
+  verdict.value.forEach((line) => lines.push(`  ${line.ok ? "OK " : (line.warn ? "?? " : "XX ")} ${line.text}`));
+  if (steps.value.length) {
+    lines.push("", "LAST ACTION");
+    steps.value.forEach((step) => lines.push(`  ${step.ok ? "OK " : "XX "} ${step.label}${step.detail ? ` — ${step.detail}` : ""}`));
+  }
+  groups.value.forEach((group: any) => {
+    lines.push("", group.title.toUpperCase());
+    group.rows.forEach((row: Row) => lines.push(`  ${row.label}: ${row.value}`));
+  });
+  return lines.join("\n");
+}
+
+async function copyReport() {
+  const text = buildReportText();
+  try {
+    await navigator.clipboard.writeText(text);
+    commonUtil.showToast(translate("Report copied to the clipboard."));
+  } catch (error) {
+    // Clipboard API needs a secure context and can be blocked; fall back to a selectable prompt.
+    logger.error("Diagnostics report could not be copied to the clipboard", error);
+    window.prompt("Copy this report", text);
+  }
+}
+
+function closeModal() {
+  modalController.dismiss({ dismissed: true });
+}
+
+onMounted(refresh);
+</script>
+
+<style scoped>
+.verdict-line {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin: 8px 0;
+}
+
+.value {
+  font-family: monospace;
+  font-size: 12px;
+  word-break: break-all;
+  white-space: normal;
+}
+</style>
