@@ -208,9 +208,11 @@
             </ion-item>
           </template>
 
+          <!-- Recovery differs by platform: iOS will not re-prompt at all, browsers reset in site settings. -->
           <ion-item v-else-if="notificationPermission === 'denied'" lines="none">
             <ion-label class="ion-text-wrap">
-              <p>{{ translate("Notifications are blocked for this app. The app must be removed from the Home Screen and added again before it can ask a second time.") }}</p>
+              <p v-if="isApplePlatform">{{ translate("Notifications are blocked for this app. The app must be removed from the Home Screen and added again before it can ask a second time.") }}</p>
+              <p v-else>{{ translate("Notifications are blocked for this site. Reset the notification permission for it in your browser settings, then reload.") }}</p>
             </ion-label>
           </ion-item>
         </ion-card>
@@ -282,6 +284,7 @@ const isRerouteSettingEnabled = computed(() => useProductStore().isRerouteSettin
 
 const notificationPermission = ref(typeof Notification !== "undefined" ? Notification.permission : "unsupported");
 const isEnablingNotifications = ref(false);
+const isApplePlatform = firebaseUtil.isApplePushPlatform();
 
 const firebaseDeviceId = computed(() => useNotificationStore().getFirebaseDeviceId);
 const notificationPrefs = computed(() => useNotificationStore().getNotificationPrefs);
@@ -442,7 +445,14 @@ async function updateNotificationPref(enumId: string) {
   }
 
   try {
-    if (!allNotificationPrefs.value.length && isToggledOn) {
+    /*
+     * Only when permission is already granted. The subscribe above awaited a network round trip,
+     * which ends the confirmation tap's transient activation, so a prompt raised here can still
+     * be refused by iOS for exactly the reason this change exists to remove. A device that has
+     * not granted yet is registered through the explicit allow action on this card, which runs
+     * inside a fresh gesture.
+     */
+    if (!allNotificationPrefs.value.length && isToggledOn && firebaseUtil.canInitialiseWithoutPrompting()) {
       await firebaseUtil.initialiseFirebaseMessaging();
     } else if (allNotificationPrefs.value.length == 1 && !isToggledOn) {
       await notificationStore.removeClientRegistrationToken(firebaseDeviceId.value, import.meta.env.VITE_NOTIF_APP_ID)

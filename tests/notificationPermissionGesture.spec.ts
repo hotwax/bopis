@@ -15,6 +15,12 @@ vi.mock("@common", () => ({
 
 const { firebaseUtil } = await import("../src/utils/firebaseUtil");
 
+function setPlatform(platform: string, maxTouchPoints: number, userAgent: string) {
+  Object.defineProperty(globalThis.navigator, "platform", { value: platform, configurable: true });
+  Object.defineProperty(globalThis.navigator, "maxTouchPoints", { value: maxTouchPoints, configurable: true });
+  Object.defineProperty(globalThis.navigator, "userAgent", { value: userAgent, configurable: true });
+}
+
 function setPermission(value: string) {
   // @ts-expect-error jsdom provides no Notification; the code only reads .permission
   globalThis.Notification = { permission: value, requestPermission: async () => value };
@@ -44,5 +50,23 @@ describe("canInitialiseWithoutPrompting", () => {
     // @ts-expect-error deliberately removing the API
     delete globalThis.Notification;
     expect(firebaseUtil.canInitialiseWithoutPrompting()).toBe(false);
+  });
+});
+
+describe("isApplePushPlatform", () => {
+  it("reports an iPad as an Apple platform despite its desktop user agent", () => {
+    // iPadOS 13+ claims to be a Mac; the tell is touch points, which a real Mac reports as 0.
+    setPlatform("MacIntel", 5, "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) Version/26.5 Safari/605.1.15");
+    expect(firebaseUtil.isApplePushPlatform()).toBe(true);
+  });
+
+  it("reports a real Mac as not an Apple push platform, so it gets browser recovery steps", () => {
+    setPlatform("MacIntel", 0, "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) Version/17.6 Safari/605.1.15");
+    expect(firebaseUtil.isApplePushPlatform()).toBe(false);
+  });
+
+  it("reports an iPhone as an Apple platform", () => {
+    setPlatform("iPhone", 5, "Mozilla/5.0 (iPhone; CPU iPhone OS 17_4 like Mac OS X) Version/17.4 Mobile/15E148");
+    expect(firebaseUtil.isApplePushPlatform()).toBe(true);
   });
 });

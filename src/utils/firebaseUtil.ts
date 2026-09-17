@@ -184,6 +184,19 @@ function attachResumeWatcher() {
 const canInitialiseWithoutPrompting = () =>
   typeof Notification !== "undefined" && Notification.permission === "granted";
 
+/**
+ * Whether this is an iOS/iPadOS device, where a blocked permission can only be recovered by
+ * removing the Home Screen app and adding it again — browsers instead reset it in site settings.
+ *
+ * iPadOS 13+ sends a desktop macOS user agent on purpose, so the tell is a Mac platform that also
+ * reports touch points; a real Mac reports zero.
+ */
+const isApplePushPlatform = () => {
+  if (typeof navigator === "undefined") return false;
+  const isIpadOS = /Mac/.test((navigator as any).platform ?? "") && (navigator.maxTouchPoints ?? 0) > 1;
+  return isIpadOS || /iPad|iPhone|iPod/.test(navigator.userAgent);
+};
+
 const initialiseFirebaseMessaging = async () => {
   logger.warn('Initializing firebase')
   const notificationStore = useNotificationStore();
@@ -226,5 +239,6 @@ const initialiseFirebaseMessaging = async () => {
 
 export const firebaseUtil = {
   canInitialiseWithoutPrompting,
+  isApplePushPlatform,
   initialiseFirebaseMessaging
 }
