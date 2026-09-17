@@ -293,10 +293,25 @@ function readPlatform() {
   const legacy = ua.match(/OS (\d+)[_.](\d+)/);
   const safariVersion = ua.match(/Version\/(\d+)\.(\d+)/);
 
+  /*
+   * Some iPads send BOTH a frozen "CPU OS 18_7" token and a current "Version/26.5" token, so
+   * trusting the legacy match alone under-reports the OS by years. Safari's version never trails
+   * the OS on these devices, so take whichever is higher and note when they disagree.
+   */
+  const legacyNum = legacy ? Number(`${legacy[1]}.${legacy[2]}`) : null;
+  const safariNum = safariVersion ? Number(`${safariVersion[1]}.${safariVersion[2]}`) : null;
+
   let osVersion = "(not iOS or iPadOS)";
-  if (isPhoneOrLegacyIpad && legacy) osVersion = `${legacy[1]}.${legacy[2]} (iOS)`;
-  else if (isIpadOS && safariVersion) osVersion = `${safariVersion[1]}.${safariVersion[2]} (iPadOS)`;
-  else if (isIpadOS) osVersion = "iPadOS, version unknown";
+  if (isPhoneOrLegacyIpad || isIpadOS) {
+    const best = Math.max(legacyNum ?? 0, safariNum ?? 0);
+    const label = isIpadOS && !isPhoneOrLegacyIpad ? "iPadOS" : "iOS/iPadOS";
+    if (best > 0) {
+      const disagrees = legacyNum && safariNum && legacyNum !== safariNum;
+      osVersion = `${best} (${label})${disagrees ? ` — UA also claims ${legacyNum}` : ""}`;
+    } else {
+      osVersion = `${label}, version unknown`;
+    }
+  }
 
   platform.value = {
     standalone: String(!!standalone),
