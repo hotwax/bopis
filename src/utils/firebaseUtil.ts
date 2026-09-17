@@ -7,7 +7,15 @@ const initialiseFirebaseMessaging = async () => {
 
   // if (notificationStore.isFirebaseInitialised) return;
 
-  const appFirebaseConfig = JSON.parse(import.meta.env.VITE_FIREBASE_CONFIG as any);
+  // An unset or malformed config used to throw here, and the rejection propagated out of the
+  // post-login flow rather than degrading to notifications being unavailable.
+  let appFirebaseConfig = null as any;
+  try {
+    const rawConfig = import.meta.env.VITE_FIREBASE_CONFIG;
+    appFirebaseConfig = rawConfig ? JSON.parse(rawConfig as any) : null;
+  } catch (error) {
+    logger.error("Firebase config is not valid JSON", error);
+  }
   const appFirebaseVapidKey = import.meta.env.VITE_FIREBASE_VAPID_KEY;
 
   if (appFirebaseConfig && appFirebaseConfig.apiKey) {
