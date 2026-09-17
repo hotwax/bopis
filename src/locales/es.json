@@ -397,5 +397,9 @@
   "Server-side subscriptions": "Server-side subscriptions",
   "Service workers": "Service workers",
   "Show a local test notification": "Show a local test notification",
-  "Verdict": "Verdict"
+  "Verdict": "Verdict",
+  "Allow notifications on this device": "Allow notifications on this device",
+  "Notifications are blocked for this app. The app must be removed from the Home Screen and added again before it can ask a second time.": "Notifications are blocked for this app. The app must be removed from the Home Screen and added again before it can ask a second time.",
+  "This device has not been allowed to show notifications yet.": "This device has not been allowed to show notifications yet.",
+  "Notifications are blocked for this site. Reset the notification permission for it in your browser settings, then reload.": "Notifications are blocked for this site. Reset the notification permission for it in your browser settings, then reload."
 }

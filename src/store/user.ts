@@ -242,8 +242,11 @@ export const useUserStore = defineStore("user", {
 
         const notificationStore = useNotificationStore();
         await notificationStore.fetchAllNotificationPrefs(import.meta.env.VITE_NOTIF_APP_ID as any, this.current.userId)
-        // Register the device token only when we have some notification preferences already set
-        if(notificationStore.getAllNotificationPrefs?.length) {
+        // Register the device token only when we have some notification preferences already set,
+        // and only when doing so cannot raise a permission prompt: there is no user gesture here,
+        // so a prompt would be refused and would leave permission stuck at "default" forever.
+        // A user who has not granted yet is offered the prompt on the settings screen instead.
+        if(notificationStore.getAllNotificationPrefs?.length && firebaseUtil.canInitialiseWithoutPrompting()) {
           await firebaseUtil.initialiseFirebaseMessaging();
         }
 
