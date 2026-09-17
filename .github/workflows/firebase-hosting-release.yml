@@ -6,6 +6,8 @@ name: Deploy to Firebase Hosting on release
   push:
     tags:        
       - '*' # Push events to every tag not containing / Refer https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#patterns-to-match-branches-and-tags
+    branches:
+      - v5.3.0-ls
 jobs:
   call-workflow-in-another-repo:
     uses: hotwax/accxui/.github/workflows/common-firebase-hosting-release.yml@main
