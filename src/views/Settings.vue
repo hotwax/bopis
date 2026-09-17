@@ -203,6 +203,7 @@
           </ion-card-content>
           <ion-item lines="none">
             <ion-button fill="outline" @click="openNotificationDiagnostics()">{{ translate("Open diagnostics") }}</ion-button>
+            <ion-button fill="outline" @click="openLogs()">{{ translate("Open logs") }}</ion-button>
           </ion-item>
         </ion-card>
         <ion-card>
@@ -230,6 +231,7 @@ import { commonUtil, emitter, firebaseMessaging, logger, translate, useNotificat
 import { useAuth } from "@common/composables/useAuth";
 import EditShipmentMethodModal from '@/components/EditShipmentMethodModal.vue';
 import NotificationDiagnosticsModal from '@/components/NotificationDiagnosticsModal.vue';
+import LogsModal from '@/components/LogsModal.vue';
 import DxpTimeZoneSwitcher from "@/components/DxpTimeZoneSwitcher.vue"
 import DxpOmsInstanceNavigator from "@/components/DxpOmsInstanceNavigator.vue";
 import DxpProductIdentifier from "@/components/DxpProductIdentifier.vue";
@@ -349,6 +351,13 @@ async function openNotificationDiagnostics() {
     component: NotificationDiagnosticsModal
   });
   return diagnosticsModal.present();
+}
+
+async function openLogs() {
+  const logsModal = await modalController.create({
+    component: LogsModal
+  });
+  return logsModal.present();
 }
 
 async function updateNotificationPref(enumId: string) {

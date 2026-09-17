@@ -8,7 +8,7 @@
       </ion-buttons>
       <ion-title>{{ translate("Notification diagnostics") }}</ion-title>
       <ion-buttons slot="end">
-        <ion-button @click="refresh">
+        <ion-button :disabled="isBusy" @click="refresh">
           <ion-icon slot="icon-only" :icon="refreshOutline" />
         </ion-button>
       </ion-buttons>
@@ -45,6 +45,11 @@
         <ion-item lines="none">
           <ion-button expand="block" fill="outline" :disabled="isBusy" @click="showLocalTestNotification">
             {{ translate("Show a local test notification") }}
+          </ion-button>
+        </ion-item>
+        <ion-item lines="none">
+          <ion-button expand="block" fill="outline" color="warning" :disabled="isBusy" @click="repairServiceWorker">
+            {{ translate("Repair the push service worker") }}
           </ion-button>
         </ion-item>
         <ion-item lines="none">
@@ -116,6 +121,7 @@ const appState = computed(() => {
     isFirebaseInitialised: String(store.isFirebaseInitialised),
     firebaseDeviceId: store.getFirebaseDeviceId || "(none)",
     subscribedTopicCount: String(store.getAllNotificationPrefs?.length ?? 0),
+    // Counted separately below, the raw count spans every facility
     omsInstanceName: commonUtil.getOMSInstanceName() || "(unknown)",
     facilityId: facility?.facilityId || "(none)",
     userId: profile?.userId || "(none)",
@@ -135,12 +141,55 @@ const expectedTopics = computed(() => {
   }));
 });
 
-const subscribedTopics = computed(() => {
+// firebase/user/notificationtopic filters by application and user only, so the
+// response carries every facility this user has ever enabled notifications at.
+// Topic names are `${oms}-${facilityId}-${enumId}`, so the current facility's
+// rows can be separated here. The trailing hyphen matters: without it facility
+// STORE1 also matches STORE10.
+const facilityTopicPrefix = computed(() => {
+  const facility: any = useProductStore().getCurrentFacility;
+  const oms = commonUtil.getOMSInstanceName();
+  return facility?.facilityId ? `${oms}-${facility.facilityId}-` : "";
+});
+
+const subscriptionSplit = computed(() => {
   const all = useNotificationStore().getAllNotificationPrefs || [];
-  if (!all.length) return [{ label: "Server-side subscriptions", value: "(none) — backend has no topic for this user" }];
-  return all.map((pref: any, index: number) => ({
+  const prefix = facilityTopicPrefix.value;
+  if (!prefix) return { thisFacility: [], otherFacilities: all };
+  return {
+    thisFacility: all.filter((pref: any) => String(pref?.topic || "").startsWith(prefix)),
+    otherFacilities: all.filter((pref: any) => !String(pref?.topic || "").startsWith(prefix))
+  };
+});
+
+// The whole row is rendered, not just `topic`. The endpoint's exact shape is not
+// documented anywhere in this repo, and whether it carries a device identifier
+// decides whether per-device filtering is possible at all.
+const rowValue = (pref: any) => {
+  try {
+    return JSON.stringify(pref);
+  } catch (error) {
+    logger.error("Notification diagnostics could not serialise a subscription row", error);
+    return String(pref);
+  }
+};
+
+const subscribedTopics = computed(() => {
+  const { thisFacility } = subscriptionSplit.value;
+  if (!facilityTopicPrefix.value) return [{ label: "Server-side subscriptions", value: "(no facility selected, cannot scope this list)" }];
+  if (!thisFacility.length) return [{ label: "This facility", value: "(none) — nothing is subscribed for the current facility" }];
+  return thisFacility.map((pref: any, index: number) => ({
     label: `Subscription ${index + 1}`,
-    value: pref?.topic || JSON.stringify(pref)
+    value: rowValue(pref)
+  }));
+});
+
+const otherFacilitySubscriptions = computed(() => {
+  const { otherFacilities } = subscriptionSplit.value;
+  if (!otherFacilities.length) return [{ label: "Other facilities", value: "(none)" }];
+  return otherFacilities.map((pref: any, index: number) => ({
+    label: `Other ${index + 1}`,
+    value: rowValue(pref)
   }));
 });
 
@@ -190,10 +239,22 @@ const verdict = computed(() => {
     out.push({ text: `Device id ${state.firebaseDeviceId} stored locally. Backend must show a token for it.`, ok: true });
   }
 
-  if (state.subscribedTopicCount === "0") {
-    out.push({ text: "No server-side topic subscriptions for this user, so nothing would be delivered even with a valid token.", ok: false });
+  const thisFacilityCount = subscriptionSplit.value.thisFacility.length;
+  const otherCount = subscriptionSplit.value.otherFacilities.length;
+
+  if (!thisFacilityCount) {
+    out.push({
+      text: otherCount
+        ? `No subscriptions for this facility. ${otherCount} exist for other facilities, which deliver nothing here — re-subscribe topics below.`
+        : "No server-side topic subscriptions for this user, so nothing would be delivered even with a valid token.",
+      ok: false
+    });
   } else {
-    out.push({ text: `${state.subscribedTopicCount} server-side topic subscription(s) found.`, ok: true });
+    out.push({ text: `${thisFacilityCount} server-side topic subscription(s) for this facility.`, ok: true });
+    if (otherCount) {
+      // ok must be false for the template to pick the warning icon and colour
+      out.push({ text: `${otherCount} subscription(s) belong to other facilities and are ignored here.`, ok: false, warn: true });
+    }
   }
 
   if (pushSub.value.exists === "false") {
@@ -252,7 +313,8 @@ const groups = computed(() => [
     ]
   },
   { title: translate("Expected topic names"), rows: expectedTopics.value },
-  { title: translate("Server-side subscriptions"), rows: subscribedTopics.value }
+  { title: translate("Server-side subscriptions (this facility)"), rows: subscribedTopics.value },
+  { title: translate("Server-side subscriptions (other facilities)"), rows: otherFacilitySubscriptions.value }
 ]);
 
 function readEnv() {
@@ -262,6 +324,7 @@ function readEnv() {
   try {
     parsed = rawConfig ? JSON.parse(rawConfig) : null;
   } catch (error) {
+    logger.error("Notification diagnostics could not parse VITE_FIREBASE_CONFIG", error);
     parsed = null;
   }
   env.value = {
@@ -334,6 +397,7 @@ async function readSupport() {
     const { isSupported } = await import("firebase/messaging");
     supported = String(await isSupported());
   } catch (error: any) {
+    logger.error("Notification diagnostics failed to resolve firebase isSupported()", error);
     supported = `error: ${error?.message || error}`;
   }
   support.value = {
@@ -364,23 +428,78 @@ async function readWorkers() {
       try {
         const existing = await registration.pushManager?.getSubscription?.();
         if (existing) { found = existing; break; }
-      } catch (error) { /* scope may not allow push */ }
+      } catch (error) {
+        // A scope may legitimately not allow push, so this is not fatal, but it
+        // is worth seeing when nothing turns up at all.
+        logger.error("Notification diagnostics could not read a push subscription for a registration", error);
+      }
     }
     pushSub.value = found
-      ? { exists: "true", endpointHost: (() => { try { return new URL(found.endpoint).host; } catch { return "(unparseable)"; } })() }
+      ? { exists: "true", endpointHost: (() => {
+          try {
+            return new URL(found.endpoint).host;
+          } catch (error) {
+            logger.error("Notification diagnostics could not parse the push endpoint", error);
+            return "(unparseable)";
+          }
+        })() }
       : { exists: "false", endpointHost: "(none)" };
   } catch (error: any) {
+    logger.error("Notification diagnostics failed to read service worker registrations", error);
     rows.push({ label: "Service worker read failed", value: String(error?.message || error) });
     pushSub.value = { exists: "(unknown)", endpointHost: "(unknown)" };
   }
   workers.value = rows;
 }
 
+// Everything the store provides would otherwise show whatever was last loaded at
+// login, which is misleading on a screen whose entire purpose is reporting current
+// state. Both store actions already swallow their own errors, the wrappers here
+// only guard against an unexpected throw leaving the modal half refreshed.
+async function readServerState() {
+  const appId = import.meta.env.VITE_NOTIF_APP_ID;
+  const userId = (useUserStore().getUserProfile as any)?.userId;
+  const facility: any = useProductStore().getCurrentFacility;
+
+  if (!appId || !userId) {
+    logger.error("Notification diagnostics cannot refresh server state, missing app id or user id", { appId, userId });
+    return;
+  }
+
+  const store = useNotificationStore();
+
+  try {
+    await store.fetchAllNotificationPrefs(appId, userId);
+  } catch (error) {
+    logger.error("Notification diagnostics failed to fetch server side topic subscriptions", error);
+  }
+
+  try {
+    await store.fetchNotificationPreferences(
+      import.meta.env.VITE_NOTIF_ENUM_TYPE_ID,
+      appId,
+      userId,
+      (enumId: string) => firebaseMessaging.generateTopicName(commonUtil.getOMSInstanceName(), facility?.facilityId, enumId)
+    );
+  } catch (error) {
+    logger.error("Notification diagnostics failed to fetch notification preferences", error);
+  }
+}
+
 async function refresh() {
-  readEnv();
-  readPlatform();
-  await readSupport();
-  await readWorkers();
+  isBusy.value = true;
+
+  try {
+    readEnv();
+    readPlatform();
+    await readSupport();
+    await readWorkers();
+    await readServerState();
+  } catch (error) {
+    logger.error("Notification diagnostics refresh failed", error);
+  } finally {
+    isBusy.value = false;
+  }
 }
 
 async function registerDevice() {
@@ -397,7 +516,12 @@ async function registerDevice() {
     if (!supported) return;
 
     let config: any = null;
-    try { config = JSON.parse(import.meta.env.VITE_FIREBASE_CONFIG); } catch (error) { config = null; }
+    try {
+      config = JSON.parse(import.meta.env.VITE_FIREBASE_CONFIG);
+    } catch (error) {
+      logger.error("Register device could not parse VITE_FIREBASE_CONFIG", error);
+      config = null;
+    }
     const vapidKey = import.meta.env.VITE_FIREBASE_VAPID_KEY;
     push("Firebase config present", !!config?.apiKey, config?.projectId);
     push("VAPID key present", !!vapidKey);
@@ -417,6 +541,7 @@ async function registerDevice() {
       token = await getToken(messaging, { vapidKey });
       push("FCM token obtained", !!token, token ? `${token.slice(0, 12)}…${token.slice(-6)}` : "empty token");
     } catch (error: any) {
+      logger.error("Register device failed to obtain an FCM token", error);
       push("FCM token request failed", false, String(error?.message || error));
       return;
     }
@@ -434,6 +559,7 @@ async function registerDevice() {
       store.isFirebaseInitialised = true;
       push("Token sent to backend", true, `deviceId ${deviceId}`);
     } catch (error: any) {
+      logger.error("Register device: backend rejected the registration token", error);
       push("Backend rejected the token", false, `${error?.response?.status || ""} ${error?.message || error}`.trim());
       return;
     }
@@ -443,10 +569,11 @@ async function registerDevice() {
       const count = store.getAllNotificationPrefs?.length ?? 0;
       push("Server-side topic subscriptions", count > 0, `${count} found`);
     } catch (error: any) {
+      logger.error("Register device could not read topic subscriptions", error);
       push("Could not read topic subscriptions", false, String(error?.message || error));
     }
   } catch (error: any) {
-    logger.error(error);
+    logger.error("Register device failed unexpectedly", error);
     push("Unexpected failure", false, String(error?.message || error));
   } finally {
     isBusy.value = false;
@@ -460,18 +587,23 @@ async function showLocalTestNotification() {
   // Pushed synchronously so a click is always acknowledged on screen, even if an await below stalls.
   steps.value = [{ label: "Test started", ok: true, detail: new Date().toLocaleTimeString() }];
 
+  logger.warn("Notification.permission", Notification.permission)
+
   try {
     if (!("Notification" in window)) {
+      logger.error("No Notification API in this context")
       push("No Notification API in this context", false);
       return;
     }
     if (Notification.permission === "denied") {
+      logger.error("Permission is denied")
       push("Permission is denied", false, "Reset notifications for this site in browser settings, or delete and re-add the Home Screen app on iOS");
       return;
     }
     if (Notification.permission === "default") {
       // Safe here: this runs inside the button tap, which is what iOS requires.
       const result = await Notification.requestPermission();
+      logger.error(`Permission requested: ${result}`)
       push(`Permission requested: ${result}`, result === "granted");
       if (result !== "granted") return;
     }
@@ -491,6 +623,7 @@ async function showLocalTestNotification() {
     try {
       registrations = [...((await navigator.serviceWorker?.getRegistrations?.()) ?? [])];
     } catch (error: any) {
+      logger.error("Local test notification could not list service workers", error);
       push("Could not list service workers", false, String(error?.message || error));
     }
 
@@ -514,6 +647,7 @@ async function showLocalTestNotification() {
         shown = true;
         break;
       } catch (error: any) {
+        logger.error(`Local test notification failed on scope ${registration.scope}`, error);
         push(`showNotification failed on ${registration.scope}`, false, String(error?.message || error));
       }
     }
@@ -525,13 +659,131 @@ async function showLocalTestNotification() {
           "Displayed without a service worker. iOS web apps do not support this path, desktop browsers do.");
         setTimeout(() => direct.close(), 8000);
       } catch (error: any) {
+        logger.error("Local test notification fell through to the Notification constructor and that failed too", error);
         push("Direct notification failed too", false, String(error?.message || error));
         push("Nothing could display on this device", false,
           "Permission is granted, so this is almost certainly blocked at the operating system level, not by the app.");
       }
     }
   } catch (error: any) {
+    logger.error("Local test notification failed unexpectedly", error);
     push("Local notification failed", false, String(error?.message || error));
+  } finally {
+    isBusy.value = false;
+    await refresh();
+  }
+}
+
+// The Firebase SDK hardcodes both of these, so registering at exactly this path
+// and scope means getToken() reuses what we register here instead of making its own.
+const FCM_SW_PATH = "/firebase-messaging-sw.js";
+const FCM_SW_SCOPE = "/firebase-cloud-messaging-push-scope";
+
+// getToken() calls pushManager.subscribe() immediately after registering, without
+// waiting for the worker to reach "activated". Subscribing against a registration
+// whose active worker is still null throws AbortError, which is why a device can
+// fail here forever while everything else looks healthy.
+function waitForActivation(registration: any, timeoutMs = 10000): Promise<boolean> {
+  if (registration.active) return Promise.resolve(true);
+
+  const worker = registration.installing || registration.waiting;
+  if (!worker) return Promise.resolve(false);
+
+  return new Promise<boolean>((resolve) => {
+    const done = (value: boolean) => {
+      worker.removeEventListener("statechange", onStateChange);
+      clearTimeout(timer);
+      resolve(value);
+    };
+    const onStateChange = () => {
+      if (worker.state === "activated") done(true);
+      else if (worker.state === "redundant") done(false);
+    };
+    const timer = setTimeout(() => done(!!registration.active), timeoutMs);
+
+    worker.addEventListener("statechange", onStateChange);
+  });
+}
+
+async function repairServiceWorker() {
+  isBusy.value = true;
+  const push = (label: string, ok: boolean, detail?: string) => steps.value.push({ label, ok, detail });
+  steps.value = [{ label: "Service worker repair started", ok: true, detail: new Date().toLocaleTimeString() }];
+
+  try {
+    if (!("serviceWorker" in navigator)) {
+      push("No service worker support in this context", false, "Push cannot work here at all");
+      return;
+    }
+
+    const registrations = (await navigator.serviceWorker.getRegistrations()) ?? [];
+    const existing = registrations.find((registration: any) =>
+      registration.scope.includes("firebase-cloud-messaging-push-scope")
+      || (registration.active || registration.waiting || registration.installing)?.scriptURL?.includes("firebase-messaging-sw.js"));
+
+    let mustReregister = true;
+
+    if (existing) {
+      const worker = existing.active || existing.waiting || existing.installing;
+      push("Existing push worker found", true, `${existing.scope} — state ${worker?.state ?? "none"}`);
+
+      // Cheapest repair first: an update picks up a changed script without dropping
+      // the push subscription, which an unregister would destroy.
+      try {
+        await existing.update();
+        push("Update check completed", true);
+      } catch (error: any) {
+        logger.error("Service worker repair: update check failed", error);
+        push("Update check failed", false, String(error?.message || error));
+      }
+
+      if (existing.active && !existing.waiting) {
+        push("Worker is active and current", true, "Nothing to repair, the subscription was left intact");
+        mustReregister = false;
+      } else if (existing.waiting) {
+        push("A newer worker is stuck waiting", false, "firebase-messaging-sw.js has no skipWaiting, so it will not take over on its own");
+      } else {
+        push("Worker is not active", false, `state ${worker?.state ?? "none"}`);
+      }
+
+      if (mustReregister) {
+        try {
+          await existing.unregister();
+          push("Unregistered the broken worker", true, "This also drops the push subscription");
+        } catch (error: any) {
+          logger.error("Service worker repair could not unregister the existing worker", error);
+          push("Could not unregister", false, String(error?.message || error));
+        }
+      }
+    } else {
+      push("No push worker is registered", false, "getToken() would have to create one from scratch");
+    }
+
+    if (!mustReregister) return;
+
+    let registration: any = null;
+    try {
+      registration = await navigator.serviceWorker.register(FCM_SW_PATH, { scope: FCM_SW_SCOPE });
+      push("Re-registered", true, registration.scope);
+    } catch (error: any) {
+      // A failure here is usually the script 404ing, being served as HTML by an
+      // SPA fallback, or importScripts to gstatic being blocked on this network.
+      logger.error("Service worker repair failed to register firebase-messaging-sw.js", error);
+      push("Registration failed", false, String(error?.message || error));
+      return;
+    }
+
+    const activated = await waitForActivation(registration);
+    push(activated ? "Worker reached activated" : "Worker never activated", activated,
+      activated ? undefined : "Check that the script is served as JavaScript and that gstatic.com is reachable");
+
+    if (activated) {
+      push("Now re-register this device", false,
+        "Unregistering dropped the push subscription, so the stored token is dead. Run the register step above, then re-subscribe topics.");
+    }
+  } catch (error: any) {
+    logger.error("Service worker repair failed unexpectedly", error);
+    push("Repair failed", false, String(error?.message || error));
   } finally {
     isBusy.value = false;
     await refresh();
@@ -571,6 +823,7 @@ async function resubscribeTopics() {
         await api({ url: "firebase/topic", method: "post", data: { topicName, applicationId: appId } });
         push(`Re-subscribed ${pref.enumId}`, true, topicName);
       } catch (error: any) {
+        logger.error(`Re-subscribe failed for topic ${topicName}`, error);
         push(`Failed on ${pref.enumId}`, false, `${error?.response?.status || ""} ${error?.message || error}`.trim());
       }
     }
@@ -579,10 +832,12 @@ async function resubscribeTopics() {
       await store.fetchAllNotificationPrefs(appId, userId);
       push("Server-side subscriptions now", true, String(store.getAllNotificationPrefs?.length ?? 0));
     } catch (error: any) {
+      logger.error("Re-subscribe could not re-read server side subscriptions", error);
       push("Could not re-read subscriptions", false, String(error?.message || error));
     }
     push("Now place a test order", true, "A notification should arrive without reloading");
   } catch (error: any) {
+    logger.error("Re-subscribe topics failed unexpectedly", error);
     push("Re-subscribe failed", false, String(error?.message || error));
   } finally {
     isBusy.value = false;
@@ -612,6 +867,7 @@ async function copyReport() {
     commonUtil.showToast(translate("Report copied to the clipboard."));
   } catch (error) {
     // Clipboard API needs a secure context and can be blocked; fall back to a selectable prompt.
+    logger.error("Diagnostics report could not be copied to the clipboard", error);
     window.prompt("Copy this report", text);
   }
 }

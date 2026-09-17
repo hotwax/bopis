@@ -2,7 +2,7 @@ import { firebaseMessaging, logger, useNotificationStore } from "@common";
 import { DateTime } from "luxon";
 
 const initialiseFirebaseMessaging = async () => {
-  console.log('Initializing firebase')
+  logger.warn('Initializing firebase')
   const notificationStore = useNotificationStore();
 
   // if (notificationStore.isFirebaseInitialised) return;

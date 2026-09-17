@@ -1306,7 +1306,7 @@ export const useOrderStore = defineStore('order', {
         }
 
         commonUtil.showToast("Initiating EPOS print")
-        console.log('Initiating EPOS print', useEposPrinter().configFromEnv())
+        logger.warn('Initiating EPOS print', useEposPrinter().configFromEnv())
 
         const printer = useEposPrinter().configFromEnv();
 
@@ -1314,7 +1314,7 @@ export const useOrderStore = defineStore('order', {
           try {
             await useEposPrinter().printPdf(printer, resp.data);
 
-            console.log('Data sent to printer')
+            logger.warn('Data sent to printer')
             commonUtil.showToast(translate("Customer receipt sent to printer."))
 
             return;
