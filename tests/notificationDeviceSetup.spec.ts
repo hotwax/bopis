@@ -154,26 +154,50 @@ describe("setUpNotificationsOnThisDevice — the whole chain from one tap", () =
     expect(fetchAllNotificationPrefs).toHaveBeenCalledWith("BOPIS", "100410");
   });
 
-  it("stops at support when push is unavailable, without prompting", async () => {
-    const requestPermission = installNotification("default");
+  it("asks for permission before the first async boundary, so the tap's activation is not spent", async () => {
+    // isSupported() does async IndexedDB work on WebKit; awaiting it before the prompt can end the
+    // transient user activation and leave permission stuck at "default" with no prompt shown.
+    const requestPermission = installNotification("default", "granted");
+    installServiceWorker([]);
+    sdkIssuesToken();
+
+    await setUpNotificationsOnThisDevice();
+
+    expect(requestPermission).toHaveBeenCalledTimes(1);
+    expect(isSupported).toHaveBeenCalledTimes(1);
+    expect(requestPermission.mock.invocationCallOrder[0]).toBeLessThan(isSupported.mock.invocationCallOrder[0]);
+  });
+
+  it("stops at support when push is unavailable, after the (harmless) prompt", async () => {
+    installNotification("default", "granted");
     installServiceWorker([]);
     isSupported.mockResolvedValue(false);
 
     const result = await setUpNotificationsOnThisDevice();
 
     expect(result).toMatchObject({ ok: false, failedStep: "support" });
-    expect(requestPermission).not.toHaveBeenCalled();
     expect(initialiseFirebaseApp).not.toHaveBeenCalled();
   });
 
-  it("stops at config when the build has no Firebase config", async () => {
-    installNotification("default");
+  it("stops at support synchronously when the Notification API does not exist", async () => {
+    delete (globalThis as any).Notification;
+    installServiceWorker([]);
+
+    const result = await setUpNotificationsOnThisDevice();
+
+    expect(result).toMatchObject({ ok: false, failedStep: "support" });
+    expect(isSupported).not.toHaveBeenCalled();
+  });
+
+  it("stops at config when the build has no Firebase config, without prompting", async () => {
+    const requestPermission = installNotification("default");
     installServiceWorker([]);
     vi.stubEnv("VITE_FIREBASE_CONFIG", "");
 
     const result = await setUpNotificationsOnThisDevice();
 
     expect(result).toMatchObject({ ok: false, failedStep: "config" });
+    expect(requestPermission).not.toHaveBeenCalled();
     expect(initialiseFirebaseApp).not.toHaveBeenCalled();
   });
 

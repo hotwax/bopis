@@ -392,7 +392,7 @@ export interface DeviceSetupResult {
 }
 
 /**
- * The whole chain, from one tap: support → config → permission → active push worker → token
+ * The whole chain, from one tap: config → permission → support → active push worker → token
  * registered with the backend → verified → subscriptions re-read. Stops at the first link that
  * fails and names it, so the caller never reports "allowed" for a device that cannot receive.
  *
@@ -409,10 +409,16 @@ export async function setUpNotificationsOnThisDevice({ userId }: { userId?: stri
     return { ok: false, failedStep, permission: permissionNow(), deviceId: notificationStore.getFirebaseDeviceId, steps };
   };
 
-  const supported = typeof navigator !== "undefined" && "serviceWorker" in navigator
-    && typeof Notification !== "undefined" && await isSupported();
-  report("Push supported in this context", supported, supported ? undefined : "iOS needs the Home Screen app over HTTPS, 16.4 or later");
-  if (!supported) return fail("support");
+  // Everything before the permission prompt must be synchronous. The prompt is only shown inside
+  // the tap's transient user activation, and WebKit's window is short: isSupported() does async
+  // IndexedDB work, so awaiting it first can spend the activation and leave permission stuck at
+  // "default" with no prompt ever shown — the very failure this path exists to fix. The full
+  // support check therefore runs after the prompt; prompting on an unsupported context is harmless.
+  const hasPushApis = typeof navigator !== "undefined" && "serviceWorker" in navigator && typeof Notification !== "undefined";
+  if (!hasPushApis) {
+    report("Push supported in this context", false, "No Notification or service worker API here");
+    return fail("support");
+  }
 
   let config: any = null;
   try {
@@ -424,11 +430,15 @@ export async function setUpNotificationsOnThisDevice({ userId }: { userId?: stri
   report("Firebase config and VAPID key present", configured);
   if (!configured) return fail("config");
 
-  // Inside the tap: iOS only shows the prompt for a user gesture.
+  // First await, still inside the tap: iOS only shows the prompt for a user gesture.
   const permission = await Notification.requestPermission();
   report(`Permission: ${permission}`, permission === "granted",
     permission === "denied" ? "Blocked on this device; recovery differs by platform" : undefined);
   if (permission !== "granted") return fail("permission");
+
+  const supported = await isSupported();
+  report("Push supported in this context", supported, supported ? undefined : "iOS needs the Home Screen app over HTTPS, 16.4 or later");
+  if (!supported) return fail("support");
 
   const registration = await ensurePushWorker(report);
   if (!registration) return fail("serviceWorker");
