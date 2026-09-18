@@ -534,7 +534,8 @@ const SETUP_FAILURE_MESSAGE: Record<string, string> = {
   permission: "Notifications were not allowed on this device.",
   serviceWorker: "The notification service could not be installed on this device. Open diagnostics for details.",
   registration: "This device could not be registered for notifications. Open diagnostics for details.",
-  verification: "Notification setup did not complete on this device. Open diagnostics for details."
+  verification: "Notification setup did not complete on this device. Open diagnostics for details.",
+  topics: "This device is registered but could not join the notification topics. Open diagnostics for details."
 };
 
 /**
@@ -584,9 +585,17 @@ async function updateNotificationPref(enumId: string) {
     const topicName = firebaseMessaging.generateTopicName(commonUtil.getOMSInstanceName(), facilityId, enumId)
 
     const pref = notificationPrefs.value.find((p: any) => p.enumId === enumId)
-    pref.isEnabled
-      ? await notificationStore.unsubscribeTopic(topicName, import.meta.env.VITE_NOTIF_APP_ID)
-      : await notificationStore.subscribeTopic(topicName, import.meta.env.VITE_NOTIF_APP_ID)
+    const updated = pref.isEnabled
+      ? await notificationStore.unsubscribeTopic(topicName, import.meta.env.VITE_NOTIF_APP_ID, firebaseDeviceId.value)
+      : await notificationStore.subscribeTopic(topicName, import.meta.env.VITE_NOTIF_APP_ID, firebaseDeviceId.value)
+
+    // Returning here also skips the registration block below. That block reads "not toggled on" as
+    // "the user just switched their last topic off" and de-registers the device, so letting a
+    // REFUSED subscribe fall into it would stop push on this device entirely.
+    if (!updated) {
+      commonUtil.showToast(translate('Notification preferences not updated. Please try again.'))
+      return;
+    }
 
     isToggledOn = !pref.isEnabled
     pref.isEnabled = !pref.isEnabled
@@ -607,7 +616,7 @@ async function updateNotificationPref(enumId: string) {
      * inside a fresh gesture.
      */
     if (!allNotificationPrefs.value.length && isToggledOn && firebaseUtil.canInitialiseWithoutPrompting()) {
-      await firebaseUtil.initialiseFirebaseMessaging();
+      await firebaseUtil.initialiseFirebaseMessaging({ userId: userProfile.value?.userId });
     } else if (allNotificationPrefs.value.length == 1 && !isToggledOn) {
       await notificationStore.removeClientRegistrationToken(firebaseDeviceId.value, import.meta.env.VITE_NOTIF_APP_ID)
     }

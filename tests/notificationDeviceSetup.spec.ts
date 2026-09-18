@@ -16,6 +16,8 @@ const api = vi.hoisted(() => vi.fn());
 const initialiseFirebaseApp = vi.hoisted(() => vi.fn());
 const isSupported = vi.hoisted(() => vi.fn());
 const fetchAllNotificationPrefs = vi.hoisted(() => vi.fn(async () => undefined));
+const subscribeTopic = vi.hoisted(() => vi.fn(async (..._args: any[]): Promise<boolean> => true));
+const unsubscribeTopic = vi.hoisted(() => vi.fn(async (..._args: any[]): Promise<boolean> => true));
 const store = vi.hoisted(() => ({ deviceId: "", isFirebaseInitialised: false, allPrefs: [] as any[] }));
 
 vi.mock("@common", () => ({
@@ -34,6 +36,8 @@ vi.mock("@common", () => ({
     set isFirebaseInitialised(value: boolean) { store.isFirebaseInitialised = value; },
     get getAllNotificationPrefs() { return store.allPrefs; },
     fetchAllNotificationPrefs,
+    subscribeTopic: (...args: any[]) => subscribeTopic(...args),
+    unsubscribeTopic: (...args: any[]) => unsubscribeTopic(...args),
     addNotification: vi.fn()
   })
 }));
@@ -45,10 +49,11 @@ vi.mock("firebase/messaging", () => ({
 }));
 
 const {
-  FCM_SW_PATH, FCM_SW_SCOPE, ensurePushWorker, isDeviceSetUp, setUpNotificationsOnThisDevice, waitForActivation
+  FCM_SW_PATH, FCM_SW_SCOPE, ensurePushWorker, isDeviceSetUp, setUpNotificationsOnThisDevice, syncDeviceTopicSubscriptions, waitForActivation
 } = await import("../src/utils/firebaseUtil");
 
 const CACHE_KEY = "bopis.fcm.registeredToken";
+const TOPIC = "oms-100013-NEW_BOPIS_ODR";
 
 /** A ServiceWorker whose state the test controls and can advance. */
 function fakeWorker(state = "activated") {
@@ -125,7 +130,8 @@ beforeEach(() => {
   api.mockReset(); api.mockResolvedValue({ status: 200, data: {} });
   initialiseFirebaseApp.mockReset();
   isSupported.mockReset(); isSupported.mockResolvedValue(true);
-  fetchAllNotificationPrefs.mockClear();
+  fetchAllNotificationPrefs.mockClear(); subscribeTopic.mockReset(); unsubscribeTopic.mockReset();
+  subscribeTopic.mockResolvedValue(true); unsubscribeTopic.mockResolvedValue(true);
   store.deviceId = ""; store.isFirebaseInitialised = false; store.allPrefs = [];
   vi.stubEnv("VITE_FIREBASE_CONFIG", JSON.stringify({ apiKey: "key", projectId: "p" }));
   vi.stubEnv("VITE_FIREBASE_VAPID_KEY", "VAPID");
@@ -139,11 +145,17 @@ describe("setUpNotificationsOnThisDevice — the whole chain from one tap", () =
     installNotification("default", "granted");
     const { register } = installServiceWorker([]);
     sdkIssuesToken("TOKEN1");
+    // The user already has the topic on another device; a fresh device inherits none of it by itself.
+    store.allPrefs = [{ topic: TOPIC, deviceId: "OTHER", receiveNotifications: "Y" }];
 
     const result = await setUpNotificationsOnThisDevice({ userId: "100410" });
 
     expect(result.ok).toBe(true);
     expect(result.failedStep).toBeUndefined();
+    // Joined for THIS device, after the token existed.
+    expect(subscribeTopic).toHaveBeenCalledWith(TOPIC, "BOPIS", "DEVICE1");
+    expect(subscribeTopic.mock.invocationCallOrder[0]).toBeGreaterThan(api.mock.invocationCallOrder[api.mock.calls.length - 1]);
+    expect(result.steps.find((s) => s.label === "This device joined the user's topics")).toMatchObject({ ok: true, detail: "1 joined, 0 already on, 0 failed" });
     // The worker was made active BEFORE the SDK was asked for a token.
     expect(register).toHaveBeenCalledWith(FCM_SW_PATH, { scope: FCM_SW_SCOPE });
     expect(register.mock.invocationCallOrder[0]).toBeLessThan(initialiseFirebaseApp.mock.invocationCallOrder[0]);
@@ -361,5 +373,84 @@ describe("isDeviceSetUp — facts, not flags", () => {
     localStorage.setItem(CACHE_KEY, "TOKEN1");
 
     await expect(isDeviceSetUp()).resolves.toBe(true);
+  });
+});
+
+describe("syncDeviceTopicSubscriptions — this device joins what the user has on anywhere", () => {
+  const row = (topic: string, deviceId: string, receiveNotifications = "Y") => ({ topic, deviceId, receiveNotifications });
+
+  it("joins the topics another device has on, for THIS device, and leaves the ones already here", async () => {
+    store.deviceId = "DEVICE1";
+    store.allPrefs = [row(TOPIC, "OTHER"), row("oms-100013-OPEN_BOPIS_ODR", "DEVICE1"), row("oms-100013-RTP_BOPIS_ODR", "OTHER", "N")];
+
+    const result = await syncDeviceTopicSubscriptions({ userId: "100410" });
+
+    expect(subscribeTopic.mock.calls).toEqual([[TOPIC, "BOPIS", "DEVICE1"]]);
+    expect(unsubscribeTopic).not.toHaveBeenCalled();
+    expect(result).toMatchObject({ deviceId: "DEVICE1", joined: [TOPIC], unchanged: ["oms-100013-OPEN_BOPIS_ODR"], rejoined: [], failed: [] });
+    // Reads cross-device first (what the user wants), then narrows the store back to this device.
+    expect(fetchAllNotificationPrefs.mock.calls).toEqual([["BOPIS", "100410"], ["BOPIS", "100410", "DEVICE1"]]);
+  });
+
+  it("re-joins the topics this device already has only when asked, because a row can predate the token", async () => {
+    store.deviceId = "DEVICE1";
+    store.allPrefs = [row(TOPIC, "DEVICE1")];
+
+    await syncDeviceTopicSubscriptions({ userId: "100410" });
+    expect(subscribeTopic).not.toHaveBeenCalled();
+
+    const result = await syncDeviceTopicSubscriptions({ userId: "100410", rejoin: true });
+    expect(unsubscribeTopic.mock.calls).toEqual([[TOPIC, "BOPIS", "DEVICE1"]]);
+    expect(subscribeTopic.mock.calls).toEqual([[TOPIC, "BOPIS", "DEVICE1"]]);
+    expect(unsubscribeTopic.mock.invocationCallOrder[0]).toBeLessThan(subscribeTopic.mock.invocationCallOrder[0]);
+    expect(result.rejoined).toEqual([TOPIC]);
+  });
+
+  it("reports a topic it could not join and still tries the rest", async () => {
+    store.deviceId = "DEVICE1";
+    store.allPrefs = [row(TOPIC, "OTHER"), row("oms-100013-OPEN_BOPIS_ODR", "OTHER")];
+    // The store reports failure rather than throwing, so a refused subscribe never de-registers the device.
+    subscribeTopic.mockImplementation(async (topic: string) => topic !== TOPIC);
+
+    const result = await syncDeviceTopicSubscriptions({ userId: "100410" });
+
+    expect(result.failed).toEqual([TOPIC]);
+    expect(result.joined).toEqual(["oms-100013-OPEN_BOPIS_ODR"]);
+  });
+
+  it("does nothing without a device id: there is no device to subscribe", async () => {
+    store.deviceId = "";
+    store.allPrefs = [row(TOPIC, "OTHER")];
+    const result = await syncDeviceTopicSubscriptions({ userId: "100410" });
+    expect(subscribeTopic).not.toHaveBeenCalled();
+    expect(fetchAllNotificationPrefs).not.toHaveBeenCalled();
+    expect(result.joined).toEqual([]);
+  });
+
+  it("setup fails at 'topics' when this device cannot join one — a device that cannot receive is not set up", async () => {
+    installNotification("default", "granted");
+    installServiceWorker([]);
+    sdkIssuesToken("TOKEN1");
+    store.allPrefs = [row(TOPIC, "OTHER")];
+    subscribeTopic.mockResolvedValue(false);
+
+    const result = await setUpNotificationsOnThisDevice({ userId: "100410" });
+
+    expect(result).toMatchObject({ ok: false, failedStep: "topics" });
+    expect(result.steps.find((s) => s.label === "This device joined the user's topics")).toMatchObject({ ok: false, detail: "0 joined, 0 already on, 1 failed" });
+  });
+});
+
+describe("a refused subscribe is reported, never thrown", () => {
+  it("still surfaces a thrown store error as a failed topic rather than aborting the sync", async () => {
+    store.deviceId = "DEVICE1";
+    store.allPrefs = [{ topic: TOPIC, deviceId: "OTHER", receiveNotifications: "Y" },
+                      { topic: "oms-100013-OPEN_BOPIS_ODR", deviceId: "OTHER", receiveNotifications: "Y" }];
+    subscribeTopic.mockImplementation(async (topic: string) => { if (topic === TOPIC) throw new Error("boom"); return true; });
+
+    const result = await syncDeviceTopicSubscriptions({ userId: "100410" });
+
+    expect(result.failed).toEqual([TOPIC]);
+    expect(result.joined).toEqual(["oms-100013-OPEN_BOPIS_ODR"]);
   });
 });

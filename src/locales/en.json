@@ -445,5 +445,6 @@
   "Notification sound is unavailable or disabled.": "Notification sound is unavailable or disabled.",
   "Test the announcement": "Test the announcement",
   "New order received": "New order received",
-  "Announce notifications": "Announce notifications"
+  "Announce notifications": "Announce notifications",
+  "This device is registered but could not join the notification topics. Open diagnostics for details.": "This device is registered but could not join the notification topics. Open diagnostics for details."
 }
