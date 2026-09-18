@@ -397,5 +397,10 @@
   "Worn Display": "すり切れたディスプレイ",
   "Yes": "はい",
   "You do not have permission to access this page": "このページにアクセスする権限がありません",
-  "Zipcode": "郵便番号"
+  "Zipcode": "郵便番号",
+  "Notification sound played.": "Notification sound played.",
+  "Notification sound is unavailable or disabled.": "Notification sound is unavailable or disabled.",
+  "Test the announcement": "Test the announcement",
+  "New order received": "新しい注文が入りました",
+  "Announce notifications": "Announce notifications"
 }

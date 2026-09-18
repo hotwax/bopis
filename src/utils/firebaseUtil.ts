@@ -1,5 +1,6 @@
 import { api, commonUtil, firebaseMessaging, logger, translate, useNotificationStore } from "@common";
 import { DateTime } from "luxon";
+import { announceNewOrder, attachSpeechPrimer, showForegroundSystemNotification } from "@/utils/notificationAlert";
 import { getApp, getApps } from "firebase/app";
 import { getMessaging, getToken, isSupported } from "firebase/messaging";
 
@@ -361,6 +362,8 @@ const initialiseFirebaseMessaging = async (): Promise<boolean> => {
   // Attached before any early return below: the watcher must survive a reload that skips
   // initialisation, which is precisely the lifecycle where a rotated token goes unnoticed.
   attachResumeWatcher();
+  // Speech has to be unlocked by a gesture before a push can ever use it, and a push brings none.
+  attachSpeechPrimer();
 
   // if (notificationStore.isFirebaseInitialised) return;
 
@@ -391,8 +394,22 @@ const initialiseFirebaseMessaging = async (): Promise<boolean> => {
         // foreground. This app shows its own toast carrying the message instead, so the flag is left
         // off the stored entry; nothing else reads it.
         notificationStore.addNotification({ ...notification.notification, time: DateTime.now().toMillis() });
-        // Background messages already surface through the service worker's system notification.
         if (notification.isForeground) {
+          // Background messages already surface through the service worker. Foreground messages
+          // need the same system-level alert because a store associate may be looking at another
+          // application view when the order arrives.
+          //
+          // The banner must be shown through the FCM worker specifically: it owns the
+          // notificationclick handler, so a banner shown through any other registration would do
+          // nothing when tapped.
+          let pushWorker: ServiceWorkerRegistration | null = null;
+          try {
+            pushWorker = findPushWorkerRegistration(await navigator.serviceWorker?.getRegistrations?.() ?? []) ?? null;
+          } catch (error) {
+            logger.warn("Could not resolve the push worker for the foreground alert", error);
+          }
+          await showForegroundSystemNotification(notification.notification, pushWorker);
+          announceNewOrder();
           await showNotificationToast(notification.notification);
         }
       }
