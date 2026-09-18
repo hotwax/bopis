@@ -11,11 +11,15 @@ vi.mock("@common", () => ({
   i18n: { global: { locale } },
   logger: { warn: vi.fn(), error: vi.fn() }
 }));
+vi.mock("@/utils/indoreEasterEgg", () => ({
+  pickIndoriLine: () => ({ text: "नया ऑर्डर आ गया", fallbackText: "Naya order aa gaya" })
+}));
 
 const {
   ANNOUNCEMENT_GAP_MS,
   CHIME_DURATION_MS,
   SPEECH_START_TIMEOUT_MS,
+  announceIndoriTest,
   announceNewOrder,
   announcementLang,
   attachSpeechPrimer,
@@ -156,6 +160,47 @@ describe("speakNewOrder", () => {
     // and it clears the wedged queue so the next attempt has a chance
     expect(cancel).toHaveBeenCalled();
     vi.useRealTimers();
+  });
+
+  it("always speaks the production phrase — never the test-only lines", async () => {
+    // What a store hears in service must be exactly what it heard when it tested.
+    await expect(speakNewOrder()).resolves.toBe(true);
+    expect(spoken[0].text).toBe("New order received");
+    expect(spoken[0].lang).toBe("en-US");
+  });
+});
+
+describe("announceIndoriTest — the settings test button on a device in India", () => {
+  it("chimes, then reads the line in Devanagari with a Hindi voice", async () => {
+    vi.useFakeTimers();
+    const pending = announceIndoriTest();
+    expect(audio.notes).toHaveLength(2);
+    await vi.advanceTimersByTimeAsync(CHIME_DURATION_MS + ANNOUNCEMENT_GAP_MS + 1);
+    await expect(pending).resolves.toBe(true);
+    expect(spoken).toHaveLength(1);
+    expect(spoken[0].text).toBe("नया ऑर्डर आ गया");
+    expect(spoken[0].lang).toBe("hi-IN");
+    vi.useRealTimers();
+  });
+
+  it("falls back to the romanised line with an Indian-English voice if the Hindi one never starts", async () => {
+    vi.useFakeTimers();
+    installAudio("suspended");   // no chime, so the speech path is isolated
+    let attempts = 0;
+    speak = vi.fn((u: any) => { spoken.push(u); attempts++; if (attempts === 2) u.onstart?.(); });   // 1st (hi-IN) wedges, 2nd starts
+    Object.defineProperty(window, "speechSynthesis", { value: { speak, cancel }, configurable: true });
+    const pending = announceIndoriTest();
+    await vi.advanceTimersByTimeAsync(SPEECH_START_TIMEOUT_MS + 1);
+    await expect(pending).resolves.toBe(true);
+    expect(spoken.map((u) => u.lang)).toEqual(["hi-IN", "en-IN"]);
+    expect(spoken[1].text).toBe("Naya order aa gaya");
+    vi.useRealTimers();
+  });
+
+  it("respects the sound preference like the real alert does", async () => {
+    setNotificationSoundEnabled(false);
+    await expect(announceIndoriTest()).resolves.toBe(false);
+    expect(speak).not.toHaveBeenCalled();
   });
 });
 
