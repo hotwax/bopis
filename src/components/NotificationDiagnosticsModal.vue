@@ -100,6 +100,7 @@ import {
 import { api, commonUtil, firebaseMessaging, logger, translate, useNotificationStore } from "@common";
 import { useUserStore } from "@/store/user";
 import { useProductStore } from "@/store/productStore";
+import { FCM_SW_PATH, FCM_SW_SCOPE, waitForActivation } from "@/utils/firebaseUtil";
 
 type Row = { label: string; value: string };
 type Step = { label: string; ok: boolean; detail?: string };
@@ -675,36 +676,8 @@ async function showLocalTestNotification() {
   }
 }
 
-// The Firebase SDK hardcodes both of these, so registering at exactly this path
-// and scope means getToken() reuses what we register here instead of making its own.
-const FCM_SW_PATH = "/firebase-messaging-sw.js";
-const FCM_SW_SCOPE = "/firebase-cloud-messaging-push-scope";
-
-// getToken() calls pushManager.subscribe() immediately after registering, without
-// waiting for the worker to reach "activated". Subscribing against a registration
-// whose active worker is still null throws AbortError, which is why a device can
-// fail here forever while everything else looks healthy.
-function waitForActivation(registration: any, timeoutMs = 10000): Promise<boolean> {
-  if (registration.active) return Promise.resolve(true);
-
-  const worker = registration.installing || registration.waiting;
-  if (!worker) return Promise.resolve(false);
-
-  return new Promise<boolean>((resolve) => {
-    const done = (value: boolean) => {
-      worker.removeEventListener("statechange", onStateChange);
-      clearTimeout(timer);
-      resolve(value);
-    };
-    const onStateChange = () => {
-      if (worker.state === "activated") done(true);
-      else if (worker.state === "redundant") done(false);
-    };
-    const timer = setTimeout(() => done(!!registration.active), timeoutMs);
-
-    worker.addEventListener("statechange", onStateChange);
-  });
-}
+// FCM_SW_PATH, FCM_SW_SCOPE and waitForActivation live in firebaseUtil so the settings button and
+// this screen repair the worker the same way.
 
 async function repairServiceWorker() {
   isBusy.value = true;
