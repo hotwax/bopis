@@ -3,6 +3,8 @@ const escapeSolrQuery = (query: any) => {
   return query.replace(/([+\-!(){}\[\]^"~*?:\/\\|&])/g, "\\$1");
 }
 
+const hasValue = (value: any) => value !== undefined && value !== null && value !== '';
+
 const prepareOrderQuery = (params: any) => {
   const viewSize = params.viewSize ? params.viewSize : process.env.VUE_APP_VIEW_SIZE;
   const viewIndex = params.viewIndex ? params.viewIndex : 0;
@@ -20,61 +22,59 @@ const prepareOrderQuery = (params: any) => {
         "start": viewIndex * viewSize
       },
       "query":"(*:*)",
-      "filter": [`docType: ${params.docType ? escapeSolrQuery(params.docType) : 'OISGIR'}`]
+      // These fields are caller-owned OMS identifiers or Solr expressions. Escaping them here
+      // changes valid values such as the hard-coded boolean fulfillment expression below. Only
+      // free text entered into the search box should be escaped at this boundary.
+      "filter": [`docType: ${params.docType || 'OISGIR'}`]
     }
   } as any
 
-  if (params.queryString) {
+  if (hasValue(params.queryString)) {
     payload.json.query = `(*${escapeSolrQuery(params.queryString)}*)`
     payload.json.params['qf'] = "productId productName virtualProductName orderId productSku customerId customerName customerPartyName search_customerPartyName search_orderIdentifications goodIdentifications"
     payload.json.params['defType'] = "edismax"
   }
 
   if (params.shipmentMethodTypeId) {
-    payload.json.filter.push(`shipmentMethodTypeId: ${escapeSolrQuery(params.shipmentMethodTypeId)}`)
+    payload.json.filter.push(`shipmentMethodTypeId: ${params.shipmentMethodTypeId}`)
   }
 
   if (params.orderTypeId) {
-    payload.json.filter.push(`orderTypeId: ${escapeSolrQuery(params.orderTypeId)}`)
+    payload.json.filter.push(`orderTypeId: ${params.orderTypeId}`)
   }
 
   if (params.orderStatusId) {
-    payload.json.filter.push(`orderStatusId: ${escapeSolrQuery(params.orderStatusId)}`)
+    payload.json.filter.push(`orderStatusId: ${params.orderStatusId}`)
   }
 
   if (params['-shipmentStatusId']) {
-    payload.json.filter.push(`-shipmentStatusId: ${escapeSolrQuery(params['-shipmentStatusId'])}`)
+    payload.json.filter.push(`-shipmentStatusId: ${params['-shipmentStatusId']}`)
   }
 
   if (params.shipmentStatusId) {
-    payload.json.filter.push(`shipmentStatusId: ${escapeSolrQuery(params.shipmentStatusId)}`)
+    payload.json.filter.push(`shipmentStatusId: ${params.shipmentStatusId}`)
   }
 
   if (params['-fulfillmentStatus']) {
-    const fulfillmentStatus = params['-fulfillmentStatus'];
-    if (typeof fulfillmentStatus === 'string' && (fulfillmentStatus.includes(' OR ') || fulfillmentStatus.includes(' AND ') || (fulfillmentStatus.startsWith('(') && fulfillmentStatus.endsWith(')')))) {
-      payload.json.filter.push(`-fulfillmentStatus: ${fulfillmentStatus}`)
-    } else {
-      payload.json.filter.push(`-fulfillmentStatus: ${escapeSolrQuery(fulfillmentStatus)}`)
-    }
+    payload.json.filter.push(`-fulfillmentStatus: ${params['-fulfillmentStatus']}`)
   }
 
   if (params.facilityId) {
-    payload.json.filter.push(`facilityId: ${escapeSolrQuery(params.facilityId)}`)
+    payload.json.filter.push(`facilityId: ${params.facilityId}`)
   }
 
   if (params.productId) {
-    payload.json.filter.push(`productId: ${escapeSolrQuery(params.productId)}`)
+    payload.json.filter.push(`productId: ${params.productId}`)
   }
 
   if (params.filters) {
     Object.keys(params.filters).forEach((key) => {
-      payload.json.filter.push(`${escapeSolrQuery(key)}: ${escapeSolrQuery(params.filters[key])}`);
+      payload.json.filter.push(`${key}: ${params.filters[key]}`);
     });
   }
   
   if(params.orderIds){
-    payload.json.filter.push(`orderId: (${params.orderIds.map((orderId: string) => escapeSolrQuery(orderId)).join(' OR ')})`)
+    payload.json.filter.push(`orderId: (${params.orderIds.join(' OR ')})`)
   }
 
   if(params.facet) {
@@ -82,23 +82,23 @@ const prepareOrderQuery = (params: any) => {
   }
 
   if (params.orderPartSeqId) {
-    payload.json.filter.push(`shipGroupSeqId: ${escapeSolrQuery(params.orderPartSeqId)}`)
+    payload.json.filter.push(`shipGroupSeqId: ${params.orderPartSeqId}`)
   }
 
   if (params.orderId) {
-    payload.json.filter.push(`orderId: ${escapeSolrQuery(params.orderId)}`)
+    payload.json.filter.push(`orderId: ${params.orderId}`)
   }
 
   if (params.shipGroupSeqId) {
-    payload.json.filter.push(`shipGroupSeqId: ${escapeSolrQuery(params.shipGroupSeqId)}`)
+    payload.json.filter.push(`shipGroupSeqId: ${params.shipGroupSeqId}`)
   }
 
   if (params['-shipGroupSeqId']) {
-    payload.json.filter.push(`-shipGroupSeqId: ${escapeSolrQuery(params['-shipGroupSeqId'])}`)
+    payload.json.filter.push(`-shipGroupSeqId: ${params['-shipGroupSeqId']}`)
   }
 
   if(params.orderItemStatusId) {
-    payload.json.filter.push(`orderItemStatusId: ${escapeSolrQuery(params.orderItemStatusId)}`)
+    payload.json.filter.push(`orderItemStatusId: ${params.orderItemStatusId}`)
   }
 
   return payload
