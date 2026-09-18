@@ -1,5 +1,6 @@
-import { api, commonUtil, firebaseMessaging, logger, useNotificationStore } from "@common";
+import { api, commonUtil, firebaseMessaging, logger, translate, useNotificationStore } from "@common";
 import { DateTime } from "luxon";
+import { announceNewOrder, attachSpeechPrimer, showForegroundSystemNotification } from "@/utils/notificationAlert";
 import { getApp, getApps } from "firebase/app";
 import { getMessaging, getToken, isSupported } from "firebase/messaging";
 
@@ -171,6 +172,42 @@ function attachResumeWatcher() {
   window.addEventListener("focus", () => refreshRegistrationToken());
 }
 
+const NOTIFICATIONS_PATH = "/notifications";
+
+/**
+ * Backend copy has no length limit, so it is trimmed to keep the toast about four lines tall
+ * next to its buttons at phone width. The notifications page carries the untrimmed text.
+ */
+const TOAST_MAX_LENGTH = 100;
+
+function buildToastMessage(payload: any) {
+  const title = payload?.data?.title?.trim() || "";
+  const body = payload?.data?.body?.trim() || "";
+
+  // title and body are backend copy, not app strings, so only the fallback is translated.
+  const message = [title, body].filter(Boolean).join(": ");
+  if (!message) return translate("New notification received.");
+
+  return message.length > TOAST_MAX_LENGTH ? `${message.slice(0, TOAST_MAX_LENGTH - 1).trimEnd()}\u2026` : message;
+}
+
+async function showNotificationToast(payload: any) {
+  await commonUtil.showToast(buildToastMessage(payload), {
+    canDismiss: true,
+    buttons: [{
+      text: translate("View"),
+      handler: async () => {
+        // Loaded on tap rather than imported at module scope: the router pulls in every view, and a
+        // token utility must not carry that graph — it is imported by login and by unit tests that
+        // mock @common. Which order the message is about is not in the payload, so the bell page
+        // is as specific as this can get.
+        const { default: router } = await import("@/router");
+        if (router.currentRoute.value.path !== NOTIFICATIONS_PATH) router.push({ path: NOTIFICATIONS_PATH });
+      }
+    }]
+  });
+}
+
 /**
  * Whether messaging can be initialised WITHOUT showing a permission prompt.
  *
@@ -325,6 +362,8 @@ const initialiseFirebaseMessaging = async (): Promise<boolean> => {
   // Attached before any early return below: the watcher must survive a reload that skips
   // initialisation, which is precisely the lifecycle where a rotated token goes unnoticed.
   attachResumeWatcher();
+  // Speech has to be unlocked by a gesture before a push can ever use it, and a push brings none.
+  attachSpeechPrimer();
 
   // if (notificationStore.isFirebaseInitialised) return;
 
@@ -350,8 +389,29 @@ const initialiseFirebaseMessaging = async (): Promise<boolean> => {
         // app was closed: registerToken replaces the row when the token no longer matches.
         tokenRegistered = await registerToken(token);
       },
-      (notification: any) => {
-        notificationStore.addNotification({...notification.notification, isForeground: notification.isForeground, time: DateTime.now().toMillis()});
+      async (notification: any) => {
+        // The shared store shows a fixed "New notification received." toast for an entry flagged as
+        // foreground. This app shows its own toast carrying the message instead, so the flag is left
+        // off the stored entry; nothing else reads it.
+        notificationStore.addNotification({ ...notification.notification, time: DateTime.now().toMillis() });
+        if (notification.isForeground) {
+          // Background messages already surface through the service worker. Foreground messages
+          // need the same system-level alert because a store associate may be looking at another
+          // application view when the order arrives.
+          //
+          // The banner must be shown through the FCM worker specifically: it owns the
+          // notificationclick handler, so a banner shown through any other registration would do
+          // nothing when tapped.
+          let pushWorker: ServiceWorkerRegistration | null = null;
+          try {
+            pushWorker = findPushWorkerRegistration(await navigator.serviceWorker?.getRegistrations?.() ?? []) ?? null;
+          } catch (error) {
+            logger.warn("Could not resolve the push worker for the foreground alert", error);
+          }
+          await showForegroundSystemNotification(notification.notification, pushWorker);
+          announceNewOrder();
+          await showNotificationToast(notification.notification);
+        }
       }
     ).then(() => {
       // Only a token the backend accepted makes this device initialised. initialiseFirebaseApp also

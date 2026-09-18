@@ -407,6 +407,7 @@
   "Verdict": "Verdict",
   "Verify that the items in the package are valid and the customer has received their order. Once the order is handed over to the customer it cannot be undone.": "Verify that the items in the package are valid and the customer has received their order.{ space }Once the order is handed over to the customer it cannot be undone.",
   "Version: ": "Version: {appVersion}",
+  "View": "View",
   "View Proof of Delivery": "View Proof of Delivery",
   "Warehouse": "Warehouse",
   "wednesday": "Wednesday",
@@ -423,5 +424,10 @@
   "Notifications are not configured for this build.": "Notifications are not configured for this build.",
   "The notification service could not be installed on this device. Open diagnostics for details.": "The notification service could not be installed on this device. Open diagnostics for details.",
   "This device could not be registered for notifications. Open diagnostics for details.": "This device could not be registered for notifications. Open diagnostics for details.",
-  "Notification setup did not complete on this device. Open diagnostics for details.": "Notification setup did not complete on this device. Open diagnostics for details."
+  "Notification setup did not complete on this device. Open diagnostics for details.": "Notification setup did not complete on this device. Open diagnostics for details.",
+  "Notification sound played.": "Notification sound played.",
+  "Notification sound is unavailable or disabled.": "Notification sound is unavailable or disabled.",
+  "Test the announcement": "Test the announcement",
+  "New order received": "New order received",
+  "Announce notifications": "Announce notifications"
 }
