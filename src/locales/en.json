@@ -425,7 +425,7 @@
   "The notification service could not be installed on this device. Open diagnostics for details.": "The notification service could not be installed on this device. Open diagnostics for details.",
   "This device could not be registered for notifications. Open diagnostics for details.": "This device could not be registered for notifications. Open diagnostics for details.",
   "Notification setup did not complete on this device. Open diagnostics for details.": "Notification setup did not complete on this device. Open diagnostics for details.",
-  "Announce new orders out loud": "Announce new orders out loud",
   "Test the announcement": "Test the announcement",
-  "New order received": "New order received"
+  "New order received": "New order received",
+  "Announce notifications": "Announce notifications"
 }

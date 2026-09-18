@@ -191,7 +191,7 @@
             </ion-item>
             <ion-item lines="none">
               <ion-toggle data-testid="notification-sound-toggle" label-placement="start" :checked="notificationSoundEnabled" @ionChange="updateNotificationSound($event)">
-                {{ translate("Announce new orders out loud") }}
+                {{ translate("Announce notifications") }}
               </ion-toggle>
             </ion-item>
             <ion-item lines="none">

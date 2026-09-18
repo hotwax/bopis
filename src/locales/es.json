@@ -405,7 +405,7 @@
   "Notifications are blocked for this app. The app must be removed from the Home Screen and added again before it can ask a second time.": "Notifications are blocked for this app. The app must be removed from the Home Screen and added again before it can ask a second time.",
   "This device has not been allowed to show notifications yet.": "This device has not been allowed to show notifications yet.",
   "Notifications are blocked for this site. Reset the notification permission for it in your browser settings, then reload.": "Notifications are blocked for this site. Reset the notification permission for it in your browser settings, then reload.",
-  "Announce new orders out loud": "Announce new orders out loud",
   "Test the announcement": "Test the announcement",
-  "New order received": "New order received"
+  "New order received": "New order received",
+  "Announce notifications": "Announce notifications"
 }
