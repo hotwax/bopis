@@ -232,6 +232,10 @@
             {{ translate('Check why notifications are not arriving on this device, and register it from here.') }}
           </ion-card-content>
           <ion-item lines="none">
+            <ion-button fill="outline" :disabled="isSendingTestNotification" @click="confirmSendTestNotification()">
+              <ion-spinner v-if="isSendingTestNotification" slot="start" name="crescent" />
+              {{ translate(isSendingTestNotification ? "Waiting for it to arrive" : "Send a test order notification") }}
+            </ion-button>
             <ion-button fill="outline" @click="openNotificationDiagnostics()">{{ translate("Open diagnostics") }}</ion-button>
             <ion-button fill="outline" @click="openLogs()">{{ translate("Open logs") }}</ion-button>
           </ion-item>
@@ -252,7 +256,7 @@
 </template>
 
 <script setup lang="ts">
-import { alertController, IonAvatar, IonButton, IonCard, IonCardContent, IonCardHeader, IonCardSubtitle, IonCardTitle, IonContent, IonHeader, IonIcon, IonItem, IonLabel, IonList, IonNote, IonPage, IonTitle, IonToggle, IonToolbar, modalController, onIonViewDidLeave, onIonViewWillEnter } from '@ionic/vue';
+import { alertController, IonAvatar, IonButton, IonCard, IonCardContent, IonCardHeader, IonCardSubtitle, IonCardTitle, IonContent, IonHeader, IonIcon, IonItem, IonLabel, IonList, IonNote, IonPage, IonSpinner, IonTitle, IonToggle, IonToolbar, modalController, onIonViewDidLeave, onIonViewWillEnter } from '@ionic/vue';
 import { computed, onMounted, onUnmounted, ref } from 'vue';
 import { openOutline } from 'ionicons/icons'
 import { DateTime, Duration } from 'luxon';
@@ -275,6 +279,7 @@ import { useOrderStore } from '@/store/order';
 import { useProductStore } from '@/store/productStore';
 import DxpAppVersionInfo from '@/components/DxpAppVersionInfo.vue';
 import { firebaseUtil } from "@/utils/firebaseUtil"
+import { sendTestOrderNotification } from "@/utils/liveNotificationTest"
 import Actions from "@/authorization/actions"
 
 const appInfo = ref(import.meta.env.VITE_VERSION_INFO ? JSON.parse(import.meta.env.VITE_VERSION_INFO) : {} as any);
@@ -435,6 +440,50 @@ function getShipmentMethodConfig() {
   }
   return {};
 }
+
+const isSendingTestNotification = ref(false);
+
+/**
+ * The backend publishes to the facility topic, so this is a real push to every device subscribed at
+ * the store, not a private ping. Say so before firing it.
+ */
+async function confirmSendTestNotification() {
+  const facilityName = (currentFacility.value as any)?.facilityName || translate("this facility");
+  const alert = await alertController.create({
+    header: translate("Send a test order notification?"),
+    message: translate("This sends a real new-order notification to every device subscribed at", { facilityName }),
+    buttons: [
+      { text: translate("Cancel"), role: "cancel" },
+      { text: translate("Send"), handler: () => { sendTestNotification(); } }
+    ]
+  });
+  await alert.present();
+}
+
+async function sendTestNotification() {
+  isSendingTestNotification.value = true;
+  try {
+    const result = await sendTestOrderNotification({ facilityId: (currentFacility.value as any)?.facilityId });
+    if (result.ok) {
+      commonUtil.showToast(translate("Received on this device after", { seconds: ((result.receivedAfterMs ?? 0) / 1000).toFixed(1), orderName: result.orderName || result.orderId }));
+      return;
+    }
+    commonUtil.showToast(translate(LIVE_TEST_FAILURE_MESSAGE[result.failedStep ?? "send"], { detail: result.detail || "" }));
+  } catch (error) {
+    logger.error("Live notification test threw", error);
+    commonUtil.showToast(translate("The test notification could not be sent."));
+  } finally {
+    isSendingTestNotification.value = false;
+  }
+}
+
+// One message per link, so the toast says which half of the round trip failed.
+const LIVE_TEST_FAILURE_MESSAGE: Record<string, string> = {
+  device: "This device is not registered for notifications, so nothing was sent. Set it up above first.",
+  order: "No open pickup order at this facility to send a notification for.",
+  send: "The server refused to send the test notification.",
+  receipt: "The server accepted it, but nothing reached this device. Open diagnostics."
+};
 
 async function openNotificationDiagnostics() {
   const diagnosticsModal = await modalController.create({
