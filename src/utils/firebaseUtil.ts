@@ -1,6 +1,6 @@
 import { api, commonUtil, firebaseMessaging, logger, translate, useNotificationStore } from "@common";
 import { useNotificationHistoryStore } from "@/store/notificationHistory";
-import { attachSpeechPrimer, showForegroundSystemNotification, speakNewOrder } from "@/utils/notificationAlert";
+import { announceNewOrder, attachSpeechPrimer, showForegroundSystemNotification } from "@/utils/notificationAlert";
 import { getApp, getApps } from "firebase/app";
 import { getMessaging, getToken, isSupported } from "firebase/messaging";
 
@@ -408,7 +408,7 @@ const initialiseFirebaseMessaging = async (): Promise<boolean> => {
             logger.warn("Could not resolve the push worker for the foreground alert", error);
           }
           await showForegroundSystemNotification(notification.notification, pushWorker);
-          speakNewOrder();
+          announceNewOrder();
           await showNotificationToast(notification.notification);
         }
       }

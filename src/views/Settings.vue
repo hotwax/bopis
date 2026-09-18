@@ -283,7 +283,7 @@ import { useOrderStore } from '@/store/order';
 import { useProductStore } from '@/store/productStore';
 import DxpAppVersionInfo from '@/components/DxpAppVersionInfo.vue';
 import { firebaseUtil } from "@/utils/firebaseUtil"
-import { isNotificationSoundEnabled, primeSpeechSynthesis, setNotificationSoundEnabled, speakNewOrder } from "@/utils/notificationAlert";
+import { announceNewOrder, isNotificationSoundEnabled, primeSpeechSynthesis, setNotificationSoundEnabled } from "@/utils/notificationAlert";
 import Actions from "@/authorization/actions"
 
 const appInfo = ref(import.meta.env.VITE_VERSION_INFO ? JSON.parse(import.meta.env.VITE_VERSION_INFO) : {} as any);
@@ -423,7 +423,7 @@ function updateNotificationSound(event: CustomEvent) {
 
 function testNotificationSound() {
   primeSpeechSynthesis();
-  const played = speakNewOrder();
+  const played = announceNewOrder();
   commonUtil.showToast(translate(played ? "Notification sound played." : "Notification sound is unavailable or disabled."));
 }
 

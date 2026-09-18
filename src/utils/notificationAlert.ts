@@ -37,37 +37,124 @@ export function announcementLang(phrase: string, appLocale: string): string {
   return phrase === ANNOUNCEMENT_SOURCE ? "en-US" : (appLocale || "en-US");
 }
 
+const hasAudio = () => typeof window !== "undefined"
+  && !!(window.AudioContext || (window as any).webkitAudioContext);
+
 let isSpeechPrimed = false;
 let isPrimerAttached = false;
+let audioContext: AudioContext | null = null;
 
 /**
- * Unlock speech for this app session.
+ * One AudioContext for the app's lifetime.
  *
- * Safari refuses `speechSynthesis.speak()` until it has been called once inside a user gesture,
- * and the refusal is silent. A push arrives without any gesture, so without this the first order
- * of a session would never be announced — the one a store associate most needs. A zero-volume
- * utterance is inaudible but still counts as the unlocking call.
- *
- * Must run synchronously inside a gesture handler: an await beforehand can end the transient
- * activation, the same way it does for the notification permission prompt.
+ * Browsers cap how many can exist, so a fresh one per notification eventually fails outright.
+ * It starts suspended on iOS and is resumed by the primer below, inside a gesture.
  */
-export function primeSpeechSynthesis(): boolean {
-  if (isSpeechPrimed || !hasSpeech()) return false;
+function getAudioContext(): AudioContext | null {
+  if (!hasAudio()) return null;
+  try {
+    if (!audioContext) audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+    return audioContext;
+  } catch (error) {
+    logger.warn("Could not create the audio context", error);
+    return null;
+  }
+}
+
+/**
+ * The chime, as data so the wait before speaking can be derived from it rather than guessed —
+ * change a note and the gap before the announcement follows automatically.
+ */
+const CHIME_NOTES = [
+  { frequency: 880, startOffset: 0, duration: 0.18 },
+  { frequency: 1320, startOffset: 0.10, duration: 0.40 }
+];
+
+/** How long the chime actually rings for. */
+export const CHIME_DURATION_MS = Math.max(...CHIME_NOTES.map((n) => n.startOffset + n.duration)) * 1000;
+
+/** A beat of silence after it, so the tone and the words are heard as two things, not one muddle. */
+export const ANNOUNCEMENT_GAP_MS = 150;
+
+/** One note of the chime: a sine tone with a fast attack and an exponential decay. */
+function scheduleNote(context: AudioContext, frequency: number, startOffset: number, duration: number) {
+  const oscillator = context.createOscillator();
+  const gain = context.createGain();
+  oscillator.type = "sine";
+  oscillator.frequency.value = frequency;
+
+  // Ramped rather than switched on: an instant gain change is audible as a click.
+  const startAt = context.currentTime + startOffset;
+  gain.gain.setValueAtTime(0.0001, startAt);
+  gain.gain.exponentialRampToValueAtTime(0.35, startAt + 0.012);
+  gain.gain.exponentialRampToValueAtTime(0.0001, startAt + duration);
+
+  oscillator.connect(gain);
+  gain.connect(context.destination);
+  oscillator.start(startAt);
+  oscillator.stop(startAt + duration + 0.05);
+}
+
+/**
+ * The two-note cue that precedes the announcement — the same shape as the till sound Shopify uses.
+ *
+ * Synthesised rather than shipped as an audio file: no asset to bundle or license, and it works
+ * offline. Returns false when audio is unavailable or still locked, so the caller can tell the
+ * difference between "played" and "silently did nothing".
+ */
+export function playNewOrderChime(): boolean {
+  const context = getAudioContext();
+  if (!context || context.state === "suspended") return false;
 
   try {
-    const utterance = new SpeechSynthesisUtterance(" ");
-    utterance.volume = 0;
-    window.speechSynthesis.speak(utterance);
-    isSpeechPrimed = true;
+    CHIME_NOTES.forEach((note) => scheduleNote(context, note.frequency, note.startOffset, note.duration));
     return true;
   } catch (error) {
-    logger.warn("Could not prime speech synthesis", error);
+    logger.warn("Could not play the new order chime", error);
     return false;
   }
 }
 
 /**
- * Prime on the first tap anywhere in the app, once per session.
+ * Unlock sound for this app session — both the chime and the spoken announcement.
+ *
+ * Safari refuses `speechSynthesis.speak()` until it has been called once inside a user gesture,
+ * and an AudioContext stays suspended on the same rule. Both refusals are silent. A push arrives
+ * without any gesture, so without this the first order of a session would make no sound at all —
+ * the one a store associate most needs. A zero-volume utterance is inaudible but still counts as
+ * the unlocking call.
+ *
+ * Must run synchronously inside a gesture handler: an await beforehand can end the transient
+ * activation, the same way it does for the notification permission prompt.
+ */
+export function primeSpeechSynthesis(): boolean {
+  let primedSomething = false;
+
+  // Resumed every call, not just the first: iOS re-suspends the context when the app is
+  // backgrounded, so a session that has already primed can still come back locked.
+  const context = getAudioContext();
+  if (context && context.state === "suspended") {
+    context.resume().catch((error) => logger.warn("Could not resume the audio context", error));
+    primedSomething = true;
+  }
+
+  if (!isSpeechPrimed && hasSpeech()) {
+    try {
+      const utterance = new SpeechSynthesisUtterance(" ");
+      utterance.volume = 0;
+      window.speechSynthesis.speak(utterance);
+      isSpeechPrimed = true;
+      primedSomething = true;
+    } catch (error) {
+      logger.warn("Could not prime speech synthesis", error);
+    }
+  }
+
+  return primedSomething;
+}
+
+/**
+ * Prime on the first tap anywhere in the app.
  *
  * Relying on someone pressing the test button in Settings only works for the session in which
  * they press it. An associate who opens the app and waits for orders presses nothing, and that is
@@ -90,6 +177,26 @@ export function attachSpeechPrimer(): void {
 export function resetSpeechPrimingForTest(): void {
   isSpeechPrimed = false;
   isPrimerAttached = false;
+  audioContext = null;
+}
+
+/**
+ * The full alert: the chime, then the spoken announcement.
+ *
+ * The tone carries across a shop floor and is recognised before the words are; the words say which
+ * kind of alert it was. The speech waits for the chime to finish — started together they overlap
+ * and neither is intelligible. When there is no chime to wait for, it speaks immediately.
+ *
+ * Returns true when something will sound, since a device with no speech voices still gets the
+ * chime and a device with no Web Audio still gets the words.
+ */
+export function announceNewOrder(): boolean {
+  if (!isNotificationSoundEnabled()) return false;
+
+  if (!playNewOrderChime()) return speakNewOrder();
+
+  window.setTimeout(() => speakNewOrder(), CHIME_DURATION_MS + ANNOUNCEMENT_GAP_MS);
+  return true;
 }
 
 export function speakNewOrder(): boolean {

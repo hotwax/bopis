@@ -13,8 +13,12 @@ vi.mock("@common", () => ({
 }));
 
 const {
+  ANNOUNCEMENT_GAP_MS,
+  CHIME_DURATION_MS,
+  announceNewOrder,
   announcementLang,
   attachSpeechPrimer,
+  playNewOrderChime,
   isNotificationSoundEnabled,
   primeSpeechSynthesis,
   resetSpeechPrimingForTest,
@@ -26,6 +30,31 @@ const {
 let spoken: any[] = [];
 let speak: any;
 let cancel: any;
+let audio: { state: string; resume: any; created: number; notes: any[] };
+
+/** A minimal Web Audio stub that records every scheduled note. */
+function installAudio(state: "running" | "suspended" = "running") {
+  audio = { state, resume: vi.fn(async () => { audio.state = "running"; }), created: 0, notes: [] };
+  const ctx = {
+    get state() { return audio.state; },
+    resume: (...a: any[]) => audio.resume(...a),
+    currentTime: 0,
+    createOscillator: () => {
+      const osc: any = { type: "", frequency: { value: 0 }, connect: vi.fn(), start: vi.fn((t: number) => { osc.startedAt = t; }), stop: vi.fn() };
+      audio.notes.push(osc);
+      return osc;
+    },
+    createGain: () => ({
+      gain: { setValueAtTime: vi.fn(), exponentialRampToValueAtTime: vi.fn() },
+      connect: vi.fn()
+    }),
+    destination: {}
+  };
+  Object.defineProperty(window, "AudioContext", {
+    configurable: true,
+    value: vi.fn(function () { audio.created++; return ctx; })
+  });
+}
 
 function installSpeech() {
   spoken = [];
@@ -59,6 +88,7 @@ beforeEach(() => {
   translations.map = {};
   resetSpeechPrimingForTest();
   installSpeech();
+  installAudio();
 });
 afterEach(() => { vi.restoreAllMocks(); });
 
@@ -131,11 +161,87 @@ describe("announcementLang — the tag follows the text, not the app setting", (
   });
 });
 
+describe("playNewOrderChime", () => {
+  it("plays the two-note cue", () => {
+    expect(playNewOrderChime()).toBe(true);
+    expect(audio.notes.map((n) => n.frequency.value)).toEqual([880, 1320]);
+    // Second note lands after the first so it reads as two beats, not a chord.
+    expect(audio.notes[1].startedAt).toBeGreaterThan(audio.notes[0].startedAt);
+  });
+
+  it("reports false while the context is still locked, instead of silently doing nothing", () => {
+    installAudio("suspended");
+    expect(playNewOrderChime()).toBe(false);
+    expect(audio.notes).toHaveLength(0);
+  });
+
+  it("reuses one audio context across notifications", () => {
+    playNewOrderChime(); playNewOrderChime(); playNewOrderChime();
+    expect(audio.created).toBe(1);
+  });
+
+  it("reports false where Web Audio does not exist", () => {
+    delete (window as any).AudioContext;
+    expect(playNewOrderChime()).toBe(false);
+  });
+});
+
+describe("announceNewOrder — chime then words", () => {
+  it("holds the words back until the chime has finished, so they do not overlap", () => {
+    vi.useFakeTimers();
+    expect(announceNewOrder()).toBe(true);
+    expect(audio.notes).toHaveLength(2);
+
+    // Still ringing: speaking now is the overlap this exists to prevent.
+    vi.advanceTimersByTime(CHIME_DURATION_MS - 1);
+    expect(speak).not.toHaveBeenCalled();
+
+    vi.advanceTimersByTime(ANNOUNCEMENT_GAP_MS + 1);
+    expect(speak).toHaveBeenCalledOnce();
+    expect(spoken[0].text).toBe("New order received");
+    vi.useRealTimers();
+  });
+
+  it("speaks immediately when there is no chime to wait for", () => {
+    vi.useFakeTimers();
+    installAudio("suspended");   // locked, so nothing rings
+    expect(announceNewOrder()).toBe(true);
+    expect(speak).toHaveBeenCalledOnce();
+    vi.useRealTimers();
+  });
+
+  it("is silent when the preference is off", () => {
+    setNotificationSoundEnabled(false);
+    expect(announceNewOrder()).toBe(false);
+    expect(audio.notes).toHaveLength(0);
+    expect(speak).not.toHaveBeenCalled();
+  });
+
+  it("still chimes on a device with no speech at all", () => {
+    removeSpeech();
+    expect(announceNewOrder()).toBe(true);
+    expect(audio.notes).toHaveLength(2);
+  });
+});
+
 describe("speech priming — Safari will not speak until a gesture has", () => {
   it("primes with an inaudible utterance", () => {
     expect(primeSpeechSynthesis()).toBe(true);
     expect(speak).toHaveBeenCalledOnce();
     expect(spoken[0].volume).toBe(0);
+  });
+
+  it("resumes a suspended audio context so the chime is unlocked too", () => {
+    installAudio("suspended");
+    expect(primeSpeechSynthesis()).toBe(true);
+    expect(audio.resume).toHaveBeenCalled();
+  });
+
+  it("resumes again on a later gesture, because iOS re-suspends on background", () => {
+    primeSpeechSynthesis();
+    installAudio("suspended");
+    primeSpeechSynthesis();               // speech already primed; audio is not
+    expect(audio.resume).toHaveBeenCalled();
   });
 
   it("primes only once, so later taps do not queue extra utterances", () => {
