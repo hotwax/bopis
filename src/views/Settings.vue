@@ -191,12 +191,12 @@
             </ion-item>
             <ion-item lines="none">
               <ion-toggle data-testid="notification-sound-toggle" label-placement="start" :checked="notificationSoundEnabled" @ionChange="updateNotificationSound($event)">
-                {{ translate("Speak new order alerts") }}
+                {{ translate("Announce new orders out loud") }}
               </ion-toggle>
             </ion-item>
             <ion-item lines="none">
               <ion-button fill="outline" data-testid="notification-sound-test" @click="testNotificationSound()">
-                {{ translate("Test notification sound") }}
+                {{ translate("Test the announcement") }}
               </ion-button>
             </ion-item>
           </ion-list>
@@ -283,7 +283,7 @@ import { useOrderStore } from '@/store/order';
 import { useProductStore } from '@/store/productStore';
 import DxpAppVersionInfo from '@/components/DxpAppVersionInfo.vue';
 import { firebaseUtil } from "@/utils/firebaseUtil"
-import { isNotificationSoundEnabled, setNotificationSoundEnabled, speakNewOrder } from "@/utils/notificationAlert";
+import { isNotificationSoundEnabled, primeSpeechSynthesis, setNotificationSoundEnabled, speakNewOrder } from "@/utils/notificationAlert";
 import Actions from "@/authorization/actions"
 
 const appInfo = ref(import.meta.env.VITE_VERSION_INFO ? JSON.parse(import.meta.env.VITE_VERSION_INFO) : {} as any);
@@ -416,9 +416,13 @@ async function openLogs() {
 function updateNotificationSound(event: CustomEvent) {
   notificationSoundEnabled.value = Boolean(event.detail?.checked);
   setNotificationSoundEnabled(notificationSoundEnabled.value);
+  // Switching it on is a gesture, so spend it unlocking speech for this session rather than
+  // waiting for the next one.
+  if (notificationSoundEnabled.value) primeSpeechSynthesis();
 }
 
 function testNotificationSound() {
+  primeSpeechSynthesis();
   const played = speakNewOrder();
   commonUtil.showToast(translate(played ? "Notification sound played." : "Notification sound is unavailable or disabled."));
 }
@@ -445,6 +449,8 @@ const SETUP_FAILURE_MESSAGE: Record<string, string> = {
  */
 async function enableNotificationsOnThisDevice() {
   isEnablingNotifications.value = true;
+  // Synchronously, before the first await: this tap is a gesture and speech needs one to unlock.
+  primeSpeechSynthesis();
   let result: Awaited<ReturnType<typeof firebaseUtil.setUpNotificationsOnThisDevice>> | undefined;
   try {
     result = await firebaseUtil.setUpNotificationsOnThisDevice({ userId: userProfile.value?.userId });

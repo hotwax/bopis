@@ -1,29 +1,65 @@
 // @vitest-environment jsdom
-import { beforeEach, describe, expect, it, vi } from "vitest";
-import {
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+
+const locale = vi.hoisted(() => ({ value: "en-US" }));
+
+vi.mock("@common", () => ({
+  // Passthrough: these specs assert on the phrase the user hears, not on i18n itself.
+  translate: (key: string) => key,
+  i18n: { global: { locale } },
+  logger: { warn: vi.fn(), error: vi.fn() }
+}));
+
+const {
+  attachSpeechPrimer,
   isNotificationSoundEnabled,
+  primeSpeechSynthesis,
+  resetSpeechPrimingForTest,
   setNotificationSoundEnabled,
   showForegroundSystemNotification,
-  speakNewOrder,
-} from "../src/utils/notificationAlert";
+  speakNewOrder
+} = await import("../src/utils/notificationAlert");
 
-describe("notification alert preferences", () => {
-  beforeEach(() => {
-    const values = new Map<string, string>();
-    Object.defineProperty(globalThis, "localStorage", {
-      configurable: true,
-      value: {
-        getItem: (key: string) => values.get(key) ?? null,
-        setItem: (key: string, value: string) => values.set(key, value),
-        removeItem: (key: string) => values.delete(key),
-        clear: () => values.clear(),
-      },
-    });
-    localStorage.clear();
-    vi.restoreAllMocks();
+let spoken: any[] = [];
+let speak: any;
+let cancel: any;
+
+function installSpeech() {
+  spoken = [];
+  speak = vi.fn((utterance: any) => { spoken.push(utterance); });
+  cancel = vi.fn();
+  Object.defineProperty(window, "speechSynthesis", { value: { speak, cancel }, configurable: true });
+  Object.defineProperty(globalThis, "SpeechSynthesisUtterance", {
+    configurable: true,
+    value: vi.fn(function (this: any, text: string) { this.text = text; })
   });
+}
 
-  it("enables spoken alerts by default and persists the user choice", () => {
+function removeSpeech() {
+  // delete leaves `"speechSynthesis" in window` false, which is what the guard reads.
+  delete (window as any).speechSynthesis;
+}
+
+beforeEach(() => {
+  const values = new Map<string, string>();
+  Object.defineProperty(globalThis, "localStorage", {
+    configurable: true,
+    value: {
+      getItem: (k: string) => values.get(k) ?? null,
+      setItem: (k: string, v: string) => values.set(k, v),
+      removeItem: (k: string) => values.delete(k),
+      clear: () => values.clear()
+    }
+  });
+  Object.defineProperty(globalThis, "Notification", { value: { permission: "granted" }, configurable: true });
+  locale.value = "en-US";
+  resetSpeechPrimingForTest();
+  installSpeech();
+});
+afterEach(() => { vi.restoreAllMocks(); });
+
+describe("sound preference", () => {
+  it("is on by default and persists the user's choice", () => {
     expect(isNotificationSoundEnabled()).toBe(true);
     setNotificationSoundEnabled(false);
     expect(isNotificationSoundEnabled()).toBe(false);
@@ -31,44 +67,122 @@ describe("notification alert preferences", () => {
     expect(isNotificationSoundEnabled()).toBe(true);
   });
 
-  it("speaks the short order alert when enabled", () => {
-    const speak = vi.fn();
-    const cancel = vi.fn();
-    Object.defineProperty(window, "speechSynthesis", { value: { speak, cancel }, configurable: true });
-    Object.defineProperty(globalThis, "SpeechSynthesisUtterance", {
-      value: vi.fn((text: string) => ({ text })),
+  it("falls back to on when storage is unreadable rather than going silent", () => {
+    Object.defineProperty(globalThis, "localStorage", {
       configurable: true,
+      value: { getItem: () => { throw new Error("blocked"); }, setItem: () => { throw new Error("blocked"); } }
     });
+    expect(isNotificationSoundEnabled()).toBe(true);
+    expect(() => setNotificationSoundEnabled(false)).not.toThrow();
+  });
+});
 
+describe("speakNewOrder", () => {
+  it("speaks the announcement and tags it with the app locale", () => {
+    locale.value = "es-ES";
     expect(speakNewOrder()).toBe(true);
     expect(cancel).toHaveBeenCalledOnce();
     expect(speak).toHaveBeenCalledOnce();
-    expect(speak.mock.calls[0][0].text).toBe("New order received");
+    expect(spoken[0].text).toBe("New order received");
+    // Without a lang, iOS can read the phrase with a voice for another language.
+    expect(spoken[0].lang).toBe("es-ES");
+    expect(spoken[0].volume).toBe(1);
   });
 
-  it("does not speak after the user disables spoken alerts", () => {
+  it("stays silent once the user switches the preference off", () => {
     setNotificationSoundEnabled(false);
-    Object.defineProperty(window, "speechSynthesis", { value: { speak: vi.fn(), cancel: vi.fn() }, configurable: true });
+    expect(speakNewOrder()).toBe(false);
+    expect(speak).not.toHaveBeenCalled();
+  });
+
+  it("reports false instead of throwing where speech is unavailable", () => {
+    removeSpeech();
     expect(speakNewOrder()).toBe(false);
   });
 });
 
-describe("foreground system notifications", () => {
-  it("uses an active service worker when one is available", async () => {
-    const showNotification = vi.fn().mockResolvedValue(undefined);
-    Object.defineProperty(globalThis, "Notification", { value: { permission: "granted" }, configurable: true });
-    Object.defineProperty(navigator, "serviceWorker", {
-      value: { getRegistrations: vi.fn().mockResolvedValue([{ showNotification }]) },
-      configurable: true,
-    });
+describe("speech priming — Safari will not speak until a gesture has", () => {
+  it("primes with an inaudible utterance", () => {
+    expect(primeSpeechSynthesis()).toBe(true);
+    expect(speak).toHaveBeenCalledOnce();
+    expect(spoken[0].volume).toBe(0);
+  });
 
-    await expect(showForegroundSystemNotification({
-      notification: { title: "New BOPIS order", body: "Order 1001 is ready" },
-      messageId: "message-1",
-    })).resolves.toBe(true);
-    expect(showNotification).toHaveBeenCalledWith("New BOPIS order", expect.objectContaining({
+  it("primes only once, so later taps do not queue extra utterances", () => {
+    expect(primeSpeechSynthesis()).toBe(true);
+    expect(primeSpeechSynthesis()).toBe(false);
+    expect(speak).toHaveBeenCalledOnce();
+  });
+
+  it("primes even while the preference is off, so switching it on mid-session still speaks", () => {
+    setNotificationSoundEnabled(false);
+    expect(primeSpeechSynthesis()).toBe(true);
+  });
+
+  it("primes on the first gesture anywhere and then unhooks both listeners", () => {
+    // Asserting "spoke once" is not enough: the once-guard would satisfy it even if the
+    // listeners stayed attached for the life of the app. Assert the removal itself.
+    const removeSpy = vi.spyOn(document, "removeEventListener");
+    attachSpeechPrimer();
+    expect(speak).not.toHaveBeenCalled();
+
+    document.dispatchEvent(new Event("pointerdown"));
+    expect(speak).toHaveBeenCalledOnce();
+    expect(spoken[0].volume).toBe(0);
+
+    const removed = removeSpy.mock.calls.map(([type]) => type);
+    expect(removed).toContain("pointerdown");
+    expect(removed).toContain("keydown");
+
+    document.dispatchEvent(new Event("pointerdown"));
+    expect(speak).toHaveBeenCalledOnce();
+  });
+});
+
+describe("showForegroundSystemNotification", () => {
+  const fcmWorker = () => ({ showNotification: vi.fn().mockResolvedValue(undefined) }) as any;
+
+  it("shows the banner through the registration it is given", async () => {
+    const worker = fcmWorker();
+    await expect(showForegroundSystemNotification(
+      { notification: { title: "New BOPIS order", body: "Order 1001 is ready" }, messageId: "message-1" },
+      worker
+    )).resolves.toBe(true);
+    expect(worker.showNotification).toHaveBeenCalledWith("New BOPIS order", expect.objectContaining({
       body: "Order 1001 is ready",
-      tag: "message-1",
+      tag: "message-1"
     }));
+  });
+
+  it("groups by order when the payload identifies one, so a re-send replaces its banner", async () => {
+    const worker = fcmWorker();
+    await showForegroundSystemNotification({ data: { title: "t", body: "b", orderId: "101277" }, messageId: "message-1" }, worker);
+    expect(worker.showNotification.mock.calls[0][1].tag).toBe("bopis-order-101277");
+  });
+
+  it("keeps separate tags per message while the payload has no order id", async () => {
+    const worker = fcmWorker();
+    await showForegroundSystemNotification({ data: { title: "t", body: "b" }, messageId: "message-1" }, worker);
+    await showForegroundSystemNotification({ data: { title: "t", body: "b" }, messageId: "message-2" }, worker);
+    expect(worker.showNotification.mock.calls[0][1].tag).toBe("message-1");
+    expect(worker.showNotification.mock.calls[1][1].tag).toBe("message-2");
+  });
+
+  it("does not show anything when permission is not granted", async () => {
+    Object.defineProperty(globalThis, "Notification", { value: { permission: "default" }, configurable: true });
+    const worker = fcmWorker();
+    await expect(showForegroundSystemNotification({ data: { title: "t" } }, worker)).resolves.toBe(false);
+    expect(worker.showNotification).not.toHaveBeenCalled();
+  });
+
+  it("reports false rather than throwing when the registration rejects", async () => {
+    const worker = { showNotification: vi.fn().mockRejectedValue(new Error("no")) } as any;
+    await expect(showForegroundSystemNotification({ data: { title: "t" } }, worker)).resolves.toBe(false);
+  });
+
+  it("reports false on a platform with no push worker and no usable constructor (iOS PWA)", async () => {
+    // The caller passes null when it cannot find the FCM worker. iOS has no usable constructor
+    // fallback, so this must report failure rather than look like it showed something.
+    await expect(showForegroundSystemNotification({ data: { title: "t" } }, null)).resolves.toBe(false);
   });
 });
