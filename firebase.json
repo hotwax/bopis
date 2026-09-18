@@ -8,10 +8,20 @@
           "**/.*",
           "**/node_modules/**"
         ],
-        "rewrites": [ {
-          "source": "**",
-          "destination": "/index.html"
-        } ],
+        "rewrites": [
+          {
+            "source": "/v5.0.0/**",
+            "destination": "/v5.0.0/index.html"
+          },
+          {
+            "source": "/v5.0.1/**",
+            "destination": "/v5.0.1/index.html"
+          },
+          {
+            "source": "**",
+            "destination": "/index.html"
+          }
+        ],
         "headers": [ {
           "source": "**",
           "headers": [ {
@@ -42,10 +52,20 @@
           "**/.*",
           "**/node_modules/**"
         ],
-        "rewrites": [ {
-          "source": "**",
-          "destination": "/index.html"
-        } ],
+        "rewrites": [
+          {
+            "source": "/v5.0.0/**",
+            "destination": "/v5.0.0/index.html"
+          },
+          {
+            "source": "/v5.0.1/**",
+            "destination": "/v5.0.1/index.html"
+          },
+          {
+            "source": "**",
+            "destination": "/index.html"
+          }
+        ],
         "headers": [ {
           "source": "**",
           "headers": [ {
@@ -76,10 +96,20 @@
           "**/.*",
           "**/node_modules/**"
         ],
-        "rewrites": [ {
-          "source": "**",
-          "destination": "/index.html"
-        } ],
+        "rewrites": [
+          {
+            "source": "/v5.0.0/**",
+            "destination": "/v5.0.0/index.html"
+          },
+          {
+            "source": "/v5.0.1/**",
+            "destination": "/v5.0.1/index.html"
+          },
+          {
+            "source": "**",
+            "destination": "/index.html"
+          }
+        ],
         "headers": [ {
           "source": "**",
           "headers": [ {

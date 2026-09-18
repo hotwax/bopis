@@ -22,49 +22,20 @@
   </ion-content>
 </template>
 
-<script lang="ts">
-import {
-  IonBadge,
-  IonContent,
-  IonItem,
-  IonLabel,
-  IonList,
-  IonListHeader,
-  IonNote
-} from '@ionic/vue'
+<script setup lang="ts">
+import { IonBadge, IonContent, IonItem, IonLabel, IonList, IonListHeader, IonNote } from '@ionic/vue'
+import { onBeforeMount } from 'vue';
+import { translate } from '@common';
+import { useStockStore } from '@/store/stock';
 
-import { defineComponent } from 'vue';
-import { useStore, mapGetters } from 'vuex';
-import { translate } from '@hotwax/dxp-components';
+const props = defineProps(['item'])
 
-export default defineComponent({  
-  name: 'InventoryDetailsPopover',
-  components:{
-    IonBadge,
-    IonContent,
-    IonItem,
-    IonLabel,
-    IonList,
-    IonListHeader,
-    IonNote,
-  },
-  props: ['item'],
-  computed: {
-    ...mapGetters({
-      product: "product/getCurrent",
-      getInventoryInformation: 'stock/getInventoryInformation',
-    })   
-  },
-  async beforeMount () {
-    const productId = this.item?.productId;
-    await this.store.dispatch('stock/fetchProductInventory', { productId });
-  },
-  setup () {
-    const store = useStore();
-    return {
-      store,
-      translate
-    }
+const getInventoryInformation = (productId: string) => useStockStore().getInventoryInformation(productId);
+
+onBeforeMount(async () => {
+  const productId = props.item?.productId;
+  if (productId) {
+    await useStockStore().fetchProductInventory({ productId });
   }
-})
+});
 </script>

@@ -1,0 +1,67 @@
+import { useProductStore } from "@/store/product"
+
+const getOrderCategory = (shipGroup: any) => {
+  // Determine category based on shipmentStatusId
+  let category = '';
+  if (shipGroup.shipmentStatusId === 'SHIPMENT_PACKED') {
+    category = 'Packed';
+  } else if (shipGroup.shipmentStatusId === 'SHIPMENT_SHIPPED') {
+    category = 'Completed';
+  } else if (shipGroup.shipmentStatusId === 'SHIPMENT_APPROVED' || (!shipGroup.shipmentStatusId && shipGroup.parentFacilityTypeId !== 'VIRTUAL_FACILITY')) {
+    category = 'Open';
+  } else if (!shipGroup.shipmentStatusId || shipGroup.shipmentStatusId === 'SHIPMENT_INPUT') {
+    category = '';
+  }
+  return category;
+}
+
+const isKit = (item: any) => {
+  const product = useProductStore().getProduct(item.productId);
+  return product && product.productTypeId === 'MARKETING_PKG_PICK';
+}
+
+const removeKitComponents = (items: any) => {
+  const kitItemSeqIds = new Set();
+  const itemsWithoutKitComponents = [] as any;
+
+  items.forEach((item: any) => {
+    if (item.productTypeId === "MARKETING_PKG_PICK") {
+      kitItemSeqIds.add(item.orderItemSeqId);
+    }
+  })
+
+  //In current implementation kit product and component product will have the same orderItemSeqId
+  items.forEach((item: any) => {
+    const alreadyExists = itemsWithoutKitComponents.some(
+      (itm: any) => itm.orderItemSeqId === item.orderItemSeqId
+    );
+
+    if ((item.productTypeId === "MARKETING_PKG_PICK" || !kitItemSeqIds.has(item.orderItemSeqId)) && !alreadyExists) {
+      itemsWithoutKitComponents.push(item);
+    }
+  });
+  return itemsWithoutKitComponents;
+}
+
+const getOrderStatus = (order: any, shipGroup: any, orderType: string) => {
+  if (order.orderStatusId === "ORDER_COMPLETED" || orderType === "completed") {
+    return shipGroup?.shipmentMethodTypeId === "STOREPICKUP" ? "Picked up" : "Completed"
+  }
+
+  if (order.shipmentStatusId) {
+    return order.shipmentStatusId === "SHIPMENT_PACKED" ? "Ready for pickup" : order.shipmentStatusId === "SHIPMENT_APPROVED" && order.pickers ? "Picking" : "Reserved"
+  }
+
+  return "Reserved"
+}
+const getPickerName = (pickerGroupName: string, pickerFirstName: string, pickerLastName: string) => {
+  return pickerGroupName ? pickerGroupName : pickerFirstName ? `${pickerFirstName} ${pickerLastName ? pickerLastName : ''}`.trim() : '';
+}
+
+export const orderUtil = {
+  getOrderCategory,
+  getOrderStatus,
+  getPickerName,
+  isKit,
+  removeKitComponents
+}
