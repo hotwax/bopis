@@ -257,7 +257,12 @@ export const useUserStore = defineStore("user", {
         // and only when doing so cannot raise a permission prompt: there is no user gesture here,
         // so a prompt would be refused and would leave permission stuck at "default" forever.
         // A user who has not granted yet is offered the prompt on the settings screen instead.
-        if(notificationStore.getAllNotificationPrefs?.length) {
+        //
+        // The guard matters more since the read above became cross-device: a fresh browser whose
+        // user has preferences on another device now finds a non-empty list, which before this
+        // change it never did. Without the check that is exactly the device — new, permission
+        // still "default" — that would be prompted with no gesture behind it.
+        if(notificationStore.getAllNotificationPrefs?.length && firebaseUtil.canInitialiseWithoutPrompting()) {
           await firebaseUtil.initialiseFirebaseMessaging({ userId: this.current.userId });
         }
         // The settings screen reads this as what is switched on HERE, so narrow it to this device.
