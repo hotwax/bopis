@@ -60,8 +60,8 @@
       </ion-list>
       <ion-card-content v-if="steps.length">
         <p v-for="(step, index) in steps" :key="index" class="verdict-line">
-          <ion-icon :icon="step.ok ? checkmarkCircleOutline : closeCircleOutline"
-            :color="step.ok ? 'success' : 'danger'" />
+          <ion-icon :icon="step.ok ? checkmarkCircleOutline : (step.warn ? alertCircleOutline : closeCircleOutline)"
+            :color="step.ok ? 'success' : (step.warn ? 'warning' : 'danger')" />
           <span>{{ step.label }}<template v-if="step.detail"> — {{ step.detail }}</template></span>
         </p>
       </ion-card-content>
@@ -97,7 +97,7 @@ import { useUserStore } from "@/store/user";
 import { useProductStore } from "@/store/productStore";
 
 type Row = { label: string; value: string };
-type Step = { label: string; ok: boolean; detail?: string };
+type Step = { label: string; ok: boolean; warn?: boolean; detail?: string };
 
 const isBusy = ref(false);
 const steps = ref<Step[]>([]);
@@ -107,6 +107,7 @@ const platform = ref({ standalone: "-", userAgent: "-", iosVersion: "-" });
 const support = ref({ fcmSupported: "-", notificationApi: false, serviceWorkerApi: false, pushManagerApi: false, permission: "-" });
 const workers = ref<Row[]>([]);
 const pushSub = ref({ exists: "-", endpointHost: "-" });
+let foregroundListenerAttached = false;
 
 const appState = computed(() => {
   const store = useNotificationStore();
@@ -334,7 +335,7 @@ async function registerDevice() {
   const push = (label: string, ok: boolean, detail?: string) => steps.value.push({ label, ok, detail });
 
   try {
-    const { isSupported, getMessaging, getToken } = await import("firebase/messaging");
+    const { isSupported, getMessaging, getToken, onMessage } = await import("firebase/messaging");
     const { initializeApp, getApps, getApp } = await import("firebase/app");
 
     const supported = await isSupported();
@@ -354,8 +355,21 @@ async function registerDevice() {
       permission === "denied" ? "Delete and re-add the Home Screen app to be asked again" : undefined);
     if (permission !== "granted") return;
 
+    const store = useNotificationStore();
+    const wasFirebaseInitialised = store.isFirebaseInitialised;
     const app = getApps().length ? getApp() : initializeApp(config);
     const messaging = getMessaging(app);
+
+    // This recovery path used to set isFirebaseInitialised without installing the foreground
+    // listener. The normal initializer then returned early and foreground pushes disappeared.
+    // If the normal initializer already ran, it owns the listener; otherwise install it here
+    // before marking the store initialized.
+    if (!wasFirebaseInitialised && !foregroundListenerAttached) {
+      onMessage(messaging, (payload: any) => {
+        store.addNotification({ ...payload.notification, isForeground: true, time: Date.now() });
+      });
+      foregroundListenerAttached = true;
+    }
 
     let token = "";
     try {
@@ -367,7 +381,6 @@ async function registerDevice() {
     }
     if (!token) return;
 
-    const store = useNotificationStore();
     const deviceId = firebaseMessaging.generateDeviceId(store.getFirebaseDeviceId);
     try {
       await api({
@@ -431,7 +444,7 @@ async function showLocalTestNotification() {
 
     // Do NOT use navigator.serviceWorker.ready: it only settles for a worker controlling this
     // page's scope, and Firebase registers its worker under /firebase-cloud-messaging-push-scope.
-    let registrations: any[] = [];
+    let registrations: readonly any[] = [];
     try {
       registrations = (await navigator.serviceWorker?.getRegistrations?.()) ?? [];
     } catch (error: any) {
@@ -453,8 +466,12 @@ async function showLocalTestNotification() {
         const live = await registration.getNotifications({ tag });
         push(`Readback found ${live.length}`, true,
           live.length ? "still owned by the page" : "zero is normal when the OS owns the alert");
-        push("If no banner appeared, the device is suppressing it", false,
-          "The app did its job. Check the per-app alert style (must not be None), Allow Notifications, Focus / Do Not Disturb, and Scheduled Summary. A web page cannot read these, so they must be checked on the device itself.");
+        steps.value.push({
+          label: "If no banner appeared, the device may be suppressing it",
+          ok: false,
+          warn: true,
+          detail: "The app did its job. Check the per-app alert style (must not be None), Allow Notifications, Focus / Do Not Disturb, and Scheduled Summary. A web page cannot read these, so they must be checked on the device itself."
+        });
         shown = true;
         break;
       } catch (error: any) {
@@ -506,13 +523,17 @@ async function resubscribeTopics() {
       return;
     }
 
-    // The app subscribes the topic BEFORE the device token exists, so the token never joins
-    // the topic. Unsubscribing and resubscribing now that a token is registered repairs it.
+    // A POST is idempotent for the topic/device row. Do not delete first: if the replacement
+    // request fails, deleting first leaves a previously working device unsubscribed.
     for (const pref of enabled) {
       const topicName = firebaseMessaging.generateTopicName(oms, facility?.facilityId, pref.enumId);
       try {
-        await api({ url: "firebase/topic", method: "delete", data: { topicName, applicationId: appId } });
-        await api({ url: "firebase/topic", method: "post", data: { topicName, applicationId: appId } });
+        const response = await api({
+          url: "firebase/topic",
+          method: "post",
+          data: { topicName, applicationId: appId, deviceId: store.getFirebaseDeviceId }
+        });
+        if (commonUtil.hasError(response)) throw response;
         push(`Re-subscribed ${pref.enumId}`, true, topicName);
       } catch (error: any) {
         push(`Failed on ${pref.enumId}`, false, `${error?.response?.status || ""} ${error?.message || error}`.trim());
@@ -540,7 +561,7 @@ function buildReportText() {
   verdict.value.forEach((line) => lines.push(`  ${line.ok ? "OK " : (line.warn ? "?? " : "XX ")} ${line.text}`));
   if (steps.value.length) {
     lines.push("", "LAST ACTION");
-    steps.value.forEach((step) => lines.push(`  ${step.ok ? "OK " : "XX "} ${step.label}${step.detail ? ` — ${step.detail}` : ""}`));
+    steps.value.forEach((step) => lines.push(`  ${step.ok ? "OK " : (step.warn ? "?? " : "XX ")} ${step.label}${step.detail ? ` — ${step.detail}` : ""}`));
   }
   groups.value.forEach((group: any) => {
     lines.push("", group.title.toUpperCase());
