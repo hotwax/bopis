@@ -190,6 +190,16 @@
             <ion-item :key="pref.enumId" v-for="pref in notificationPrefs" lines="none">
               <ion-toggle label-placement="start" @click.prevent="confirmNotificationPrefUpdate(pref.enumId, $event)" :checked="pref.isEnabled">{{ pref.description }}</ion-toggle>
             </ion-item>
+            <ion-item lines="none">
+              <ion-toggle data-testid="notification-sound-toggle" label-placement="start" :checked="notificationSoundEnabled" @ionChange="updateNotificationSound($event)">
+                {{ translate("Announce notifications") }}
+              </ion-toggle>
+            </ion-item>
+            <ion-item lines="none">
+              <ion-button fill="outline" data-testid="notification-sound-test" @click="testNotificationSound()">
+                {{ translate("Test the announcement") }}
+              </ion-button>
+            </ion-item>
           </ion-list>
 
           <!--
@@ -280,6 +290,8 @@ import { useProductStore } from '@/store/productStore';
 import DxpAppVersionInfo from '@/components/DxpAppVersionInfo.vue';
 import { firebaseUtil } from "@/utils/firebaseUtil"
 import { sendTestOrderNotification } from "@/utils/liveNotificationTest"
+import { announceIndoriTest, announceNewOrder, isNotificationSoundEnabled, primeSpeechSynthesis, setNotificationSoundEnabled } from "@/utils/notificationAlert";
+import { isIndoreTeam } from "@/utils/indoreEasterEgg";
 import Actions from "@/authorization/actions"
 
 const appInfo = ref(import.meta.env.VITE_VERSION_INFO ? JSON.parse(import.meta.env.VITE_VERSION_INFO) : {} as any);
@@ -292,6 +304,7 @@ const userProfile = computed(() => useUserStore().getUserProfile);
 const currentProductStore = computed(() => useProductStore().getCurrentProductStore);
 const isProductStoreSettingEnabled = computed(() => useProductStore().isProductStoreSettingEnabled);
 const isRerouteSettingEnabled = computed(() => useProductStore().isRerouteSettingEnabled);
+const notificationSoundEnabled = ref(isNotificationSoundEnabled());
 
 const notificationPermission = ref(typeof Notification !== "undefined" ? Notification.permission : "unsupported");
 const isEnablingNotifications = ref(false);
@@ -499,6 +512,20 @@ async function openLogs() {
   return logsModal.present();
 }
 
+function updateNotificationSound(event: CustomEvent) {
+  notificationSoundEnabled.value = Boolean(event.detail?.checked);
+  setNotificationSoundEnabled(notificationSoundEnabled.value);
+  // Switching it on is a gesture, so spend it unlocking speech for this session rather than
+  // waiting for the next one.
+  if (notificationSoundEnabled.value) primeSpeechSynthesis();
+}
+
+async function testNotificationSound() {
+  primeSpeechSynthesis();
+  const played = await (isIndoreTeam() ? announceIndoriTest() : announceNewOrder());
+  commonUtil.showToast(translate(played ? "Notification sound played." : "Notification sound is unavailable or disabled."));
+}
+
 // One message per link in the chain, so the toast names what actually failed. Details land in
 // the app logs and in the diagnostics screen; the toast only has to point there.
 const SETUP_FAILURE_MESSAGE: Record<string, string> = {
@@ -521,6 +548,8 @@ const SETUP_FAILURE_MESSAGE: Record<string, string> = {
  */
 async function enableNotificationsOnThisDevice() {
   isEnablingNotifications.value = true;
+  // Synchronously, before the first await: this tap is a gesture and speech needs one to unlock.
+  primeSpeechSynthesis();
   let result: Awaited<ReturnType<typeof firebaseUtil.setUpNotificationsOnThisDevice>> | undefined;
   try {
     result = await firebaseUtil.setUpNotificationsOnThisDevice({ userId: userProfile.value?.userId });
