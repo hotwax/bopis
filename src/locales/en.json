@@ -412,5 +412,14 @@
   "Allow notifications on this device": "Allow notifications on this device",
   "Notifications are blocked for this app. The app must be removed from the Home Screen and added again before it can ask a second time.": "Notifications are blocked for this app. The app must be removed from the Home Screen and added again before it can ask a second time.",
   "This device has not been allowed to show notifications yet.": "This device has not been allowed to show notifications yet.",
-  "Notifications are blocked for this site. Reset the notification permission for it in your browser settings, then reload.": "Notifications are blocked for this site. Reset the notification permission for it in your browser settings, then reload."
+  "Notifications are blocked for this site. Reset the notification permission for it in your browser settings, then reload.": "Notifications are blocked for this site. Reset the notification permission for it in your browser settings, then reload.",
+  "Notifications were not allowed on this device.": "Notifications were not allowed on this device.",
+  "Notifications are allowed, but this device is not registered to receive them yet.": "Notifications are allowed, but this device is not registered to receive them yet.",
+  "Finish setting up notifications on this device": "Finish setting up notifications on this device",
+  "Notifications are set up on this device.": "Notifications are set up on this device.",
+  "Push notifications are not supported here. On iPad, add the app to the Home Screen and open it from there.": "Push notifications are not supported here. On iPad, add the app to the Home Screen and open it from there.",
+  "Notifications are not configured for this build.": "Notifications are not configured for this build.",
+  "The notification service could not be installed on this device. Open diagnostics for details.": "The notification service could not be installed on this device. Open diagnostics for details.",
+  "This device could not be registered for notifications. Open diagnostics for details.": "This device could not be registered for notifications. Open diagnostics for details.",
+  "Notification setup did not complete on this device. Open diagnostics for details.": "Notification setup did not complete on this device. Open diagnostics for details."
 }
