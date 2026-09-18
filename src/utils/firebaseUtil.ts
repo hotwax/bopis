@@ -80,6 +80,14 @@ function isMissingRow(error: any) {
 }
 
 /** Exported for tests: this is the decision the three review comments were about. */
+/** Whether the most recent registerToken stored a token the backend had not seen for this device. */
+let lastRegistrationChangedToken = false;
+
+export interface TopicSyncResult { deviceId: string; joined: string[]; rejoined: string[]; unchanged: string[]; failed: string[] }
+let lastTopicSync: TopicSyncResult | null = null;
+/** The outcome of the topic sync run by the most recent initialiseFirebaseMessaging, for reporting. */
+export function getLastTopicSync() { return lastTopicSync; }
+
 export async function registerToken(token: string) {
   const notificationStore = useNotificationStore();
   const applicationId = import.meta.env.VITE_NOTIF_APP_ID;
@@ -118,8 +126,65 @@ export async function registerToken(token: string) {
   }
 
   notificationStore.setFirebaseDeviceId(deviceId);
+  lastRegistrationChangedToken = registeredToken !== token;
   writeRegisteredToken(token);
   return true;
+}
+
+/**
+ * Make THIS device's topic subscriptions match what the user has switched on anywhere.
+ *
+ * Subscriptions are per device on the backend, and registering a token enrols the device in
+ * nothing — so a second device registers cleanly, shows the switches on (they used to read the
+ * user's other device) and never receives a thing. Every topic the user has on for any device is
+ * joined here for this one.
+ *
+ * `rejoin` re-does the topics this device already has a row for. Used when the token just changed:
+ * a row can exist from a switch flipped before any token was registered, in which case FCM never
+ * learned the token, and the backend's re-subscribe is the only way to make it.
+ */
+export async function syncDeviceTopicSubscriptions({ userId, rejoin = false }: { userId: string; rejoin?: boolean }): Promise<TopicSyncResult> {
+  const notificationStore = useNotificationStore();
+  const applicationId = import.meta.env.VITE_NOTIF_APP_ID as string;
+  const deviceId = notificationStore.getFirebaseDeviceId;
+  const result: TopicSyncResult = { deviceId, joined: [], rejoined: [], unchanged: [], failed: [] };
+  if (!deviceId) return result;
+
+  // Cross-device on purpose: the question is what the USER wants, not what this device has.
+  await notificationStore.fetchAllNotificationPrefs(applicationId, userId);
+  const rows: any[] = notificationStore.getAllNotificationPrefs || [];
+  const wanted = [...new Set(rows.filter((row) => row.topic && row.receiveNotifications !== "N").map((row) => row.topic as string))];
+  const mine = new Set(rows.filter((row) => row.deviceId === deviceId).map((row) => row.topic as string));
+
+  for (const topic of wanted) {
+    try {
+      if (!mine.has(topic)) {
+        (await notificationStore.subscribeTopic(topic, applicationId, deviceId))
+          ? result.joined.push(topic) : result.failed.push(topic);
+      } else if (rejoin) {
+        await notificationStore.unsubscribeTopic(topic, applicationId, deviceId);
+        (await notificationStore.subscribeTopic(topic, applicationId, deviceId))
+          ? result.rejoined.push(topic) : result.failed.push(topic);
+      } else {
+        result.unchanged.push(topic);
+      }
+    } catch (error) {
+      // The store reports rather than throws; this is for anything unforeseen.
+      logger.error(`Could not subscribe this device to ${topic}`, error);
+      result.failed.push(topic);
+    }
+  }
+
+  // Leave the store holding THIS device's rows: the settings screen reads them as "what is on here".
+  try {
+    await notificationStore.fetchAllNotificationPrefs(applicationId, userId, deviceId);
+  } catch (error) {
+    logger.warn("Could not re-read this device's subscriptions", error);
+  }
+
+  lastTopicSync = result;
+  if (result.joined.length || result.rejoined.length || result.failed.length) logger.warn("Device topic subscriptions synced", result);
+  return result;
 }
 
 /**
@@ -355,7 +420,12 @@ export async function ensurePushWorker(report: StepReporter = () => undefined): 
  * receive": it also resolves when push is unsupported or permission was refused, and the backend
  * can refuse the token.
  */
-const initialiseFirebaseMessaging = async (): Promise<boolean> => {
+/**
+ * `userId` lets the device be joined to the user's topics once its token is registered. Without it
+ * the token is registered and nothing more — the callers that have no user in hand (the token
+ * refresh on resume) rely on the backend carrying a rotated token across on its own.
+ */
+const initialiseFirebaseMessaging = async ({ userId }: { userId?: string } = {}): Promise<boolean> => {
   logger.warn('Initializing firebase')
   const notificationStore = useNotificationStore();
 
@@ -423,6 +493,24 @@ const initialiseFirebaseMessaging = async (): Promise<boolean> => {
     });
   }
 
+  // Per-device subscriptions: the token alone enrols this device in nothing.
+
+  lastTopicSync = null;
+
+  if (tokenRegistered && userId) {
+
+    try {
+
+      await syncDeviceTopicSubscriptions({ userId, rejoin: lastRegistrationChangedToken });
+
+    } catch (error) {
+
+      logger.error("Could not sync this device's topic subscriptions", error);
+
+    }
+
+  }
+
   return tokenRegistered;
 }
 
@@ -441,7 +529,7 @@ export async function isDeviceSetUp(): Promise<boolean> {
   }
 }
 
-export type DeviceSetupStep = "support" | "config" | "permission" | "serviceWorker" | "registration" | "verification";
+export type DeviceSetupStep = "support" | "config" | "permission" | "serviceWorker" | "registration" | "verification" | "topics";
 export interface DeviceSetupStepResult { label: string; ok: boolean; detail?: string }
 export interface DeviceSetupResult {
   ok: boolean;
@@ -505,7 +593,7 @@ export async function setUpNotificationsOnThisDevice({ userId }: { userId?: stri
 
   // Same path the boot uses, so the foreground handlers get attached too — but with the worker
   // already active, getToken cannot lose the subscribe/activation race.
-  const registered = await initialiseFirebaseMessaging();
+  const registered = await initialiseFirebaseMessaging({ userId });
   report("Token registered with the backend", registered, registered
     ? `deviceId ${notificationStore.getFirebaseDeviceId}`
     : String((lastInitialiseError as any)?.message || lastInitialiseError || "the backend refused the token or no token was issued"));
@@ -515,14 +603,16 @@ export async function setUpNotificationsOnThisDevice({ userId }: { userId?: stri
   report("Device verified end to end", verified, verified ? undefined : "permission, active worker or confirmed token is missing");
   if (!verified) return fail("verification");
 
-  // Informational: the token store back-fills the user's existing topic subscriptions server side.
+  // Subscriptions are per device and the token enrols this device in nothing, so initialise joined
+  // it to every topic the user has on. A topic it could not join is an order that will not reach
+  // it, which is a failure of the setup, not a footnote.
   if (userId) {
-    try {
-      await notificationStore.fetchAllNotificationPrefs(import.meta.env.VITE_NOTIF_APP_ID as any, userId);
-      report("Server-side topic subscriptions", true, String(notificationStore.getAllNotificationPrefs?.length ?? 0));
-    } catch (error) {
-      logger.warn("Could not re-read topic subscriptions after setup", error);
-    }
+    const sync = lastTopicSync;
+    const failed = sync?.failed ?? [];
+    report("This device joined the user's topics", !!sync && failed.length === 0, sync
+      ? `${sync.joined.length + sync.rejoined.length} joined, ${sync.unchanged.length} already on, ${failed.length} failed`
+      : "not attempted");
+    if (!sync || failed.length) return fail("topics");
   }
 
   logger.warn("Notification setup on this device completed", steps);
@@ -534,5 +624,6 @@ export const firebaseUtil = {
   isApplePushPlatform,
   initialiseFirebaseMessaging,
   isDeviceSetUp,
-  setUpNotificationsOnThisDevice
+  setUpNotificationsOnThisDevice,
+  syncDeviceTopicSubscriptions
 }

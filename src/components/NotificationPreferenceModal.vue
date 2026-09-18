@@ -118,17 +118,17 @@ async function handleTopicSubscription() {
    * stored, so it answers "has this device registered" without re-entering initialisation.
    */
   if (notificationPrefToUpdate.value.subscribe.length && !notificationStore.getFirebaseDeviceId) {
-    await firebaseUtil.initialiseFirebaseMessaging();
+    await firebaseUtil.initialiseFirebaseMessaging({ userId: userStore.getUserProfile?.userId });
   }
 
   const subscribeRequests = notificationPrefToUpdate.value.subscribe.map((enumId: string) => {
     const topicName = firebaseMessaging.generateTopicName(commonUtil.getOMSInstanceName(), facilityId, enumId);
-    return notificationStore.subscribeTopic(topicName, import.meta.env.VITE_NOTIF_APP_ID);
+    return notificationStore.subscribeTopic(topicName, import.meta.env.VITE_NOTIF_APP_ID, notificationStore.getFirebaseDeviceId);
   });
 
   const unsubscribeRequests = notificationPrefToUpdate.value.unsubscribe.map((enumId: string) => {
     const topicName = firebaseMessaging.generateTopicName(commonUtil.getOMSInstanceName(), facilityId, enumId);
-    return notificationStore.unsubscribeTopic(topicName, import.meta.env.VITE_NOTIF_APP_ID);
+    return notificationStore.unsubscribeTopic(topicName, import.meta.env.VITE_NOTIF_APP_ID, notificationStore.getFirebaseDeviceId);
   });
 
   const responses = await Promise.allSettled([...subscribeRequests, ...unsubscribeRequests]);
