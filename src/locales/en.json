@@ -410,6 +410,8 @@
   "Service workers": "Service workers",
   "Show a local test notification": "Show a local test notification",
   "Verdict": "Verdict",
+  "Notification sound played.": "Notification sound played.",
+  "Notification sound is unavailable or disabled.": "Notification sound is unavailable or disabled.",
   "Allow notifications on this device": "Allow notifications on this device",
   "Notifications are blocked for this app. The app must be removed from the Home Screen and added again before it can ask a second time.": "Notifications are blocked for this app. The app must be removed from the Home Screen and added again before it can ask a second time.",
   "This device has not been allowed to show notifications yet.": "This device has not been allowed to show notifications yet.",
@@ -422,5 +424,8 @@
   "Notifications are not configured for this build.": "Notifications are not configured for this build.",
   "The notification service could not be installed on this device. Open diagnostics for details.": "The notification service could not be installed on this device. Open diagnostics for details.",
   "This device could not be registered for notifications. Open diagnostics for details.": "This device could not be registered for notifications. Open diagnostics for details.",
-  "Notification setup did not complete on this device. Open diagnostics for details.": "Notification setup did not complete on this device. Open diagnostics for details."
+  "Notification setup did not complete on this device. Open diagnostics for details.": "Notification setup did not complete on this device. Open diagnostics for details.",
+  "Test the announcement": "Test the announcement",
+  "New order received": "New order received",
+  "Announce notifications": "Announce notifications"
 }
