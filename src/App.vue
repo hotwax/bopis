@@ -63,7 +63,8 @@ onMounted(async () => {
     if (isAuthenticated.value && currentProductStore?.productStoreId) {
       await useProductStore().fetchProductStoreSettings(currentProductStore.productStoreId).catch((error) => logger.error(error));
 
-      if (allNotificationPrefs.value?.length) {
+      // Same rule as login: no gesture here, so never let this raise a permission prompt.
+      if (allNotificationPrefs.value?.length && firebaseUtil.canInitialiseWithoutPrompting()) {
         await firebaseUtil.initialiseFirebaseMessaging();
       }
     }
