@@ -100,6 +100,7 @@ import {
 import { api, commonUtil, firebaseMessaging, logger, translate, useNotificationStore } from "@common";
 import { useUserStore } from "@/store/user";
 import { useProductStore } from "@/store/productStore";
+import { FCM_SW_PATH, FCM_SW_SCOPE, waitForActivation } from "@/utils/firebaseUtil";
 
 type Row = { label: string; value: string };
 type Step = { label: string; ok: boolean; detail?: string };
@@ -467,9 +468,10 @@ async function readServerState() {
   }
 
   const store = useNotificationStore();
+  const deviceId = store.getFirebaseDeviceId;
 
   try {
-    await store.fetchAllNotificationPrefs(appId, userId);
+    await store.fetchAllNotificationPrefs(appId, userId, deviceId);
   } catch (error) {
     logger.error("Notification diagnostics failed to fetch server side topic subscriptions", error);
   }
@@ -479,7 +481,8 @@ async function readServerState() {
       import.meta.env.VITE_NOTIF_ENUM_TYPE_ID,
       appId,
       userId,
-      (enumId: string) => firebaseMessaging.generateTopicName(commonUtil.getOMSInstanceName(), facility?.facilityId, enumId)
+      (enumId: string) => firebaseMessaging.generateTopicName(commonUtil.getOMSInstanceName(), facility?.facilityId, enumId),
+      deviceId
     );
   } catch (error) {
     logger.error("Notification diagnostics failed to fetch notification preferences", error);
@@ -566,7 +569,7 @@ async function registerDevice() {
     }
 
     try {
-      await store.fetchAllNotificationPrefs(import.meta.env.VITE_NOTIF_APP_ID, (useUserStore().getUserProfile as any)?.userId);
+      await store.fetchAllNotificationPrefs(import.meta.env.VITE_NOTIF_APP_ID, (useUserStore().getUserProfile as any)?.userId, store.getFirebaseDeviceId);
       const count = store.getAllNotificationPrefs?.length ?? 0;
       push("Server-side topic subscriptions", count > 0, `${count} found`);
     } catch (error: any) {
@@ -675,36 +678,8 @@ async function showLocalTestNotification() {
   }
 }
 
-// The Firebase SDK hardcodes both of these, so registering at exactly this path
-// and scope means getToken() reuses what we register here instead of making its own.
-const FCM_SW_PATH = "/firebase-messaging-sw.js";
-const FCM_SW_SCOPE = "/firebase-cloud-messaging-push-scope";
-
-// getToken() calls pushManager.subscribe() immediately after registering, without
-// waiting for the worker to reach "activated". Subscribing against a registration
-// whose active worker is still null throws AbortError, which is why a device can
-// fail here forever while everything else looks healthy.
-function waitForActivation(registration: any, timeoutMs = 10000): Promise<boolean> {
-  if (registration.active) return Promise.resolve(true);
-
-  const worker = registration.installing || registration.waiting;
-  if (!worker) return Promise.resolve(false);
-
-  return new Promise<boolean>((resolve) => {
-    const done = (value: boolean) => {
-      worker.removeEventListener("statechange", onStateChange);
-      clearTimeout(timer);
-      resolve(value);
-    };
-    const onStateChange = () => {
-      if (worker.state === "activated") done(true);
-      else if (worker.state === "redundant") done(false);
-    };
-    const timer = setTimeout(() => done(!!registration.active), timeoutMs);
-
-    worker.addEventListener("statechange", onStateChange);
-  });
-}
+// FCM_SW_PATH, FCM_SW_SCOPE and waitForActivation live in firebaseUtil so the settings button and
+// this screen repair the worker the same way.
 
 async function repairServiceWorker() {
   isBusy.value = true;
@@ -802,6 +777,7 @@ async function resubscribeTopics() {
     const userId = (useUserStore().getUserProfile as any)?.userId;
     const facility: any = useProductStore().getCurrentFacility;
     const oms = commonUtil.getOMSInstanceName();
+    const deviceId = store.getFirebaseDeviceId;
 
     if (!store.getFirebaseDeviceId) {
       push("No device token registered yet", false, "Run the register step first, then re-subscribe");
@@ -820,8 +796,10 @@ async function resubscribeTopics() {
     for (const pref of enabled) {
       const topicName = firebaseMessaging.generateTopicName(oms, facility?.facilityId, pref.enumId);
       try {
-        await api({ url: "firebase/topic", method: "delete", data: { topicName, applicationId: appId } });
-        await api({ url: "firebase/topic", method: "post", data: { topicName, applicationId: appId } });
+        // FirebaseNotificationTopicUser is keyed by device, so both halves must name it or the
+        // delete misses the row and the post creates one for a different device.
+        await api({ url: "firebase/topic", method: "delete", data: { topicName, applicationId: appId, deviceId } });
+        await api({ url: "firebase/topic", method: "post", data: { topicName, applicationId: appId, deviceId } });
         push(`Re-subscribed ${pref.enumId}`, true, topicName);
       } catch (error: any) {
         logger.error(`Re-subscribe failed for topic ${topicName}`, error);
@@ -830,7 +808,7 @@ async function resubscribeTopics() {
     }
 
     try {
-      await store.fetchAllNotificationPrefs(appId, userId);
+      await store.fetchAllNotificationPrefs(appId, userId, deviceId);
       push("Server-side subscriptions now", true, String(store.getAllNotificationPrefs?.length ?? 0));
     } catch (error: any) {
       logger.error("Re-subscribe could not re-read server side subscriptions", error);
