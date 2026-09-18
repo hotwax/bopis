@@ -194,11 +194,6 @@
                 {{ translate("Announce notifications") }}
               </ion-toggle>
             </ion-item>
-            <ion-item v-if="isIndoreTeam" lines="none">
-              <ion-toggle data-testid="indori-mode-toggle" label-placement="start" :checked="indoriModeEnabled" @ionChange="updateIndoriMode($event)">
-                {{ translate("Indori mode") }}
-              </ion-toggle>
-            </ion-item>
             <ion-item lines="none">
               <ion-button fill="outline" data-testid="notification-sound-test" @click="testNotificationSound()">
                 {{ translate("Test the announcement") }}
@@ -288,8 +283,8 @@ import { useOrderStore } from '@/store/order';
 import { useProductStore } from '@/store/productStore';
 import DxpAppVersionInfo from '@/components/DxpAppVersionInfo.vue';
 import { firebaseUtil } from "@/utils/firebaseUtil"
-import { announceNewOrder, isNotificationSoundEnabled, primeSpeechSynthesis, setNotificationSoundEnabled } from "@/utils/notificationAlert";
-import { isIndoreTeam as detectIndoreTeam, isIndoriModeEnabled, setIndoriModeEnabled } from "@/utils/indoreEasterEgg";
+import { announceIndoriTest, announceNewOrder, isNotificationSoundEnabled, primeSpeechSynthesis, setNotificationSoundEnabled } from "@/utils/notificationAlert";
+import { isIndoreTeam } from "@/utils/indoreEasterEgg";
 import Actions from "@/authorization/actions"
 
 const appInfo = ref(import.meta.env.VITE_VERSION_INFO ? JSON.parse(import.meta.env.VITE_VERSION_INFO) : {} as any);
@@ -303,8 +298,6 @@ const currentProductStore = computed(() => useProductStore().getCurrentProductSt
 const isProductStoreSettingEnabled = computed(() => useProductStore().isProductStoreSettingEnabled);
 const isRerouteSettingEnabled = computed(() => useProductStore().isRerouteSettingEnabled);
 const notificationSoundEnabled = ref(isNotificationSoundEnabled());
-const isIndoreTeam = detectIndoreTeam();
-const indoriModeEnabled = ref(isIndoriModeEnabled());
 
 const notificationPermission = ref(typeof Notification !== "undefined" ? Notification.permission : "unsupported");
 const isEnablingNotifications = ref(false);
@@ -429,15 +422,9 @@ function updateNotificationSound(event: CustomEvent) {
   if (notificationSoundEnabled.value) primeSpeechSynthesis();
 }
 
-function updateIndoriMode(event: CustomEvent) {
-  indoriModeEnabled.value = Boolean(event.detail?.checked);
-  setIndoriModeEnabled(indoriModeEnabled.value);
-  if (indoriModeEnabled.value) primeSpeechSynthesis();
-}
-
 async function testNotificationSound() {
   primeSpeechSynthesis();
-  const played = await announceNewOrder();
+  const played = await (isIndoreTeam() ? announceIndoriTest() : announceNewOrder());
   commonUtil.showToast(translate(played ? "Notification sound played." : "Notification sound is unavailable or disabled."));
 }
 

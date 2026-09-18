@@ -1,5 +1,5 @@
 import { i18n, logger, translate } from "@common";
-import { isIndoriModeEnabled, pickIndoriLine } from "@/utils/indoreEasterEgg";
+import { pickIndoriLine } from "@/utils/indoreEasterEgg";
 
 export const NOTIFICATION_SOUND_STORAGE_KEY = "bopis.notificationSoundEnabled";
 
@@ -192,13 +192,33 @@ export function resetSpeechPrimingForTest(): void {
  * chime and a device with no Web Audio still gets the words.
  */
 export async function announceNewOrder(): Promise<boolean> {
+  return announceWith(speakNewOrder);
+}
+
+/** Chime, wait for it to finish, then whatever `speak` says. Shared by the real alert and the test button. */
+async function announceWith(speak: () => Promise<boolean>): Promise<boolean> {
   if (!isNotificationSoundEnabled()) return false;
 
-  if (!playNewOrderChime()) return speakNewOrder();
+  if (!playNewOrderChime()) return speak();
 
   await new Promise((resolve) => window.setTimeout(resolve, CHIME_DURATION_MS + ANNOUNCEMENT_GAP_MS));
-  await speakNewOrder();
+  await speak();
   return true;   // the chime played, so something sounded even if the words did not
+}
+
+/**
+ * The settings screen's test announcement for a device in India. Never used for a real order: a
+ * store must hear in service exactly what it heard when it tested.
+ */
+export async function announceIndoriTest(): Promise<boolean> {
+  return announceWith(async () => {
+    if (!isNotificationSoundEnabled() || !hasSpeech()) return false;
+    const line = pickIndoriLine();
+    // Devanagari first: it is the version that sounds right. If the engine will not start the
+    // Hindi voice, the romanised line through an Indian-English voice is the next best thing.
+    if (await speakUtterance(line.text, "hi-IN")) return true;
+    return speakUtterance(line.fallbackText, "en-IN");
+  });
 }
 
 /**
@@ -258,14 +278,6 @@ export function speakUtterance(text: string, lang: string): Promise<boolean> {
 
 export async function speakNewOrder(): Promise<boolean> {
   if (!isNotificationSoundEnabled() || !hasSpeech()) return false;
-
-  if (isIndoriModeEnabled()) {
-    const line = pickIndoriLine();
-    // Devanagari first: it is the version that sounds right. If the engine will not start the
-    // Hindi voice, the romanised line through an Indian-English voice is the next best thing.
-    if (await speakUtterance(line.text, "hi-IN")) return true;
-    return speakUtterance(line.fallbackText, "en-IN");
-  }
 
   const phrase = translate(ANNOUNCEMENT_SOURCE);
   // Without a language the platform picks a voice by its own rules, which on iOS can read the

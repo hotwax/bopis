@@ -1,16 +1,6 @@
 // @vitest-environment jsdom
-import { beforeEach, describe, expect, it } from "vitest";
-import {
-  INDORI_LINES, INDORI_MODE_STORAGE_KEY, isIndoreTeam, isIndoriModeEnabled, pickIndoriLine, setIndoriModeEnabled
-} from "../src/utils/indoreEasterEgg";
-
-beforeEach(() => {
-  const values = new Map<string, string>();
-  Object.defineProperty(globalThis, "localStorage", {
-    configurable: true,
-    value: { getItem: (k: string) => values.get(k) ?? null, setItem: (k: string, v: string) => values.set(k, v), removeItem: (k: string) => values.delete(k) }
-  });
-});
+import { describe, expect, it } from "vitest";
+import { INDORI_LINES, isIndoreTeam, pickIndoriLine } from "../src/utils/indoreEasterEgg";
 
 describe("isIndoreTeam — by the device's own clock", () => {
   it("recognises both the current and the legacy zone id", () => {
@@ -25,22 +15,6 @@ describe("isIndoreTeam — by the device's own clock", () => {
 
   it("is false, not thrown, with no resolvable zone", () => {
     expect(isIndoreTeam("")).toBe(false);
-  });
-});
-
-describe("isIndoriModeEnabled — the stored preference can never override the timezone", () => {
-  it("stays off outside India even with the flag written to storage", () => {
-    // This device (the test runner) is not in India, so this exercises the real gate.
-    localStorage.setItem(INDORI_MODE_STORAGE_KEY, "true");
-    const inIndia = isIndoreTeam();
-    expect(isIndoriModeEnabled()).toBe(inIndia);
-  });
-
-  it("round-trips the preference", () => {
-    setIndoriModeEnabled(true);
-    expect(localStorage.getItem(INDORI_MODE_STORAGE_KEY)).toBe("true");
-    setIndoriModeEnabled(false);
-    expect(localStorage.getItem(INDORI_MODE_STORAGE_KEY)).toBe("false");
   });
 });
 
