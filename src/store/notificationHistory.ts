@@ -18,7 +18,10 @@ export const useNotificationHistoryStore = defineStore("notificationHistory", {
   },
   actions: {
     async hydrate() {
-      this.notifications = await readNotifications();
+      const storedNotifications = await readNotifications();
+      // Keep the current in-memory history when IndexedDB is unavailable. Assigning the
+      // sentinel as an empty list would erase notifications received during this session.
+      if (storedNotifications !== null) this.notifications = storedNotifications;
     },
     async addNotification(payload: any) {
       const notification = toStoredNotification(payload, DateTime.now().toMillis());

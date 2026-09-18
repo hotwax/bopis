@@ -69,16 +69,17 @@ async function getDb(): Promise<BaseDB | null> {
   }
 }
 
-export async function readNotifications(): Promise<StoredNotification[]> {
+export async function readNotifications(): Promise<StoredNotification[] | null> {
   const instanceDb = await getDb();
-  if (!instanceDb) return [];
+  // null means storage is unavailable; [] is a valid, successfully-read empty history.
+  if (!instanceDb) return null;
 
   try {
     const rows = await instanceDb.table<StoredNotification, string>(NOTIFICATIONS_TABLE).toArray();
     return rows.sort((a, b) => b.receivedAt - a.receivedAt);
   } catch (error) {
     logger.error("Failed to read notification history", error);
-    return [];
+    return null;
   }
 }
 
