@@ -1,4 +1,5 @@
 import { api, commonUtil, firebaseMessaging, logger, translate, useNotificationStore } from "@common";
+import { useNotificationHistoryStore } from "@/store/notificationHistory";
 import { DateTime } from "luxon";
 import { announceNewOrder, attachSpeechPrimer, showForegroundSystemNotification } from "@/utils/notificationAlert";
 import { getApp, getApps } from "firebase/app";
@@ -390,10 +391,9 @@ const initialiseFirebaseMessaging = async (): Promise<boolean> => {
         tokenRegistered = await registerToken(token);
       },
       async (notification: any) => {
-        // The shared store shows a fixed "New notification received." toast for an entry flagged as
-        // foreground. This app shows its own toast carrying the message instead, so the flag is left
-        // off the stored entry; nothing else reads it.
-        notificationStore.addNotification({ ...notification.notification, time: DateTime.now().toMillis() });
+        // History is owned by this app's IndexedDB store rather than the persisted `@common`
+        // store, so that it survives logout instead of being wiped with the session.
+        await useNotificationHistoryStore().addNotification(notification.notification);
         if (notification.isForeground) {
           // Background messages already surface through the service worker. Foreground messages
           // need the same system-level alert because a store associate may be looking at another
