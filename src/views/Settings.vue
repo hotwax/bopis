@@ -17,6 +17,7 @@
             is added on sides from ion-item and ion-padding-vertical to compensate the removed
             vertical padding -->
             <ion-card-header class="ion-no-padding ion-padding-vertical">
+              <p class="overline">{{ sessionTimeLeft }}</p>
               <ion-card-subtitle>{{ userProfile?.username }}</ion-card-subtitle>
               <ion-card-title>{{ userProfile?.userFullName }}</ion-card-title>
             </ion-card-header>
@@ -247,9 +248,10 @@
 </template>
 
 <script setup lang="ts">
-import { alertController, IonAvatar, IonButton, IonCard, IonCardContent, IonCardHeader, IonCardSubtitle, IonCardTitle, IonContent, IonHeader, IonIcon, IonItem, IonLabel, IonList, IonPage, IonTitle, IonToggle, IonToolbar, modalController, onIonViewWillEnter } from '@ionic/vue';
-import { computed, onMounted, ref } from 'vue';
+import { alertController, IonAvatar, IonButton, IonCard, IonCardContent, IonCardHeader, IonCardSubtitle, IonCardTitle, IonContent, IonHeader, IonIcon, IonItem, IonLabel, IonList, IonNote, IonPage, IonTitle, IonToggle, IonToolbar, modalController, onIonViewDidLeave, onIonViewWillEnter } from '@ionic/vue';
+import { computed, onMounted, onUnmounted, ref } from 'vue';
 import { openOutline } from 'ionicons/icons'
+import { DateTime, Duration } from 'luxon';
 import Image from '@/components/Image.vue';
 
 import { commonUtil, emitter, firebaseMessaging, logger, translate, useNotificationStore } from '@common';
@@ -291,12 +293,59 @@ const notificationPrefs = computed(() => useNotificationStore().getNotificationP
 const allNotificationPrefs = computed(() => useNotificationStore().getAllNotificationPrefs);
 const currentFacility = computed(() => useProductStore().getCurrentFacility);
 
+// Session expiry shown to the associate. The source is the expirationTime the OMS issued
+// (read through getTokenExpiration so the embedded Shopify value wins when the app runs
+// inside admin), which is the same number isAuthenticated uses to end the session.
+const sessionExpiresAt = computed(() => Number(commonUtil.getTokenExpiration()) || 0);
+
+// Driven off the wall clock rather than a decrementing counter: an installed PWA gets
+// suspended for hours and its timers throttled, so on resume this shows the real remaining
+// time instead of however far the counter happened to get.
+const currentTime = ref(DateTime.now().toMillis());
+let sessionTimer: ReturnType<typeof setInterval> | null = null;
+
+const sessionTimeLeft = computed(() => {
+  if (!sessionExpiresAt.value) return "";
+
+  const remaining = sessionExpiresAt.value - currentTime.value;
+  if (remaining <= 0) return translate("Session expired");
+
+  const duration = Duration.fromMillis(remaining).shiftTo("days", "hours", "minutes", "seconds");
+  return duration.days > 0 ? duration.toFormat("d'd' hh:mm:ss") : duration.toFormat("hh:mm:ss");
+});
+
+const stopSessionTimer = () => {
+  if (!sessionTimer) return;
+  clearInterval(sessionTimer);
+  sessionTimer = null;
+};
+
+const startSessionTimer = () => {
+  // Settings is a tab child and Ionic keeps it mounted, so the timer is tied to view
+  // enter/leave instead of mount/unmount - otherwise it keeps ticking on other tabs.
+  stopSessionTimer();
+  currentTime.value = DateTime.now().toMillis();
+  sessionTimer = setInterval(() => {
+    currentTime.value = DateTime.now().toMillis();
+  }, 1000);
+};
+
 onMounted(() => {
   appVersion.value = import.meta.env.VITE_APP_BUILD ? import.meta.env.VITE_APP_BUILD : appInfo.value.branch ? (appInfo.value.branch + "-" + appInfo.value.revision) : appInfo.value.tag;
   appVersion.value = appInfo.value.branch ? (appInfo.value.branch + "-" + appInfo.value.revision) : appInfo.value.tag;
 });
 
+onIonViewDidLeave(() => {
+  stopSessionTimer();
+});
+
+onUnmounted(() => {
+  stopSessionTimer();
+});
+
 onIonViewWillEnter(async () => {
+  startSessionTimer();
+
   // Permission can change outside this screen (system settings, the diagnostics modal),
   // so re-read it on entry rather than trusting the value captured at setup.
   notificationPermission.value = typeof Notification !== "undefined" ? Notification.permission : "unsupported";
@@ -312,7 +361,7 @@ onIonViewWillEnter(async () => {
 
   // as notification prefs can also be updated from the notification pref modal,
   // latest state is fetched each time we open the settings page
-  await useNotificationStore().fetchNotificationPreferences(import.meta.env.VITE_NOTIF_ENUM_TYPE_ID, import.meta.env.VITE_NOTIF_APP_ID, userProfile.value?.userId, (enumId: string) => firebaseMessaging.generateTopicName(commonUtil.getOMSInstanceName(), (currentFacility.value as any)?.facilityId, enumId))
+  await useNotificationStore().fetchNotificationPreferences(import.meta.env.VITE_NOTIF_ENUM_TYPE_ID, import.meta.env.VITE_NOTIF_APP_ID, userProfile.value?.userId, (enumId: string) => firebaseMessaging.generateTopicName(commonUtil.getOMSInstanceName(), (currentFacility.value as any)?.facilityId, enumId), firebaseDeviceId.value)
 });
 
 async function fetchFacilityDependencies(facility: any) {
@@ -323,7 +372,7 @@ async function fetchFacilityDependencies(facility: any) {
     await useProductStore().fetchProductStoreDependencies(currentProductStore.value.productStoreId)
     await useProductStore().fetchProductStoreShipmentMethods(currentProductStore.value?.productStoreId);
   }
-  await useNotificationStore().fetchNotificationPreferences(import.meta.env.VITE_NOTIF_ENUM_TYPE_ID, import.meta.env.VITE_NOTIF_APP_ID, userProfile.value?.userId, (enumId: string) => firebaseMessaging.generateTopicName(commonUtil.getOMSInstanceName(), (currentFacility.value as any)?.facilityId, enumId))
+  await useNotificationStore().fetchNotificationPreferences(import.meta.env.VITE_NOTIF_ENUM_TYPE_ID, import.meta.env.VITE_NOTIF_APP_ID, userProfile.value?.userId, (enumId: string) => firebaseMessaging.generateTopicName(commonUtil.getOMSInstanceName(), (currentFacility.value as any)?.facilityId, enumId), firebaseDeviceId.value)
 }
 
 async function timeZoneUpdated(tzId: string) {
@@ -457,7 +506,7 @@ async function updateNotificationPref(enumId: string) {
     } else if (allNotificationPrefs.value.length == 1 && !isToggledOn) {
       await notificationStore.removeClientRegistrationToken(firebaseDeviceId.value, import.meta.env.VITE_NOTIF_APP_ID)
     }
-    await notificationStore.fetchAllNotificationPrefs(import.meta.env.VITE_NOTIF_APP_ID, userProfile.value?.userId);
+    await notificationStore.fetchAllNotificationPrefs(import.meta.env.VITE_NOTIF_APP_ID, userProfile.value?.userId, firebaseDeviceId.value);
   } catch (error) {
     logger.error(error);
   }

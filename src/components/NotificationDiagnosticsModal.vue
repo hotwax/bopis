@@ -467,9 +467,10 @@ async function readServerState() {
   }
 
   const store = useNotificationStore();
+  const deviceId = store.getFirebaseDeviceId;
 
   try {
-    await store.fetchAllNotificationPrefs(appId, userId);
+    await store.fetchAllNotificationPrefs(appId, userId, deviceId);
   } catch (error) {
     logger.error("Notification diagnostics failed to fetch server side topic subscriptions", error);
   }
@@ -479,7 +480,8 @@ async function readServerState() {
       import.meta.env.VITE_NOTIF_ENUM_TYPE_ID,
       appId,
       userId,
-      (enumId: string) => firebaseMessaging.generateTopicName(commonUtil.getOMSInstanceName(), facility?.facilityId, enumId)
+      (enumId: string) => firebaseMessaging.generateTopicName(commonUtil.getOMSInstanceName(), facility?.facilityId, enumId),
+      deviceId
     );
   } catch (error) {
     logger.error("Notification diagnostics failed to fetch notification preferences", error);
@@ -566,7 +568,7 @@ async function registerDevice() {
     }
 
     try {
-      await store.fetchAllNotificationPrefs(import.meta.env.VITE_NOTIF_APP_ID, (useUserStore().getUserProfile as any)?.userId);
+      await store.fetchAllNotificationPrefs(import.meta.env.VITE_NOTIF_APP_ID, (useUserStore().getUserProfile as any)?.userId, store.getFirebaseDeviceId);
       const count = store.getAllNotificationPrefs?.length ?? 0;
       push("Server-side topic subscriptions", count > 0, `${count} found`);
     } catch (error: any) {
@@ -802,6 +804,7 @@ async function resubscribeTopics() {
     const userId = (useUserStore().getUserProfile as any)?.userId;
     const facility: any = useProductStore().getCurrentFacility;
     const oms = commonUtil.getOMSInstanceName();
+    const deviceId = store.getFirebaseDeviceId;
 
     if (!store.getFirebaseDeviceId) {
       push("No device token registered yet", false, "Run the register step first, then re-subscribe");
@@ -820,8 +823,10 @@ async function resubscribeTopics() {
     for (const pref of enabled) {
       const topicName = firebaseMessaging.generateTopicName(oms, facility?.facilityId, pref.enumId);
       try {
-        await api({ url: "firebase/topic", method: "delete", data: { topicName, applicationId: appId } });
-        await api({ url: "firebase/topic", method: "post", data: { topicName, applicationId: appId } });
+        // FirebaseNotificationTopicUser is keyed by device, so both halves must name it or the
+        // delete misses the row and the post creates one for a different device.
+        await api({ url: "firebase/topic", method: "delete", data: { topicName, applicationId: appId, deviceId } });
+        await api({ url: "firebase/topic", method: "post", data: { topicName, applicationId: appId, deviceId } });
         push(`Re-subscribed ${pref.enumId}`, true, topicName);
       } catch (error: any) {
         logger.error(`Re-subscribe failed for topic ${topicName}`, error);
@@ -830,7 +835,7 @@ async function resubscribeTopics() {
     }
 
     try {
-      await store.fetchAllNotificationPrefs(appId, userId);
+      await store.fetchAllNotificationPrefs(appId, userId, deviceId);
       push("Server-side subscriptions now", true, String(store.getAllNotificationPrefs?.length ?? 0));
     } catch (error: any) {
       logger.error("Re-subscribe could not re-read server side subscriptions", error);
