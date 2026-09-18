@@ -23,6 +23,20 @@ export function setNotificationSoundEnabled(enabled: boolean): void {
 
 const hasSpeech = () => typeof window !== "undefined" && "speechSynthesis" in window;
 
+/**
+ * The English source string for the announcement.
+ *
+ * Locales that have not translated it yet get this back from translate() unchanged. Tagging that
+ * English text as, say, Spanish makes a Spanish voice mispronounce English — worse than not
+ * tagging at all — so the language tag follows the TEXT rather than the app's locale setting.
+ * The moment a real translation is added the tag switches to the app locale on its own.
+ */
+const ANNOUNCEMENT_SOURCE = "New order received";
+
+export function announcementLang(phrase: string, appLocale: string): string {
+  return phrase === ANNOUNCEMENT_SOURCE ? "en-US" : (appLocale || "en-US");
+}
+
 let isSpeechPrimed = false;
 let isPrimerAttached = false;
 
@@ -82,10 +96,11 @@ export function speakNewOrder(): boolean {
   if (!isNotificationSoundEnabled() || !hasSpeech()) return false;
 
   try {
-    const utterance = new SpeechSynthesisUtterance(translate("New order received"));
+    const phrase = translate(ANNOUNCEMENT_SOURCE);
+    const utterance = new SpeechSynthesisUtterance(phrase);
     // Without a language the platform picks a voice by its own rules, which on iOS can read the
-    // phrase with a voice for another language. i18n's locale is the app's own answer.
-    utterance.lang = String(i18n.global.locale.value || "en-US");
+    // phrase with a voice for another language.
+    utterance.lang = announcementLang(phrase, String(i18n.global.locale.value || ""));
     utterance.volume = 1;
     utterance.rate = 1;
     window.speechSynthesis.cancel();
@@ -111,7 +126,7 @@ export async function showForegroundSystemNotification(
 ): Promise<boolean> {
   if (typeof Notification === "undefined" || Notification.permission !== "granted") return false;
 
-  const title = payload?.notification?.title || payload?.data?.title || translate("New order received");
+  const title = payload?.notification?.title || payload?.data?.title || translate(ANNOUNCEMENT_SOURCE);
   const body = payload?.notification?.body || payload?.data?.body || "";
   // Prefer the order: re-sending for one order should replace its banner rather than stack another.
   // orderId is not in the payload yet (hotwax/oms#1057 adds it); messageId keeps them distinct until then.

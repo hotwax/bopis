@@ -2,15 +2,18 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const locale = vi.hoisted(() => ({ value: "en-US" }));
+// Mirrors vue-i18n: a locale with no entry for the key gets the source string back unchanged,
+// which is exactly the untranslated case this module has to detect.
+const translations = vi.hoisted(() => ({ map: {} as Record<string, string> }));
 
 vi.mock("@common", () => ({
-  // Passthrough: these specs assert on the phrase the user hears, not on i18n itself.
-  translate: (key: string) => key,
+  translate: (key: string) => translations.map[key] ?? key,
   i18n: { global: { locale } },
   logger: { warn: vi.fn(), error: vi.fn() }
 }));
 
 const {
+  announcementLang,
   attachSpeechPrimer,
   isNotificationSoundEnabled,
   primeSpeechSynthesis,
@@ -53,6 +56,7 @@ beforeEach(() => {
   });
   Object.defineProperty(globalThis, "Notification", { value: { permission: "granted" }, configurable: true });
   locale.value = "en-US";
+  translations.map = {};
   resetSpeechPrimingForTest();
   installSpeech();
 });
@@ -78,15 +82,25 @@ describe("sound preference", () => {
 });
 
 describe("speakNewOrder", () => {
-  it("speaks the announcement and tags it with the app locale", () => {
+  it("speaks the announcement and tags it with the app locale once it is translated", () => {
     locale.value = "es-ES";
+    translations.map["New order received"] = "Nuevo pedido recibido";
     expect(speakNewOrder()).toBe(true);
     expect(cancel).toHaveBeenCalledOnce();
     expect(speak).toHaveBeenCalledOnce();
-    expect(spoken[0].text).toBe("New order received");
+    expect(spoken[0].text).toBe("Nuevo pedido recibido");
     // Without a lang, iOS can read the phrase with a voice for another language.
     expect(spoken[0].lang).toBe("es-ES");
     expect(spoken[0].volume).toBe(1);
+  });
+
+  it("keeps an English tag while a locale has not translated the phrase", () => {
+    // es.json currently holds the English source. Tagging that es-ES would make a Spanish voice
+    // mispronounce English, which is worse than not tagging at all.
+    locale.value = "es-ES";
+    expect(speakNewOrder()).toBe(true);
+    expect(spoken[0].text).toBe("New order received");
+    expect(spoken[0].lang).toBe("en-US");
   });
 
   it("stays silent once the user switches the preference off", () => {
@@ -98,6 +112,22 @@ describe("speakNewOrder", () => {
   it("reports false instead of throwing where speech is unavailable", () => {
     removeSpeech();
     expect(speakNewOrder()).toBe(false);
+  });
+});
+
+describe("announcementLang — the tag follows the text, not the app setting", () => {
+  it("uses the app locale for a phrase that was actually translated", () => {
+    expect(announcementLang("Nuevo pedido recibido", "es-ES")).toBe("es-ES");
+    expect(announcementLang("新しい注文を受信しました", "ja-JP")).toBe("ja-JP");
+  });
+
+  it("falls back to English when the phrase came back untranslated", () => {
+    expect(announcementLang("New order received", "es-ES")).toBe("en-US");
+    expect(announcementLang("New order received", "ja-JP")).toBe("en-US");
+  });
+
+  it("falls back to English when the app reports no locale at all", () => {
+    expect(announcementLang("Nuevo pedido recibido", "")).toBe("en-US");
   });
 });
 
