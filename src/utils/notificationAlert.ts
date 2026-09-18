@@ -1,4 +1,5 @@
 import { i18n, logger, translate } from "@common";
+import { isIndoriModeEnabled, pickIndoriLine } from "@/utils/indoreEasterEgg";
 
 export const NOTIFICATION_SOUND_STORAGE_KEY = "bopis.notificationSoundEnabled";
 
@@ -190,33 +191,86 @@ export function resetSpeechPrimingForTest(): void {
  * Returns true when something will sound, since a device with no speech voices still gets the
  * chime and a device with no Web Audio still gets the words.
  */
-export function announceNewOrder(): boolean {
+export async function announceNewOrder(): Promise<boolean> {
   if (!isNotificationSoundEnabled()) return false;
 
   if (!playNewOrderChime()) return speakNewOrder();
 
-  window.setTimeout(() => speakNewOrder(), CHIME_DURATION_MS + ANNOUNCEMENT_GAP_MS);
-  return true;
+  await new Promise((resolve) => window.setTimeout(resolve, CHIME_DURATION_MS + ANNOUNCEMENT_GAP_MS));
+  await speakNewOrder();
+  return true;   // the chime played, so something sounded even if the words did not
 }
 
-export function speakNewOrder(): boolean {
+/**
+ * How long to wait for the engine to actually begin speaking before treating the call as failed.
+ *
+ * speechSynthesis.speak() returns without error even when nothing will ever play — Chrome wedges
+ * after certain sequences and Safari refuses without a gesture, both silently. The only honest
+ * signal is the utterance's own `start` event; long enough for a voice to load, short enough that
+ * a fallback still lands while the order is news.
+ */
+export const SPEECH_START_TIMEOUT_MS = 1500;
+
+/**
+ * Speak one utterance and report whether the engine actually started it.
+ *
+ * Resolves on `start`, not `end`: "did sound begin" is the question, and waiting for the end would
+ * hold the caller for the length of the sentence. A start that never comes is cancelled so a wedged
+ * queue does not swallow the next attempt too.
+ */
+export function speakUtterance(text: string, lang: string): Promise<boolean> {
+  return new Promise((resolve) => {
+    if (!hasSpeech()) return resolve(false);
+
+    let settled = false;
+    let watchdog: ReturnType<typeof setTimeout> | undefined;
+    const settle = (started: boolean) => {
+      if (settled) return;
+      settled = true;
+      if (watchdog) clearTimeout(watchdog);
+      resolve(started);
+    };
+
+    try {
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.lang = lang;
+      utterance.volume = 1;
+      utterance.rate = 1;
+      utterance.onstart = () => settle(true);
+      utterance.onerror = (event) => {
+        logger.warn("Speech synthesis reported an error", (event as any)?.error);
+        settle(false);
+      };
+      watchdog = setTimeout(() => {
+        logger.warn("Speech synthesis never started; cancelling", { lang });
+        try { window.speechSynthesis.cancel(); } catch { /* nothing to recover here */ }
+        settle(false);
+      }, SPEECH_START_TIMEOUT_MS);
+
+      window.speechSynthesis.cancel();
+      window.speechSynthesis.speak(utterance);
+    } catch (error) {
+      logger.warn("Could not speak", error);
+      settle(false);
+    }
+  });
+}
+
+export async function speakNewOrder(): Promise<boolean> {
   if (!isNotificationSoundEnabled() || !hasSpeech()) return false;
 
-  try {
-    const phrase = translate(ANNOUNCEMENT_SOURCE);
-    const utterance = new SpeechSynthesisUtterance(phrase);
-    // Without a language the platform picks a voice by its own rules, which on iOS can read the
-    // phrase with a voice for another language.
-    utterance.lang = announcementLang(phrase, String(i18n.global.locale.value || ""));
-    utterance.volume = 1;
-    utterance.rate = 1;
-    window.speechSynthesis.cancel();
-    window.speechSynthesis.speak(utterance);
-    return true;
-  } catch (error) {
-    logger.warn("Could not speak the new order alert", error);
-    return false;
+  if (isIndoriModeEnabled()) {
+    const line = pickIndoriLine();
+    // Devanagari first: it is the version that sounds right. If the engine will not start the
+    // Hindi voice, the romanised line through an Indian-English voice is the next best thing.
+    if (await speakUtterance(line.text, "hi-IN")) return true;
+    return speakUtterance(line.fallbackText, "en-IN");
   }
+
+  const phrase = translate(ANNOUNCEMENT_SOURCE);
+  // Without a language the platform picks a voice by its own rules, which on iOS can read the
+  // phrase with a voice for another language.
+  return speakUtterance(phrase, announcementLang(phrase, String(i18n.global.locale.value || "")));
 }
 
 /**

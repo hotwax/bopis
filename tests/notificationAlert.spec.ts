@@ -11,10 +11,18 @@ vi.mock("@common", () => ({
   i18n: { global: { locale } },
   logger: { warn: vi.fn(), error: vi.fn() }
 }));
+const egg = vi.hoisted(() => ({ enabled: false, pick: 0 }));
+vi.mock("@/utils/indoreEasterEgg", () => ({
+  isIndoriModeEnabled: () => egg.enabled,
+  pickIndoriLine: () => [
+    { text: "नया ऑर्डर आ गया", fallbackText: "Naya order aa gaya" }
+  ][egg.pick]
+}));
 
 const {
   ANNOUNCEMENT_GAP_MS,
   CHIME_DURATION_MS,
+  SPEECH_START_TIMEOUT_MS,
   announceNewOrder,
   announcementLang,
   attachSpeechPrimer,
@@ -56,9 +64,11 @@ function installAudio(state: "running" | "suspended" = "running") {
   });
 }
 
+let engineStarts = true;   // set false to model a wedged engine that accepts speak() and then does nothing
 function installSpeech() {
   spoken = [];
-  speak = vi.fn((utterance: any) => { spoken.push(utterance); });
+  engineStarts = true;
+  speak = vi.fn((utterance: any) => { spoken.push(utterance); if (engineStarts) utterance.onstart?.(); });
   cancel = vi.fn();
   Object.defineProperty(window, "speechSynthesis", { value: { speak, cancel }, configurable: true });
   Object.defineProperty(globalThis, "SpeechSynthesisUtterance", {
@@ -86,6 +96,7 @@ beforeEach(() => {
   Object.defineProperty(globalThis, "Notification", { value: { permission: "granted" }, configurable: true });
   locale.value = "en-US";
   translations.map = {};
+  egg.enabled = false;
   resetSpeechPrimingForTest();
   installSpeech();
   installAudio();
@@ -112,10 +123,10 @@ describe("sound preference", () => {
 });
 
 describe("speakNewOrder", () => {
-  it("speaks the announcement and tags it with the app locale once it is translated", () => {
+  it("speaks the announcement and tags it with the app locale once it is translated", async () => {
     locale.value = "es-ES";
     translations.map["New order received"] = "Nuevo pedido recibido";
-    expect(speakNewOrder()).toBe(true);
+    await expect(speakNewOrder()).resolves.toBe(true);
     expect(cancel).toHaveBeenCalledOnce();
     expect(speak).toHaveBeenCalledOnce();
     expect(spoken[0].text).toBe("Nuevo pedido recibido");
@@ -124,24 +135,57 @@ describe("speakNewOrder", () => {
     expect(spoken[0].volume).toBe(1);
   });
 
-  it("keeps an English tag while a locale has not translated the phrase", () => {
+  it("keeps an English tag while a locale has not translated the phrase", async () => {
     // es.json currently holds the English source. Tagging that es-ES would make a Spanish voice
     // mispronounce English, which is worse than not tagging at all.
     locale.value = "es-ES";
-    expect(speakNewOrder()).toBe(true);
+    await expect(speakNewOrder()).resolves.toBe(true);
     expect(spoken[0].text).toBe("New order received");
     expect(spoken[0].lang).toBe("en-US");
   });
 
-  it("stays silent once the user switches the preference off", () => {
+  it("stays silent once the user switches the preference off", async () => {
     setNotificationSoundEnabled(false);
-    expect(speakNewOrder()).toBe(false);
+    await expect(speakNewOrder()).resolves.toBe(false);
     expect(speak).not.toHaveBeenCalled();
   });
 
-  it("reports false instead of throwing where speech is unavailable", () => {
+  it("reports false instead of throwing where speech is unavailable", async () => {
     removeSpeech();
-    expect(speakNewOrder()).toBe(false);
+    await expect(speakNewOrder()).resolves.toBe(false);
+  });
+
+  it("reports false when the engine accepts speak() but never starts — a wedged engine", async () => {
+    vi.useFakeTimers();
+    engineStarts = false;
+    const pending = speakNewOrder();
+    await vi.advanceTimersByTimeAsync(SPEECH_START_TIMEOUT_MS + 1);
+    await expect(pending).resolves.toBe(false);
+    // and it clears the wedged queue so the next attempt has a chance
+    expect(cancel).toHaveBeenCalled();
+    vi.useRealTimers();
+  });
+
+  it("reads the special line in Devanagari with a Hindi voice when that mode is on", async () => {
+    egg.enabled = true;
+    await expect(speakNewOrder()).resolves.toBe(true);
+    expect(spoken).toHaveLength(1);
+    expect(spoken[0].text).toBe("नया ऑर्डर आ गया");
+    expect(spoken[0].lang).toBe("hi-IN");
+  });
+
+  it("falls back to the romanised line with an Indian-English voice if the Hindi one never starts", async () => {
+    vi.useFakeTimers();
+    egg.enabled = true;
+    let attempts = 0;
+    speak = vi.fn((u: any) => { spoken.push(u); attempts++; if (attempts === 2) u.onstart?.(); });   // 1st (hi-IN) wedges, 2nd starts
+    Object.defineProperty(window, "speechSynthesis", { value: { speak, cancel }, configurable: true });
+    const pending = speakNewOrder();
+    await vi.advanceTimersByTimeAsync(SPEECH_START_TIMEOUT_MS + 1);
+    await expect(pending).resolves.toBe(true);
+    expect(spoken.map((u) => u.lang)).toEqual(["hi-IN", "en-IN"]);
+    expect(spoken[1].text).toBe("Naya order aa gaya");
+    vi.useRealTimers();
   });
 });
 
@@ -187,40 +231,43 @@ describe("playNewOrderChime", () => {
 });
 
 describe("announceNewOrder — chime then words", () => {
-  it("holds the words back until the chime has finished, so they do not overlap", () => {
+  it("holds the words back until the chime has finished, so they do not overlap", async () => {
     vi.useFakeTimers();
-    expect(announceNewOrder()).toBe(true);
+    const pending = announceNewOrder();
     expect(audio.notes).toHaveLength(2);
 
     // Still ringing: speaking now is the overlap this exists to prevent.
-    vi.advanceTimersByTime(CHIME_DURATION_MS - 1);
+    await vi.advanceTimersByTimeAsync(CHIME_DURATION_MS - 1);
     expect(speak).not.toHaveBeenCalled();
 
-    vi.advanceTimersByTime(ANNOUNCEMENT_GAP_MS + 1);
+    await vi.advanceTimersByTimeAsync(ANNOUNCEMENT_GAP_MS + 1);
     expect(speak).toHaveBeenCalledOnce();
     expect(spoken[0].text).toBe("New order received");
+    await expect(pending).resolves.toBe(true);
     vi.useRealTimers();
   });
 
-  it("speaks immediately when there is no chime to wait for", () => {
-    vi.useFakeTimers();
+  it("speaks immediately when there is no chime to wait for", async () => {
     installAudio("suspended");   // locked, so nothing rings
-    expect(announceNewOrder()).toBe(true);
+    await expect(announceNewOrder()).resolves.toBe(true);
     expect(speak).toHaveBeenCalledOnce();
-    vi.useRealTimers();
   });
 
-  it("is silent when the preference is off", () => {
+  it("is silent when the preference is off", async () => {
     setNotificationSoundEnabled(false);
-    expect(announceNewOrder()).toBe(false);
+    await expect(announceNewOrder()).resolves.toBe(false);
     expect(audio.notes).toHaveLength(0);
     expect(speak).not.toHaveBeenCalled();
   });
 
-  it("still chimes on a device with no speech at all", () => {
+  it("still chimes on a device with no speech at all", async () => {
+    vi.useFakeTimers();
     removeSpeech();
-    expect(announceNewOrder()).toBe(true);
+    const pending = announceNewOrder();
+    await vi.advanceTimersByTimeAsync(CHIME_DURATION_MS + ANNOUNCEMENT_GAP_MS + 1);
+    await expect(pending).resolves.toBe(true);
     expect(audio.notes).toHaveLength(2);
+    vi.useRealTimers();
   });
 });
 
