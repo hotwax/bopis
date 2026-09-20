@@ -194,6 +194,7 @@ function buildToastMessage(payload: any) {
 async function showNotificationToast(payload: any) {
   await commonUtil.showToast(buildToastMessage(payload), {
     canDismiss: true,
+    manualDismiss: true,
     buttons: [{
       text: translate("View"),
       handler: async () => {
