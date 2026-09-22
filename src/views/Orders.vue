@@ -4,8 +4,9 @@
       <ion-toolbar>
         <ion-title>{{ (currentFacility as any)?.facilityName ? (currentFacility as any)?.facilityName : (currentFacility as any)?.facilityId }}</ion-title>
         <ion-buttons slot="end">
-          <ion-button data-testid="notifications-button" @click="viewNotifications()">
-            <ion-icon slot="icon-only" :icon="notificationsOutline" :color="(unreadNotificationsStatus && notifications.length) ? 'primary' : ''" />
+          <ion-button class="notifications-button" data-testid="notifications-button" @click="viewNotifications()">
+            <ion-icon slot="icon-only" :icon="notificationsOutline" :color="unreadNotificationCount ? 'primary' : ''" />
+            <ion-badge data-testid="notifications-badge" v-if="unreadNotificationCount" color="primary">{{ unreadNotificationCount }}</ion-badge>
           </ion-button>
           <ion-button @click="viewShipToStoreOrders()">
             <ion-icon slot="icon-only" :icon="trailSignOutline" />
@@ -154,7 +155,7 @@ import { onMounted, onUnmounted, ref, computed } from "vue";
 import ProductListItem from '@/components/ProductListItem.vue'
 import { mailOutline, notificationsOutline, printOutline, trailSignOutline } from "ionicons/icons";
 import router from "@/router";
-import { commonUtil, emitter, logger, translate, useNotificationStore } from '@common'
+import { commonUtil, emitter, logger, translate } from '@common'
 import { DateTime } from 'luxon';
 
 import AssignPickerModal from "./AssignPickerModal.vue";
@@ -163,6 +164,7 @@ import ProofOfDeliveryModal from "@/components/ProofOfDeliveryModal.vue";
 import { useUserStore } from "@/store/user";
 import { useOrderStore } from "@/store/order";
 import { useProductStore } from "@/store/productStore"
+import { useNotificationHistoryStore } from "@/store/notificationHistory"
 import Actions from "@/authorization/actions"
 
 const queryString = ref('');
@@ -171,8 +173,7 @@ const segmentSelected = ref('open');
 const orders = computed(() => useOrderStore().getOpenOrders);
 const packedOrders = computed(() => useOrderStore().getPackedOrders);
 const completedOrders = computed(() => useOrderStore().getCompletedOrders);
-const notifications = computed(() => useNotificationStore().getNotifications);
-const unreadNotificationsStatus = computed(() => useNotificationStore().hasUnreadNotifications);
+const unreadNotificationCount = computed(() => useNotificationHistoryStore().getUnreadCount);
 const isHandoverProofEnabled = computed(() => useProductStore().isHandoverProofEnabled)
 const isPrintPackingSlipEnabled = computed(() => useProductStore().isPrintPackingSlipEnabled)
 const isTrackingEnabled = computed(() => useProductStore().isTrackingEnabled)
@@ -203,6 +204,10 @@ onUnmounted(() => {
 
 onIonViewWillEnter(() => {
   queryString.value = '';
+
+  // History outlives the session, so the badge has to come off disk rather than off whatever the
+  // running app happened to receive.
+  useNotificationHistoryStore().hydrate();
 
   segmentSelected.value = order.value?.orderType || "open"
   searchOrders()
@@ -440,7 +445,6 @@ function viewShipToStoreOrders() {
 }
 
 function viewNotifications() {
-  useNotificationStore().setUnreadNotificationsStatus(false)
   router.push({ path: '/notifications' })
 }
 
@@ -665,6 +669,20 @@ ion-item {
   flex-direction: column;
   align-items: flex-end;
   row-gap: 4px;
+}
+
+/* Overlay the count on the bell instead of letting it widen the toolbar button. */
+.notifications-button {
+  position: relative;
+}
+
+.notifications-button ion-badge {
+  position: absolute;
+  top: 0;
+  inset-inline-end: 0;
+  font-size: 0.625rem;
+  padding: 2px 5px;
+  pointer-events: none;
 }
 
 @media (min-width: 991px){
