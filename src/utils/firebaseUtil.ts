@@ -3,6 +3,7 @@ import { DateTime } from "luxon";
 import { announceNewOrder, attachSpeechPrimer, showForegroundSystemNotification } from "@/utils/notificationAlert";
 import { getApp, getApps } from "firebase/app";
 import { getMessaging, getToken, isSupported } from "firebase/messaging";
+import router from "@/router";
 
 /**
  * The registration token we have CONFIRMED the backend holds for this device.
@@ -192,21 +193,18 @@ function buildToastMessage(payload: any) {
 }
 
 async function showNotificationToast(payload: any) {
-  await commonUtil.showToast(buildToastMessage(payload), {
+  const toast = await commonUtil.showToast(buildToastMessage(payload), {
     canDismiss: true,
     manualDismiss: true,
     buttons: [{
       text: translate("View"),
       handler: async () => {
-        // Loaded on tap rather than imported at module scope: the router pulls in every view, and a
-        // token utility must not carry that graph — it is imported by login and by unit tests that
-        // mock @common. Which order the message is about is not in the payload, so the bell page
-        // is as specific as this can get.
-        const { default: router } = await import("@/router");
         if (router.currentRoute.value.path !== NOTIFICATIONS_PATH) router.push({ path: NOTIFICATIONS_PATH });
       }
     }]
-  });
+  }) as any;
+
+  toast.present();
 }
 
 /**
@@ -357,7 +355,6 @@ export async function ensurePushWorker(report: StepReporter = () => undefined): 
  * can refuse the token.
  */
 const initialiseFirebaseMessaging = async (): Promise<boolean> => {
-  logger.warn('Initializing firebase')
   const notificationStore = useNotificationStore();
 
   // Attached before any early return below: the watcher must survive a reload that skips
@@ -411,7 +408,7 @@ const initialiseFirebaseMessaging = async (): Promise<boolean> => {
           }
           await showForegroundSystemNotification(notification.notification, pushWorker);
           announceNewOrder();
-          await showNotificationToast(notification.notification);
+          showNotificationToast(notification.notification);
         }
       }
     ).then(() => {
