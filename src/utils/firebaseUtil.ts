@@ -194,6 +194,7 @@ function buildToastMessage(payload: any) {
 
 async function showNotificationToast(payload: any) {
   const toast = await commonUtil.showToast(buildToastMessage(payload), {
+    position: "top",
     canDismiss: true,
     manualDismiss: true,
     buttons: [{
