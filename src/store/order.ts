@@ -278,7 +278,10 @@ export const useOrderStore = defineStore('order', {
           shipmentMethodTypeId: 'STOREPICKUP',
           shipmentMethodTypeId_op: 'equals',
           shipmentMethodTypeId_not: 'Y',
-          ...queryParams
+          ...queryParams,
+          shipmentStatusId: 'SHIPMENT_INPUT,SHIPMENT_APPROVED,SHIPMENT_PACKED,SHIPMENT_SHIPPED',
+          shipmentStatusId_op: 'in',
+          shipmentStatusId_not: 'Y'
         }
       }
 
@@ -517,6 +520,9 @@ export const useOrderStore = defineStore('order', {
 
       if (params.shipmentMethodTypeIds) {
         queryParams.shipmentMethodTypeIds = params.shipmentMethodTypeIds
+      } else {
+        queryParams.statusId = 'SHIPMENT_PACKED,SHIPMENT_APPROVED'
+        queryParams.statusId_op = 'in'
       }
 
       try {

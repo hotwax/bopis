@@ -4,8 +4,9 @@
       <ion-toolbar>
         <ion-title>{{ (currentFacility as any)?.facilityName ? (currentFacility as any)?.facilityName : (currentFacility as any)?.facilityId }}</ion-title>
         <ion-buttons slot="end">
-          <ion-button data-testid="notifications-button" @click="viewNotifications()">
-            <ion-icon slot="icon-only" :icon="notificationsOutline" :color="(unreadNotificationsStatus && notifications.length) ? 'primary' : ''" />
+          <ion-button class="notifications-button" data-testid="notifications-button" @click="viewNotifications()">
+            <ion-icon slot="icon-only" :icon="notificationsOutline" :color="unreadNotificationCount ? 'primary' : ''" />
+            <ion-badge data-testid="notifications-badge" v-if="unreadNotificationCount" color="primary">{{ unreadNotificationCount }}</ion-badge>
           </ion-button>
           <ion-button @click="viewShipToStoreOrders()">
             <ion-icon slot="icon-only" :icon="trailSignOutline" />
@@ -94,8 +95,8 @@
             <ProductListItem v-for="item in order.items" :key="item.productId" :item="item" :orderId="order.orderId" :customerId="order.customerId" :currencyUom="order.currencyUom" orderType="packed"/>
             <div class="border-top">
 
-              <ion-button data-testid="handover-button" :disabled="!useUserStore().hasPermission(Actions.APP_ORDER_UPDATE)" fill="clear" @click.stop="deliverShipment(order)">
-                {{ order.shipmentMethodTypeId === 'STOREPICKUP' ? translate("Handover") : translate("Ship") }}
+              <ion-button v-if="order.shipmentMethodTypeId === 'STOREPICKUP'" data-testid="handover-button" :disabled="!useUserStore().hasPermission(Actions.APP_ORDER_UPDATE)" fill="clear" @click.stop="deliverShipment(order)">
+                {{ translate("Handover") }}
               </ion-button>
               <ion-button data-testid="listpage-cancel-button" color="danger" :disabled="!useUserStore().hasPermission(Actions.APP_ORDER_UPDATE)" fill="clear" @click.stop="openRejectOrderModal(order)">
                 {{ translate("Cancel") }}
@@ -154,7 +155,7 @@ import { onMounted, onUnmounted, ref, computed } from "vue";
 import ProductListItem from '@/components/ProductListItem.vue'
 import { mailOutline, notificationsOutline, printOutline, trailSignOutline } from "ionicons/icons";
 import router from "@/router";
-import { commonUtil, emitter, logger, translate, useNotificationStore } from '@common'
+import { commonUtil, emitter, logger, translate } from '@common'
 import { DateTime } from 'luxon';
 
 import AssignPickerModal from "./AssignPickerModal.vue";
@@ -163,6 +164,8 @@ import ProofOfDeliveryModal from "@/components/ProofOfDeliveryModal.vue";
 import { useUserStore } from "@/store/user";
 import { useOrderStore } from "@/store/order";
 import { useProductStore } from "@/store/productStore"
+import { useNotificationHistoryStore } from "@/store/notificationHistory"
+import { newOrderAlert } from "@/utils/newOrderAlert"
 import Actions from "@/authorization/actions"
 
 const queryString = ref('');
@@ -171,8 +174,7 @@ const segmentSelected = ref('open');
 const orders = computed(() => useOrderStore().getOpenOrders);
 const packedOrders = computed(() => useOrderStore().getPackedOrders);
 const completedOrders = computed(() => useOrderStore().getCompletedOrders);
-const notifications = computed(() => useNotificationStore().getNotifications);
-const unreadNotificationsStatus = computed(() => useNotificationStore().hasUnreadNotifications);
+const unreadNotificationCount = computed(() => useNotificationHistoryStore().getUnreadCount);
 const isHandoverProofEnabled = computed(() => useProductStore().isHandoverProofEnabled)
 const isPrintPackingSlipEnabled = computed(() => useProductStore().isPrintPackingSlipEnabled)
 const isTrackingEnabled = computed(() => useProductStore().isTrackingEnabled)
@@ -204,10 +206,19 @@ onUnmounted(() => {
 onIonViewWillEnter(() => {
   queryString.value = '';
 
+  // History outlives the session, so the badge has to come off disk rather than off whatever the
+  // running app happened to receive.
+  useNotificationHistoryStore().hydrate();
+
   segmentSelected.value = order.value?.orderType || "open"
   searchOrders()
   if (segmentSelected.value === 'open') {
-    getPickupOrders()
+    // Seeds the baseline on the way in, so the orders already waiting are not announced as new.
+    getPickupOrders().then(() => newOrderAlert.syncOpenOrders({
+      facilityId: (currentFacility.value as any)?.facilityId,
+      orders: orders.value,
+      isSearchActive: !!queryString.value.trim()
+    }))
   } else if (segmentSelected.value === 'packed') {
     getPackedOrders()
   } else {
@@ -228,6 +239,13 @@ async function autoRefreshOrders() {
   try {
     if(segmentSelected.value === 'open') {
       await getPickupOrders(undefined, undefined, false)
+      // Announce anything that appeared since the last poll. Only the open segment is diffed:
+      // packed and completed orders are the result of someone acting, not something arriving.
+      await newOrderAlert.syncOpenOrders({
+        facilityId: (currentFacility.value as any)?.facilityId,
+        orders: orders.value,
+        isSearchActive: !!queryString.value.trim()
+      })
     } else if(segmentSelected.value === 'packed') {
       await getPackedOrders(undefined, undefined, false)
     } else {
@@ -259,7 +277,9 @@ async function assignPicker(order: any, shipGroup: any, facilityId: any) {
       await createPicklist(order, result.data.selectedPicker);
       const updatedOrder = orders.value.find((ord: any) => ord.orderId === order.orderId);
       const updatedShipGroup = updatedOrder.shipGroups.find((sg: any) => sg.shipGroupSeqId === shipGroup.shipGroupSeqId);
-      await useOrderStore().packShipGroupItems({ order: updatedOrder, shipGroup: updatedShipGroup })
+      if(shipGroup.shipmentMethodTypeId === 'STOREPICKUP') {
+        await useOrderStore().packShipGroupItems({ order: updatedOrder, shipGroup: updatedShipGroup })
+      }
       emitter.emit("dismissLoader");
     }
   })
@@ -359,7 +379,9 @@ async function readyForPickup(orderData: any, shipGroup: any) {
             await printPicklist(orderData, shipGroup)
             orderIndex = orders.value.findIndex((o: any) => o.orderId === orderData.orderId);
           }
-          await useOrderStore().packShipGroupItems({ order: orderIndex >= 0 ? orders.value[orderIndex] : orderData, shipGroup: orderIndex >= 0 ? orders.value[orderIndex].shipGroup : shipGroup })
+          if(shipGroup.shipmentMethodTypeId === 'STOREPICKUP') {
+            await useOrderStore().packShipGroupItems({ order: orderIndex >= 0 ? orders.value[orderIndex] : orderData, shipGroup: orderIndex >= 0 ? orders.value[orderIndex].shipGroup : shipGroup })
+          }
           emitter.emit("dismissLoader");
         }
       }]
@@ -440,7 +462,6 @@ function viewShipToStoreOrders() {
 }
 
 function viewNotifications() {
-  useNotificationStore().setUnreadNotificationsStatus(false)
   router.push({ path: '/notifications' })
 }
 
@@ -665,6 +686,20 @@ ion-item {
   flex-direction: column;
   align-items: flex-end;
   row-gap: 4px;
+}
+
+/* Overlay the count on the bell instead of letting it widen the toolbar button. */
+.notifications-button {
+  position: relative;
+}
+
+.notifications-button ion-badge {
+  position: absolute;
+  top: 0;
+  inset-inline-end: 0;
+  font-size: 0.625rem;
+  padding: 2px 5px;
+  pointer-events: none;
 }
 
 @media (min-width: 991px){

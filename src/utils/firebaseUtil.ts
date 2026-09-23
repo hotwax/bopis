@@ -1,8 +1,10 @@
 import { api, commonUtil, firebaseMessaging, logger, translate, useNotificationStore } from "@common";
+import { useNotificationHistoryStore } from "@/store/notificationHistory";
 import { DateTime } from "luxon";
 import { announceNewOrder, attachSpeechPrimer, showForegroundSystemNotification } from "@/utils/notificationAlert";
 import { getApp, getApps } from "firebase/app";
 import { getMessaging, getToken, isSupported } from "firebase/messaging";
+import router from "@/router";
 
 /**
  * The registration token we have CONFIRMED the backend holds for this device.
@@ -257,20 +259,45 @@ function buildToastMessage(payload: any) {
 }
 
 async function showNotificationToast(payload: any) {
-  await commonUtil.showToast(buildToastMessage(payload), {
+  const toast = await commonUtil.showToast(buildToastMessage(payload), {
+    position: "top",
     canDismiss: true,
+    manualDismiss: true,
     buttons: [{
       text: translate("View"),
       handler: async () => {
-        // Loaded on tap rather than imported at module scope: the router pulls in every view, and a
-        // token utility must not carry that graph — it is imported by login and by unit tests that
-        // mock @common. Which order the message is about is not in the payload, so the bell page
-        // is as specific as this can get.
-        const { default: router } = await import("@/router");
         if (router.currentRoute.value.path !== NOTIFICATIONS_PATH) router.push({ path: NOTIFICATIONS_PATH });
       }
     }]
-  });
+  }) as any;
+
+  toast.present();
+}
+
+/**
+ * Raise every alert a notification should produce: the system banner, the chime and the in-app
+ * toast.
+ *
+ * Exported because new orders are also detected locally by diffing the order list, and an order
+ * found that way must alert identically to one that arrived over push - otherwise the two paths
+ * drift and only one of them gets fixed.
+ *
+ * The banner must go through the FCM worker specifically: it owns the notificationclick handler,
+ * so a banner raised on any other registration would do nothing when tapped.
+ */
+export async function alertForNotification(payload: any, { showToast = true, playChime = true } = {}) {
+  let pushWorker: ServiceWorkerRegistration | null = null;
+
+  try {
+    pushWorker = findPushWorkerRegistration(await navigator.serviceWorker?.getRegistrations?.() ?? []) ?? null;
+  } catch (error) {
+    logger.warn("Could not resolve the push worker for the foreground alert", error);
+  }
+
+  await showForegroundSystemNotification(payload, pushWorker);
+
+  if (playChime) announceNewOrder();
+  if (showToast) await showNotificationToast(payload);
 }
 
 /**
@@ -460,28 +487,23 @@ const initialiseFirebaseMessaging = async ({ userId }: { userId?: string } = {})
         tokenRegistered = await registerToken(token);
       },
       async (notification: any) => {
-        // The shared store shows a fixed "New notification received." toast for an entry flagged as
-        // foreground. This app shows its own toast carrying the message instead, so the flag is left
-        // off the stored entry; nothing else reads it.
-        notificationStore.addNotification({ ...notification.notification, time: DateTime.now().toMillis() });
         if (notification.isForeground) {
-          // Background messages already surface through the service worker. Foreground messages
-          // need the same system-level alert because a store associate may be looking at another
-          // application view when the order arrives.
+          // Banner only. The chime, the toast and the history row all come from the local order
+          // diff, which sees the same order on its next poll - raising them here as well would
+          // double up on any device where both push and the diff are working. The banner survives
+          // because it is tagged with the order id, so the two paths collapse into one.
           //
-          // The banner must be shown through the FCM worker specifically: it owns the
-          // notificationclick handler, so a banner shown through any other registration would do
+          // It must be shown through the FCM worker specifically: that worker owns the
+          // notificationclick handler, so a banner raised on any other registration would do
           // nothing when tapped.
-          let pushWorker: ServiceWorkerRegistration | null = null;
-          try {
-            pushWorker = findPushWorkerRegistration(await navigator.serviceWorker?.getRegistrations?.() ?? []) ?? null;
-          } catch (error) {
-            logger.warn("Could not resolve the push worker for the foreground alert", error);
-          }
-          await showForegroundSystemNotification(notification.notification, pushWorker);
-          announceNewOrder();
-          await showNotificationToast(notification.notification);
+          await alertForNotification(notification.notification, { showToast: false, playChime: false });
+          return;
         }
+
+        // A background message is the one case the local diff cannot see, so it is recorded here.
+        // History is owned by this app's IndexedDB store rather than the persisted `@common`
+        // store, so that it survives logout instead of being wiped with the session.
+        await useNotificationHistoryStore().addNotification(notification.notification);
       }
     ).then(() => {
       // Only a token the backend accepted makes this device initialised. initialiseFirebaseApp also
