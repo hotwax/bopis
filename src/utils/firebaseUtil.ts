@@ -220,7 +220,7 @@ async function showNotificationToast(payload: any) {
  * The banner must go through the FCM worker specifically: it owns the notificationclick handler,
  * so a banner raised on any other registration would do nothing when tapped.
  */
-export async function alertForNotification(payload: any) {
+export async function alertForNotification(payload: any, { showToast = true, playChime = true } = {}) {
   let pushWorker: ServiceWorkerRegistration | null = null;
 
   try {
@@ -230,8 +230,9 @@ export async function alertForNotification(payload: any) {
   }
 
   await showForegroundSystemNotification(payload, pushWorker);
-  announceNewOrder();
-  await showNotificationToast(payload);
+
+  if (playChime) announceNewOrder();
+  if (showToast) await showNotificationToast(payload);
 }
 
 /**
@@ -415,19 +416,23 @@ const initialiseFirebaseMessaging = async (): Promise<boolean> => {
         tokenRegistered = await registerToken(token);
       },
       async (notification: any) => {
+        if (notification.isForeground) {
+          // Banner only. The chime, the toast and the history row all come from the local order
+          // diff, which sees the same order on its next poll - raising them here as well would
+          // double up on any device where both push and the diff are working. The banner survives
+          // because it is tagged with the order id, so the two paths collapse into one.
+          //
+          // It must be shown through the FCM worker specifically: that worker owns the
+          // notificationclick handler, so a banner raised on any other registration would do
+          // nothing when tapped.
+          await alertForNotification(notification.notification, { showToast: false, playChime: false });
+          return;
+        }
+
+        // A background message is the one case the local diff cannot see, so it is recorded here.
         // History is owned by this app's IndexedDB store rather than the persisted `@common`
         // store, so that it survives logout instead of being wiped with the session.
         await useNotificationHistoryStore().addNotification(notification.notification);
-        if (notification.isForeground) {
-          // Background messages already surface through the service worker. Foreground messages
-          // need the same system-level alert because a store associate may be looking at another
-          // application view when the order arrives.
-          //
-          // The banner must be shown through the FCM worker specifically: it owns the
-          // notificationclick handler, so a banner shown through any other registration would do
-          // nothing when tapped.
-          await alertForNotification(notification.notification);
-        }
       }
     ).then(() => {
       // Only a token the backend accepted makes this device initialised. initialiseFirebaseApp also
