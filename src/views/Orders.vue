@@ -165,6 +165,7 @@ import { useUserStore } from "@/store/user";
 import { useOrderStore } from "@/store/order";
 import { useProductStore } from "@/store/productStore"
 import { useNotificationHistoryStore } from "@/store/notificationHistory"
+import { newOrderAlert } from "@/utils/newOrderAlert"
 import Actions from "@/authorization/actions"
 
 const queryString = ref('');
@@ -212,7 +213,12 @@ onIonViewWillEnter(() => {
   segmentSelected.value = order.value?.orderType || "open"
   searchOrders()
   if (segmentSelected.value === 'open') {
-    getPickupOrders()
+    // Seeds the baseline on the way in, so the orders already waiting are not announced as new.
+    getPickupOrders().then(() => newOrderAlert.syncOpenOrders({
+      facilityId: (currentFacility.value as any)?.facilityId,
+      orders: orders.value,
+      isSearchActive: !!queryString.value.trim()
+    }))
   } else if (segmentSelected.value === 'packed') {
     getPackedOrders()
   } else {
@@ -233,6 +239,13 @@ async function autoRefreshOrders() {
   try {
     if(segmentSelected.value === 'open') {
       await getPickupOrders(undefined, undefined, false)
+      // Announce anything that appeared since the last poll. Only the open segment is diffed:
+      // packed and completed orders are the result of someone acting, not something arriving.
+      await newOrderAlert.syncOpenOrders({
+        facilityId: (currentFacility.value as any)?.facilityId,
+        orders: orders.value,
+        isSearchActive: !!queryString.value.trim()
+      })
     } else if(segmentSelected.value === 'packed') {
       await getPackedOrders(undefined, undefined, false)
     } else {
