@@ -210,6 +210,31 @@ async function showNotificationToast(payload: any) {
 }
 
 /**
+ * Raise every alert a notification should produce: the system banner, the chime and the in-app
+ * toast.
+ *
+ * Exported because new orders are also detected locally by diffing the order list, and an order
+ * found that way must alert identically to one that arrived over push - otherwise the two paths
+ * drift and only one of them gets fixed.
+ *
+ * The banner must go through the FCM worker specifically: it owns the notificationclick handler,
+ * so a banner raised on any other registration would do nothing when tapped.
+ */
+export async function alertForNotification(payload: any) {
+  let pushWorker: ServiceWorkerRegistration | null = null;
+
+  try {
+    pushWorker = findPushWorkerRegistration(await navigator.serviceWorker?.getRegistrations?.() ?? []) ?? null;
+  } catch (error) {
+    logger.warn("Could not resolve the push worker for the foreground alert", error);
+  }
+
+  await showForegroundSystemNotification(payload, pushWorker);
+  announceNewOrder();
+  await showNotificationToast(payload);
+}
+
+/**
  * Whether messaging can be initialised WITHOUT showing a permission prompt.
  *
  * `Notification.requestPermission()` must originate from a user gesture. iOS refuses it outright
@@ -401,15 +426,7 @@ const initialiseFirebaseMessaging = async (): Promise<boolean> => {
           // The banner must be shown through the FCM worker specifically: it owns the
           // notificationclick handler, so a banner shown through any other registration would do
           // nothing when tapped.
-          let pushWorker: ServiceWorkerRegistration | null = null;
-          try {
-            pushWorker = findPushWorkerRegistration(await navigator.serviceWorker?.getRegistrations?.() ?? []) ?? null;
-          } catch (error) {
-            logger.warn("Could not resolve the push worker for the foreground alert", error);
-          }
-          await showForegroundSystemNotification(notification.notification, pushWorker);
-          announceNewOrder();
-          showNotificationToast(notification.notification);
+          await alertForNotification(notification.notification);
         }
       }
     ).then(() => {

@@ -208,9 +208,9 @@
             </ion-button>            
           </ion-item>
           <ion-item lines="none" v-else-if="orderType === 'packed' && order.shipGroup?.items?.length" class="ion-hide-md-down">
-            <ion-button data-testid="handover-button" size="default" :disabled="!useUserStore().hasPermission(Actions.APP_ORDER_UPDATE) || order.handovered || order.shipped || order.cancelled || hasCancelledItems" expand="block" @click="deliverShipment(order)">
+            <ion-button v-if="order.shipGroup.shipmentMethodTypeId === 'STOREPICKUP'" data-testid="handover-button" size="default" :disabled="!useUserStore().hasPermission(Actions.APP_ORDER_UPDATE) || order.handovered || order.shipped || order.cancelled || hasCancelledItems" expand="block" @click="deliverShipment(order)">
               <ion-icon slot="start" :icon="checkmarkDoneOutline"/>
-              {{ order.shipGroup.shipmentMethodTypeId === 'STOREPICKUP' ? translate("Handover") : translate("Ship") }}
+              {{ translate("Handover") }}
             </ion-button>
             <ion-button data-testid="submit-cancel-items-button" color="danger" size="default" :disabled="!useUserStore().hasPermission(Actions.APP_ORDER_UPDATE)||!useUserStore().hasPermission(Actions.APP_CANCEL_BOPIS_ORDER) || order.handovered || order.shipped || order.cancelled || !hasCancelledItems" expand="block" fill="outline" @click="cancelOrder(order)">
               {{ translate("Cancel items") }}
@@ -784,7 +784,9 @@ async function assignPicker(orderRef: any, shipGroup: any, facilityId: any) {
       emitter.emit("presentLoader");
       await createPicklist(orderRef, result.data.selectedPicker);
       const updatedOrder = order.value;
-      await useOrderStore().packShipGroupItems({ order: updatedOrder, shipGroup: updatedOrder.shipGroup })
+      if(shipGroup.shipmentMethodTypeId === 'STOREPICKUP') {
+        await useOrderStore().packShipGroupItems({ order: updatedOrder, shipGroup: updatedOrder.shipGroup })
+      }
       await getOrderDetail(props.orderId, props.shipGroupSeqId, props.orderType);
       emitter.emit("dismissLoader");
     }
@@ -833,12 +835,14 @@ async function readyForPickup(orderData: any, shipGroup: any) {
             await printPicklist(orderData, shipGroup)
           }
           const updatedOrder = order.value;
-          await useOrderStore().packShipGroupItems({ order: orderData, shipGroup: updatedOrder.shipGroup }).then(async (resp: any) => {
-            if (!commonUtil.hasError(resp)) {
-              await getOrderDetail(props.orderId, props.shipGroupSeqId, props.orderType);
-              prepareOrderTimeline({ statusId: "SHIPMENT_PACKED" });
-            }
-          })
+          if(shipGroup.shipmentMethodTypeId === 'STOREPICKUP') {
+            await useOrderStore().packShipGroupItems({ order: orderData, shipGroup: updatedOrder.shipGroup }).then(async (resp: any) => {
+              if (!commonUtil.hasError(resp)) {
+                await getOrderDetail(props.orderId, props.shipGroupSeqId, props.orderType);
+                prepareOrderTimeline({ statusId: "SHIPMENT_PACKED" });
+              }
+            })
+          }
           emitter.emit("dismissLoader");
         }
       }]

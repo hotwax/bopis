@@ -95,8 +95,8 @@
             <ProductListItem v-for="item in order.items" :key="item.productId" :item="item" :orderId="order.orderId" :customerId="order.customerId" :currencyUom="order.currencyUom" orderType="packed"/>
             <div class="border-top">
 
-              <ion-button data-testid="handover-button" :disabled="!useUserStore().hasPermission(Actions.APP_ORDER_UPDATE)" fill="clear" @click.stop="deliverShipment(order)">
-                {{ order.shipmentMethodTypeId === 'STOREPICKUP' ? translate("Handover") : translate("Ship") }}
+              <ion-button v-if="order.shipmentMethodTypeId === 'STOREPICKUP'" data-testid="handover-button" :disabled="!useUserStore().hasPermission(Actions.APP_ORDER_UPDATE)" fill="clear" @click.stop="deliverShipment(order)">
+                {{ translate("Handover") }}
               </ion-button>
               <ion-button data-testid="listpage-cancel-button" color="danger" :disabled="!useUserStore().hasPermission(Actions.APP_ORDER_UPDATE)" fill="clear" @click.stop="openRejectOrderModal(order)">
                 {{ translate("Cancel") }}
@@ -165,6 +165,7 @@ import { useUserStore } from "@/store/user";
 import { useOrderStore } from "@/store/order";
 import { useProductStore } from "@/store/productStore"
 import { useNotificationHistoryStore } from "@/store/notificationHistory"
+import { newOrderAlert } from "@/utils/newOrderAlert"
 import Actions from "@/authorization/actions"
 
 const queryString = ref('');
@@ -212,7 +213,12 @@ onIonViewWillEnter(() => {
   segmentSelected.value = order.value?.orderType || "open"
   searchOrders()
   if (segmentSelected.value === 'open') {
-    getPickupOrders()
+    // Seeds the baseline on the way in, so the orders already waiting are not announced as new.
+    getPickupOrders().then(() => newOrderAlert.syncOpenOrders({
+      facilityId: (currentFacility.value as any)?.facilityId,
+      orders: orders.value,
+      isSearchActive: !!queryString.value.trim()
+    }))
   } else if (segmentSelected.value === 'packed') {
     getPackedOrders()
   } else {
@@ -233,6 +239,13 @@ async function autoRefreshOrders() {
   try {
     if(segmentSelected.value === 'open') {
       await getPickupOrders(undefined, undefined, false)
+      // Announce anything that appeared since the last poll. Only the open segment is diffed:
+      // packed and completed orders are the result of someone acting, not something arriving.
+      await newOrderAlert.syncOpenOrders({
+        facilityId: (currentFacility.value as any)?.facilityId,
+        orders: orders.value,
+        isSearchActive: !!queryString.value.trim()
+      })
     } else if(segmentSelected.value === 'packed') {
       await getPackedOrders(undefined, undefined, false)
     } else {
@@ -264,7 +277,9 @@ async function assignPicker(order: any, shipGroup: any, facilityId: any) {
       await createPicklist(order, result.data.selectedPicker);
       const updatedOrder = orders.value.find((ord: any) => ord.orderId === order.orderId);
       const updatedShipGroup = updatedOrder.shipGroups.find((sg: any) => sg.shipGroupSeqId === shipGroup.shipGroupSeqId);
-      await useOrderStore().packShipGroupItems({ order: updatedOrder, shipGroup: updatedShipGroup })
+      if(shipGroup.shipmentMethodTypeId === 'STOREPICKUP') {
+        await useOrderStore().packShipGroupItems({ order: updatedOrder, shipGroup: updatedShipGroup })
+      }
       emitter.emit("dismissLoader");
     }
   })
@@ -364,7 +379,9 @@ async function readyForPickup(orderData: any, shipGroup: any) {
             await printPicklist(orderData, shipGroup)
             orderIndex = orders.value.findIndex((o: any) => o.orderId === orderData.orderId);
           }
-          await useOrderStore().packShipGroupItems({ order: orderIndex >= 0 ? orders.value[orderIndex] : orderData, shipGroup: orderIndex >= 0 ? orders.value[orderIndex].shipGroup : shipGroup })
+          if(shipGroup.shipmentMethodTypeId === 'STOREPICKUP') {
+            await useOrderStore().packShipGroupItems({ order: orderIndex >= 0 ? orders.value[orderIndex] : orderData, shipGroup: orderIndex >= 0 ? orders.value[orderIndex].shipGroup : shipGroup })
+          }
           emitter.emit("dismissLoader");
         }
       }]
