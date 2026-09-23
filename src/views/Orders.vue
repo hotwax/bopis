@@ -95,8 +95,8 @@
             <ProductListItem v-for="item in order.items" :key="item.productId" :item="item" :orderId="order.orderId" :customerId="order.customerId" :currencyUom="order.currencyUom" orderType="packed"/>
             <div class="border-top">
 
-              <ion-button data-testid="handover-button" :disabled="!useUserStore().hasPermission(Actions.APP_ORDER_UPDATE)" fill="clear" @click.stop="deliverShipment(order)">
-                {{ order.shipmentMethodTypeId === 'STOREPICKUP' ? translate("Handover") : translate("Ship") }}
+              <ion-button v-if="order.shipmentMethodTypeId === 'STOREPICKUP'" data-testid="handover-button" :disabled="!useUserStore().hasPermission(Actions.APP_ORDER_UPDATE)" fill="clear" @click.stop="deliverShipment(order)">
+                {{ translate("Handover") }}
               </ion-button>
               <ion-button data-testid="listpage-cancel-button" color="danger" :disabled="!useUserStore().hasPermission(Actions.APP_ORDER_UPDATE)" fill="clear" @click.stop="openRejectOrderModal(order)">
                 {{ translate("Cancel") }}

@@ -208,9 +208,9 @@
             </ion-button>            
           </ion-item>
           <ion-item lines="none" v-else-if="orderType === 'packed' && order.shipGroup?.items?.length" class="ion-hide-md-down">
-            <ion-button data-testid="handover-button" size="default" :disabled="!useUserStore().hasPermission(Actions.APP_ORDER_UPDATE) || order.handovered || order.shipped || order.cancelled || hasCancelledItems" expand="block" @click="deliverShipment(order)">
+            <ion-button v-if="order.shipGroup.shipmentMethodTypeId === 'STOREPICKUP'" data-testid="handover-button" size="default" :disabled="!useUserStore().hasPermission(Actions.APP_ORDER_UPDATE) || order.handovered || order.shipped || order.cancelled || hasCancelledItems" expand="block" @click="deliverShipment(order)">
               <ion-icon slot="start" :icon="checkmarkDoneOutline"/>
-              {{ order.shipGroup.shipmentMethodTypeId === 'STOREPICKUP' ? translate("Handover") : translate("Ship") }}
+              {{ translate("Handover") }}
             </ion-button>
             <ion-button data-testid="submit-cancel-items-button" color="danger" size="default" :disabled="!useUserStore().hasPermission(Actions.APP_ORDER_UPDATE)||!useUserStore().hasPermission(Actions.APP_CANCEL_BOPIS_ORDER) || order.handovered || order.shipped || order.cancelled || !hasCancelledItems" expand="block" fill="outline" @click="cancelOrder(order)">
               {{ translate("Cancel items") }}
