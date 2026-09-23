@@ -784,7 +784,9 @@ async function assignPicker(orderRef: any, shipGroup: any, facilityId: any) {
       emitter.emit("presentLoader");
       await createPicklist(orderRef, result.data.selectedPicker);
       const updatedOrder = order.value;
-      await useOrderStore().packShipGroupItems({ order: updatedOrder, shipGroup: updatedOrder.shipGroup })
+      if(shipGroup.shipmentMethodTypeId === 'STOREPICKUP') {
+        await useOrderStore().packShipGroupItems({ order: updatedOrder, shipGroup: updatedOrder.shipGroup })
+      }
       await getOrderDetail(props.orderId, props.shipGroupSeqId, props.orderType);
       emitter.emit("dismissLoader");
     }
@@ -833,12 +835,14 @@ async function readyForPickup(orderData: any, shipGroup: any) {
             await printPicklist(orderData, shipGroup)
           }
           const updatedOrder = order.value;
-          await useOrderStore().packShipGroupItems({ order: orderData, shipGroup: updatedOrder.shipGroup }).then(async (resp: any) => {
-            if (!commonUtil.hasError(resp)) {
-              await getOrderDetail(props.orderId, props.shipGroupSeqId, props.orderType);
-              prepareOrderTimeline({ statusId: "SHIPMENT_PACKED" });
-            }
-          })
+          if(shipGroup.shipmentMethodTypeId === 'STOREPICKUP') {
+            await useOrderStore().packShipGroupItems({ order: orderData, shipGroup: updatedOrder.shipGroup }).then(async (resp: any) => {
+              if (!commonUtil.hasError(resp)) {
+                await getOrderDetail(props.orderId, props.shipGroupSeqId, props.orderType);
+                prepareOrderTimeline({ statusId: "SHIPMENT_PACKED" });
+              }
+            })
+          }
           emitter.emit("dismissLoader");
         }
       }]

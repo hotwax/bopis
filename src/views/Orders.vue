@@ -277,7 +277,9 @@ async function assignPicker(order: any, shipGroup: any, facilityId: any) {
       await createPicklist(order, result.data.selectedPicker);
       const updatedOrder = orders.value.find((ord: any) => ord.orderId === order.orderId);
       const updatedShipGroup = updatedOrder.shipGroups.find((sg: any) => sg.shipGroupSeqId === shipGroup.shipGroupSeqId);
-      await useOrderStore().packShipGroupItems({ order: updatedOrder, shipGroup: updatedShipGroup })
+      if(shipGroup.shipmentMethodTypeId === 'STOREPICKUP') {
+        await useOrderStore().packShipGroupItems({ order: updatedOrder, shipGroup: updatedShipGroup })
+      }
       emitter.emit("dismissLoader");
     }
   })
@@ -377,7 +379,9 @@ async function readyForPickup(orderData: any, shipGroup: any) {
             await printPicklist(orderData, shipGroup)
             orderIndex = orders.value.findIndex((o: any) => o.orderId === orderData.orderId);
           }
-          await useOrderStore().packShipGroupItems({ order: orderIndex >= 0 ? orders.value[orderIndex] : orderData, shipGroup: orderIndex >= 0 ? orders.value[orderIndex].shipGroup : shipGroup })
+          if(shipGroup.shipmentMethodTypeId === 'STOREPICKUP') {
+            await useOrderStore().packShipGroupItems({ order: orderIndex >= 0 ? orders.value[orderIndex] : orderData, shipGroup: orderIndex >= 0 ? orders.value[orderIndex].shipGroup : shipGroup })
+          }
           emitter.emit("dismissLoader");
         }
       }]
