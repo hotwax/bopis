@@ -278,10 +278,10 @@ export const useOrderStore = defineStore('order', {
           shipmentMethodTypeId: 'STOREPICKUP',
           shipmentMethodTypeId_op: 'equals',
           shipmentMethodTypeId_not: 'Y',
+          ...queryParams,
           shipmentStatusId: 'SHIPMENT_INPUT,SHIPMENT_APPROVED,SHIPMENT_PACKED,SHIPMENT_SHIPPED',
           shipmentStatusId_op: 'in',
-          shipmentStatusId_not: 'Y',
-          ...queryParams
+          shipmentStatusId_not: 'Y'
         }
       }
 
