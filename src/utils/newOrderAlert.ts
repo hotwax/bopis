@@ -53,14 +53,35 @@ export function resetNewOrderTracking() {
  * One order, in the shape an FCM data message arrives in, so every consumer downstream reads it
  * the same way whether it came from push or from the diff.
  */
-function buildOrderPayload(order: any) {
+/**
+ * Items this facility is responsible for.
+ *
+ * An order can be split across facilities, so only the ship groups assigned here count - the
+ * picker is being told what THEY have to pack, not how large the customer's order was. The
+ * fallback covers a ship group that arrives without a facilityId rather than announcing "0 items".
+ */
+function countItemsForFacility(order: any, facilityId: string) {
+  const shipGroups = order?.shipGroups || [];
+  const facilityShipGroups = shipGroups.filter((shipGroup: any) => shipGroup?.facilityId === facilityId);
+  const counted = facilityShipGroups.length ? facilityShipGroups : shipGroups;
+
+  return counted.reduce((total: number, shipGroup: any) => total + (shipGroup?.items?.length || 0), 0);
+}
+
+function buildOrderBody(order: any, facilityId: string) {
+  const itemCount = countItemsForFacility(order, facilityId);
+
+  return `${order.customerName} has placed ${order.orderName || order.orderId} for ${itemCount} item${itemCount === 1 ? "" : "s"}`;
+}
+
+function buildOrderPayload(order: any, facilityId: string) {
   return {
     // toStoredNotification keys the history row on messageId, so deriving it from the order makes
     // a repeat announcement update that row rather than adding a duplicate.
     messageId: `local-order-${order.orderId}`,
     data: {
       title: translate("New Order"),
-      body: `${order.customerName} has placed ${order.orderName || order.orderId} for 1 item`,
+      body: buildOrderBody(order, facilityId),
       // showForegroundSystemNotification tags the banner with this, so re-announcing the same
       // order replaces its banner rather than stacking another.
       orderId: order.orderId
@@ -68,13 +89,13 @@ function buildOrderPayload(order: any) {
   };
 }
 
-function buildAlertPayload(newOrders: any[]) {
-  if (newOrders.length === 1) return buildOrderPayload(newOrders[0]);
+function buildAlertPayload(newOrders: any[], facilityId: string) {
+  if (newOrders.length === 1) return buildOrderPayload(newOrders[0], facilityId);
 
   return {
     data: {
-      title: translate("new orders to pack", { count: newOrders.length }),
-      body: translate("Open the orders list to start picking.")
+      title: translate("New Orders"),
+      body: newOrders.map((order: any) => buildOrderBody(order, facilityId)).join(", ")
     }
   };
 }
@@ -122,10 +143,10 @@ export async function syncOpenOrders({ facilityId, orders, isSearchActive = fals
     // Every new order is recorded, not just the one named in a collapsed banner: the notifications
     // page is a log of orders rather than of alerts, and each row is keyed on its own order id.
     for (const order of newOrders) {
-      await useNotificationHistoryStore().addNotification(buildOrderPayload(order));
+      await useNotificationHistoryStore().addNotification(buildOrderPayload(order, facilityId));
     }
 
-    await alertForNotification(buildAlertPayload(newOrders));
+    await alertForNotification(buildAlertPayload(newOrders, facilityId));
   } catch (error) {
     logger.error("Could not raise the new order alert", error);
   }
