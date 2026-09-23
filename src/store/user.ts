@@ -250,14 +250,24 @@ export const useUserStore = defineStore("user", {
           notificationStore.setFirebaseDeviceId(firebaseMessaging.generateDeviceId());
         }
 
-        await notificationStore.fetchAllNotificationPrefs(import.meta.env.VITE_NOTIF_APP_ID as any, this.current.userId, notificationStore.getFirebaseDeviceId)
+        // Cross-device on purpose: "does this user want notifications anywhere" is what decides
+        // whether this device registers. Which topics THIS device joins is settled inside
+        // initialise, once its token exists — subscriptions are per device on the backend.
+        await notificationStore.fetchAllNotificationPrefs(import.meta.env.VITE_NOTIF_APP_ID as any, this.current.userId)
         // Register the device token only when we have some notification preferences already set,
         // and only when doing so cannot raise a permission prompt: there is no user gesture here,
         // so a prompt would be refused and would leave permission stuck at "default" forever.
         // A user who has not granted yet is offered the prompt on the settings screen instead.
-        if(notificationStore.getAllNotificationPrefs?.length) {
-          await firebaseUtil.initialiseFirebaseMessaging();
+        //
+        // The guard matters more since the read above became cross-device: a fresh browser whose
+        // user has preferences on another device now finds a non-empty list, which before this
+        // change it never did. Without the check that is exactly the device — new, permission
+        // still "default" — that would be prompted with no gesture behind it.
+        if(notificationStore.getAllNotificationPrefs?.length && firebaseUtil.canInitialiseWithoutPrompting()) {
+          await firebaseUtil.initialiseFirebaseMessaging({ userId: this.current.userId });
         }
+        // The settings screen reads this as what is switched on HERE, so narrow it to this device.
+        await notificationStore.fetchAllNotificationPrefs(import.meta.env.VITE_NOTIF_APP_ID as any, this.current.userId, notificationStore.getFirebaseDeviceId)
 
         const facilityId = router.currentRoute.value.query.facilityId
         if (facilityId) {

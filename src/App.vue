@@ -63,9 +63,15 @@ onMounted(async () => {
     if (isAuthenticated.value && currentProductStore?.productStoreId) {
       await useProductStore().fetchProductStoreSettings(currentProductStore.productStoreId).catch((error) => logger.error(error));
 
+      // Cross-device on purpose, like login: whether this user wants notifications at all is what
+      // decides. The persisted list is narrowed to this device, so a fresh one — the very device
+      // that still has to join the topics — would otherwise see nothing and never initialise.
+      await useNotificationStore().fetchAllNotificationPrefs(import.meta.env.VITE_NOTIF_APP_ID, userProfile.value?.userId).catch((error) => logger.error(error));
       // Same rule as login: no gesture here, so never let this raise a permission prompt.
       if (allNotificationPrefs.value?.length && firebaseUtil.canInitialiseWithoutPrompting()) {
-        await firebaseUtil.initialiseFirebaseMessaging();
+        // With the user in hand, initialise also joins this device to the user's topics, then
+        // narrows the list back to this device for the settings screen.
+        await firebaseUtil.initialiseFirebaseMessaging({ userId: userProfile.value?.userId });
       }
     }
 });
