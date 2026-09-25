@@ -709,7 +709,7 @@ async function prepareOrderTimeline(paramsToUpdate ?: any) {
     })
   }
 
-  const getShipmentPackedDate = shipmentStatusInfo?.find((statusInfo: any) => statusInfo.statusId === "SHIPMENT_PACKED")
+  const getShipmentPackedDate = shipmentStatusInfo?.find((statusInfo: any) => statusInfo.statusId === "SHIPMENT_APPROVED")
   if(getShipmentPackedDate?.statusDate) {
     timeline.push({
       label: "Ready for pickup",
@@ -784,9 +784,7 @@ async function assignPicker(orderRef: any, shipGroup: any, facilityId: any) {
       emitter.emit("presentLoader");
       await createPicklist(orderRef, result.data.selectedPicker);
       const updatedOrder = order.value;
-      if(shipGroup.shipmentMethodTypeId === 'STOREPICKUP') {
-        await useOrderStore().packShipGroupItems({ order: updatedOrder, shipGroup: updatedOrder.shipGroup })
-      }
+      await useOrderStore().packShipGroupItems({ order: updatedOrder, shipGroup: updatedOrder.shipGroup })
       await getOrderDetail(props.orderId, props.shipGroupSeqId, props.orderType);
       emitter.emit("dismissLoader");
     }
@@ -835,14 +833,12 @@ async function readyForPickup(orderData: any, shipGroup: any) {
             await printPicklist(orderData, shipGroup)
           }
           const updatedOrder = order.value;
-          if(shipGroup.shipmentMethodTypeId === 'STOREPICKUP') {
-            await useOrderStore().packShipGroupItems({ order: orderData, shipGroup: updatedOrder.shipGroup }).then(async (resp: any) => {
-              if (!commonUtil.hasError(resp)) {
-                await getOrderDetail(props.orderId, props.shipGroupSeqId, props.orderType);
-                prepareOrderTimeline({ statusId: "SHIPMENT_PACKED" });
-              }
-            })
-          }
+          await useOrderStore().packShipGroupItems({ order: orderData, shipGroup: updatedOrder.shipGroup }).then(async (resp: any) => {
+            if (!commonUtil.hasError(resp)) {
+              await getOrderDetail(props.orderId, props.shipGroupSeqId, props.orderType);
+              prepareOrderTimeline({ statusId: "SHIPMENT_APPROVED" });
+            }
+          })
           emitter.emit("dismissLoader");
         }
       }]

@@ -165,7 +165,7 @@ import { useUserStore } from "@/store/user";
 import { useOrderStore } from "@/store/order";
 import { useProductStore } from "@/store/productStore"
 import { useNotificationHistoryStore } from "@/store/notificationHistory"
-import { newOrderAlert } from "@/utils/newOrderAlert"
+import { NEW_OPEN_ORDERS_EVENT } from "@/services/openOrderEvents"
 import Actions from "@/authorization/actions"
 
 const queryString = ref('');
@@ -196,10 +196,12 @@ const communicationEventOrderIds = computed(() => {
 
 onMounted(() => {
   emitter.on("refreshPickupOrders", getPickupOrders);
+  emitter.on(NEW_OPEN_ORDERS_EVENT, refreshOnNewOrders);
 });
 
 onUnmounted(() => {
   emitter.off("refreshPickupOrders", getPickupOrders);
+  emitter.off(NEW_OPEN_ORDERS_EVENT, refreshOnNewOrders);
   stopAutoRefresh()
 });
 
@@ -213,12 +215,7 @@ onIonViewWillEnter(() => {
   segmentSelected.value = order.value?.orderType || "open"
   searchOrders()
   if (segmentSelected.value === 'open') {
-    // Seeds the baseline on the way in, so the orders already waiting are not announced as new.
-    getPickupOrders().then(() => newOrderAlert.syncOpenOrders({
-      facilityId: (currentFacility.value as any)?.facilityId,
-      orders: orders.value,
-      isSearchActive: !!queryString.value.trim()
-    }))
+    getPickupOrders()
   } else if (segmentSelected.value === 'packed') {
     getPackedOrders()
   } else {
@@ -239,18 +236,27 @@ async function autoRefreshOrders() {
   try {
     if(segmentSelected.value === 'open') {
       await getPickupOrders(undefined, undefined, false)
-      // Announce anything that appeared since the last poll. Only the open segment is diffed:
-      // packed and completed orders are the result of someone acting, not something arriving.
-      await newOrderAlert.syncOpenOrders({
-        facilityId: (currentFacility.value as any)?.facilityId,
-        orders: orders.value,
-        isSearchActive: !!queryString.value.trim()
-      })
     } else if(segmentSelected.value === 'packed') {
       await getPackedOrders(undefined, undefined, false)
     } else {
       await getCompletedOrders(undefined, undefined, false)
     }
+  } finally {
+    isAutoRefreshing = false;
+  }
+}
+
+/**
+ * New orders are detected app wide by the open order watcher, which also raises the alert. This
+ * only brings the list on screen up to date, without waiting for the next auto refresh.
+ */
+async function refreshOnNewOrders() {
+  // Only a visible, unfiltered open list is affected; a search result is the user's to refresh.
+  if (!autoRefreshTimer || segmentSelected.value !== 'open' || queryString.value.trim() || isAutoRefreshing) return;
+
+  isAutoRefreshing = true;
+  try {
+    await getPickupOrders(undefined, undefined, false)
   } finally {
     isAutoRefreshing = false;
   }
@@ -277,9 +283,7 @@ async function assignPicker(order: any, shipGroup: any, facilityId: any) {
       await createPicklist(order, result.data.selectedPicker);
       const updatedOrder = orders.value.find((ord: any) => ord.orderId === order.orderId);
       const updatedShipGroup = updatedOrder.shipGroups.find((sg: any) => sg.shipGroupSeqId === shipGroup.shipGroupSeqId);
-      if(shipGroup.shipmentMethodTypeId === 'STOREPICKUP') {
-        await useOrderStore().packShipGroupItems({ order: updatedOrder, shipGroup: updatedShipGroup })
-      }
+      await useOrderStore().packShipGroupItems({ order: updatedOrder, shipGroup: updatedShipGroup })
       emitter.emit("dismissLoader");
     }
   })
@@ -379,9 +383,7 @@ async function readyForPickup(orderData: any, shipGroup: any) {
             await printPicklist(orderData, shipGroup)
             orderIndex = orders.value.findIndex((o: any) => o.orderId === orderData.orderId);
           }
-          if(shipGroup.shipmentMethodTypeId === 'STOREPICKUP') {
-            await useOrderStore().packShipGroupItems({ order: orderIndex >= 0 ? orders.value[orderIndex] : orderData, shipGroup: orderIndex >= 0 ? orders.value[orderIndex].shipGroup : shipGroup })
-          }
+          await useOrderStore().packShipGroupItems({ order: orderIndex >= 0 ? orders.value[orderIndex] : orderData, shipGroup: orderIndex >= 0 ? orders.value[orderIndex].shipGroup : shipGroup })
           emitter.emit("dismissLoader");
         }
       }]

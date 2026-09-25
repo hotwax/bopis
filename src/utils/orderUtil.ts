@@ -3,7 +3,7 @@ import { useProductStore } from "@/store/product"
 const getOrderCategory = (shipGroup: any) => {
   // Determine category based on shipmentStatusId
   let category = '';
-  if (shipGroup.shipmentStatusId === 'SHIPMENT_PACKED') {
+  if (shipGroup.shipmentStatusId === 'SHIPMENT_PACKED' || (shipGroup.shipmentStatusId === 'SHIPMENT_APPROVED' && shipGroup.shipmentMethodTypeId !== 'STOREPICKUP')) {
     category = 'Packed';
   } else if (shipGroup.shipmentStatusId === 'SHIPMENT_SHIPPED') {
     category = 'Completed';

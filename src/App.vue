@@ -6,19 +6,26 @@
 
 <script setup lang="ts">
 import { IonApp, IonRouterOutlet, loadingController } from "@ionic/vue";
-import { computed, onMounted, onUnmounted, ref } from "vue";
+import { computed, onMounted, onUnmounted, ref, watch } from "vue";
 import { translate, emitter, logger, useNotificationStore, i18n } from "@common";
 import { useAuth } from "@common/composables/useAuth";
 import { Settings } from "luxon";
 import { useUserStore } from "@/store/user";
 import { useProductStore } from "@/store/productStore";
 import { firebaseUtil } from "@/utils/firebaseUtil";
+import { openOrderWatcher } from "@/services/openOrderWatcher";
 
 const { isAuthenticated } = useAuth();
 const loader = ref<any>(null);
 
 const userProfile = computed(() => useUserStore().getUserProfile);
 const allNotificationPrefs = computed(() => useNotificationStore().getAllNotificationPrefs);
+const currentFacilityId = computed(() => (useProductStore().getCurrentFacility as any)?.facilityId);
+
+watch([isAuthenticated, currentFacilityId], ([authenticated, facilityId]) => {
+  if (authenticated && facilityId) openOrderWatcher.start(facilityId);
+  else openOrderWatcher.stop();
+}, { immediate: true });
 
 
 
@@ -79,5 +86,6 @@ onMounted(async () => {
 onUnmounted(() => {
   emitter.off("presentLoader", (options: any) => presentLoader(options));
   emitter.off("dismissLoader", dismissLoader);
+  openOrderWatcher.stop();
 });
 </script>

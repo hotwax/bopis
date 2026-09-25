@@ -7,6 +7,39 @@ import { useProductStore as useProduct } from "@/store/product";
 import { useUserStore } from "@/store/user";
 import Actions from "@/authorization/actions"
 
+/**
+ * Filters for the open orders list. Shared with the app-level new order watcher so that what it
+ * alerts on is exactly what the Open segment shows.
+ *
+ * `showShippingOrders` selects the non store pickup variant; the default is store pickup.
+ */
+export function buildOpenOrdersQuery(params: any) {
+  let queryParams = {
+    keyword: params.queryString || '',
+    facilityId: params.facilityId,
+    orderStatusId: 'ORDER_APPROVED',
+    shipmentStatusId: 'SHIPMENT_INPUT,SHIPMENT_PACKED,SHIPMENT_SHIPPED',
+    shipmentStatusId_op: 'in',
+    shipmentStatusId_not: 'Y',
+    pageSize: 200,
+    pageIndex: params.viewIndex || 0
+  } as any;
+
+  if (params.showShippingOrders) {
+    queryParams = {
+      shipmentMethodTypeId: 'STOREPICKUP',
+      shipmentMethodTypeId_op: 'equals',
+      shipmentMethodTypeId_not: 'Y',
+      ...queryParams,
+      shipmentStatusId: 'SHIPMENT_INPUT,SHIPMENT_APPROVED,SHIPMENT_PACKED,SHIPMENT_SHIPPED',
+      shipmentStatusId_op: 'in',
+      shipmentStatusId_not: 'Y'
+    }
+  }
+
+  return queryParams;
+}
+
 export const useOrderStore = defineStore('order', {
   state: () => ({
     open: {
@@ -262,28 +295,7 @@ export const useOrderStore = defineStore('order', {
         this.open = { list: [], total: 0 };
       }
 
-      let queryParams = {
-        keyword: params.queryString || '',
-        facilityId: params.facilityId,
-        orderStatusId: 'ORDER_APPROVED',
-        shipmentStatusId: 'SHIPMENT_INPUT,SHIPMENT_PACKED,SHIPMENT_SHIPPED',
-        shipmentStatusId_op: 'in',
-        shipmentStatusId_not: 'Y',
-        pageSize: 200,
-        pageIndex: params.viewIndex
-      } as any;
-
-      if (params.showShippingOrders) {
-        queryParams = {
-          shipmentMethodTypeId: 'STOREPICKUP',
-          shipmentMethodTypeId_op: 'equals',
-          shipmentMethodTypeId_not: 'Y',
-          ...queryParams,
-          shipmentStatusId: 'SHIPMENT_INPUT,SHIPMENT_APPROVED,SHIPMENT_PACKED,SHIPMENT_SHIPPED',
-          shipmentStatusId_op: 'in',
-          shipmentStatusId_not: 'Y'
-        }
-      }
+      const queryParams = buildOpenOrdersQuery(params);
 
       try {
         let total = 0;
@@ -763,13 +775,22 @@ export const useOrderStore = defineStore('order', {
         facilityId: payload.shipGroup.facilityId,
         shipmentId: payload.shipGroup.shipmentId
       }
-      let resp;
+      let resp: any = {};
       try {
-        resp = await api({
-          url: `poorti/shipments/${params.shipmentId}/pack`,
-          method: "POST",
-          data: params,
-        });
+        if(payload.shipGroup.shipmentMethodTypeId === 'STOREPICKUP') {
+          resp = await api({
+            url: `poorti/shipments/${params.shipmentId}/pack`,
+            method: "POST",
+            data: params,
+          });
+        } else {
+          this.removeOpenOrder(payload)
+          payload.order = { ...payload.order, readyToShip: true }
+          this.updateCurrent({ order: payload.order })
+          commonUtil.showToast(translate("Order packed and ready for delivery"))
+          return;
+        }
+
         if (resp.status === 200 && !commonUtil.hasError(resp)) {
           this.removeOpenOrder(payload)
           if (payload.order.shipGroup.shipmentMethodTypeId === 'STOREPICKUP') {

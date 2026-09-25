@@ -3,8 +3,8 @@ import { alertForNotification } from "@/utils/firebaseUtil";
 import { useNotificationHistoryStore } from "@/store/notificationHistory";
 
 /**
- * Announce new open orders by diffing the list the Orders screen already polls, rather than by
- * waiting for a push to arrive.
+ * Announce new open orders by diffing the open order list, rather than by waiting for a push to
+ * arrive. The list is fetched by the app-level watcher (services/openOrderWatcher), not by a page.
  *
  * This is not a replacement for push: it can only fire while the app is open and running, so a
  * closed or suspended device still hears nothing. It covers the case where the app IS open, which
@@ -136,8 +136,9 @@ export async function syncOpenOrders({ facilityId, orders, isSearchActive = fals
   if (!newOrders.length) return [];
 
   // Checked after the baseline is updated, not before: an unsubscribed stretch must not leave a
-  // gap that gets announced in one burst when the preference is switched back on.
-  if (!isSubscribedToNewOrders(facilityId)) return [];
+  // gap that gets announced in one burst when the preference is switched back on. The orders are
+  // still returned, since they are new whether or not this device is told about them.
+  if (!isSubscribedToNewOrders(facilityId)) return newOrders;
 
   try {
     // Every new order is recorded, not just the one named in a collapsed banner: the notifications

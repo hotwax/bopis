@@ -1,10 +1,11 @@
-import { api, commonUtil, firebaseMessaging, logger, translate, useNotificationStore } from "@common";
+import { api, commonUtil, emitter, firebaseMessaging, logger, translate, useNotificationStore } from "@common";
 import { useNotificationHistoryStore } from "@/store/notificationHistory";
 import { DateTime } from "luxon";
 import { announceNewOrder, attachSpeechPrimer, showForegroundSystemNotification } from "@/utils/notificationAlert";
 import { getApp, getApps } from "firebase/app";
 import { getMessaging, getToken, isSupported } from "firebase/messaging";
 import router from "@/router";
+import { ORDER_PUSH_RECEIVED_EVENT } from "@/services/openOrderEvents";
 
 /**
  * The registration token we have CONFIRMED the backend holds for this device.
@@ -296,7 +297,7 @@ export async function alertForNotification(payload: any, { showToast = true, pla
 
   await showForegroundSystemNotification(payload, pushWorker);
 
-  if (playChime) announceNewOrder();
+  // if (playChime) announceNewOrder();
   if (showToast) await showNotificationToast(payload);
 }
 
@@ -488,10 +489,14 @@ const initialiseFirebaseMessaging = async ({ userId }: { userId?: string } = {})
       },
       async (notification: any) => {
         if (notification.isForeground) {
-          // Banner only. The chime, the toast and the history row all come from the local order
-          // diff, which sees the same order on its next poll - raising them here as well would
-          // double up on any device where both push and the diff are working. The banner survives
-          // because it is tagged with the order id, so the two paths collapse into one.
+          // Banner only. The chime, the toast and the history row all come from the open order
+          // watcher - raising them here as well would double up on any device where both push and
+          // the watcher are working. The banner survives because it is tagged with the order id,
+          // so the two paths collapse into one.
+          //
+          // The push is also a hint that something changed, so the watcher checks now rather than
+          // on its next poll. Either way the alert has a single source.
+          emitter.emit(ORDER_PUSH_RECEIVED_EVENT);
           //
           // It must be shown through the FCM worker specifically: that worker owns the
           // notificationclick handler, so a banner raised on any other registration would do
