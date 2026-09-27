@@ -7,6 +7,7 @@ import { versionInfoUtil } from '../../common/utils/versionInfoUtil'
 import pkg from './package.json'
 import { VitePWA } from 'vite-plugin-pwa'
 import manifest from "./manifest.json"
+import { sharedDevEnvPlugin } from '../../common/vite/sharedDevEnv'
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => {
@@ -18,7 +19,7 @@ export default defineConfig(({ mode }) => {
     build: {
       outDir: appBuild ? `dist/${appBuild}` : 'dist'
     },
-    plugins: [
+    plugins: [sharedDevEnvPlugin(),
       ideTraceVue(),
       vue(),
       legacy(),
