@@ -302,6 +302,28 @@ export async function alertForNotification(payload: any, { showToast = true, pla
 }
 
 /**
+ * Ask for notification permission when it has not been decided yet, and report where it landed.
+ *
+ * MUST be called from inside a tap and BEFORE the handler's first await. WebKit only honours the
+ * request while the user gesture is live: outside one it refuses silently and leaves permission at
+ * "default", so nothing appears and nothing looks wrong.
+ *
+ * Returns the resulting permission so a caller can tell "granted" from "the user said no" from
+ * "already decided, nothing was shown".
+ */
+export async function requestNotificationPermissionFromGesture(): Promise<string> {
+  if (typeof Notification === "undefined") return "unsupported";
+  if (Notification.permission !== "default") return Notification.permission;
+
+  try {
+    return await Notification.requestPermission();
+  } catch (error) {
+    logger.error("Could not request notification permission", error);
+    return Notification.permission;
+  }
+}
+
+/**
  * Whether messaging can be initialised WITHOUT showing a permission prompt.
  *
  * `Notification.requestPermission()` must originate from a user gesture. iOS refuses it outright
@@ -454,7 +476,6 @@ export async function ensurePushWorker(report: StepReporter = () => undefined): 
  * refresh on resume) rely on the backend carrying a rotated token across on its own.
  */
 const initialiseFirebaseMessaging = async ({ userId }: { userId?: string } = {}): Promise<boolean> => {
-  logger.warn('Initializing firebase')
   const notificationStore = useNotificationStore();
 
   // Attached before any early return below: the watcher must survive a reload that skips
@@ -648,6 +669,7 @@ export async function setUpNotificationsOnThisDevice({ userId }: { userId?: stri
 
 export const firebaseUtil = {
   canInitialiseWithoutPrompting,
+  requestNotificationPermissionFromGesture,
   isApplePushPlatform,
   initialiseFirebaseMessaging,
   isDeviceSetUp,

@@ -629,6 +629,19 @@ async function updateNotificationPref(enumId: string) {
 async function confirmNotificationPrefUpdate(enumId: string, event: CustomEvent) {
   event.stopImmediatePropagation();
 
+  // Asked here, on the toggle tap itself, rather than after the confirm alert: WebKit only shows
+  // the prompt while a user gesture is live, and this is the strongest one available - nothing has
+  // awaited yet. Raising it from the alert's Confirm handler worked in Chrome but is at the mercy
+  // of the dismiss in WebKit, and a lost gesture fails silently, leaving permission at "default".
+  //
+  // Only when switching ON, and only when nothing has been decided yet, so an already granted or
+  // denied device sees no extra dialog. The outcome does not gate the toggle: the preference is
+  // server-side state worth saving either way.
+  if (!notificationPrefs.value.find((pref: any) => pref.enumId === enumId)?.isEnabled) {
+    await firebaseUtil.requestNotificationPermissionFromGesture();
+    notificationPermission.value = typeof Notification !== "undefined" ? Notification.permission : "unsupported";
+  }
+
   const message = translate("Are you sure you want to update the notification preferences?");
   const alert = await alertController.create({
     header: translate("Update notification preferences"),

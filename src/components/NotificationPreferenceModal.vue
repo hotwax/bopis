@@ -91,6 +91,13 @@ function toggleNotificationPref(enumId: string, event: any) {
 }
 
 async function updateNotificationPref() {
+  // Before presentLoader and before the first await, so the Save tap is still a live gesture:
+  // WebKit only shows the permission prompt from inside one. Asked only when something is being
+  // switched ON, since switching everything off is not a request to be notified.
+  if (notificationPrefToUpdate.value.subscribe.length) {
+    await firebaseUtil.requestNotificationPermissionFromGesture();
+  }
+
   emitter.emit("presentLoader");
   try {
     await handleTopicSubscription();

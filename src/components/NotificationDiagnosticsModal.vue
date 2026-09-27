@@ -511,6 +511,12 @@ async function registerDevice() {
   steps.value = [];
   const push = (label: string, ok: boolean, detail?: string) => steps.value.push({ label, ok, detail });
 
+  // Must run inside this tap: iOS only shows the prompt for a user gesture.
+  const permission = await Notification.requestPermission();
+  push(`Permission result: ${permission}`, permission === "granted",
+    permission === "denied" ? "Delete and re-add the Home Screen app to be asked again" : undefined);
+  if (permission !== "granted") return;
+
   try {
     const { isSupported, getMessaging, getToken } = await import("firebase/messaging");
     const { initializeApp, getApps, getApp } = await import("firebase/app");
@@ -530,12 +536,6 @@ async function registerDevice() {
     push("Firebase config present", !!config?.apiKey, config?.projectId);
     push("VAPID key present", !!vapidKey);
     if (!config?.apiKey || !vapidKey) return;
-
-    // Must run inside this tap: iOS only shows the prompt for a user gesture.
-    const permission = await Notification.requestPermission();
-    push(`Permission result: ${permission}`, permission === "granted",
-      permission === "denied" ? "Delete and re-add the Home Screen app to be asked again" : undefined);
-    if (permission !== "granted") return;
 
     const app = getApps().length ? getApp() : initializeApp(config);
     const messaging = getMessaging(app);
