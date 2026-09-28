@@ -4,6 +4,7 @@ import legacy from '@vitejs/plugin-legacy'
 import path from 'path'
 import { defineConfig, loadEnv } from 'vite'
 import { versionInfoUtil } from '../../common/utils/versionInfoUtil'
+import { commonEnvPlugin } from '../../common/vite/commonEnvPlugin'
 import pkg from './package.json'
 import { VitePWA } from 'vite-plugin-pwa'
 import manifest from "./manifest.json"
@@ -19,6 +20,7 @@ export default defineConfig(({ mode }) => {
       outDir: appBuild ? `dist/${appBuild}` : 'dist'
     },
     plugins: [
+      commonEnvPlugin(),
       ideTraceVue(),
       vue(),
       legacy(),
