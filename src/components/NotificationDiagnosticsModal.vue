@@ -506,18 +506,28 @@ async function refresh() {
 }
 
 async function registerDevice() {
+  // First thing in the tap: iOS only shows the prompt while the gesture is live, so the request is
+  // made before any other work and before the first await. Guarded because calling a missing
+  // Notification would throw before the try below could report it.
+  const permissionRequest = typeof Notification !== "undefined" ? Notification.requestPermission() : null;
+
   logger.warn("Hard register");
   isBusy.value = true;
   steps.value = [];
   const push = (label: string, ok: boolean, detail?: string) => steps.value.push({ label, ok, detail });
 
-  // Must run inside this tap: iOS only shows the prompt for a user gesture.
-  const permission = await Notification.requestPermission();
-  push(`Permission result: ${permission}`, permission === "granted",
-    permission === "denied" ? "Delete and re-add the Home Screen app to be asked again" : undefined);
-  if (permission !== "granted") return;
-
   try {
+    if (!permissionRequest) {
+      push("No Notification API in this context", false);
+      return;
+    }
+    // Inside the try so a refusal still reaches the finally below, which clears isBusy; returning
+    // before it left every button in this modal disabled.
+    const permission = await permissionRequest;
+    push(`Permission result: ${permission}`, permission === "granted",
+      permission === "denied" ? "Delete and re-add the Home Screen app to be asked again" : undefined);
+    if (permission !== "granted") return;
+
     const { isSupported, getMessaging, getToken } = await import("firebase/messaging");
     const { initializeApp, getApps, getApp } = await import("firebase/app");
 
@@ -586,6 +596,12 @@ async function registerDevice() {
 }
 
 async function showLocalTestNotification() {
+  // First thing in the tap, before any other work or await, so the gesture is still live when iOS
+  // decides whether to show the prompt. Only asked when nothing has been decided yet.
+  const permissionRequest = typeof Notification !== "undefined" && Notification.permission === "default"
+    ? Notification.requestPermission()
+    : null;
+
   isBusy.value = true;
   const push = (label: string, ok: boolean, detail?: string) => steps.value.push({ label, ok, detail });
   // Pushed synchronously so a click is always acknowledged on screen, even if an await below stalls.
@@ -604,9 +620,9 @@ async function showLocalTestNotification() {
       push("Permission is denied", false, "Reset notifications for this site in browser settings, or delete and re-add the Home Screen app on iOS");
       return;
     }
-    if (Notification.permission === "default") {
-      // Safe here: this runs inside the button tap, which is what iOS requires.
-      const result = await Notification.requestPermission();
+    if (permissionRequest) {
+      // Requested at the top of this handler, while the tap was still a live gesture.
+      const result = await permissionRequest;
       logger.error(`Permission requested: ${result}`)
       push(`Permission requested: ${result}`, result === "granted");
       if (result !== "granted") return;

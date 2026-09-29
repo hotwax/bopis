@@ -123,8 +123,12 @@ async function handleTopicSubscription() {
    * already-registered user would accumulate a duplicate for each save, with later notifications
    * landing in the store several times over. getFirebaseDeviceId is set once a token has been
    * stored, so it answers "has this device registered" without re-entering initialisation.
+   *
+   * Only once permission is granted: initialisation asks for permission again inside Firebase, and
+   * by now the Save tap's gesture is long spent, so a device that dismissed the prompt above would
+   * be asked with no gesture behind it — which iOS can turn into a permanent denial.
    */
-  if (notificationPrefToUpdate.value.subscribe.length && !notificationStore.getFirebaseDeviceId) {
+  if (notificationPrefToUpdate.value.subscribe.length && !notificationStore.getFirebaseDeviceId && firebaseUtil.canInitialiseWithoutPrompting()) {
     await firebaseUtil.initialiseFirebaseMessaging({ userId: userStore.getUserProfile?.userId });
   }
 

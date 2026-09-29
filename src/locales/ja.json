@@ -402,5 +402,15 @@
   "Notification sound is unavailable or disabled.": "Notification sound is unavailable or disabled.",
   "Test the announcement": "Test the announcement",
   "New order received": "新しい注文が入りました",
-  "Announce notifications": "Announce notifications"
+  "Announce notifications": "Announce notifications",
+  "Enable": "Enable",
+  "Notifications are not supported here. On iPhone or iPad, add the app to the Home Screen and open it from there.": "Notifications are not supported here. On iPhone or iPad, add the app to the Home Screen and open it from there.",
+  "Notifications are not set up on this device yet.": "Notifications are not set up on this device yet.",
+  "Notification permission was not given. Tap Enable again and choose Allow.": "Notification permission was not given. Tap Enable again and choose Allow.",
+  "The notification service could not be installed on this device. Fully close the app, open it again and tap Enable.": "The notification service could not be installed on this device. Fully close the app, open it again and tap Enable.",
+  "This device could not be registered for notifications. Check the connection and tap Enable again.": "This device could not be registered for notifications. Check the connection and tap Enable again.",
+  "Notification setup did not finish on this device. Tap Enable again, or open diagnostics for details.": "Notification setup did not finish on this device. Tap Enable again, or open diagnostics for details.",
+  "This device is registered but could not join the notification topics. Tap Enable again.": "This device is registered but could not join the notification topics. Tap Enable again.",
+  "Notifications are not configured for this build.": "Notifications are not configured for this build.",
+  "Notifications are set up on this device.": "Notifications are set up on this device."
 }

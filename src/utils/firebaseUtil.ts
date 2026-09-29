@@ -91,7 +91,24 @@ let lastTopicSync: TopicSyncResult | null = null;
 /** The outcome of the topic sync run by the most recent initialiseFirebaseMessaging, for reporting. */
 export function getLastTopicSync() { return lastTopicSync; }
 
+/** Why the most recent registerToken returned false, for the setup report. */
+let lastRegisterTokenError = "";
+
+/** "DELETE firebase/token: 400 <message>" — enough to tell the two backend calls and their answers apart. */
+function describeApiError(call: string, error: any) {
+  const status = error?.response?.status ?? error?.status ?? "";
+  const body = error?.response?.data ?? error?.data;
+  let detail = "";
+  try {
+    detail = body ? JSON.stringify(body) : String(error?.message || error || "");
+  } catch {
+    detail = String(error?.message || error || "");
+  }
+  return `${call}: ${status} ${detail}`.replace(/\s+/g, " ").trim().slice(0, 300);
+}
+
 export async function registerToken(token: string) {
+  lastRegisterTokenError = "";
   const notificationStore = useNotificationStore();
   const applicationId = import.meta.env.VITE_NOTIF_APP_ID;
   const deviceId = firebaseMessaging.generateDeviceId(notificationStore.getFirebaseDeviceId);
@@ -110,6 +127,7 @@ export async function registerToken(token: string) {
         // POST would be a silent no-op against it, and caching the new token here would end all
         // future retries. Clearing the cache keeps the next resume on the replace path.
         clearRegisteredToken();
+        lastRegisterTokenError = describeApiError("DELETE firebase/token", error);
         logger.error("Could not remove the previous registration token; leaving it unreplaced", error);
         return false;
       }
@@ -124,6 +142,7 @@ export async function registerToken(token: string) {
     // Clear rather than record: an empty cache forces the next attempt back down the
     // delete-then-store path, instead of trusting a write the backend never accepted.
     clearRegisteredToken();
+    lastRegisterTokenError = describeApiError("POST firebase/token", error);
     logger.error("Backend rejected the registration token", error);
     return false;
   }
@@ -430,8 +449,8 @@ export async function ensurePushWorker(report: StepReporter = () => undefined): 
       report("Push worker is active", true, existing.scope);
       return existing;
     }
-    // A worker stuck waiting never takes over on its own (firebase-messaging-sw.js has no
-    // skipWaiting) and one that is not active cannot subscribe, so start over. That drops the
+    // A worker stuck waiting (older copies of firebase-messaging-sw.js had no skipWaiting) never
+    // takes over on its own, and one that is not active cannot subscribe, so start over. That drops the
     // push subscription, which is fine here: the caller registers a fresh token right after.
     try {
       await existing.unregister();
@@ -500,6 +519,19 @@ const initialiseFirebaseMessaging = async ({ userId }: { userId?: string } = {})
   lastInitialiseError = null;
 
   if (appFirebaseConfig && appFirebaseConfig.apiKey) {
+    // getToken() registers the push worker itself when none exists and subscribes straight away,
+    // without waiting for it to activate (checked against the bundled @firebase/messaging 0.12.4),
+    // so on a fresh device the subscribe can fail with AbortError. Every caller — login, app mount,
+    // the settings toggle and Enable — therefore gets an active worker before any token is asked for.
+    const pushWorker = await ensurePushWorker((label, ok, detail) => {
+      if (!ok) logger.warn(`Push worker: ${label}`, detail);
+    });
+    if (!pushWorker) {
+      lastInitialiseError = new Error("The push worker could not be installed or activated on this device");
+      logger.error("Skipping Firebase initialisation, no active push worker");
+      return false;
+    }
+
     await firebaseMessaging.initialiseFirebaseApp(
       appFirebaseConfig,
       appFirebaseVapidKey,
@@ -531,10 +563,23 @@ const initialiseFirebaseMessaging = async ({ userId }: { userId?: string } = {})
         // store, so that it survives logout instead of being wiped with the session.
         await useNotificationHistoryStore().addNotification(notification.notification);
       }
-    ).then(() => {
+    ).then((outcome) => {
       // Only a token the backend accepted makes this device initialised. initialiseFirebaseApp also
       // resolves when push is unsupported or permission was refused, and that used to set this flag.
-      if (tokenRegistered) notificationStore.isFirebaseInitialised = true;
+      if (tokenRegistered) {
+        notificationStore.isFirebaseInitialised = true;
+        return;
+      }
+
+      // Resolving without a registered token has three different causes, and the setup report
+      // used to collapse them into one generic line. Record which one it was.
+      if (outcome?.status === "unsupported") {
+        lastInitialiseError = new Error("Firebase reports push is not supported in this context");
+      } else if (outcome?.status === "permission") {
+        lastInitialiseError = new Error(`Firebase did not get notification permission (it read "${outcome.permission}"), so no token was requested`);
+      } else if (outcome?.status === "token") {
+        lastInitialiseError = new Error(`A token was issued but the backend did not accept it — ${lastRegisterTokenError || "no detail"}`);
+      }
     }).catch((err) => {
       lastInitialiseError = err;
       logger.error("Failed to initialize notifications", err)
@@ -577,6 +622,60 @@ export async function isDeviceSetUp(): Promise<boolean> {
   }
 }
 
+/**
+ * The first reason this device cannot receive notifications, or null when nothing is wrong.
+ *
+ * Checked in the same order the Enable flow repairs things, so the reported issue is always the
+ * next one that flow would run into. Every check reads observable state — permission, the push
+ * worker, the browser's push subscription, the locally confirmed token — never a persisted flag.
+ */
+export type NotificationHealthIssue = "unsupported" | "config" | "permissionDenied" | "permissionDefault"
+  | "serviceWorker" | "pushSubscription" | "deviceId" | "token";
+
+export async function getNotificationHealthIssue(): Promise<NotificationHealthIssue | null> {
+  if (typeof navigator === "undefined" || !("serviceWorker" in navigator) || typeof Notification === "undefined") return "unsupported";
+
+  let config: any;
+  try {
+    config = JSON.parse(import.meta.env.VITE_FIREBASE_CONFIG as any);
+  } catch {
+    config = null;
+  }
+  if (!config?.apiKey || !import.meta.env.VITE_FIREBASE_VAPID_KEY) return "config";
+
+  if (Notification.permission === "denied") return "permissionDenied";
+  if (Notification.permission !== "granted") return "permissionDefault";
+
+  try {
+    if (!await isSupported()) return "unsupported";
+  } catch {
+    return "unsupported";
+  }
+
+  let pushWorker: any;
+  try {
+    pushWorker = findPushWorkerRegistration(await navigator.serviceWorker.getRegistrations());
+  } catch (error) {
+    logger.warn("Notification health check could not read service worker registrations", error);
+    return "serviceWorker";
+  }
+  if (!pushWorker?.active) return "serviceWorker";
+
+  // A granted device with an active worker can still have no subscription — the token handshake
+  // never completed, or unregistering a broken worker dropped it — and then FCM has nowhere to send.
+  try {
+    if (!await pushWorker.pushManager?.getSubscription?.()) return "pushSubscription";
+  } catch (error) {
+    logger.warn("Notification health check could not read the push subscription", error);
+    return "pushSubscription";
+  }
+
+  if (!useNotificationStore().getFirebaseDeviceId) return "deviceId";
+  if (!readRegisteredToken()) return "token";
+
+  return null;
+}
+
 export type DeviceSetupStep = "support" | "config" | "permission" | "serviceWorker" | "registration" | "verification" | "topics";
 export interface DeviceSetupStepResult { label: string; ok: boolean; detail?: string }
 export interface DeviceSetupResult {
@@ -592,7 +691,9 @@ export interface DeviceSetupResult {
  * registered with the backend → verified → subscriptions re-read. Stops at the first link that
  * fails and names it, so the caller never reports "allowed" for a device that cannot receive.
  *
- * Must be called from a user gesture: the permission prompt will not appear from anywhere else.
+ * Must be called from a user gesture, and before the caller does anything else in that tap: the
+ * permission prompt will not appear from anywhere else. The request is made synchronously, before
+ * this function's first await, so a caller may start it and do other gesture work afterwards.
  * userId is passed in rather than read from the user store, which imports this module.
  */
 export async function setUpNotificationsOnThisDevice({ userId }: { userId?: string } = {}): Promise<DeviceSetupResult> {
@@ -605,18 +706,23 @@ export async function setUpNotificationsOnThisDevice({ userId }: { userId?: stri
     return { ok: false, failedStep, permission: permissionNow(), deviceId: notificationStore.getFirebaseDeviceId, steps };
   };
 
-  // Everything before the permission prompt must be synchronous. The prompt is only shown inside
-  // the tap's transient user activation, and WebKit's window is short: isSupported() does async
-  // IndexedDB work, so awaiting it first can spend the activation and leave permission stuck at
-  // "default" with no prompt ever shown — the very failure this path exists to fix. The full
-  // support check therefore runs after the prompt; prompting on an unsupported context is harmless.
+  // The permission request is started before anything else in the tap. The prompt is only shown
+  // inside the tap's transient user activation, and WebKit's window is short: any await first, or
+  // other gesture-gated work run ahead of it, can spend the activation and leave the device with no
+  // prompt ever shown — the very failure this path exists to fix. Only the synchronous check that
+  // the API exists comes first, since calling a missing Notification would throw; the config and
+  // full support checks run after the request has been made.
   const hasPushApis = typeof navigator !== "undefined" && "serviceWorker" in navigator && typeof Notification !== "undefined";
   if (!hasPushApis) {
     report("Push supported in this context", false, "No Notification or service worker API here");
     return fail("support");
   }
 
-  let config: any = null;
+  const permissionBefore = Notification.permission;
+  const askedAt = Date.now();
+  const permissionRequest = Notification.requestPermission();
+
+  let config: any;
   try {
     config = JSON.parse(import.meta.env.VITE_FIREBASE_CONFIG as any);
   } catch {
@@ -624,12 +730,23 @@ export async function setUpNotificationsOnThisDevice({ userId }: { userId?: stri
   }
   const configured = !!config?.apiKey && !!import.meta.env.VITE_FIREBASE_VAPID_KEY;
   report("Firebase config and VAPID key present", configured);
-  if (!configured) return fail("config");
+  if (!configured) {
+    // The prompt is already up; its answer is simply not needed on a build that cannot register.
+    permissionRequest.catch(() => undefined);
+    return fail("config");
+  }
 
-  // First await, still inside the tap: iOS only shows the prompt for a user gesture.
-  const permission = await Notification.requestPermission();
+  let permission: NotificationPermission;
+  try {
+    permission = await permissionRequest;
+  } catch (error) {
+    logger.error("Notification permission request failed", error);
+    permission = Notification.permission;
+  }
+  // How long the request took separates "the user answered a prompt" from "the platform answered
+  // without showing one", which the result alone cannot: both can come back "denied".
   report(`Permission: ${permission}`, permission === "granted",
-    permission === "denied" ? "Blocked on this device; recovery differs by platform" : undefined);
+    `was ${permissionBefore}, answered in ${Date.now() - askedAt}ms${permission === "denied" ? "; blocked on this device, recovery differs by platform" : ""}`);
   if (permission !== "granted") return fail("permission");
 
   const supported = await isSupported();
@@ -673,6 +790,7 @@ export const firebaseUtil = {
   isApplePushPlatform,
   initialiseFirebaseMessaging,
   isDeviceSetUp,
+  getNotificationHealthIssue,
   setUpNotificationsOnThisDevice,
   syncDeviceTopicSubscriptions
 }
