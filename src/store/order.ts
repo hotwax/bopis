@@ -309,9 +309,10 @@ export const useOrderStore = defineStore('order', {
         return resp;
 
       } catch (err) {
-        logger.error(err);
+        const serverError = commonUtil.getErrorMessage(err, translate("Please contact administrator."));
+        logger.error("Failed to fetch open orders", serverError);
         emitter.emit("dismissLoader");
-        commonUtil.showToast(translate("Something went wrong"));
+        commonUtil.showToast(translate("Failed to fetch open orders. {error}", { error: serverError }));
       }
     },
     async fetchPickersInformation({ shipmentIds, shipmentStatusId }: { shipmentIds: any, shipmentStatusId: string }) {
@@ -555,8 +556,9 @@ export const useOrderStore = defineStore('order', {
         emitter.emit("dismissLoader");
         return resp;
       } catch (err) {
-        logger.error(err);
-        commonUtil.showToast(translate("Something went wrong"));
+        const serverError = commonUtil.getErrorMessage(err, translate("Please contact administrator."));
+        logger.error("Failed to fetch packed orders", serverError);
+        commonUtil.showToast(translate("Failed to fetch packed orders. {error}", { error: serverError }));
         emitter.emit("dismissLoader");
       }
     },
@@ -632,8 +634,9 @@ export const useOrderStore = defineStore('order', {
         emitter.emit("dismissLoader");
         return resp;
       } catch (err) {
-        logger.error(err);
-        commonUtil.showToast(translate("Something went wrong"));
+        const serverError = commonUtil.getErrorMessage(err, translate("Please contact administrator."));
+        logger.error("Failed to fetch completed orders", serverError);
+        commonUtil.showToast(translate("Failed to fetch completed orders. {error}", { error: serverError }));
         emitter.emit("dismissLoader");
       }
     },
@@ -695,11 +698,12 @@ export const useOrderStore = defineStore('order', {
           }
           this.updateCurrent({ order })
         } else {
-          commonUtil.showToast(translate("Something went wrong"))
+          throw resp.data;
         }
       } catch (err) {
-        logger.error(err)
-        commonUtil.showToast(translate("Something went wrong"))
+        const serverError = commonUtil.getErrorMessage(err, translate("Please contact administrator."));
+        logger.error("Failed to deliver order", serverError);
+        commonUtil.showToast(translate("Failed to deliver order. {error}", { error: serverError }));
       }
       emitter.emit("dismissLoader")
       return resp;
@@ -732,11 +736,12 @@ export const useOrderStore = defineStore('order', {
           }
           this.updateCurrent({ order })
         } else {
-          commonUtil.showToast(translate("Something went wrong"))
+          throw resp.data;
         }
       } catch (err) {
-        logger.error(err)
-        commonUtil.showToast(translate("Something went wrong"))
+        const serverError = commonUtil.getErrorMessage(err, translate("Please contact administrator."));
+        logger.error("Failed to deliver order", serverError);
+        commonUtil.showToast(translate("Failed to deliver order. {error}", { error: serverError }));
       }
       emitter.emit("dismissLoader")
       return resp;
@@ -764,11 +769,12 @@ export const useOrderStore = defineStore('order', {
           this.updateCurrent({ order: payload.order })
           commonUtil.showToast(translate("Order packed and ready for delivery"))
         } else {
-          commonUtil.showToast(translate("Something went wrong"))
+          throw resp.data;
         }
       } catch (err) {
-        logger.error(err)
-        commonUtil.showToast(translate("Something went wrong"))
+        const serverError = commonUtil.getErrorMessage(err, translate("Please contact administrator."));
+        logger.error("Failed to pack order", serverError);
+        commonUtil.showToast(translate("Failed to pack order. {error}", { error: serverError }));
       } finally {
         emitter.emit("dismissLoader")
       }
@@ -794,10 +800,13 @@ export const useOrderStore = defineStore('order', {
         if (refreshPickupOrders) {
           commonUtil.showToast(translate(payload.isEntireOrderRejected ? 'All items were rejected from the order' : 'Some items were rejected from the order') + ' ' + (payload.orderName ? payload.orderName : payload.orderId));
         } else {
-          commonUtil.showToast(translate('Something went wrong'));
+          throw resp;
         }
         return resp;
       } catch (err) {
+        const serverError = commonUtil.getErrorMessage(err, translate("Please contact administrator."));
+        logger.error("Failed to reject order items", serverError);
+        commonUtil.showToast(translate("Failed to reject order items. {error}", { error: serverError }));
         return err;
       } finally {
         emitter.emit("dismissLoader");
@@ -884,8 +893,9 @@ export const useOrderStore = defineStore('order', {
           commonUtil.showToast(translate("Orders Not Found"))
         }
       } catch (err) {
-        logger.error(err)
-        commonUtil.showToast(translate("Something went wrong"))
+        const serverError = commonUtil.getErrorMessage(err, translate("Please contact administrator."));
+        logger.error("Failed to fetch incoming orders", serverError);
+        commonUtil.showToast(translate("Failed to fetch incoming orders. {error}", { error: serverError }));
       } finally {
         emitter.emit("dismissLoader")
       }
@@ -946,8 +956,9 @@ export const useOrderStore = defineStore('order', {
           commonUtil.showToast(translate("Orders Not Found"))
         }
       } catch (err) {
-        logger.error(err)
-        commonUtil.showToast(translate("Something went wrong"))
+        const serverError = commonUtil.getErrorMessage(err, translate("Please contact administrator."));
+        logger.error("Failed to fetch ready for pickup orders", serverError);
+        commonUtil.showToast(translate("Failed to fetch ready for pickup orders. {error}", { error: serverError }));
       } finally {
         emitter.emit("dismissLoader")
       }
@@ -1008,8 +1019,9 @@ export const useOrderStore = defineStore('order', {
           commonUtil.showToast(translate("Orders Not Found"))
         }
       } catch (err) {
-        logger.error(err)
-        commonUtil.showToast(translate("Something went wrong"))
+        const serverError = commonUtil.getErrorMessage(err, translate("Please contact administrator."));
+        logger.error("Failed to fetch completed orders", serverError);
+        commonUtil.showToast(translate("Failed to fetch completed orders. {error}", { error: serverError }));
       } finally {
         emitter.emit("dismissLoader")
       }
@@ -1290,8 +1302,9 @@ export const useOrderStore = defineStore('order', {
           commonUtil.showToast(translate('Unable to open as browser is blocking pop-ups.', { documentName: 'picklist' }), { icon: cogOutline });
         }
       } catch (err) {
-        commonUtil.showToast(translate('Failed to print picklist'))
-        logger.error("Failed to print picklist", err)
+        const serverError = commonUtil.getErrorMessage(err, translate("Please contact administrator."));
+        logger.error("Failed to print picklist", serverError);
+        commonUtil.showToast(translate("Failed to print picklist. {error}", { error: serverError }));
       }
     },
     async printPackingSlip(shipmentIds: Array<string>): Promise<any> {
@@ -1322,8 +1335,9 @@ export const useOrderStore = defineStore('order', {
         }
 
       } catch (err) {
-        commonUtil.showToast(translate('Failed to print packing slip'))
-        logger.error("Failed to load packing slip", err)
+        const serverError = commonUtil.getErrorMessage(err, translate("Please contact administrator."));
+        logger.error("Failed to load packing slip", serverError);
+        commonUtil.showToast(translate("Failed to print packing slip. {error}", { error: serverError }));
       }
     },
     async sendPickupScheduledNotification(payload: any): Promise<any> {
@@ -1406,8 +1420,9 @@ export const useOrderStore = defineStore('order', {
         }
 
       } catch (err) {
-        commonUtil.showToast(translate('Failed to print shipping label and packing slip'))
-        logger.error("Failed to load shipping label and packing slip", err)
+        const serverError = commonUtil.getErrorMessage(err, translate("Please contact administrator."));
+        logger.error("Failed to load shipping label and packing slip", serverError);
+        commonUtil.showToast(translate("Failed to print shipping label and packing slip. {error}", { error: serverError }));
       }
     },
     async cancelOrder(payload: any): Promise<any> {

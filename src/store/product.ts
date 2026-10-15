@@ -75,13 +75,14 @@ export const useProductStore = defineStore('product', {
           commonUtil.showToast(translate("Products not found"));
         }
       } catch (error) {
-        logger.error(error)
+        const serverError = commonUtil.getErrorMessage(error, translate("Please contact administrator."));
+        logger.error("Failed to fetch products", serverError);
         this.products = {
           list: [],
           total: 0,
           queryString: ''
-        }
-        commonUtil.showToast(translate("Something went wrong"));
+        };
+        commonUtil.showToast(translate("Failed to fetch products. {error}", { error: serverError }));
       }
       if (payload.viewIndex === 0) emitter.emit("dismissLoader");
       return resp;
@@ -122,8 +123,9 @@ export const useProductStore = defineStore('product', {
           commonUtil.showToast(translate("Product not found"));
         }
       } catch (error) {
-        logger.error(error)
-        commonUtil.showToast(translate("Something went wrong"));
+        const serverError = commonUtil.getErrorMessage(error, translate("Please contact administrator."));
+        logger.error("Failed to fetch product details", serverError);
+        commonUtil.showToast(translate("Failed to fetch product details. {error}", { error: serverError }));
       }
       emitter.emit("dismissLoader");
       return resp;
