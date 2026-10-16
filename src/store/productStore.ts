@@ -2,7 +2,16 @@ import { defineStore } from 'pinia'
 import { api, commonUtil, useEmbeddedAppStore, logger, translate, useSolrSearch } from '@common'
 import { useUserStore } from '@/store/user'
 import Actions from "@/authorization/actions"
-const defaultProductStoreSettings = JSON.parse(import.meta.env.VITE_DEFAULT_PRODUCT_STORE_SETTINGS as string || '{}')
+// Settings the app reads in code, registered here so they load even when a deployment's
+// VITE_DEFAULT_PRODUCT_STORE_SETTINGS omits them. The env list still wins for any key it defines.
+const requiredProductStoreSettings = {
+  AFFECT_QOH_ON_REJ: { stateKey: "affectQoh", value: "N" }
+}
+const getDefaultProductStoreSettings = () => ({
+  ...requiredProductStoreSettings,
+  ...JSON.parse(import.meta.env.VITE_DEFAULT_PRODUCT_STORE_SETTINGS as string || "{}")
+})
+const defaultProductStoreSettings = getDefaultProductStoreSettings()
 
 const getProductStoreSettingValue = (settings: any, settingTypeEnumId: string) => {
   const stateKey = defaultProductStoreSettings[settingTypeEnumId]?.stateKey || settingTypeEnumId
@@ -91,6 +100,9 @@ export const useProductStore = defineStore('productStore', {
     },
     isHandoverProofEnabled(): boolean {
       return this.isProductStoreSettingEnabled('HANDOVER_PROOF')
+    },
+    isAffectQohOnRejectionEnabled(): boolean {
+      return this.isProductStoreSettingEnabled("AFFECT_QOH_ON_REJ")
     },
     getProductIdentificationPref: (state) => state.settings.productIdentifier.productIdentificationPref,
     getBarcodeIdentifierPref: (state) => state.settings.barcodeIdentifier.barcodeIdentifierPref,
@@ -405,7 +417,7 @@ export const useProductStore = defineStore('productStore', {
       this.currentProductStore = payload;
     },
     async fetchProductStoreSettings(productStoreId: string) {
-      const defaultProductStoreSettings = JSON.parse(import.meta.env.VITE_DEFAULT_PRODUCT_STORE_SETTINGS as string || '{}')
+      const defaultProductStoreSettings = getDefaultProductStoreSettings()
       const productStoreSettings = {} as any
 
       if (productStoreId) {
@@ -460,7 +472,7 @@ export const useProductStore = defineStore('productStore', {
     },
 
     async setProductStoreSetting(productStoreId: string, settingTypeEnumId: string, settingValue: any) {
-      const defaultProductStoreSettings = JSON.parse(import.meta.env.VITE_DEFAULT_PRODUCT_STORE_SETTINGS as string || '{}')
+      const defaultProductStoreSettings = getDefaultProductStoreSettings()
 
       try {
         const payloadSettingValue = typeof settingValue === 'object' ? JSON.stringify(settingValue) : settingValue;
