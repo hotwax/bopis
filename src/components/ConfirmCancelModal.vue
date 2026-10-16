@@ -136,7 +136,9 @@ async function cancelOrder() {
       )
     };
   } catch (err) {
-    logger.error("Error cancelling order items", err);
+    const serverError = commonUtil.getErrorMessage(err);
+    logger.error("Failed to cancel items", serverError);
+    commonUtil.showToast(`${translate("Failed to cancel items.")} ${serverError}`);
   }
 
   // If all the items are cancelled then mark the whole order as cancelled
