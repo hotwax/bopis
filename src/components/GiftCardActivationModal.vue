@@ -127,7 +127,7 @@ async function activateGitCard() {
   } catch (error: any) {
     const serverError = commonUtil.getErrorMessage(error, translate("Please contact administrator."));
     logger.error("Failed to activate gift card", serverError);
-    commonUtil.showToast(translate("Failed to activate gift card. {error}", { error: serverError }));
+    commonUtil.showToast(`${translate("Failed to activate gift card.")} ${serverError}`);
   }
 }
 

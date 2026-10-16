@@ -744,7 +744,7 @@ async function createPicklist(orderRef: any, selectedPicker: any) {
   } catch (err) {
     const serverError = commonUtil.getErrorMessage(err, translate("Please contact administrator."));
     logger.error("Something went wrong while creating picklist", serverError);
-    commonUtil.showToast(translate("Failed to create picklist. {error}", { error: serverError }));
+    commonUtil.showToast(`${translate("Failed to create picklist.")} ${serverError}`);
   }
 }
 
@@ -763,7 +763,7 @@ async function printPicklist(orderRef: any, shipGroup: any) {
     } catch (error) {
       const serverError = commonUtil.getErrorMessage(error, translate("Please contact administrator."));
       logger.error("Failed to assign picker role", serverError);
-      commonUtil.showToast(translate("Failed to create picklist. {error}", { error: serverError }));
+      commonUtil.showToast(`${translate("Failed to create picklist.")} ${serverError}`);
       return;
     }
   }
@@ -1067,7 +1067,7 @@ async function sendReadyForPickupEmail(orderRef: any) {
           } catch (error) {
             const serverError = commonUtil.getErrorMessage(error, translate("Please contact administrator."));
             logger.error("Failed to send email", serverError);
-            commonUtil.showToast(translate("Failed to send email. {error}", { error: serverError }));
+            commonUtil.showToast(`${translate("Failed to send email.")} ${serverError}`);
           }
         }
       }]
@@ -1124,7 +1124,7 @@ async function requestTransfer(orderRef: any) {
   } catch (err) {
     const serverError = commonUtil.getErrorMessage(err, translate("Please contact administrator."));
     logger.error("Failed to mark order as ship to store", serverError);
-    commonUtil.showToast(translate("Failed to mark order as ship to store. {error}", { error: serverError }));
+    commonUtil.showToast(`${translate("Failed to mark order as ship to store")}. ${serverError}`);
   }
   emitter.emit("dismissLoader");
 }

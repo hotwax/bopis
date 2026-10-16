@@ -342,10 +342,11 @@ async function updateNotificationPref(enumId: string) {
     isToggledOn = !pref.isEnabled
     pref.isEnabled = !pref.isEnabled
     notificationStore.setNotificationPrefs(notificationPrefs.value)
+    commonUtil.showToast(translate('Notification preferences updated.'))
   } catch (error) {
     const serverError = commonUtil.getErrorMessage(error, translate("Please try again."));
     logger.error("Failed to update notification preferences", serverError);
-    commonUtil.showToast(translate("Notification preferences not updated. {error}", { error: serverError }));
+    commonUtil.showToast(`${translate("Notification preferences not updated.")} ${serverError}`);
   } finally {
     emitter.emit("dismissLoader")
   }

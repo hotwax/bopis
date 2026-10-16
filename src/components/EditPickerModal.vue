@@ -188,7 +188,7 @@ async function confirmSave() {
           } catch(err) {
             const serverError = commonUtil.getErrorMessage(err, translate("Please contact administrator."));
             logger.error('Failed to replace picker', serverError);
-            commonUtil.showToast(translate("Failed to replace picker. {error}", { error: serverError }));
+            commonUtil.showToast(`${translate("Failed to replace picker.")} ${serverError}`);
             closeModal();
           }
         }
