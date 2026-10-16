@@ -419,7 +419,7 @@ async function sendReadyForPickupEmail(orderData: any) {
               throw resp.data;
             }
           } catch (error) {
-            const serverError = commonUtil.getErrorMessage(error, translate("Please contact administrator."));
+            const serverError = commonUtil.getErrorMessage(error);
             logger.error("Failed to send email", serverError);
             commonUtil.showToast(`${translate("Failed to send email.")} ${serverError}`);
           }
@@ -459,7 +459,7 @@ async function printPicklist(orderData: any, shipGroup: any) {
         throw resp.data;
       }
     } catch (error) {
-      const serverError = commonUtil.getErrorMessage(error, translate("Please contact administrator."));
+      const serverError = commonUtil.getErrorMessage(error);
       logger.error("Failed to assign picker role", serverError);
       commonUtil.showToast(`${translate("Failed to create picklist.")} ${serverError}`);
       return;
@@ -531,7 +531,7 @@ async function createPicklist(orderData: any, selectedPicker: any) {
       throw resp.data;
     }
   } catch (err) {
-    const serverError = commonUtil.getErrorMessage(err, translate("Please contact administrator."));
+    const serverError = commonUtil.getErrorMessage(err);
     logger.error("Failed to create picklist", serverError);
     commonUtil.showToast(`${translate("Failed to create picklist.")} ${serverError}`);
     emitter.emit("dismissLoader");
@@ -582,7 +582,7 @@ async function requestTransfer(orderData: any) {
       throw resp.data;
     }
   } catch (err) {
-    const serverError = commonUtil.getErrorMessage(err, translate("Please contact administrator."));
+    const serverError = commonUtil.getErrorMessage(err);
     logger.error("Failed to mark order as ship to store", serverError);
     commonUtil.showToast(`${translate("Failed to mark order as ship to store")}. ${serverError}`);
   }
@@ -617,7 +617,7 @@ async function openProofOfDeliveryModal(orderData: any, isViewModeOnly: any) {
         commonUtil.showToast(translate("Details have been successfully saved, and an email has been sent to the customer."));
       }
     } catch (err) {
-      const serverError = commonUtil.getErrorMessage(err, translate("Please contact administrator."));
+      const serverError = commonUtil.getErrorMessage(err);
       logger.error("Failed to save delivery details", serverError);
       commonUtil.showToast(`${translate("Failed to save delivery details.")} ${serverError}`);
     } finally {

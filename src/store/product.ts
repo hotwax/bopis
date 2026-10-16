@@ -75,7 +75,7 @@ export const useProductStore = defineStore('product', {
           commonUtil.showToast(translate("Products not found"));
         }
       } catch (error) {
-        const serverError = commonUtil.getErrorMessage(error, translate("Please contact administrator."));
+        const serverError = commonUtil.getErrorMessage(error);
         logger.error("Failed to fetch products", serverError);
         this.products = {
           list: [],
@@ -123,7 +123,7 @@ export const useProductStore = defineStore('product', {
           commonUtil.showToast(translate("Product not found"));
         }
       } catch (error) {
-        const serverError = commonUtil.getErrorMessage(error, translate("Please contact administrator."));
+        const serverError = commonUtil.getErrorMessage(error);
         logger.error("Failed to fetch product details", serverError);
         commonUtil.showToast(`${translate("Failed to fetch product details.")} ${serverError}`);
       }

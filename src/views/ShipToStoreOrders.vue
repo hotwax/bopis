@@ -265,7 +265,7 @@ const scheduleOrderForPickup = async (shipmentId: string, order: any) => {
             throw emailResp.data;
           }
         } catch (error) {
-          const serverError = commonUtil.getErrorMessage(error, translate("Please contact administrator."));
+          const serverError = commonUtil.getErrorMessage(error);
           logger.error('Error sending pickup scheduled notification:', serverError);
           commonUtil.showToast(`${translate('Order marked as ready for pickup but something went wrong while sending the email notification')}. ${serverError}`);
         }
@@ -278,7 +278,7 @@ const scheduleOrderForPickup = async (shipmentId: string, order: any) => {
       throw resp.data;
     }
   } catch (err) {
-    const serverError = commonUtil.getErrorMessage(err, translate("Please contact administrator."));
+    const serverError = commonUtil.getErrorMessage(err);
     logger.error('Failed to mark order as ready for pickup', serverError);
     commonUtil.showToast(`${translate("Failed to mark order as ready for pickup")}. ${serverError}`);
   } finally {
@@ -330,7 +330,7 @@ const handoverOrder = async (shipmentId: string, order: any) => {
             throw emailResp.data;
           }
         } catch (error) {
-          const serverError = commonUtil.getErrorMessage(error, translate("Please contact administrator."));
+          const serverError = commonUtil.getErrorMessage(error);
           logger.error('Error sending handover notification:', serverError);
           commonUtil.showToast(`${translate('Order handed over successfully but something went wrong while sending the email notification')}. ${serverError}`);
         }
@@ -342,7 +342,7 @@ const handoverOrder = async (shipmentId: string, order: any) => {
       throw resp.data;
     }
   } catch (err) {
-    const serverError = commonUtil.getErrorMessage(err, translate("Please contact administrator."));
+    const serverError = commonUtil.getErrorMessage(err);
     logger.error('Failed to handover order', serverError);
     commonUtil.showToast(`${translate("Failed to handover order")}. ${serverError}`);
   } finally {
@@ -383,7 +383,7 @@ const sendReadyForPickupEmail = async (order: any) => {
             throw resp.data;
           }
         } catch (error) {
-          const serverError = commonUtil.getErrorMessage(error, translate("Please contact administrator."));
+          const serverError = commonUtil.getErrorMessage(error);
           logger.error("Failed to send email", serverError);
           commonUtil.showToast(`${translate("Failed to send email.")} ${serverError}`);
         }
@@ -415,7 +415,7 @@ const openProofOfDeliveryModal = async (order: any, isViewModeOnly: any) => {
         commonUtil.showToast(translate("Details have been successfully saved, and an email has been sent to the customer."));
       }
     } catch (err) {
-      const serverError = commonUtil.getErrorMessage(err, translate("Please contact administrator."));
+      const serverError = commonUtil.getErrorMessage(err);
       logger.error("Failed to save delivery details", serverError);
       commonUtil.showToast(`${translate("Failed to save delivery details.")} ${serverError}`);
     } finally {

@@ -309,7 +309,7 @@ export const useOrderStore = defineStore('order', {
         return resp;
 
       } catch (err) {
-        const serverError = commonUtil.getErrorMessage(err, translate("Please contact administrator."));
+        const serverError = commonUtil.getErrorMessage(err);
         logger.error("Failed to fetch open orders", serverError);
         emitter.emit("dismissLoader");
         commonUtil.showToast(`${translate("Failed to fetch open orders.")} ${serverError}`);
@@ -556,7 +556,7 @@ export const useOrderStore = defineStore('order', {
         emitter.emit("dismissLoader");
         return resp;
       } catch (err) {
-        const serverError = commonUtil.getErrorMessage(err, translate("Please contact administrator."));
+        const serverError = commonUtil.getErrorMessage(err);
         logger.error("Failed to fetch packed orders", serverError);
         commonUtil.showToast(`${translate("Failed to fetch packed orders.")} ${serverError}`);
         emitter.emit("dismissLoader");
@@ -634,7 +634,7 @@ export const useOrderStore = defineStore('order', {
         emitter.emit("dismissLoader");
         return resp;
       } catch (err) {
-        const serverError = commonUtil.getErrorMessage(err, translate("Please contact administrator."));
+        const serverError = commonUtil.getErrorMessage(err);
         logger.error("Failed to fetch completed orders", serverError);
         commonUtil.showToast(`${translate("Failed to fetch completed orders.")} ${serverError}`);
         emitter.emit("dismissLoader");
@@ -701,7 +701,7 @@ export const useOrderStore = defineStore('order', {
           throw resp.data;
         }
       } catch (err) {
-        const serverError = commonUtil.getErrorMessage(err, translate("Please contact administrator."));
+        const serverError = commonUtil.getErrorMessage(err);
         logger.error("Failed to deliver order", serverError);
         commonUtil.showToast(`${translate("Failed to deliver order.")} ${serverError}`);
       }
@@ -739,7 +739,7 @@ export const useOrderStore = defineStore('order', {
           throw resp.data;
         }
       } catch (err) {
-        const serverError = commonUtil.getErrorMessage(err, translate("Please contact administrator."));
+        const serverError = commonUtil.getErrorMessage(err);
         logger.error("Failed to deliver order", serverError);
         commonUtil.showToast(`${translate("Failed to deliver order.")} ${serverError}`);
       }
@@ -772,7 +772,7 @@ export const useOrderStore = defineStore('order', {
           throw resp.data;
         }
       } catch (err) {
-        const serverError = commonUtil.getErrorMessage(err, translate("Please contact administrator."));
+        const serverError = commonUtil.getErrorMessage(err);
         logger.error("Failed to pack order", serverError);
         commonUtil.showToast(`${translate("Failed to pack order.")} ${serverError}`);
       } finally {
@@ -804,7 +804,7 @@ export const useOrderStore = defineStore('order', {
         }
         return resp;
       } catch (err) {
-        const serverError = commonUtil.getErrorMessage(err, translate("Please contact administrator."));
+        const serverError = commonUtil.getErrorMessage(err);
         logger.error("Failed to reject order items", serverError);
         commonUtil.showToast(`${translate("Failed to reject order items.")} ${serverError}`);
         return err;
@@ -893,7 +893,7 @@ export const useOrderStore = defineStore('order', {
           commonUtil.showToast(translate("Orders Not Found"))
         }
       } catch (err) {
-        const serverError = commonUtil.getErrorMessage(err, translate("Please contact administrator."));
+        const serverError = commonUtil.getErrorMessage(err);
         logger.error("Failed to fetch incoming orders", serverError);
         commonUtil.showToast(`${translate("Failed to fetch incoming orders.")} ${serverError}`);
       } finally {
@@ -956,7 +956,7 @@ export const useOrderStore = defineStore('order', {
           commonUtil.showToast(translate("Orders Not Found"))
         }
       } catch (err) {
-        const serverError = commonUtil.getErrorMessage(err, translate("Please contact administrator."));
+        const serverError = commonUtil.getErrorMessage(err);
         logger.error("Failed to fetch ready for pickup orders", serverError);
         commonUtil.showToast(`${translate("Failed to fetch ready for pickup orders.")} ${serverError}`);
       } finally {
@@ -1019,7 +1019,7 @@ export const useOrderStore = defineStore('order', {
           commonUtil.showToast(translate("Orders Not Found"))
         }
       } catch (err) {
-        const serverError = commonUtil.getErrorMessage(err, translate("Please contact administrator."));
+        const serverError = commonUtil.getErrorMessage(err);
         logger.error("Failed to fetch completed orders", serverError);
         commonUtil.showToast(`${translate("Failed to fetch completed orders.")} ${serverError}`);
       } finally {
@@ -1302,7 +1302,7 @@ export const useOrderStore = defineStore('order', {
           commonUtil.showToast(translate('Unable to open as browser is blocking pop-ups.', { documentName: 'picklist' }), { icon: cogOutline });
         }
       } catch (err) {
-        const serverError = commonUtil.getErrorMessage(err, translate("Please contact administrator."));
+        const serverError = commonUtil.getErrorMessage(err);
         logger.error("Failed to print picklist", serverError);
         commonUtil.showToast(`${translate("Failed to print picklist")}. ${serverError}`);
       }
@@ -1335,7 +1335,7 @@ export const useOrderStore = defineStore('order', {
         }
 
       } catch (err) {
-        const serverError = commonUtil.getErrorMessage(err, translate("Please contact administrator."));
+        const serverError = commonUtil.getErrorMessage(err);
         logger.error("Failed to load packing slip", serverError);
         commonUtil.showToast(`${translate("Failed to print packing slip")}. ${serverError}`);
       }
@@ -1420,7 +1420,7 @@ export const useOrderStore = defineStore('order', {
         }
 
       } catch (err) {
-        const serverError = commonUtil.getErrorMessage(err, translate("Please contact administrator."));
+        const serverError = commonUtil.getErrorMessage(err);
         logger.error("Failed to load shipping label and packing slip", serverError);
         commonUtil.showToast(`${translate("Failed to print shipping label and packing slip")}. ${serverError}`);
       }
