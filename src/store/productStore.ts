@@ -2,16 +2,7 @@ import { defineStore } from 'pinia'
 import { api, commonUtil, useEmbeddedAppStore, logger, translate, useSolrSearch } from '@common'
 import { useUserStore } from '@/store/user'
 import Actions from "@/authorization/actions"
-// Settings the app reads in code, registered here so they load even when a deployment's
-// VITE_DEFAULT_PRODUCT_STORE_SETTINGS omits them. The env list still wins for any key it defines.
-const requiredProductStoreSettings = {
-  AFFECT_QOH_ON_REJ: { stateKey: "affectQoh", value: "N" }
-}
-const getDefaultProductStoreSettings = () => ({
-  ...requiredProductStoreSettings,
-  ...JSON.parse(import.meta.env.VITE_DEFAULT_PRODUCT_STORE_SETTINGS as string || "{}")
-})
-const defaultProductStoreSettings = getDefaultProductStoreSettings()
+const defaultProductStoreSettings = JSON.parse(import.meta.env.VITE_DEFAULT_PRODUCT_STORE_SETTINGS as string || '{}')
 
 const getProductStoreSettingValue = (settings: any, settingTypeEnumId: string) => {
   const stateKey = defaultProductStoreSettings[settingTypeEnumId]?.stateKey || settingTypeEnumId
@@ -417,7 +408,7 @@ export const useProductStore = defineStore('productStore', {
       this.currentProductStore = payload;
     },
     async fetchProductStoreSettings(productStoreId: string) {
-      const defaultProductStoreSettings = getDefaultProductStoreSettings()
+      const defaultProductStoreSettings = JSON.parse(import.meta.env.VITE_DEFAULT_PRODUCT_STORE_SETTINGS as string || '{}')
       const productStoreSettings = {} as any
 
       if (productStoreId) {
@@ -472,7 +463,7 @@ export const useProductStore = defineStore('productStore', {
     },
 
     async setProductStoreSetting(productStoreId: string, settingTypeEnumId: string, settingValue: any) {
-      const defaultProductStoreSettings = getDefaultProductStoreSettings()
+      const defaultProductStoreSettings = JSON.parse(import.meta.env.VITE_DEFAULT_PRODUCT_STORE_SETTINGS as string || '{}')
 
       try {
         const payloadSettingValue = typeof settingValue === 'object' ? JSON.stringify(settingValue) : settingValue;
