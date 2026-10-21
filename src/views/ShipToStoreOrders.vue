@@ -266,7 +266,7 @@ const scheduleOrderForPickup = async (shipmentId: string, order: any) => {
           }
         } catch (error) {
           const serverError = commonUtil.getErrorMessage(error);
-          logger.error('Error sending pickup scheduled notification:', serverError);
+          logger.error('Error sending pickup scheduled notification:', error);
           commonUtil.showToast(`${translate('Order marked as ready for pickup but something went wrong while sending the email notification')}. ${serverError}`);
         }
       } else {
@@ -331,7 +331,7 @@ const handoverOrder = async (shipmentId: string, order: any) => {
           }
         } catch (error) {
           const serverError = commonUtil.getErrorMessage(error);
-          logger.error('Error sending handover notification:', serverError);
+          logger.error('Error sending handover notification:', error);
           commonUtil.showToast(`${translate('Order handed over successfully but something went wrong while sending the email notification')}. ${serverError}`);
         }
       } else {
@@ -343,7 +343,7 @@ const handoverOrder = async (shipmentId: string, order: any) => {
     }
   } catch (err) {
     const serverError = commonUtil.getErrorMessage(err);
-    logger.error('Failed to handover order', serverError);
+    logger.error('Failed to handover order', err);
     commonUtil.showToast(`${translate("Failed to handover order")}. ${serverError}`);
   } finally {
     emitter.emit("dismissLoader");
@@ -385,7 +385,7 @@ const sendReadyForPickupEmail = async (order: any) => {
         } catch (error) {
           const serverError = commonUtil.getErrorMessage(error);
           logger.error("Failed to send email", serverError);
-          commonUtil.showToast(`${translate("Failed to send email.")} ${serverError}`);
+          commonUtil.showToast(`${translate("Failed to send email")}. ${serverError}`);
         }
       }
     }]
@@ -417,7 +417,7 @@ const openProofOfDeliveryModal = async (order: any, isViewModeOnly: any) => {
     } catch (err) {
       const serverError = commonUtil.getErrorMessage(err);
       logger.error("Failed to save delivery details", serverError);
-      commonUtil.showToast(`${translate("Failed to save delivery details.")} ${serverError}`);
+      commonUtil.showToast(`${translate("Failed to save delivery details")}. ${serverError}`);
     } finally {
       emitter.emit("dismissLoader");
     }
