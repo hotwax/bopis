@@ -807,7 +807,7 @@ export const useOrderStore = defineStore('order', {
       const itemsToReject = order.shipGroup.items
         .map((item: any) => ({
           ...item,
-          updateQOH: false,
+          updateQOH: useProductStore().isAffectQohOnRejectionEnabled,
           rejectionReasonId: item.reason,
           kitComponents: orderUtil.isKit(item) ? item.rejectedComponents || [] : []
         }));
