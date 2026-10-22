@@ -1123,7 +1123,7 @@ async function requestTransfer(orderRef: any) {
     }
   } catch (err) {
     const serverError = commonUtil.getErrorMessage(err);
-    logger.error("Failed to mark order as ship to store", err);
+    logger.error(err);
     commonUtil.showToast(`${translate("Failed to mark order as ship to store")}. ${serverError}`);
   }
   emitter.emit("dismissLoader");

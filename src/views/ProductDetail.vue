@@ -235,7 +235,7 @@ const checkInventory = async () => {
     }
   } catch (error) {
     const serverError = commonUtil.getErrorMessage(error);
-    logger.error("Failed to check inventory", error);
+    logger.error(error);
     commonUtil.showToast(`${translate("Failed to check inventory")}. ${serverError}`);
   }
 };

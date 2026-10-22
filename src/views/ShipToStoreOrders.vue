@@ -279,7 +279,7 @@ const scheduleOrderForPickup = async (shipmentId: string, order: any) => {
     }
   } catch (err) {
     const serverError = commonUtil.getErrorMessage(err);
-    logger.error('Failed to mark order as ready for pickup', serverError);
+    logger.error('Failed to mark order as ready for pickup', err);
     commonUtil.showToast(`${translate("Failed to mark order as ready for pickup")}. ${serverError}`);
   } finally {
     emitter.emit("dismissLoader");
@@ -384,7 +384,7 @@ const sendReadyForPickupEmail = async (order: any) => {
           }
         } catch (error) {
           const serverError = commonUtil.getErrorMessage(error);
-          logger.error("Failed to send email", serverError);
+          logger.error(error);
           commonUtil.showToast(`${translate("Failed to send email")}. ${serverError}`);
         }
       }
@@ -416,7 +416,7 @@ const openProofOfDeliveryModal = async (order: any, isViewModeOnly: any) => {
       }
     } catch (err) {
       const serverError = commonUtil.getErrorMessage(err);
-      logger.error("Failed to save delivery details", serverError);
+      logger.error("Failed to save delivery details", err);
       commonUtil.showToast(`${translate("Failed to save delivery details")}. ${serverError}`);
     } finally {
       emitter.emit("dismissLoader");

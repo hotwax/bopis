@@ -805,7 +805,7 @@ export const useOrderStore = defineStore('order', {
         return resp;
       } catch (err) {
         const serverError = commonUtil.getErrorMessage(err);
-        logger.error("Failed to reject order items", err);
+        logger.error(err);
         commonUtil.showToast(`${translate("Failed to reject order items")}. ${serverError}`);
         return err;
       } finally {
