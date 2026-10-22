@@ -896,7 +896,7 @@ async function rejectOrder() {
         orderItemSeqId: item.orderItemSeqId,
         quantity: parseInt(item.quantity),
         maySplit: 'Y',
-        updateQOH: false,
+        updateQOH: useProductStore().isAffectQohOnRejectionEnabled,
         rejectionReasonId: item.rejectReason || rejectEntireOrderReasonId.value,
         kitComponents: orderUtil.isKit(item) ? item.rejectedComponents || [] : []
       });

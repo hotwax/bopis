@@ -92,6 +92,9 @@ export const useProductStore = defineStore('productStore', {
     isHandoverProofEnabled(): boolean {
       return this.isProductStoreSettingEnabled('HANDOVER_PROOF')
     },
+    isAffectQohOnRejectionEnabled(): boolean {
+      return this.isProductStoreSettingEnabled("AFFECT_QOH_ON_REJ")
+    },
     getProductIdentificationPref: (state) => state.settings.productIdentifier.productIdentificationPref,
     getBarcodeIdentifierPref: (state) => state.settings.barcodeIdentifier.barcodeIdentifierPref,
     getProductIdentificationOptions: (state) => state.settings.productIdentifier.productIdentificationOptions,
