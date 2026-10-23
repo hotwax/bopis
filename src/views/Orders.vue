@@ -611,7 +611,8 @@ async function openProofOfDeliveryModal(orderData: any, isViewModeOnly: any) {
 
       if (commonUtil.hasError(resp) || !resp.data?.success) {
         logger.error("Pickup notification failed:", resp);
-        commonUtil.showToast(translate("Details have been successfully saved, but failed to send email notification to the customer due to missing configuration."));
+        const serverError = commonUtil.getErrorMessage(resp);
+        commonUtil.showToast(`${translate("Details have been successfully saved, but failed to send email notification to the customer due to missing configuration.")} ${serverError}`);
       } else {
         await useOrderStore().fetchCommunicationEvents({ orders: [order.value] });
         commonUtil.showToast(translate("Details have been successfully saved, and an email has been sent to the customer."));
