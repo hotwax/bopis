@@ -254,7 +254,7 @@ const submitForm = async () => {
   } catch (err) {
     const serverError = commonUtil.getErrorMessage(err);
     logger.error("Error in submitForm:", err);
-    commonUtil.showToast(`${translate("Something went wrong")}. ${serverError}`);
+    commonUtil.showToast(`${translate("Failed to save delivery details")}. ${serverError}`);
   } finally {
     isSubmitting.value = false;
   }
