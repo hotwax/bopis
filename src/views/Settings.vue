@@ -310,7 +310,7 @@ function getShipmentMethodConfig() {
       const carrierName = carriers.value.find((carrier: any) => carrier.partyId === shippingMethodConfig.carrierPartyId)?.groupName;
       return { ...shippingMethodConfig, shipmentMethodDesc, carrierName };
     } catch (error) {
-      console.error('Error parsing shipping method config:', error);
+      logger.error('Error parsing shipping method config:', error);
       return {};
     }
   } else if (typeof shippingMethodConfig === 'string' && shippingMethodConfig !== '') {

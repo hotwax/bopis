@@ -1219,7 +1219,7 @@ export const useOrderStore = defineStore('order', {
           throw resp.data;
         }
       } catch (err) {
-        console.error("Failed to fetch enumeration information", err)
+        logger.error("Failed to fetch enumeration information", err)
       }
     },
     clearEnumerations() {
