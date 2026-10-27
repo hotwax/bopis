@@ -3,6 +3,12 @@
     <ion-header>
       <ion-toolbar>
         <ion-title>{{ translate("Settings") }}</ion-title>
+        <ion-buttons slot="end">
+          <ion-button fill="clear" @click="openLogs()">
+            <ion-icon slot="start" :icon="documentTextOutline" />
+            {{ translate("View logs") }}
+          </ion-button>
+        </ion-buttons>
       </ion-toolbar>
     </ion-header>
     
@@ -197,12 +203,12 @@
 </template>
 
 <script setup lang="ts">
-import { alertController, IonAvatar, IonButton, IonCard, IonCardContent, IonCardHeader, IonCardSubtitle, IonCardTitle, IonContent, IonHeader, IonIcon, IonItem, IonLabel, IonList, IonPage, IonTitle, IonToggle, IonToolbar, modalController, onIonViewWillEnter } from '@ionic/vue';
+import { alertController, IonAvatar, IonButtons, IonButton, IonCard, IonCardContent, IonCardHeader, IonCardSubtitle, IonCardTitle, IonContent, IonHeader, IonIcon, IonItem, IonLabel, IonList, IonPage, IonTitle, IonToggle, IonToolbar, modalController, onIonViewWillEnter } from '@ionic/vue';
 import { computed, onMounted, ref } from 'vue';
-import { openOutline } from 'ionicons/icons'
+import { openOutline, documentTextOutline } from 'ionicons/icons'
 import Image from '@/components/Image.vue';
 
-import { commonUtil, emitter, firebaseMessaging, logger, translate, useNotificationStore } from '@common';
+import { commonUtil, emitter, firebaseMessaging, logger, translate, useNotificationStore, DxpLogsModal } from '@common';
 import { useAuth } from "@common/composables/useAuth";
 import EditShipmentMethodModal from '@/components/EditShipmentMethodModal.vue';
 import DxpTimeZoneSwitcher from "@/components/DxpTimeZoneSwitcher.vue"
@@ -384,6 +390,13 @@ async function confirmNotificationPrefUpdate(enumId: string, event: CustomEvent)
     ],
   });
   return alert.present();
+}
+
+async function openLogs() {
+  const logsModal = await modalController.create({
+    component: DxpLogsModal
+  });
+  return logsModal.present();
 }
 </script>
 
