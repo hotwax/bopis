@@ -25,11 +25,13 @@ import "@common/css/settings.css"
 import "@common/css/theme.css"
 import './theme/variables.css';
 
-import { createDxpI18n, logger, initialiseConfig } from '@common';
+import { createDxpI18n, faroUtil, logger, initialiseConfig } from '@common';
 import { createPinia } from 'pinia'
 import piniaPluginPersistedstate from 'pinia-plugin-persistedstate'
 import localeMessages from '@/locales'
 import { useUserStore } from './store/user';
+
+faroUtil.initialiseFaro()
 
 const app = createApp(App)
 const pinia = createPinia();
@@ -42,7 +44,8 @@ app.use(IonicVue, {
   innerHTMLTemplatesEnabled: true
 })
   .use(logger, {
-    level: import.meta.env.VITE_DEFAULT_LOG_LEVEL
+    level: import.meta.env.VITE_DEFAULT_LOG_LEVEL,
+    afterHooks: [faroUtil.faroLoggerHook]
   })
   .use(pinia)
   .use(router)
