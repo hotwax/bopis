@@ -18,6 +18,6 @@ jobs:
       accxuiVersion: v1.9.0
     secrets:
       envPAT: ${{ secrets.envPAT }}
-      HOTWAX_PUBLIC_SECRET: ${{ secrets.HOTWAX_PUBLIC_SECRET }}
+      UAT_FIREBASE_SERVICE_ACCOUNT: ${{ secrets.UAT_FIREBASE_SERVICE_ACCOUNT }}
       VITE_FIREBASE_CONFIG: ${{ secrets.DEV_VUE_APP_FIREBASE_CONFIG }}
       VITE_FIREBASE_VAPID_KEY: ${{ secrets.DEV_VUE_APP_FIREBASE_VAPID_KEY }}
