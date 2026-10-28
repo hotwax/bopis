@@ -25,12 +25,11 @@ import "@common/css/settings.css"
 import "@common/css/theme.css"
 import './theme/variables.css';
 
-import { createDxpI18n, logger, initialiseConfig } from '@common';
+import { createDxpI18n, faroUtil, logger, initialiseConfig } from '@common';
 import { createPinia } from 'pinia'
 import piniaPluginPersistedstate from 'pinia-plugin-persistedstate'
 import localeMessages from '@/locales'
 import { useUserStore } from './store/user';
-import { faroUtil } from '@/utils/faroUtil';
 
 faroUtil.initialiseFaro()
 
