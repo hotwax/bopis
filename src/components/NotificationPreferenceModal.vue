@@ -94,9 +94,7 @@ async function updateNotificationPref() {
   try {
     await handleTopicSubscription();
   } catch (error) {
-    const serverError = commonUtil.getErrorMessage(error);
     logger.error(error);
-    commonUtil.showToast(`${translate('Notification preferences not updated. Please try again.')} ${serverError}`);
   } finally {
     emitter.emit("dismissLoader");
   }
