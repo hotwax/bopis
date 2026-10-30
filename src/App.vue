@@ -50,7 +50,7 @@ onMounted(async () => {
   emitter.on("presentLoader", (options: any) => presentLoader(options));
   emitter.on("dismissLoader", dismissLoader);
 
-  if (userProfile.value && userProfile.value.userTimeZone) {
+  if (userProfile.value && userProfile.value.timeZone) {
     Settings.defaultZone = userProfile.value.timeZone;
   }
 
