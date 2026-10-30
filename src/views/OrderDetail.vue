@@ -820,10 +820,20 @@ async function readyForPickup(orderData: any, shipGroup: any) {
         handler: async () => {
           alert.dismiss();
           emitter.emit("presentLoader", { message: "Loading...", backdropDismiss: false });
+          let orderToPack = orderData;
+          let shipGroupToPack = shipGroup;
           if (!shipGroup.shipmentId) {
             await printPicklist(orderData, shipGroup)
+            // createPicklist puts the new shipment on the store's current order, not on the shipGroup passed in here
+            orderToPack = order.value;
+            shipGroupToPack = order.value.shipGroup;
+            if (!shipGroupToPack?.shipmentId) {
+              commonUtil.showToast(translate("Something went wrong"));
+              emitter.emit("dismissLoader");
+              return;
+            }
           }
-          await useOrderStore().packShipGroupItems({ order: orderData, shipGroup }).then(async (resp: any) => {
+          await useOrderStore().packShipGroupItems({ order: orderToPack, shipGroup: shipGroupToPack }).then(async (resp: any) => {
             if (!commonUtil.hasError(resp)) {
               await getOrderDetail(props.orderId, props.shipGroupSeqId, props.orderType);
               prepareOrderTimeline({ statusId: "SHIPMENT_PACKED" });
