@@ -119,9 +119,7 @@ export const useUserStore = defineStore("user", {
           }
         }
       } catch (error: any) {
-        const serverError = commonUtil.getErrorMessage(error);
         logger.error("Failed to fetch user profile information", error);
-        commonUtil.showToast(`${translate("Failed to fetch user profile information")}. ${serverError}`);
         useAuth().clearAuth();
         return Promise.reject(error);
       }

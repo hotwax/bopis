@@ -826,17 +826,12 @@ export const useOrderStore = defineStore('order', {
         rejectToFacilityId: 'PICKUP_REJECTED',
         items: itemsToReject
       }
-      try {
-        const response = await api({
-          url: "poorti/rejectOrderItems",
-          method: "post",
-          data: payload
-        });
-        return [response];
-      } catch (err) {
-        logger.error(err)
-        return err as any
-      }
+      const response = await api({
+        url: "poorti/rejectOrderItems",
+        method: "post",
+        data: payload
+      });
+      return [response];
     },
     async fetchShipToStoreIncomingOrders(payload: any) {
       if (payload.viewIndex === 0) emitter.emit("presentLoader")

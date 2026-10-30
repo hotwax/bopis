@@ -744,7 +744,7 @@ async function createPicklist(orderRef: any, selectedPicker: any) {
   } catch (err) {
     const serverError = commonUtil.getErrorMessage(err);
     logger.error("Something went wrong while creating picklist", err);
-    commonUtil.showToast(`${translate("Failed to create picklist")}. ${serverError}`);
+    commonUtil.showToast(`${translate("Something went wrong. Picklist can not be created.")} ${serverError}`);
   }
 }
 
@@ -763,7 +763,7 @@ async function printPicklist(orderRef: any, shipGroup: any) {
     } catch (error) {
       const serverError = commonUtil.getErrorMessage(error);
       logger.error("Failed to assign picker role", error);
-      commonUtil.showToast(`${translate("Failed to create picklist")}. ${serverError}`);
+      commonUtil.showToast(`${translate("Something went wrong. Picklist can not be created.")} ${serverError}`);
       return;
     }
   }
@@ -1066,8 +1066,8 @@ async function sendReadyForPickupEmail(orderRef: any) {
             }
           } catch (error) {
             const serverError = commonUtil.getErrorMessage(error);
-            logger.error("Failed to send email", error);
-            commonUtil.showToast(`${translate("Failed to send email")}. ${serverError}`);
+            logger.error(error);
+            commonUtil.showToast(`${translate("Something went wrong while sending the email.")} ${serverError}`);
           }
         }
       }]

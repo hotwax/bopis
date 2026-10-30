@@ -385,7 +385,7 @@ const sendReadyForPickupEmail = async (order: any) => {
         } catch (error) {
           const serverError = commonUtil.getErrorMessage(error);
           logger.error(error);
-          commonUtil.showToast(`${translate("Failed to send email")}. ${serverError}`);
+          commonUtil.showToast(`${translate("Something went wrong while sending the email.")} ${serverError}`);
         }
       }
     }]

@@ -168,10 +168,10 @@ const getPicker = async (vSize?: any, vIndex?: any) => {
       availablePickers.value = availablePickers.value.concat(pickers);
       total = resp.data.response?.numFound;
     } else {
-      logger.error(translate('Something went wrong'));
+      logger.error(resp);
     }
   } catch (err) {
-    logger.error(translate('Something went wrong'));
+    logger.error(err);
   }
   isScrollable.value = availablePickers.value.length < total;
   isLoading.value = false;

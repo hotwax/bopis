@@ -421,7 +421,7 @@ async function sendReadyForPickupEmail(orderData: any) {
           } catch (error) {
             const serverError = commonUtil.getErrorMessage(error);
             logger.error(error);
-            commonUtil.showToast(`${translate("Failed to send email")}. ${serverError}`);
+            commonUtil.showToast(`${translate("Something went wrong while sending the email.")} ${serverError}`);
           }
         }
       }]
@@ -461,7 +461,7 @@ async function printPicklist(orderData: any, shipGroup: any) {
     } catch (error) {
       const serverError = commonUtil.getErrorMessage(error);
       logger.error(error);
-      commonUtil.showToast(`${translate("Failed to create picklist")}. ${serverError}`);
+      commonUtil.showToast(`${translate("Something went wrong. Picklist can not be created.")} ${serverError}`);
       return;
     }
     await createPicklist(orderData, "_NA_");
@@ -533,7 +533,7 @@ async function createPicklist(orderData: any, selectedPicker: any) {
   } catch (err) {
     const serverError = commonUtil.getErrorMessage(err);
     logger.error(err);
-    commonUtil.showToast(`${translate("Failed to create picklist")}. ${serverError}`);
+    commonUtil.showToast(`${translate('Something went wrong. Picklist can not be created.')} ${serverError}`);
     emitter.emit("dismissLoader");
     return;
   }
