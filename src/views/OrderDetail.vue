@@ -742,22 +742,30 @@ async function createPicklist(orderRef: any, selectedPicker: any) {
       throw resp.data
     }
   } catch (err) {
+    const serverError = commonUtil.getErrorMessage(err);
     logger.error("Something went wrong while creating picklist", err);
+    commonUtil.showToast(`${translate("Something went wrong. Picklist can not be created.")} ${serverError}`);
   }
 }
 
 async function printPicklist(orderRef: any, shipGroup: any) {
   if(!isTrackingEnabled.value) {
-    const resp = await useOrderStore().ensurePartyRole({
-      partyId: "_NA_",
-      roleTypeId: "WAREHOUSE_PICKER",
-    })
-    if(commonUtil.hasError(resp)) {
-      commonUtil.showToast(translate("Something went wrong"))
+    try {
+      const resp = await useOrderStore().ensurePartyRole({
+        partyId: "_NA_",
+        roleTypeId: "WAREHOUSE_PICKER",
+      })
+      if(commonUtil.hasError(resp)) {
+        throw resp.data;
+      }
+      await createPicklist(orderRef, "_NA_")
+      return;
+    } catch (error) {
+      const serverError = commonUtil.getErrorMessage(error);
+      logger.error("Failed to assign picker role", error);
+      commonUtil.showToast(`${translate("Something went wrong. Picklist can not be created.")} ${serverError}`);
       return;
     }
-    await createPicklist(orderRef, "_NA_")
-    return;
   }
   await useOrderStore().printPicklist(shipGroup.picklistId)
 }
@@ -1054,11 +1062,12 @@ async function sendReadyForPickupEmail(orderRef: any) {
             if (!commonUtil.hasError(resp) && resp.data?.success) {
               commonUtil.showToast(translate("Email sent successfully"))
             } else {
-              commonUtil.showToast(translate("Something went wrong while sending the email."))
+              throw resp.data;
             }
           } catch (error) {
-            commonUtil.showToast(translate("Something went wrong while sending the email."))
-            logger.error(error)
+            const serverError = commonUtil.getErrorMessage(error);
+            logger.error(error);
+            commonUtil.showToast(`${translate("Something went wrong while sending the email.")} ${serverError}`);
           }
         }
       }]
@@ -1110,12 +1119,12 @@ async function requestTransfer(orderRef: any) {
       commonUtil.showToast(translate('Order marked as ship to store'));
       router.push({ path: '/tabs/orders' });
     } else {
-      commonUtil.showToast(translate('Failed to mark order as ship to store'));
-      logger.error('Ship-to-Store conversion failed', resp);
+      throw resp.data;
     }
   } catch (err) {
+    const serverError = commonUtil.getErrorMessage(err);
     logger.error(err);
-    commonUtil.showToast(translate("Something went wrong"));
+    commonUtil.showToast(`${translate("Failed to mark order as ship to store")}. ${serverError}`);
   }
   emitter.emit("dismissLoader");
 }
