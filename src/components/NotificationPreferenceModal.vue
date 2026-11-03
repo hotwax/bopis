@@ -114,12 +114,14 @@ async function handleTopicSubscription() {
   });
 
   const responses = await Promise.allSettled([...subscribeRequests, ...unsubscribeRequests]);
-  const hasFailedResponse = responses.some((response: any) => response.status === "rejected");
-  commonUtil.showToast(
-    hasFailedResponse
-      ? translate('Notification preferences not updated. Please try again.')
-      : translate('Notification preferences updated.')
-  );
+  const failedResponse = responses.find((response: any) => response.status === "rejected") as PromiseRejectedResult | undefined;
+  if (failedResponse) {
+    const serverError = commonUtil.getErrorMessage(failedResponse.reason);
+    logger.error(failedResponse.reason);
+    commonUtil.showToast(`${translate('Notification preferences not updated. Please try again.')} ${serverError}`);
+  } else {
+    commonUtil.showToast(translate('Notification preferences updated.'));
+  }
 }
 
 async function confirmSave() {

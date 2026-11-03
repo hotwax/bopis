@@ -186,8 +186,9 @@ async function confirmSave() {
             await resetPicker()
             closeModal({ selectedPicker: selectedPicker.value })
           } catch(err) {
-            commonUtil.showToast(translate('Something went wrong, could not edit picker.'))
+            const serverError = commonUtil.getErrorMessage(err);
             logger.error('Something went wrong, could not edit picker', err)
+            commonUtil.showToast(`${translate("Something went wrong, could not edit picker.")} ${serverError}`);
             closeModal();
           }
         }

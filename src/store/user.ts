@@ -119,10 +119,9 @@ export const useUserStore = defineStore("user", {
           }
         }
       } catch (error: any) {
-        commonUtil.showToast(translate("Failed to fetch user profile information"));
-        console.error("error", error);
+        logger.error("Failed to fetch user profile information", error);
         useAuth().clearAuth();
-        return Promise.reject(new Error(error));
+        return Promise.reject(error);
       }
     },
     async fetchPermissions() {
@@ -174,8 +173,9 @@ export const useUserStore = defineStore("user", {
         this.updateUserInfo({ userTimeZone: tzId })
         this.current.timeZone = tzId
       } catch (error: any) {
-        console.error("Failed to set user time zone", error);
-        commonUtil.showToast(translate("Failed to set user time zone"));
+        const serverError = commonUtil.getErrorMessage(error);
+        logger.error("Failed to set user time zone", error);
+        commonUtil.showToast(`${translate("Failed to set user time zone")}. ${serverError}`);
       }
     },
 
@@ -195,7 +195,7 @@ export const useUserStore = defineStore("user", {
           this.timeZones = resp.data.timeZones.filter((timeZone: any) => DateTime.local().setZone(timeZone.id).isValid);
         }
       } catch (err) {
-        console.error('Error', err)
+        logger.error('Error', err)
       }
     },
 
@@ -221,7 +221,7 @@ export const useUserStore = defineStore("user", {
           });
         }
       } catch (error) {
-        console.error(error)
+        logger.error(error)
       } finally {
         i18n.global.locale.value = newLocale as any
         this.locale = newLocale

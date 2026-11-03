@@ -268,7 +268,7 @@ export const useProductStore = defineStore('productStore', {
           }
         });
       } catch (error) {
-        console.error('error', error)
+        logger.error('error', error)
       }
       this.currentFacility = payload;
     },
@@ -310,7 +310,7 @@ export const useProductStore = defineStore('productStore', {
           }
         }
       } catch (error) {
-        console.error("Failed to resolve facility preference:", error);
+        logger.error("Failed to resolve facility preference:", error);
       }
       // In case app is not embedded and user has no facility preference on server
       this.setCurrentFacility(this.facilities[0]);
@@ -346,7 +346,7 @@ export const useProductStore = defineStore('productStore', {
             productStores.map((store: any) => productStoresMap[store.productStoreId] = store.storeName)
             stores.map((store: any) => store.storeName = productStoresMap[store.productStoreId])
           } catch (error) {
-            console.error(error);
+            logger.error(error);
           }
         }
 
@@ -403,7 +403,7 @@ export const useProductStore = defineStore('productStore', {
           }
         });
       } catch (error) {
-        console.error('error', error)
+        logger.error('error', error)
       }
       this.currentProductStore = payload;
     },
@@ -500,8 +500,9 @@ export const useProductStore = defineStore('productStore', {
           throw resp
         }
       } catch (err) {
-        commonUtil.showToast(translate('Failed to update Product Store setting.'))
-        logger.error(err)
+        const serverError = commonUtil.getErrorMessage(err);
+        logger.error(err);
+        commonUtil.showToast(`${translate("Failed to update Product Store setting.")} ${serverError}`);
       }
     },
 
@@ -530,7 +531,7 @@ export const useProductStore = defineStore('productStore', {
 
         fetchedGoodIdentificationOptions = resp.data
       } catch (error) {
-        console.error('Failed to fetch good identification types', error)
+        logger.error('Failed to fetch good identification types', error)
       }
 
       // Merge the arrays and remove duplicates
@@ -581,7 +582,7 @@ export const useProductStore = defineStore('productStore', {
           throw resp.data;
         }
       } catch (err) {
-        console.error("Failed to fetch facility information", err)
+        logger.error("Failed to fetch facility information", err)
       }
     },
     clearFacilities() {

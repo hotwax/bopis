@@ -262,11 +262,12 @@ const scheduleOrderForPickup = async (shipmentId: string, order: any) => {
           if (!commonUtil.hasError(emailResp) && emailResp.data?.success) {
             commonUtil.showToast(translate('Order marked as ready for pickup, an email notification has been sent to the customer'));
           } else {
-            commonUtil.showToast(translate('Order marked as ready for pickup but something went wrong while sending the email notification'));
+            throw emailResp.data;
           }
         } catch (error) {
+          const serverError = commonUtil.getErrorMessage(error);
           logger.error('Error sending pickup scheduled notification:', error);
-          commonUtil.showToast(translate('Order marked as ready for pickup but something went wrong while sending the email notification'));
+          commonUtil.showToast(`${translate('Order marked as ready for pickup but something went wrong while sending the email notification')}. ${serverError}`);
         }
       } else {
         commonUtil.showToast(translate('Order marked as ready for pickup'));
@@ -274,11 +275,12 @@ const scheduleOrderForPickup = async (shipmentId: string, order: any) => {
       useOrderStore().resetShipToStoreOrdersPagination();
       await getIncomingOrders();
     } else {
-      commonUtil.showToast(translate("Failed to mark order as ready for pickup"));
+      throw resp.data;
     }
   } catch (err) {
+    const serverError = commonUtil.getErrorMessage(err);
     logger.error('Schedule order for pickup error:', err);
-    commonUtil.showToast(translate("Something went wrong"));
+    commonUtil.showToast(`${translate("Failed to mark order as ready for pickup")}. ${serverError}`);
   } finally {
     emitter.emit("dismissLoader");
   }
@@ -325,24 +327,24 @@ const handoverOrder = async (shipmentId: string, order: any) => {
           if (!commonUtil.hasError(emailResp) && emailResp.data?.success) {
             commonUtil.showToast(translate('Order handed over successfully and order completion email has been sent'));
           } else {
-            logger.error('Error sending handover notification:', emailResp);
-            commonUtil.showToast(translate('Order handed over successfully but something went wrong while sending the email notification'));
+            throw emailResp.data;
           }
         } catch (error) {
+          const serverError = commonUtil.getErrorMessage(error);
           logger.error('Error sending handover notification:', error);
-          commonUtil.showToast(translate('Order handed over successfully but something went wrong while sending the email notification'));
+          commonUtil.showToast(`${translate('Order handed over successfully but something went wrong while sending the email notification')}. ${serverError}`);
         }
       } else {
         commonUtil.showToast(translate('Order handed over successfully'));
       }
       await getReadyForPickupOrders();
     } else {
-      commonUtil.showToast(translate("Failed to handover order"));
-      logger.error("Handover failed", resp);
+      throw resp.data;
     }
   } catch (err) {
+    const serverError = commonUtil.getErrorMessage(err);
     logger.error('Handover failed', err);
-    commonUtil.showToast(translate("Something went wrong"));
+    commonUtil.showToast(`${translate("Failed to handover order")}. ${serverError}`);
   } finally {
     emitter.emit("dismissLoader");
   }
@@ -378,11 +380,12 @@ const sendReadyForPickupEmail = async (order: any) => {
           if (!commonUtil.hasError(resp) && resp.data?.success) {
             commonUtil.showToast(translate("Email sent successfully"));
           } else {
-            commonUtil.showToast(translate("Something went wrong while sending the email."));
+            throw resp.data;
           }
         } catch (error) {
-          commonUtil.showToast(translate("Something went wrong while sending the email."));
+          const serverError = commonUtil.getErrorMessage(error);
           logger.error(error);
+          commonUtil.showToast(`${translate("Something went wrong while sending the email.")} ${serverError}`);
         }
       }
     }]
@@ -406,14 +409,16 @@ const openProofOfDeliveryModal = async (order: any, isViewModeOnly: any) => {
       const resp = await orderStore.sendPickupNotification(data.proofOfDeliveryData);
       if (commonUtil.hasError(resp) || !resp.data?.success){
         logger.error("Pickup notification failed:", resp);
-        commonUtil.showToast(translate("Details have been successfully saved, but failed to send email notification to the customer due to missing configuration."));
+        const serverError = commonUtil.getErrorMessage(resp);
+        commonUtil.showToast(`${translate("Details have been successfully saved, but failed to send email notification to the customer due to missing configuration.")} ${serverError}`);
       } else {
         await (useOrderStore() as any).fetchCommunicationEvents({ orders: [order] });
         commonUtil.showToast(translate("Details have been successfully saved, and an email has been sent to the customer."));
       }
     } catch (err) {
+      const serverError = commonUtil.getErrorMessage(err);
       logger.error("Error in saving the details:", err);
-      commonUtil.showToast(translate("Something went wrong"));
+      commonUtil.showToast(`${translate("Failed to save delivery details")}. ${serverError}`);
     } finally {
       emitter.emit("dismissLoader");
     }
