@@ -795,9 +795,19 @@ export const useOrderStore = defineStore('order', {
     async rejectItems(payload: any) {
       emitter.emit("presentLoader");
       try {
-        const resp = await this.rejectOrderItems(payload);
-        const refreshPickupOrders = resp.find((response: any) => response.data);
-        if (refreshPickupOrders) {
+        const items = payload.shipGroup.items.map((item: any) => ({
+          ...item,
+          updateQOH: useProductStore().isAffectQohOnRejectionEnabled,
+          rejectionReasonId: item.reason,
+          kitComponents: orderUtil.isKit(item) ? item.rejectedComponents || [] : []
+        }));
+
+        const resp = await this.rejectOrderItems({
+          orderId: payload.orderId,
+          rejectToFacilityId: "PICKUP_REJECTED",
+          items
+        });
+        if (!commonUtil.hasError(resp)) {
           commonUtil.showToast(translate(payload.isEntireOrderRejected ? 'All items were rejected from the order' : 'Some items were rejected from the order') + ' ' + (payload.orderName ? payload.orderName : payload.orderId));
         } else {
           throw resp;
@@ -806,32 +816,22 @@ export const useOrderStore = defineStore('order', {
       } catch (err) {
         const serverError = commonUtil.getErrorMessage(err);
         logger.error(err);
-        commonUtil.showToast(`${translate("Failed to reject order items")}. ${serverError}`);
+        const errorMessage = serverError
+          ? `${translate("Failed to reject order items")}. ${serverError}`
+          : translate("Failed to reject order items");
+        commonUtil.showToast(errorMessage);
         return err;
       } finally {
         emitter.emit("dismissLoader");
       }
     },
-    async rejectOrderItems(order: any) {
-      const itemsToReject = order.shipGroup.items
-        .map((item: any) => ({
-          ...item,
-          updateQOH: useProductStore().isAffectQohOnRejectionEnabled,
-          rejectionReasonId: item.reason,
-          kitComponents: orderUtil.isKit(item) ? item.rejectedComponents || [] : []
-        }));
-
-      const payload = {
-        orderId: order.orderId,
-        rejectToFacilityId: 'PICKUP_REJECTED',
-        items: itemsToReject
-      }
-      const response = await api({
+    async rejectOrderItems({ orderId, rejectToFacilityId, items }: any) {
+      return await api({
         url: "poorti/rejectOrderItems",
         method: "post",
-        data: payload
+        data: { orderId, rejectToFacilityId, items },
+        timeout: 60000
       });
-      return [response];
     },
     async fetchShipToStoreIncomingOrders(payload: any) {
       if (payload.viewIndex === 0) emitter.emit("presentLoader")

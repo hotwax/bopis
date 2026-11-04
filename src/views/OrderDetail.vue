@@ -889,9 +889,7 @@ async function openOrderItemRejHistoryModal() {
 }
 
 async function rejectOrder() {
-  emitter.emit("presentLoader");
-
-  let orderRef = JSON.parse(JSON.stringify(order.value))
+  let orderRef = JSON.parse(JSON.stringify(order.value));
   const isEntireOrderRejectionValue = isEntireOrderRejectionEnabled();
   const rejectToFacilityId = orderRef.shipGroup.shipmentMethodTypeId === "STOREPICKUP" ? "PICKUP_REJECTED" : "REJECTED_ITM_PARKING";
   const itemsToReject: any[] = [];
@@ -910,39 +908,71 @@ async function rejectOrder() {
       });
     }
   }
-  if (itemsToReject.length > 0) {
-    const payload = {
+
+  if (!itemsToReject.length) {
+    return;
+  }
+
+  emitter.emit("presentLoader");
+
+  let isTimeout = false;
+  try {
+    const resp = await useOrderStore().rejectOrderItems({
       orderId: orderRef.orderId,
       rejectToFacilityId,
       items: itemsToReject
-    };
-    try {
-      const resp = await useOrderStore().rejectOrderItems(payload);
+    });
 
-      if (!commonUtil.hasError(resp)) {
-        const rejectedSeqIds = new Set(itemsToReject.map(i => i.orderItemSeqId));
-        orderRef.shipGroup.items = orderRef.shipGroup.items.filter(
-          (item: any) => !rejectedSeqIds.has(item.orderItemSeqId)
-        );
-        
-        const toastMessage = orderRef.shipGroup.items.length === 0 ? translate('All items were rejected from the order.', { orderId: orderRef.orderName ?? orderRef.orderId }) : translate('Some items were rejected from the order.', { orderId: orderRef.orderName ?? orderRef.orderId });
-        commonUtil.showToast(toastMessage);
-      }
-    } catch (err) {
+    if (commonUtil.hasError(resp)) {
+      throw resp;
+    }
+  } catch (err: any) {
+    isTimeout = !err?.response && ["ECONNABORTED", "ETIMEDOUT"].includes(err?.code);
+    if (isTimeout) {
+      commonUtil.showToast(translate("Request timed out. The order was refreshed, please check its status."));
+    } else {
+      const serverError = commonUtil.getErrorMessage(err);
       logger.error("Something went wrong while rejecting order items:", err);
+      const errorMessage = serverError
+        ? `${translate("Failed to reject order items")}. ${serverError}`
+        : translate("Failed to reject order items");
+      commonUtil.showToast(errorMessage);
+    }
+    return;
+  } finally {
+    emitter.emit("dismissLoader");
+    if (isTimeout) {
+      try {
+        await getOrderDetail(props.orderId, props.shipGroupSeqId, props.orderType);
+      } catch (refreshErr) {
+        logger.error("Failed to refresh order after timeout:", refreshErr);
+      }
     }
   }
 
-  if(!orderRef.shipGroup.items.length) orderRef.rejected = true;
+  // Post-success UI and store updates (isolated from API failure handling)
+  try {
+    const rejectedSeqIds = new Set(itemsToReject.map(i => i.orderItemSeqId));
+    orderRef.shipGroup.items = orderRef.shipGroup.items.filter(
+      (item: any) => !rejectedSeqIds.has(item.orderItemSeqId)
+    );
 
-  await useOrderStore().updateCurrent({ order: orderRef });
-  hasRejectedItems.value = order.value.shipGroup.items.some((item: any) => item.rejectReason);
+    const toastMessage = orderRef.shipGroup.items.length === 0
+      ? translate('All items were rejected from the order.', { orderId: orderRef.orderName ?? orderRef.orderId })
+      : translate('Some items were rejected from the order.', { orderId: orderRef.orderName ?? orderRef.orderId });
+    commonUtil.showToast(toastMessage);
 
-  if(order.value.shipGroup?.shipmentMethodTypeId === "STOREPICKUP") {
-    prepareOrderTimeline();
+    if (!orderRef.shipGroup.items.length) orderRef.rejected = true;
+
+    await useOrderStore().updateCurrent({ order: orderRef });
+    hasRejectedItems.value = order.value.shipGroup.items.some((item: any) => item.rejectReason);
+
+    if (order.value.shipGroup?.shipmentMethodTypeId === "STOREPICKUP") {
+      await prepareOrderTimeline();
+    }
+  } catch (postUpdateErr) {
+    logger.error("Failed to update UI after rejecting order items:", postUpdateErr);
   }
-
-  emitter.emit("dismissLoader");
 }
 
 async function cancelOrder(orderRef: any) {
