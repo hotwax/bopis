@@ -7,7 +7,7 @@
 <script setup lang="ts">
 import { IonApp, IonRouterOutlet, loadingController } from "@ionic/vue";
 import { computed, onMounted, onUnmounted, ref } from "vue";
-import { translate, emitter, logger, useNotificationStore, i18n } from "@common";
+import { translate, emitter, firebaseMessaging, logger, useNotificationStore, i18n } from "@common";
 import { useAuth } from "@common/composables/useAuth";
 import { Settings } from "luxon";
 import { useUserStore } from "@/store/user";
@@ -63,7 +63,15 @@ onMounted(async () => {
     if (isAuthenticated.value && currentProductStore?.productStoreId) {
       await useProductStore().fetchProductStoreSettings(currentProductStore.productStoreId).catch((error) => logger.error(error));
 
-      if (allNotificationPrefs.value?.length) {
+      // A session that began before device ids were minted at login has none yet, and every
+      // firebase call is keyed by it.
+      if (!useNotificationStore().getFirebaseDeviceId) {
+        useNotificationStore().setFirebaseDeviceId(firebaseMessaging.generateDeviceId());
+      }
+      // Like login: this device's subscriptions decide, and no gesture here, so never let this raise
+      // a permission prompt.
+      await useNotificationStore().fetchAllNotificationPrefs(import.meta.env.VITE_NOTIF_APP_ID, userProfile.value?.userId, useNotificationStore().getFirebaseDeviceId).catch((error) => logger.error(error));
+      if (allNotificationPrefs.value?.length && firebaseUtil.canInitialiseWithoutPrompting()) {
         await firebaseUtil.initialiseFirebaseMessaging();
       }
     }

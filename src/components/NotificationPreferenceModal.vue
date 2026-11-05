@@ -34,6 +34,7 @@ import { closeOutline, save } from "ionicons/icons";
 import { commonUtil, emitter, firebaseMessaging, logger, translate, useNotificationStore } from '@common';
 import { useProductStore } from "@/store/productStore";
 import { useUserStore as usePiniaUserStore } from "@/store/user";
+import { firebaseUtil } from "@/utils/firebaseUtil";
 
 const userStore = usePiniaUserStore();
 const notificationPrefs = computed(() => useNotificationStore().getNotificationPrefs);
@@ -52,7 +53,7 @@ const isButtonDisabled = computed(() => {
 });
 
 onBeforeMount(async () => {
-  await useNotificationStore().fetchNotificationPreferences(import.meta.env.VITE_NOTIF_ENUM_TYPE_ID, import.meta.env.VITE_NOTIF_APP_ID, userStore.getUserProfile?.userId, (enumId: string) => firebaseMessaging.generateTopicName(commonUtil.getOMSInstanceName(), (useProductStore().getCurrentFacility as any)?.facilityId, enumId));
+  await useNotificationStore().fetchNotificationPreferences(import.meta.env.VITE_NOTIF_ENUM_TYPE_ID, import.meta.env.VITE_NOTIF_APP_ID, userStore.getUserProfile?.userId, (enumId: string) => firebaseMessaging.generateTopicName(commonUtil.getOMSInstanceName(), (useProductStore().getCurrentFacility as any)?.facilityId, enumId), useNotificationStore().getFirebaseDeviceId);
   notificationPrefState.value = notificationPrefs.value.reduce((prefs: any, pref: any) => {
     prefs[pref.enumId] = pref.isEnabled
     return prefs
@@ -90,6 +91,13 @@ function toggleNotificationPref(enumId: string, event: any) {
 }
 
 async function updateNotificationPref() {
+  // Before presentLoader and before the first await, so the Save tap is still a live gesture:
+  // WebKit only shows the permission prompt from inside one. Asked only when something is being
+  // switched ON, since switching everything off is not a request to be notified.
+  if (notificationPrefToUpdate.value.subscribe.length) {
+    await firebaseUtil.requestNotificationPermissionFromGesture();
+  }
+
   emitter.emit("presentLoader");
   try {
     await handleTopicSubscription();
@@ -103,14 +111,29 @@ async function updateNotificationPref() {
 async function handleTopicSubscription() {
   const facilityId = (currentFacility.value as any)?.facilityId;
   const notificationStore = useNotificationStore();
+
+  /*
+   * subscribe#Topic only attaches tokens the backend already knows about, and this screen never
+   * registered the device. A user who sets their preferences here would create subscriptions with
+   * no token behind them and receive nothing until their next login. Register first so it works
+   * immediately.
+   *
+   * Only when this device has no confirmed token yet, and only once permission is granted:
+   * initialisation asks for permission again inside Firebase, and by now the Save tap's gesture is
+   * spent, so a device that dismissed the prompt above would be asked with no gesture behind it.
+   */
+  if (notificationPrefToUpdate.value.subscribe.length && !notificationStore.isFirebaseInitialised && firebaseUtil.canInitialiseWithoutPrompting()) {
+    await firebaseUtil.initialiseFirebaseMessaging();
+  }
+
   const subscribeRequests = notificationPrefToUpdate.value.subscribe.map((enumId: string) => {
     const topicName = firebaseMessaging.generateTopicName(commonUtil.getOMSInstanceName(), facilityId, enumId);
-    return notificationStore.subscribeTopic(topicName, import.meta.env.VITE_NOTIF_APP_ID);
+    return notificationStore.subscribeTopic(topicName, import.meta.env.VITE_NOTIF_APP_ID, notificationStore.getFirebaseDeviceId);
   });
 
   const unsubscribeRequests = notificationPrefToUpdate.value.unsubscribe.map((enumId: string) => {
     const topicName = firebaseMessaging.generateTopicName(commonUtil.getOMSInstanceName(), facilityId, enumId);
-    return notificationStore.unsubscribeTopic(topicName, import.meta.env.VITE_NOTIF_APP_ID);
+    return notificationStore.unsubscribeTopic(topicName, import.meta.env.VITE_NOTIF_APP_ID, notificationStore.getFirebaseDeviceId);
   });
 
   const responses = await Promise.allSettled([...subscribeRequests, ...unsubscribeRequests]);

@@ -1,4 +1,4 @@
-import { api, i18n, commonUtil, logger, translate, useNotificationStore } from "@common";
+import { api, i18n, commonUtil, firebaseMessaging, logger, translate, useNotificationStore } from "@common";
 import { useAuth } from "@common/composables/useAuth";
 import { defineStore } from "pinia"
 import { DateTime, Settings } from "luxon"
@@ -241,9 +241,20 @@ export const useUserStore = defineStore("user", {
         await useProductStore().fetchProductStoreDependencies(useProductStore().getCurrentProductStore.productStoreId)
 
         const notificationStore = useNotificationStore();
-        await notificationStore.fetchAllNotificationPrefs(import.meta.env.VITE_NOTIF_APP_ID as any, this.current.userId)
-        // Register the device token only when we have some notification preferences already set
-        if(notificationStore.getAllNotificationPrefs?.length) {
+
+        // Every firebase call is keyed by device, so the id has to exist before anything queries or
+        // writes with it. It is only minted once: generateDeviceId with no argument always produces a
+        // new one, so the guard is what makes this stable across logins.
+        if (!notificationStore.getFirebaseDeviceId) {
+          notificationStore.setFirebaseDeviceId(firebaseMessaging.generateDeviceId());
+        }
+
+        // Subscriptions are per device, so it is this device's that decide whether it registers.
+        await notificationStore.fetchAllNotificationPrefs(import.meta.env.VITE_NOTIF_APP_ID as any, this.current.userId, notificationStore.getFirebaseDeviceId)
+        // Register only when doing so cannot raise a permission prompt: there is no user gesture
+        // here, so a prompt would be refused and could leave permission stuck at "default". A user
+        // who has not granted yet is offered the prompt on the settings screen instead.
+        if(notificationStore.getAllNotificationPrefs?.length && firebaseUtil.canInitialiseWithoutPrompting()) {
           await firebaseUtil.initialiseFirebaseMessaging();
         }
 
