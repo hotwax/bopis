@@ -33,9 +33,11 @@ vi.mock("firebase/messaging", () => ({ isSupported: () => Promise.resolve(true),
 
 const { firebaseUtil } = await import("@/utils/firebaseUtil");
 const { useNotificationSetupStore } = await import("@/store/notificationSetup");
+const { useNotificationDeviceSetup } = await import("@/composables/useNotificationDeviceSetup");
 
 setActivePinia(createPinia());
 const setup = useNotificationSetupStore();
+const deviceSetup = useNotificationDeviceSetup();
 
 // An already active FCM worker, so initialise goes straight to the Firebase app.
 const activeWorker = { scope: "https://app/firebase-cloud-messaging-push-scope", active: { state: "activated" }, update: vi.fn() };
@@ -133,7 +135,7 @@ describe("permission prompts", () => {
 
   it("Enable asks for permission before its first await, so the tap's gesture is still live", () => {
     (globalThis as any).Notification.permission = "default";
-    setup.setUpNotificationsOnThisDevice();
+    deviceSetup.setUpNotificationsOnThisDevice();
 
     expect((globalThis as any).Notification.requestPermission).toHaveBeenCalledTimes(1);
   });
@@ -142,10 +144,19 @@ describe("permission prompts", () => {
     (globalThis as any).Notification.permission = "default";
     (globalThis as any).Notification.requestPermission = vi.fn(() => Promise.resolve("denied"));
 
-    const result = await setup.setUpNotificationsOnThisDevice();
+    const result = await deviceSetup.setUpNotificationsOnThisDevice();
 
     expect(result).toMatchObject({ ok: false, failedStep: "permission" });
     expect(initialiseFirebaseApp).not.toHaveBeenCalled();
+  });
+
+  it("Enable names why registration failed, from the store's last initialise error", async () => {
+    initialiseFirebaseApp.mockResolvedValue({ status: "unsupported" });
+
+    const result = await deviceSetup.setUpNotificationsOnThisDevice();
+
+    expect(result).toMatchObject({ ok: false, failedStep: "registration" });
+    expect(result.steps.at(-1)?.detail).toBe("Firebase reports push is not supported in this context");
   });
 });
 

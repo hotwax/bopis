@@ -3,7 +3,8 @@ import { logger } from "@common";
 /*
  * Browser-side helpers for push notifications: the permission prompt, the FCM push worker and the
  * locally recorded token. Pure of app state: no API calls and no stores (AGENTS.md, App layout).
- * Registration, setup and the health check live in useNotificationSetupStore.
+ * Token registration lives in useNotificationSetupStore; the Enable chain and the health check in
+ * the useNotificationDeviceSetup composable.
  */
 
 /**

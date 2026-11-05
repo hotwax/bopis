@@ -240,6 +240,7 @@ import { useProductStore } from '@/store/productStore';
 import DxpAppVersionInfo from '@/components/DxpAppVersionInfo.vue';
 import { type DeviceSetupResult, type NotificationHealthIssue, firebaseUtil } from "@/utils/firebaseUtil"
 import { useNotificationSetupStore } from "@/store/notificationSetup";
+import { useNotificationDeviceSetup } from "@/composables/useNotificationDeviceSetup";
 import Actions from "@/authorization/actions"
 
 const appInfo = ref(import.meta.env.VITE_VERSION_INFO ? JSON.parse(import.meta.env.VITE_VERSION_INFO) : {} as any);
@@ -258,6 +259,7 @@ const notificationPrefs = computed(() => useNotificationStore().getNotificationP
 const allNotificationPrefs = computed(() => useNotificationStore().getAllNotificationPrefs);
 const currentFacility = computed(() => useProductStore().getCurrentFacility);
 
+const { getNotificationHealthIssue, setUpNotificationsOnThisDevice } = useNotificationDeviceSetup();
 const isEnablingNotifications = ref(false);
 const isApplePlatform = firebaseUtil.isApplePushPlatform();
 // null when nothing is wrong, and also until the first check finishes, so the Enable button does
@@ -283,7 +285,7 @@ const notificationHealthMessage = computed(() => notificationHealthIssue.value ?
 
 async function refreshNotificationHealth() {
   try {
-    notificationHealthIssue.value = await useNotificationSetupStore().getNotificationHealthIssue();
+    notificationHealthIssue.value = await getNotificationHealthIssue();
   } catch (error) {
     logger.error("Could not check notification health", error);
   }
@@ -412,7 +414,7 @@ const SETUP_FAILURE_MESSAGE: Record<string, string> = {
 async function enableNotificationsOnThisDevice() {
   // First thing in the tap: calling setUp makes the permission request synchronously, before its
   // own first await, so nothing below can spend the gesture ahead of the prompt.
-  const setup = useNotificationSetupStore().setUpNotificationsOnThisDevice();
+  const setup = setUpNotificationsOnThisDevice();
   isEnablingNotifications.value = true;
   let result: DeviceSetupResult | undefined;
   try {
