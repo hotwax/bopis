@@ -214,6 +214,25 @@
             </ion-item>
           </ion-list>
         </ion-card>
+
+        <ion-card>
+          <ion-card-header>
+            <ion-card-title>
+              {{ translate("Notification diagnostics") }}
+            </ion-card-title>
+          </ion-card-header>
+          <ion-card-content>
+            {{ translate("Check why notifications are not arriving on this device, and register it from here.") }}
+          </ion-card-content>
+          <ion-item lines="none">
+            <ion-button fill="outline" data-testid="notification-test-send" :disabled="isSendingTestNotification" @click="confirmSendTestNotification()">
+              <ion-spinner v-if="isSendingTestNotification" slot="start" name="crescent" />
+              {{ translate(isSendingTestNotification ? "Waiting for it to arrive" : "Send a test order notification") }}
+            </ion-button>
+            <ion-button fill="outline" data-testid="notification-diagnostics-open" @click="openNotificationDiagnostics()">{{ translate("Open diagnostics") }}</ion-button>
+            <ion-button fill="outline" @click="openLogs()">{{ translate("Open logs") }}</ion-button>
+          </ion-item>
+        </ion-card>
       </section>
     </ion-content>
   </ion-page>
@@ -228,6 +247,7 @@ import Image from '@/components/Image.vue';
 import { commonUtil, emitter, firebaseMessaging, logger, translate, useNotificationStore, DxpLogsModal } from '@common';
 import { useAuth } from "@common/composables/useAuth";
 import EditShipmentMethodModal from '@/components/EditShipmentMethodModal.vue';
+import NotificationDiagnosticsModal from '@/components/NotificationDiagnosticsModal.vue';
 import DxpTimeZoneSwitcher from "@/components/DxpTimeZoneSwitcher.vue"
 import DxpOmsInstanceNavigator from "@/components/DxpOmsInstanceNavigator.vue";
 import DxpProductIdentifier from "@/components/DxpProductIdentifier.vue";
@@ -240,6 +260,7 @@ import { useProductStore } from '@/store/productStore';
 import DxpAppVersionInfo from '@/components/DxpAppVersionInfo.vue';
 import { type DeviceSetupResult, type NotificationHealthIssue, firebaseUtil } from "@/utils/firebaseUtil"
 import { useNotificationDeviceSetup } from "@/composables/useNotificationDeviceSetup";
+import { useLiveNotificationTest } from "@/composables/useLiveNotificationTest";
 import Actions from "@/authorization/actions"
 
 const appInfo = ref(import.meta.env.VITE_VERSION_INFO ? JSON.parse(import.meta.env.VITE_VERSION_INFO) : {} as any);
@@ -535,6 +556,60 @@ async function confirmNotificationPrefUpdate(enumId: string, event: CustomEvent)
     ],
   });
   return alert.present();
+}
+
+const { sendTestOrderNotification } = useLiveNotificationTest();
+const isSendingTestNotification = ref(false);
+
+/**
+ * The backend publishes to the facility topic, so this is a real push to every device subscribed at
+ * the store, not a private ping. Say so before firing it.
+ */
+async function confirmSendTestNotification() {
+  const facilityName = (currentFacility.value as any)?.facilityName || translate("this facility");
+  const alert = await alertController.create({
+    header: translate("Send a test order notification?"),
+    message: translate("This sends a real new-order notification to every device subscribed at", { facilityName }),
+    buttons: [
+      { text: translate("Cancel"), role: "cancel" },
+      { text: translate("Send"), handler: () => { sendTestNotification(); } }
+    ]
+  });
+  await alert.present();
+}
+
+// One message per link, so the toast says which half of the round trip failed.
+const LIVE_TEST_FAILURE_MESSAGE: Record<string, string> = {
+  device: "This device is not registered for notifications, so nothing was sent. Set it up above first.",
+  order: "No open pickup order at this facility to send a notification for.",
+  send: "The server refused to send the test notification.",
+  receipt: "The server accepted it, but nothing reached this device. Open diagnostics."
+};
+
+async function sendTestNotification() {
+  isSendingTestNotification.value = true;
+  try {
+    const result = await sendTestOrderNotification({ facilityId: (currentFacility.value as any)?.facilityId });
+    if (result.ok) {
+      commonUtil.showToast(translate("Received on this device after", { seconds: ((result.receivedAfterMs ?? 0) / 1000).toFixed(1), orderName: result.orderName || result.orderId }));
+      return;
+    }
+    commonUtil.showToast(translate(LIVE_TEST_FAILURE_MESSAGE[result.failedStep ?? "send"]));
+  } catch (error) {
+    logger.error("Live notification test threw", error);
+    commonUtil.showToast(translate("The test notification could not be sent."));
+  } finally {
+    isSendingTestNotification.value = false;
+  }
+}
+
+async function openNotificationDiagnostics() {
+  const diagnosticsModal = await modalController.create({
+    component: NotificationDiagnosticsModal
+  });
+  // The diagnostics actions can register this device or change its subscriptions.
+  diagnosticsModal.onDidDismiss().then(() => refreshNotificationHealth());
+  return diagnosticsModal.present();
 }
 
 async function openLogs() {
