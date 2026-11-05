@@ -28,6 +28,11 @@ export function readRegisteredToken() {
   }
 }
 
+/** Whether the backend has confirmed a token for this device, for the diagnostics screen. */
+export function hasConfirmedToken() {
+  return !!readRegisteredToken();
+}
+
 export function writeRegisteredToken(token: string) {
   try {
     localStorage.setItem(REGISTERED_TOKEN_KEY, token);
