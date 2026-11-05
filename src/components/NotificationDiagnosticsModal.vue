@@ -204,8 +204,11 @@ const verdict = computed(() => {
   const out: { text: string; ok: boolean; warn?: boolean }[] = [];
   const state = appState.value;
 
-  if (platform.value.standalone === "false") {
+  // Only iPhone and iPad need the Home Screen app for push; a browser tab receives it everywhere else.
+  if (platform.value.standalone === "false" && platform.value.isApplePush) {
     out.push({ text: "Opened in a browser tab, not the Home Screen app. On iOS, push only works from the installed Home Screen app.", ok: false });
+  } else if (platform.value.standalone === "false") {
+    out.push({ text: "Opened in a browser tab, which can receive push on this platform.", ok: true });
   } else if (platform.value.standalone === "true") {
     out.push({ text: "Running as an installed Home Screen app.", ok: true });
   }
@@ -226,7 +229,12 @@ const verdict = computed(() => {
   }
 
   if (support.value.permission === "denied") {
-    out.push({ text: "Notification permission is DENIED. iOS will not re-prompt; the Home Screen app must be deleted and re-added.", ok: false });
+    out.push({
+      text: platform.value.isApplePush
+        ? "Notification permission is DENIED. iOS will not re-prompt; the Home Screen app must be deleted and re-added."
+        : "Notification permission is DENIED. The browser will not ask again; reset notifications for this site in the browser's site settings, then reload.",
+      ok: false
+    });
   } else if (support.value.permission === "default") {
     out.push({ text: "Permission not yet requested. Use the register button below, which asks from a real tap.", ok: false, warn: true });
   } else if (support.value.permission === "granted") {
