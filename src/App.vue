@@ -13,7 +13,6 @@ import { Settings } from "luxon";
 import { useUserStore } from "@/store/user";
 import { useProductStore } from "@/store/productStore";
 import { firebaseUtil } from "@/utils/firebaseUtil";
-import { useNotificationSetupStore } from "@/store/notificationSetup";
 
 const { isAuthenticated } = useAuth();
 const loader = ref<any>(null);
@@ -73,7 +72,7 @@ onMounted(async () => {
       // a permission prompt.
       await useNotificationStore().fetchAllNotificationPrefs(import.meta.env.VITE_NOTIF_APP_ID, userProfile.value?.userId, useNotificationStore().getFirebaseDeviceId).catch((error) => logger.error(error));
       if (allNotificationPrefs.value?.length && firebaseUtil.canInitialiseWithoutPrompting()) {
-        await useNotificationSetupStore().initialiseFirebaseMessaging();
+        await firebaseUtil.initialiseFirebaseMessaging();
       }
     }
 });

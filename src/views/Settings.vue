@@ -239,7 +239,6 @@ import { useOrderStore } from '@/store/order';
 import { useProductStore } from '@/store/productStore';
 import DxpAppVersionInfo from '@/components/DxpAppVersionInfo.vue';
 import { type DeviceSetupResult, type NotificationHealthIssue, firebaseUtil } from "@/utils/firebaseUtil"
-import { useNotificationSetupStore } from "@/store/notificationSetup";
 import { useNotificationDeviceSetup } from "@/composables/useNotificationDeviceSetup";
 import Actions from "@/authorization/actions"
 
@@ -484,7 +483,7 @@ async function updateNotificationPref(enumId: string) {
      * this card, which runs inside a fresh gesture.
      */
     if (!allNotificationPrefs.value.length && isToggledOn && firebaseUtil.canInitialiseWithoutPrompting()) {
-      await useNotificationSetupStore().initialiseFirebaseMessaging();
+      await firebaseUtil.initialiseFirebaseMessaging();
     } else if (allNotificationPrefs.value.length == 1 && !isToggledOn) {
       await notificationStore.removeClientRegistrationToken(firebaseDeviceId.value, import.meta.env.VITE_NOTIF_APP_ID)
     }

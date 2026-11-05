@@ -1,15 +1,14 @@
 import { logger, useNotificationStore } from "@common";
 import { isSupported } from "firebase/messaging";
-import { useNotificationSetupStore } from "@/store/notificationSetup";
 import {
   type DeviceSetupResult, type DeviceSetupStep, type DeviceSetupStepResult, type NotificationHealthIssue, type StepReporter,
-  ensurePushWorker, findPushWorkerRegistration, readRegisteredToken
+  ensurePushWorker, findPushWorkerRegistration, getLastInitialiseError, initialiseFirebaseMessaging, readRegisteredToken
 } from "@/utils/firebaseUtil";
 
 /*
  * Setting up push on this device from the screens: the Enable chain run from a tap, and the checks
- * the settings card reads. Token registration and the Firebase listeners are in
- * useNotificationSetupStore, which login needs as well.
+ * the settings card reads. Token registration and the Firebase listeners are in firebaseUtil, which
+ * login needs as well.
  */
 export function useNotificationDeviceSetup() {
   /**
@@ -91,7 +90,6 @@ export function useNotificationDeviceSetup() {
     const steps: DeviceSetupStepResult[] = [];
     const report: StepReporter = (label, ok, detail) => steps.push({ label, ok, detail });
     const notificationStore = useNotificationStore();
-    const setupStore = useNotificationSetupStore();
     const permissionNow = () => (typeof Notification !== "undefined" ? Notification.permission : "unsupported");
     const fail = (failedStep: DeviceSetupStep): DeviceSetupResult => {
       logger.error("Notification setup on this device did not complete", { failedStep, steps });
@@ -143,10 +141,10 @@ export function useNotificationDeviceSetup() {
     const registration = await ensurePushWorker(report);
     if (!registration) return fail("serviceWorker");
 
-    const registered = await setupStore.initialiseFirebaseMessaging();
+    const registered = await initialiseFirebaseMessaging();
     report("Token registered with the backend", registered, registered
       ? `deviceId ${notificationStore.getFirebaseDeviceId}`
-      : setupStore.lastInitialiseError || "the backend refused the token or no token was issued");
+      : getLastInitialiseError() || "the backend refused the token or no token was issued");
     if (!registered) return fail("registration");
 
     const verified = await isDeviceSetUp();

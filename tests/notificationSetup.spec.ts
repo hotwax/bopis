@@ -1,6 +1,5 @@
 // @vitest-environment jsdom
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { createPinia, setActivePinia } from "pinia";
 
 const api = vi.hoisted(() => vi.fn());
 const initialiseFirebaseApp = vi.hoisted(() => vi.fn());
@@ -32,11 +31,9 @@ vi.mock("firebase/app", () => ({ getApp: vi.fn(), getApps: () => [{}] }));
 vi.mock("firebase/messaging", () => ({ isSupported: () => Promise.resolve(true), getMessaging: vi.fn(), getToken }));
 
 const { firebaseUtil } = await import("@/utils/firebaseUtil");
-const { useNotificationSetupStore } = await import("@/store/notificationSetup");
 const { useNotificationDeviceSetup } = await import("@/composables/useNotificationDeviceSetup");
 
-setActivePinia(createPinia());
-const setup = useNotificationSetupStore();
+const setup = firebaseUtil;
 const deviceSetup = useNotificationDeviceSetup();
 
 // An already active FCM worker, so initialise goes straight to the Firebase app.
@@ -150,7 +147,7 @@ describe("permission prompts", () => {
     expect(initialiseFirebaseApp).not.toHaveBeenCalled();
   });
 
-  it("Enable names why registration failed, from the store's last initialise error", async () => {
+  it("Enable names why registration failed, from the last initialise error", async () => {
     initialiseFirebaseApp.mockResolvedValue({ status: "unsupported" });
 
     const result = await deviceSetup.setUpNotificationsOnThisDevice();

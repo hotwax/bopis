@@ -8,7 +8,6 @@ import { useOrderStore } from "@/store/order";
 import { useStockStore } from "@/store/stock";
 import { useProductStore } from "@/store/productStore";
 import { firebaseUtil } from "@/utils/firebaseUtil";
-import { useNotificationSetupStore } from "@/store/notificationSetup";
 
 interface UserState {
   permissions: any[]
@@ -256,7 +255,7 @@ export const useUserStore = defineStore("user", {
         // here, so a prompt would be refused and could leave permission stuck at "default". A user
         // who has not granted yet is offered the prompt on the settings screen instead.
         if(notificationStore.getAllNotificationPrefs?.length && firebaseUtil.canInitialiseWithoutPrompting()) {
-          await useNotificationSetupStore().initialiseFirebaseMessaging();
+          await firebaseUtil.initialiseFirebaseMessaging();
         }
 
         const facilityId = router.currentRoute.value.query.facilityId
