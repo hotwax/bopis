@@ -203,7 +203,7 @@
               <p>{{ translate(notificationHealthMessage) }}</p>
             </ion-label>
             <!-- Hidden when denied: a tap cannot bring the prompt back, only the steps in the message can. -->
-            <ion-button v-if="notificationHealthIssue !== 'permissionDenied'" slot="end" fill="outline" data-testid="notification-enable" :disabled="isEnablingNotifications" @click="enableNotificationsOnThisDevice()">
+            <ion-button v-if="canEnableFixNotificationHealth" slot="end" fill="outline" data-testid="notification-enable" :disabled="isEnablingNotifications" @click="enableNotificationsOnThisDevice()">
               <ion-spinner v-if="isEnablingNotifications" slot="start" name="crescent" />
               {{ translate("Enable") }}
             </ion-button>
@@ -280,6 +280,10 @@ const NOTIFICATION_HEALTH_MESSAGE: Record<NotificationHealthIssue, string> = {
   token: "Notifications are not set up on this device yet."
 };
 
+// Enable cannot fix a blocked permission, a build without Firebase config, or a context with no push
+// support, so it is offered only for what its chain can repair.
+const canEnableFixNotificationHealth = computed(() => !!notificationHealthIssue.value
+  && !["permissionDenied", "config", "unsupported"].includes(notificationHealthIssue.value));
 const notificationHealthMessage = computed(() => notificationHealthIssue.value ? NOTIFICATION_HEALTH_MESSAGE[notificationHealthIssue.value] : "");
 
 async function refreshNotificationHealth() {
