@@ -238,7 +238,8 @@ import { useUserStore } from '@/store/user';
 import { useOrderStore } from '@/store/order';
 import { useProductStore } from '@/store/productStore';
 import DxpAppVersionInfo from '@/components/DxpAppVersionInfo.vue';
-import { type NotificationHealthIssue, firebaseUtil } from "@/utils/firebaseUtil"
+import { type DeviceSetupResult, type NotificationHealthIssue, firebaseUtil } from "@/utils/firebaseUtil"
+import { useNotificationSetupStore } from "@/store/notificationSetup";
 import Actions from "@/authorization/actions"
 
 const appInfo = ref(import.meta.env.VITE_VERSION_INFO ? JSON.parse(import.meta.env.VITE_VERSION_INFO) : {} as any);
@@ -282,7 +283,7 @@ const notificationHealthMessage = computed(() => notificationHealthIssue.value ?
 
 async function refreshNotificationHealth() {
   try {
-    notificationHealthIssue.value = await firebaseUtil.getNotificationHealthIssue();
+    notificationHealthIssue.value = await useNotificationSetupStore().getNotificationHealthIssue();
   } catch (error) {
     logger.error("Could not check notification health", error);
   }
@@ -411,9 +412,9 @@ const SETUP_FAILURE_MESSAGE: Record<string, string> = {
 async function enableNotificationsOnThisDevice() {
   // First thing in the tap: calling setUp makes the permission request synchronously, before its
   // own first await, so nothing below can spend the gesture ahead of the prompt.
-  const setup = firebaseUtil.setUpNotificationsOnThisDevice();
+  const setup = useNotificationSetupStore().setUpNotificationsOnThisDevice();
   isEnablingNotifications.value = true;
-  let result: Awaited<ReturnType<typeof firebaseUtil.setUpNotificationsOnThisDevice>> | undefined;
+  let result: DeviceSetupResult | undefined;
   try {
     result = await setup;
   } catch (error) {
@@ -481,7 +482,7 @@ async function updateNotificationPref(enumId: string) {
      * this card, which runs inside a fresh gesture.
      */
     if (!allNotificationPrefs.value.length && isToggledOn && firebaseUtil.canInitialiseWithoutPrompting()) {
-      await firebaseUtil.initialiseFirebaseMessaging();
+      await useNotificationSetupStore().initialiseFirebaseMessaging();
     } else if (allNotificationPrefs.value.length == 1 && !isToggledOn) {
       await notificationStore.removeClientRegistrationToken(firebaseDeviceId.value, import.meta.env.VITE_NOTIF_APP_ID)
     }

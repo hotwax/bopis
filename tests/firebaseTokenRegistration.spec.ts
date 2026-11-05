@@ -1,5 +1,6 @@
 // @vitest-environment jsdom
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { createPinia, setActivePinia } from "pinia";
 
 /** jsdom here provides no Storage, so the module under test needs one to exist. */
 class MemoryStorage {
@@ -28,7 +29,10 @@ vi.mock("@common", () => ({
 vi.mock("firebase/app", () => ({ getApp: vi.fn(), getApps: () => [] }));
 vi.mock("firebase/messaging", () => ({ getMessaging: vi.fn(), getToken: vi.fn() }));
 
-const { registerToken } = await import("../src/utils/firebaseUtil");
+const { useNotificationSetupStore } = await import("../src/store/notificationSetup");
+
+setActivePinia(createPinia());
+const { registerToken } = useNotificationSetupStore();
 
 const CACHE_KEY = "bopis.fcm.registeredToken";
 const calls = () => api.mock.calls.map(([cfg]: any[]) => `${cfg.method}`);

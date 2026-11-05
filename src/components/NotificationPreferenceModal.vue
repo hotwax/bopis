@@ -35,6 +35,7 @@ import { commonUtil, emitter, firebaseMessaging, logger, translate, useNotificat
 import { useProductStore } from "@/store/productStore";
 import { useUserStore as usePiniaUserStore } from "@/store/user";
 import { firebaseUtil } from "@/utils/firebaseUtil";
+import { useNotificationSetupStore } from "@/store/notificationSetup";
 
 const userStore = usePiniaUserStore();
 const notificationPrefs = computed(() => useNotificationStore().getNotificationPrefs);
@@ -123,7 +124,7 @@ async function handleTopicSubscription() {
    * spent, so a device that dismissed the prompt above would be asked with no gesture behind it.
    */
   if (notificationPrefToUpdate.value.subscribe.length && !notificationStore.isFirebaseInitialised && firebaseUtil.canInitialiseWithoutPrompting()) {
-    await firebaseUtil.initialiseFirebaseMessaging();
+    await useNotificationSetupStore().initialiseFirebaseMessaging();
   }
 
   const subscribeRequests = notificationPrefToUpdate.value.subscribe.map((enumId: string) => {

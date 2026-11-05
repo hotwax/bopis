@@ -1,5 +1,6 @@
 // @vitest-environment jsdom
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { createPinia, setActivePinia } from "pinia";
 
 const api = vi.hoisted(() => vi.fn());
 const initialiseFirebaseApp = vi.hoisted(() => vi.fn());
@@ -31,6 +32,10 @@ vi.mock("firebase/app", () => ({ getApp: vi.fn(), getApps: () => [{}] }));
 vi.mock("firebase/messaging", () => ({ isSupported: () => Promise.resolve(true), getMessaging: vi.fn(), getToken }));
 
 const { firebaseUtil } = await import("@/utils/firebaseUtil");
+const { useNotificationSetupStore } = await import("@/store/notificationSetup");
+
+setActivePinia(createPinia());
+const setup = useNotificationSetupStore();
 
 // An already active FCM worker, so initialise goes straight to the Firebase app.
 const activeWorker = { scope: "https://app/firebase-cloud-messaging-push-scope", active: { state: "activated" }, update: vi.fn() };
@@ -61,7 +66,7 @@ describe("initialiseFirebaseMessaging (#867)", () => {
   it("marks the device initialised only once the backend accepted its token", async () => {
     issuesToken();
 
-    await expect(firebaseUtil.initialiseFirebaseMessaging()).resolves.toBe(true);
+    await expect(setup.initialiseFirebaseMessaging()).resolves.toBe(true);
     expect(store.isFirebaseInitialised).toBe(true);
     expect(api).toHaveBeenCalledWith(expect.objectContaining({ url: "firebase/token", method: "post", data: expect.objectContaining({ registrationToken: "TOKEN", deviceId: "DEVICE-A" }) }));
   });
@@ -69,7 +74,7 @@ describe("initialiseFirebaseMessaging (#867)", () => {
   it("leaves the flag off when permission was refused, so a later Enable or reload tries again", async () => {
     initialiseFirebaseApp.mockResolvedValue({ status: "permission", permission: "denied" });
 
-    await expect(firebaseUtil.initialiseFirebaseMessaging()).resolves.toBe(false);
+    await expect(setup.initialiseFirebaseMessaging()).resolves.toBe(false);
     expect(store.isFirebaseInitialised).toBe(false);
   });
 
@@ -77,7 +82,7 @@ describe("initialiseFirebaseMessaging (#867)", () => {
     issuesToken();
     api.mockResolvedValue({ status: 200, data: { _ERROR_MESSAGE_: "refused" } });
 
-    await expect(firebaseUtil.initialiseFirebaseMessaging()).resolves.toBe(false);
+    await expect(setup.initialiseFirebaseMessaging()).resolves.toBe(false);
     expect(store.isFirebaseInitialised).toBe(false);
   });
 
@@ -90,8 +95,8 @@ describe("initialiseFirebaseMessaging (#867)", () => {
 
       return { status: "token" };
     });
-    await firebaseUtil.initialiseFirebaseMessaging();
-    await firebaseUtil.initialiseFirebaseMessaging();
+    await setup.initialiseFirebaseMessaging();
+    await setup.initialiseFirebaseMessaging();
     handlers.forEach((handler) => handler({ notification: { data: { title: "New order" } }, isForeground: true }));
 
     expect(store.addNotification).toHaveBeenCalledTimes(1);
@@ -103,7 +108,7 @@ describe("subscriptions stay per device", () => {
     issuesToken();
     store.getAllNotificationPrefs = [{ topic: "oms-STORE1-NEW_ORDER", deviceId: "DEVICE-B" }];
 
-    await firebaseUtil.initialiseFirebaseMessaging();
+    await setup.initialiseFirebaseMessaging();
 
     expect(store.subscribeTopic).not.toHaveBeenCalled();
     expect(store.fetchAllNotificationPrefs).not.toHaveBeenCalled();
@@ -128,7 +133,7 @@ describe("permission prompts", () => {
 
   it("Enable asks for permission before its first await, so the tap's gesture is still live", () => {
     (globalThis as any).Notification.permission = "default";
-    firebaseUtil.setUpNotificationsOnThisDevice();
+    setup.setUpNotificationsOnThisDevice();
 
     expect((globalThis as any).Notification.requestPermission).toHaveBeenCalledTimes(1);
   });
@@ -137,7 +142,7 @@ describe("permission prompts", () => {
     (globalThis as any).Notification.permission = "default";
     (globalThis as any).Notification.requestPermission = vi.fn(() => Promise.resolve("denied"));
 
-    const result = await firebaseUtil.setUpNotificationsOnThisDevice();
+    const result = await setup.setUpNotificationsOnThisDevice();
 
     expect(result).toMatchObject({ ok: false, failedStep: "permission" });
     expect(initialiseFirebaseApp).not.toHaveBeenCalled();
@@ -156,7 +161,7 @@ describe("token rotation (#879)", () => {
 
   it("re-registers a rotated token when the app comes back, deleting the old row first", async () => {
     issuesToken("OLD");
-    await firebaseUtil.initialiseFirebaseMessaging();
+    await setup.initialiseFirebaseMessaging();
     api.mockClear();
     getToken.mockResolvedValue("ROTATED");
 
