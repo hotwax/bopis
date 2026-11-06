@@ -918,18 +918,19 @@ async function rejectOrder() {
     };
     try {
       const resp = await useOrderStore().rejectOrderItems(payload);
+      if (commonUtil.hasError(resp)) throw resp;
 
-      if (!commonUtil.hasError(resp)) {
-        const rejectedSeqIds = new Set(itemsToReject.map(i => i.orderItemSeqId));
-        orderRef.shipGroup.items = orderRef.shipGroup.items.filter(
-          (item: any) => !rejectedSeqIds.has(item.orderItemSeqId)
-        );
-        
-        const toastMessage = orderRef.shipGroup.items.length === 0 ? translate('All items were rejected from the order.', { orderId: orderRef.orderName ?? orderRef.orderId }) : translate('Some items were rejected from the order.', { orderId: orderRef.orderName ?? orderRef.orderId });
-        commonUtil.showToast(toastMessage);
-      }
+      const rejectedSeqIds = new Set(itemsToReject.map(i => i.orderItemSeqId));
+      orderRef.shipGroup.items = orderRef.shipGroup.items.filter(
+        (item: any) => !rejectedSeqIds.has(item.orderItemSeqId)
+      );
+
+      const toastMessage = orderRef.shipGroup.items.length === 0 ? translate('All items were rejected from the order.', { orderId: orderRef.orderName ?? orderRef.orderId }) : translate('Some items were rejected from the order.', { orderId: orderRef.orderName ?? orderRef.orderId });
+      commonUtil.showToast(toastMessage);
     } catch (err) {
       logger.error("Something went wrong while rejecting order items:", err);
+      const serverError = commonUtil.getErrorMessage(err);
+      commonUtil.showToast(serverError ? `${translate("Failed to reject order items")}. ${serverError}` : translate("Failed to reject order items"));
     }
   }
 
