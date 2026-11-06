@@ -804,6 +804,9 @@ export const useOrderStore = defineStore('order', {
         commonUtil.showToast(translate(order.isEntireOrderRejected ? 'All items were rejected from the order' : 'Some items were rejected from the order') + ' ' + (order.orderName ? order.orderName : order.orderId));
         return resp;
       } catch (err) {
+        const serverError = commonUtil.getErrorMessage(err);
+        logger.error(err);
+        commonUtil.showToast(serverError ? `${translate("Failed to reject order items")}. ${serverError}` : translate("Failed to reject order items"));
         return err;
       } finally {
         emitter.emit("dismissLoader");
