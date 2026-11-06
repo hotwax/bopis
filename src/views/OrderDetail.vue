@@ -929,7 +929,8 @@ async function rejectOrder() {
       commonUtil.showToast(toastMessage);
     } catch (err) {
       logger.error("Something went wrong while rejecting order items:", err);
-      commonUtil.showToast(`${translate("Failed to reject order items")}. ${commonUtil.getErrorMessage(err)}`);
+      const serverError = commonUtil.getErrorMessage(err);
+      commonUtil.showToast(serverError ? `${translate("Failed to reject order items")}. ${serverError}` : translate("Failed to reject order items"));
     }
   }
 
