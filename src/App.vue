@@ -15,7 +15,9 @@ import { useProductStore } from "@/store/productStore";
 import { firebaseUtil } from "@/utils/firebaseUtil";
 
 const { isAuthenticated } = useAuth();
-const loader = ref<any>(null);
+// The loader being created or shown. A promise, so a dismissLoader that arrives while
+// loadingController.create() is still pending can cancel it instead of being lost.
+const loader = ref<ReturnType<typeof loadingController.create> | null>(null);
 
 const userProfile = computed(() => useUserStore().getUserProfile);
 const allNotificationPrefs = computed(() => useNotificationStore().getAllNotificationPrefs);
@@ -26,23 +28,40 @@ const presentLoader = async (options = { message: "", backdropDismiss: false }) 
   if (options.message && loader.value) dismissLoader();
 
   if (!loader.value) {
-    loader.value = await loadingController.create({
+    loader.value = loadingController.create({
       message: options.message ? translate(options.message) : (options.backdropDismiss ? translate("Click the backdrop to dismiss.") : translate("Loading...")),
       backdropDismiss: options.backdropDismiss || false
     });
   }
-  loader.value.present();
+  const pending = loader.value;
+  const element = await pending;
+
+  // Dismissed while it was being created: drop it rather than show a loader nothing will close.
+  if (loader.value !== pending) {
+    element.remove();
+
+    return;
+  }
+  element.present();
 };
 
-const dismissLoader = () => {
-  if (loader.value) {
-    loader.value.dismiss();
-    loader.value = null;
+const dismissLoader = async () => {
+  const pending = loader.value;
+
+  if (!pending) {
+    return;
+  }
+  loader.value = null;
+  const element = await pending;
+
+  // presentLoader removes a loader dismissed before it was shown.
+  if (element.isConnected) {
+    element.dismiss();
   }
 };
 
 onMounted(async () => {
-  loader.value = await loadingController.create({
+  loader.value = loadingController.create({
     message: translate("Loading..."),
     backdropDismiss: false
   });
