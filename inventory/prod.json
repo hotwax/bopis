@@ -1,0 +1,17 @@
+{
+  "available": true,
+  "target": {
+    "project": "digital-commerce-71eb8",
+    "site": "hotwax-bopis",
+    "environment": "prod",
+    "origin": "https://hotwax-bopis.web.app"
+  },
+  "versions": [],
+  "defaultVersion": "v5.4.1",
+  "configuredEnvironment": "AppEnvProd",
+  "defaultSource": "Compiled build metadata",
+  "checkedAt": "2026-11-16T11:26:24.051Z",
+  "deployedAt": "2026-10-29T04:06:49.320Z",
+  "release": "sites/hotwax-bopis/channels/live/releases/1793246809320000",
+  "fileCount": 117
+}
