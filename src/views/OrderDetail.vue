@@ -530,7 +530,7 @@ async function fetchOrderChangeHistory() {
       orderChangeHistory = resp.data.filter((event: any) =>
         event.facilityId === "PICKUP_REJECTED" || event.fromFacilityId === "PICKUP_REJECTED"
       )
-    } else {
+    } else if(commonUtil.hasError(resp)) {
       throw resp.data;
     }
   } catch(err) {
@@ -562,7 +562,7 @@ async function fetchOrderCommunicationEvent() {
       orderCommunicationEvent = resp.data.communicationEventList.filter((event: any) => {
         return event.subject && event.subject.includes("pickup")
       })
-    } else {
+    } else if(commonUtil.hasError(resp)) {
       throw resp.data;
     }
   } catch(err) {

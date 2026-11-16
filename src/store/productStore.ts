@@ -578,7 +578,7 @@ export const useProductStore = defineStore('productStore', {
           resp.data.map((facility: any) => {
             this.facilities[facility.facilityId] = facility["facilityName"]
           })
-        } else {
+        } else if (commonUtil.hasError(resp)) {
           throw resp.data;
         }
       } catch (err) {
@@ -608,7 +608,7 @@ export const useProductStore = defineStore('productStore', {
           if (validCoords) {
             this.facilitiesLatLng[facilityId] = validCoords;
           }
-        } else {
+        } else if (commonUtil.hasError(resp)) {
           throw resp.data
         }
       } catch (err) {
@@ -632,7 +632,7 @@ export const useProductStore = defineStore('productStore', {
         })
         if (!commonUtil.hasError(resp) && resp.data?.response?.docs?.length > 0) {
           this.storesInformation = resp.data.response.docs;
-        } else {
+        } else if (commonUtil.hasError(resp)) {
           throw resp.data
         }
       } catch (err) {
