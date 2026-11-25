@@ -1034,7 +1034,7 @@ export const useOrderStore = defineStore('order', {
           const productIds = [...(resp.data.reduce((ids: any, history: any) => ids.add(history.productId), new Set()))];
           const productStore = useProduct();
           await productStore.fetchProducts({ productIds })
-        } else {
+        } else if (commonUtil.hasError(resp)) {
           throw resp.data
         }
       } catch (err) {
@@ -1203,7 +1203,7 @@ export const useOrderStore = defineStore('order', {
           resp.data.map((enumeration: any) => {
             this.enumerations[enumeration.enumId] = enumeration["description"]
           })
-        } else {
+        } else if (commonUtil.hasError(resp)) {
           throw resp.data;
         }
       } catch (err) {

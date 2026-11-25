@@ -160,7 +160,7 @@ async function findPickers(vSize?: any, vIndex?: any) {
       }))
       availablePickers.value = availablePickers.value.concat(pickers);
       total = resp.data.response?.numFound;
-    } else {
+    } else if (resp.status !== 200 || commonUtil.hasError(resp)) {
       throw resp.data;
     }
   } catch (err) {
