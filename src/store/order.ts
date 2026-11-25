@@ -795,7 +795,7 @@ export const useOrderStore = defineStore('order', {
           rejectToFacilityId: 'PICKUP_REJECTED',
           items: order.shipGroup.items.map((item: any) => ({
             ...item,
-            updateQOH: "false",
+            updateQOH: false,
             rejectionReasonId: item.reason,
             kitComponents: orderUtil.isKit(item) ? item.rejectedComponents || [] : []
           }))
