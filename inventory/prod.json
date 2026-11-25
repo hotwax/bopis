@@ -6,11 +6,13 @@
     "environment": "prod",
     "origin": "https://hotwax-bopis.web.app"
   },
-  "versions": [],
+  "versions": [
+    "v5.3.0-ls2"
+  ],
   "defaultVersion": "v5.4.1",
   "configuredEnvironment": "AppEnvProd",
   "defaultSource": "Compiled build metadata",
-  "checkedAt": "2026-11-25T09:43:52.371Z",
+  "checkedAt": "2026-11-25T10:03:56.922Z",
   "deployedAt": "2026-10-29T04:06:49.320Z",
   "release": "sites/hotwax-bopis/channels/live/releases/1793246809320000",
   "fileCount": 117
