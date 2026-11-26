@@ -1206,7 +1206,7 @@ export const useOrderStore = defineStore('order', {
     },
     async fetchCarrierInformation(partyIds: any) {
       const cachedPartyIds = Object.keys(this.carrierNames);
-      const ids = partyIds.filter((partyId: string) => !cachedPartyIds.includes(partyId))
+      const ids = partyIds.filter((partyId: string) => partyId && !cachedPartyIds.includes(partyId))
 
       if (!ids.length) return this.carrierNames;
 
